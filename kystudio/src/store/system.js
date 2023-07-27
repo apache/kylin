@@ -63,7 +63,8 @@ export default {
     ddlEnabled: 'false',
     logicalViewEnabled: 'false',
     logicalViewDatabase: 'KYLIN_LOGICAL_VIEW',
-    loadThresholdEnabled: 'true'
+    loadThresholdEnabled: 'true',
+    advancedOperator: 'false'
   },
   mutations: {
     [types.COLLECT_MESSAGE_DIRECTIVES]: (state, directive) => {
@@ -191,6 +192,7 @@ export default {
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view.enabled', key: 'logicalViewEnabled', defaultValue: 'false'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view.database', key: 'logicalViewDatabase', defaultValue: 'KYLIN_LOGICAL_VIEW'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.table.load-threshold-enabled', key: 'loadThresholdEnabled', defaultValue: 'true'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.index.enable-operator-design', key: 'advancedOperator', defaultValue: 'false'})
           resolve(response)
         }, () => {
           reject()
@@ -247,6 +249,9 @@ export default {
     },
     logicalViewDatabaseName: (state) => {
       return state.logicalViewDatabase
+    },
+    isAdvancedOperator: (state) => {
+      return state.advancedOperator === 'true'
     }
   }
 }

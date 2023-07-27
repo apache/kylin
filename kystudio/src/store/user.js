@@ -168,6 +168,13 @@ export default {
         permissions.MANAGEMENT.value
       ].includes(state.currentUserAccess)
     },
+    isProjectOperator (state) {
+      return [
+        permissions.ADMINISTRATION.value,
+        permissions.MANAGEMENT.value,
+        permissions.OPERATION.value
+      ].includes(state.currentUserAccess)
+    },
     isDataPermission (state) {
       return state.ext_permissions
     }

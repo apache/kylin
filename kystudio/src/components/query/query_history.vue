@@ -25,9 +25,9 @@
         :project-name="currentSelectedProject"
         :layout-id="aggIndexLayoutId"
         :is-show-aggregate-action="false"
-        :isShowEditAgg="datasourceActions.includes('editAggGroup')"
-        :isShowBulidIndex="datasourceActions.includes('buildIndex')"
-        :isShowTableIndexActions="datasourceActions.includes('tableIndexActions')">
+        :isShowEditAgg="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()"
+        :isShowBulidIndex="datasourceActions.includes('buildIndex') || isAdvancedOperatorUser()"
+        :isShowTableIndexActions="datasourceActions.includes('tableIndexActions') || isAdvancedOperatorUser()">
       </ModelAggregate>
     </el-dialog>
 
@@ -101,6 +101,9 @@ import { pageRefTags, apiUrl, bigPageCount } from 'config'
       loadOnlineQueryNodes: 'LOAD_ONLINE_QUERY_NODES'
     })
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   computed: {
     ...mapGetters([
       'currentSelectedProject',

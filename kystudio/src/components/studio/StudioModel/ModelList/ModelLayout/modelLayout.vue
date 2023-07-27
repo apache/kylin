@@ -81,26 +81,26 @@
             <ModelAggregate
               :model="currentModelRow"
               :project-name="currentSelectedProject"
-              :isShowEditAgg="datasourceActions.includes('editAggGroup')"
-              :isShowBulidIndex="datasourceActions.includes('buildIndex')"
-              :isShowTableIndexActions="datasourceActions.includes('tableIndexActions')"
+              :isShowEditAgg="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()"
+              :isShowBulidIndex="datasourceActions.includes('buildIndex') || isAdvancedOperatorUser()"
+              :isShowTableIndexActions="datasourceActions.includes('tableIndexActions') || isAdvancedOperatorUser()"
               ref="modelAggregateItem"
               @refreshModel="refreshModelData"
               v-if="currentIndexTab === 'indexOverview'" />
           </el-tab-pane>
-          <el-tab-pane class="tab-pane-item" v-if="datasourceActions.includes('editAggGroup')" :label="$t('aggregateGroup')" name="aggGroup">
+          <el-tab-pane class="tab-pane-item" v-if="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()" :label="$t('aggregateGroup')" name="aggGroup">
             <ModelAggregateView
               :model="currentModelRow"
               :project-name="currentSelectedProject"
-              :isShowEditAgg="datasourceActions.includes('editAggGroup')"
+              :isShowEditAgg="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()"
               @refreshModel="refreshModelData"
               v-if="currentIndexTab === 'aggGroup'" />
           </el-tab-pane>
-          <el-tab-pane class="tab-pane-item" v-if="datasourceActions.includes('editAggGroup')" :label="$t('tableIndex')" name="tableIndex">
+          <el-tab-pane class="tab-pane-item" v-if="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()" :label="$t('tableIndex')" name="tableIndex">
             <TableIndexView
               :model="currentModelRow"
               :project-name="currentSelectedProject"
-              :isShowTableIndexActions="datasourceActions.includes('tableIndexActions')"
+              :isShowTableIndexActions="datasourceActions.includes('tableIndexActions') || isAdvancedOperatorUser()"
               @refreshModel="refreshModelData"
               v-if="currentIndexTab === 'tableIndex'" />
           </el-tab-pane>
@@ -181,7 +181,8 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
     })
   },
   inject: [
-    'forceUpdateRoute'
+    'forceUpdateRoute',
+    'isAdvancedOperatorUser'
   ],
   methods: {
     ...mapActions({
