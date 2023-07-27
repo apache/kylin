@@ -123,6 +123,9 @@ vuex.registerModule(['modals', 'DataSourceModal'], store)
       firstEditType: state => state.firstEditType,
       databaseSizeObj: state => state.databaseSizeObj
     }),
+    ...mapState({
+      loadThresholdEnabled: state => state.system.loadThresholdEnabled
+    }),
     ...mapGetters([
       'currentSelectedProject'
     ])
@@ -217,6 +220,10 @@ export default class DataSourceModal extends Vue {
     }
   }
   async handleSubmit () {
+    if (this.loadThresholdEnabled === 'true' && this.$refs['source-hive-form'] && this.$refs['source-hive-form'].tablesNum > 1000) {
+      this.$message.error(this.$t('tableNumOver'))
+      return
+    }
     this._showLoading()
     try {
       if (await this._validate()) {
