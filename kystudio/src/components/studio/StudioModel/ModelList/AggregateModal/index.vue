@@ -417,7 +417,7 @@
             <span v-if="isWaitingCheckAllCuboids">{{$t('numTitle', {num: $t('needCheck')})}}</span>
             <!-- 正在检测的情况 -->
             <span v-if="!isWaitingCheckAllCuboids && renderCoboidTextCheck(cuboidsInfo.total_count) === 'loading'">{{$t('numTitle1')}}<i class="el-icon-loading"></i></span>
-            <common-tip :content="$t('includesEmpty')" v-if="isDisabledSaveBtn" >
+            <common-tip :content="disabledTips" v-if="isDisabledSaveBtn" >
               <i class="el-ksd-icon-refresh_22 ksd-fs-22 ksd-ml-10 is-disabled" @click="checkCuboids(true)"></i>
             </common-tip>
             <i class="el-ksd-icon-refresh_22 ksd-fs-22 ksd-ml-10" v-else @click="checkCuboids(true)"></i>
@@ -457,8 +457,12 @@
         </div>
         <div class="right ksd-fs-0">
           <el-button :type="!onlyRealTimeType ? 'primary' : ''" :text="!onlyRealTimeType" size="medium" @click="handleClose(false)">{{$t('kylinLang.common.cancel')}}</el-button>
-          <el-button :type="onlyRealTimeType ? 'primary' : ''" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&isCatchUpLoading" v-if="isShow" :loading="isSubmit&&!isCatchUpLoading" @click="handleSubmit(false)">{{$t('kylinLang.common.save')}}</el-button>
-          <el-button v-if="isShow && !onlyRealTimeType" type="primary" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&!isCatchUpLoading" :loading="isSubmit&&isCatchUpLoading" @click="handleSubmit(true)">{{$t('saveAndBuild')}}</el-button>
+          <common-tip :content="disabledTips" :disabled="!isDisabledSaveBtn" effect="dark" placement="top">
+            <el-button :type="onlyRealTimeType ? 'primary' : ''" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&isCatchUpLoading" v-if="isShow" v-guide.saveAggBtn :loading="isSubmit&&!isCatchUpLoading" @click="handleSubmit(false)">{{$t('kylinLang.common.save')}}</el-button>
+          </common-tip>
+          <common-tip effect="dark" :disabled="!isDisabledSaveBtn" placement="top" :content="disabledTips">
+            <el-button v-if="isShow && !onlyRealTimeType" type="primary" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&!isCatchUpLoading" :loading="isSubmit&&isCatchUpLoading" @click="handleSubmit(true)">{{$t('saveAndBuild')}}</el-button>
+          </common-tip>
         </div>
       </div>
     </div>
@@ -605,7 +609,8 @@ vuex.registerModule(['modals', 'AggregateModal'], store)
       model: state => state.model,
       projectName: state => state.projectName,
       aggregateIdx: state => state.aggregateIdx,
-      formDataLoaded: state => state.formDataLoaded
+      formDataLoaded: state => state.formDataLoaded,
+      originFormData: state => state.originFormData
     }),
     ...mapGetters('AggregateModal', [
       'dimensions',
@@ -881,15 +886,36 @@ export default class AggregateModal extends Vue {
       this.$message.error(this.$t('calcError'))
     })
   }
-  get isDisabledSaveBtn () {
-    // 正在计算的时候按钮disable，选的维度有空的时候，disable，聚合组数为0 时
+  getFormStringify () {
     const cloneForm = objectClone(this.form)
     if (cloneForm && cloneForm.aggregateArray.length) {
       cloneForm.aggregateArray.forEach((a) => {
         delete a.activeTab // 切换tab不属于编辑内容变化
       })
     }
-    return this.calcLoading || this.isSubmit || !this.isFormVaild || !this.form.aggregateArray || this.form.aggregateArray.length === 0 || this.cloneForm === JSON.stringify(cloneForm)
+    return cloneForm
+  }
+  get isDisabledSaveBtn () {
+    // 正在计算的时候按钮disable，选的维度有空的时候，disable，聚合组数为0 时
+    const cloneForm = this.getFormStringify()
+    return this.calcLoading || this.isSubmit || !this.isFormVaild || !this.form.aggregateArray || (this.form.aggregateArray.length === 0 && !this.cloneForm) || this.cloneForm === JSON.stringify(cloneForm)
+  }
+  get disabledTips () {
+    const cloneForm = this.getFormStringify()
+    // 初始 this.cloneForm 为空说明原来就没有聚合组，初始有聚合组，编辑时删除到无聚合组，属于删除聚合组操作，允许操作
+    if (!this.form.aggregateArray || (this.form.aggregateArray.length === 0 && !this.cloneForm)) {
+      return this.$t('noAgg')
+    }
+    if (!this.isFormVaild) {
+      return this.$t('includesEmpty')
+    }
+    if (this.cloneForm === JSON.stringify(cloneForm)) {
+      return this.$t('noChange')
+    }
+    if (this.calcLoading) {
+      return this.$t('calcLoading')
+    }
+    return ''
   }
   renderCoboidTextCheck (cuboidsInfo, id) {
     let cuboidText = ''
@@ -924,9 +950,10 @@ export default class AggregateModal extends Vue {
         this.isWaitingCheckCuboids[id] = true
       }
       const cloneForm = objectClone(this.form)
-      if (cloneForm && cloneForm.aggregateArray.length) {
-        cloneForm.aggregateArray.forEach((a) => {
+      if (this.originFormData.length) {
+        cloneForm.aggregateArray = this.originFormData.map((a) => {
           delete a.activeTab // 切换tab不属于编辑内容变化
+          return a
         })
       }
       this.cloneForm = JSON.stringify(cloneForm)
