@@ -487,6 +487,8 @@ export default class JobsList extends Vue {
   progressIconClass (status) {
     if (status === 'STOPPED') {
       return 'el-ksd-n-icon-pause-circle-filled'
+    } else if (status === 'DISCARDED') {
+      return 'el-ksd-n-icon-error-circle-filled discarded'
     } else {
       return ''
     }
@@ -728,6 +730,9 @@ export default class JobsList extends Vue {
                 }, (resError) => {
                   handleError(resError)
                 })
+              } else {
+                this.selectedJob = {}
+                this.showStep = false
               }
             }
             if (this.multipleSelection.length) {
@@ -746,6 +751,8 @@ export default class JobsList extends Vue {
           } else {
             this.jobsList = []
             this.jobTotal = 0
+            this.selectedJob = {}
+            this.showStep = false
           }
           this.searchLoading = false
         })
@@ -1344,6 +1351,9 @@ export default class JobsList extends Vue {
       .el-progress__text {
         .el-ksd-n-icon-pause-circle-filled {
           color: @ke-color-primary;
+        }
+        .el-ksd-n-icon-error-circle-filled.discarded {
+          color: @ke-color-info-secondary;
         }
       }
     }
