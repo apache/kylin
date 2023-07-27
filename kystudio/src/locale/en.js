@@ -258,7 +258,7 @@ exports.default = {
     checkModel: 'Check Model',
     buildIndexSuccess: 'Success to submit a build index job, please check it on the monitor page.',
     buildIndexSuccess1: ' The new {indexType} will be used for querying after the build is complete. ',
-    saveIndexSuccess: 'You have successfully saved the {indexType}.',
+    saveIndexSuccess: 'You have successfully updated the {indexType}.',
     buildIndexFail1: 'Fail to submit the build index job because the model {modelName} doesn\'t have any load data range.',
     buildIndexFail2: 'Fail to generate a build index job because the {indexType} has no change.',
     primaryPartitionColumn: 'Primary Partition Column',

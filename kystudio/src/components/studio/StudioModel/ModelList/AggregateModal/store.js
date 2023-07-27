@@ -1,4 +1,4 @@
-import { handleSuccessAsync, getFullMapping } from 'util'
+import { handleSuccessAsync, getFullMapping, objectClone } from 'util'
 
 const types = {
   SHOW_MODAL: 'SHOW_MODAL',
@@ -51,7 +51,8 @@ const initialState = JSON.stringify({
     aggregateArray: [
       JSON.parse(initialAggregateData)
     ]
-  }
+  },
+  originFormData: []
 })
 
 export default {
@@ -139,6 +140,7 @@ export default {
           return { id, includes, measures, mandatory, jointArray, hierarchyArray, activeTab, open, dimCap, isEditDim, index_range, curAggIsEdit }
         })
         state.form.aggregateArray = aggGroups
+        state.originFormData = objectClone(aggGroups)
 
         if (payload.editType === 'new') {
           const initAggregate = JSON.parse(initialAggregateData)
