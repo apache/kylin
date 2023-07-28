@@ -11,10 +11,10 @@ const initialState = JSON.stringify({
   isShow: false,
   editType: 'new',
   callback: null,
-  totalUsers: [],
   form: {
     group_name: '',
-    selected_users: []
+    selected_users: [],
+    origin_selected_users: []
   }
 })
 
@@ -45,10 +45,15 @@ export default {
     [types.SET_MODAL]: (state, payload) => {
       for (const key of Object.keys(state)) {
         switch (key) {
-          case 'form':
-            payload.group && (state.form.group_name = payload.group.group_name)
-            payload.group && (state.form.selected_users = payload.group.users)
+          case 'form': {
+            if (payload.group) {
+              state.form.group_name = payload.group.group_name
+              state.form.origin_selected_users = payload.group.users
+              const size = 100
+              state.form.selected_users = payload.group.users.length <= size ? payload.group.users : payload.group.users.slice(0, size)
+            }
             break
+          }
           default: {
             payload[key] && (state[key] = payload[key])
             break
