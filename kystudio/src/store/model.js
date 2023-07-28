@@ -65,8 +65,8 @@ export default {
       return new Promise((resolve, reject) => {
         const newParams = {
           ...para,
-          last_modify_from: para.last_modify[0] && para.last_modify[0].getTime(),
-          last_modify_to: para.last_modify[1] && para.last_modify[1].getTime(),
+          last_modify_from: para.last_modify[0] && new Date(para.last_modify[0]).getTime(),
+          last_modify_to: para.last_modify[1] && new Date(para.last_modify[1]).getTime(),
           last_modify: undefined
         }
         api.model.getModelList(newParams).then((response) => {

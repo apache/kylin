@@ -24,6 +24,7 @@
         @rename="changeModelName"
         @loadModelsList="reloadModel"
         @loadModels="reloadModel"
+        :modelListFilters="modelListFilters"
         :currentModel="currentModelRow"
         :appendToBody="true"
         :editText="$t('modelEditAction')"
@@ -133,7 +134,7 @@ import { Component } from 'vue-property-decorator'
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { handleError, jumpToJobs } from 'util/business'
 import { transToServerGmtTime, handleSuccessAsync } from 'util'
-import { pageRefTags, pageCount } from 'config'
+import { pageCount } from 'config'
 import locales from './locales'
 import ModelOverview from '../ModelOverview/ModelOverview.vue'
 import ModelSegment from '../ModelSegment/index.vue'
@@ -156,19 +157,18 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
 
 @Component({
   beforeRouteEnter (to, from, next) {
-    if (!from.name || from.name !== 'ModelList') {
-      next((vm) => {
-        vm.initData = true
-        vm.modelPageOffest = to.query.modelPageOffest
-        vm.__init()
-      })
-    } else {
-      next((vm) => {
-        vm.initData = true
-        vm.modelPageOffest = to.query.modelPageOffest
-        vm.initModelData()
-      })
-    }
+    next(vm => {
+      // 从模型页面过来，用模型列表的过滤条件获取modelList
+      if (to.query.modelListFilters || getQueryString('modelListFilters')) {
+        vm.modelListFilters = JSON.parse(to.query.modelListFilters) || JSON.parse(getQueryString('modelListFilters'))
+      }
+  
+      if (from.name === 'ModelList') {
+        vm.filterData = vm.modelListFilters
+      } else if (to.query.filterData) {
+        vm.filterData = JSON.parse(to.query.filterData)
+      }
+    })
   },
   computed: {
     ...mapGetters([
@@ -227,7 +227,6 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
   locales
 })
 export default class ModelLayout extends Vue {
-  pageRefTags = pageRefTags
   randomKey = Date.now().toString(32)
   initData = false
   currentModelRow = null
@@ -237,28 +236,44 @@ export default class ModelLayout extends Vue {
   buildVisible = {}
   showModelList = false
   showSearchResult = false
-  modelPageOffest = 0
+  modelListFilters = {}
+  filterData = {
+    page_offset: 0,
+    page_size: pageCount,
+    exact: false,
+    model_name: this.searchModelName,
+    sort_by: 'last_modify',
+    reverse: true,
+    status: [],
+    model_alias_or_owner: '',
+    last_modify: [],
+    owner: '',
+    project: this.currentSelectedProject
+  }
 
   created () {
-    // if (!this.initData) {
-    //   this.initModelData()
-    // }
+    this.__init()
     document.addEventListener('click', this.handleClick)
   }
 
   async __init () {
-    await this.loadModelList()
-    this.initModelData()
+    try {
+      const { modelName } = this.$route.params
+      this.modelName = modelName
+      this.$nextTick(async () => {
+        await this.loadModelList()
+        this.initModelData()
+      })
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   async initModelData () {
-    const { modelName, searchModelName, tabTypes } = this.$route.params
-    this.modelName = modelName
-    this.searchModelName = searchModelName || ''
-    await this.refreshModelData()
-    this.currentModelRow = {...this.currentModelRow, tabTypes: typeof tabTypes !== 'undefined' ? tabTypes : 'overview'}
-    if (this.currentModelRow.tabTypes === 'second' && localStorage.getItem('isFirstSaveModel') === 'true') {
-      this.showGuide()
+    try {
+      await this.refreshModelData('init')
+    } catch (e) {
+      handleError(e)
     }
   }
 
@@ -267,61 +282,73 @@ export default class ModelLayout extends Vue {
   }
 
   jumpBack () {
-    this.$router.push({name: 'ModelList'})
+    this.$router.push({name: 'ModelList', query: { modelListFilters: JSON.stringify(this.modelListFilters) }})
   }
 
   // 模型搜索
-  searchModel (val) {
+  searchModel () {
+    this.resetFilters()
     this.loadModelList()
+  }
+
+  resetFilters () {
+    this.filterData = {
+      page_offset: 0,
+      page_size: pageCount,
+      exact: false,
+      model_name: this.searchModelName,
+      sort_by: 'last_modify',
+      reverse: true,
+      status: [],
+      model_alias_or_owner: '',
+      last_modify: [],
+      owner: '',
+      project: this.currentSelectedProject
+    }
   }
 
   chooseOtherModel ({model, ...args}) {
     if (model.status && model.status === 'BROKEN') return
     this.$router.push({name: 'refresh'})
     this.$nextTick(() => {
-      this.$router.replace({name: 'ModelDetails', params: {modelName: model.alias, searchModelName: this.searchModelName, ...args}, query: {modelPageOffest: this.modelPageOffest}})
+      this.$router.replace({name: 'ModelDetails', params: {modelName: model.alias, ...args}, query: {modelListFilters: JSON.stringify(this.modelListFilters), filterData: JSON.stringify(this.filterData)}})
     })
   }
 
-  loadModelList (name = '') {
-    const { modelPageOffest } = this
-    return new Promise((resolve, reject) => {
-      const modelName = this.searchModelName || name
+  async loadModelList () {
+    try {
       this.showSearchResult = true
-      this.loadModels({
-        page_offset: modelPageOffest || 0,
-        page_size: +localStorage.getItem(this.pageRefTags.modelListPager) || pageCount,
-        exact: false,
-        model_name: modelName || '',
-        sort_by: 'last_modify',
-        reverse: true,
-        status: [],
-        model_alias_or_owner: '',
-        last_modify: [],
-        owner: '',
-        project: this.currentSelectedProject
-      }).then(() => {
-        this.showSearchResult = false
-        resolve()
-      }).catch((res) => {
-        handleError(res)
-        reject()
-      })
-    })
+      this.filterData.project = this.currentSelectedProject
+      await this.loadModels(this.filterData)
+      this.showSearchResult = false
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   // 仅刷新当前 model 数据
-  async refreshModelData () {
-    const response = await this.getModelByModelName({model_name: this.modelName, project: this.currentSelectedProject})
-    const { value } = await handleSuccessAsync(response)
-    if (value.length) {
-      this.currentModelRow = {...this.currentModelRow, ...value[0]}
-      if (!this.modelList.filter(it => it.alias === this.modelName).length) {
-        // 没有匹配到相应的 model
+  async refreshModelData (type) {
+    try {
+      const response = await this.getModelByModelName({model_name: this.modelName, project: this.currentSelectedProject})
+      const { value } = await handleSuccessAsync(response)
+      // 能通过模型名称获取到模型数据，说明该模型存在
+      if (value.length) {
+        if (type === 'init') {
+          const { tabTypes, createSecStorageIndex, indexTab } = this.$route.params
+          this.showCreateOrEditSecStorageIndex = createSecStorageIndex ?? false
+          this.currentIndexTab = indexTab ?? 'indexOverview'
+          this.currentModelRow = {tabTypes: typeof tabTypes !== 'undefined' ? tabTypes : 'overview', ...value[0]}
+          if (this.currentModelRow.tabTypes === 'second' && localStorage.getItem('isFirstSaveModel') === 'true') {
+            this.showGuide()
+          }
+        } else {
+          this.currentModelRow = {...this.currentModelRow, ...value[0]}
+        }
+      } else {
         this.jumpBack()
       }
-    } else {
-      this.$router.replace({ name: 'ModelList', params: {searchModelName: this.searchModelName} })
+    } catch (e) {
+      handleError(e)
     }
   }
 
@@ -618,7 +645,7 @@ export default class ModelLayout extends Vue {
       position: absolute;
       padding: 0 0 14px 0;
       box-sizing: border-box;
-      z-index: 11;
+      z-index: 9999;
       line-height: 56px;
       background: @ke-background-color-white;
       box-shadow: 0px 2px 8px rgba(50, 73, 107, 24%);
