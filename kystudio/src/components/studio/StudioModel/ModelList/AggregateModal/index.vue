@@ -1232,7 +1232,7 @@ export default class AggregateModal extends Vue {
           duration: 10000,
           showClose: true,
           message: (
-            <div>
+            <div class="el-message__content">
               <span>{tipMsg}</span>
               <a href="javascript:void(0)" onClick={() => this.jumpToJobs()}>{this.$t('kylinLang.common.toJoblist')}</a>
             </div>

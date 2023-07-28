@@ -7,7 +7,7 @@ export default {
     segmentSubTitle: 'Add segments to define the model\'s data range for serving queries.',
     ignore: 'Ignore',
     next: 'Next',
-    pre: 'Previous',
+    pre: 'Prev',
     indexOverview: 'Index Overview',
     aggregateGroup: 'Aggregate Group',
     tableIndex: 'Table Index',

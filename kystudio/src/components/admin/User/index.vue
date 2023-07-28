@@ -55,7 +55,7 @@
         </template>
       </el-table-column>
       <!-- 表：是否有数据权限 -->
-      <el-table-column :label="$t('dataPermission')" align="center" :width="120">
+      <el-table-column :label="$t('dataPermission')" align="center" :width="140">
         <template slot-scope="scope">
           <i class="el-icon-ksd-good_health admin-svg" v-if="scope.row.hasQueryPermission"></i>
         </template>

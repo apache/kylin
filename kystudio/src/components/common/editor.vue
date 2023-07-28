@@ -8,26 +8,22 @@
       <div class="limit-sql-tip" v-if="showLimitTip">{{needFormater ? $t('kylinLang.common.sqlPartLimitTip') : $t('kylinLang.common.sqlLimitTip')}}</div>
     </template>
     <div class="smyles_dragbar" v-if="dragable" v-drag:change.height="editorDragData"></div>
-    <el-popover
-      placement="top"
-      title=""
-      trigger="click"
-      v-model="showCopyStatus">
-      <i class="el-icon-circle-check"></i> <span>{{$t('kylinLang.common.copySuccess')}}</span>
-    </el-popover>
     <el-tooltip placement="top" :disabled="isFormat==='origin'">
       <div slot="content">{{$t('kylinLang.common.notice')}}<br/>
         <span class="tooltips-cont"><i class="el-ksd-n-icon-warning-filled ksd-mb-2"></i>
         <span>{{$t('kylinLang.common.formatTips')}}</span></span>
       </div>
-      <i class="el-ksd-icon-dup_16 edit-copy-btn ksd-fs-16"
+      <el-button
+        size="mini"
         @click.stop
         v-if="readOnly"
+        icon-button
+        icon="el-ksd-icon-dup_16"
+        class="edit-copy-btn"
         :class="{'is-show': editorData, 'alwaysShow': alwaysShowCopyBtn}"
         v-clipboard:copy="fullFormatData || editorData"
         v-clipboard:success="onCopy"
-        v-clipboard:error="onError">
-      </i>
+        v-clipboard:error="onError"></el-button>
     </el-tooltip>
     <el-tabs v-model="isFormat" v-if="isFormatSwitch" class="format-switch" type="button" :class="{'en-model': $lang==='en'}" @tab-click="changeFormatType">
       <el-tab-pane :label="$t('kylinLang.common.origin')" name="origin"></el-tab-pane>
@@ -134,18 +130,18 @@ import { Component } from 'vue-property-decorator'
       if (navigator.userAgent.indexOf('Windows NT') >= 0 && window.clipboardData) {
         let text = window.clipboardData.getData('text')
         if (text && text === this.editorData) {
-          this.showCopyStatus = true
-          setTimeout(() => {
-            this.showCopyStatus = false
-          }, 1000)
+          this.$message({
+            type: 'success',
+            message: this.$t('kylinLang.common.copySuccess')
+          })
         } else {
           this.$message(this.$t('kylinLang.common.copyfail'))
         }
       } else {
-        this.showCopyStatus = true
-        setTimeout(() => {
-          this.showCopyStatus = false
-        }, 1000)
+        this.$message({
+          type: 'success',
+          message: this.$t('kylinLang.common.copySuccess')
+        })
       }
     },
     onError () {
@@ -232,7 +228,6 @@ export default class KapEditor extends Vue {
       formatData: '',
       fullFormatData: '',
       dragging: false,
-      showCopyStatus: false,
       editorDragData: {
         height: +this.height || 0,
         width: this.width

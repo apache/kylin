@@ -251,6 +251,8 @@
       .feedback-suggestions {
         padding: 16px 8px;
         box-sizing: border-box;
+        height: calc(~'100vh - 48px - 60px');
+        overflow-y: auto;
         .suggestion-list {
           .label {
             font-size: 14px;

@@ -493,7 +493,7 @@ export default class Snapshot extends Vue {
         duration: 10000,
         showClose: true,
         message: (
-          <div>
+          <div class="el-message__content">
             <span>{this.$t('kylinLang.common.buildSuccess')}</span>
             <a href="javascript:void(0)" onClick={() => this.gotoJob()}>{this.$t('kylinLang.common.toJoblist')}</a>
           </div>
