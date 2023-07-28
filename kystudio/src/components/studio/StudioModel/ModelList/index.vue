@@ -277,6 +277,10 @@ function getDefaultFilters (that) {
         vm.filterArgs.model_alias_or_owner = to.params.modelAlias
         vm.filterArgs.exact = true
       }
+      // 从ER图跳转回来的，模糊搜索模型 - KE
+      if (to.query.modelListFilters) {
+        vm.filterArgs = {...vm.filterArgs, ...JSON.parse(to.query.modelListFilters)}
+      }
       if (to.query.model_alias) {
         vm.currentEditModel = to.query.model_alias
         vm.filterArgs.model_alias_or_owner = to.query.model_alias
@@ -830,7 +834,7 @@ export default class ModelList extends Vue {
 
   modelRowClickEvent (row, e) {
     if (row.status === 'BROKEN' || ('visible' in row && !row.visible)) return
-    this.$router.push({name: 'ModelDetails', params: {modelName: row.alias}, query: {modelPageOffest: this.filterArgs.page_offset}})
+    this.$router.push({ name: 'ModelDetails', params: {modelName: row.alias}, query: {modelListFilters: JSON.stringify(this.filterArgs)} })
   }
 
   // 展示 E-R 图

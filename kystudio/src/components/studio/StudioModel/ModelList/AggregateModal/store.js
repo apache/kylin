@@ -151,6 +151,8 @@ export default {
           initAggregate.measures = measuresList
           state.form.aggregateArray.push(initAggregate)
         }
+      } else {
+        state.originFormData = []
       }
     }
   },

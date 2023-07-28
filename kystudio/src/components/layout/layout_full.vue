@@ -49,6 +49,7 @@ import { filterInjectScript } from 'util'
 @Component({
   computed: {
     ...mapGetters([
+      'isAdminRole',
       'isProjectOperator',
       'isAdvancedOperator'
     ]),
@@ -60,7 +61,7 @@ import { filterInjectScript } from 'util'
   provide () {
     return {
       forceUpdateRoute: this.forceUpdateRoute,
-      isAdvancedOperatorUser: () => this.isProjectOperator && this.isAdvancedOperator // 高级运维人员，可以设计索引
+      isAdvancedOperatorUser: () => (this.isProjectOperator || this.isAdminRole) && this.isAdvancedOperator // 高级运维人员，可以设计索引
     }
   },
   components: {
