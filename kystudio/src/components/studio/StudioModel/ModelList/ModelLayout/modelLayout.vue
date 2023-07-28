@@ -368,7 +368,7 @@ export default class ModelLayout extends Vue {
               duration: 10000,
               showClose: true,
               message: (
-                <div>
+                <div class="el-message__content">
                   <span>{this.$t('kylinLang.common.submitSuccess')}</span>
                   <a href="javascript:void(0)" onClick={() => jumpToJobs()}>{this.$t('kylinLang.common.toJoblist')}</a>
                 </div>
