@@ -128,6 +128,9 @@ export default {
     },
     [types.UPDATE_USER_DATA_PERMISSION]: function ({ commit }, para) {
       return api.user.updataUserDataPermission(para)
+    },
+    [types.GET_UNASSIGNED_USERS]: function ({ commit }, para) {
+      return api.user.getUnassignedUsers(para)
     }
   },
   getters: {

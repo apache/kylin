@@ -66,5 +66,8 @@ export default {
   },
   updataUserDataPermission: (para) => {
     return Vue.resource(apiUrl + 'access/global/permission/data_query').update(para)
+  },
+  getUnassignedUsers: (para) => {
+    return Vue.resource(apiUrl + 'user/unassigned_users').get(para)
   }
 }
