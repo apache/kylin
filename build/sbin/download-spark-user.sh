@@ -33,7 +33,7 @@ if [[ -d ${KYLIN_HOME}/spark ]]; then
     exit 1
 fi
 
-spark_version_in_binary=3.2.0-4.6.3.0
+spark_version_in_binary=3.2.0-kylin-4.6.9.0
 spark_pkg_name=spark-newten-"`echo ${spark_version_in_binary}| sed "s/-kylin//g"`"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 
@@ -52,7 +52,7 @@ rm -rf ${KYLIN_HOME}/spark/R
 rm -rf ${KYLIN_HOME}/spark/hive_1_2_2
 
 # Temp fix of "Cannot find catalog plugin class for catalog 'spark_catalog': org.apache.spark.sql.delta.catalog.DeltaCatalog"
-cp ${KYLIN_HOME}/server/jars/delta-core_2.12-1.2.1.jar ${KYLIN_HOME}/spark/jars/
+cp ${KYLIN_HOME}/server/jars/delta-core_2.12-2.0.2.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/alluxio-shaded-client-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-soft-affinity-cache-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-external-guava*.jar ${KYLIN_HOME}/spark/jars/
