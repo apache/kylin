@@ -1006,7 +1006,7 @@ class NModel extends Schama {
   _createUniqueName (guid, alias) {
     if (alias && guid) {
       var sameCount = this._checkSameAlias(guid, alias)
-      var finalAlias = alias.toUpperCase().replace(/[^a-zA-Z_0-9]/g, '')
+      var finalAlias = alias.toUpperCase().replace(/[^a-zA-Z_0-9\u4e00-\u9fa5]/g, '')
       if (sameCount === 0) {
         return finalAlias
       } else {
