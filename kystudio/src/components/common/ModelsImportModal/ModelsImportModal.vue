@@ -568,9 +568,9 @@ export default class ModelsImportModal extends Vue {
     if (!NamedRegex.test(value)) {
       row.isNameError = true
       row.nameErrorMsg = 'kylinLang.common.nameFormatValidTip'
-    } else if (value.length > 50) {
+    } else if (value.length > 127) {
       row.isNameError = true
-      row.nameErrorMsg = 'kylinLang.common.overLengthTip'
+      row.nameErrorMsg = 'kylinLang.common.overLength127Tip'
     } else if (allImportModalName.filter(v => v === value).length > 1) {
       row.isNameError = true
       row.nameErrorMsg = 'kylinLang.model.sameModelName'
