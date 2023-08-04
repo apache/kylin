@@ -18,7 +18,7 @@
   import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
   import vuex from '../../../../../store'
   import { NamedRegex } from 'config'
-  import { handleError, kylinMessage } from 'util/business'
+  import { handleError, kylinMessage, handleSuccess } from 'util/business'
   import locales from './locales'
   import store, { types } from './store'
 
@@ -37,7 +37,8 @@
     },
     methods: {
       ...mapActions({
-        cloneModel: 'CLONE_MODEL'
+        cloneModel: 'CLONE_MODEL',
+        modelNameValidate: 'NEW_MODEL_NAME_VALIDATE'
       }),
       ...mapMutations('ModelCloneModal', {
         setModal: types.SET_MODAL,
@@ -65,8 +66,20 @@
     checkName (rule, value, callback) {
       if (!NamedRegex.test(value)) {
         callback(new Error(this.$t('kylinLang.common.nameFormatValidTip')))
+      } else if (value.length > 127) {
+        callback(new Error(this.$t('kylinLang.common.overLength127Tip')))
       } else {
-        callback()
+        this.modelNameValidate({model_name: value, project: this.currentSelectedProject}).then((response) => {
+          handleSuccess(response, (data) => {
+            if (data) {
+              callback(new Error(this.$t('kylinLang.model.sameModelName')))
+            } else {
+              callback()
+            }
+          })
+        }, (res) => {
+          handleError(res)
+        })
       }
     }
     closeModal (isSubmit) {
