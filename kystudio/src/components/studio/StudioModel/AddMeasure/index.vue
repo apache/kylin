@@ -523,7 +523,7 @@ export default class AddMeasure extends Vue {
     this.corrColumnError = ''
     if (this.measure.expression === 'SUM(constant)' || this.measure.expression === 'COUNT(constant)') {
       this.measure.parameterValue.type = 'constant'
-      this.measure.parameterValue.value = 1
+      this.measure.parameterValue.value = '1'
     } else {
       this.measure.parameterValue.type = 'column'
       this.measure.parameterValue.value = ''
