@@ -530,7 +530,7 @@ export default class queryResult extends Vue {
         }
       }
     }
-    return isAnyNull
+    return isAnyNull || this.currentEditTabs.vacant
   }
   get includeFilterIndexType () {
     let flag = false
