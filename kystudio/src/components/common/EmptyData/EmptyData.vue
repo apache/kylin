@@ -73,7 +73,7 @@ export default class EmptyData extends Vue {
     img {
       height: 60px;
     }
-    font-size: 14px;
+    font-size: 12px;
     .center:first-child {
       margin-bottom: 8px;
     }

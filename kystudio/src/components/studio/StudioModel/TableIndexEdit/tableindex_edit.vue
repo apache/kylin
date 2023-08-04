@@ -1,86 +1,94 @@
 <template>
   <!-- tableindex的添加和编辑 -->
-  <el-dialog :title="tableIndexModalTitle" append-to-body limited-area top="5vh" class="table-edit-dialog" width="880px" v-if="isShow" :visible="true" :close-on-press-escape="false" :close-on-click-modal="false" @close="isShow && closeModal()">
-      <div class="table-index-list">
-        <div class="ksd-mb-10" v-if="modelInstance.model_type === 'HYBRID'">
-          <h4>
-            <span class="is-required">*</span>
-            {{$t('indexTimeRange')}}
-            <common-tip :content="$t('indexTimeRangeTips')"><i class="el-ksd-icon-more_info_16 ksd-fs-16"></i></common-tip>
-          </h4>
-          <el-radio-group v-model="tableIndexMeta.index_range" :disabled="tableIndexMeta.id !== ''" @change="changeTableIndexType">
-            <el-tooltip placement="top" :disabled="indexUpdateEnabled" :content="$t('refuseAddIndexTip')">
-              <el-radio :label="'HYBRID'" :disabled="!indexUpdateEnabled">{{$t('kylinLang.common.HYBRID')}}</el-radio>
+  <el-dialog :title="tableIndexModalTitle" append-to-body limited-area class="table-edit-dialog" width="880px" v-if="isShow" :visible="true" :close-on-press-escape="false" :close-on-click-modal="false" @close="isShow && closeModal()">
+    <div class="table-index-list">
+      <transfer-data
+        :allModelColumns="allColumns"
+        isShowNum
+        draggable
+        topColAble
+        sharedByAble
+        isSortAble
+        isAllSelect
+        :selectedColumns="selectedColumns"
+        :rightTitle="$t('tableIndex')"
+        :rightTitleTip="$t('tableIndexTips')"
+        isTextRecognition
+        :isEdit="this.tableIndexMeta.id !== ''"
+        :alertTips="alertTips"
+        @handleTableIndexRecognize="handleTableIndexRecognize"
+        @setSelectedColumns="(v) => setSelectedColumns(v)"
+        @setShardbyCol="(label) => setShardbyCol(label)">
+        <template slot="left-footer" v-if="showExcludedTableCheckBox">
+          <el-checkbox v-model="displayExcludedTables" @change="isShowExcludedTablesCols" class="exclude-checkbox" size="small">
+            <span>{{$t('excludeTableCheckbox')}}</span>
+            <el-tooltip effect="dark" placement="top" :maxHeight="200">
+              <div slot="content" class="ksd-fs-12">
+                <div>{{ $t('excludeTableCheckboxTip1') }}</div>
+                <li>• {{ $t('excludeTableCheckboxTip2') }}</li>
+                <li>• {{ $t('excludeTableCheckboxTip3') }}</li>
+                <div v-html="$t('excludeTableCheckboxTip4')"></div>
+              </div>
+              <i class="el-icon-ksd-what ksd-fs-14"></i>
             </el-tooltip>
-            <el-radio :label="'BATCH'">{{$t('kylinLang.common.BATCH')}}</el-radio>
-            <el-tooltip placement="top" :disabled="indexUpdateEnabled" :content="$t('refuseAddIndexTip')">
-              <el-radio :label="'STREAMING'" :disabled="!indexUpdateEnabled">{{$t('kylinLang.common.STREAMING')}}</el-radio>
-            </el-tooltip>
-          </el-radio-group>
+          </el-checkbox>
+        </template>
+        <template slot="help">
+          <el-popover
+            ref="help"
+            placement="top"
+            width="366"
+            popper-class="table-index-help"
+            :title="$t('kylinLang.common.help')"
+            v-model="isShowHelp">
+            <i class="el-ksd-n-icon-close-L-outlined" @click="isShowHelp = false"></i>
+            <div class="sugession-blocks">
+              <p>
+                <el-tag type="info" size="mini" is-light>{{ $t('sugessionLabel1') }}</el-tag>
+                <span class="sugession">{{ $t('sugession1') }}</span>
+              </p>
+              <p class="ksd-mt-16">
+                <el-tag type="info" size="mini" is-light>{{ $t('sugessionLabel2') }}</el-tag>
+                <span class="sugession">{{ $t('sugession2') }}
+                  <span class="tips">{{ $t('tips') }}<a class="ky-a-like" @click="goToDataSource">{{ $t('goToDataSource') }}</a></span>
+                </span>
+              </p>
+            </div>
+            <div class="footer">
+              <span class="info ksd-mr-16">{{ $t('knowMore') }}<a :href="$t('shardbyManal')">{{ $t('userManual') }}</a></span>
+            </div>
+          </el-popover>
+          <el-tooltip effect="dark" :content="$t('help')" placement="top">
+            <i class="el-ksd-n-icon-help-circle-outlined" v-popover:help></i>
+          </el-tooltip>
+        </template>
+      </transfer-data>
+      <div class="ksd-mt-16" v-if="modelInstance.model_type === 'HYBRID'">
+        <div class="ksd-title-label-mini ksd-mb-8">
+          {{$t('indexTimeRange')}}
+          <span class="is-required">*</span>
         </div>
-        <div class="header">
-          <h4 class="ksd-left" v-if="modelInstance.model_type === 'HYBRID'">{{$t('includeColumns')}}</h4>
-          <el-alert
-            :title="$t('tableIndexShardByTips')"
-            type="info"
-            :closable="false"
-            :show-background="false"
-            show-icon>
-          </el-alert>
-          <template v-if="modelInstance.model_type !== 'HYBRID' || modelInstance.model_type === 'HYBRID' && tableIndexMeta.index_range">
-            <p class="anit-table-tips" v-if="hasManyToManyAndAntiTable">{{$t('manyToManyAntiTableTip')}}</p>
-            <el-button plain class="ksd-ml-10" size="mini" @click="handleTableIndexRecognize">
-              {{$t('textRecognition')}}
-            </el-button>
-            <el-input v-model="searchColumn" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:200px" :placeholder="$t('filterByColumns')"></el-input>
-          </template>
-        </div>
-        <div class="no-index-range" v-if="modelInstance.model_type === 'HYBRID' && !tableIndexMeta.index_range">
-          <span>{{$t('noIndexRangeByHybrid')}}</span>
-        </div>
-        <div class="ky-simple-table" v-else>
-          <el-row class="table-header table-row ksd-mt-10">
-            <el-col :span="1"><el-checkbox v-model="isSelectAllTableIndex" :indeterminate="getSelectedColumns.length !== 0 && allColumns.length > getSelectedColumns.length" @change="selectAllTableIndex" size="small" /></el-col>
-            <el-col :span="14" class="column-name">{{$t('kylinLang.model.columnName')}}</el-col>
-            <el-col :span="3" class="cardinality-item">{{$t('cardinality')}}</el-col>
-            <el-col :span="3">ShardBy</el-col>
-            <el-col :span="3">{{$t('order')}}</el-col>
-          </el-row>
-          <div class="table-content table-index-layout" v-scroll.observe.reactive @scroll-bottom="scrollLoad">
-            <transition-group name="flip-list" tag="div">
-                <el-row v-for="(col, index) in searchAllColumns" :key="col.fullName" class="table-row">
-                  <el-col :span="1"><el-checkbox size="small" :disabled="getDisabledTableType(col)" v-model="col.isUsed" @change="(status) => selectTableIndex(status, col)" /></el-col>
-                  <el-col :span="14" class="column-name" :title="col.fullName">{{col.fullName}}<el-tooltip :content="$t('excludedTableIconTip')" effect="dark" placement="top"><i class="excluded_table-icon el-icon-ksd-exclude" v-if="isExistExcludeTable(col) && displayExcludedTables"></i></el-tooltip></el-col>
-                  <el-col :span="3" class="cardinality-item">
-                    <template v-if="col.cardinality === null"><i class="no-data_placeholder">NULL</i></template>
-                    <template v-else>{{ col.cardinality }}</template>
-                  </el-col>
-                  <el-col :span="3" @click.native="toggleShard(col)">
-                     <i class="el-icon-success" v-if="col.isUsed" :class="{active: col.isShared}"></i>
-                  </el-col>
-                  <el-col :span="3" class="order-actions">
-                    <template  v-if="col.isUsed">
-                      <el-tooltip :content="$t('moveTop')" effect="dark" placement="top">
-                        <span :class="['icon', 'el-icon-ksd-move_to_top', {'is-disabled': index === 0 && !searchColumn}]" @click="topRow(col)"></span>
-                      </el-tooltip>
-                      <el-tooltip :content="$t('moveUp')" effect="dark" placement="top">
-                        <span :class="['icon', 'el-icon-ksd-move_up', {'is-disabled': index === 0}]" @click="upRow(col)"></span>
-                      </el-tooltip>
-                      <el-tooltip :content="$t('moveDown')" effect="dark" placement="top">
-                        <span :class="['icon', 'el-icon-ksd-move_down', {'is-disabled': !searchAllColumns[index + 1] || !searchAllColumns[index + 1].isUsed}]" @click="downRow(col)"></span>
-                      </el-tooltip>
-                    </template>
-                  </el-col>
-                </el-row>
-              </transition-group>
-          </div>
-       </div>
+        <el-radio-group v-model="tableIndexMeta.index_range" size="small" :disabled="tableIndexMeta.id !== ''">
+          <el-tooltip placement="top" :disabled="indexUpdateEnabled" :content="$t('refuseAddIndexTip')">
+            <el-radio :label="'HYBRID'" :disabled="!indexUpdateEnabled">
+              {{$t('kylinLang.common.HYBRID')}}<el-tooltip effect="dark" :content="$t('indexTimeRangeTips')" placement="top">
+                <i class="el-icon-ksd-what ksd-ml-5 ksd-fs-14"></i>
+              </el-tooltip>
+            </el-radio>
+          </el-tooltip>
+          <el-radio class="ksd-ml-16" :label="'BATCH'">{{$t('kylinLang.common.BATCH')}}</el-radio>
+          <el-tooltip placement="top" :disabled="indexUpdateEnabled" :content="$t('refuseAddIndexTip')">
+            <el-radio class="ksd-ml-16" :label="'STREAMING'" :disabled="!indexUpdateEnabled">{{$t('kylinLang.common.STREAMING')}}</el-radio>
+          </el-tooltip>
+        </el-radio-group>
+        <div v-if="indexRangeReqiured" class="is-required ksd-fs-12 ksd-mt-8">{{ $t('indexRangeReqiured') }}</div>
       </div>
-      <div slot="footer" class="dialog-footer ky-no-br-space">
-        <el-button :type="onlyBatchType ? 'primary' : ''" :text="onlyBatchType" @click="closeModal" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
-        <el-button :type="!onlyBatchType ? 'primary' : ''" :loading="btnLoading&&!isLoadDataLoading" size="medium" @click="submit(false)" :disabled="saveBtnDisable || btnLoading&&isLoadDataLoading">{{$t('kylinLang.common.save')}}</el-button>
-        <el-button v-if="onlyBatchType" type="primary" :loading="btnLoading&&isLoadDataLoading" size="medium" @click="submit(true)" :disabled="saveBtnDisable || btnLoading&&!isLoadDataLoading">{{$t('saveAndBuild')}}</el-button>
-      </div>
+    </div>
+    <div slot="footer" class="dialog-footer ky-no-br-space">
+      <el-button :type="onlyBatchType ? 'primary' : ''" :text="onlyBatchType" @click="closeModal" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
+      <el-button :type="!onlyBatchType ? 'primary' : ''" :loading="btnLoading&&!isLoadDataLoading" size="medium" @click="submit(false)" :disabled="saveBtnDisable || btnLoading&&isLoadDataLoading">{{$t('kylinLang.common.save')}}</el-button>
+      <el-button v-if="onlyBatchType" type="primary" :loading="btnLoading&&isLoadDataLoading" size="medium" @click="submit(true)" :disabled="saveBtnDisable || btnLoading&&!isLoadDataLoading">{{$t('saveAndBuild')}}</el-button>
+    </div>
   </el-dialog>
 </template>
 <script>
@@ -88,10 +96,10 @@
   import { Component, Watch } from 'vue-property-decorator'
   import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
   import vuex from '../../../../store'
-  import { NamedRegex } from 'config'
   import { BuildIndexStatus } from 'config/model'
-  import { handleError, handleSuccess, kylinConfirm } from 'util/business'
-  import { objectClone, changeObjectArrProperty, indexOfObjWithSomeKey, filterObjectArray } from 'util/index'
+  import { handleSuccess, kapConfirm, postCloudUrlMessage } from 'util/business'
+  import { objectClone, getQueryString, indexOfObjWithSomeKey } from 'util/index'
+  import TransferData from '../../../common/CustomTransferData/TransferData'
   import locales from './locales'
   import store, { types } from './store'
 
@@ -104,9 +112,11 @@
       ]),
       ...mapState('TableIndexEditModal', {
         isShow: state => state.isShow,
+        isHybridBatch: state => state.isHybridBatch,
         modelInstance: state => state.form.data.modelInstance,
         tableIndexDesc: state => objectClone(state.form.data.tableIndexDesc),
         indexUpdateEnabled: state => state.form.data.indexUpdateEnabled,
+        isShowHelpDefault: state => state.form.data.isShowHelp,
         callback: state => state.callback
       })
     },
@@ -125,16 +135,17 @@
         callRecognizeAggregateModal: types.CALL_MODAL
       })
     },
+    components: {
+      TransferData
+    },
     locales
   })
   export default class TableIndexEditModal extends Vue {
+    isShowHelp = false
     btnLoading = false
-    openShared = false
-    searchColumn = ''
+    allColumnList = []
     allColumns = []
-    currentPager = 1
-    pagerSize = 50
-    pager = 0
+    selectedColumns = []
     tableIndexMetaStr = JSON.stringify({
       id: '',
       col_order: [],
@@ -144,73 +155,46 @@
       index_range: ''
     })
     tableIndexMeta = JSON.parse(this.tableIndexMetaStr)
-    rules = {
-      name: [
-        {validator: this.checkName, trigger: 'blur'}
-      ]
-    }
     cloneMeta = ''
-    isSelectAllTableIndex = false
     displayExcludedTables = false
     isLoadDataLoading = false
-
-    @Watch('searchColumn')
-    changeSearchColumn (val) {
-      const dom = document.querySelector('.table-index-layout .scroll-content')
-      dom && (dom.style = 'transform: translate3d(0px, 0px, 0px);')
-    }
-
-    get getSelectedColumns () {
-      return this.allColumns.filter(it => it.isUsed)
-    }
+    alertTips = []
+    indexRangeReqiured = false
 
     get onlyBatchType () {
       return (this.modelInstance.model_type === 'HYBRID' && this.tableIndexMeta.index_range !== 'STREAMING') || (this.modelInstance.model_type !== 'STREAMING' && this.modelInstance.model_type !== 'HYBRID')
     }
 
-    topRow (col) {
-      let index = this.getRowIndex(col, 'fullName')
-      this.allColumns.splice(0, 0, col)
-      this.allColumns.splice(index + 1, 1)
+    get showExcludedTableCheckBox () {
+      return this.modelInstance.selected_columns.length ? this.modelInstance.selected_columns.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
     }
-    upRow (col) {
-      let i = this.getRowIndex(col, 'fullName')
-      this.allColumns.splice(i - 1, 0, col)
-      this.allColumns.splice(i + 1, 1)
+
+    goToDataSource () {
+      this.$router.push('/studio/source')
     }
-    downRow (col) {
-      let i = this.getRowIndex(col, 'fullName')
-      this.allColumns.splice(i + 2, 0, col)
-      this.allColumns.splice(i, 1)
+  
+    setSelectedColumns (selectedColumns) {
+      this.selectedColumns = selectedColumns
+      this.tableIndexMeta.col_order = []
+      this.selectedColumns.forEach((key) => {
+        const i = indexOfObjWithSomeKey(this.allColumns, 'key', key)
+        i !== -1 && this.tableIndexMeta.col_order.push(this.allColumns[i].label)
+      })
+      this.removeTips('error')
     }
-    getRowIndex (t, key) {
-      return indexOfObjWithSomeKey(this.allColumns, key, t[key])
+    setShardbyCol (label) {
+      this.tableIndexMeta.shard_by_columns = []
+      label && this.tableIndexMeta.shard_by_columns.push(label)
+      this.removeTips('error')
     }
-    toggleShard (t) {
-      let shardStatus = t.isShared
-      changeObjectArrProperty(this.allColumns, '*', 'isShared', false)
-      t.isShared = !shardStatus
-    }
-    scrollLoad () {
-      if (this.searchAllColumns && this.searchAllColumns.length !== this.filterResult.length) {
-        this.currentPager += 1
-      }
-    }
-    // 是否存在多对多且被屏蔽的表
-    get hasManyToManyAndAntiTable () {
-      let flag = false
-      for (let item of this.allColumns) {
-        if (this.getDisabledTableType(item)) {
-          flag = true
-          break
-        }
-      }
-      return flag
+    removeTips (type) {
+      const index = indexOfObjWithSomeKey(this.alertTips, 'type', type)
+      index !== -1 && this.alertTips.splice(index, 1)
     }
     // 当表为屏蔽表且表关联关系为多对多时，不能作为维度添加到索引中
     getDisabledTableType (col) {
       if (!col) return false
-      const [currentTable] = col.fullName.split('.')
+      const [currentTable] = col.column.split('.')
       const { join_tables } = this.modelInstance
       const manyToManyTables = join_tables.filter(it => it.join_relation_type === 'MANY_TO_MANY').map(item => item.alias)
       return manyToManyTables.includes(currentTable) && this.isExistExcludeTable(col)
@@ -219,52 +203,43 @@
     isExistExcludeTable (col) {
       return typeof col.excluded !== 'undefined' ? col.excluded : false
     }
-    get filterResult () {
-      if (!this.isShow) {
-        return []
-      }
-      return this.allColumns.filter((col) => {
-        if (this.displayExcludedTables) {
-          return !this.searchColumn || col.fullName.toUpperCase().indexOf(this.searchColumn.toUpperCase()) >= 0
-        } else {
-          return (!this.searchColumn || col.fullName.toUpperCase().indexOf(this.searchColumn.toUpperCase()) >= 0) && !this.isExistExcludeTable(col)
+    initColumns () {
+      this.allColumns = this.modelInstance.selected_columns.filter(col => !this.displayExcludedTables && !this.isExistExcludeTable(col) || this.displayExcludedTables).map((col) => {
+        const isShardby = this.tableIndexMeta.shard_by_columns.indexOf(col.column) >= 0
+        const disabled = this.getDisabledTableType(col)
+        const isSelected = this.tableIndexMeta.col_order.indexOf(col.column) >= 0
+        if (disabled) {
+          this.alertTips = [{ text: this.$t('manyToManyAntiTableTip'), type: 'warning' }]
         }
+        return { key: col.id, label: col.column, name: col.name, disabled: disabled, cardinality: col.cardinality, type: col.type, comment: col.comment, excluded: typeof col.excluded !== 'undefined' ? col.excluded : true, selected: isSelected, isShared: isShardby }
       })
+      this.selectedColumns = this.tableIndexMeta.col_order.map(item => {
+        const index = this.allColumns.findIndex(it => it.label === item)
+        return this.allColumns[index].key
+      })
+      setTimeout(() => {
+        this.isShowHelp = this.isShowHelpDefault
+      }, 200)
     }
-    get searchAllColumns () {
-      if (!this.isShow) {
-        return []
-      }
-      return this.filterResult.slice(0, this.pagerSize * this.currentPager)
-    }
-    getAllColumns () {
-      this.allColumns = []
-      let result = this.modelInstance.selected_columns.map((c) => {
-        return { fullName: c.column, cardinality: c.cardinality, excluded: typeof c.excluded !== 'undefined' ? c.excluded : true }
-      })
-      if (this.tableIndexMeta.col_order.length) {
-        const selected = this.tableIndexMeta.col_order.map(item => {
-          const index = result.findIndex(it => it.fullName === item)
-          return {fullName: item, cardinality: result[index].cardinality, excluded: result[index].excluded}
-        })
-        const unSort = result.filter(item => !this.tableIndexMeta.col_order.includes(item.fullName))
-        result = [...selected, ...unSort]
-      }
-      result.forEach((ctx, index) => {
-        let obj = {fullName: ctx.fullName, cardinality: ctx.cardinality, excluded: ctx.excluded, isUsed: false, isShared: false, colorful: false}
-        if (this.tableIndexMeta.col_order.indexOf(ctx.fullName) >= 0) {
-          obj.isUsed = true
+    isShowExcludedTablesCols () {
+      this.allColumns = this.modelInstance.selected_columns.filter(col => !this.displayExcludedTables && !this.isExistExcludeTable(col) || this.displayExcludedTables).map((col) => {
+        const isShardby = this.tableIndexMeta.shard_by_columns.indexOf(col.column) >= 0
+        const disabled = this.getDisabledTableType(col)
+        if (disabled) {
+          this.alertTips = [{ text: this.$t('manyToManyAntiTableTip'), type: 'warning' }]
         }
-        if (this.tableIndexMeta.shard_by_columns.indexOf(ctx.fullName) >= 0) {
-          obj.isShared = true
-        }
-        this.allColumns.push(obj)
+        return { key: col.id, label: col.column, name: col.name, disabled: disabled, cardinality: col.cardinality, type: col.type, comment: col.comment, excluded: typeof col.excluded !== 'undefined' ? col.excluded : true, selected: false, isShared: isShardby }
       })
-      // 初始判断是否为全选状态
-      this.isSelectAllTableIndex = this.allColumns.length && this.allColumns.filter(it => it.isUsed).length === this.allColumns.length
+      if (!this.displayExcludedTables) {
+        this.removeTips('warning')
+      }
+      this.selectedColumns = this.tableIndexMeta.col_order.map(item => {
+        const index = this.allColumns.findIndex(it => it.label === item)
+        return this.allColumns[index].key
+      })
     }
     get saveBtnDisable () {
-      return filterObjectArray(this.allColumns, 'isUsed', true).length === 0 || this.cloneMeta === JSON.stringify(this.allColumns)
+      return this.cloneMeta === JSON.stringify(this.selectedColumns)
     }
     @Watch('isShow')
     initTableIndex (val) {
@@ -278,42 +253,17 @@
           }
           Object.assign(this.tableIndexMeta, this.tableIndexDesc)
         }
-        this.getAllColumns()
-        this.cloneMeta = JSON.stringify(this.allColumns)
+        this.initColumns()
+        this.cloneMeta = JSON.stringify(this.selectedColumns)
       } else {
         this.tableIndexMeta = JSON.parse(this.tableIndexMetaStr)
       }
     }
-    pagerChange (pager) {
-      this.pager = pager
-    }
-    checkName (rule, value, callback) {
-      if (!NamedRegex.test(value)) {
-        callback(new Error(this.$t('kylinLang.common.nameFormatValidTip')))
-      } else {
-        callback()
-      }
-    }
-    clearAll () {
-      this.allColumns.forEach((col) => {
-        col.isUsed = false
-        col.isShared = false
-      })
-    }
-    changeTableIndexType () {
-      this.isSelectAllTableIndex = false
-      this.clearAll()
-    }
-    selectAll () {
-      this.allColumns.forEach((col) => {
-        col.isUsed = true
-      })
-    }
     closeModal (isSubmit) {
       this.hideModal()
       this.btnLoading = false
-      this.searchColumn = ''
-      this.isSelectAllTableIndex = false
+      this.displayExcludedTables = false
+      this.alertTips = []
       setTimeout(() => {
         this.callback && this.callback({
           isSubmit: isSubmit
@@ -360,12 +310,14 @@
         allColumns: this.allColumns,
         model: this.modelInstance
       })
-      this.allColumns.forEach((col) => {
-        if (selectedColumns.includes(col.fullName)) {
-          col.isUsed = true
+      selectedColumns.forEach((col) => {
+        const index = indexOfObjWithSomeKey(this.allColumns, 'label', col)
+        if (index !== -1) {
+          const selectedIndex = this.selectedColumns.indexOf(this.allColumns[index].key)
+          selectedIndex === -1 && this.selectedColumns.push(this.allColumns[index].key)
         }
       })
-      this.selectTableIndex()
+      this.setSelectedColumns(this.selectedColumns)
     }
     confirmSubmit (isLoadData) {
       this.isLoadDataLoading = isLoadData
@@ -388,21 +340,12 @@
       }
       let errorCb = (res) => {
         this.btnLoading = false
-        handleError(res)
+        // handleError(res)
+        this.removeTips('error')
+        this.alertTips.push({ text: res.body.msg, type: 'error' })
       }
-      // 按照sort选中列的顺序对col_order进行重新排序
-      this.tableIndexMeta.col_order = []
-      this.tableIndexMeta.shard_by_columns = []
-      this.allColumns.forEach((col) => {
-        if (col.isUsed) {
-          this.tableIndexMeta.col_order.push(col.fullName)
-        }
-        if (col.isShared) {
-          this.tableIndexMeta.shard_by_columns.push(col.fullName)
-        }
-      })
       this.tableIndexMeta.project = this.currentSelectedProject
-      this.tableIndexMeta.model_id = this.modelInstance.uuid
+      this.tableIndexMeta.model_id = this.isHybridBatch ? this.modelInstance.batch_id : this.modelInstance.uuid
       'name' in this.tableIndexMeta && delete this.tableIndexMeta.name
       if (this.tableIndexMeta.id) {
         this.editTableIndex({...this.tableIndexMeta, index_range: this.tableIndexMeta.index_range || 'EMPTY'}).then(successCb, errorCb)
@@ -411,6 +354,10 @@
       }
     }
     async submit (isLoadData) {
+      if (this.modelInstance.model_type === 'HYBRID' && !this.tableIndexMeta.index_range) {
+        this.indexRangeReqiured = true
+        return
+      }
       const { status } = this.tableIndexDesc || {}
       // 该字段只有在保存并构建时才会用到，纯流模型是屏蔽保存并构建的
       const isHaveBatchSegment = this.modelInstance.model_type === 'HYBRID' ? this.modelInstance.batch_segments.length > 0 : this.modelInstance.segments.length > 0
@@ -419,36 +366,20 @@
         this.tableIndexMeta.load_data = isLoadData
       }
       if (status && status !== 'EMPTY' && status === 'ONLINE') {
-        kylinConfirm(this.$t('cofirmEditTableIndex'), {cancelButtonText: this.$t('kylinLang.common.cancel'), confirmButtonText: this.$t('kylinLang.common.submit'), type: 'warning'}).then(() => {
+        kapConfirm(this.$t('cofirmEditTableIndex'), {cancelButtonText: this.$t('kylinLang.common.cancel'), confirmButtonText: this.$t('kylinLang.common.submit'), type: 'warning'}).then(() => {
           this.confirmSubmit(isLoadData)
         })
       } else {
         this.confirmSubmit(isLoadData)
       }
     }
-    selectAllTableIndex (v) {
-      this.isSelectAllTableIndex = v
-      this.allColumns.forEach(item => {
-        if (v && this.getDisabledTableType(item)) return
-        item.isUsed = v
-        if (!v) {
-          item.isShared = v
-        }
-      })
-    }
-    selectTableIndex (status, col) {
-      const selectedColumns = this.getSelectedColumns
-      const unSelected = this.allColumns.filter(it => !it.isUsed)
-      if (!status) { // 如果取消选择，isSorted重置成false
-        col.isShared = status
-      }
-      this.allColumns = [...selectedColumns, ...unSelected]
-      selectedColumns.length === this.allColumns.length && (this.isSelectAllTableIndex = true)
-      unSelected.length === this.allColumns.length && (this.isSelectAllTableIndex = false)
-    }
     // 跳转至job页面
     jumpToJobs () {
-      this.$router.push('/monitor/job')
+      if (getQueryString('from') === 'cloud' || getQueryString('from') === 'iframe') {
+        postCloudUrlMessage(this.$route, { name: 'kapJob' })
+      } else {
+        this.$router.push('/monitor/job')
+      }
     }
   }
 </script>
@@ -457,6 +388,9 @@
   .table-edit-dialog {
     .el-dialog {
       min-width: 600px;
+      .exclude-checkbox {
+        margin: 6px 8px;
+      }
       .header {
         text-align: right;
         .el-alert--nobg {
@@ -598,6 +532,60 @@
         right: 10px;
         line-height: 32px;
       }
+    }
+  }
+  .table-index-help {
+    position: relative;
+    font-size: 12px;
+    color: @text-normal-color;
+    .el-ksd-n-icon-close-L-outlined {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      cursor: pointer;
+    }
+    .el-popover__title {
+      color: @text-normal-color;
+      font-weight: @font-medium;
+    }
+    .sugession-blocks {
+      margin-bottom: 32px;
+      p {
+        display: flex;
+        align-items: flex-start;
+        .sugession {
+          margin-left: 8px;
+          line-height: 18px;
+        }
+        .tips {
+          color: @text-disabled-color;
+          display: block;
+          margin-top: 4px;
+        }
+      }
+    }
+    .footer {
+      height: 32px;
+      line-height: 32px;
+      text-align: right;
+      background-color: @ke-background-color-secondary;
+      position: absolute;
+      bottom: 0px;
+      left: 0px;
+      width: 100%;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+      border-top: 1px solid @ke-border-secondary;
+      color: @text-placeholder-color;
+      a {
+        color: @text-normal-color;
+        &:hover {
+          color: @ke-color-primary;
+        }
+      }
+    }
+    &.el-popper[x-placement^=top] .popper__arrow::after {
+      border-top-color: @ke-background-color-secondary;
     }
   }
 </style>

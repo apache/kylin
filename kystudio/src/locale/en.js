@@ -181,6 +181,7 @@ exports.default = {
     readedAll: 'Readed All',
     removeAll: 'Remove All Readed',
     clearAll: 'Clear All',
+    selectAll: 'Select All',
     remove: 'Remove',
     import: 'Import',
     back: 'Back',

@@ -35,6 +35,7 @@
     "nvd3": "1.8.4",
     "smooth-scrollbar": "7.4.0",
     "sql-formatter": "8.2.0",
+    "sortablejs": "1.15.0",
     "uuid": "8.3.2",
     "vue": "2.5.2",
     "vue-clipboard2": "0.0.6",
