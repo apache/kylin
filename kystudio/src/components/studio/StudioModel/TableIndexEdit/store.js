@@ -14,7 +14,8 @@ const initialState = JSON.stringify({
     data: {
       modelInstance: null,
       tableIndexDesc: null,
-      indexUpdateEnabled: true
+      indexUpdateEnabled: true,
+      isShowHelp: false
     }
   },
   callback: null

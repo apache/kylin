@@ -170,7 +170,8 @@ export default class TableIndexView extends Vue {
     const { isSubmit } = await this.showTableIndexEditModal({
       modelInstance: this.modelInstance,
       tableIndexDesc: indexDesc || {name: 'TableIndex_1'},
-      indexUpdateEnabled: this.indexUpdateEnabled
+      indexUpdateEnabled: this.indexUpdateEnabled,
+      isShowHelp: this.indexDatas.length === 0
     })
     isSubmit && this.loadTableIndices()
     isSubmit && this.$emit('refreshModel')
