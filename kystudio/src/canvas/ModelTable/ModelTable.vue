@@ -3,7 +3,7 @@
     <TableHeader
       :width="width"
       :table-alias="table.alias"
-      :is-fact-table="table.type === 'FACT'"
+      :is-fact-table="table.kind === 'FACT'"
     />
   </v-group>
 </template>

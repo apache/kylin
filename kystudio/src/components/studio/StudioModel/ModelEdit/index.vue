@@ -464,7 +464,7 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import locales from './locales'
 import DataSourceBar from '../../../common/DataSourceBar'
 import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from '../../../../util/business'
-import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey, debounceEvent } from '../../../../util'
+import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey } from '../../../../util'
 import $ from 'jquery'
 import DimensionModal from '../DimensionsModal/index.vue'
 import BatchMeasureModal from '../BatchMeasureModal/index.vue'
@@ -2223,6 +2223,9 @@ export default class ModelEdit extends Vue {
     const modelTableBoxBorder = +window.getComputedStyle(modelTableTitle)['borderWidth'].replace(/px/, '')
     for (let item in this.modelRender.tables) {
       const { drawSize } = this.modelRender.tables[item]
+      if (drawSize.height > modelRenderConfig.tableBoxHeight * 2) {
+        this.handleScrollBottom(this.modelRender.tables[item])
+      }
       if (drawSize.height === modelTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
         this.modelRender.tables[item].spreadOut = false
         this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
@@ -2245,11 +2248,6 @@ export default class ModelEdit extends Vue {
   async checkInvalidIndex () {
     if (this.extraoption.action === 'edit') {
       const res = await this.modelInstance.generateMetadata(true)
-      // const _data = {
-      //   project: this.currentSelectedProject,
-      //   model_id: res.uuid,
-      //   join_tables: res.join_tables
-      // }
       const response = await this.invalidIndexes(res)
       const result = await handleSuccessAsync(response)
       const { computed_columns, anti_flatten_lookups } = result

@@ -19,6 +19,7 @@ class NTable {
     this.getOtherTableByGuid = options.getTableByGuid
     this.kind = options.kind ? options.kind : options.fact ? modelRenderConfig.tableKind.fact : modelRenderConfig.tableKind.lookup // table 类型
     this.joinInfo = {} // 链接对象
+    this.join = options.join // ER 图传进来的join
     this.guid = options.guid || sampleGuid() // identify id
     this.alias = options.alias || options.table // 别名
     this.source_type = options.source_type

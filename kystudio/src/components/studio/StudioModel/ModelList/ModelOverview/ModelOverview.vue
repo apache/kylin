@@ -1,13 +1,13 @@
 <template>
   <el-tabs :class="['model-overview', {'er-overview': activeTab === 'erDiagram'}]" v-model="activeTab" v-if="model">
-    <el-tab-pane :label="$t('erDiagram')" name="erDiagram">
-      <ModelERDiagram ref="$er-diagram" :model="model" />
-    </el-tab-pane>
     <el-tab-pane :label="$t('dimension')" name="dimension">
-      <ModelDimensionList :model="model" />
+      <ModelDimensionList :model="model"  v-if="activeTab === 'dimension'"  />
     </el-tab-pane>
     <el-tab-pane :label="$t('measure')" name="measure">
-      <ModelMeasureList :model="model" />
+      <ModelMeasureList :model="model" v-if="activeTab === 'measure'" />
+    </el-tab-pane>
+    <el-tab-pane :label="$t('erDiagram')" name="erDiagram">
+      <ModelERDiagram ref="$er-diagram" :model="model" v-if="activeTab === 'erDiagram'" />
     </el-tab-pane>
   </el-tabs>
 </template>
@@ -32,7 +32,7 @@ import ModelMeasureList from '../../../../common/ModelMeasureList/ModelMeasureLi
   locales
 })
 export default class ModelOverview extends Vue {
-  activeTab = 'erDiagram'
+  activeTab = 'dimension'
   modelData = null
 
   // 此处有待调查：为何删除模型的瞬间，会造成模型object变化？

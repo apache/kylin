@@ -2,11 +2,11 @@
   <div :class="['model-er-diagram', {'is-full-screen': isFullScreen}]" v-drag="{sizeChangeCb:dragBox}" v-loading="loadingER">
     <el-alert class="alertChangeER" :title="$t('changeERTips')" type="warning" show-icon :closable="false" v-if="changeER && showChangeAlert"></el-alert>
     <div class="er-layout" ref="el-draw-layout" v-if="currentModel" :style="getErLayoutStyle">
-      <div :class="['table-box', {'is-lookup': t.type !== 'FACT'}]" :id="t.guid" v-for="t in currentModel.tables" :key="t.guid" :style="getTableStyles(t)">
+      <div :class="['table-box', {'is-lookup': t.kind !== 'FACT'}]" :id="t.guid" v-for="t in modelData.tables" :key="t.guid" :style="getTableStyles(t)">
         <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" @dblclick="handleDBClick(t)">
           <span class="table-sign">
-            <el-tooltip :content="$t(t.type)" placement="top">
-              <i class="el-ksd-n-icon-symbol-f-filled kind" v-if="t.type === 'FACT'"></i>
+            <el-tooltip :content="$t(t.kind)" placement="top">
+              <i class="el-ksd-n-icon-symbol-f-filled kind" v-if="t.kind === 'FACT'"></i>
               <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
             </el-tooltip>
           </span>
@@ -25,6 +25,7 @@
               :key="col.id"
               :id="`${t.guid}_${col.name}`"
               :class="{'is-pfk': isPFK(col.name, t).isPK || isPFK(col.name, t).isFK}"
+              v-scroll.observe.reactive @scroll-bottom="handleScrollBottom(t)"
               @mouseleave="(e) => handleMouseLeave(e, t, col)"
               @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
             >
@@ -35,6 +36,7 @@
                 <span :class="['col-name', {'is-link': col.isPFK}]" v-custom-tooltip="{text: col.name, w: 30, effect: 'dark', 'popper-class': 'popper--small', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{col.name}}</span>
               </span>
             </li>
+            <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd && !showOnlyConnectedColumn"><i class="el-ksd-icon-loading_16"></i></li>
           </ul>
         </div>
       </div>
@@ -135,7 +137,17 @@ export default class ModelERDiagram extends Vue {
     return table.spreadOut ? table.columns.length > num ? `${num}` :`${table.columns.length}` : ''
   }
   getColumns (t) {
-    return this.showOnlyConnectedColumn ? t.columns.filter(it => this.isPFK(it.name, t).isPK || this.isPFK(it.name, t).isFK) : t.columns
+    return this.showOnlyConnectedColumn ? t.showColumns.filter(it => this.isPFK(it.name, t).isPK || this.isPFK(it.name, t).isFK) : t.showColumns
+  }
+  // 滚动加载 columns
+  handleScrollBottom (table) {
+    if (table.hasMoreColumns) {
+      table.hasScrollEnd = true
+      setTimeout(() => {
+        table.loadMoreColumns()
+        table.hasScrollEnd = false
+      }, 300)
+    }
   }
   async created () {
     this.loadingER = true
@@ -333,9 +345,12 @@ export default class ModelERDiagram extends Vue {
   exchangeTableData () {
     const currentTableTitle = this.$el.querySelector('.table-title')
     const modelTableBoxBorder = +window.getComputedStyle(currentTableTitle)['borderWidth'].replace(/px/, '')
-    for (let item in this.currentModel.tables) {
-      const t = this.currentModel.tables[item]
+    for (let item in this.modelData.tables) {
+      const t = this.modelData.tables[item]
       const canvasHeight = this.currentModel.canvas.coordinate[`${t.alias}`].height
+      if (canvasHeight > modelRenderConfig.tableBoxHeight * 2) {
+        this.handleScrollBottom(t)
+      }
       if (canvasHeight === currentTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
         this.$set(t, 'spreadOut', false)
         this.$set(t, 'spreadHeight', modelRenderConfig.tableBoxHeight)
@@ -371,7 +386,7 @@ export default class ModelERDiagram extends Vue {
   exchangePosition () {
     if (this.source === 'modelList') {
       if (!(this.currentModel && this.currentModel.tables)) return
-      const [factTable] = this.currentModel.tables.filter(it => it.type === 'FACT')
+      const [factTable] = this.currentModel.tables.filter(it => it.kind === 'FACT')
       const factGuid = factTable.guid
       document.getElementById(factGuid).scrollIntoView()
     }
@@ -572,6 +587,13 @@ export default class ModelERDiagram extends Vue {
             &:hover {
               background-color: @warning-color-3;
             }
+          }
+          &.li-load-more {
+            text-align:center;
+            cursor:pointer;
+            font-size: 12px;
+            color: @text-disabled-color;
+            border-bottom:none;
           }
         }
       }

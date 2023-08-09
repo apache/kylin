@@ -99,7 +99,7 @@ function autoCalcLayer (tables, model) {
     height: 230,
     width: 200
   }
-  const [factTable] = tables.filter(it => it.type === 'FACT')
+  const [factTable] = tables.filter(it => it.kind === 'FACT')
   if (!factTable) {
     return
   }

@@ -1,3 +1,4 @@
+import NTable from '../components/studio/StudioModel/ModelEdit/table'
 import { sampleGuid } from './index'
 /**
  * 找出lookup表的主键表和外键表
@@ -48,15 +49,24 @@ function getTablesData (modelData) {
     // 所有表集合 = 事实表 + 维度表
     const allTablesInfo = [factInfo, ...lookupsInfo]
     // 将simplified_tables和table_info组合，成为table data列表
-    tablesData = allTablesInfo.map(tableInfo => ({
-      guid: sampleGuid(),
-      ...tableInfo,
-      ...tableColumnDataMap[tableInfo.table]
-    }))
+    tablesData = allTablesInfo.map(tableInfo => {
+      const option = {
+        guid: sampleGuid(),
+        ...tableInfo,
+        ...tableColumnDataMap[tableInfo.table]
+      }
+      option.computed_columns = option.columns.filter((col) => {
+        return col.is_computed_column
+      }).map(c => ({
+        ...c,
+        tableAlias: factAlias,
+        columnName: c.name
+      }))
+      return new NTable(option)
+    })
   } catch (e) {
     console.warn(e)
   }
-
   return tablesData
 }
 
@@ -118,7 +128,7 @@ export function getColumnNameMap (tablesData) {
 
   for (const tableData of tablesData) {
     const tableAlias = tableData.alias
-    for (const column of tableData.columns) {
+    for (const column of tableData.all_columns) {
       columnNameMap[`${tableAlias}.${column.name}`] = column
     }
   }
@@ -151,13 +161,7 @@ export function generateModel (modelData) {
     guid: modelData.uuid,
     name: modelData.name,
     alias: modelData.alias,
-    tables: tablesData.map(tableData => ({
-      guid: tableData.guid,
-      name: tableData.table,
-      alias: tableData.alias,
-      type: tableData.kind,
-      spreadOut: true
-    })),
+    tables: tablesData,
     dimensions: dimensionsData.map(dimensionData => ({
       guid: dimensionData.guid,
       name: dimensionData.name,
