@@ -269,7 +269,7 @@ export default class TreeList extends Vue {
       case 'isMore':
         if (data.text === 'columns') {
           data.parent.child_options.page_offset += 1
-          'childContent' in data.parent && (data.parent.children = data.parent.childContent.slice(0, data.parent.child_options.page_offset * data.parent.child_options.page_size - 1))
+          'childContent' in data.parent && (data.parent.children = data.parent.childContent.slice(0, data.parent.child_options.page_offset * data.parent.child_options.page_size))
           data.parent.isMore = data.parent.child_options.page_offset * data.parent.child_options.page_size < data.parent.childContent.length
         } else if (!data.parent.isLoading) {
           data.parent.isLoading = true
