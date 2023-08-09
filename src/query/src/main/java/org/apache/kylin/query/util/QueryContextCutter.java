@@ -47,6 +47,15 @@ public class QueryContextCutter {
     }
 
     /**
+     * Analyze a RelNode tree to get olapContexts.
+     * @param root The root relNode of a query statement
+     */
+    public static void analyzeOlapContext(RelNode root) {
+        cutContext(new ContextInitialCutStrategy(), (KapRel) root.getInput(0), root);
+        fillOlapContextPropertiesWithRelTree(root);
+    }
+
+    /**
      * For each query parse tree, the following steps are used for generating OlapContexts 
      * and matching the precomputed indexes.
      * <p> 1. The larger the OlapContext for the first cut, the better;</p>
