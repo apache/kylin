@@ -182,7 +182,7 @@
   </template>
   <script>
   import { Component, Vue } from 'vue-property-decorator'
-  import { objectClone, indexOfObjWithSomeKey, kapConfirm } from 'util'
+  import { objectClone, indexOfObjWithSomeKey, kylinConfirm } from 'util'
   import Sortable, { AutoScroll } from 'sortablejs/modular/sortable.core.esm.js'
   import EmptyData from '../EmptyData/EmptyData'
   
@@ -497,7 +497,7 @@
           onEnd: async (e) => {
             if (this.selectedColumnSortByCardinality || this.selectedColumnSort) {
               try {
-                await kapConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
+                await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
               } catch (res) {
                 const items = this.$el.querySelectorAll('.drag-item')
                 this.$nextTick(() => {
@@ -617,7 +617,7 @@
   
     async handleSortSelectedCommand (sort) {
       if (this.hasDragSuccess) {
-        await kapConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
+        await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
       }
       this.selectedColumnSortByCardinality = ''
       this.selectedColumnSort = sort
@@ -627,7 +627,7 @@
   
     async handleSortCardinality (sort) {
       if (this.hasDragSuccess) {
-        await kapConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
+        await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
       }
       this.selectedColumnSort = ''
       this.selectedColumnSortByCardinality = sort
@@ -663,7 +663,7 @@
       e.preventDefault()
       if (this.selectedColumnSortByCardinality || this.selectedColumnSort) {
         try {
-          await kapConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
+          await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
         } catch (res) {
           return
         }

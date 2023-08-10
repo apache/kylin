@@ -97,7 +97,7 @@
   import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
   import vuex from '../../../../store'
   import { BuildIndexStatus } from 'config/model'
-  import { handleSuccess, kapConfirm, postCloudUrlMessage } from 'util/business'
+  import { handleSuccess, kylinConfirm, postCloudUrlMessage } from 'util/business'
   import { objectClone, getQueryString, indexOfObjWithSomeKey } from 'util/index'
   import TransferData from '../../../common/CustomTransferData/TransferData'
   import locales from './locales'
@@ -366,7 +366,7 @@
         this.tableIndexMeta.load_data = isLoadData
       }
       if (status && status !== 'EMPTY' && status === 'ONLINE') {
-        kapConfirm(this.$t('cofirmEditTableIndex'), {cancelButtonText: this.$t('kylinLang.common.cancel'), confirmButtonText: this.$t('kylinLang.common.submit'), type: 'warning'}).then(() => {
+        kylinConfirm(this.$t('cofirmEditTableIndex'), {cancelButtonText: this.$t('kylinLang.common.cancel'), confirmButtonText: this.$t('kylinLang.common.submit'), type: 'warning'}).then(() => {
           this.confirmSubmit(isLoadData)
         })
       } else {
