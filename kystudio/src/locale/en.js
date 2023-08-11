@@ -169,7 +169,7 @@ exports.default = {
     streamingConnectHiveError: 'Join hive table with streaming table is not supported.',
     seeDetail: 'Details',
     notConnectServer: 'Cannot connect the Kylin server. Please check your network or Kylin server status.',
-    notConnectServerIframe: 'Cannot connect the Kyligence server. Please check your network or Kyligence server status.',
+    notConnectServerIframe: 'Cannot connect the Kylin server. Please check your network or Kylin server status.',
     timeOut: 'Request timed out!',
     willClose: 'Are you sure you want to continue closing the window?',
     overwriteWarnTip: 'Current action will overwrite existed results, are you sure you want to continue?',
@@ -469,7 +469,7 @@ exports.default = {
     rangeInfoTip: 'The load range refers to the data from the start time(included) to end time(excluded).'
   },
   login: {
-    signIn: 'Kyligence Account | Sign In'
+    signIn: 'N/A'
   },
   menu: {
     studio: 'Data Asset',

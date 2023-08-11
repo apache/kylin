@@ -105,7 +105,7 @@ import { kylinConfirm, handleSuccess, handleError } from '../../util/business'
       htraceTips: 'Please make sure Zipkin server is properly deployed according to the manual of performance diagnose package.',
       queryError: 'The query fails.',
       queryTimeOut: 'The request timeout, please check the network situation and Kylin service instance status. If the resource group is turned on, please make sure that the project is bound to the query resource group and there are available query instances',
-      queryTimeOutInCloud: 'The request timeout, please check the network situation and Kyligence Engine service instance status.'
+      queryTimeOutInCloud: 'The request timeout, please check the network situation and Kylin 5 service instance status.'
     }
   }
 })

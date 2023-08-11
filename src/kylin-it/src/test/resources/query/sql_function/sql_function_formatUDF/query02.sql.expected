@@ -1,4 +1,3 @@
---https://github.com/Kyligence/KAP/issues/13612
 
 select date_format(CAL_DT,'y'),
        date_format(CAL_DT,'y'),

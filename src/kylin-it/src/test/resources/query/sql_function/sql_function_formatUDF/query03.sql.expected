@@ -1,4 +1,3 @@
---https://github.com/Kyligence/KAP/issues/13612
 
 --test date_format(timestamp,part)
 select date_format(TEST_TIME_ENC,'y'),

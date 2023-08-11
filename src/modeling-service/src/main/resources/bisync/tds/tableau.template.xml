@@ -20,7 +20,7 @@
     <connection class='federated'>
         <named-connections>
             <named-connection caption='' name='genericodbc.11du78x0szfyb51b703es1ocv315'>
-                <connection class='genericodbc' dbname='' odbc-connect-string-extras='' odbc-dbms-name='MySQL' odbc-driver='KyligenceODBCDriver' odbc-dsn='' odbc-suppress-connection-pooling='' odbc-use-connection-pooling='' port='7070' schema='DEFAULT' server='' username='ADMIN'>
+                <connection class='genericodbc' dbname='' odbc-connect-string-extras='' odbc-dbms-name='MySQL' odbc-driver='ODBCDriver' odbc-dsn='' odbc-suppress-connection-pooling='' odbc-use-connection-pooling='' port='7070' schema='DEFAULT' server='' username='ADMIN'>
                 </connection>
             </named-connection>
         </named-connections>

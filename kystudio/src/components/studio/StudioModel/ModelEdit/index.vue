@@ -2211,7 +2211,7 @@ export default class ModelEdit extends Vue {
     if (localStorage.getItem('isFirstAddModel') === 'true') {
       await this.showFistAddModelGuide()
     }
-    const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kyligence Enterprise (\d+.\d+.\d+.\d+)-\w+/)[1]
+    const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kylin 5 (\d+.\d+.\d+.\d+)-\w+/)[1]
     if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160) && localStorage.getItem('isFirstAddModel') === 'false') {
       await this.showUpdateGuide()
     }
@@ -2531,7 +2531,7 @@ export default class ModelEdit extends Vue {
         color: @ke-color-primary;
       }
     }
-    
+
   }
   .join-type-hide {
     display: none;
@@ -2782,7 +2782,7 @@ export default class ModelEdit extends Vue {
     right: 20px;
     bottom: 20px;
   }
-  
+
   .panel-box{
     box-shadow: 0 2px 4px 0 @color-text-placeholder;
     position:relative;
@@ -3107,7 +3107,7 @@ export default class ModelEdit extends Vue {
         background: @grey-2;
       }
     }
-    
+
     .search-action-result {
       width:620px;
       // margin: 0 auto;
@@ -3448,7 +3448,7 @@ export default class ModelEdit extends Vue {
         cursor: default;
       }
       ul {
-        li {       
+        li {
           padding-left: 5px;
           cursor: move;
           border-top: solid 2px transparent;

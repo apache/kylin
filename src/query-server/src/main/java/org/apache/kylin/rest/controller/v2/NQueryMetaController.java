@@ -35,10 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.ApiOperation;
 
 /**
- * Backward capable API for KyligenceODBC: /kylin/api/tables_and_columns
- *
- * Ref(KE 3.x): org.apache.kylin.rest.controller.QueryController.getMetadata(MetaRequest)
- *
+ * Backward capable API for : /kylin/api/tables_and_columns
+ **
  * TODO ODBC should support Newten API: /kylin/api/query/tables_and_columns
  *
  * @author yifanzhang

@@ -1,3 +1,2 @@
--- https://github.com/Kyligence/KAP/issues/13613
 
 SELECT INITCAP('') FROM "TEST_KYLIN_FACT"

@@ -1,5 +1,4 @@
 
---disable reason: https://github.com/Kyligence/KAP/issues/14425
 select  --add_months(CAL_DT,2),
 	   count(distinct date_part('YEAR',CAL_DT)),
 	   count(distinct date_part('MONTH',CAL_DT)),

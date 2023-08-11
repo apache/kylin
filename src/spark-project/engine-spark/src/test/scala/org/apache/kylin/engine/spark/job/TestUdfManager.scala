@@ -35,7 +35,7 @@ class TestUdfManager extends SparderBaseFunSuite with SharedSparkSession with Be
   }
 
   // ignore for dev, if you want to run this case, modify udfCache maximum to Long.MaxValue
-  // and if (funcName == "TOP_N") to if (funcName.startsWith("TOP_N")) in io.kyligence.kap.engine.spark.job.UdfManager
+  // and if (funcName == "TOP_N") to if (funcName.startsWith("TOP_N")) in spark.job.UdfManager
   ignore("test register udf in multi-thread") {
     import functions.udf
     val testFunc = udf(() => "test")

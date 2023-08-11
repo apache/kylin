@@ -15,7 +15,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- ISSUE: https://github.com/Kyligence/KAP/issues/10038
 
 SELECT
         round(SUM({fn POWER({fn CONVERT(2, SQL_DOUBLE)}, item_count)}),-290)

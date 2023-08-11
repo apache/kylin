@@ -15,7 +15,12 @@
 # limitations under the License.
 #
 
-# Docker image for Kylin 5.X release
+# This is the Docker Image for Kylin 5 release process
+#
+# For what is release policy and release process, please refer to following link:
+# 1. https://www.apache.org/legal/release-policy.html
+# 2. https://infra.apache.org/release-publishing.html
+
 FROM openjdk:8-slim
 
 ENV M2_HOME /root/apache-maven-3.8.8

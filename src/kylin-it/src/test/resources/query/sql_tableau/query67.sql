@@ -23,5 +23,4 @@ FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
 group by (CASE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" WHEN 'Auction' THEN '111' ELSE '222' END)  ORDER BY 1 ASC
 -- below group by causes error because of CC replacement
 -- since (CASE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" WHEN 'Auction' THEN '111' ELSE '222' END) is replaced by CC col
--- see https://github.com/Kyligence/KAP/issues/14072
 -- GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME"  ORDER BY 1 ASC

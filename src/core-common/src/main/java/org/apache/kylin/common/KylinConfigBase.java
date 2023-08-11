@@ -311,7 +311,6 @@ public abstract class KylinConfigBase implements Serializable {
         setProperty("kylin.log.spark-driver-properties-file", getLogSparkDriverPropertiesFile());
         setProperty("kylin.log.spark-appmaster-properties-file", getLogSparkAppMasterPropertiesFile());
 
-        // https://github.com/kyligence/kap/issues/12654
         this.properties.put(WORKING_DIR_PROP,
                 makeQualified(new Path(this.properties.getProperty(WORKING_DIR_PROP, KYLIN_ROOT))).toString());
         if (this.properties.getProperty(DATA_WORKING_DIR_PROP) != null) {
