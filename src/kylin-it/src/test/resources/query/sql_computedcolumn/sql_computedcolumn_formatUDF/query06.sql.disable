@@ -1,5 +1,3 @@
-
---disable reason: https://github.com/Kyligence/KAP/issues/14426
 select count(distinct date_format(CAL_DT,'YEAR')),
        count(distinct date_format(CAL_DT,'y')),
 	   count(distinct date_format(CAL_DT,'Y')),

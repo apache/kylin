@@ -1,6 +1,4 @@
---https://github.com/kyligence/kap/issues/14155#
 
---disable reason: https://github.com/Kyligence/KAP/issues/14426
 --test count(date_format(timestamp,part)
 select count(date_format(TEST_TIME_ENC,'YEAR')),
        count(date_format(TEST_TIME_ENC,'Y')),

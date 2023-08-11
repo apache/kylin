@@ -20,10 +20,10 @@
 
 ## Basic Info
 export DRY_RUN=0 # use in maven-release-plugin
-export RELEASE_VERSION=5.0.0-alpha
-export NEXT_VERSION=5.0.0-beta
+export RELEASE_VERSION=
+export NEXT_VERSION=
 export GIT_BRANCH=kylin5
-export GIT_USERNAME=XiaoxiangYu
+export GIT_USERNAME=
 export RC_NAME=rc1
 # publish-rc / publish
 export RELEASE_STEP=publish-rc

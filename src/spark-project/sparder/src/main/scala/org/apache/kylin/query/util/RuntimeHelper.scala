@@ -141,7 +141,6 @@ object RuntimeHelper extends Logging {
           } else if (deriveMap.contains(index)) {
             deriveMap.apply(index)
           } else if (DataType.DATETIME_FAMILY.contains(column.getType.getName)) {
-            // https://github.com/Kyligence/KAP/issues/14561
             literalTs.as(s"${factTableName}_${columnName}")
           } else if (DataType.STRING_FAMILY.contains(column.getType.getName)) {
             literalString.as(s"${factTableName}_${columnName}")

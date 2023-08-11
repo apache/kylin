@@ -22,9 +22,9 @@ public class MsgPicker {
     private static ThreadLocal<Message> msg = new ThreadLocal<Message>();
 
     public static void setMsg(String lang) {
-        if ("cn".equals(lang))
-            msg.set(CnMessage.getInstance());
-        else
+        //if ("cn".equals(lang))
+            //msg.set(CnMessage.getInstance());
+        //else
             msg.set(Message.getInstance());
     }
 

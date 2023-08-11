@@ -20,4 +20,4 @@
 #  */
 #
 
-# Run release-publish.sh instead.
+# TODO:Run release-publish.sh instead.

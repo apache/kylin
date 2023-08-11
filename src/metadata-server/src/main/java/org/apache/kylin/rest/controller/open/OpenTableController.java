@@ -154,7 +154,7 @@ public class OpenTableController extends NBasicController {
         return tableController.loadTables(tableLoadRequest);
     }
 
-    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"KC"})
+    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"N/A"})
     @PostMapping(value = "/compatibility/aws")
     @ResponseBody
     public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(@RequestBody AWSTableLoadRequest tableLoadRequest)
@@ -223,7 +223,7 @@ public class OpenTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
 
-    @ApiOperation(value = "reloadAWSTablesCompatibleCrossAccount", tags = {"KC"})
+    @ApiOperation(value = "reloadAWSTablesCompatibleCrossAccount", tags = {"N/A"})
     @PostMapping(value = "/reload/compatibility/aws")
     @ResponseBody
     public EnvelopeResponse<OpenReloadTableResponse> reloadAWSTablesCompatibleCrossAccount(@RequestBody OpenReloadTableRequest request) {
@@ -279,7 +279,7 @@ public class OpenTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, dbTblName, "");
     }
 
-    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = {"KC" })
+    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = {"N/A" })
     @PutMapping(value = "/ext/prop/aws")
     @ResponseBody
     public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(@RequestBody UpdateAWSTableExtDescRequest request) {

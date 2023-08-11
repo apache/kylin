@@ -121,7 +121,7 @@ public class ImportModelContext implements AutoCloseable {
             importResourceStore.putResourceWithoutCheck(resPath, raw.getByteSource(), raw.getTimestamp(), 0);
         });
 
-        // put target project into importResourceStore in case of broken io.kyligence.kap.metadata.cube.model.IndexPlan.initConfig4IndexPlan
+        // put target project into importResourceStore in case of broken IndexPlan.initConfig4IndexPlan
         importResourceStore.checkAndPutResource(ProjectInstance.concatResourcePath(targetProject),
                 targetResourceStore.getResource(ProjectInstance.concatResourcePath(targetProject)).getByteSource(), -1);
 

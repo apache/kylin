@@ -296,7 +296,7 @@ public class SparkSourceService extends BasicService {
                     fileSystem.copyFromLocalFile(new Path(parquetFile.getAbsolutePath()), new Path(hdfsPath));
                 }
             }
-            // KC-6666, check and delete location
+            // N/A-6666, check and delete location
             String tbLocation = String.format(Locale.ROOT, "%s/%s", ss.catalog().getDatabase(db).locationUri(),
                     tableName);
             FileSystem fs = FileSystem.get(ss.sparkContext().hadoopConfiguration());

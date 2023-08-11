@@ -293,7 +293,7 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testLoadSamples() throws IOException, InterruptedException {
         Assert.assertEquals(8, sparkSourceService.loadSamples(ss, SaveMode.Overwrite).size());
-        // KC-6666, table not exists but table location exists
+        // N/A-6666, table not exists but table location exists
         // re-create spark context and re-load samples
         {
             ss.stop();

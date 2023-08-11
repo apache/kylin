@@ -140,7 +140,6 @@ public class NProjectLoader {
 
         // before parallel stream, should use outside KylinConfig.getInstanceFromEnv()
         // in case of load is executed in thread.
-        // eg. io.kyligence.kap.smart.query.AbstractQueryRunner.SUGGESTION_EXECUTOR_POOL
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         pi.getRealizationEntries().parallelStream().forEach(entry -> {
             IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());

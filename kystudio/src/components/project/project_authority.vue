@@ -208,12 +208,12 @@ import userAccess from './user_access'
       deleteAccessTitle: 'Delete Authorization',
       authorTips: 'Can\'t add System Admin to the list, as this role already has full access to all projects.',
       authorTips1: 'By default, the added user/user group would be granted full access to all the tables in the project.',
-      authorTips2: `<div class="ksd-mb-8">What roles does Kyligence Enterprise provide?</div>
+      authorTips2: `<div class="ksd-mb-8">What roles does Kylin 5 provide?</div>
       <p><span>Project Admin</span><span>For the project admin who needs all permission and could manage and maintain this project, including loading tables, authorizing user access permission, etc.</span></p>
       <p><span>Management</span><span>For the model designer who needs permission to load tables, design models and indexes, build indexes and monitor job status.</span></p>
       <p><span>Operation</span><span>For the operator who needs permission to build indexes and monitor job status.</span></p>
       <p><span>Query</span><span>For the business analyst who needs permission to query tables or indexes.</span></p>`,
-      authorTips3: `<div class="ksd-mb-8">What roles does Kyligence Enterprise provide?</div>
+      authorTips3: `<div class="ksd-mb-8">What roles does Kylin 5 provide?</div>
       <p><span>Project Admin</span><span>For the project admin who needs all permission and could manage and maintain this project, including loading tables, authorizing user access permission, etc.</span></p>
       <p><span>Management</span><span>For the model designer who needs permission to load tables, design models and indexes, build indexes and monitor job status.</span></p>
       <p><span>Operation</span><span>For the operator who needs permission to design indexes, build indexes and monitor job status.</span></p>

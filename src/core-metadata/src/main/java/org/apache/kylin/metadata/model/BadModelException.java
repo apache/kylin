@@ -33,7 +33,7 @@ public class BadModelException extends KylinException {
         SAME_EXPR_DIFF_NAME, // another model already has defined same expr but different cc name
         SELF_CONFLICT_WITH_SAME_NAME, // cc conflicts with self's other cc
         SELF_CONFLICT_WITH_SAME_EXPRESSION, // cc conflicts with self's other cc
-        LOOKUP_CC_NOT_REFERENCING_ITSELF // see io.kyligence.kap.metadata.model.KapModel.initComputedColumns()
+        LOOKUP_CC_NOT_REFERENCING_ITSELF
     }
 
     @JsonProperty

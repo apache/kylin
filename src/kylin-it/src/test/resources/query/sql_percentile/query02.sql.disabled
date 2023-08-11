@@ -16,7 +16,6 @@
 -- limitations under the License.
 --
 -- percentile's result is unstable, therefore round is added
--- Todo (unstable test) https://github.com/Kyligence/KAP/issues/10761
 select seller_id, round(percentile_approx(price, 0.5),0) from test_kylin_fact
 where seller_id is not null
 group by seller_id

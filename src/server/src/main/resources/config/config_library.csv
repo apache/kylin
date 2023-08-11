@@ -80,7 +80,7 @@ kylin.engine.global-dict-check-enabled,boolean,是否开启全局字典检查,Wh
 kylin.engine.index-column-flattable-enabled,boolean,是否开启平表中只包含索引列,Whether to open the flat watch contains only index columns,TRUE,TRUE
 kylin.engine.inferior-flattable-enabled,boolean,是否开启亚平表功能,Whether to enable inferior flat table,TRUE,TRUE
 kylin.engine.inferior-flattable-storage-level,String,亚平表数据的缓存级别,Storage level for inferior flat table,TRUE,TRUE
-kylin.engine.log.local-working-directory,String,KC 环境中，日志的工作路径,"In the KC environment, the working path of the log",TRUE,TRUE
+kylin.engine.log.local-working-directory,String,N/A 环境中，日志的工作路径,"In the N/A environment, the working path of the log",TRUE,TRUE
 kylin.engine.lookup-table-default-count-value,Long,维度表的默认行数,Default number of the dimension table,TRUE,TRUE
 kylin.engine.max-allocation-proportion,Double,yarn集群队列中的内存最大使用比例,Maximum use ratio in the Yarn cluster queue,TRUE,TRUE
 kylin.engine.max-retry-time,Int,spark构建作业的重试次数,SPARK to construct homework renewal times,TRUE,TRUE
@@ -110,7 +110,7 @@ kylin.engine.spark.sampling-class-name,String,spark抽样作业实现类,SPARK s
 kylin.engine.spark.snapshot-build-class-name,String,构建 snapshot job 的类名,Build the name of Snapshot Job,TRUE,TRUE
 kylin.engine.spark.task-core-factor,Int,多少 spark 任务使用一个 core,How many spark tasks use a core,TRUE,TRUE
 kylin.engine.spark.task-impact-instance-enabled,boolean,spark 构建作业是否根据任务数量来计算core数量,Whether spark builds a job based on the number of tasks calculates the number of cores,TRUE,TRUE
-kylin.engine.steps.skip,String,值为`org.apache.kylin.engine.spark.job.NResourceDetectStep` 时代表关闭资源探测，KC 如果配置此值将无法自动伸缩构建节点，所以建议永远不要配置,"The value is `IO. Kyligence.kap.engine.Spark.job.nRsourceDeteCTStep` Anti -resource detection. If you configure this value, it will not be automatically expanded to build nodes, so it is recommended not to configure the configuration.",TRUE,TRUE
+kylin.engine.steps.skip,String,值为`org.apache.kylin.engine.spark.job.NResourceDetectStep` 时代表关闭资源探测，N/A 如果配置此值将无法自动伸缩构建节点，所以建议永远不要配置,"The value is `.kap.engine.Spark.job.nRsourceDeteCTStep` Anti -resource detection. If you configure this value, it will not be automatically expanded to build nodes, so it is recommended not to configure the configuration.",TRUE,TRUE
 kylin.engine.streaming-base-ckeckpoint-location,String,实时OLAP构建作业的check point目录,Real -time OLAP CHCK POINT directory that builds homework,TRUE,TRUE
 kylin.engine.streaming-duration,Long,实时OLAP构建定时触发，单位毫秒,"Real -time OLAP builds regular triggers, the unit milliseconds",TRUE,TRUE
 kylin.engine.streaming-metrics-enabled,boolean,实时OLAP构建监控是否开启,Real -time OLAP Construction Monitoring Whether it is turned on,TRUE,TRUE
@@ -233,8 +233,8 @@ kylin.kerberos.principal,String,kerberos prncipal配置,Kerberos PRNCIPAL config
 kylin.kerberos.project-level-enabled,boolean,项目级kerberous配置开关,Project -level Kerberous configuration switch,TRUE,TRUE
 kylin.kerberos.ticket-refresh-interval-minutes,Long,zk Kerberos ticket更新周期,ZK KERBEROS TICKET update cycle,TRUE,TRUE
 kylin.kerberos.zookeeper-server-principal,String,zk Kerberos principal,zk Kerberos principal,TRUE,TRUE
-kylin.lightning.cluster-id,Long,KC 环境中，集群 id,"In the KC environment, cluster ID",TRUE,TRUE
-kylin.lightning.server.zookeeper-node,String,KC环境中，zookeeper 的路径,"In the KC environment, the path of zookeeper",TRUE,TRUE
+kylin.lightning.cluster-id,Long,N/A 环境中，集群 id,"In the N/A environment, cluster ID",TRUE,TRUE
+kylin.lightning.server.zookeeper-node,String,KC环境中，zookeeper 的路径,"In the N/A environment, the path of zookeeper",TRUE,TRUE
 kylin.metadata.audit-log.batch-size,Int,读取audit log批次大小,Read the Audit Log batch size,TRUE,TRUE
 kylin.metadata.audit-log.batch-timeout,String,审计日志执行 sql 的超时时间,The audit log executes the timeout of SQL,TRUE,TRUE
 kylin.metadata.audit-log.catchup-interval,String,audit log同步频率,Audit log synchronous frequency,TRUE,TRUE
@@ -558,8 +558,8 @@ kylin.engine.snapshot.specified-spark-conf-enabled,boolean,默认关闭，开启
 kylin.source.hive.support-special-symbol-in-hive-column,boolean,默认关闭，开启后支持hive列包含特殊字符（#@-+等等），不开启只支持数值字符-,"Turn off by default. After opening, the HIVE column contains special characters (#@-+, etc.).",TRUE,TRUE
 kylin.streaming.job-meta-retained-time,String,默认2h，实时任务hdfs元数据的保留时间，超过则会被清理,"By default 2H, the retention time of real -time task HDFS metadata will be cleaned up if it exceeds",TRUE,TRUE
 kylin.streaming.meta-scheme,String,"可选""jdbc""，表示实时任务从jdbc读取还是从Hdfs读取元数据","Optional ""JDBC"", indicating that real -time tasks are read from JDBC or from HDFS read metadata",TRUE,TRUE
-kylin.engine.cluster-manager-health-check-max-times,Int,"KC 环境中, 轮询 spark master 的次数, 默认值: 10 , 10 表示10次轮询都无法连接spark master, 即达到 120s * 10 后停止任务, -1 表示不行进行检测, 一般情况下填写非零正整数用于调整轮询次数","In the KC environment, the number of times of inquiry spark master. Under normal circumstances, fill in the non -zero -conditioned integer to adjust the number of rim inquiries """,TRUE,TRUE
-kylin.engine.cluster-manager-heal-check-interval-second,Int,"KC 环境中, 构建任务 spark driver 轮询连接 spark master 的时间间隔, 默认值 120 : 120S轮训一次, 需与 kylin.engine.cluster-manager-health-check-max-times 搭配使用, 只允许填写非零正整数, 若数值过小, 会对 spark master 造成压力","In the KC environment, the time interval between the SPARK DRIVER rotation of the Spark Driver rotate the Spark Master. The default value is 120: 120s. It needs to be used with Kylin.engine.Cluster-HEALTH-Check-Max-Times. Positive integer, if the value is too small, it will put pressure on the spark master",TRUE,TRUE
+kylin.engine.cluster-manager-health-check-max-times,Int,"N/A 环境中, 轮询 spark master 的次数, 默认值: 10 , 10 表示10次轮询都无法连接spark master, 即达到 120s * 10 后停止任务, -1 表示不行进行检测, 一般情况下填写非零正整数用于调整轮询次数","In the N/A environment, the number of times of inquiry spark master. Under normal circumstances, fill in the non -zero -conditioned integer to adjust the number of rim inquiries """,TRUE,TRUE
+kylin.engine.cluster-manager-heal-check-interval-second,Int,"N/A 环境中, 构建任务 spark driver 轮询连接 spark master 的时间间隔, 默认值 120 : 120S轮训一次, 需与 kylin.engine.cluster-manager-health-check-max-times 搭配使用, 只允许填写非零正整数, 若数值过小, 会对 spark master 造成压力","In the N/A environment, the time interval between the SPARK DRIVER rotation of the Spark Driver rotate the Spark Master. The default value is 120: 120s. It needs to be used with Kylin.engine.Cluster-HEALTH-Check-Max-Times. Positive integer, if the value is too small, it will put pressure on the spark master",TRUE,TRUE
 kylin.env.log-rotate-check-cron,String,日志滚动的 cron 表达式,cron for log rotate,FALSE,TRUE
 kylin.env.log-rotate-enabled,boolean,是否开启日志滚动,whether to enable log rotate,FALSE,TRUE
 kylin.model.measure-name-check-enabled,boolean,是否校验度量名称,whether to validate measure's name,FALSE,TRUE

@@ -2,7 +2,7 @@
   <div>
     <el-alert show-icon :closable="false" :show-background="false" type="info" class="download-tips">
       <span slot="title">{{$t('outputTips')}}<el-button size="mini" nobg-text @click="downloadLogs">{{$t('download')}}</el-button>{{$t('end')}}</span>
-      <!-- 只在 KC 中使用 -->
+      <!-- 只在 N/A 中使用 -->
     </el-alert>
     <!-- <el-alert show-icon :show-background="false" type="info" class="download-tips" v-else>
       <span slot="title">{{$t('outputTipsKC')}}</span>

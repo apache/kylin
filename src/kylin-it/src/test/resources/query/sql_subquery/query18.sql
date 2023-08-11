@@ -13,7 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- related issue https://github.com/Kyligence/KAP/issues/4286#issuecomment-377104695
 
 
 select test_kylin_fact.lstg_format_name, sum(test_kylin_fact.price) as GMV 

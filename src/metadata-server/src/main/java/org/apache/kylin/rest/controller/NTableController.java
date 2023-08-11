@@ -241,7 +241,7 @@ public class NTableController extends NBasicController {
     }
 
     @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {
-            "KC" }, notes = "Update Body: data_source_type, need_sampling, sampling_rows, data_source_properties")
+            "N/A" }, notes = "Update Body: data_source_type, need_sampling, sampling_rows, data_source_properties")
     @PostMapping(value = "/compatibility/aws")
     @ResponseBody
     public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(
@@ -270,7 +270,7 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, loadTableResponse, "");
     }
 
-    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = { "KC" }, notes = "Update Body: data_source_properties")
+    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = { "N/A" }, notes = "Update Body: data_source_properties")
     @PutMapping(value = "/ext/prop/aws")
     @ResponseBody
     public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(

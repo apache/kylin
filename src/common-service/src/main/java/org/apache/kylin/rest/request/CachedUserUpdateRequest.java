@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * used by KC for refresh guava cache in static-user-manager
+ * used by N/A for refresh guava cache in static-user-manager
  */
 
 @Getter

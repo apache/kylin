@@ -17,7 +17,6 @@
 --
 
 
--- related https://github.com/Kyligence/KAP/issues/7614
 
 
 select test_kylin_fact.lstg_format_name,sum(test_kylin_fact.price) as GMV

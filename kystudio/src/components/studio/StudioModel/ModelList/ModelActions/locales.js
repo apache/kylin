@@ -42,7 +42,7 @@ export default {
     exportTDSOptions2: 'Include the ones in both aggregate indexes and table indexes',
     exportTDSOptions3: 'Include all columns for dimension or measure, even if they are not included in any aggregate or table index',
     connectODBC: 'Other ODBC data sources（default）',
-    connectTableau: 'Tableau Kyligence Connector',
+    connectTableau: '',
     exportTDSOfflineTips: 'The exported TDS file can\'t be used for queries if the model is OFFLINE. Please make sure that the model goes online when using this TDS file.',
     delModelTip: 'Are you sure you want to drop the model {modelName}?',
     delModelTitle: 'Delete Model',

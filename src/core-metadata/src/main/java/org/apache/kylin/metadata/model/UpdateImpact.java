@@ -30,7 +30,7 @@ import lombok.Setter;
 /**
  *  Updating cc expression will cause change on both cc and measure.
  *  This UpdateImpact records changed cc's and measure's id during cc modification in
- *  io.kyligence.kap.rest.service.ModelSemanticHelper#updateModelColumns.
+ *  ModelSemanticHelper#updateModelColumns.
  */
 
 @Getter
