@@ -137,7 +137,6 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     }
 
     public void initConfig(KylinConfig config) {
-        // https://olapio.atlassian.net/browse/KE-11535
         // to compatible with existing model
         // if expose-computed-column is empty, set it with the maintainModelType
         if (!overrideKylinProps.containsKey(EXPOSE_COMPUTED_COLUMN_CONF)) {

@@ -83,7 +83,6 @@ class DFDictionaryBuilder(
     } finally lock.unlock()
   }
 
-  // Workaround: https://olapio.atlassian.net/browse/KE-41645
   private[builder] def changeAQEConfig(isDictBuildFinished: Boolean = false) : Boolean = {
     if (!seg.getConfig.isGlobalDictAQEEnabled && !isDictBuildFinished) {
       logInfo("Temporarily Close AQE for dict build job")

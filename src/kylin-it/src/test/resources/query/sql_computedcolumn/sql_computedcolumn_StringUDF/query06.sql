@@ -17,7 +17,6 @@
 --
 
 
--- KE-27687
 select
 count(repeat(NAME1,2)),
 count(repeat(NAME2,3)),

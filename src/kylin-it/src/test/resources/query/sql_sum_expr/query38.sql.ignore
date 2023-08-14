@@ -15,8 +15,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- https://olapio.atlassian.net/browse/KE-12527
-
 SELECT 1.1000000000000001 AS "X__alias__0",
        SUM(CAST(1 AS DOUBLE)) AS "sum_Number_of_Records_ok"
 FROM "TDVT"."CALCS" "Calcs"

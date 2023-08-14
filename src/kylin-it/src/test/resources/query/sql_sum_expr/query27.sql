@@ -17,7 +17,6 @@
 --
 
 
--- TODO ISSUE https://olapio.atlassian.net/browse/KE-9299
 -- Case 2.2: "PRICE/100" and {fn convert(NULL,DECIMAL(30,15))} types not aligned, hit index
 
 SELECT

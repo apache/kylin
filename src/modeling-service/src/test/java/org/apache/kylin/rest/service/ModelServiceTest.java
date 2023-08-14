@@ -677,7 +677,6 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(3, segments.size());
         Assert.assertEquals("MERGING", segments.get(2).getStatusToDisplay().toString());
 
-        // KE-25547, complete segment response
         val seg2Resp = segments.stream().filter(s -> s.getId().equals(seg2.getId())).findFirst().get();
         Assert.assertNotNull(seg2Resp);
         Assert.assertEquals(seg2.isSnapshotReady(), seg2Resp.isSnapshotReady());

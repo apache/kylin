@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-8378
 -- Case 2
 
 select sum(case when nullif(5,5)=cast(null as int)  then  PRICE end)  AS COL

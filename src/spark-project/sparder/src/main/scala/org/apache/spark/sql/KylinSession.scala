@@ -181,7 +181,6 @@ object KylinSession extends Logging {
           // maybe this is an existing SparkContext, update its SparkConf which maybe used
           // by SparkSession
 
-          // KE-12678
           if (sc.master.startsWith("yarn")) {
             Unsafe.setProperty("spark.ui.proxyBase", "/proxy/" + sc.applicationId)
           }

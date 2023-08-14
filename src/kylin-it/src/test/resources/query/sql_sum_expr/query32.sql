@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-8378
 -- Case 1: Kylin goes well but H2 does not support such query: select sum(case when 1=2 then 1 end) AS COL
 -- modify it as follow:
 

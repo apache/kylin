@@ -19,7 +19,6 @@
 
 -- ISSUE #10686
 -- ISSUE #10852
--- ISSUE https://olapio.atlassian.net/browse/KE-8756
 
 SELECT COUNT(*) AS COL1,
        SUM(CASE WHEN "TEST_CAL_DT"."CAL_DT" <= CAST('2012-12-31' AS DATE) THEN PRICE*4

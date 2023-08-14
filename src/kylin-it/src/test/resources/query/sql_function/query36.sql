@@ -17,7 +17,6 @@
 --
 
 
--- KE-19050
 select
 substring(ACCOUNT_COUNTRY from cast(2.0 as integer) for 2),
 substring('abcdefg' from cast(2.0 as integer) for 2)
