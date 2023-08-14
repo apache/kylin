@@ -17,7 +17,6 @@
 --
 
 
--- KE-27687
 select
 repeat(NAME1,2),
 repeat(NAME2,3),

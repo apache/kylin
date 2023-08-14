@@ -16,7 +16,7 @@
 -- limitations under the License.
 --
 
--- KE-19841 optimize non-equal join with is not distinct from condition
+--  optimize non-equal join with is not distinct from condition
 SELECT SUM(PRICE),
        CAL_DT
 FROM TEST_KYLIN_FACT

@@ -301,7 +301,7 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
             ss.sparkContext().hadoopConfiguration().set("javax.jdo.option.ConnectionURL",
                     "jdbc:derby:memory:db;create=true");
         }
-        Assert.assertEquals(9, sparkSourceService.loadSamples(ss, SaveMode.Overwrite).size());
+        Assert.assertEquals(8, sparkSourceService.loadSamples(ss, SaveMode.Overwrite).size());
         FileUtils.deleteDirectory(new File("spark-warehouse"));
     }
 

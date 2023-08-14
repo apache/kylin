@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- KE-14446 sum case when with percentile
+-- sum case when with percentile
 
 SELECT
 ROUND(PERCENTILE(PRICE, 0.5), -1),

@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-8789
 
 select count(*) AS COL1,
 sum(case when CAL_DT = '2012-01-01' then PRICE else 1 end) AS COL2

@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-8289
 -- Use PRICE as dimension, will hit index
 
 select

@@ -17,7 +17,6 @@
 --
 
 
--- KE-14621 division between integers
 SELECT 5/4 as A,
     5.0/4 AS B,
     5/4.0 AS C,

@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-9491
 
 select sum(case when CAL_DT>=date '2012-01-01' then price*1 end) as aaa
 from TEST_KYLIN_FACT

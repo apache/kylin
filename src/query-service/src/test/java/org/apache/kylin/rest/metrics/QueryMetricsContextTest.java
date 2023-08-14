@@ -361,7 +361,6 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testWhenHitStorageCache() {
-        //this is for  https://olapio.atlassian.net/browse/KE-12573
         final String origSql = "select * from test_parse_sql_pattern_error;";
         final String massagedSql = "select * from test_parse_sql_pattern_error";
         final String sqlPattern = "SELECT *\n" + "FROM \"TEST_PARSE_SQL_PATTERN_ERROR\"";

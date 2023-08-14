@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-9299
 -- Case 2.1: "PRICE/100" and {fn convert(NULL,DECIMAL(30,15))} types aligned, hit cube
 
 SELECT

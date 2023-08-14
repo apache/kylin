@@ -70,7 +70,6 @@ public class SecondaryCatalogTest implements JobWaiter {
 
     /**
      * When set spark.sql.catalog.{queryCatalog}.url to an irrelevant clickhouse JDBC URL, there is an bug before
-     * KE-27650
      */
     @Test
     public void testSparkJdbcUrlNotExist() throws Exception {

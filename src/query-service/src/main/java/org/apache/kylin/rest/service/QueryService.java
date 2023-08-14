@@ -721,9 +721,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             try {
                 if (!sqlResponse.isPrepare() && QueryMetricsContext.isStarted()) {
                     val queryMetricsContext = QueryMetricsContext.collect(QueryContext.current());
-                    // KE-35556 Set stored sql a structured format json string
+                    // Set stored sql a structured format json string
                     queryMetricsContext.setSql(constructQueryHistorySqlText(sqlRequest, sqlResponse, originalSql));
-                    // KE-36662 Using sql_pattern as normalized_sql storage
+                    // Using sql_pattern as normalized_sql storage
                     String normalizedSql = QueryContext.currentMetrics().getCorrectedSql();
                     queryMetricsContext.setSqlPattern(normalizedSql);
                     QueryHistoryScheduler queryHistoryScheduler = QueryHistoryScheduler.getInstance();

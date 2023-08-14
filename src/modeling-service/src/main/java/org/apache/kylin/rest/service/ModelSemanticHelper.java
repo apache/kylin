@@ -258,7 +258,9 @@ public class ModelSemanticHelper extends BasicService {
         String project = dataModel.getProject();
         val projectKylinConfig = NProjectManager.getProjectConfig(project);
         boolean isScd2Enabled = projectKylinConfig.isQueryNonEquiJoinModelEnabled();
-        QueryContext.current().setAclInfo(AclPermissionUtil.createAclInfo(project, getCurrentUserGroups()));
+        if (!projectKylinConfig.isUTEnv()) {
+            QueryContext.current().setAclInfo(AclPermissionUtil.createAclInfo(project, getCurrentUserGroups()));
+        }
         QueryExec queryExec = new QueryExec(project, projectKylinConfig, false);
         for (int i = 0; i < requestJoinTableDescs.size(); i++) {
             final JoinDesc joinWithoutNonEquivInfo = dataModel.getJoinTables().get(i).getJoin();

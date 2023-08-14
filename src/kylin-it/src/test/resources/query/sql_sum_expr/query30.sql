@@ -17,7 +17,6 @@
 --
 
 
--- ISSUE https://olapio.atlassian.net/browse/KE-8640
 -- Case 2
 
 select sum(case when LSTG_FORMAT_NAME='ABIN' then price end) AS COL1,

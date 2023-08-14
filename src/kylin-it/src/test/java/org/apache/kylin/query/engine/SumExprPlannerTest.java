@@ -113,7 +113,6 @@ public class SumExprPlannerTest extends CalciteRuleTestBase {
     }
 
     /**
-     * see https://olapio.atlassian.net/browse/KE-14512
      */
     @Test
     public void testWithAVG() {

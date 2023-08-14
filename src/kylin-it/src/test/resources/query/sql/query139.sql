@@ -16,7 +16,6 @@
 -- limitations under the License.
 --
 
--- KE-19732
 
 select floor(cal_dt to day), ceil(cal_dt to day),
 floor(cal_dt to week), ceil(cal_dt to week),

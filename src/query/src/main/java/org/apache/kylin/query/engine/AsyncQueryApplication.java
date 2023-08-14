@@ -98,7 +98,7 @@ public class AsyncQueryApplication extends SparkApplication {
         try {
             QueryMetricsContext queryMetricsContext = QueryMetricsContext.collect(queryContext);
             queryMetricsContext.setSql(constructQueryHistorySqlText(queryParams, queryContext.getUserSQL()));
-            // KE-36662 Using sql_pattern as normalized_sql storage
+            // Using sql_pattern as normalized_sql storage
             String normalizedSql = QueryContext.currentMetrics().getCorrectedSql();
             queryMetricsContext.setSqlPattern(normalizedSql);
 

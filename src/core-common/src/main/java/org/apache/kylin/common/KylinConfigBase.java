@@ -1844,7 +1844,6 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // If return empty result for select star query
-    // https://olapio.atlassian.net/browse/KE-23663
     public boolean getEmptyResultForSelectStar() {
         return Boolean.parseBoolean(getOptional("kylin.query.return-empty-result-on-select-star", FALSE));
     }

@@ -78,7 +78,6 @@ public class SecondStorageJobParamUtil {
     /**
      * build delete layout table parameters
      *
-     * PRD_KE-34597 add index clean job
      *
      * @param project project name
      * @param model model id

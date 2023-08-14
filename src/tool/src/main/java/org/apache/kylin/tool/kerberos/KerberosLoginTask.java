@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
- * KE-Process kerberos long-running scenario.
+ * Process kerberos long-running scenario.
  * @deprecated since 'ke-4.5.18.0'
  * This implementation is no longer acceptable to fulfill in long-running scenario.
  * Use {@link DelegationTokenManager} instead.

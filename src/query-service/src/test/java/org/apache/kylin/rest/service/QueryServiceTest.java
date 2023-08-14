@@ -1701,7 +1701,6 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    //ref KE-12803
     public void testDeepCopy() {
         final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
         tableMetas.stream()
@@ -1732,7 +1731,6 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    //reference KE-8052
     public void testQueryWithScanBytesAndRows() {
         long defaultValue = QueryContext.DEFAULT_NULL_SCANNED_DATA;
 

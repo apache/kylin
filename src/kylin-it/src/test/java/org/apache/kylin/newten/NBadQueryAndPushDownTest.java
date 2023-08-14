@@ -203,7 +203,6 @@ public class NBadQueryAndPushDownTest extends NLocalWithSparkSessionTest {
 
     @Test
     public void testPushDownForced() throws Exception {
-        //test for KE-14218
 
         KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY,
                 "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl");

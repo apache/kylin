@@ -107,7 +107,7 @@ public class QueryHistory {
 
     // this field is composed of modelId, layout id and index type
     // it's written as modelId#layoutId#indexType
-    // This way to serialized query realizations had been deprecated. See KE-20697
+    // This way to serialized query realizations had been deprecated.
     private String queryRealizations;
 
     @JsonProperty(QUERY_SERVER)

@@ -69,7 +69,6 @@ import io.kyligence.kap.secondstorage.test.SharedSparkSession;
  * {@link QueryRouteTest} simulates the case where KE(resolving clickhouse table schema on spark driver) or worker
  * (executing query on spark executor) can not access ClickHouse.In such case, we should use table index to answer query.
  * <p/>
- *  @see <a href="https://olapio.atlassian.net/browse/KE-28035">KE-28035</a> for details.
  */
 public class QueryRouteTest {
 

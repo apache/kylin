@@ -17,7 +17,6 @@
 --
 
 
--- https://olapio.atlassian.net/browse/KE-12536
 
 SELECT "TEST_CAL_DT"."CAL_DT" AS COL1,
        AVG(CASE WHEN LSTG_FORMAT_NAME='ABIN' then 0 else 1 end) AS COL92,
