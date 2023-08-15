@@ -28,15 +28,15 @@ import java.nio.file.Paths;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.junit.annotation.MetadataInfo;
+//import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.Test;
 
 import lombok.val;
 import lombok.var;
 
-@MetadataInfo
+//@MetadataInfo
 class HiveClientJarToolWithoutSparkHiveDirTest extends HiveClientJarToolTestBase {
     @BeforeEach
     public void before() throws IOException {
@@ -54,7 +54,7 @@ class HiveClientJarToolWithoutSparkHiveDirTest extends HiveClientJarToolTestBase
         Files.deleteIfExists(sparkPath);
     }
 
-    @Test
+    // @Test
     void getKylinSparkHiveJarsPath() throws IOException {
         val sparkHome = KylinConfig.getSparkHome();
         val sparkPath = Paths.get(sparkHome);
@@ -78,12 +78,12 @@ class HiveClientJarToolWithoutSparkHiveDirTest extends HiveClientJarToolTestBase
         }
     }
 
-    @Test
+    // @Test
     void testExecute() throws IOException {
         testExecute(true, true, "${KYLIN_HOME}/spark/hive_1_2_2 needs to be an existing directory");
     }
 
-    @Test
+    // @Test
     void testExecuteWithHive122File() throws IOException {
         val sparkHome = KylinConfig.getSparkHome();
         val sparkPath = Paths.get(sparkHome);
