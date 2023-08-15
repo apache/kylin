@@ -65,7 +65,7 @@ cp -rf ../build/deploy/grafana/custom.ini   ${package_name}/tool/grafana/
 
 # Add JDBC Driver
 bash release/jdbc_package.sh
-cp ../jdbc_dist/kylin-jdbc-${RELEASE_VERSION}.tar.gz "${package_name}"/lib
+cp ../jdbc_dist/kylin-jdbc-*.tar.gz "${package_name}"/lib
 
 # Add conf profiles
 mkdir -p ${package_name}/conf
@@ -93,7 +93,7 @@ rm -rf ext lib commit_SHA1 VERSION # keep the spark folder on purpose
 cp -rf server/webapp/dist ${package_name}/server/public
 cp -rf server/newten.jar ${package_name}/server/
 cp -rf server/jars ${package_name}/server/
-cp -rf deploy/.keystore ${package_name}/server/
+# cp -rf deploy/.keystore ${package_name}/server/
 # mv ${package_name}/server/jars/log4j* ${package_name}/spark/jars/
 rm -rf server/
 
