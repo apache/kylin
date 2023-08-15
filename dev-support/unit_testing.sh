@@ -17,10 +17,28 @@
 # limitations under the License.
 #
 
+# use `bash unit_testing.sh` to run unit test of core part
+# use `bash unit_testing.sh -all` to run Integrate Test of all modules
+
+if [ $# -eq 0 ]; then
+  MODE='simple'
+else
+  inputs=$1
+  if [[ "$inputs" == "-all" ]]; then
+    MODE='all'
+  else
+    MODE='simple'
+  fi
+fi
+
+echo "Running testing on mode : $MODE ."
+
 ci_output=ci-results-`date +"%Y-%m-%d"`.txt
 
-mvn -U clean install -T 2C -Dmaven.compile.fork=true -DskipTests
-echo "----------- Kylin Install Success -----------"
+echo "----------- Kylin Install Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
+
+mvn -U clean install -T 2C -Dmaven.compile.fork=true -DskipTests >>${ci_output} 2>&1
+echo "----------- Kylin Unit Test Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
 
 mvn clean test --fail-at-end -pl src/assembly -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/common-booter -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
@@ -34,12 +52,9 @@ mvn clean test --fail-at-end -pl src/core-storage -DfailIfNoTests=false -Duser.t
 mvn clean test --fail-at-end -pl src/data-loading-booter -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/data-loading-server -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/data-loading-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/datasource-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/datasource-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/distributed-lock-ext -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/jdbc -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/job-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/kylin-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/metadata-server -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/modeling-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/query -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
@@ -49,19 +64,28 @@ mvn clean test --fail-at-end -pl src/query-server -DfailIfNoTests=false -Duser.t
 mvn clean test --fail-at-end -pl src/query-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/server -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/source-hive -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/streaming -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/streaming-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/streaming-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
-mvn clean test --fail-at-end -pl src/tool -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/ -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/engine-build-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/engine-spark -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/spark-project/kylin-soft-affinity-cache -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/source-jdbc -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/sparder -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/spark-project/spark-common -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
--- mvn clean test --fail-at-end -pl src/spark-project/spark-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
-echo "----------- Kylin Test Completed -----------"
+mvn clean test --fail-at-end -pl src/tool -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+
+if [[ "$MODE" == "all" ]]; then
+  echo "----------- Kylin Integrate Test Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
+  mvn clean test --fail-at-end -pl src/datasource-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/datasource-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/kylin-server-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/kylin-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/streaming -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/streaming-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/streaming-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/spark-project/kylin-soft-affinity-cache -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/spark-project/spark-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+fi
+
+echo "----------- Kylin Test Completed <`date +"%Y-%m-%d %H:%M:%S"`>-----------"
 
 
 echo "<Running test on following module>"
