@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-# use `bash unit_testing.sh` to run unit test of core part
-# use `bash unit_testing.sh -all` to run Integrate Test of all modules
+# use `bash unit_testing.sh` to run unit test for core modules
+# use `bash unit_testing.sh -all` to run test(include IT) for all modules
 
 if [ $# -eq 0 ]; then
   MODE='simple'
@@ -37,7 +37,7 @@ ci_output=ci-results-`date +"%Y-%m-%d"`.txt
 
 echo "----------- Kylin Install Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
 
-mvn -U clean install -T 2C -Dmaven.compile.fork=true -DskipTests >>${ci_output} 2>&1
+mvn -U clean install -T 2C -Dmaven.compile.fork=true -DskipTests
 echo "----------- Kylin Unit Test Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
 
 mvn clean test --fail-at-end -pl src/assembly -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
@@ -45,7 +45,6 @@ mvn clean test --fail-at-end -pl src/common-booter -DfailIfNoTests=false -Duser.
 mvn clean test --fail-at-end -pl src/common-server -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/common-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/core-common -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
-mvn clean test --fail-at-end -pl src/core-job -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/core-metadata -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/core-metrics -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
 mvn clean test --fail-at-end -pl src/core-storage -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
@@ -76,6 +75,7 @@ if [[ "$MODE" == "all" ]]; then
   echo "----------- Kylin Integrate Test Start <`date +"%Y-%m-%d %H:%M:%S"`> -----------"
   mvn clean test --fail-at-end -pl src/datasource-sdk -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
   mvn clean test --fail-at-end -pl src/datasource-service -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
+  mvn clean test --fail-at-end -pl src/core-job -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
   mvn clean test --fail-at-end -pl src/kylin-server-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
   mvn clean test --fail-at-end -pl src/kylin-it -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
   mvn clean test --fail-at-end -pl src/streaming -DfailIfNoTests=false -Duser.timezone=GMT+8 >>${ci_output} 2>&1
@@ -88,11 +88,11 @@ fi
 echo "----------- Kylin Test Completed <`date +"%Y-%m-%d %H:%M:%S"`>-----------"
 
 
-echo "<Running test on following module>"
+echo "----------- Running test on following module ----------- "
 cat ${ci_output} | grep "maven-surefire-plugin:3.0.0-M5:test"
 
-echo "<Failed test on following module>"
+echo "----------- Failed test on following module ----------- "
 cat ${ci_output} | grep "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:"
 
-echo "<Failed cases statistics>"
+echo "----------- Failed cases statistics ----------- "
 cat ${ci_output} | grep "R] Tests run"
