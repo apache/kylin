@@ -58,7 +58,7 @@ export default {
     openSecStorageTips2: 'With the tiered storage ON, the existing data needs to be loaded to tiered storage to take effect.',
     disableSecStorageActionTips: 'The tiered storage can\'t be used for fusion or streaming models at the moment.',
     disableSecStorageActionTips2: 'The tiered storage can\'t be used because no dimension or measure has been added and the base table index can\'t be added.',
-    forbidenComputedColumnTips: 'The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="https://docs.kyligence.io/books/v4.5/en/Designers-Guide/tiered_storage/" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
+    forbidenComputedColumnTips: 'The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
     secondStoragePartitionTips: 'Can\'t save the model. When the model uses incremental load method and the tiered storage is ON, the time partition column must be added as a dimension.',
     streamSecStoragePartitionTips: 'Can\'t save the model. For fusion model, the time partition column must be added as a dimension.',
     baseAggIndexTips: 'The base aggregate index contains all dimensions and metrics of the model, and can override answering aggregated queries to avoid pushdown. It will automatically update as the model changes by default.',

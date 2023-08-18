@@ -88,7 +88,7 @@ export default {
     chooseNode: 'Please select node',
     storageNode: 'Storage Node',
     openSecStorageTitle: 'Turn On Tiered Storage',
-    openSecStorageTips: 'With this switch ON, the selected nodes can\'t be removed from the project. The models under this project could use the tiered storage on demand.<br/><br/>The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="https://docs.kyligence.io/books/v4.5/en/Designers-Guide/tiered_storage/" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
+    openSecStorageTips: 'With this switch ON, the selected nodes can\'t be removed from the project. The models under this project could use the tiered storage on demand.<br/><br/>The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
     openSecConfirmBtn: 'Turn On',
     closeSecStorageSetting: 'Turn Off Tiered Storage',
     closeSecStorageTip: 'With this switch OFF, the data stored in the tiered storage will be cleared. The query performance might be affected.',

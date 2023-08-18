@@ -980,7 +980,7 @@ export default class SettingAdvanced extends Vue {
           h('a', {
             style: 'color: #0988DE',
             attrs: {
-              href: `https://docs.kyligence.io/books/v4.5/${this.$lang === 'en' ? 'en' : 'zh-cn'}/Designers-Guide/model/model_design/advance_guide/multilevel_partitioning.${this.$lang === 'en' ? 'en' : 'cn'}.html`,
+              href: 'https://kylin.apache.org/5.0/docs/modeling/model_design/advance_guide/multilevel_partitioning',
               target: '_blank'
             }
           }, this.$t('userManual')),
@@ -1081,7 +1081,7 @@ export default class SettingAdvanced extends Vue {
           h('a', {
             style: 'color: #0988DE',
             attrs: {
-              href: `https://docs.kyligence.io/books/v4.5/${this.$lang === 'en' ? 'en' : 'zh-cn'}/Designers-Guide/model/model_design/slowly_changing_dimension.${this.$lang === 'en' ? 'en' : 'cn'}.html`,
+              href: 'https://kylin.apache.org/5.0/docs/modeling/model_design/slowly_changing_dimension',
               target: '_blank'
             }
           }, this.$t('userManual')),

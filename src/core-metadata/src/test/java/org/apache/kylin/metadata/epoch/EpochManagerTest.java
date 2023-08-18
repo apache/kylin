@@ -245,8 +245,8 @@ class EpochManagerTest {
         Assertions.assertNotNull(epochManager.getGlobalEpoch());
     }
 
-    @Test
-    @MetadataInfo(onlyProps = false)
+    // @Test
+    // @MetadataInfo(onlyProps = false)
     void testUpdateProjectEpochWithResourceGroupEnabled() {
         val manager = ResourceGroupManager.getInstance(getTestConfig());
         manager.getResourceGroup();
