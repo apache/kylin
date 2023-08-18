@@ -64,7 +64,7 @@ export default {
     disableActionTips3: 'Unavailable for Fusion model',
     disableActionTips4: 'The time partition settings can\'t be modified for fusion model and streaming model. ',
     disableSecStorageActionTips: 'The tiered storage can\'t be used for fusion or streaming models at the moment.',
-    forbidenComputedColumnTips: 'The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="https://docs.kyligence.io/books/v4.5/en/Designers-Guide/tiered_storage/" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
+    forbidenComputedColumnTips: 'The parquet files containing data prior to 1970 cannot be loaded. <a class="ky-a-like" href="" target="_blank">View the manual <i class="el-ksd-icon-spark_link_16"></i></a>',
     disableEditModel: 'Can\'t edit model. Please stop the streaming job and then delete all the streaming segments.'
   }
 }

@@ -106,7 +106,7 @@ export default {
     continueEditing: 'Continue Editing',
     betaSearchTips: 'The current search is beta version. Having search problems? ',
     feedback: 'Go to feedback',
-    introductionUrl: 'http://kyligence.io/enterprise/#analytics',
+    introductionUrl: '',
     noConnectedColumn: 'No Connected Column'
   }
 }

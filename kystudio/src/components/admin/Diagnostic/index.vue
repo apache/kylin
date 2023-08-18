@@ -98,7 +98,7 @@
               <el-progress class="progress" :percentage="Math.ceil(+item.progress * 100)" v-bind="setProgressColor(item)" :icon-class="item.stage==='PREPARE'?'el-ksd-icon-time_22':''"></el-progress>
               <template v-if="item.status === '001'">
                 <!-- TODO: add kylin5 diag doc -->
-                <p class="error-text">{{$t('requireOverTime1')}}<span class='retry-btn' @click="retryJob(item)">{{$t('retry')}}</span>{{$t('requireOverTime2')}}<a :href="$lang === 'en' ? 'https://docs.kyligence.io/books/v4.5/en/Operation-and-Maintenance-Guide/system-operation/diag.en.html' : 'https://docs.kyligence.io/books/v4.5/zh-cn/Operation-and-Maintenance-Guide/system-operation/diagnosis/diag.cn.html'" target="_blank">{{$t('manual')}}<i class="el-ksd-icon-export_22 export-icon"></i></a>{{$t('requireOverTime3')}}</p>
+                <p class="error-text">{{$t('requireOverTime1')}}<span class='retry-btn' @click="retryJob(item)">{{$t('retry')}}</span>{{$t('requireOverTime2')}}<a :href="$lang === 'en' ? 'https://kylin.apache.org/5.0/docs/operations/system-operation/diagnosis/intro' : 'https://kylin.apache.org/5.0/docs/operations/system-operation/diagnosis/intro'" target="_blank">{{$t('manual')}}<i class="el-ksd-icon-export_22 export-icon"></i></a>{{$t('requireOverTime3')}}</p>
               </template>
               <template v-if="['002', '999'].includes(item.status)">
                 <span class="error-text">{{item.status === '002' ? $t('noAuthorityTip') : $t('otherErrorMsg')}}</span><span class="detail-text" @click="item.showErrorDetail = !item.showErrorDetail">{{$t('details')}}<i :class="item.showErrorDetail ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i></span>

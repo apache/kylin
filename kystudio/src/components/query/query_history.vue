@@ -123,7 +123,7 @@ import { pageRefTags, apiUrl, bigPageCount } from 'config'
       exportSqlTitle: 'Export SQL',
       exportHistoryTips: '{maxLength} query histories could be exported at a time. If you want to export more. Check ',
       userManual: 'User Manual',
-      manualUrl: 'https://docs.kyligence.io/books/v4.5/en/Designers-Guide/query/history.en.html',
+      manualUrl: 'https://kylin.apache.org/5.0/docs/query/history',
       exportHistoryTips2: ' for details.',
       exportSqlConfirm: '<b>{historyTotal}</b> SQL(s) will be exported as a .txt file. Are you sure you want to export?',
       exportHistoryConfirm: '<b>{historyTotal}</b> query historie(s) will be exported as a .csv file. Are you sure you want to export?'

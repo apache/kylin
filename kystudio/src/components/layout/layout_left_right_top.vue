@@ -214,7 +214,7 @@ let MessageBox = ElementUI.MessageBox
       settingTips: 'Configure',
       useageMana: 'Used Storage: ',
       trash: 'Low Usage Storage',
-      tarshTips: 'Low usage storage refers to the obsolete files generated after the system has been running for a period of time. For more details, please refer to <a href="https://docs.kyligence.io/books/v4.5/en/Operation-and-Maintenance-Guide/junk_file_clean.en.html" target="_blank">user manual</a>.',
+      tarshTips: 'Low usage storage refers to the obsolete files generated after the system has been running for a period of time. For more details, please refer to <a href="https://kylin.apache.org/5.0/docs/operations/system-operation/junk_file_clean" target="_blank">user manual</a>.',
       clear: 'Clear',
       resetPassword: 'Reset Password',
       confirmLoginOut: 'Are you sure you want to log out?',

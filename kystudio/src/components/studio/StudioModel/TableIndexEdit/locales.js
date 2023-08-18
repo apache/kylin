@@ -27,7 +27,7 @@ export default {
     excludeTableCheckboxTip1: 'Exclude columns using the slow-changing dimension to record data changes:',
     excludeTableCheckboxTip2: 'When you want the column to reflect historical facts (SCD Type2, As Was), please check this option and add it to the index.',
     excludeTableCheckboxTip3: 'When you want the column to reflect the latest state of the dimension (SCD Type1, As Is), do not check this option. Instead, add a foreign key to the index.',
-    excludeTableCheckboxTip4: '<br/>Not familiar with the slow-changing dimension? <a class="ky-a-like" href="https://docs.kyligence.io/books/v4.6/en/Designers-Guide/model/model_design/slowly_changing_dimension.en.html?h=Slowly%20Changing%20Dimension" target="_blank">Check the manual</a>',
+    excludeTableCheckboxTip4: '<br/>Not familiar with the slow-changing dimension? <a class="ky-a-like" href="https://kylin.apache.org/5.0/docs/modeling/model_design/slowly_changing_dimension" target="_blank">Check the manual</a>',
     manyToManyAntiTableTip: 'The table columns excluded, if the join relationship of a table is One-to-Many or Many-to-Many, dimensions from this table can\'t be used in indexes. ',
     indexTimeRange: 'Real-time Index Types',
     indexTimeRangeTips: 'After selection, the table index will generate streaming indexes and batch indexes of the same content respectively.',
@@ -42,7 +42,7 @@ export default {
     goToDataSource: 'Go to sampling',
     knowMore: 'For more information, please ',
     userManual: 'view the manual',
-    shardbyManal: 'https://docs.kyligence.io/books/v4.6/en/Designers-Guide/model/model_design/table_index.en.html?q=shardBy',
+    shardbyManal: 'https://kylin.apache.org/5.0/docs/modeling/model_design/table_index',
     indexRangeReqiured: 'Please select the real-time index type',
     help: 'Help'
   }
