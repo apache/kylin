@@ -21,7 +21,6 @@ package org.apache.kylin.common.exception.code;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.ErrorCodeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ErrorMsg extends AbstractErrorContent {
 
     private static final Map<String, String> EN_MAP;
-    private static final Map<String, String> CN_MAP;
+//    private static final Map<String, String> CN_MAP;
     private static final ThreadLocal<Map<String, String>> FRONT_MAP = new ThreadLocal<>();
 
     static {
         try {
             EN_MAP = loadProperties("kylin_error_msg_conf_en.properties");
-            CN_MAP = loadProperties("kylin_error_msg_conf_cn.properties");
+            // CN_MAP = loadProperties("kylin_error_msg_conf_cn.properties");
             FRONT_MAP.set(EN_MAP);
         } catch (IOException e) {
             throw new ErrorCodeException("loading msg map failed.", e);
@@ -48,11 +47,7 @@ public class ErrorMsg extends AbstractErrorContent {
     }
 
     public static void setMsg(String lang) {
-        if (StringUtils.equalsIgnoreCase(CN_LANG, lang)) {
-            FRONT_MAP.set(CN_MAP);
-        } else {
-            FRONT_MAP.set(EN_MAP);
-        }
+        FRONT_MAP.set(EN_MAP);
     }
 
     @Override
