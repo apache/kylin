@@ -20,8 +20,14 @@
 #  */
 #
 
-docker build -f Dockerfile -t release-machine:5-alpha .
-docker image tag release-machine:5-alpha apachekylin/release-machine:5-alpha
+docker build -f Dockerfile -t release-machine:latest .
 
+if [[ "$?" == "0" ]]; then
+    echo "Docker image build succeed"
+    docker image tag release-machine:latest apachekylin/release-machine:latest
+fi
 #docker login -u xiaoxiangyu
-#docker push apachekylin/release-machine:5.0
+#docker push apachekylin/release-machine:latest
+
+# docker run --name kylin-rm --hostname kylin-rm -p 7070:7070 \
+#   -i -t apachekylin/release-machine:latest  bash
