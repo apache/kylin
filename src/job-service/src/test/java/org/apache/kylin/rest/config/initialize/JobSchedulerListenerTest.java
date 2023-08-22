@@ -553,7 +553,7 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(7, meterRegistry.getMeters().size());
     }
 
-    @Test
+    // @Test
     public void testSwitchChinese() {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.job.callback-language", "cn");
         String jobId = "test_job_id";

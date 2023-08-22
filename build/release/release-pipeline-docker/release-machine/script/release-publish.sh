@@ -98,10 +98,10 @@ function run_command {
   fi
 }
 
-ASF_USERNAME=$(read_config "Your apache id?" "")
+ASF_USERNAME=$(read_config "Your apache id?" "xxyu")
 GIT_USERNAME=$(read_config "Your full name(used as author of git commit)?" "Release manager")
 ASF_PASSWORD=$(read_config "Your apache password?" "")
-GIT_EMAIL=$ASF_PASSWORD"@apache.org"
+GIT_EMAIL=$ASF_USERNAME"@apache.org"
 GPG_KEY=$(read_config "GPG key of you(used to sign release candidate)?" "$GIT_EMAIL")
 GPG_PASSPHRASE=$(read_config "PASSPHRASE for your private GPG key?" "")
 
@@ -235,9 +235,10 @@ function publish_snapshot_package {
 
     ## Upload to svn repository
     ask_confirm "You are going to upload rc, are you sure you have the permissions?"
-    cd ${svn_folder}
+    cd ${svn_stage_folder}
     svn add ${rc_name}
     run_command "Publish release candidate dir" svn commit -m 'Check in release artifacts for '${rc_name}
+    echo "Please check $RELEASE_STAGING_LOCATION"
     return 0
 }
 
@@ -277,13 +278,13 @@ fi
 
 function preview_site() {
     info "Prepare website"
-    if [ ! -d "${documenst_folder}" ]; then
+    if [ ! -d "${document_folder}" ]; then
         mkdir -p $document_folder
-        nvm install 16.14
+        run_command "Install nodejs for docusaurus" nvm install 16.14
     fi
     cd $document_folder
     if [ ! -d "${document_folder_elder}" ]; then
-        git clone --branch $branch_doc_1 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO"
+        run_command "Clone website for kylin4" git clone --branch $branch_doc_1 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO"
     else
         cd ${document_folder_elder}
         git reset --hard HEAD~4
@@ -291,7 +292,7 @@ function preview_site() {
     fi
 
     if [ ! -d "${document_folder_newer}" ]; then
-        git clone --branch $branch_doc_2 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO"
+        run_command "Clone website for kylin5" git clone --branch $branch_doc_2 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO"
     else
         cd ${document_folder_newer}
         git reset --hard HEAD~4
@@ -301,19 +302,41 @@ function preview_site() {
     if [ ! -d "${document_folder_preview}" ]; then
         mkdir ${document_folder_preview}
     else
-        rm -rf full/*
+        rm -rf ${document_folder_preview:?}/*
     fi
 
     info "Build website"
-    # TODO
 
+    # Build inner website
+    cd ${document_folder_newer}/website
+    nvm use 16.14
+    run_command "Install node modules" npm install
+    run_command "Build inner website" npm run build
+    document_folder_newer_build=${document_folder_newer}/website/build
+
+    # Build outer website
+    cd ${document_folder_elder}/website
+    run_command "Build outer website" jekyll b -s website -d ${document_folder_preview}
+
+    # Merge two websites
+    rm -rf ${document_folder_preview}/5.0
+    mv ${document_folder_newer_build} ${document_folder_preview}/5.0
+
+    run_command "Preview merged website" jekyll s -P 7070
     info "Website could be previewed at localhost:7070"
     return 0
 }
 
 function publish_site() {
     info "Publish website"
-    # TODO
+    svn update ${document_folder_preview}
+    svn add --force ${document_folder_preview}/* --auto-props --parents --depth infinity -q
+    svn status ${document_folder_preview}
+    if [ `svn status ${document_folder_preview} | wc -l ` != 1 ];
+        then MSG=`git log --format=oneline | head -1`;svn commit ${document_folder_preview} -m "${MSG:41}";
+    else
+        echo "No need to refresh website.";
+    fi
     return 0
 }
 
