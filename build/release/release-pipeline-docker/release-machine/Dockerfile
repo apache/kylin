@@ -51,12 +51,19 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get update \
     && apt-get install -y --no-install-recommends nodejs
 
-## =====================================
-
 # install maven
 RUN wget https://archive.apache.org/dist/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz \
     && tar -zxvf apache-maven-3.8.8-bin.tar.gz \
     && rm -f apache-maven-3.8.8-bin.tar.gz
+
+RUN apt-get install -y --fix-missing ruby-full
+
+RUN gem install jekyll:2.5.3 jekyll-multiple-languages:1.0.11  rouge:1.10.1 kramdown:1.17.0
+
+# install Node JS(this new version is for kylin website)
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+
+ENV NVM_DIR="/root/.nvm"
 
 RUN mkdir /root/.m2
 COPY conf/settings.xml /root/.m2/settings.xml
@@ -66,7 +73,5 @@ RUN chmod u+x /root/scripts/entrypoint.sh
 
 COPY script/release-publish.sh /root/release-publish.sh
 RUN chmod u+x /root/release-publish.sh
-
-COPY conf/setenv.sh /root/scripts/setenv.sh
 
 #ENTRYPOINT ["/root/scripts/entrypoint.sh"]
