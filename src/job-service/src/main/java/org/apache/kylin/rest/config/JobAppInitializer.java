@@ -18,6 +18,7 @@
 package org.apache.kylin.rest.config;
 
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.job.metrics.RDBMJobMetricsDAO;
 import org.apache.kylin.rest.config.initialize.JobSyncListener;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +32,10 @@ public class JobAppInitializer implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         EventBusFactory.getInstance().register(jobSyncListener, true);
+        try {
+            RDBMJobMetricsDAO jobMetricsDAO = RDBMJobMetricsDAO.getInstance();
+        } catch (Exception e) {
+            //todo
+        }
     }
 }
