@@ -79,7 +79,7 @@ public class KapGuardian {
             kapGuardian.start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                logger.info("Guardian Process of KE instance port[{}] KYLIN_HOME[{}] stopped",
+                logger.info("Guardian Process of instance port[{}] KYLIN_HOME[{}] stopped",
                         kapGuardian.getServerPort(), kapGuardian.getKylinHome());
                 kapGuardian.stop();
             }));

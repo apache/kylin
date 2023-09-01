@@ -16,25 +16,27 @@
 #
 
 # Docker image for apache kylin, based on the Hadoop image
-FROM hadoop3.2.1-all-in-one-for-kylin5
+# FROM hadoop3.2.1-all-in-one-for-kylin5
+FROM apachekylin/apache-kylin-standalone:5.x-base-dev-only
 
 USER root
+
+RUN apt-get -y install curl
+RUN apt-get update && apt-get -y install openjdk-8-jdk
+
 # make a new workdir
 RUN mkdir -p /home/kylin
 
 # change workdir to install Kylin
 WORKDIR /home/kylin
 
-ENV KYLIN_VERSION 5.0.0
+ENV KYLIN_VERSION 5.0.0-beta
 ENV KYLIN_HOME /home/kylin/apache-kylin-$KYLIN_VERSION-bin
 
-# TODO: Download Kylin from official website
 COPY package/apache-kylin-$KYLIN_VERSION-*.tar.gz /home/kylin/
 
 RUN tar -zxf /home/kylin/apache-kylin-$KYLIN_VERSION-*.tar.gz \
     && rm -f /home/kylin/apache-kylin-$KYLIN_VERSION-*.tar.gz \
-    && mv /home/kylin/apache-kylin-$KYLIN_VERSION-* $KYLIN_HOME \
-    && mkdir -p $KYLIN_HOME/lib/ext \
     && cp $HIVE_HOME/lib/mysql-connector-java.jar $KYLIN_HOME/lib/ext/ \
     && cp $HIVE_HOME/lib/mysql-connector-java.jar $KYLIN_HOME/spark/hive_1_2_2/
 

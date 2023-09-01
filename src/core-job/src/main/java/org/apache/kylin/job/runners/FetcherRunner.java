@@ -223,7 +223,7 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
                 jobPool.execute(new JobRunner(nDefaultScheduler, executable, this));
                 logger.info("{} scheduled", jobDesc);
             } else {
-                logger.info("memory is not enough, remaining: {} MB , schedule job : {}",
+                logger.warn("Memory is not enough, remaining: {} MB , fail to schedule job : {}",
                         NDefaultScheduler.getMemoryRemaining().availablePermits(), executable.getDisplayName());
             }
         } catch (Exception ex) {

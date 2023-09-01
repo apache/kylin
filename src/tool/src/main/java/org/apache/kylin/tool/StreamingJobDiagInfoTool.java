@@ -66,18 +66,18 @@ public class StreamingJobDiagInfoTool extends AbstractInfoExtractorTool {
     @SuppressWarnings("static-access")
     private static final Option OPTION_STREAMING_INCLUDE_CONF = OptionBuilder.getInstance().withArgName("includeConf")
             .hasArg().isRequired(false)
-            .withDescription("Specify whether to include ke conf files to extract. Default true.")
+            .withDescription("Specify whether to include conf files to extract. Default true.")
             .create("includeConf");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_STREAMING_META = OptionBuilder.getInstance().withArgName("includeMeta").hasArg()
-            .isRequired(false).withDescription("Specify whether to include ke metadata to extract. Default true.")
+            .isRequired(false).withDescription("Specify whether to include metadata to extract. Default true.")
             .create("includeMeta");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_STREAMING_AUDIT_LOG = OptionBuilder.getInstance().withArgName("includeAuditLog")
             .hasArg().isRequired(false)
-            .withDescription("Specify whether to include ke auditLog to extract. Default true.")
+            .withDescription("Specify whether to include auditLog to extract. Default true.")
             .create("includeAuditLog");
 
     private static final String OPT_STREAMING_JOB = "-job";

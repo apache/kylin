@@ -50,14 +50,14 @@ public class KEProcessChecker extends AbstractHealthChecker {
             case 0:
                 return new CheckResult(CheckStateEnum.NORMAL);
             case 1:
-                return new CheckResult(CheckStateEnum.SUICIDE, "KE instance is normally stopped");
+                return new CheckResult(CheckStateEnum.SUICIDE, "instance is normally stopped");
             case -1:
-                return new CheckResult(CheckStateEnum.RESTART, "KE Instance is crashed");
+                return new CheckResult(CheckStateEnum.RESTART, "Instance is crashed");
             default:
-                return new CheckResult(CheckStateEnum.WARN, "Unknown ke process status");
+                return new CheckResult(CheckStateEnum.WARN, "Unknown process status");
             }
         } catch (Exception e) {
-            logger.error("Check KE process failed, cmd: {}", cmd, e);
+            logger.error("Check process failed, cmd: {}", cmd, e);
 
             return new CheckResult(CheckStateEnum.WARN,
                     "Execute shell guardian-get-process-status.sh failed. " + e.getMessage());

@@ -19,10 +19,10 @@
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh $@
 
 function addCrontab() {
-    logrotateCmd="${cronExpress} /usr/sbin/logrotate -s ${logrotateDir}/status ${logrotateDir}/ke > /dev/null 2>&1"
+    logrotateCmd="${cronExpress} /usr/sbin/logrotate -s ${logrotateDir}/status ${logrotateDir}/kylin > /dev/null 2>&1"
     crontab -l | while read line
     do
-        if [[ "$line" == *${logrotateDir}/ke* ]];then
+        if [[ "$line" == *${logrotateDir}/kylin* ]];then
             continue
         fi
         echo "$line" >> ${logrotateDir}/cron
@@ -37,8 +37,8 @@ function rmCronConf() {
     fi
 }
 
-function creatConf(){
-  cat > ${logrotateDir}/ke <<EOL
+function createConf(){
+  cat > ${logrotateDir}/kylin <<EOL
 ${ERR_LOG} ${OUT_LOG} ${KYLIN_OUT}  {
 size ${file_threshold}M
 rotate ${keep_limit}

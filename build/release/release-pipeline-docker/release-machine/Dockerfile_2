@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,19 +15,13 @@
 # limitations under the License.
 #
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd ${DIR}
-echo "build image in dir "${DIR}
+# This is the Docker Image for Kylin 5 release process
+#
+# For what is release policy and release process, please refer to following link:
+# 1. https://www.apache.org/legal/release-policy.html
+# 2. https://infra.apache.org/release-publishing.html
 
-# TODO: download from the official website
-echo "package kylin in local for building image"
-rm -rf ${DIR}/package/*
-if [[ ! -d ${DIR}/package/ ]]; then
-    mkdir -p ${DIR}/package/
-fi
-${DIR}/../../../build/release/release.sh
-cp ${DIR}/../../../dist/apache-kylin-*.tar.gz ${DIR}/package/
-
-echo "start to build Hadoop docker image"
-docker build -f Dockerfile_hadoop -t hadoop3.2.1-all-in-one-for-kylin5 .
-docker build -f Dockerfile_kylin -t apachekylin/apache-kylin-standalone:5.0.0 .
+FROM release-machine:5.0-base
+COPY conf/settings.xml /root/.m2/settings.xml
+COPY release-publish.sh /root/release-publish.sh
+RUN chmod u+x /root/release-publish.sh

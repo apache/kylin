@@ -84,7 +84,7 @@ public class KEStatusChecker extends AbstractHealthChecker {
                     setKgSecretKey(null);
                 }
 
-                throw new IllegalStateException("Get KE health status failed: " + response.msg);
+                throw new IllegalStateException("Get health status failed: " + response.msg);
             }
 
             Status status = response.getData();
@@ -122,7 +122,7 @@ public class KEStatusChecker extends AbstractHealthChecker {
             failCount = 0;
             return new CheckResult(CheckStateEnum.NORMAL);
         } catch (Exception e) {
-            logger.info("Check KE status failed! ", e);
+            logger.info("Check status failed! ", e);
 
             if (++failCount >= getKylinConfig().getGuardianApiFailThreshold()) {
                 return new CheckResult(CheckStateEnum.RESTART, String.format(Locale.ROOT,

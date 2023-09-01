@@ -125,7 +125,7 @@ public class NSystemController extends NBasicController {
         return this.aclEvaluate;
     }
 
-    @ApiOperation(value = "dump ke inner metadata responding to system kylinconfig")
+    @ApiOperation(value = "dump inner metadata responding to system kylinconfig")
     @GetMapping(value = "/metadata/dump")
     @ResponseBody
     public EnvelopeResponse<String> dumpMetadata(@RequestParam(value = "dump_path") String dumpPath) throws Exception {

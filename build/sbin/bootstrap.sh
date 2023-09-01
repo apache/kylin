@@ -251,7 +251,7 @@ function clearCrontab() {
     touch ${logrotateDir}/cron
     crontab -l | while read line
     do
-        if [[ "$line" == *${logrotateDir}/ke* ]];then
+        if [[ "$line" == *${logrotateDir}/kylin* ]];then
             continue
         fi
         echo "$line" >> ${logrotateDir}/cron
@@ -337,7 +337,7 @@ function startKE(){
 
     PID=`cat ${KYLIN_HOME}/pid`
     CUR_DATE=$(date "+%Y-%m-%d %H:%M:%S")
-    echo $CUR_DATE" new KE process pid is "$PID >> ${KYLIN_HOME}/logs/kylin.log
+    echo $CUR_DATE" new Kylin process pid is "$PID >> ${KYLIN_HOME}/logs/kylin.log
 
     sh ${KYLIN_HOME}/bin/guardian.sh start
 
