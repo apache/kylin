@@ -119,7 +119,7 @@ public class KylinResultSet extends AvaticaResultSet {
         try {
             result = client.executeQuery(sql, params, paramValues, queryToggles, queryId);
         } catch (IOException e) {
-            logger.error("Query KE failed: ", e);
+            logger.error("Query failed: ", e);
             throw new SQLException(e);
         }
 

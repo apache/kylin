@@ -5,6 +5,8 @@ for [release manager](https://infra.apache.org/release-publishing.html#releasema
 to complete [apache release process](https://www.apache.org/legal/release-policy.html) 
 and obey [apache release policy](https://www.apache.org/legal/release-policy.html).
 
+For maven artifacts, please check [publishing-maven-artifacts](https://infra.apache.org/publishing-maven-artifacts.html).
+
 Some source code are modified from [apache spark release](https://github.com/apache/spark/tree/master/dev/create-release) scripts.
 Kylin project use [maven-release-plugin](https://maven.apache.org/maven-release/maven-release-plugin/) to release source code and maven artifacts
 
@@ -24,26 +26,11 @@ It also provided a way to publish documentation for Kylin 5.
 
 -[ ] Update `CURRENT_KYLIN_VERSION` in `KylinVersion.java` .
 
-### Step 1 : Configure Basic Info and Copy GPG Private Key
-
--  Start docker container
-
 ```bash
-docker run --name release-machine --hostname release-machine -i -t apachekylin/release-machine:latest  bash
-# docker ps -f name=release-machine
+docker start release-machine-1 \
+    -p 4040:4040 \
+    bash 
 ```
-
-- Copy GPG Private Key from your laptop into container
-
-```bash
-docker cp ~/XXX.private.key release-machine:/root
-```
-
-### Step 2 : Configure setenv.sh
-
-- Set correct values for all variables in `/root/scripts/setenv.sh`, such as **ASF_PASSWORD** and **GPG_PASSPHRASE**.
-
-#### Variables in setenv.sh
 
 | Name            | Comment                                                                                                                                                                          |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -60,21 +47,10 @@ docker cp ~/XXX.private.key release-machine:/root
 
 Otherwise, you will fail in maven-deploy-plugin with http 401 error.
 
-### Step 3 : Install GPG Private Key
-
-```bash
-gpg --import XXX.private.key
-```
-
-```bash
-gpg --list-sigs {NAME of Your Key}
-```
-
 ### Step 4 : Publish Release Candidate
 
 ```bash
-export RELEASE_STEP=publish-rc
-bash release-publish.sh
+bash release-publish.sh publish-snapshot
 ```
 
 ### Step 5 : Vote for Release Candidate
@@ -84,8 +60,7 @@ bash release-publish.sh
 ### Step 6 : Publish Release Candidate
 
 ```bash
-export RELEASE_STEP=publish
-bash release-publish.sh
+bash release-publish.sh publish-release
 ```
 
 - Prepare vote template for announcement

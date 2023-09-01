@@ -19,7 +19,7 @@
     </property>
     <property>
         <name>yarn.scheduler.minimum-allocation-mb</name>
-        <value>512</value>
+        <value>256</value>
     </property>
     <property>
         <name>yarn.scheduler.maximum-allocation-mb</name>
@@ -35,11 +35,11 @@
     </property>
     <property>
         <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>4</value>
+        <value>8</value>
     </property>
     <property>
         <name>yarn.scheduler.capacity.maximum-am-resource-percent</name>
-        <value>0.5</value>
+        <value>0.6</value>
     </property>
     <property>
         <name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name>

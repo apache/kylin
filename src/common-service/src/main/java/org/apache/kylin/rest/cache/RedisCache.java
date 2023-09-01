@@ -174,7 +174,7 @@ public class RedisCache implements KylinCache {
         }
         logger.info("The 'kylin.cache.redis.cluster-enabled' is {}", redisClusterEnabled);
         if (kylinConfig.isRedisClusterEnabled()) {
-            logger.info("ke will use redis cluster");
+            logger.info("will use redis cluster");
             Set<HostAndPort> hosts = Sets.newHashSet();
             for (String hostAndPort : hostAndPorts) {
                 String host = hostAndPort.substring(0, hostAndPort.lastIndexOf(":"));
@@ -195,7 +195,7 @@ public class RedisCache implements KylinCache {
             }
             logger.warn("jedis cluster is not support ping");
         } else {
-            logger.info("ke will use redis pool. The redis host ke will connect to is {}", hostAndPorts[0]);
+            logger.info("will use redis pool. The redis host will connect to is {}", hostAndPorts[0]);
             String host = hostAndPorts[0].substring(0, hostAndPorts[0].lastIndexOf(":"));
             int port = Integer.parseInt(hostAndPorts[0].substring(hostAndPorts[0].lastIndexOf(":") + 1));
             JedisPoolConfig config = new JedisPoolConfig();

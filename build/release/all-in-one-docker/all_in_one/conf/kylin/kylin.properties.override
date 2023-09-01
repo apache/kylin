@@ -26,16 +26,16 @@ kylin.env.hdfs-working-dir=/kylin
 
 # Query
 kylin.storage.columnar.spark-conf.spark.driver.memory=512M
-kylin.storage.columnar.spark-conf.spark.driver.memoryOverhead=512M
+kylin.storage.columnar.spark-conf.spark.driver.memoryOverhead=256M
 kylin.storage.columnar.spark-conf.spark.executor.cores=1
 kylin.storage.columnar.spark-conf.spark.executor.instances=1
 kylin.storage.columnar.spark-conf.spark.executor.memory=1024M
-kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead=512M
+kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead=256M
 
 # Build
 kylin.engine.driver-memory-strategy=2,500
 kylin.engine.spark-conf.spark.driver.memory=512M
-kylin.engine.spark-conf.spark.driver.memoryOverhead=512M
+kylin.engine.spark-conf.spark.driver.memoryOverhead=256M
 kylin.engine.spark-conf.spark.executor.cores=1
 kylin.engine.spark-conf.spark.executor.instances=1
 kylin.engine.spark-conf.spark.executor.memory=1024M
@@ -54,3 +54,6 @@ kylin.query.engine.push-down.enable-prepare-statement-with-params=true
 kylin.query.calcite.extras-props.FUN=standard,oracle
 kylin.circuit-breaker.threshold.project=500
 kylin.engine.resource-request-over-limit-proportion=3.0
+
+# Shutdown the lock
+kylin.job.auto-set-concurrent-jobs=false

@@ -20,12 +20,17 @@
 #  */
 #
 
-docker build -f Dockerfile -t release-machine:latest .
+docker image rm release-machine:latest
+build_status='1'
+while [ "$build_status" != "0" ]
+do
+  echo "Build release-machine from $(date)"
+  docker build -f Dockerfile_1 -t release-machine:5.0-base .
+  build_status="$?"
+done
 
-if [[ "$?" == "0" ]]; then
-    echo "Docker image build succeed"
-    docker image tag release-machine:latest apachekylin/release-machine:latest
-fi
+docker build -f Dockerfile_2 -t release-machine:latest .
+
 #docker login -u xiaoxiangyu
 #docker push apachekylin/release-machine:latest
 

@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-## DEFAULT: get ke process status
+## DEFAULT: get kylin process status
 ## return code
 ## 0 process is running
 ## 1 process is stopped
