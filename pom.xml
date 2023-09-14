@@ -2963,6 +2963,11 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
                 </plugin>
@@ -3411,24 +3416,6 @@
 
     <profiles>
         <profile>
-            <id>kyoffice</id>
-
-            <repositories>
-                <repository>
-                    <id>kyoffice</id>
-                    <name>Central Repository</name>
-                    <url>http://mvn.ops.kylincorp.com/repository/maven-public/</url>
-                    <layout>default</layout>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-        </profile>
-        <profile>
             <id>sandbox</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -3493,16 +3480,6 @@
                 <hadoop.version>3.3.1</hadoop.version>
                 <hadoop.cloud.version>3.3.1</hadoop.cloud.version>
                 <jetty.version>9.3.24.v20180605</jetty.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>clickhouse.native.jdbc</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <clickhouse.group>com.github.housepower</clickhouse.group>
-                <clickhouse.artifact>clickhouse-native-jdbc</clickhouse.artifact>
             </properties>
         </profile>
         <profile>
@@ -3593,6 +3570,7 @@
                         <artifactId>maven-gpg-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
+                            <interactive>true</interactive>
                         </configuration>
                     </plugin>
                     <!-- Override the parent assembly execution to customize the assembly
