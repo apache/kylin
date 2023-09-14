@@ -69,6 +69,8 @@
     </servers>
 
     <profiles>
+        <!-- This is default proxy for China mainland,
+        remove this profile if you are not in China-->
         <profile>
             <repositories>
                 <repository>

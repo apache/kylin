@@ -21,7 +21,7 @@
 # 1. https://www.apache.org/legal/release-policy.html
 # 2. https://infra.apache.org/release-publishing.html
 
-FROM release-machine:5.0-base
+FROM apachekylin/release-machine:5.0-base
 COPY conf/settings.xml /root/.m2/settings.xml
 COPY release-publish.sh /root/release-publish.sh
 RUN chmod u+x /root/release-publish.sh
