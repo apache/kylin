@@ -150,12 +150,12 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.clickhouse.MockSecondStorage;
+//import io.kyligence.kap.clickhouse.MockSecondStorage;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+//import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.var;
 
@@ -1568,7 +1568,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
         val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         val project = "default";
-        MockSecondStorage.mock("default", new ArrayList<>(), this);
+//        MockSecondStorage.mock("default", new ArrayList<>(), this);
         val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             indexPlanManager.updateIndexPlan(model, indexPlan -> {
@@ -1576,8 +1576,8 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             });
             return null;
         }, project);
-        SecondStorageUtil.initModelMetaData(project, model);
-        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+//        SecondStorageUtil.initModelMetaData(project, model);
+//        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
 
         val job3 = new DefaultExecutable();
         job3.setProject(getProject());
@@ -1595,12 +1595,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         jobService.jobActionValidateToTest(job4.getId(), getProject(), JobActionEnum.PAUSE.name());
     }
 
-    @Test
+    //@Test
     public void testGetSegmentsInGetJobList() throws IOException {
         val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         val modelMock = RandomUtil.randomUUIDStr();
         val project = "default";
-        MockSecondStorage.mock("default", new ArrayList<>(), this);
+//        MockSecondStorage.mock("default", new ArrayList<>(), this);
         val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             indexPlanManager.updateIndexPlan(model, indexPlan -> {
@@ -1608,8 +1608,8 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             });
             return null;
         }, project);
-        SecondStorageUtil.initModelMetaData(project, model);
-        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+//        SecondStorageUtil.initModelMetaData(project, model);
+//        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
 
         val manager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
         val job = new DefaultExecutable();
