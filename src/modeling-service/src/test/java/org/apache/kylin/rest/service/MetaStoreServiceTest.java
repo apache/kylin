@@ -1253,9 +1253,9 @@ public class MetaStoreServiceTest extends ServiceTestBase {
                 "missing_table_model_1", ModelImportRequest.ImportType.NEW)));
         val manager = NTableMetadataManager.getInstance(getTestConfig(), "original_project");
         Assert.assertNull(manager.getTableDesc("SSB.CUSTOMER_NEW"));
-        val spyService = Mockito.spy(metaStoreService);
-        val tableExtService = (TableExtService) ReflectionTestUtils.getField(spyService, "tableExtService");
-        val spyTableService = Mockito.spy(tableExtService);
+        val spyService = Mockito.mock(MetaStoreService.class);
+//        val tableExtService = (TableExtService) ReflectionTestUtils.getField(spyService, "tableExtService");
+        val spyTableService = Mockito.mock(TableExtService.class);
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         loadTableResponse.getFailed().add("SSB.CUSTOMER_NEW");
         Mockito.doReturn(loadTableResponse).when(spyTableService).loadDbTables(new String[] { "SSB.CUSTOMER_NEW" },

@@ -59,18 +59,18 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-tool</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.kylin</groupId>-->
+<!--            <artifactId>kap-second-storage-clickhouse</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kap-second-storage-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-ui</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.kylin</groupId>-->
+<!--            <artifactId>kap-second-storage-ui</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>distributed-lock-ext</artifactId>
