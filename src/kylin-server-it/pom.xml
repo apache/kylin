@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-server-it</artifactId>
-    <name>Kylin - Server Integration Test</name>
+    <name>Kylin - Integration Test Server</name>
 
     <properties>
         <beanutils.version>1.9.4</beanutils.version>
@@ -72,7 +72,7 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-common-server</artifactId>
         </dependency>
-        <!--KAP-->
+        <!-- Kylin -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metadata</artifactId>

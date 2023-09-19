@@ -22,7 +22,7 @@
     <packaging>jar</packaging>
     <name>Kylin - Tool</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Tool</description>
+    <description>Kylin Tool</description>
 
     <parent>
         <artifactId>kylin</artifactId>

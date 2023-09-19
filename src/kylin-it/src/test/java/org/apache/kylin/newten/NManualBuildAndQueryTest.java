@@ -52,7 +52,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 
-@Ignore("see io.kyligence.kap.ut.TestQueryAndBuild")
+@Ignore("see TestQueryAndBuild")
 @SuppressWarnings("serial")
 public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
 

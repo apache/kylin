@@ -26,7 +26,7 @@
 
     <artifactId>kylin-source-jdbc</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin - Source JDBC</name>
+    <name>Kylin - JDBC Source</name>
     <url>http://kylin.apache.org</url>
     <description>Kylin  Source for JDBC</description>
 

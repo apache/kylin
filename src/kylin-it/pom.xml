@@ -49,7 +49,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <!--KAP-->
+        <!--Kylin-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metadata</artifactId>

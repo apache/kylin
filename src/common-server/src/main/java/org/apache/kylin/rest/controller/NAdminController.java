@@ -60,7 +60,6 @@ public class NAdminController extends NBasicController {
             propertyKeys.addAll(Arrays.asList(whiteListProperties.split(",")));
         }
 
-        // add KAP specific
         propertyKeys.add("kylin.env.smart-mode-enabled");
         propertyKeys.add("kylin.source.load-hive-tablename-enabled");
         propertyKeys.add("kylin.kerberos.project-level-enabled");

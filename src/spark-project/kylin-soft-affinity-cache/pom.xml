@@ -20,8 +20,8 @@
     <artifactId>kylin-soft-affinity-cache</artifactId>
     <packaging>jar</packaging>
     <url>http://kylin.apache.org</url>
-    <description>Kylin Soft Affinity Cache</description>
-    <name>Kylin - Soft Affinity Local Cache</name>
+    <description>Kylin Local Data Cache</description>
+    <name>Kylin - Local Data Cache</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

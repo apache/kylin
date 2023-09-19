@@ -18,9 +18,9 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-sparder</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin - Sparder</name>
+    <name>Kylin - Query Engine Spark</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Sparder Query Engine</description>
+    <description>Kylin Query Engine Spark</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +35,7 @@
     </parent>
 
     <dependencies>
-        <!--KAP-->
+        <!-- Kylin -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>

@@ -19,9 +19,9 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-engine-spark</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin - SPARK Engine</name>
+    <name>Kylin - Build Engine Spark</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Job Engine - SPARK</description>
+    <description>Kylin Build Engine - SPARK</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

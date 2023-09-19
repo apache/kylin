@@ -258,7 +258,7 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
         }
 
         logger.debug("\nStart to transform SQL with row ACL\n");
-        // if origin SQL has where clause, add "()", see KAP#2873
+        // if origin SQL has where clause, add "()"
         sql = whereClauseBracketsCompletion(defaultSchema, sql, getCandidateTables(allWhereCondWithTbls), project);
 
         sql = rowFilter(defaultSchema, sql, allWhereCondWithTbls, project);
