@@ -52,7 +52,6 @@ public class SimplifiedMeasure implements Serializable {
     @JsonProperty("name")
     private String name;
     // returnType is concerned in equal comparasion for return type changes in measure
-    // see io.kyligence.kap.rest.service.ModelServiceSemanticUpdateTest.testUpdateMeasure_ChangeReturnType
     @JsonProperty("return_type")
     private String returnType;
     @JsonProperty("parameter_value")

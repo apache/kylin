@@ -404,9 +404,6 @@ public class KapConfig {
         return Integer.parseInt(config.getOptional("kylin.metrics.daily-max-retry-times", "3"));
     }
 
-    /**
-     * kap monitor
-     */
     public boolean isMonitorEnabled() {
         return Boolean.parseBoolean(config.getOptional("kylin.monitor.enabled", "false"));
     }
@@ -459,9 +456,6 @@ public class KapConfig {
         return Double.parseDouble(config.getOptional("kylin.monitor.cluster-crash-threshold", "0.8"));
     }
 
-    /**
-     * kap circuit-breaker
-     */
     public boolean isCircuitBreakerEnabled() {
         return Boolean.parseBoolean(config.getOptional("kylin.circuit-breaker.enabled", "true"));
     }

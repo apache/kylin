@@ -153,7 +153,7 @@ public class NSparkMetadataExplorerTest extends NLocalWithSparkSessionTest {
         SparkSession sparkSession = Mockito.mock(SparkSession.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(sparkSession.sql("desc formatted " + "TEST_KYLIN_FACT").where("col_name == 'Location'").head()
                 .getString(1)).thenReturn(
-                        "hdfs://hacluster//KAP/src/spark-project/examples/test_data/27578/spark-warehouse/test_kylin_fact");
+                        "hdfs://hacluster//src/spark-project/examples/test_data/27578/spark-warehouse/test_kylin_fact");
         Assert.assertTrue(
                 sparkMetadataExplorer.getLoc(sparkSession, "TEST_KYLIN_FACT", null).contains("hdfs://hacluster"));
         Assert.assertTrue(sparkMetadataExplorer.getLoc(sparkSession, "TEST_KYLIN_FACT", "hdfs://writecluster")

@@ -43,7 +43,6 @@ public class ServerInfoUtil {
         buf.append("kylin.home: ").append(kylinHome == null ? UNKNOWN : new File(kylinHome).getAbsolutePath())
                 .append("\n");
 
-        // kap versions
         String kapVersion = null;
         try {
             File versionFile = new File(kylinHome, "VERSION");

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.kyligence.kap.rest.controller.open;
+package org.apache.kylin.rest.controller.open;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 

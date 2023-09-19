@@ -122,7 +122,7 @@ public class ExecAndComp {
                 "query/sql_timestamp/query27.sql",
                 // TODO percentile_approx()
                 "semi_auto/measures/query00.sql" };
-        String[] pathArray = fullPath.split("src/kap-it/src/test/resources/");
+        String[] pathArray = fullPath.split("src/kylin-it/src/test/resources/");
         if (pathArray.length < 2)
             return false;
         String relativePath = pathArray[1];

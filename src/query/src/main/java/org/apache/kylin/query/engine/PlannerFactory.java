@@ -238,7 +238,6 @@ public class PlannerFactory {
         // convert all right joins to left join since we only support left joins in model
         planner.addRule(RightJoinToLeftJoinRule.INSTANCE);
         // UnionMergeRule may slow volcano planner optimization on large number of union clause
-        // see KAP#16036
         planner.removeRule(UnionMergeRule.INSTANCE);
 
         planner.addRule(KapProjectJoinTransposeRule.INSTANCE);

@@ -26,9 +26,9 @@
     <packaging>jar</packaging>
     <artifactId>kylin-assembly</artifactId>
 
-    <name>Kylin - Assembly</name>
+    <name>Kylin - Source Assembly</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Assembly</description>
+    <description>Kylin - Source Assembly</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,7 +45,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <!--KAP-->
+        <!-- Kylin -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metadata</artifactId>

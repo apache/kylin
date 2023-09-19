@@ -1495,7 +1495,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    // KAP query sql blacklist
     public String getSqlBlacklistItemIdEmpty() {
         return "黑名单条目 id 不能为空";
     }

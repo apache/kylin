@@ -114,7 +114,7 @@ public class SegmentMergeStorageChecker {
 
     public static long recountExpectedSpaceByte(long originalExpectedSpaceByte, int replication) {
         logger.info("Merging segments requires {} B space(original)", originalExpectedSpaceByte);
-        logger.info("Kap replication is {}", replication);
+        logger.info("Replication is {}", replication);
         long expectedSpaceByByte = originalExpectedSpaceByte * replication;
         logger.info("Merging segments requires {} B space after recount.", expectedSpaceByByte);
         return expectedSpaceByByte;

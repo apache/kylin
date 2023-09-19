@@ -1424,7 +1424,6 @@ public class Message {
         return "The parameter '%s' is too large, maximum %s KB.";
     }
 
-    // KAP query sql blacklist
     public String getSqlBlacklistItemIdEmpty() {
         return "The id of blacklist item can not be empty.";
     }

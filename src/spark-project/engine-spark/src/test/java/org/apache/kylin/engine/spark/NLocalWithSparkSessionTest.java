@@ -135,7 +135,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         if (ss != null) {
             ss.close();
         }
-        FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
+        FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
     }
 
     protected IndexDataConstructor indexDataConstructor;
@@ -247,7 +247,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         if (type.isBoolean())
             return DataTypes.BooleanType;
 
-        throw new IllegalArgumentException("KAP data type: " + type + " can not be converted to spark's type.");
+        throw new IllegalArgumentException("Data type: " + type + " can not be converted to spark's type.");
     }
 
     protected void fullBuild(String dfName) throws Exception {

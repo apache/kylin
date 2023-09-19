@@ -2153,9 +2153,9 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isPushdownQueryCacheEnabled() {
-        // KAP#12784 disable all push-down caches, even if the pushdown result is cached, it won't be used
+        // disable all push-down caches, even if the pushdown result is cached, it won't be used
         // Thus this config is set to FALSE by default
-        // you may need to change the default value if the pushdown cache issue KAP#13060 is resolved
+        // you may need to change the default value if the pushdown cache issue is resolved
         return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.cache-enabled", FALSE));
     }
 

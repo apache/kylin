@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-spark-it</artifactId>
-    <name>Kylin - SPARK IT</name>
+    <name>Kylin - Integration Test Spark</name>
     <url>http://kylin.apache.org</url>
     <description>Kylin Job Engine - SPARK</description>
 

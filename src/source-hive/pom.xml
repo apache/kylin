@@ -22,7 +22,7 @@
     <artifactId>kylin-source-hive</artifactId>
     <packaging>jar</packaging>
     <name>Kylin - Hive Source</name>
-    <description>KAP Hive Source</description>
+    <description>Hive Source</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

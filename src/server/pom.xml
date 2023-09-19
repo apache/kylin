@@ -32,7 +32,7 @@
     </parent>
 
     <dependencies>
-        <!--Add dependencies of KAP extensions-->
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-data-loading-server</artifactId>
@@ -503,6 +503,9 @@
         </profile>
         <profile>
             <id>sandbox</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencies>
                 <!-- for sandbox -->
                 <dependency>
@@ -523,6 +526,7 @@
                 <dependency>
                     <groupId>org.apache.hive</groupId>
                     <artifactId>hive-exec</artifactId>
+                    <scope>provided</scope>
                 </dependency>
                 <!--end for sandbox -->
             </dependencies>

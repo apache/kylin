@@ -53,9 +53,9 @@ public class NCircuitBreaker {
 
                     breakerStarted.set(true);
 
-                    logger.info("kap circuit-breaker started");
+                    logger.info("circuit-breaker started");
                 } catch (Exception e) {
-                    logger.error("kap circuit-breaker start failed", e);
+                    logger.error("circuit-breaker start failed", e);
                 }
             }
         }
@@ -65,7 +65,7 @@ public class NCircuitBreaker {
     public static void stop() {
         // Only used in test cases!!!
         breakerStarted.set(false);
-        logger.info("kap circuit-breaker stopped");
+        logger.info("circuit-breaker stopped");
     }
 
     public static void verifyProjectCreation(int current) {
@@ -111,7 +111,7 @@ public class NCircuitBreaker {
 
     private static boolean isEnabled() {
         if (!breakerStarted.get()) {
-            logger.warn("kap circuit-breaker not started");
+            logger.warn("circuit-breaker not started");
             return false;
         }
         return breakerConfig.isBreakerEnabled();

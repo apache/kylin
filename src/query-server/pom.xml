@@ -34,7 +34,7 @@
     </properties>
 
     <dependencies>
-        <!--Add dependencies of KAP extensions-->
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-common-server</artifactId>

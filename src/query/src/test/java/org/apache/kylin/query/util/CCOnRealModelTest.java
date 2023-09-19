@@ -112,7 +112,6 @@ public class CCOnRealModelTest extends NLocalFileMetadataTestCase {
         }
     }
 
-    // ignored for KAP#16258
     @Ignore("historic ignored")
     @Test
     public void testSubquery() {

@@ -63,7 +63,7 @@ public class NBitmapFunctionForCalciteExecTest extends NLocalWithSparkSessionTes
     public void after() throws Exception {
         NDefaultScheduler.destroyInstance();
         cleanupTestMetadata();
-        FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
+        FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
         Unsafe.clearProperty("kylin.query.engine.run-constant-query-locally");
     }
 
