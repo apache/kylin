@@ -77,22 +77,20 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.ShellException;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.dao.ExecutableOutputPO;
-import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.job.dao.NExecutableDao;
-import org.apache.kylin.job.exception.PersistentException;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
+import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.dao.NExecutableDao;
+import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.val;
 
@@ -1531,7 +1529,7 @@ public class NExecutableManager {
                 || to == ExecutableState.ERROR || to == ExecutableState.SUICIDAL;
     }
 
-    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) throws PersistentException {
+    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) {
         DataOutputStream dout = null;
         try {
             Path path = new Path(resPath);
@@ -1543,7 +1541,7 @@ public class NExecutableManager {
             JsonUtil.writeValue(dout, obj);
         } catch (Exception e) {
             // the operation to update output to hdfs failed, next task should not be interrupted.
-            throw new PersistentException("update job output: " + resPath + " to HDFS failed", e);
+            logger.error("update job output [{}] to HDFS failed.", resPath, e);
         } finally {
             IOUtils.closeQuietly(dout);
         }

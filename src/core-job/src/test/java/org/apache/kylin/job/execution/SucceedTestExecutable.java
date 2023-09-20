@@ -18,9 +18,6 @@
 
 package org.apache.kylin.job.execution;
 
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.exception.PersistentException;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +34,7 @@ public class SucceedTestExecutable extends BaseTestExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws PersistentException, ExecuteException, InterruptedException {
+    public ExecuteResult doWork(ExecutableContext context) {
         Map<String, String> info = new HashMap<String, String>() {
             {
                 put("runningStatus", "inRunning");

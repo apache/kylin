@@ -32,17 +32,17 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.mail.MailNotificationType;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.ExecuteRuntimeException;
 import org.apache.kylin.job.exception.JobStoppedException;
-import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 
 /**
@@ -229,15 +229,15 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             switch (state) {
             case SUCCEED:
                 updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
-                onStatusChange(ExecutableState.SUCCEED);
+                onStatusChange(MailNotificationType.JOB_SUCCEED);
                 break;
             case DISCARDED:
                 updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
-                onStatusChange(ExecutableState.DISCARDED);
+                onStatusChange(MailNotificationType.JOB_DISCARDED);
                 break;
             case SUICIDAL:
                 updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());
-                onStatusChange(ExecutableState.SUICIDAL);
+                onStatusChange(MailNotificationType.JOB_ERROR);
                 break;
             case ERROR:
             case PAUSED:
@@ -260,7 +260,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
                 }
                 updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
                 if (state == ExecutableState.ERROR) {
-                    onStatusChange(ExecutableState.ERROR);
+                    onStatusChange(MailNotificationType.JOB_ERROR);
                 }
                 break;
             default:
@@ -290,8 +290,6 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             boolean taskSucceed = false;
             switch (task.getStatus()) {
             case RUNNING:
-                hasError = true;
-                break;
             case ERROR:
                 hasError = true;
                 break;
@@ -368,8 +366,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // Hook method, default action is doing nothing
     }
 
-    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg)
-            throws PersistentException, ExecuteException, InterruptedException {
+    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg) {
         //to final state, regardless of isStoppedNonVoluntarily, otherwise a paused job might fail to suicide
         if (!getOutput().getState().isFinalState()) {
             updateJobOutput(getProject(), getId(), finalState, null, null, failedMsg, hook);
@@ -411,7 +408,11 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // just implement it
     }
 
-    protected void onStatusChange(ExecutableState state) {
-        super.notifyUserStatusChange(state);
+    protected boolean onStatusChange(MailNotificationType notificationType) {
+        KylinConfig config = getConfig();
+        if (config.isMailEnabled()) {
+            return super.notifyUser(notificationType);
+        }
+        return false;
     }
 }

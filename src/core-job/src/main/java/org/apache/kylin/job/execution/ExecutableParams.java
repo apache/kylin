@@ -17,7 +17,6 @@
  */
 package org.apache.kylin.job.execution;
 
-import static org.apache.kylin.job.execution.AbstractExecutable.NOTIFY_LIST;
 import static org.apache.kylin.job.execution.AbstractExecutable.PARENT_ID;
 import static org.apache.kylin.job.execution.AbstractExecutable.SPARK_YARN_QUEUE;
 import static org.apache.kylin.job.execution.AbstractExecutable.SUBMITTER;
@@ -25,7 +24,6 @@ import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_DATA_RANGE_
 import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_DATA_RANGE_START;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,15 +36,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.MailHelper;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.job.JobBucket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -86,28 +83,9 @@ public class ExecutableParams {
         setParentId(parent.getId());
     }
 
-    public final List<String> getNotifyList() {
-        final String str = getParam(NOTIFY_LIST);
-        if (str != null) {
-            return Lists.newArrayList(StringUtils.split(str, ","));
-        } else {
-            return Collections.emptyList();
-        }
-    }
-
-    public final void setNotifyList(String notifications) {
-        setParam(NOTIFY_LIST, notifications);
-    }
-
-    public final void setNotifyList(List<String> notifications) {
-        setNotifyList(StringUtils.join(notifications, ","));
-    }
-
     public List<String> getAllNotifyUsers(KylinConfig kylinConfig) {
         final String[] adminDls = kylinConfig.getAdminDls();
-        List<String> users = MailHelper.getAllNotifyUserList(adminDls);
-        users.addAll(getNotifyList());
-        return users;
+        return Lists.newArrayList(adminDls);
     }
 
     public final String getParentId() {

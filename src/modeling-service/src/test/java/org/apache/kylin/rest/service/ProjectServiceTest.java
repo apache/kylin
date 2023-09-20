@@ -98,7 +98,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-//import io.kyligence.kap.clickhouse.MockSecondStorage;
+//import io.Kylin.kap.clickhouse.MockSecondStorage;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -369,18 +369,17 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         var response = projectService.getProjectConfig(project);
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(false);
-        jobNotificationConfigRequest.setJobNotificationStates(Lists.newArrayList("Succeed", "Error", "Discard"));
+        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("Succeed", "Error", "Discard"));
         jobNotificationConfigRequest.setJobNotificationEmails(
-                Lists.newArrayList("user1@kyligence.io", "user2@kyligence.io", "user2@kyligence.io"));
-        jobNotificationConfigRequest.setMetadataPersistNotificationEnabled(false);
+                Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         response = projectService.getProjectConfig(project);
         Assert.assertEquals(2, response.getJobNotificationEmails().size());
-        Assert.assertEquals(3, response.getJobNotificationStates().size());
+        Assert.assertEquals(3, response.getJobStatesNotification().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
 
         jobNotificationConfigRequest
-                .setJobNotificationEmails(Lists.newArrayList("@kyligence.io", "user2@.io", "user2@kyligence.io"));
+                .setJobNotificationEmails(Lists.newArrayList("@Kylin.io", "user2@.io", "user2@Kylin.io"));
         thrown.expect(KylinException.class);
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         thrown = ExpectedException.none();
@@ -773,10 +772,9 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(true);
-        jobNotificationConfigRequest.setJobNotificationStates(Lists.newArrayList("Succeed", "Error", "Discard"));
+        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("Succeed", "Error", "Discard"));
         jobNotificationConfigRequest.setJobNotificationEmails(
-                Lists.newArrayList("user1@kyligence.io", "user2@kyligence.io", "user2@kyligence.io"));
-        jobNotificationConfigRequest.setMetadataPersistNotificationEnabled(false);
+                Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(PROJECT, jobNotificationConfigRequest);
 
         projectService.updateQueryAccelerateThresholdConfig(PROJECT, 30, false);
@@ -792,12 +790,12 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         updateProject();
         var response = projectService.getProjectConfig(PROJECT);
         Assert.assertEquals(2, response.getJobNotificationEmails().size());
-        Assert.assertEquals(3, response.getJobNotificationStates().size());
+        Assert.assertEquals(3, response.getJobStatesNotification().size());
         Assert.assertTrue(response.isDataLoadEmptyNotificationEnabled());
 
         response = projectService.resetProjectConfig(PROJECT, "job_notification_config");
         Assert.assertEquals(0, response.getJobNotificationEmails().size());
-        Assert.assertEquals(3, response.getJobNotificationStates().size());
+        Assert.assertEquals(0, response.getJobStatesNotification().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
 
         Assert.assertFalse(response.isFavoriteQueryTipsEnabled());
