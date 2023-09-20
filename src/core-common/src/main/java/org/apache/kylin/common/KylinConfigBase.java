@@ -1170,15 +1170,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String[] getJobNotificationStates() {
-        return getOptionalStringArray("kylin.job.notification-enable-states", new String[0]);
-    }
-
-    public int getJobMetadataPersistRetry() {
-        return Integer.parseInt(this.getOptional("kylin.job.metadata-persist-retry", "5"));
-    }
-
-    public Boolean getJobMetadataPersistNotificationEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.job.notification-on-metadata-persist", FALSE));
+        return getOptionalStringArray("kylin.job.notification-enable-states", null);
     }
 
     public int getJobRetry() {
@@ -2601,10 +2593,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public Boolean getTimeMachineEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.storage.time-machine-enabled", FALSE));
-    }
-
-    public boolean getJobSourceRecordsChangeNotificationEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.notification-on-source-records-change", FALSE));
     }
 
     public int getMetadataBackupCountThreshold() {

@@ -36,12 +36,10 @@
 
 package org.apache.kylin.job.execution;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -55,25 +53,28 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
+import org.apache.kylin.common.mail.MailNotificationType;
+import org.apache.kylin.common.mail.MailNotifier;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.MailHelper;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.ThrowableUtils;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.MoreObjects;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
-import org.apache.kylin.job.constant.JobIssueEnum;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.JobStoppedNonVoluntarilyException;
-import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.mail.JobMailUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -83,11 +84,6 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -101,13 +97,9 @@ public abstract class AbstractExecutable implements Executable {
 
     public interface Callback {
         void process() throws Exception;
-
-//        default void onProcessError(Throwable throwable) {
-//        }
     }
 
     protected static final String SUBMITTER = "submitter";
-    protected static final String NOTIFY_LIST = "notify_list";
     protected static final String PARENT_ID = "parentId";
     public static final String RUNTIME_INFO = "runtimeInfo";
     public static final String DEPENDENT_FILES = "dependentFiles";
@@ -286,9 +278,9 @@ public abstract class AbstractExecutable implements Executable {
         if (result.succeed()) {
             wrapWithCheckQuit(() -> {
                 ExecutableState state = adjustState(ExecutableState.SUCCEED);
-                logger.info("Job {} adjust future state from {} to {}", getId(), ExecutableState.SUCCEED.name(), state.name());
-                updateJobOutput(project, getId(), state, result.getExtraInfo(), result.output(),
-                        null);
+                logger.info("Job {} adjust future state from {} to {}", getId(), ExecutableState.SUCCEED.name(),
+                        state.name());
+                updateJobOutput(project, getId(), state, result.getExtraInfo(), result.output(), null);
             });
         } else if (result.skip()) {
             wrapWithCheckQuit(() -> {
@@ -323,17 +315,17 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
+            String output, Consumer<String> hook) {
         updateJobOutput(project, jobId, newStatus, info, output, null, hook);
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
+            String output, String failedMsg, Consumer<String> hook) {
         updateJobOutput(project, jobId, newStatus, info, output, this.getLogPath(), failedMsg, hook);
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, String logPath, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
+            String output, String logPath, String failedMsg, Consumer<String> hook) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             NExecutableManager executableManager = getExecutableManager(project);
             val existedInfo = executableManager.getOutput(jobId).getExtra();
@@ -357,11 +349,10 @@ public abstract class AbstractExecutable implements Executable {
         }, project, UnitOfWork.DEFAULT_MAX_RETRY, getEpochId(), getTempLockName());
 
         //write output to HDFS
-        updateJobOutputWithPersistCheck(project, jobId, output, logPath);
+        updateJobOutputToHDFS(project, jobId, output, logPath);
     }
 
-    private static void updateJobOutputToHDFS(String project, String jobId, String output, String logPath)
-            throws PersistentException {
+    private static void updateJobOutputToHDFS(String project, String jobId, String output, String logPath) {
         NExecutableManager nExecutableManager = getExecutableManager(project);
         ExecutableOutputPO jobOutput = nExecutableManager.getJobOutput(jobId);
         if (null != output) {
@@ -549,7 +540,7 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     // Ensure metadata compatibility
-    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException, InterruptedException;
+    public abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException;
 
     @Override
     public boolean isRunnable() {
@@ -582,7 +573,7 @@ public abstract class AbstractExecutable implements Executable {
         return output.getByteSize();
     }
 
-    public void notifyUserIfNecessary(NDataLayout[] addOrUpdateCuboids) {
+    public boolean notifyUserIfNecessary(NDataLayout[] addOrUpdateCuboids) {
         boolean hasEmptyLayout = false;
         for (NDataLayout dataCuboid : addOrUpdateCuboids) {
             if (dataCuboid.getRows() == 0) {
@@ -590,56 +581,33 @@ public abstract class AbstractExecutable implements Executable {
                 break;
             }
         }
-        if (hasEmptyLayout) {
-            notifyUserJobIssue(JobIssueEnum.LOAD_EMPTY_DATA);
+
+        if (hasEmptyLayout && getConfig().isMailEnabled()) {
+            logger.info("Layout rows is 0, notify user");
+            return notifyUser(MailNotificationType.JOB_LOAD_EMPTY_DATA);
         }
+
+        return false;
     }
 
-    public final void notifyUserJobIssue(JobIssueEnum jobIssue) {
+    protected boolean notifyUser(MailNotificationType notificationType) {
         Preconditions.checkState((this instanceof DefaultExecutable) || this.getParent() instanceof DefaultExecutable);
         val projectConfig = NProjectManager.getInstance(getConfig()).getProject(project).getConfig();
-        boolean needNotification = true;
-        switch (jobIssue) {
-        case LOAD_EMPTY_DATA:
-            needNotification = projectConfig.getJobDataLoadEmptyNotificationEnabled();
-            String state = checkStateIfOverride(NonCustomProjectLevelConfig.JOB_DATA_LOAD_EMPTY_NOTIFICATION_ENABLED.getValue());
-            needNotification = state == null ? needNotification : Boolean.parseBoolean(state);
-            break;
-        case SOURCE_RECORDS_CHANGE: //todo source record change
-            needNotification = projectConfig.getJobSourceRecordsChangeNotificationEnabled();
-            break;
-        default:
-            throw new IllegalArgumentException(String.format(Locale.ROOT, "no process for jobIssue: %s.", jobIssue));
-        }
-        List<String> users;
-        users = getOverrideNotifyUsers();
 
+        boolean needNotification = notificationType.needNotify(projectConfig);
         if (!needNotification) {
-            return;
+            logger.info("[{}] is not specified by user, not need to notify users.", notificationType.getDisplayName());
+            return false;
         }
 
+        List<String> users = getAllNotifyUsers(projectConfig);
         if (this instanceof DefaultExecutable) {
-            MailHelper.notifyUser(projectConfig, EmailNotificationContent.createContent(jobIssue, this), users);
+            return MailNotifier.notifyUser(projectConfig, JobMailUtil.createMail(notificationType, this), users);
         } else {
-            MailHelper.notifyUser(projectConfig, EmailNotificationContent.createContent(jobIssue, this.getParent()),
+            return MailNotifier.notifyUser(projectConfig, JobMailUtil.createMail(notificationType, this.getParent()),
                     users);
         }
     }
-
-    public final void notifyUserStatusChange(ExecutableState state) {
-        Preconditions.checkState(
-                (this instanceof DefaultExecutable) || this.getParent() instanceof DefaultExecutable);
-        val projectConfig = NProjectManager.getInstance(getConfig()).getProject(project).getConfig();
-        List<String> users = getOverrideNotifyUsers();
-        if (this instanceof DefaultExecutable) {
-            MailHelper.notifyUser(projectConfig, EmailNotificationContent.createContent(state,
-                    this, ((DefaultExecutable) this).getTasks()), users);
-        } else {
-            MailHelper.notifyUser(projectConfig, EmailNotificationContent.createContent(state,
-                            this.getParent(), ((DefaultExecutable) this.getParent()).getTasks()), users);
-        }
-    }
-
 
     public void setSparkYarnQueueIfEnabled(String project, String yarnQueue) {
         ProjectInstance proj = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project);
@@ -676,34 +644,6 @@ public abstract class AbstractExecutable implements Executable {
     public final Output getOutput() {
         return getManager().getOutput(getId());
     }
-
-    //will modify input info
-//    public Map<String, String> makeExtraInfo(Map<String, String> info) {
-//        if (info == null) {
-//            return Maps.newHashMap();
-//        }
-//
-//        // post process
-//        if (info.containsKey(MR_JOB_ID) && !info.containsKey(YARN_APP_ID)) {
-//            String jobId = info.get(MR_JOB_ID);
-//            if (jobId.startsWith("job_")) {
-//                info.put(YARN_APP_ID, jobId.replace("job_", "application_"));
-//            }
-//        }
-//
-//        if (info.containsKey(YARN_APP_ID)
-//                && !org.apache.commons.lang3.StringUtils.isEmpty(getConfig().getJobTrackingURLPattern())) {
-//            String pattern = getConfig().getJobTrackingURLPattern();
-//            try {
-//                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
-//                info.put(YARN_APP_URL, newTrackingURL);
-//            } catch (IllegalFormatException ife) {
-//                logger.error("Illegal tracking url pattern: {}", getConfig().getJobTrackingURLPattern());
-//            }
-//        }
-//
-//        return info;
-//    }
 
     public static long getStartTime(Output output) {
         return output.getStartTime();
@@ -978,94 +918,5 @@ public abstract class AbstractExecutable implements Executable {
             return getId();
         }
         return getParentId();
-    }
-
-    protected void updateJobOutputWithPersistCheck(String project, String jobId, String output, String logPath)
-            throws ExecuteException, PersistentException, InterruptedException {
-        Throwable exception;
-        int retryCnt = 0;
-        do {
-            exception = null;
-            retryCnt++;
-            try {
-                updateJobOutputToHDFS(project, jobId, output, logPath);
-            } catch (Exception e) {
-                logger.error("update Job Output failed due to : {}", e.getMessage());
-                if (isMetaDataPersistException(e, 5)) {
-                    exception = e;
-                    Thread.sleep(1000L * (long) Math.pow(4, retryCnt));
-                } else {
-                    throw e;
-                }
-            }
-        } while (exception != null && retryCnt <= context.getConfig().getJobMetadataPersistRetry());
-
-        if (exception != null) {
-            checkMetadataPersistConfig(exception);
-        }
-    }
-
-    protected void checkMetadataPersistConfig(Throwable exception) throws ExecuteException {
-        String state = checkStateIfOverride(NonCustomProjectLevelConfig.NOTIFICATION_ON_METADATA_PERSIST.getValue());
-        if((state == null && this.getConfig().getJobMetadataPersistNotificationEnabled())
-                || (Boolean.parseBoolean(state))) { //if override then check override prop
-            handleMetadataPersistException(exception);
-            throw new ExecuteException(exception);
-        }
-    }
-
-    protected void handleMetadataPersistException(Throwable exception) {
-
-        List<String> notifyUsers = getOverrideNotifyUsers();
-        if (notifyUsers == null || notifyUsers.isEmpty()) {
-            logger.warn("no need to send email, user list is empty.");
-            return;
-        }
-        if (this instanceof DefaultExecutable) {
-            MailHelper.notifyUser(getConfig(), EmailNotificationContent.createMetadataPersistExceptionContent(
-                    exception, this), notifyUsers);
-        } else {
-            MailHelper.notifyUser(getConfig(), EmailNotificationContent.createMetadataPersistExceptionContent(
-                    exception, this.getParent()), notifyUsers);
-        }
-    }
-
-    protected boolean isMetaDataPersistException(Exception e, final int maxDepth) {
-        if (e instanceof PersistentException) {
-            return true;
-        }
-        Throwable t = e.getCause();
-        int depth = 0;
-        while (t != null && depth < maxDepth) {
-            depth++;
-            if (t instanceof PersistentException) {
-                return true;
-            }
-            t = t.getCause();
-        }
-        return false;
-    }
-
-    private String checkStateIfOverride(String state) {
-        String overrideState;
-        if (this instanceof DefaultExecutable) {
-            overrideState = EmailNotificationContent.checkOverrideConfig(this.getProject(),
-                    state);
-        } else {
-            overrideState = EmailNotificationContent.checkOverrideConfig(this.getParent().getProject(),
-                    state);
-        }
-
-        return overrideState;
-    }
-
-    private List<String> getOverrideNotifyUsers() {
-        String overrideNotifyUsers = checkStateIfOverride(
-                NonCustomProjectLevelConfig.NOTIFICATION_USER_EMAILS.getValue());
-        List<String> notifyUsers = getAllNotifyUsers(getConfig());
-        if(overrideNotifyUsers != null) {
-            notifyUsers.addAll(Arrays.asList(StringUtils.split(overrideNotifyUsers, ",")));
-        }
-        return notifyUsers;
     }
 }

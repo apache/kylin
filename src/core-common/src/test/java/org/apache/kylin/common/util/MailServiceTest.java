@@ -18,61 +18,49 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.AbstractTestCase;
+import org.apache.commons.mail.EmailException;
 import org.apache.kylin.common.KylinConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
+import org.apache.kylin.common.mail.MailService;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-@Ignore("convenient trial tool for dev")
-public class MailServiceTest extends AbstractTestCase {
-
-    private CleanMetadataHelper cleanMetadataHelper = null;
-
-    @Before
-    public void setUp() throws Exception {
-        cleanMetadataHelper = new CleanMetadataHelper();
-        cleanMetadataHelper.setUp();
-    }
-
-    @After
-    public void after() throws Exception {
-        cleanMetadataHelper.tearDown();
-    }
+public class MailServiceTest {
 
     @Test
-    public void testSendEmail() throws IOException {
+    public void testSendEmail() {
+        KylinConfig mockConfig = Mockito.mock(KylinConfig.class);
+        Mockito.when(mockConfig.isStarttlsEnabled()).thenReturn(true);
+        Mockito.when(mockConfig.getMailUsername()).thenReturn("test@user");
+        Mockito.when(mockConfig.getMailPassword()).thenReturn("test_password");
+        Mockito.when(mockConfig.getSmtpPort()).thenReturn("25");
+        Mockito.when(mockConfig.getMailSender()).thenReturn("test@user");
 
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-        MailService mailservice = new MailService(config);
-        boolean sent = sendTestEmail(mailservice);
-        assert sent;
-
-        overwriteSystemProp("kylin.job.notification-enabled", "false");
-        // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
-        mailservice = new MailService(config);
-        sent = sendTestEmail(mailservice);
-        assert !sent;
-    }
-
-    @Test
-    public void testMailHelper() {
-        overwriteSystemProp("kylin.capacity.notification-enabled", "true");
-        overwriteSystemProp("kylin.capacity.notification-emails", "foobar@foobar.com");
-        boolean sent = MailTemplateProvider.notifyUserForOverCapacity(100L, 81L, "abc");
-        assert sent;
-    }
-
-    private boolean sendTestEmail(MailService mailservice) {
-
-        List<String> receivers = new ArrayList<String>(1);
+        MailService mailservice = new MailService(mockConfig);
+        List<String> receivers = new ArrayList<>(1);
         receivers.add("foobar@foobar.com");
-        return mailservice.sendMail(receivers, "A test email from Kylin", "Hello!");
+        boolean sent = sendTestEmail(mailservice, receivers, true);
+        Assert.assertFalse(sent);
+
+        Mockito.when(mockConfig.isStarttlsEnabled()).thenReturn(false);
+        Mockito.when(mockConfig.getMailUsername()).thenReturn("");
+        Mockito.when(mockConfig.getMailPassword()).thenReturn("ENC(test_password)");
+        Mockito.when(mockConfig.getMailSender()).thenReturn("test@sender");
+
+        mailservice = new MailService(mockConfig);
+        sent = sendTestEmail(mailservice, Lists.newArrayList(), false);
+        Assert.assertFalse(sent);
+    }
+
+    private boolean sendTestEmail(MailService mailservice, List<String> receivers, boolean isHtmlMsg) {
+        try {
+            return mailservice.sendMail(receivers, "A test email from Kylin", "Hello!", isHtmlMsg);
+        } catch (EmailException e) {
+            return false;
+        }
     }
 }

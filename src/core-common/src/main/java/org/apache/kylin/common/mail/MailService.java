@@ -16,25 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.common.mail;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.common.util.EncryptUtil;
 
 /**
  * @author xduo
  */
 public class MailService {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MailService.class);
-
-    private Boolean enabled = Boolean.TRUE;
-    private Boolean starttlsEnabled = Boolean.FALSE;
+    private boolean starttlsEnabled;
     private String host;
     private String port;
     private String username;
@@ -42,13 +40,12 @@ public class MailService {
     private String sender;
 
     public MailService(KylinConfig config) {
-        this(config.isMailEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(),
-                config.getMailUsername(), config.getMailPassword(), config.getMailSender());
+        this(config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(),
+                config.getMailPassword(), config.getMailSender());
     }
 
-    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username,
-            String password, String sender) {
-        this.enabled = enabled;
+    private MailService(boolean starttlsEnabled, String host, String port, String username, String password,
+            String sender) {
         this.starttlsEnabled = starttlsEnabled;
         this.host = host;
         this.port = port;
@@ -58,12 +55,6 @@ public class MailService {
         }
         this.password = password;
         this.sender = sender;
-
-        if (enabled) {
-            if (host.isEmpty()) {
-                throw new RuntimeException("mail service host is empty");
-            }
-        }
     }
 
     /**
@@ -73,7 +64,7 @@ public class MailService {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content) {
+    public boolean sendMail(List<String> receivers, String subject, String content) throws EmailException {
         return sendMail(receivers, subject, content, true);
     }
 
@@ -84,14 +75,8 @@ public class MailService {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
-
-        if (!enabled) {
-            logger.info("Email service is disabled; this mail will not be delivered: " + subject);
-            logger.info("To enable mail service, set 'kylin.job.notification-enabled=true' in kylin.properties");
-            return false;
-        }
-
+    public boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg)
+            throws EmailException {
         Email email = new HtmlEmail();
         email.setHostName(host);
         email.setStartTLSEnabled(starttlsEnabled);
@@ -109,27 +94,20 @@ public class MailService {
             email.setAuthentication(username, password);
         }
 
-        //email.setDebug(true);
-        try {
-            for (String receiver : receivers) {
-                email.addTo(receiver);
-            }
-
-            email.setFrom(sender);
-            email.setSubject(subject);
-            email.setCharset("UTF-8");
-            if (isHtmlMsg) {
-                ((HtmlEmail) email).setHtmlMsg(content);
-            } else {
-                ((HtmlEmail) email).setTextMsg(content);
-            }
-            email.send();
-            email.getMailSession();
-
-        } catch (EmailException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            return false;
+        for (String receiver : receivers) {
+            email.addTo(receiver);
         }
+
+        email.setFrom(sender);
+        email.setSubject(subject);
+        email.setCharset(StandardCharsets.UTF_8.toString());
+        if (isHtmlMsg) {
+            ((HtmlEmail) email).setHtmlMsg(content);
+        } else {
+            ((HtmlEmail) email).setTextMsg(content);
+        }
+        email.send();
+        email.getMailSession();
 
         return true;
     }

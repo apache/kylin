@@ -44,6 +44,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.FileUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.ComputedColumnConfigRequest;
@@ -98,8 +99,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -286,10 +285,7 @@ public class NProjectController extends NBasicController {
             @RequestBody JobNotificationConfigRequest jobNotificationConfigRequest) {
         checkRequiredArg("data_load_empty_notification_enabled",
                 jobNotificationConfigRequest.getDataLoadEmptyNotificationEnabled());
-        checkRequiredArg("job_notification_states", jobNotificationConfigRequest.getJobNotificationStates());
         checkRequiredArg("job_notification_emails", jobNotificationConfigRequest.getJobNotificationEmails());
-        checkRequiredArg("metadata_persist_notification_enabled",
-                jobNotificationConfigRequest.getMetadataPersistNotificationEnabled());
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
@@ -332,7 +328,8 @@ public class NProjectController extends NBasicController {
             @RequestBody SnapshotConfigRequest snapshotConfigRequest) {
         checkBooleanArg("snapshot_manual_management_enabled",
                 snapshotConfigRequest.getSnapshotManualManagementEnabled());
-        checkBooleanArg("snapshot_automatic_refresh_enabled", snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
+        checkBooleanArg("snapshot_automatic_refresh_enabled",
+                snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
         projectService.updateSnapshotConfig(project, snapshotConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

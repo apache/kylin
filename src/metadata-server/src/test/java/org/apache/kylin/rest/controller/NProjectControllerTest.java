@@ -244,10 +244,9 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     public void testUpdateJobNotificationConfig() throws Exception {
         val request = new JobNotificationConfigRequest();
 
-        request.setJobNotificationStates(Arrays.asList("Succeed", "Error", "Discard"));
+        request.setJobStatesNotification(Arrays.asList("Succeed", "Error", "Discard"));
         request.setDataLoadEmptyNotificationEnabled(true);
         request.setJobNotificationEmails(Arrays.asList("fff@g.com"));
-        request.setMetadataPersistNotificationEnabled(false);
 
         Mockito.doNothing().when(projectService).updateJobNotificationConfig("default", request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/job_notification_config", "default")

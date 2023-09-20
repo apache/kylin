@@ -49,71 +49,34 @@
 <div style="margin-left:5%;margin-right:5%;font-family: 'Trebuchet MS ', Arial, Helvetica, sans-serif;">
 <span style="
     line-height: 1.1;font-size: 18px;">
-    <p style="text-align:left;">Dear Kylin5 user,</p>
-    <p>We found some source records updated in your Kylin system. You can reload updated records by following instructions.</p>
-    <p>Ignore this issue may cause query result inconsistency over different indexes.</p>
-    <#if start_time == "1970-01-01 08:00:00">
-        <p>You may refresh the full build segment to apply source records change.</p>
-    <#else>
-        <p>You may refresh the segment from ${start_time} to ${end_time} to apply source records change.</p>
-    </#if>
+    <p style="text-align:left;">Dear Kylin User,</p>
+    <p>It's a pity that the job is discarded. Thank you for using Kylin.</p>
 </span>
-    <hr style="margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #eee;">
-    <h1>
-    <span style="display: inline;
-            background-color: #607D8B;
-            color: #fff;
-            line-height: 1;
-            font-weight: 700;
-            font-size:36px;
-            text-align: center;">&nbsp;SOURCE RECORDS CHANGED&nbsp;</span>
-    </h1>
-    <hr style="margin-top: 20px;
-            margin-bottom: 20px;
-            border: 0;
-            border-top: 1px solid #eee;">
     <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;border:1px solid #f8f8f8">
-
-        <tr>
-
-            <td style="padding: 10px 15px;
-                    background-color: #eeeeee;
-                    border:1px solid #f8f8f8;">
-                <h4 style="margin-top: 0;
-                        margin-bottom: 0;
-                        font-size: 16px;
-                        color: inherit;
-                        color: #404040;
-                        font-family: 'Trebuchet MS ', Arial, Helvetica, sans-serif;">
-                ${job_name}
-                </h4>
-            </td>
-        </tr>
-
-        <tr>
-
-            <td style="padding: 10px 15px;
-                    background-color: #eeeeee;
-                    border:1px solid #f8f8f8;">
-                <h4 style="margin-top: 0;
-                        margin-bottom: 0;
-                        font-size: 16px;
-                        color: inherit;
-                        color: #404040;
-                        font-family: 'Trebuchet MS ', Arial, Helvetica, sans-serif;">
-                ${env_name}
-                </h4>
-            </td>
-        </tr>
 
         <tr>
 
             <td style="padding: 15px;">
                 <table cellpadding="0" cellspacing="0" width="100%"
                        style="margin-bottom: 20px;border:1 solid #ddd;border-collapse: collapse;font-family: 'Trebuchet MS ', Arial, Helvetica, sans-serif;">
+                    <tr>
+                        <th width="30%" style="padding: 8px;
+                                            line-height: 1.42857143;
+                                            vertical-align: top;
+                                            border: 1px solid #ddd;
+                                            text-align: left;
+                                            font-size: medium;
+                                            font-style: normal;">Job Type
+                        </th>
+                        <td style="padding: 8px;
+                                line-height: 1.42857143;
+                                vertical-align: top;
+                                border: 1px solid #ddd;
+                                font-size: medium;
+                                font-style: normal;">
+                            ${job_name}
+                        </td>
+                    </tr>
                     <tr>
                         <th width="30%" style="padding: 8px;
                                             line-height: 1.42857143;
@@ -130,24 +93,6 @@
                                 font-size: medium;
                                 font-style: normal;">
                         ${submitter}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th width="30%" style="padding: 8px;
-                                            line-height: 1.42857143;
-                                            vertical-align: top;
-                                            border: 1px solid #ddd;
-                                            text-align: left;
-                                            font-size: medium;
-                                            font-style: normal;">Job Engine
-                        </th>
-                        <td style="padding: 8px;
-                                line-height: 1.42857143;
-                                vertical-align: top;
-                                border: 1px solid #ddd;
-                                font-size: medium;
-                                font-style: normal;">
-                        ${job_engine}
                         </td>
                     </tr>
                     <tr>
@@ -175,7 +120,7 @@
                                             border: 1px solid #ddd;
                                             text-align: left;
                                             font-size: medium;
-                                            font-style: normal;">Model Name
+                                            font-style: normal;">Object
                         </th>
                         <td style="padding: 8px;
                                 line-height: 1.42857143;
@@ -183,7 +128,44 @@
                                 border: 1px solid #ddd;
                                 font-size: medium;
                                 font-style: normal;">
-                        ${model_name}
+                        ${object}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th width="30%" style="padding: 8px;
+                                            line-height: 1.42857143;
+                                            vertical-align: top;
+                                            border: 1px solid #ddd;
+                                            text-align: left;
+                                            font-size: medium;
+                                            font-style: normal;">Start Time
+                        </th>
+                        <td style="padding: 8px;
+                                line-height: 1.42857143;
+                                vertical-align: top;
+                                border: 1px solid #ddd;
+                                font-size: medium;
+                                font-style: normal;">
+                        ${start_time}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th width="30%" style="padding: 8px;
+                                            line-height: 1.42857143;
+                                            vertical-align: top;
+                                            border: 1px solid #ddd;
+                                            text-align: left;
+                                            font-size: medium;
+                                            font-style: normal;">
+                            End Time
+                        </th>
+                        <td style="padding: 8px;
+                                line-height: 1.42857143;
+                                vertical-align: top;
+                                border: 1px solid #ddd;
+                                font-size: medium;
+                                font-style: normal;">
+                        ${end_time}
                         </td>
                     </tr>
                 </table>
@@ -196,7 +178,7 @@
     border-top: 1px solid #eee;">
     <h4 style="font-weight: 500;
     line-height: 1.1;font-size:18px;">
-        <p>Best Wishes!</p>
+        <p>Yours sincerely,</p>
         <p style="margin: 0 0 10px;"><b>Kylin Team</b></p>
     </h4>
 </div>

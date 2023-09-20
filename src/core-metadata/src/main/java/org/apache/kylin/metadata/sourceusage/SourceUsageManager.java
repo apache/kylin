@@ -39,34 +39,35 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.common.constant.Constants;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.mail.MailNotificationType;
+import org.apache.kylin.common.mail.MailNotifier;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.MailTemplateProvider;
+import org.apache.kylin.common.util.SizeConvertUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.constant.Constants;
-import org.apache.kylin.common.util.SizeConvertUtil;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.sourceusage.SourceUsageRecord.CapacityStatus;
 import org.apache.kylin.metadata.sourceusage.SourceUsageRecord.ProjectCapacityDetail;
+import org.apache.kylin.metadata.sourceusage.mail.SourceUsageMailUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 
@@ -233,12 +234,13 @@ public class SourceUsageManager {
                         logger.info("Capacity usage is less than threshold, enable notification");
                     } else if (copyForWrite.isCapacityNotification() && config.isOverCapacityNotificationEnabled()
                             && isOverCapacityThreshold(copyForWrite)) {
-                        if (MailTemplateProvider.notifyUserForOverCapacity(copyForWrite.getLicenseCapacity(),
-                                copyForWrite.getCurrentCapacity(), usageRecord.resourceName())) {
+                        boolean isSuccessful = MailNotifier.notifyUser(config,
+                                SourceUsageMailUtil.createMail(MailNotificationType.OVER_LICENSE_CAPACITY_THRESHOLD,
+                                        copyForWrite.getLicenseCapacity(), copyForWrite.getCurrentCapacity()),
+                                Lists.newArrayList(config.getOverCapacityMailingList()));
+                        if (isSuccessful) {
                             copyForWrite.setCapacityNotification(false);
-                            logger.info("Capacity usage is more than threshold, disable notification");
-                        } else {
-                            logger.info("Send mail for Over Capacity failed.");
+                            logger.info("Capacity usage is more than threshold and notify user, disable notification");
                         }
                     }
                 });
