@@ -272,7 +272,7 @@ function setLogRotate() {
     fi
 }
 
-function startKE(){
+function startKylin(){
     setLogRotate
     clearRedundantProcess
 
@@ -346,7 +346,7 @@ function startKE(){
     recordKylinStartOrStop "start success" "${START_TIME}"
 }
 
-function stopKE(){
+function stopKylin(){
     sh ${KYLIN_HOME}/bin/guardian.sh stop
     clearCrontab
 
@@ -395,11 +395,11 @@ if [[ "$1" == org.apache.kylin.* ]]; then
 # start command
 elif [ "$1" == "start" ]; then
     echo "Starting Kylin..."
-    startKE
+    startKylin
 # stop command
 elif [ "$1" == "stop" ]; then
     echo `date '+%Y-%m-%d %H:%M:%S '`"Stopping Kylin..."
-    stopKE
+    stopKylin
     if [[ $? == 0 ]]; then
         exit 0
     else
@@ -409,12 +409,12 @@ elif [ "$1" == "stop" ]; then
 elif [ "$1" == "restart" ]; then
     echo "Restarting Kylin..."
     echo "--> Stopping Kylin first if it's running..."
-    stopKE
+    stopKylin
     if [[ $? != 0 ]]; then
         echo "    Kylin is not running, now start it"
     fi
     echo "--> Starting Kylin..."
-    startKE
+    startKylin
 else
     quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop' or 'kylin.sh [-v] restart'"
 fi

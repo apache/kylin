@@ -126,7 +126,7 @@
         <!-- Spark versions -->
         <delta.version>2.0.2</delta.version>
 
-        <spark.version>3.2.0-kylin-4.6.10.0</spark.version>
+        <spark.version>3.2.0-kylin-4.6.9.0</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -506,6 +506,20 @@
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kap-second-storage-core</artifactId>
                 <version>5.0.0-beta</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.kylin</groupId>
+                        <artifactId>kylin-core-job</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.kylin</groupId>
+                        <artifactId>kylin-core-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.kylin</groupId>
+                        <artifactId>kylin-spark-common</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 <!--            <dependency>-->
 <!--                <groupId>org.apache.kylin</groupId>-->
@@ -3161,7 +3175,7 @@
                         <includeTestSourceDirectory>false</includeTestSourceDirectory>
                         <failOnWarning>false</failOnWarning>
                         <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
-                        <configLocation>scalastyle-config.xml</configLocation>
+                        <configLocation>dev-support/scalastyle-config.xml</configLocation>
                         <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
                         <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
                         <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>

@@ -45,8 +45,8 @@ function startKG() {
         fi
     fi
 
-    KE_PID_FILE=${KYLIN_HOME}/pid
-    if [[ ! -f ${KE_PID_FILE} ]]; then
+    KYLIN_PID_FILE=${KYLIN_HOME}/pid
+    if [[ ! -f ${KYLIN_PID_FILE} ]]; then
         quit "Kylin is not running, will not start guardian process"
     fi
 

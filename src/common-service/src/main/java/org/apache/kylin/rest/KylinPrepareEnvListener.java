@@ -61,7 +61,7 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
 
         if (env.acceptsProfiles(Profiles.of("sandbox"))) {
             if (env.acceptsProfiles(Profiles.of("docker"))) {
-                setSandboxEnvs("../../dev-support/sandbox/conf");
+                setSandboxEnvs("../../dev-support/contributor/sandbox/conf");
             } else {
                 setSandboxEnvs("../examples/test_case_data/sandbox");
             }
