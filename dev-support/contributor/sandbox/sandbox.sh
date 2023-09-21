@@ -48,7 +48,7 @@ function error() {
 }
 
 PROJECT_DIR=$(cd -P -- "$(dirname -- "$0")/../.." && pwd -P)
-WORKDIR=$(cd -P -- "${PROJECT_DIR}/dev-support/sandbox" && pwd -P)
+WORKDIR=$(cd -P -- "${PROJECT_DIR}/dev-support/contributor/sandbox" && pwd -P)
 
 KYLIN_HOME="${PROJECT_DIR}"
 warn "# KYLIN_HOME=${KYLIN_HOME}"

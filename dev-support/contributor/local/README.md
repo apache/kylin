@@ -6,7 +6,7 @@
 
 3. Install Docker Desktop on local machine and configure the Docker resource, as follows is the lowest requirement：
 
-   ![image-20211102111253713](./images/docker_resources.png)
+   ![image-20211102111253713](images/docker_resources.png)
 
 
 ### Usage
@@ -23,29 +23,29 @@
 
 *Executing Result*
 
-![Executing Result](./images/executing_result.png)
+![Executing Result](images/executing_result.png)
 
 * Run Configuration for IDEA Debug*
 
-![image-20211102105411171](./images/idea_configuration.png)
+![image-20211102105411171](images/idea_configuration.png)
 
 
 3) Executing `./dev-support/local/local.sh up` to download images and start the container。
 
 *Container started successfully*
 
-![image-20211102110553460](./images/docker_container.png)
+![image-20211102110553460](images/docker_container.png)
 
 
 4) After start IDEA Debug and access to `http://localhost:8080/` to check Kylin started successfully.
 
 * Run into Kylin web and enjoy.
 
-![Kylin WebSite](./images/kylin_ui.png)
+![Kylin WebSite](images/kylin_ui.png)
 
 * Access to `http://localhost:4041/` to check sparder started successfully.
   
-![Sparder](./images/sparder.png)
+![Sparder](images/sparder.png)
 
 
 ### Other Usage
