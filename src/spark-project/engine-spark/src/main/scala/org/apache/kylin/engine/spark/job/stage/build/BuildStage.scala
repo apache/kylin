@@ -399,7 +399,7 @@ abstract class BuildStage(private val jobContext: SegmentJob,
     val bitmapCol = DictionaryBuilderHelper.needGlobalDict(measure)
     val columns = if (Objects.nonNull(bitmapCol)) {
       val id = dataModel.getColumnIdByColumnName(bitmapCol.getIdentity)
-      Seq(s"${id}_KE_ENCODE")
+      Seq(s"${id}_KYLIN_ENCODE")
     } else {
       Seq.empty[String]
     } ++

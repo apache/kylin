@@ -40,7 +40,7 @@ import org.apache.spark.sql.execution.command._
 
 class ViewCheck extends DDLCheck {
   private val LOGGER = LoggerFactory.getLogger(classOf[ViewCheck])
-  private val PREFIX = "KE_"
+  private val PREFIX = "KYLIN_"
   private val SOURCE = new NSparkMetadataExplorer
   private val LOGICAL_VIEW_TYPE = "GlobalTempView"
 
@@ -53,8 +53,8 @@ class ViewCheck extends DDLCheck {
     if ("hive".equalsIgnoreCase(pageType)) {
       databasesHasAccess.append(listAllDatabasesHasAccess(project))
       syntaxSupport.append("`create view`,`alter view`,`drop view`,`show create table`")
-      cnDescription.append("Hive View 名称需要以 `KE_` 开头\t")
-      enDescription.append("Hive View name should start with `KE_`\t")
+      cnDescription.append("Hive View 名称需要以 `KYLIN_` 开头\t")
+      enDescription.append("Hive View name should start with `KYLIN_`\t")
       cnDescription
         .append(s"仅支持 ${syntaxSupport} 语法\t")
       enDescription

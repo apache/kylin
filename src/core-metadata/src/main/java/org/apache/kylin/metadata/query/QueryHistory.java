@@ -43,7 +43,7 @@ public class QueryHistory {
     public static final String ADJ_SLOW = "Slow";
     public static final String QUERY_HISTORY_SUCCEEDED = "SUCCEEDED";
     public static final String QUERY_HISTORY_FAILED = "FAILED";
-    public static final String DEFAULT_DATABASE = "KE_HISTORY";
+    public static final String DEFAULT_DATABASE = "KYLIN_HISTORY";
 
     // database name
     public static final String DB_NAME = DEFAULT_DATABASE;

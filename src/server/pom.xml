@@ -21,7 +21,7 @@
     <artifactId>kylin-server</artifactId>
     <packaging>jar</packaging>
     <name>Kylin - REST Server</name>
-    <url>http://kylin.apache.org</url>
+    <url>https://kylin.apache.org</url>
     <description>REST Service and RPC Server</description>
 
     <parent>

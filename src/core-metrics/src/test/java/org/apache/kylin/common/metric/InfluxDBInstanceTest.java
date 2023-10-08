@@ -43,13 +43,13 @@ import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 @MetadataInfo(onlyProps = true)
 public class InfluxDBInstanceTest {
 
-    private final String SHOW_DATABASES = "{\"results\":[{\"statement_id\":0,\"series\":[{\"name\":\"databases\",\"columns\":[\"name\"],\"values\":[[\"_internal\"],[\"KE_HISTORY\"]]}]}]}\n";
+    private final String SHOW_DATABASES = "{\"results\":[{\"statement_id\":0,\"series\":[{\"name\":\"databases\",\"columns\":[\"name\"],\"values\":[[\"_internal\"],[\"KYLIN_HISTORY\"]]}]}]}\n";
 
     private InfluxDBInstance influxDBInstance;
 
     @BeforeEach
     public void setup() throws Exception {
-        influxDBInstance = new InfluxDBInstance("KE_HISTORY", "KYLIN_MONITOR_RP", "", "", 1, false);
+        influxDBInstance = new InfluxDBInstance("KYLIN_HISTORY", "KYLIN_MONITOR_RP", "", "", 1, false);
         influxDBInstance.init();
         influxDBInstance.setInfluxDB(mockInfluxDB());
     }

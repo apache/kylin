@@ -69,7 +69,7 @@ spring:
       max-file-size: "5MB"
       max-request-size: "5MB"
   application:
-    name: ${kylin.server.mode}
+    name: ${kylin.server.mode:all}
   web:
     resources:
       chain:

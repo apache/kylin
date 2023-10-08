@@ -1,6 +1,6 @@
 # How to Run/Debug Kylin in IDE(with some backgrounds)
 > This guide is an enhanced version for [How to debug Kylin in IDEA with Hadoop](https://kylin.apache.org/5.0/docs/development/how_to_debug_kylin_in_ide) , <br>
-> it is not only step-by-step guide, but give more background knowledge and explanation. 
+> it is not only step-by-step guide, but give more background knowledge and explanation. A video is [here](https://www.bilibili.com/video/BV19C4y1Z7AN).
 
 ## Part One - Before your read
 
@@ -31,58 +31,58 @@ to be updated
 | build       | Scripts for building, packaging, running Kylin                                                       |
 | dev-support | Scripts and guides for contributors to develop/debug/test, for committers to release/publish website |
 | kystudio    | Frontend source code, mainly using Vue.js                                                            |
-| src         | Backend source code, mainly using Java & Scala, managed by Maven                                     |
-| pom.xml     | Project definition                                                                                   |
-| README.md   | General guide to Kylin 5 project                                                                     |
+| src         | Backend source code, wrote by Java & Scala, using Spark/Calcite/Hadoop/Spring etc                    |
+| pom.xml     | Project definition by Apache Maven                                                                   |
+| README.md   | General guide to the development of Kylin 5 project                                                  |
 | LICENSE     | A must-to-have file by ASF                                                                           |
 | NOTICE      | A must-to-have file by ASF                                                                           |
 
 ### Step 4: Understand Maven modules
 
 
-| Module Name                | Brief Description                                                                      |           Tags           | 
-|:---------------------------|:---------------------------------------------------------------------------------------|:------------------------:|
-| Core Common                | todo                                                                                   |           Core           |
-| Core Metadata              | todo                                                                                   |           Core           |
-| Core Metrics               | todo                                                                                   |           Core           |
-| Core Job                   | todo                                                                                   |           Core           |
-| Core Storage               | todo                                                                                   |           Core           |
-| Query Common               | todo                                                                                   |           Core           |
-| Local Data Cache           | Improve query performance by caching parquet files in spark executor's disk/memory     |          Add-on          |
-| Spark Common               | todo                                                                                   |
-| Query Engine Spark         | todo                                                                                   |
-| Hive Source                | todo                                                                                   |
-| Build Engine               | todo                                                                                   |           Core           |
-| Distributed Lock Extension | todo                                                                                   |          Add-on          |
-| Build Engine Spark         | todo                                                                                   |
-| Query                      | Transfer sql text to logical/physical plan and optimize using Apache Calcite.          |           Core           |
-| Streaming SDK              | Not ready. Used to parse Kafka message in custom way.                                  | Add-on, Not-Ready-Module |
-| Streaming                  | Not ready. Make Apache Kafka as a data source for Kylin 5.                             |     Not-Ready-Module     |
-| Tool                       | Different tools for metadata backup, Diagnose etc.                                     |           Tool           |
-| Common Service             | todo                                                                                   |
-| Datasource Service         | todo                                                                                   |
-| Modeling Service           | todo                                                                                   |
-| Data Loading Service       | todo                                                                                   |
-| Query Service              | todo                                                                                   |
-| Common Server              | todo                                                                                   |
-| Job Service                | todo                                                                                   |
-| Streaming Service          | todo                                                                                   |     Not-Ready-Module     |
-| Data Loading Server        | todo                                                                                   |
-| Query Server               | todo                                                                                   |
-| Metadata Server            | todo                                                                                   |
-| REST Server                | Main entry of Kylin process, including Spring config files.                            |          Spring          |
-| Datasource SDK             | Not ready. Framework to add data source for Kylin 5.                                   | Add-on, Not-Ready-Module |
-| JDBC Source                | Not ready. Make some RDBMS as a data source fro Kylin 5.                               |     Not-Ready-Module     |
-| Integration Test           | Major code for Integration Test                                                        |         Testing          |
-| Integration Test Spark     | Some code for Integration Test                                                         |         Testing          |
-| Source Assembly            | Used to create jars for build engine in spark-submit cmd.                              |          Build           |
-| Integration Test Server    | Some code for Integration Test                                                         |         Testing          |
-| Data loading Booter        | For micro-service deployment such as k8s. Process build/refresh index/segment request. |      Micro-service       |
-| Query Booter               | For micro-service deployment such as k8s. Process query request.                       |      Micro-service       |
-| Common Booter              | For micro-service deployment such as k8s. Process crud of metadata request.            |      Micro-service       |
-| JDBC Driver                | Connect Kylin using JDBC, for SQL Client or BI                                         |           Tool           |
+| Module Name                | Brief Description                                                                  |              Tags               | 
+|:---------------------------|:-----------------------------------------------------------------------------------|:-------------------------------:|
+| Core Common                | Utility method, config entry                                                       |              Core               |
+| Core Metadata              | Definition of metadata, CRUD of metadata                                           |              Core               |
+| Core Metrics               | Metrics, monitor                                                                   |              Core               |
+| Core Job                   | Job Engine. Define of executable, submit different job                             |              Core               |
+| Core Storage               |                                                                                    |              Core               |
+| Query Common               | Query parser, transformer, process                                                 |              Core               |
+| Local Data Cache           | Improve query performance by caching parquet files in spark executor's disk/memory |             Add-on              |
+| Spark Common               | Logic, profiler, optimizer of Spark Execution                                      |
+| Query Engine Spark         |                                                                                    |
+| Hive Source                | Outdated code                                                                      |
+| Build Engine SDK           |                                                                                    |              Core               |
+| Distributed Lock Extension | Different implementations of distributed lock                                      |             Add-on              |
+| Build Engine Spark         |                                                                                    |
+| Query                      | Transfer sql text to logical/physical plan and optimize using Apache Calcite       |              Core               |
+| Streaming SDK              | Not ready. Used to parse Kafka message in custom way                               |    Add-on, Not-Ready-Module     |
+| Streaming                  | Not ready. Make Apache Kafka as a data source for Kylin 5                          |        Not-Ready-Module         |
+| Tool                       | Different tools for metadata backup, Diagnose etc                                  |              Tool               |
+| Common Service             |                                                                                    |
+| Datasource Service         |                                                                                    |
+| Modeling Service           |                                                                                    |
+| Data Loading Service       |                                                                                    |
+| Query Service              | Controller&Service for SQL Query                                                   |
+| Common Server              |                                                                                    |
+| Job Service                |                                                                                    |
+| Streaming Service          | Not ready.                                                                         |        Not-Ready-Module         |
+| Data Loading Server        |                                                                                    |
+| Query Server               |                                                                                    |
+| Metadata Server            | Controller for CRUD of metadata                                                    |
+| REST Server                | Starter of Kylin process, including Spring config files                            |             Spring              |
+| Datasource SDK             | Not ready. Framework to add data source for Kylin 5                                |    Add-on, Not-Ready-Module     |
+| JDBC Source                | Not ready. Make some RDBMS as a data source fro Kylin 5                            |        Not-Ready-Module         |
+| Integration Test           | Major code for Integration Test                                                    |             Testing             |
+| Integration Test Spark     | Some code for Integration Test                                                     |             Testing             |
+| Source Assembly            | Use shade plugin to create jars for build engine in spark-submit cmd               |              Build              |
+| Integration Test Server    | Some code for Integration Test                                                     |             Testing             |
+| Data loading Booter        | Not ready. Starter for micro-service. Process build/refresh index/segment request  | Micro-service, Not-Ready-Module |
+| Query Booter               | Not ready. Starter for micro-service. Process query request                        | Micro-service, Not-Ready-Module |
+| Common Booter              | Not ready. Starter for micro-service. Process crud of metadata request             | Micro-service, Not-Ready-Module |
+| JDBC Driver                | Connect Kylin using JDBC, for SQL Client or BI                                     |              Tool               |
 
-### STEP 5: Install required software in laptop
+### STEP 5: Install required software in laptop(Mac)
 
 | Component                | Version                                    | Comment/Link                    |
 |--------------------------|--------------------------------------------|---------------------------------|
@@ -128,6 +128,15 @@ Wed Sep 20 11:15:45 CST 2023
 Make sure these port is available to use.
 
 ### STEP 6: Prepare a linux machine(Optional)
+
+Use real Hadoop Cluster(compare to local mode) make you test your patch in immersive way and reproduce issue easily.
+
+When you run Kylin 5 in laptop, and submitting spark job to building cube/mode at the same time. 
+These programs may consume a lot of hardware resource, and you will suffer poor experience. So it is better not to run hadoop on your laptop.
+
+If you like, you can choose to connect to your own test/production Hadoop cluster.
+
+```shell
 kylin@worker-03:~$ docker -v
 Docker version 20.10.17, build 100c701
 kylin@worker-03:~$ uname -a
@@ -136,15 +145,8 @@ kylin@worker-03:~$ free -h
 total        used        free      shared  buff/cache   available
 Mem:           47Gi       2.8Gi        37Gi       2.0Mi       8.0Gi        44Gi
 Swap:         8.0Gi          0B       8.0Gi
+```
 
-### Terms
-
-| Term          | Comment  |
-|:--------------|:---------|
-| Build Engine  |          |
-| Job Engine    |          |
-| Query Engine  |          |
-| Metadata      |          |
 
 ### Attention
 This guide is verified using this [verified tag](https://github.com/apache/kylin/releases/tag/ide-run-2023) <br>
@@ -245,10 +247,7 @@ npm install
 bash build/release/download-spark.sh
 ```
 
-Result of `ls -al build/spark/jars | wc -l` should be 282.
-By default, the `SPARK_HOME` is pointed to `$PROJECT_DIR/build/spark` .
-
-You are free to move spark directory to other place.
+By default, the `SPARK_HOME` is pointed to `$PROJECT_DIR/build/spark`. You are free to move spark directory to other place.
 
 ### STEP 5: Import and configure project in IDE 
 
@@ -321,7 +320,7 @@ IDEA official reference is https://www.jetbrains.com/help/idea/run-debug-configu
 ```shell 
 KYLIN_HOME=$PROJECT_DIR
 KYLIN_CONF=$PROJECT_DIR/dev-support/contributor/sandbox/conf
-SPARK_HOME=/Users/xiaoxiang.yu/LacusDir/kyspark
+SPARK_HOME=
 HADOOP_CONF_DIR=$PROJECT_DIR/dev-support/contributor/sandbox/conf
 HADOOP_USER_NAME=root
 ```
@@ -388,14 +387,7 @@ rm -rf  ~/.m2/repository/org/apache/kylin
 rm -rf $PROJECT_DIR
 ```
 
-#### How to check out a specific git commit
-
-```shell
-// todo
-```
-
 #### Fix Invalid method name: 'get_all_functions'
-This is usually caused by hive .
 ```sh
 org.apache.hadoop.hive.ql.metadata.HiveException: org.apache.thrift.TApplicationException: Invalid method name: 'get_all_functions'
 	at org.apache.hadoop.hive.ql.metadata.Hive.getAllFunctions(Hive.java:3904) ~[hive-exec-2.3.9.jar:2.3.9]
@@ -416,7 +408,6 @@ org.apache.hadoop.hdfs.CannotObtainBlockLengthException: Cannot obtain block len
 	at org.apache.hadoop.hdfs.DFSInputStream.readBlockLength(DFSInputStream.java:470) ~[hadoop-hdfs-client-2.10.1.jar:?]
 ```
 
-todo
 
 #### Query Failed by InvalidClassException
 

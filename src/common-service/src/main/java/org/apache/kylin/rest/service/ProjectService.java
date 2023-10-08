@@ -63,6 +63,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.event.ProjectCleanOldQueryResultEvent;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
@@ -74,6 +75,7 @@ import org.apache.kylin.common.scheduler.SourceUsageUpdateNotifier;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JdbcUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -610,6 +612,11 @@ public class ProjectService extends BasicService {
         response.setJdbcSourceConnectionUrl(config.getJdbcConnectionUrl());
         response.setJdbcSourceEnable(config.getJdbcEnable());
         response.setJdbcSourceDriver(config.getJdbcDriver());
+
+        Pair<String, String> infos = KylinVersion.getGitCommitInfo();
+        response.setGitCommit(infos.getFirst());
+        response.setPackageVersion(KylinVersion.getCurrentVersion().toString());
+        response.setPackageTimestamp(infos.getSecond());
 
         if (SecondStorageUtil.isGlobalEnable()) {
             response.setSecondStorageEnabled(SecondStorageUtil.isProjectEnable(project));

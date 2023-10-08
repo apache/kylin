@@ -130,7 +130,7 @@ object SparkDDLTestUtils {
        """.stripMargin)
     spark.sql(
       s"""
-         |CREATE TABLE if not exists `ssb`.`ke_table1`(
+         |CREATE TABLE if not exists `ssb`.`kylin_table1`(
          |  `c1` int,
          |  `c2` string)
        """.stripMargin)

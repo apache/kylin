@@ -41,7 +41,7 @@ public class Column {
     @JacksonXmlProperty(localName = "hidden", isAttribute = true)
     private String hidden;
 
-    @JacksonXmlProperty(localName = "ke_cube_used", isAttribute = true)
+    @JacksonXmlProperty(localName = "kylin_cube_used", isAttribute = true)
     private String keCubeUsed;
 
     @JacksonXmlProperty(localName = "aggregation", isAttribute = true)

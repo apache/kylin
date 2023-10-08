@@ -36,7 +36,7 @@ class InitConfigurationTest {
     void testInit() {
         HostInfoFetcher hostInfoFetcher = Mockito.spy(new DefaultHostInfoFetcher());
         ReflectionTestUtils.setField(configuration, "hostInfoFetcher", hostInfoFetcher);
-        Mockito.when(hostInfoFetcher.getHostname()).thenReturn("ke_host");
+        Mockito.when(hostInfoFetcher.getHostname()).thenReturn("kylin_host");
         KylinConfig.getInstanceFromEnv().setProperty("kylin.env.hostname-check-enabled", "false");
         try {
             configuration.init();
@@ -50,7 +50,7 @@ class InitConfigurationTest {
         } catch (KylinException e) {
             Assert.fail();
         }
-        Mockito.when(hostInfoFetcher.getHostname()).thenReturn("ke_host");
+        Mockito.when(hostInfoFetcher.getHostname()).thenReturn("kylin_host");
         Assert.assertThrows(KylinRuntimeException.class, () -> configuration.init());
     }
 }

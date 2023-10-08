@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
 
+@Deprecated
 @RestController
 @RequestMapping(value = "/api/lightning", produces = { HTTP_VND_APACHE_KYLIN_JSON,
         HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
