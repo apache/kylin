@@ -29,7 +29,7 @@ public class Col {
     @JacksonXmlProperty(localName = "value", isAttribute = true)
     private String value;
 
-    @JacksonXmlProperty(localName = "ke_cc_expr", isAttribute = true)
+    @JacksonXmlProperty(localName = "kylin_cc_expr", isAttribute = true)
     private String keCcExpr;
 
     public String getKey() {

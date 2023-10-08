@@ -1651,7 +1651,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getDDLViewNameError() {
-        return "视图名需要以 KE_ 开头";
+        return "视图名需要以 KYLIN_ 开头";
     }
 
     @Override
@@ -1661,7 +1661,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getDDLDropError() {
-        return "仅支持删除 view 类型表且 view 名称需要以 KE_ 开头";
+        return "仅支持删除 view 类型表且 view 名称需要以 KYLIN_ 开头";
     }
 
     @Override

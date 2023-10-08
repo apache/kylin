@@ -48,7 +48,7 @@ public class Message {
 
     private static final String PARAMETER_EMPTY = "Please enter the value for the parameter '%s'.";
     private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop view`,  `alter view`, `show create table`";
-    private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KE_";
+    private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KYLIN_";
     private static final String DDL_VIEW_NAME_DUPLICATE_ERROR = "Logical View names is duplicate";
     private static final String DDL_DROP_ERROR = "Only support drop view";
     private static final String DDL_TABLE_NOT_LOADED = "Table '%s' is not loaded into the data source ";

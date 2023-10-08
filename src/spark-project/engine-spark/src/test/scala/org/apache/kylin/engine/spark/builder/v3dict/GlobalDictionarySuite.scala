@@ -145,7 +145,7 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
       Row("a"),
       Row("b"))
 
-    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(colName + "_KE_ENCODE"))
+    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(colName + "_KYLIN_ENCODE"))
 
     val df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema)
     val dictDfPlan = df
@@ -170,7 +170,7 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     schema = schema.add(encodeColName, StringType)
     val data = Seq.empty[Row]
 
-    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(encodeColName + "_KE_ENCODE"))
+    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(encodeColName + "_KYLIN_ENCODE"))
 
     val df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema)
     val dictDfPlan = df

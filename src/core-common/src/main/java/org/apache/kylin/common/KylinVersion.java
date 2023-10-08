@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 
@@ -92,7 +92,7 @@ public class KylinVersion implements Comparable {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("5.0.0");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("5.0-SNAPSHOT");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 
@@ -160,14 +160,17 @@ public class KylinVersion implements Comparable {
         return !signatureIncompatible;
     }
 
+
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
+        Pair<String, String> info = getGitCommitInfo();
         buf.append("kylin.home: ").append(
                 KylinConfig.getKylinHome() == null ? "UNKNOWN" : new File(KylinConfig.getKylinHome()).getAbsolutePath())
                 .append("\n");
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
-        buf.append("commit:").append(getGitCommitInfo()).append("\n");
+        buf.append("commit:").append(info.getFirst()).append("\n");
+        buf.append(info.getSecond()).append("\n"); // package.timestamp:%Y-%m-%d %H:%M:%S
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
         buf.append("os.arch:").append(System.getProperty("os.arch")).append("\n");
         buf.append("os.version:").append(System.getProperty("os.version")).append("\n");
@@ -177,23 +180,36 @@ public class KylinVersion implements Comparable {
         return buf.toString();
     }
 
-    public static String getGitCommitInfo() {
+    public static Pair<String, String> getGitCommitInfo() {
+        if (gitInfo != null) {
+            return gitInfo;
+        }
+        gitInfo = new Pair<>("N/A", "N/A");
         try {
             File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v15);
             if (!commitFile.exists()) {
                 commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v13);
             }
             List<String> lines = FileUtils.readLines(commitFile, Charset.defaultCharset());
-            StringBuilder sb = new StringBuilder();
             for (String line : lines) {
-                if (!line.startsWith("#")) {
-                    sb.append(line).append(";");
+                if (line.contains("@") && gitInfo.getFirst().equals("N/A")) {
+                    gitInfo.setFirst(line);
+                } else if (line.contains("timestamp") && gitInfo.getSecond().equals("N/A")) {
+                    String[] words = line.split(":");
+                    if (words.length == 2) {
+                        gitInfo.setSecond(words[1]);
+                    } else {
+                        gitInfo.setSecond(line);
+                    }
                 }
             }
-            return sb.toString();
+            return gitInfo;
         } catch (Exception e) {
-            return StringUtils.EMPTY;
+            return gitInfo;
         }
     }
+
+    /* Git Commit and Package Timestamp */
+    private static Pair<String, String> gitInfo;
 
 }

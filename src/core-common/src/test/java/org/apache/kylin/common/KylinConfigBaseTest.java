@@ -1116,7 +1116,7 @@ class KylinConfigBaseTest {
         val config = KylinConfig.getInstanceFromEnv();
         assertEquals(config.getStreamingStatsUrl().toString(), config.getMetadataUrl().toString());
         assertEquals(config.getQueryHistoryUrl().toString(), config.getMetadataUrl().toString());
-        val pgUrl = "ke_metadata@jdbc,driverClassName=org.postgresql.Driver,"
+        val pgUrl = "kylin_metadata@jdbc,driverClassName=org.postgresql.Driver,"
                 + "url=jdbc:postgresql://sandbox:5432/kylin,username=postgres,password";
         config.setStreamingStatsUrl(pgUrl);
         assertEquals(pgUrl, config.getStreamingStatsUrl().toString());
@@ -1126,7 +1126,7 @@ class KylinConfigBaseTest {
 
     @Test
     void testMetadataUrlContainsComma() {
-        String url = "ke_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,"
+        String url = "kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,"
                 + "url=\"jdbc:mysql:replication://10.1.3.12:3306,10.1.3.11:3306/kylin_test?useUnicode=true&characterEncoding=utf8\","
                 + "username=kylin,password=test,maxTotal=20,maxIdle=20";
         StorageURL storageURL = StorageURL.valueOf(url);

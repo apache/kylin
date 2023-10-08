@@ -144,6 +144,13 @@ public class ProjectConfigResponse {
     @JsonProperty("jdbc_source_driver")
     private String jdbcSourceDriver;
 
+    @JsonProperty("package_timestamp")
+    private String packageTimestamp;
+    @JsonProperty("git_commit")
+    private String gitCommit;
+    @JsonProperty("package_version")
+    private String packageVersion;
+
     public void setFrequencyTimeWindow(int frequencyTimeWindow) {
         switch (frequencyTimeWindow) {
         case 1:

@@ -74,22 +74,22 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
 
   // Hive View
   private static final String CREATEVIEW_SQL1 =
-      "CREATE VIEW `ssb`.`ke_order_view` as select LO_ORDERKEY, C_NAME from SSB.p_lineorder t1 left join "
+      "CREATE VIEW `ssb`.`kylin_order_view` as select LO_ORDERKEY, C_NAME from SSB.p_lineorder t1 left join "
           + "SSB. CUSTOMER t2 on t1. LO_CUSTKEY = t2. C_CUSTKEY";
   private static final String CREATEVIEW_SQL2 = "CREATE VIEW `ssb`.`order_view2` as select * from SSB.P_LINEORDER";
   private static final String CREATEVIEW_SQL3 = "CREATE VIEW `ssb`.`order_view2` as abc";
-  private static final String CREATEVIEW_SQL4 = "CREATE VIEW `ssb`.`ke_order_view2` as select * from SSB.unload_table";
-  private static final String CREATEVIEW_SQL5 = "CREATE VIEW `ke_order_view2` as select * from SSB.P_LINEORDER";
+  private static final String CREATEVIEW_SQL4 = "CREATE VIEW `ssb`.`kylin_order_view2` as select * from SSB.unload_table";
+  private static final String CREATEVIEW_SQL5 = "CREATE VIEW `kylin_order_view2` as select * from SSB.P_LINEORDER";
   private static final String CREATEVIEW_SQL6 = "abc";
-  private static final String CREATEVIEW_SQL7 = "CREATE VIEW `ssb`.`ke_order_view3` as select * from SSB.P_LINEORDER";
+  private static final String CREATEVIEW_SQL7 = "CREATE VIEW `ssb`.`kylin_order_view3` as select * from SSB.P_LINEORDER";
   private static final String ALTERVIEW_SQL =
-      "alter view `ssb`.`ke_order_view` as select lo_orderkey from SSB.P_LINEORDER";
-  private static final String DROPVIEW_SQL1 = "drop view `ssb`.`ke_order_view`";
-  private static final String DROPVIEW_SQL2 = "drop table `ssb`.`ke_table1`";
-  private static final String DROPVIEW_SQL3 = "drop table `ssb`.`ke_order_view`";
-  private static final String DROPVIEW_SQL4 = "drop table `ke_table2`";
+      "alter view `ssb`.`kylin_order_view` as select lo_orderkey from SSB.P_LINEORDER";
+  private static final String DROPVIEW_SQL1 = "drop view `ssb`.`kylin_order_view`";
+  private static final String DROPVIEW_SQL2 = "drop table `ssb`.`kylin_table1`";
+  private static final String DROPVIEW_SQL3 = "drop table `ssb`.`kylin_order_view`";
+  private static final String DROPVIEW_SQL4 = "drop table `kylin_table2`";
 
-  private static final String SHOWVIEW_SQL = "show create table ssb.ke_order_view";
+  private static final String SHOWVIEW_SQL = "show create table ssb.kylin_order_view";
 
   // Logical View
   private static final String CREATE_LOGICAL_VIEW_SQL1 = "CREATE LOGICAL VIEW  "
@@ -201,7 +201,7 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
     ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL1, HIVE_VIEW));
     ddlService.executeSQL(new ViewRequest("ssb", ALTERVIEW_SQL, HIVE_VIEW));
     String createViewSQL = ddlService.executeSQL(new ViewRequest("ssb", SHOWVIEW_SQL, HIVE_VIEW));
-    Assert.assertTrue(createViewSQL.contains("ke_order_view"));
+    Assert.assertTrue(createViewSQL.contains("kylin_order_view"));
     ddlService.executeSQL(new ViewRequest("ssb", DROPVIEW_SQL1, HIVE_VIEW));
   }
 

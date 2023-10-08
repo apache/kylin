@@ -31,7 +31,7 @@ import scala.util.{Failure, Success, Try}
 
 object DFBuilderHelper extends Logging {
 
-  val ENCODE_SUFFIX = "_KE_ENCODE"
+  val ENCODE_SUFFIX = "_KYLIN_ENCODE"
 
   /**
    * select columns to build

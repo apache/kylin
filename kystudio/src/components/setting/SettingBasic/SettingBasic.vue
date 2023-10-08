@@ -11,6 +11,10 @@
         <div class="setting-label font-medium">{{$t('projectName')}}</div>
         <div class="setting-value fixed">{{project.alias || project.project}}</div>
       </div>
+      <div class="setting-item">
+        <div class="setting-label font-medium">Package Info</div>
+        <div class="setting-value fixed">kylin.version {{project.package_version}}, {{project.package_timestamp}}, commit: {{project.git_commit}}</div>
+      </div>
       <div class="setting-item clearfix">
         <div class="setting-label font-medium">{{$t('description')}}</div>
         <div class="setting-value">{{project.description}}</div>

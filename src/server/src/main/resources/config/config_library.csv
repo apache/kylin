@@ -159,20 +159,20 @@ kylin.guardian.check-init-delay,Int,KG开始检测时间,KG starts detection tim
 kylin.guardian.check-interval,Int,KG周期检测间隔,KG cycle detection interval,TRUE,TRUE
 kylin.guardian.checkers,String,置检查的规则,Rules for checking inspections,TRUE,TRUE
 kylin.guardian.downgrade-mode-parallel-query-threshold,Int,并行查询最大阈值,The maximum threshold of parallel query,TRUE,TRUE
-kylin.guardian.downgrade-on-full-gc-busy-enabled,boolean,Full GC时长占比过大时处理KE规则繁忙处理开关,"Full GC duration is too large to process KE rules, busy processing switch",TRUE,TRUE
+kylin.guardian.downgrade-on-full-gc-busy-enabled,boolean,Full GC时长占比过大时处理KE规则繁忙处理开关,"Full GC duration is too large to process Kylin rules, busy processing switch",TRUE,TRUE
 kylin.guardian.enabled,boolean,KG守护进程是否开启,Is the KG Guardian process open?,TRUE,TRUE
-kylin.guardian.full-gc-busy-high-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比高繁忙阈值,Full GC duration is too large to process KE rules FullGC accounts for high busy threshold,TRUE,TRUE
-kylin.guardian.full-gc-busy-low-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比低繁忙阈值,Full GC duration is too large to process KE rules FullGC accounts for low busy threshold,TRUE,TRUE
-kylin.guardian.full-gc-check-factor,Int,Full GC时长占比过大时处理KE规则检测时长,FULL GC duration to process KE rules detection duration when the proportion is too large,TRUE,TRUE
-kylin.guardian.full-gc-duration-ratio-restart-enabled,boolean,Full GC时长占比过大时处理KE规则过载重启开关,Full GC duration is too large to process the KE rule overload and restart the switch,TRUE,TRUE
-kylin.guardian.full-gc-duration-ratio-threshold,Double,Full GC时长占比过大时处理KE规则FullGC占比过载阈值,"Full GC duration to process KE rules when the proportion is too large, FullGC accounts for overload threshold",TRUE,TRUE
-kylin.guardian.ha-check-init-delay,Int,开始检测KE时间,Start detect KE time,TRUE,TRUE
-kylin.guardian.ha-check-interval,Int,KG检测KE周期间隔,KG detection KE weekly interval,TRUE,TRUE
-kylin.guardian.ha-enabled,boolean,KE保证KG HA开关,KE guarantee KG HA switch,TRUE,TRUE
-kylin.guardian.kill-slow-query-fail-restart-enabled,boolean,杀死超时查询失败次数过多时重启KE规则开关,The kill timeout query fails too much time to restart the KE rules switch,TRUE,TRUE
-kylin.guardian.kill-slow-query-fail-threshold,Int,杀死超时查询失败次数过多时重启KE规则杀死失败次数阈值,Killout time query fails too much time to restart the KE rules to kill the failure number of the number of failures,TRUE,TRUE
-kylin.guardian.restart-spark-fail-restart-enabled,boolean,Spark重启失败次数过多时重启KE规则开关,"SPARK restarts too many times, restart the KE rules switch",TRUE,TRUE
-kylin.guardian.restart-spark-fail-threshold,Int,Spark重启失败次数过多时重启KE规则重启失败阈值,"SPARK restart failure times when there are too many times, restart the KE rules restart the failure threshold",TRUE,TRUE
+kylin.guardian.full-gc-busy-high-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比高繁忙阈值,Full GC duration is too large to process Kylin rules FullGC accounts for high busy threshold,TRUE,TRUE
+kylin.guardian.full-gc-busy-low-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比低繁忙阈值,Full GC duration is too large to process Kylin rules FullGC accounts for low busy threshold,TRUE,TRUE
+kylin.guardian.full-gc-check-factor,Int,Full GC时长占比过大时处理KE规则检测时长,FULL GC duration to process Kylin rules detection duration when the proportion is too large,TRUE,TRUE
+kylin.guardian.full-gc-duration-ratio-restart-enabled,boolean,Full GC时长占比过大时处理KE规则过载重启开关,Full GC duration is too large to process the Kylin rule overload and restart the switch,TRUE,TRUE
+kylin.guardian.full-gc-duration-ratio-threshold,Double,Full GC时长占比过大时处理KE规则FullGC占比过载阈值,"Full GC duration to process Kylin rules when the proportion is too large, FullGC accounts for overload threshold",TRUE,TRUE
+kylin.guardian.ha-check-init-delay,Int,开始检测KE时间,Start detect Kylin time,TRUE,TRUE
+kylin.guardian.ha-check-interval,Int,KG检测KE周期间隔,KG detection Kylin weekly interval,TRUE,TRUE
+kylin.guardian.ha-enabled,boolean,Kylin 保证KG HA开关,Kylin guarantee KG HA switch,TRUE,TRUE
+kylin.guardian.kill-slow-query-fail-restart-enabled,boolean,杀死超时查询失败次数过多时重启KE规则开关,The kill timeout query fails too much time to restart the Kylin rules switch,TRUE,TRUE
+kylin.guardian.kill-slow-query-fail-threshold,Int,杀死超时查询失败次数过多时重启KE规则杀死失败次数阈值,Killout time query fails too much time to restart the Kylin rules to kill the failure number of the number of failures,TRUE,TRUE
+kylin.guardian.restart-spark-fail-restart-enabled,boolean,Spark重启失败次数过多时重启KE规则开关,"SPARK restarts too many times, restart the Kylin rules switch",TRUE,TRUE
+kylin.guardian.restart-spark-fail-threshold,Int,Spark重启失败次数过多时重启KE规则重启失败阈值,"SPARK restart failure times when there are too many times, restart the Kylin rules restart the failure threshold",TRUE,TRUE
 kylin.health.metastore-error-response-ms,Int,metastore健康检查，超时时长,"Metastore health checkup, timeout time",TRUE,TRUE
 kylin.health.metastore-warning-response-ms,Int,metastore健康检查，警告状态时长,"Metastore health check, warning state durability",TRUE,TRUE
 kylin.index.base-index-auto-update,boolean,是否自动更新基础索引,Whether to automatically update the basic index,TRUE,TRUE
@@ -484,7 +484,7 @@ kylin.source.jdbc.source.enable,boolean,是否开启 jdbc 数据源,Whether to t
 kylin.source.jdbc.user,String,JDBC 连接用户名,JDBC connect user name,TRUE,TRUE
 kylin.source.kafka.poll-message-timeout-ms,String,拉取 kafka 数据超时时间,Pull Kafka dataout time timeout,TRUE,TRUE
 kylin.source.load-hive-tablename-enabled,boolean,前端：加载Hive表元数据-立即刷新按钮的展示，后端：是否支持加载Hive表,"Front end: Load the HIVE table metadata-immediately refresh the display of the button, back end: whether to support loading the Hive table",TRUE,TRUE
-kylin.source.load-hive-tablename-interval-seconds,Long,定时加载hive表信息到内存，前端可以根据列表加载对应的hive表到KE,Load the hive table information to the memory regularly. The front end can load the corresponding Hive table to KE according to the list,TRUE,TRUE
+kylin.source.load-hive-tablename-interval-seconds,Long,定时加载hive表信息到内存，前端可以根据列表加载对应的hive表到KE,Load the hive table information to the memory regularly. The front end can load the corresponding Hive table to Kylin according to the list,TRUE,TRUE
 kylin.source.name-case-sensitive-enabled,boolean,数据源列名是否敏感,Is the data source name sensitive?,TRUE,TRUE
 kylin.spark-conf.auto-prior,boolean,是否需要自动配置 spark conf,Do you need to automatically configure Spark Conf,TRUE,TRUE
 kylin.storage.columnar.dimension-range-filter-enabled,boolean,是否开启维度范围过滤,Whether to open the dimension range filter,TRUE,TRUE

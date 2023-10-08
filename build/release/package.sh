@@ -41,8 +41,8 @@ echo "${kylin_commit_sha1}@${current_branch}" > build/commit_SHA1
 if [ -z "$ASF_USERNAME" ]; then
     ASF_USERNAME="SOMEONE"
 fi
-echo "Build by ${ASF_USERNAME} at" `date "+%Y-%m-%d %H:%M:%S"` >> build/commit_SHA1
-echo "OS  : `uname -a`" >> build/commit_SHA1
+echo "package.timestamp:" `date "+%Y-%m-%d %H:%M:%S %z"` >> build/commit_SHA1
+echo "os: $(uname -a)" >> build/commit_SHA1
 
 KYLIN_VERSION_NAME="Apache Kylin ${release_version}"
 

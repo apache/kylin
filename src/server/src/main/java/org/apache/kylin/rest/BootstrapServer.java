@@ -52,7 +52,7 @@ import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 import lombok.val;
 
 @ImportResource(locations = { "applicationContext.xml", "kylinSecurity.xml" })
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages="org.apache.kylin", excludeName = "io.kyligence.kap.secondstorage.management.ManagementConfig")
 @EnableScheduling
 @EnableAsync
 @EnableCaching

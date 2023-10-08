@@ -43,7 +43,6 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.runners.FetcherRunner;
 import org.apache.kylin.job.runners.JobCheckRunner;
-import org.apache.kylin.job.runners.QuotaStorageCheckRunner;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
@@ -177,11 +176,6 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
         int pollSecond = jobEngineConfig.getPollIntervalSecond();
         logger.info("Fetching jobs every {} seconds", pollSecond);
         val fetcher = new FetcherRunner(this, jobPool, fetcherPool);
-
-        if (config.isStorageQuotaEnabled()) {
-            fetcherPool.scheduleWithFixedDelay(new QuotaStorageCheckRunner(this), RandomUtils.nextInt(0, pollSecond),
-                    pollSecond, TimeUnit.SECONDS);
-        }
 
         fetcherPool.scheduleWithFixedDelay(new JobCheckRunner(this), RandomUtils.nextInt(0, pollSecond), pollSecond,
                 TimeUnit.SECONDS);

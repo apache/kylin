@@ -24,7 +24,7 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>Kylin - Build Engine</name>
+    <name>Kylin - Build Engine SDK</name>
     <artifactId>kylin-engine-build-sdk</artifactId>
 
     <dependencies>
