@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl"?>
+<rdf:RDF xml:lang="en"
+         xmlns="http://usefulinc.com/ns/doap#" 
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+         xmlns:asfext="http://projects.apache.org/ns/asfext#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/">
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+         https://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+  <Project rdf:about="https://kylin.apache.org">
+    <created>2023-10-31</created>
+    <license rdf:resource="https://spdx.org/licenses/Apache-2.0" />
+    <name>Apache Kylin</name>
+    <homepage rdf:resource="https://kylin.apache.org" />
+    <asfext:pmc rdf:resource="https://kylin.apache.org" />
+    <shortdesc>Apache Kylin is an open source, distributed Analytical Data Warehouse for Big Data.</shortdesc>
+    <description>Apache Kylin is an open source, distributed Analytical Data Warehouse for Big Data; it was designed to provide OLAP (Online Analytical Processing) capability in the big data era. By renovating the multi-dimensional cube and precalculation technology on Hadoop and Spark, Kylin is able to achieve near constant query speed regardless of the ever-growing data volume. Reducing query latency from minutes to sub-second, Kylin brings online analytics back to big data.</description>
+    <bug-database rdf:resource="https://issues.apache.org/jira/projects/KYLIN/issues" />
+    <mailing-list rdf:resource="https://kylin.apache.org/community/" />
+    <download-page rdf:resource="https://kylin.apache.org/download/" />
+    <programming-language>Java</programming-language>
+    <programming-language>Scala</programming-language>
+    <category rdf:resource="https://projects.apache.org/category/big-data" />
+    <release>
+      <Version>
+        <name>Kylin 4.0.3</name>
+        <created>2022-12-22</created>
+        <revision>4.0.3</revision>
+      </Version>
+</release>
+<release>
+      <Version>
+        <name>Kylin 5.0.0-beta</name>
+        <created>2023-08-30</created>
+        <revision>5.0.0-beta</revision>
+      </Version>
+    </release>
+    <repository>
+      <GitRepository>
+        <location rdf:resource="https://github.com/apache/kylin"/>
+        <browse rdf:resource="https://github.com/apache/kylin"/>
+      </GitRepository>
+    </repository>
+  </Project>
+</rdf:RDF>
+
