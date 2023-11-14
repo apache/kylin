@@ -229,11 +229,10 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             switch (state) {
             case SUCCEED:
                 updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
-                onStatusChange(MailNotificationType.JOB_SUCCEED);
+                onStatusChange(MailNotificationType.JOB_FINISHED);
                 break;
             case DISCARDED:
                 updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
-                onStatusChange(MailNotificationType.JOB_DISCARDED);
                 break;
             case SUICIDAL:
                 updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());

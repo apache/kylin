@@ -100,6 +100,24 @@
                                             border: 1px solid #ddd;
                                             text-align: left;
                                             font-size: medium;
+                                            font-style: normal;">Project
+                        </th>
+                        <td style="padding: 8px;
+                                line-height: 1.42857143;
+                                vertical-align: top;
+                                border: 1px solid #ddd;
+                                font-size: medium;
+                                font-style: normal;">
+                            ${project_name}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th width="30%" style="padding: 8px;
+                                            line-height: 1.42857143;
+                                            vertical-align: top;
+                                            border: 1px solid #ddd;
+                                            text-align: left;
+                                            font-size: medium;
                                             font-style: normal;">Object
                         </th>
                         <td style="padding: 8px;

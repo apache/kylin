@@ -638,7 +638,7 @@ class KylinConfigBaseTest {
                 new PropertiesEntity("kylin.job.notification-on-job-error", "false", false));
 
         map.put("getJobNotificationStates", new PropertiesEntity("kylin.job.notification-enable-states",
-                "error,succeed,discarded", new String[] { "error", "succeed", "discarded" }));
+                "error,finished,discarded", new String[] { "error", "finished", "discarded" }));
 
         map.put("getStorageResourceSurvivalTimeThreshold",
                 new PropertiesEntity("kylin.storage.resource-survival-time-threshold", "7d", 7L * 24 * 60 * 60 * 1000));

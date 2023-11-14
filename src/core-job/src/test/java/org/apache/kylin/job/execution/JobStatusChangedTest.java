@@ -111,11 +111,11 @@ public class JobStatusChangedTest extends LogOutputTestCase {
         overwriteSystemProp("kylin.job.notification-enabled", "true");
 
         // test job state needs to be notified, but it is not configured
-        notified = job.onStatusChange(MailNotificationType.JOB_SUCCEED);
+        notified = job.onStatusChange(MailNotificationType.JOB_FINISHED);
         Assert.assertFalse(notified);
 
-        overwriteSystemProp("kylin.job.notification-enable-states", "ERROR,DISCARDED,SUCCEED");
-        notified = job.onStatusChange(MailNotificationType.JOB_SUCCEED);
+        overwriteSystemProp("kylin.job.notification-enable-states", "ERROR,DISCARDED,FINISHED");
+        notified = job.onStatusChange(MailNotificationType.JOB_FINISHED);
         Assert.assertTrue(containsLog("user list is empty, not need to notify users."));
         Assert.assertFalse(notified);
 

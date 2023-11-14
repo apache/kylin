@@ -369,7 +369,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         var response = projectService.getProjectConfig(project);
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(false);
-        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("Succeed", "Error", "Discard"));
+        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("finished", "error", "discarded"));
         jobNotificationConfigRequest.setJobNotificationEmails(
                 Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
@@ -772,7 +772,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(true);
-        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("Succeed", "Error", "Discard"));
+        jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("finished", "error", "discarded"));
         jobNotificationConfigRequest.setJobNotificationEmails(
                 Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(PROJECT, jobNotificationConfigRequest);

@@ -41,7 +41,7 @@ public enum MailNotificationType {
                     .anyMatch(item -> getCorrespondingJobStates().equalsIgnoreCase(item));
         }
     },
-    JOB_SUCCEED("Job Succeed", "JOB_SUCCEED", "succeed") {
+    JOB_FINISHED("Job Finished", "JOB_FINISHED", "finished") {
         @Override
         public boolean needNotify(KylinConfig kylinconfig) {
             return needNotifyStates(kylinconfig).stream()

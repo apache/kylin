@@ -36,7 +36,7 @@ import lombok.val;
 public class JobMailUtilTest extends NLocalFileMetadataTestCase {
     private static final String DEFAULT_PROJECT = "default";
     private static final String MAIL_TITLE_JOB_ERROR = "[Kylin System Notification]-[Job Error]";
-    private static final String MAIL_TITLE_JOB_SUCCEED = "[Kylin System Notification]-[Job Succeed]";
+    private static final String MAIL_TITLE_JOB_FINISHED = "[Kylin System Notification]-[Job Finished]";
     private static final String MAIL_TITLE_JOB_DISCARDED = "[Kylin System Notification]-[Job Discarded]";
     private static final String MAIL_TITLE_JOB_LOAD_EMPTY_DATA = "[Kylin System Notification]-[Job Load Empty Data]";
 
@@ -68,10 +68,10 @@ public class JobMailUtilTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(mail.getSecond());
         Assert.assertEquals(MAIL_TITLE_JOB_LOAD_EMPTY_DATA, mail.getFirst());
 
-        // test job succeed
-        mail = JobMailUtil.createMail(MailNotificationType.JOB_SUCCEED, job);
+        // test job finished
+        mail = JobMailUtil.createMail(MailNotificationType.JOB_FINISHED, job);
         Assert.assertNotNull(mail.getSecond());
-        Assert.assertEquals(MAIL_TITLE_JOB_SUCCEED, mail.getFirst());
+        Assert.assertEquals(MAIL_TITLE_JOB_FINISHED, mail.getFirst());
 
         // test job discarded
         mail = JobMailUtil.createMail(MailNotificationType.JOB_DISCARDED, job);
@@ -81,7 +81,7 @@ public class JobMailUtilTest extends NLocalFileMetadataTestCase {
         // test create mail failed
         DefaultExecutableOnModel job2 = new DefaultExecutableOnModel();
         job2.setProject(DEFAULT_PROJECT);
-        mail = JobMailUtil.createMail(MailNotificationType.JOB_SUCCEED, job2);
+        mail = JobMailUtil.createMail(MailNotificationType.JOB_FINISHED, job2);
         Assert.assertNull(mail);
     }
 
