@@ -447,8 +447,6 @@ public class ProjectService extends BasicService {
         overrideKylinProps.computeIfPresent(KYLIN_SOURCE_JDBC_PASS_KEY, (k, v) -> HIDDEN_VALUE);
     }
 
-    /** Changing the order of assignments is not allowed
-     */
     @Transaction(project = 0)
     public void updateJobNotificationConfig(String project, JobNotificationConfigRequest request) {
         aclEvaluate.checkProjectAdminPermission(project);
@@ -457,10 +455,11 @@ public class ProjectService extends BasicService {
             overrideKylinProps.put("kylin.job.notification-enable-states",
                     String.join(",", Sets.newHashSet(request.getJobStatesNotification())));
             overrideKylinProps.put("kylin.job.notification-on-job-error", null);
+        } else {
+            overrideKylinProps.put("kylin.job.notification-on-job-error",
+                    String.valueOf(request.getJobErrorNotificationEnabled()));
         }
 
-        overrideKylinProps.put("kylin.job.notification-on-job-error",
-                String.valueOf(request.getJobErrorNotificationEnabled()));
         overrideKylinProps.put("kylin.job.notification-on-empty-data-load",
                 String.valueOf(request.getDataLoadEmptyNotificationEnabled()));
         overrideKylinProps.put("kylin.job.notification-admin-emails",

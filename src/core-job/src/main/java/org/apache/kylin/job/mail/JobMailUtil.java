@@ -21,6 +21,7 @@ package org.apache.kylin.job.mail;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.StringUtils;
@@ -55,7 +56,7 @@ public class JobMailUtil {
         data.put("job_name", executable.getName());
         data.put("submitter", executable.getSubmitter());
         data.put("project_name", executable.getProject());
-        data.put("object", executable.getTargetSubject());
+        data.put("object", Optional.ofNullable(executable.getTargetModelAlias()).orElse(executable.getTargetSubject()));
         data.put("start_time", DateFormat.formatToDateStr(executable.getStartTime(),
                 DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS));
         data.put("end_time", DateFormat.formatToDateStr(executable.getLastModified(),

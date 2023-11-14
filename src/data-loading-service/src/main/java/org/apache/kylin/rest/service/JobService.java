@@ -63,6 +63,7 @@ import org.apache.kylin.common.exception.JobExceptionReason;
 import org.apache.kylin.common.exception.JobExceptionResolve;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.logging.SetLogCategory;
+import org.apache.kylin.common.mail.MailNotificationType;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
@@ -77,6 +78,11 @@ import org.apache.kylin.common.scheduler.JobReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.common.JobUtil;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -134,11 +140,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
@@ -542,6 +543,10 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
             return;
         }
         getManager(NExecutableManager.class, project).discardJob(job.getId());
+
+        if (getConfig().isMailEnabled()) {
+            job.notifyUser(MailNotificationType.JOB_DISCARDED);
+        }
     }
 
     /**
@@ -831,8 +836,8 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         segmentSubStages.setStepRatio(stepRatio);
 
         // Put warning message into segment_sub_stages.info if exists
-        Optional<ExecutableStepResponse> warningStageRes = stageResponses.stream().filter(stageRes ->
-                stageRes.getStatus() == JobStatusEnum.WARNING).findFirst();
+        Optional<ExecutableStepResponse> warningStageRes = stageResponses.stream()
+                .filter(stageRes -> stageRes.getStatus() == JobStatusEnum.WARNING).findFirst();
         warningStageRes.ifPresent(res -> segmentSubStages.getInfo().put(NBatchConstants.P_WARNING_CODE,
                 res.getInfo().getOrDefault(NBatchConstants.P_WARNING_CODE, null)));
     }
@@ -850,7 +855,8 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
              */
             Set<JobStatusEnum> jobStatusEnums = Sets.newHashSet(JobStatusEnum.ERROR, JobStatusEnum.STOPPED,
                     JobStatusEnum.DISCARDED);
-            Set<JobStatusEnum> jobFinishOrSkip = Sets.newHashSet(JobStatusEnum.FINISHED, JobStatusEnum.SKIP, JobStatusEnum.WARNING);
+            Set<JobStatusEnum> jobFinishOrSkip = Sets.newHashSet(JobStatusEnum.FINISHED, JobStatusEnum.SKIP,
+                    JobStatusEnum.WARNING);
             if (oldResponse.getStatus() != newResponse.getStatus()
                     && !jobStatusEnums.contains(oldResponse.getStatus())) {
                 if (jobStatusEnums.contains(newResponse.getStatus())) {
