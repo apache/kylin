@@ -142,6 +142,7 @@ public enum ServerErrorCode implements ErrorCodeSupplier {
     LICENSE_FILE_NOT_EXIST("KE-010015001"), //
     EMPTY_LICENSE_CONTENT("KE-010015002"), //
     INVALID_LICENSE("KE-010015003"), //
+    LOW_LEVEL_LICENSE("KE-010015004"), //
 
     // 10016XXX email
     EMPTY_EMAIL("KE-010016001"), //

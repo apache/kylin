@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 4)
 public class MultiTenantModeFilter extends BaseFilter {
-    private static final Set<String> NOT_ROUTE_APIS = com.google.common.collect.Sets.newHashSet();
+    private static final Set<String> NOT_ROUTE_APIS = Sets.newHashSet();
     private static final Set<String> ASYNC_QUERY_APIS = Sets.newHashSet();
     private static final Set<String> ROUTES_APIS = Sets.newHashSet();
     private static final Set<String> JOB_APIS = Sets.newHashSet();

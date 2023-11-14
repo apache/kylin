@@ -541,6 +541,16 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getLowLevelLicenseMessage() {
+        return "无法使用分层存储，如需使用请先升级为 Kyligence 高级版";
+    }
+
+    @Override
+    public String getRestartNoticeMessage() {
+        return "部分功能需重启后再试";
+    }
+
+    @Override
     public String saveModelFail() {
         return "模型 “%s” 保存失败。请确保模型中使用的列 “%s” 在源表 “%s” 中存在。";
     }

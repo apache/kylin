@@ -32,15 +32,14 @@ import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -70,7 +69,6 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.favorite.import-sql-max-size");
         propertyKeys.add("kylin.model.suggest-model-sql-limit");
         propertyKeys.add("kylin.query.query-history-download-max-size");
-        propertyKeys.add("kylin.streaming.enabled");
         propertyKeys.add("kylin.model.measure-name-check-enabled");
         propertyKeys.add("kylin.security.remove-ldap-custom-security-limit-enabled");
         propertyKeys.add("kylin.source.ddl.logical-view.enabled");
@@ -90,7 +88,8 @@ public class NAdminController extends NBasicController {
             propertyKeys.add("kylin.security.allow-non-admin-generate-query-diag-package");
         }
 
-        final String config = KylinConfig.getInstanceFromEnv().exportToString(propertyKeys) + addPropertyInMetadata();
+        final String config = KylinConfig.getInstanceFromEnv().exportToString(propertyKeys)
+                + addPropertyWithKylinInfoCheck() + addPropertyInMetadata();
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, config, "");
     }
@@ -112,6 +111,10 @@ public class NAdminController extends NBasicController {
         Properties properties = new Properties();
         ResourceGroupManager manager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());
         properties.put("resource_group_enabled", manager.isResourceGroupEnabled());
+        return getPropertyString(properties);
+    }
+
+    private String getPropertyString(Properties properties) {
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             sb.append(entry.getKey()).append("=").append(entry.getValue()).append('\n');
@@ -119,4 +122,9 @@ public class NAdminController extends NBasicController {
         return sb.toString();
     }
 
+    private String addPropertyWithKylinInfoCheck() {
+        Properties properties = new Properties();
+        properties.put("kylin.streaming.enabled", KylinConfig.getInstanceFromEnv().streamingEnabled());
+        return getPropertyString(properties);
+    }
 }

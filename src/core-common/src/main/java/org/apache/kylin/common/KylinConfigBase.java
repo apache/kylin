@@ -59,6 +59,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 import org.apache.kylin.common.util.AddressUtil;
@@ -1669,7 +1670,9 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean streamingEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.streaming.enabled", FALSE));
+        boolean checkKylinInfo = KylinInfoExtension.getFactory().checkKylinInfo();
+        boolean enable = Boolean.parseBoolean(getOptional("kylin.streaming.enabled", FALSE));
+        return enable && checkKylinInfo;
     }
 
     public Map<String, String> getStreamingSparkConfigOverride() {
@@ -3979,5 +3982,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public void setJdbcShareStateUrl(String jdbcShareStateUrl) {
         setProperty(KYLIN_JDBC_SHARE_STATE_URL, jdbcShareStateUrl);
+    }
+
+    public String getKylinInfoExtensionFactory() {
+        String defaultValue = "org.apache.kylin.common.extension.KylinInfoExtension$Factory";
+        return getOptional("kylin.extension.info.factory", defaultValue);
     }
 }

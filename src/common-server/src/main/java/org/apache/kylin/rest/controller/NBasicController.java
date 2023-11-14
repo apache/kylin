@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
-import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_ID;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
@@ -27,6 +25,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CONNECT_C
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_DOWNLOAD_FILE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INCORRECT_PROJECT_MODE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.ServerErrorCode.LOW_LEVEL_LICENSE;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
@@ -41,6 +40,8 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_IN_RANGE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_LESS_THAN_ZERO;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_UNAUTHORIZED;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,19 +72,22 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
+import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -131,9 +135,6 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -381,7 +382,8 @@ public class NBasicController {
         return data;
     }
 
-    public Map<String, Object> setCustomDataResponse(String name, Pair<List<TableDesc>, Integer> result, int offset, int limit) {
+    public Map<String, Object> setCustomDataResponse(String name, Pair<List<TableDesc>, Integer> result, int offset,
+            int limit) {
         Map<String, Object> data = new HashMap<>();
         data.put(name, PagingUtil.cutPage(result.getFirst(), offset, limit));
         data.put("size", result.getSecond());
@@ -666,5 +668,15 @@ public class NBasicController {
             logger.error("Failed to encode host, will use the original host name");
         }
         return host;
+    }
+
+    public void checkKylinInfo(boolean enableSecondStorage) {
+        if (enableSecondStorage) {
+            boolean checkKylinInfo = KylinInfoExtension.getFactory().checkKylinInfo();
+            if (!checkKylinInfo) {
+                Message msg = MsgPicker.getMsg();
+                throw new KylinException(LOW_LEVEL_LICENSE, msg.getLowLevelLicenseMessage());
+            }
+        }
     }
 }

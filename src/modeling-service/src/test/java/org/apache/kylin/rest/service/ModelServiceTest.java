@@ -3966,6 +3966,7 @@ public class ModelServiceTest extends SourceTestCase {
         }, defaultProject);
 //        SecondStorageUtil.initModelMetaData(defaultProject, modelId);
 //        Assert.assertTrue(SecondStorageUtil.isModelEnable(defaultProject, modelId));
+//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(defaultProject, modelId));
         List<NDataSegment> overlapSegments31 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
                 dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
                 null);
@@ -4308,6 +4309,7 @@ public class ModelServiceTest extends SourceTestCase {
         when(changedResponse.hasTableIndexChange()).thenReturn(true);
         modelService.changeSecondStorageIfNeeded(project, request, () -> true);
         Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
 
         val modelRequest = modelService.convertToRequest(modelService.getModelById(model, project));
         Assert.assertTrue(modelRequest.isWithSecondStorage());
@@ -4326,6 +4328,7 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertTrue(indexPlanManager.getIndexPlan(model).containBaseTableLayout());
         SecondStorageUtil.initModelMetaData(project, model);
         Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
         {
             List<NDataSegmentResponse> segments = modelService.getSegmentsResponse(model, project, "0",
                     "" + Long.MAX_VALUE, "", null, null, true, "start_time", false, null, null);
@@ -4383,6 +4386,7 @@ public class ModelServiceTest extends SourceTestCase {
         }, project);
         Assert.assertTrue(indexPlanManager.getIndexPlan(model).containBaseTableLayout());
         Assert.assertFalse(SecondStorageUtil.isModelEnable(project, model));
+//        Assert.assertFalse(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
         {
             List<NDataSegmentResponse> segments = modelService.getSegmentsResponse(model, project, "0",
                     "" + Long.MAX_VALUE, "", null, null, true, "start_time", false,
@@ -5280,9 +5284,11 @@ public class ModelServiceTest extends SourceTestCase {
         }, project);
         SecondStorageUtil.initModelMetaData(project, model);
         Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
 
         val mockModel = RandomUtil.randomUUIDStr();
         Assert.assertFalse(SecondStorageUtil.isModelEnable(project, mockModel));
+//        Assert.assertFalse(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, mockModel));
 
         val segment = Mockito.mock(NDataSegment.class);
         modelService.checkSegmentSecondStorage(mockModel, project, segment);

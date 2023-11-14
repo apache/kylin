@@ -632,6 +632,14 @@ public class Message {
         return UNKNOWN_ERROR;
     }
 
+    public String getLowLevelLicenseMessage() {
+        return "Tiered Storage cannot be used. Please upgrade to Kyligence Premium version if you want to use the function.";
+    }
+
+    public String getRestartNoticeMessage() {
+        return "Some functions need to restart and try again.";
+    }
+
     public String saveModelFail() {
         return "Can’t save model \"%s\". Please ensure that the used column \"%s\" exist in source table \"%s\".";
     }

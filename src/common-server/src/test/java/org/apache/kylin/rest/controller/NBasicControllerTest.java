@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.exception.CommonErrorCode.UNKNOWN_ERROR_CODE;
+import static org.apache.kylin.common.exception.ServerErrorCode.LOW_LEVEL_LICENSE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_PARSE_ERROR;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_NON_NEGATIVE_CHECK;
@@ -30,6 +31,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_AUTH_INFO_NOTFOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,6 +42,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.extension.KylinInfoExtension;
+import org.apache.kylin.common.msg.CnMessage;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -57,14 +61,25 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import lombok.val;
+
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*",
+        "javax.crypto.*" })
+@PrepareForTest({ KylinInfoExtension.class })
 public class NBasicControllerTest extends NLocalFileMetadataTestCase {
 
     private MockMvc mockMvc;
@@ -306,12 +321,12 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         Object tableData = mockDataResponse.get("table");
         if (tableData instanceof List<?>) {
             for (Object tableDatum : (List<?>) tableData) {
-                Assert.assertEquals("table1", ((TableDesc)tableDatum).getName().toLowerCase(Locale.ROOT));
+                Assert.assertEquals("table1", ((TableDesc) tableDatum).getName().toLowerCase(Locale.ROOT));
             }
         }
         Assert.assertEquals(3, mockDataResponse.get("size"));
     }
-    
+
     @Test
     public void testEncodeAndDecodeHost() {
         Assert.assertTrue(nBasicController.encodeHost("").isEmpty());
@@ -324,4 +339,31 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("ip", nBasicController.decodeHost("ip"));
     }
 
+    @Test
+    public void testCheckLicenseLevel() throws Exception {
+        nBasicController.checkKylinInfo(false);
+
+        PowerMockito.mockStatic(KylinInfoExtension.class);
+        val factory = Mockito.mock(KylinInfoExtension.Factory.class);
+        Mockito.when(factory.checkKylinInfo()).thenReturn(true);
+        PowerMockito.when(KylinInfoExtension.getFactory()).thenReturn(factory);
+        nBasicController.checkKylinInfo(true);
+
+        checkErrorMessage(factory, "en", Message.getInstance());
+        checkErrorMessage(factory, "cn", CnMessage.getInstance());
+    }
+
+    private void checkErrorMessage(KylinInfoExtension.Factory factory, String lang, Message message) {
+        try {
+            MsgPicker.setMsg(lang);
+            Mockito.when(factory.checkKylinInfo()).thenReturn(false);
+            nBasicController.checkKylinInfo(true);
+            fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            val kylinException = (KylinException) e;
+            Assert.assertEquals(LOW_LEVEL_LICENSE.toErrorCode(), kylinException.getErrorCode());
+            Assert.assertEquals(message.getLowLevelLicenseMessage(), kylinException.getMessage());
+        }
+    }
 }
