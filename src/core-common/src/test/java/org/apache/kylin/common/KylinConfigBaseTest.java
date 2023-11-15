@@ -631,8 +631,8 @@ class KylinConfigBaseTest {
         map.put("getJobNotificationStates",
                 new PropertiesEntity("kylin.job.notification-enable-states", "", new String[0]));
 
-        map.put("getJobMetadataPersistNotificationEnabled",
-                new PropertiesEntity("kylin.job.notification-on-metadata-persist", "false", false));
+        //map.put("getJobMetadataPersistNotificationEnabled",
+        //        new PropertiesEntity("kylin.job.notification-on-metadata-persist", "false", false));
 
         map.put("getJobErrorNotificationEnabled",
                 new PropertiesEntity("kylin.job.notification-on-job-error", "false", false));
