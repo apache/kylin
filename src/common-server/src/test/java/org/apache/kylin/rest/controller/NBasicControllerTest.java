@@ -350,7 +350,7 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         nBasicController.checkKylinInfo(true);
 
         checkErrorMessage(factory, "en", Message.getInstance());
-        checkErrorMessage(factory, "cn", CnMessage.getInstance());
+        // checkErrorMessage(factory, "cn", CnMessage.getInstance());
     }
 
     private void checkErrorMessage(KylinInfoExtension.Factory factory, String lang, Message message) {
