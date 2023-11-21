@@ -60,6 +60,7 @@ hs_err_pid*
 # The star is required for further !/.idea/ to work, see https://git-scm.com/docs/gitignore
 /.idea/*
 !/.idea/vcs.xml
+!/.idea/icon.png
 .DS_Store
 target
 logs
