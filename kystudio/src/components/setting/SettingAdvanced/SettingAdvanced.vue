@@ -58,9 +58,9 @@
         <span class="setting-label font-medium">{{$t('jobState')}} :</span><span class="setting-value fixed">
         </span>
          <span class="setting-value">
-              {{form.job_notification_states.map(states => $t(states)).join(', ')}}
+              {{form.job_states_notification.map(states => $t(states)).join(', ')}}
             </span>
-            <el-checkbox-group class="setting-input" :value="form.job_notification_states" @input="handleInputJobState">
+            <el-checkbox-group class="setting-input" :value="form.job_states_notification" @input="handleInputJobState">
               <el-checkbox
                 v-for="jobState in jobNotificationStateTypes"
                 :key="jobState"
@@ -416,7 +416,7 @@ export default class SettingAdvanced extends Vue {
     project: '',
     // tips_enabled: true,
     // threshold: 20,
-    job_notification_states: [],
+    job_states_notification: [],
     data_load_empty_notification_enabled: true,
     metadata_persist_notification_enabled: false,
     job_notification_emails: [],
@@ -1224,7 +1224,7 @@ export default class SettingAdvanced extends Vue {
   }
   handleInputJobState (value) {
     if (value.length >= 0) {
-      this.form.job_notification_states = value
+      this.form.job_states_notification = value
     }
   }
 }

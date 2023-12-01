@@ -39,7 +39,7 @@ export function _getJobAlertSettings (data, isArrayDefaultValue, isSort) {
     metadata_persist_notification_enabled: data.metadata_persist_notification_enabled,
     data_load_empty_notification_enabled: data.data_load_empty_notification_enabled,
     job_notification_emails: jobEmails,
-    job_notification_states: data.job_notification_states
+    job_states_notification: data.job_states_notification
   }
 }
 
@@ -98,8 +98,4 @@ export function _getKerberosSettings (data) {
   }
 }
 
-export const jobNotificationStateTypes = [
-  'Succeed',
-  'Error',
-  'Discard'
-]
+export const jobNotificationStateTypes = ['succeed', 'error', 'discarded']

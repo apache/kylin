@@ -97,8 +97,8 @@
   import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
   import vuex from '../../../../store'
   import { BuildIndexStatus } from 'config/model'
-  import { handleSuccess, kylinConfirm, postCloudUrlMessage } from 'util/business'
-  import { objectClone, getQueryString, indexOfObjWithSomeKey } from 'util/index'
+  import { handleSuccess, kylinConfirm } from 'util/business'
+  import { objectClone, indexOfObjWithSomeKey } from 'util/index'
   import TransferData from '../../../common/CustomTransferData/TransferData'
   import locales from './locales'
   import store, { types } from './store'
@@ -375,11 +375,7 @@
     }
     // 跳转至job页面
     jumpToJobs () {
-      if (getQueryString('from') === 'cloud' || getQueryString('from') === 'iframe') {
-        postCloudUrlMessage(this.$route, { name: 'kapJob' })
-      } else {
-        this.$router.push('/monitor/job')
-      }
+      this.$router.push('/monitor/job')
     }
   }
 </script>

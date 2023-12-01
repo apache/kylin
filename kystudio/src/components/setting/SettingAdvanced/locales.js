@@ -94,6 +94,9 @@ export default {
     closeSecStorageTip: 'With this switch OFF, the data stored in the tiered storage will be cleared. The query performance might be affected.',
     affectedModels: 'The affected model:',
     secStorageInputTitle: 'Please enter "Turn Off Tiered Storage" to confirm.',
-    emptyTips: 'Can\'t be empty'
+    emptyTips: 'Can\'t be empty',
+    succeed: 'FINISHED',
+    error: 'ERROR',
+    discarded: 'DISCARDED'
   }
 }
