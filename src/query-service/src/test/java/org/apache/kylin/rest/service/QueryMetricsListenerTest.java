@@ -65,6 +65,7 @@ public class QueryMetricsListenerTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         createTestMetadata();
+        getTestConfig().setProperty("kylin.monitor.enabled", "true");
         queryMetricsListener = Mockito.spy(new QueryMetricsListener());
         queryService = Mockito.spy(new QueryService());
     }

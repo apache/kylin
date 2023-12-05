@@ -65,6 +65,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.routing.RealizationCheck;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -297,6 +298,7 @@ public class OLAPContext {
             String modelId, String modelAlias, List<String> snapshots) {
         val realization = new NativeQueryRealization(modelId, modelAlias, ctx.storageContext.getLayoutId(),
                 realizationType, ctx.storageContext.isPartialMatchModel(), snapshots);
+        realization.setCxtId(ctx.id);
         realization.setSecondStorage(
                 QueryContext.current().getSecondStorageUsageMap().getOrDefault(realization.getLayoutId(), false));
         realization.setRecommendSecondStorage(
@@ -525,6 +527,43 @@ public class OLAPContext {
                 + ", allOlapJoins=" + allOlapJoins + ", groupByColumns=" + groupByColumns + ", innerGroupByColumns="
                 + innerGroupByColumns + ", innerFilterColumns=" + innerFilterColumns + ", aggregations=" + aggregations
                 + ", filterColumns=" + filterColumns + '}';
+    }
+
+    public final static String SEP = System.getProperty("line.separator");
+    public final static String INDENT = "  ";
+
+    public final static String olapContextFormat = SEP
+            + "{"
+            + SEP + INDENT + "\"Fact Table\" = \"%s\","
+            + SEP + INDENT + "\"Dimension Tables\" = [%s],"
+            + SEP + INDENT + "\"Recommend Dimension(Group by)\" = [%s],"
+            + SEP + INDENT + "\"Recommend Dimension(Filter cond)\" = [%s],"
+            + SEP + INDENT + "\"Measures\" = [%s],"
+            + SEP + "}"
+            + SEP;
+
+    public String tipsForUser() {
+        Set<String> allTables = allTableScans.stream().map(OLAPTableScan::getTableName).collect(Collectors.toSet());
+        if (!allTables.isEmpty() && firstTableScan != null) {
+            allTables.remove(firstTableScan.getTableName());
+            return String.format(olapContextFormat,
+                    firstTableScan.getTableName(),
+                    Strings.join(allTables.stream().map(c -> "\"" + c + "\"").iterator(), ','),
+                    Strings.join(groupByColumns.stream().map(c -> "\"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
+                    Strings.join(filterColumns.stream().map(c -> "\"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
+                    Strings.join(aggregations.stream().map(c -> "\"" + c.getFullExpression() + "\"").iterator(), ',')
+                    );
+        } else {
+            return "empty";
+        }
+    }
+
+    public String toHumanReadString() {
+        String r = realization == null ? "not matched" : realization.getCanonicalName();
+        return "{id = " + id
+                + ", model = " + r
+                + ", fact table = " + (firstTableScan != null ? firstTableScan.getTableName() : "?")
+                + "}";
     }
 
     public void matchJoinWithFilterTransformation() {

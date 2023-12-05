@@ -36,6 +36,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexSlot;
 import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.util.RexUtils;
 import org.apache.kylin.util.CalciteSystemProperty;
@@ -112,6 +113,9 @@ public class ContextUtil {
     public static void dumpCalcitePlan(String msg, RelNode relNode, Logger logger) {
         if (Boolean.TRUE.equals(CalciteSystemProperty.DEBUG.value()) && logger.isDebugEnabled()) {
             logger.debug("{} :{}{}", msg, System.getProperty("line.separator"), RelOptUtil.toString(relNode));
+        }
+        if (QueryContext.current().isDryRun() && msg.contains("FIRST ROUND")) {
+            QueryContext.current().setLastUsedRelNode(RelOptUtil.toString(relNode));
         }
     }
 

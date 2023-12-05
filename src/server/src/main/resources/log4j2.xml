@@ -19,6 +19,7 @@
     <Appenders>
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+<!--            <PatternLayout pattern="%-5p    %d{HH:mm:ss,SSS}    %X{request.project}[%t]  ====  %l  %c{2}%n      %mask{%m}%n%n"/>-->
         </Console>
     </Appenders>
     <Loggers>

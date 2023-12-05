@@ -25,6 +25,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
+import org.apache.kylin.common.exception.DryRunSucceedException;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
 import org.apache.kylin.query.engine.exec.sparder.QueryEngine;
 import org.apache.kylin.query.mask.QueryResultMasks;
@@ -63,6 +64,10 @@ public class SparkEngine implements QueryEngine {
     @Override
     public ExecuteResult computeToIterable(DataContext dataContext, RelNode relNode) {
         Dataset<Row> sparkPlan = QueryResultMasks.maskResult(toSparkPlan(dataContext, relNode));
+        if (QueryContext.current().isDryRun()) {
+            throw new DryRunSucceedException("DryRun succeed. Query is stopped due to DryRun enabled.",
+                    sparkPlan.queryExecution().executedPlan().toString());
+        }
         log.info("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution().logical());
         if (KapConfig.getInstanceFromEnv().isOnlyPlanInSparkEngine()) {
             return ResultPlan.completeResultForMdx(sparkPlan, relNode.getRowType());

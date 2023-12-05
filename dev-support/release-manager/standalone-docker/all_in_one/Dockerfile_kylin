@@ -42,7 +42,7 @@ RUN tar -zxf /home/kylin/apache-kylin-$KYLIN_VERSION-*.tar.gz \
 
 COPY conf/kylin/kylin.properties.override $KYLIN_HOME/conf/
 
-COPY ./entrypoint.sh /home/kylin/entrypoint.sh
+COPY ./scripts/entrypoint.sh /home/kylin/entrypoint.sh
 RUN chmod u+x /home/kylin/entrypoint.sh
 
 ENTRYPOINT ["/home/kylin/entrypoint.sh"]

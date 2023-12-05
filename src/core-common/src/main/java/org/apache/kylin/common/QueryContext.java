@@ -145,6 +145,23 @@ public class QueryContext implements Closeable {
     @Setter
     private boolean enhancedAggPushDown;
 
+
+    /**
+     * For debug purpose, will show RelNode
+     * when dryRun is enabled
+     */
+    @Getter
+    @Setter
+    private String lastUsedRelNode;
+
+    /**
+     * For debug purpose, when dry run mode is enabled, the query
+     * will be not executed, and debug message of this query will
+     * show in the Insight page.
+     */
+    @Getter
+    private boolean dryRun = false;
+
     private QueryContext() {
         // use QueryContext.current() instead
         queryId = RandomUtil.randomUUIDStr();
@@ -187,6 +204,10 @@ public class QueryContext implements Closeable {
         long takeTime = current - recordMillis;
         queryRecord.put(message, takeTime + "");
         recordMillis = current;
+    }
+
+    public void setDryRun(boolean flag) {
+        dryRun = flag;
     }
 
     @Override

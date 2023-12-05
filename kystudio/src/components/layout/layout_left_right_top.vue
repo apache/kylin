@@ -74,6 +74,7 @@
                 <el-button type="primary" text iconr="el-ksd-icon-arrow_down_22"><span class="limit-user-name">{{currentUserInfo && currentUserInfo.username}}</span></el-button>
                 <el-dropdown-menu slot="dropdown">
                   <div class="user-name">{{ currentUserInfo && currentUserInfo.username }}</div>
+                  <div class="user-name"><a href="https://kylin.apache.org/5.0/docs/quickstart/tutorial" target="_blank">Tutorial</a></div>
                   <el-dropdown-item :disabled="!isTestingSecurityProfile" command="setting">{{$t('kylinLang.common.changePassword')}}</el-dropdown-item>
                   <el-dropdown-item command="loginout">{{$t('kylinLang.common.logout')}}</el-dropdown-item>
                 </el-dropdown-menu>
@@ -846,7 +847,7 @@ export default class LayoutLeftRightTop extends Vue {
   }
   .user-name {
     padding: 0 8px 8px 8px;
-    line-height: 1;
+    line-height: 2;
     border-bottom: 1px solid @line-split-color;
     box-sizing: border-box;
     overflow: hidden;

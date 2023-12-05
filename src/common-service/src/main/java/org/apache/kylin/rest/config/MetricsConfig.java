@@ -57,6 +57,27 @@ public class MetricsConfig {
 
     @EventListener(ApplicationReadyEvent.class)
     public void registerMetrics() {
+        if (KylinConfig.getInstanceFromEnv().isPrometheusMetricsEnabled()) {
+            log.info("Register prometheus global metrics... ");
+            MetricsRegistry.registerGlobalPrometheusMetrics();
+
+            METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
+                Set<String> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()
+                        .stream().map(ProjectInstance::getName).collect(Collectors.toSet());
+
+                MetricsRegistry.refreshProjectLongRunningJobs(KylinConfig.getInstanceFromEnv(), allProjects);
+                Sets.SetView<String> newProjects = Sets.difference(allProjects, allControlledProjects);
+                for (String newProject : newProjects) {
+                    log.info("Register prometheus metrics for project {}", newProject);
+                    MetricsRegistry.registerProjectPrometheusMetrics(KylinConfig.getInstanceFromEnv(), newProject);
+                }
+
+                allControlledProjects.clear();
+                allControlledProjects.addAll(allProjects);
+
+            }, 0, 1, TimeUnit.MINUTES);
+        }
+
         if (!KapConfig.getInstanceFromEnv().isMonitorEnabled()) {
             return;
         }
@@ -70,10 +91,6 @@ public class MetricsConfig {
 
         log.info("Register host metrics...");
         MetricsRegistry.registerHostMetrics(host);
-        if (KylinConfig.getInstanceFromEnv().isPrometheusMetricsEnabled()) {
-            log.info("Register prometheus global metrics... ");
-            MetricsRegistry.registerGlobalPrometheusMetrics();
-        }
 
         METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
             Set<String> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()

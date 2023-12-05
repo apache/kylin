@@ -51,7 +51,7 @@ public class SQLDigest {
 
     // group by
     public List<TblColRef> groupbyColumns;
-    public Set<TblColRef> subqueryJoinParticipants; // FIXME: can we add subqueryJoinParticipants to allColumns/groupbyCols at OLAPContext? from dong@newten
+    public Set<TblColRef> subqueryJoinParticipants; // FIXME: can we add subqueryJoinParticipants to allColumns/groupbyCols at OLAPContext?
 
     // aggregation
     public Set<TblColRef> metricColumns;

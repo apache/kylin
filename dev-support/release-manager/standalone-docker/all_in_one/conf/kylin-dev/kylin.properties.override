@@ -1,0 +1,75 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# The http session will timeout in 3 hours
+spring.session.store-type=JDBC
+spring.session.timeout=10800
+
+# Turn off query cache
+kylin.query.cache-enabled=false
+
+server.port=7070
+kylin.query.init-sparder-async=false
+
+kylin.env.apache-hadoop-conf-dir=/opt/hadoop-3.2.1/etc/hadoop
+kylin.env.apache-hive-conf-dir=/opt/apache-hive-3.1.2-bin/conf
+
+# The metastore connection information
+kylin.metadata.url=kylin@jdbc,driverClassName=com.mysql.jdbc.Driver,url=jdbc:mysql://localhost:3306/kylin?useUnicode=true&characterEncoding=utf8,username=root,password=123456,maxTotal=50,maxIdle=8
+
+kylin.env.zookeeper-connect-string=localhost:2181
+kylin.env.hdfs-working-dir=/kylin
+
+# The yarn resource used by query engine(spark session)
+kylin.storage.columnar.spark-conf.spark.driver.memory=512M
+kylin.storage.columnar.spark-conf.spark.driver.memoryOverhead=256M
+kylin.storage.columnar.spark-conf.spark.executor.cores=1
+kylin.storage.columnar.spark-conf.spark.executor.instances=1
+kylin.storage.columnar.spark-conf.spark.executor.memory=2048M
+kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead=256M
+
+# The yarn resource used by build engine(spark session)
+kylin.engine.driver-memory-strategy=2,500
+kylin.engine.spark-conf.spark.driver.memory=512M
+kylin.engine.spark-conf.spark.driver.memoryOverhead=256M
+kylin.engine.spark-conf.spark.executor.cores=1
+kylin.engine.spark-conf.spark.executor.instances=2
+kylin.engine.spark-conf.spark.executor.memory=2048M
+kylin.engine.spark-conf.spark.executor.memoryOverhead=512M
+
+# The yarn resource used by query engine(spark session) Async Query
+kylin.query.async-query.spark-conf.spark.executor.cores=1
+kylin.query.async-query.spark-conf.spark.driver.memory=1024M
+kylin.query.async-query.spark-conf.spark.executor.memory=1024M
+kylin.query.async-query.spark-conf.spark.executor.instances=1
+kylin.query.async-query.spark-conf.spark.executor.memoryOverhead=512M
+
+# Turn off the password force reset function
+kylin.metadata.random-admin-password.enabled=false
+
+kylin.query.engine.push-down.enable-prepare-statement-with-params=true
+kylin.query.calcite.extras-props.FUN=standard,oracle
+kylin.circuit-breaker.threshold.project=500
+kylin.engine.resource-request-over-limit-proportion=3.0
+
+# Kylin can only run two jobs at the same time
+kylin.job.max-concurrent-jobs=2
+
+# If this switch is turned on, Kylin will check node's available memory, if remained
+# memory is not fulfilled, job will be hanged.
+# In some cases, the Kylin will refuse to start any build job by this check logic.
+kylin.job.auto-set-concurrent-jobs=false

@@ -23,23 +23,30 @@
 # https://stackoverflow.com/questions/57591432/gpg-signing-failed-inappropriate-ioctl-for-device-on-macos-with-maven
 GPG_TTY=$(tty)
 export GPG_TTY
-CUR_DATE=$(date "+%Y-%m-%d")
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 set -e
 
 function exit_with_usage {
   cat << EOF
-usage: release-publish.sh <publish-snapshot|publish-release|preview-site|...>
-Creates build deliverables from a Kylin commit.
+usage: release-publish.sh options command
 
-Top level targets are
-  // package:
-  publish-snapshot: Publish snapshot release to Apache snapshots
-  publish-release: Publish a release to Apache release repo
+Options are
+  -b ,GIT_BRANCH
+  -d ,DRY_RUN, for maven-release-plugin only
+  -g ,GITHUB_UID, part of you Github URL
+  -o ,MODE_OFFICIAL, if you are using gitbox or github
+  -r ,MODE_RELEASE, if you are packaging or releasing
+  -v ,MODE_VERBOSE, if you want to double check important message
+
+Command are
+  init: Clone all source repo
   reset: Clean when after a fail release attempt
+  publish-snapshot(RM only): Publish snapshot release to Apache snapshots
+  package:
+  publish-release(RM only): Publish a release to Apache release repo
   preview-site: Build Kylin website on docker, so you can check/preview website in localhost:7070
-  publish-site: After checked, you can upload content to apache.org
+  publish-site(RM only): After checked, you can upload content to apache.org
 EOF
   exit 0
 }
@@ -52,7 +59,7 @@ EOF
 }
 
 function ask_confirm {
-  if [ "$MODE" = "batch" ] ;then
+  if [ "$MODE_VERBOSE" = "0" ] ;then
     return 0
   fi
   read -p "$1 Will you continue? [y/n] " ANSWER
@@ -62,25 +69,8 @@ function ask_confirm {
   fi
 }
 
-if [ $# -eq 0 ]; then
-  exit_with_usage
-else
-  if [ "$1" = "reset" ] || \
-      [ "$1" = "publish-snapshot" ] || \
-      [ "$1" = "publish-release" ] || \
-      [ "$1" = "preview-site" ] || \
-      [ "$1" = "publish-site" ];
-  then
-      ask_confirm "You are running step [$1] as release manager"
-      RELEASE_STEP=$1
-  else
-      echo "Your input $1 is not valid."
-      exit_with_usage
-  fi
-fi
-
 function read_config {
-  if [ "$MODE" = "batch" ] ;then
+  if [ "$MODE_VERBOSE" = "0" ] ;then
     echo "$2"
   elif [ "$MODE" = "" ]; then
     local PROMPT="$1"
@@ -118,96 +108,128 @@ function run_command {
 }
 
 function switch_node_for_packaging {
-  # nvm use system
-  node -v # 12.22.12
+  nvm use system
+  node -v
+  # should be 12.22.12
 }
 
 function switch_node_for_website {
-  # nvm install 16.14.2
-  # nvm use 16.14.2
-  node -v # 16.14.2
+  nvm install 16.14.2
+  nvm use 16.14.2
+  node -v
+  # should be 16.14.2
 }
 
-DRY_RUN=false
+####################################################
+####################################################
+# Following is for configuring
 
-ASF_USERNAME=$(read_config "Your apache id?" "$ASF_USERNAME")
-GIT_USERNAME=$(read_config "Your full name(used as author of git commit)?" "$GIT_USERNAME")
-ASF_PASSWORD=$(read_config "Your apache password?" "$ASF_PASSWORD")
-GIT_EMAIL=$ASF_USERNAME"@apache.org"
-GPG_KEY=$(read_config "GPG key of you(used to sign release candidate)?" "$GPG_KEY")
-GPG_PASSPHRASE=$(read_config "PASSPHRASE for your private GPG key?" "$GPG_PASSPHRASE")
+function configure_release {
+  export rm_dir=/root/release-manager
+  export working_dir=$rm_dir/kylin-folder
+  CUR_DATE=$(date "+%Y-%m-%d")
 
-GIT_BRANCH=$(read_config "Git branch for release?" "$GIT_BRANCH")
-RELEASE_VERSION=$(read_config "Which version are you going to release?" "$RELEASE_VERSION")
-NEXT_RELEASE_VERSION=$(read_config "Which version is the next development version?" "$NEXT_RELEASE_VERSION")
-RC_NUMBER="rc"$(read_config "Number for release candidate?" "$RC_NUMBER")
 
-export working_dir=/root/kylin-folder
-svn_folder=$working_dir/svn
-source_code_folder=$working_dir/source/kylin
-
-packaging_folder=$source_code_folder/target/checkout
-svn_stage_folder=$svn_folder/dev
-rc_name=apache-kylin-"${RELEASE_VERSION}"-${RC_NUMBER}
-release_candidate_folder=$svn_stage_folder/$rc_name
-final_release_folder=$svn_folder/release
-
-branch_doc_1=document
-branch_doc_2=doc5.0
-document_folder=$working_dir/document
-document_folder_src=$document_folder/src
-document_folder_elder=$document_folder_src/$branch_doc_1
-document_folder_newer=$document_folder_src/$branch_doc_2
-document_folder_svn=$svn_folder/site
-
-LOG=$working_dir/$rc_name-$CUR_DATE.log
-rm -rf "$LOG"
-
-ASF_KYLIN_REPO="gitbox.apache.org/repos/asf/kylin.git"
-# GITHUB_REPO_URL=${GIT_REPO_URL:-https://github.com/apache/kylin.git}
-RELEASE_STAGING_LOCATION="https://dist.apache.org/repos/dist/dev/kylin"
-RELEASE_LOCATION="https://dist.apache.org/repos/dist/release/kylin"
-WEBSITE_SVN="https://svn.apache.org/repos/asf/kylin/site"
-
-GPG_COMMAND="gpg -u $GPG_KEY --no-tty --batch --pinentry-mode loopback"
-
-if [[ -z "$ASF_PASSWORD" ]]; then
-  echo 'The environment variable ASF_PASSWORD is not set. Enter the password.'
-  echo
-  stty -echo && printf "ASF password: " && read ASF_PASSWORD && printf '\n' && stty echo
-fi
-
-if [[ -z "$GPG_PASSPHRASE" ]]; then
-  echo 'The environment variable GPG_PASSPHRASE is not set. Enter the passphrase to'
-  echo 'unlock the GPG signing key that will be used to sign the release!'
-  echo
-  stty -echo && printf "GPG passphrase: " && read GPG_PASSPHRASE && printf '\n' && stty echo
-fi
-
-for env in ASF_USERNAME GPG_PASSPHRASE RC_NUMBER GPG_KEY; do
-  if [ -z "${!env}" ]; then
-    echo "ERROR: $env must be set to run this script"
-    exit_with_usage
+  ### 0. identity
+  if [ "$MODE_OFFICIAL" = "1" ] ; then
+    echo "As Apache Committer, you using Gitbox."
+    ASF_USERNAME=$(read_config "Your apache id?" "$ASF_USERNAME")
+    ASF_PASSWORD=$(read_config "Your apache password?" "$ASF_PASSWORD")
+    GIT_EMAIL=$ASF_USERNAME"@apache.org"
+  else
+    echo "As developer, you using Github."
+    GIT_EMAIL=$(read_config "Your EMAIL?" "N/A")
   fi
-done
+
+  if [ "$MODE_RELEASE" = "1" ] ; then
+    echo "Packaging and releasing"
+    GPG_KEY=$(read_config "GPG key of you(used to sign release candidate)?" "$GPG_KEY")
+    GPG_PASSPHRASE=$(read_config "PASSPHRASE for your private GPG key?" "$GPG_PASSPHRASE")
+    RELEASE_VERSION=$(read_config "Which version are you going to release?" "$RELEASE_VERSION")
+    NEXT_RELEASE_VERSION=$(read_config "Which version is the next development version?" "$NEXT_RELEASE_VERSION")
+    RC_NUMBER="rc"$(read_config "Number for release candidate?" "$RC_NUMBER")
+  else
+    echo "Only packaging"
+  fi
+  GIT_USERNAME=$(read_config "Your full name(used as author of git commit)?" "$GIT_USERNAME")
+  GIT_BRANCH=$(read_config "Git branch for release?" "$GIT_BRANCH")
+
+
+  ### 1. Source code folder
+  svn_folder=$working_dir/asf_svn
+  export source_code_folder=$working_dir/source/gitbox
+  export packaging_folder=$working_dir/source/github
+
+
+  ### 2. Release binary folder
+  export svn_stage_folder=$svn_folder/dev
+  export rc_name=apache-kylin-"${RELEASE_VERSION}"-${RC_NUMBER}
+  export release_candidate_folder=$svn_stage_folder/$rc_name
+  export final_release_folder=$svn_folder/release
+
+
+  ### 3. Official document folder
+  export branch_doc_1=document
+  export branch_doc_2=doc5.0
+  export document_folder=$working_dir/document
+  export document_folder_elder=$document_folder/outer
+  export document_folder_newer=$document_folder/inner
+  export document_folder_svn=$svn_folder/site
+
+
+  ### 4. Remote repository setting
+  # for apache committer only
+  export ASF_KYLIN_REPO="gitbox.apache.org/repos/asf/kylin.git"
+  # for all developer
+  export GITHUB_REPO_URL="https://github.com/${GITHUB_UID:apache}/kylin.git"
+  # for upload release candidate
+  export RELEASE_STAGING_LOCATION="https://dist.apache.org/repos/dist/dev/kylin"
+  # for upload final approved release
+  export RELEASE_LOCATION="https://dist.apache.org/repos/dist/release/kylin"
+  # for upload official website
+  export WEBSITE_SVN="https://svn.apache.org/repos/asf/kylin/site"
+
+  if [ "$MODE_OFFICIAL" = "1" ] ; then
+    export FINAL_KYLIN_REPO="https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO"
+  else
+    export FINAL_KYLIN_REPO=$GITHUB_REPO_URL
+  fi
+
+
+  ### 5. Misc
+  export GPG_COMMAND="gpg -u $GPG_KEY --no-tty --batch --pinentry-mode loopback"
+  export LOG=$working_dir/$rc_name-$CUR_DATE.log
+  rm -rf "$LOG"
+}
+
+####################################################
+####################################################
+# Following is for packaging and releasing
 
 function reset_release {
   info "Reset release folder"
   cd ${source_code_folder}
-  git reset --hard HEAD~5
+  git reset --hard HEAD~3
   git pull -r origin "$GIT_BRANCH"
   mvn clean
   mvn release:clean
+
+  cd ${packaging_folder}
+  git reset --hard HEAD~3
+  git pull -r origin "$GIT_BRANCH"
+  mvn clean
+
   # Update current script
-  mv /root/release-publish.sh .release-publish.sh.bak
-  cp $source_code_folder/build/release/release-pipeline-docker/release-machine/release-publish.sh /root/
+  mv $rm_dir/release-publish.sh $rm_dir/.release-publish.sh.bak
+  cp $source_code_folder/dev-support/release-manager/release-pipeline-docker/release-machine/bin/release-publish.sh $rm_dir
 }
 
 function prepare_release {
+  source /root/.bashrc
+  bash $HOME/.nvm/install.sh
   info "Configuration and Clone Code"
   git config --global user.name "${GIT_USERNAME}"
-  git config --global user.email ${GIT_EMAIL}
-  git config --global user.password ${ASF_PASSWORD}
+  git config --global user.email "${GIT_EMAIL}"
   mkdir -p $working_dir
   cd $working_dir
 
@@ -215,7 +237,12 @@ function prepare_release {
   then
       mkdir -p ${source_code_folder}
       info "Clone source code to ${source_code_folder} ."
-      run_command "Clone Gitbox" git clone "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO" --single-branch --branch "$GIT_BRANCH" ${source_code_folder}
+      run_command "Clone Gitbox" git clone "$FINAL_KYLIN_REPO" --single-branch --branch "$GIT_BRANCH" ${source_code_folder}
+  fi
+
+  if [ ! -d "${packaging_folder}" ]
+  then
+      cp -r ${source_code_folder}/* ${packaging_folder}
   fi
 
   if [ ! -d "${release_candidate_folder}" ]
@@ -300,24 +327,24 @@ function publish_release {
 
 function preview_site() {
   info "Prepare website"
-  if [ ! -d "${document_folder_src}" ]; then
-      mkdir -p $document_folder_src
+  if [ ! -d "${document_folder}" ]; then
+      mkdir -p $document_folder
       run_command "Install nodejs for docusaurus" switch_node_for_website
   fi
-  cd $document_folder_src
+  cd $document_folder
   if [ ! -d "${document_folder_elder}" ]; then
-      run_command "Clone website for kylin4" git clone --single-branch --branch $branch_doc_1 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO" $branch_doc_1
+      run_command "Clone website for outer" git clone --single-branch --branch $branch_doc_1 $FINAL_KYLIN_REPO outer
   else
       cd ${document_folder_elder}
-      git reset --hard HEAD~4
+      git reset --hard HEAD~2
       git pull -r origin $branch_doc_1
   fi
 
   if [ ! -d "${document_folder_newer}" ]; then
-      run_command "Clone website for kylin5" git clone --single-branch --branch $branch_doc_2 "https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_KYLIN_REPO" $branch_doc_2
+      run_command "Clone website for kylin5" git clone --single-branch --branch $branch_doc_2 $FINAL_KYLIN_REPO innner
   else
       cd ${document_folder_newer}
-      git reset --hard HEAD~4
+      git reset --hard HEAD~2
       git pull -r origin $branch_doc_2
   fi
 
@@ -330,23 +357,24 @@ function preview_site() {
 
   # Build inner website
   cd ${document_folder_newer}/website
-  # nvm use 16.14
+  switch_node_for_website
   run_command "Install node modules" npm install
   run_command "Build inner website" npm run build
   document_folder_newer_build=${document_folder_newer}/website/build
 
   # Build outer website
   cd ${document_folder_elder}/website
+  switch_node_for_packaging
   run_command "Build outer website" jekyll build >>$LOG 2>&1
-  document_folder_elder_build=${document_folder_elder}/_site
+  document_folder_elder_build=${document_folder_elder}/website/_site
 
   # Merge two websites
+  run_command "Preview merged website" jekyll s -P 4040 -H 0.0.0.0 -B
+
   rm -rf ${document_folder_elder_build}/5.0
   mv ${document_folder_newer_build} ${document_folder_elder_build}/5.0
   info "Build website should be done, and stored in ${document_folder_elder_build} ."
-
-  run_command "Preview merged website" jekyll s -P 7070
-  info "Website could be previewed at localhost:7070"
+  info "Website could be previewed at localhost:4040"
 }
 
 function publish_site() {
@@ -367,6 +395,56 @@ function publish_site() {
 ####################################################
 # Script running start from here
 
+if [ $# -eq 0 ]; then
+  exit_with_usage
+else
+  export GITHUB_UID=apache
+  export GIT_BRANCH=kylin5
+  export MODE_RELEASE=0
+  export MODE_OFFICIAL=0
+  export MODE_VERBOSE=0
+  export DRY_RUN='false'
+  while getopts "b:g:ordv" opt; do
+    case $opt in
+      b)
+        export GIT_BRANCH=$OPTARG
+        echo "GIT_BRANCH set to $GIT_BRANCH" ;;
+      d)
+        export DRY_RUN='true'
+        echo "DRY_RUN set to $DRY_RUN" ;;
+      g)
+        export GITHUB_UID=$OPTARG
+        echo "GITHUB_UID set to $GITHUB_UID" ;;
+      o)
+        export MODE_OFFICIAL=1
+        echo "MODE_OFFICIAL set to $MODE_OFFICIAL" ;;
+      r)
+        export MODE_RELEASE=1
+        echo "MODE_RELEASE set to $MODE_RELEASE" ;;
+      v)
+        export MODE_VERBOSE=1
+        echo "MODE_VERBOSE set to $MODE_VERBOSE" ;;
+      \?) error "Invalid option: $OPTARG" ;;
+    esac
+  done
+
+  COMMAND=${@: -1}
+  if [ "$COMMAND" = "reset" ] || \
+      [ "$COMMAND" = "prepare" ] || \
+      [ "$COMMAND" = "publish-snapshot" ] || \
+      [ "$COMMAND" = "publish-release" ] || \
+      [ "$COMMAND" = "preview-site" ] || \
+      [ "$COMMAND" = "publish-site" ];
+  then
+      ask_confirm "You are running step [$COMMAND]"
+      RELEASE_STEP=$COMMAND
+  else
+      echo "Your input $COMMAND is not valid."
+      exit_with_usage
+  fi
+fi
+
+configure_release
 prepare_release
 
 if [[ "$RELEASE_STEP" == "reset" ]]; then

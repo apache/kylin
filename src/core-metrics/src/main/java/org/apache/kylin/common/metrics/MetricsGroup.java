@@ -96,6 +96,7 @@ public class MetricsGroup {
 
     public static boolean counterInc(MetricsName name, MetricsCategory category, String entity,
             Map<String, String> tags, long increments) {
+        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return true;
         if (increments < 0) {
             return false;
         }
@@ -120,6 +121,7 @@ public class MetricsGroup {
 
     public static boolean histogramUpdate(MetricsName name, MetricsCategory category, String entity,
             Map<String, String> tags, long updateTo) {
+        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return true;
         if (updateTo < 0) {
             return false;
         }
@@ -442,6 +444,7 @@ public class MetricsGroup {
     public static final Map<String, MetricsObject> cacheInfluxMetricStatusMap = new ConcurrentHashMap<>();
 
     public static long tryRestoreCounter(String fieldName, String category, String entity, Map<String, String> tags) {
+        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return 0L;
         try {
             MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
             if (MetricsName.QUERY.getVal().equals(fieldName)) {
@@ -500,6 +503,7 @@ public class MetricsGroup {
     }
 
     private static long tryRestoreExceptionCounter(String fieldName, String category, String entity, Map<String, String> tags) {
+        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return 0L;
         MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
         if (KylinConfig.getInstanceFromEnv().isDevOrUT()) {
             cacheInfluxMetricStatusMap.get(metricsObject.toString()).setInitStatus(true);

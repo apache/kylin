@@ -517,7 +517,6 @@ public class KapConfig {
     }
 
     /**
-     * Newten
      */
     public String getCuboidSpanningTree() {
         return config.getOptional("kylin.cube.cuboid-spanning-tree",

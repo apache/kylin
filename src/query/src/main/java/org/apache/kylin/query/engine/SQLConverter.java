@@ -103,7 +103,7 @@ public class SQLConverter {
      */
     public RelRoot convertSqlToRelNode(String sql) throws SqlParseException {
         SqlNode sqlNode = parseSQL(sql);
-        QueryContext.current().record("end calcite parse sql");
+        QueryContext.current().record("end_calcite_parse_sql");
 
         return convertToRelNode(sqlNode);
     }

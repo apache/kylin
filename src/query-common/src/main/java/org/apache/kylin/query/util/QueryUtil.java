@@ -195,7 +195,7 @@ public class QueryUtil {
                 queryParams.getOffset());
         queryParams.setSql(massagedSql);
         massagedSql = transformSql(queryParams);
-        QueryContext.current().record("massage");
+        QueryContext.current().record("end_massage_sql");
         return massagedSql;
     }
 

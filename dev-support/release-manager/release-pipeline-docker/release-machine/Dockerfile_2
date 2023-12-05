@@ -22,6 +22,11 @@
 # 2. https://infra.apache.org/release-publishing.html
 
 FROM apachekylin/release-machine:5.0-base
+WORKDIR /root/release-manager/
 COPY conf/settings.xml /root/.m2/settings.xml
-COPY release-publish.sh /root/release-publish.sh
+COPY bin/release-publish.sh /root/release-publish.sh
+COPY bin/entrypoint.sh /root/entrypoint.sh
 RUN chmod u+x /root/release-publish.sh
+RUN chmod u+x /root/entrypoint.sh
+
+ENTRYPOINT ["/root/entrypoint.sh"]

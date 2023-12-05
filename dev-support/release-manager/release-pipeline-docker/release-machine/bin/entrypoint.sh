@@ -20,4 +20,18 @@
 #  */
 #
 
-# TODO:Run release-publish.sh instead.
+WDR=/root/release-manager/
+mv /root/release-publish.sh $WDR
+
+source /root/.bashrc
+bash $HOME/.nvm/install.sh
+nvm list
+
+bash -x release-publish.sh \
+  -b $GIT_BRANCH \
+  -g apache \
+  reset
+while :
+do
+    sleep 20
+done

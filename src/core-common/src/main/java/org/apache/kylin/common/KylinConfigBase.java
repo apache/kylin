@@ -1245,7 +1245,6 @@ public abstract class KylinConfigBase implements Serializable {
         Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware
 
-        // these sources no longer exists in Newten
         r.put(1, "org.apache.kylin.source.kafka.NSparkKafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
         r.put(9, "org.apache.kylin.engine.spark.source.NSparkDataSource");
@@ -1893,6 +1892,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public long getQueryScanBytesCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache-threshold-scan-bytes", String.valueOf(1024 * 1024)));
+    }
+
+    public boolean isQueryDryRunEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.dryrun-enabled", FALSE));
     }
 
     public boolean isQueryCacheEnabled() {
