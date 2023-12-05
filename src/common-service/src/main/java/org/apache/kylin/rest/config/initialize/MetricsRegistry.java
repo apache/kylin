@@ -199,22 +199,27 @@ public class MetricsRegistry {
                                 return count;
                             }).tags(MetricsTag.STATE.getVal(), state, MetricsTag.POOL.getVal(), "dbcp2",
                                     MetricsTag.TYPE.getVal(), driver)
+                            .description("Number of Metastore(RDBMS) connections")
                             .strongReference(true).register(meterRegistry));
         }
 
         Gauge.builder(PrometheusMetrics.SPARDER_UP.getValue(), () -> SparderEnv.isSparkAvailable() ? 1 : 0)
+                .description("Health status of spark context(query engine)")
                 .strongReference(true).register(meterRegistry);
 
         Gauge.builder(PrometheusMetrics.SPARK_TASKS.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getPendingTaskCount() : 0)
                 .tags(MetricsTag.STATE.getVal(), MetricsTag.PENDING.getVal()).strongReference(true)
+                .description("Number of pending spark tasks of query engine")
                 .register(meterRegistry);
         Gauge.builder(PrometheusMetrics.SPARK_TASKS.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getRunningTaskCount() : 0)
                 .tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal()).strongReference(true)
+                .description("Number of running spark tasks of query engine")
                 .register(meterRegistry);
         Gauge.builder(PrometheusMetrics.SPARK_TASK_UTILIZATION.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getRunningTaskCount() * 1.0 / e.getSlotCount() : 0)
+                .description("Ratio of spark cores utilization.")
                 .strongReference(true).register(meterRegistry);
     }
 
@@ -229,7 +234,8 @@ public class MetricsRegistry {
                 () -> Objects.isNull(scheduler.getContext()) ? 0
                         : scheduler.getContext().getRunningJobs().values().stream()
                                 .filter(job -> ExecutableState.RUNNING.equals(job.getOutput().getState())).count())
-                .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal()).register(meterRegistry);
+                .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal())
+                .description("Number of spark job by build engine").register(meterRegistry);
 
         for (double runningTimeoutHour : RUNNING_JOB_TIMEOUT_HOUR) {
             Gauge.builder(PrometheusMetrics.JOB_LONG_RUNNING.getValue(),
@@ -237,6 +243,7 @@ public class MetricsRegistry {
                             .getOrDefault(runningTimeoutHour, 0L))
                     .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal(),
                             MetricsTag.TIMEOUT.getVal(), runningTimeoutHour + "h")
+                    .description("Number of spark job by query engine")
                     .register(meterRegistry);
         }
 
@@ -246,6 +253,7 @@ public class MetricsRegistry {
                             .getOrDefault(waitTimeoutMin, 0L))
                     .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.WAITING.getVal(),
                             MetricsTag.TIMEOUT.getVal(), waitTimeoutMin + "m")
+                    .description("Number of spark job by build engine which ")
                     .register(meterRegistry);
         }
     }

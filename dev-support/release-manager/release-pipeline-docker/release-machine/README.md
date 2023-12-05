@@ -27,24 +27,32 @@ It also provided a way to publish documentation for Kylin 5.
 -[ ] Update `CURRENT_KYLIN_VERSION` in `KylinVersion.java` .
 
 ```bash
+
+docker stop release-machine
+docker container rm release-machine
+bash create-release-machine.sh
+
+
 WORKDIR=~/release-manager/working-dir
-rm -rf $WORKDIR
-docker start release-machine \
+# rm -rf $WORKDIR
+mkdir -p $RM_WORKDIR
+docker run --name release-machine \
+    --hostname release-machine \
+    --interactive \
     --volume "$WORKDIR:/root/kylin-folder" \
     --volume ~/.gnupg/:/root/.gnupg \
-    --env GIT_USERNAME='???' \
-    --env GPG_KEY=??? \
-    --env GPG_PASSPHRASE=??? \
-    --env ASF_USERNAME=??? \
-    --env ASF_PASSWORD='???' \
-    --env GIT_BRANCH=??? \
-    --env RELEASE_VERSION=??? \
-    --env NEXT_RELEASE_VERSION=??? \
-    --env RC_NUMBER=??? \
+    --env GIT_USERNAME=$GIT_USERNAME \
+    --env GPG_KEY=$GPG_KEY \
+    --env GPG_PASSPHRASE=$GPG_PASSPHRASE \
+    --env ASF_USERNAME=$ASF_USERNAME \
+    --env ASF_PASSWORD=$ASF_PASSWORD \
+    --env GIT_BRANCH=kylin5\
+    --env RELEASE_VERSION=5.0.0 \
+    --env NEXT_RELEASE_VERSION=5.0.1 \
+    --env RC_NUMBER=0 \
     -p 4040:4040 \
     -t release-machine:latest \
-    
-    bash    
+    bash 
 ```
 
 | Name            | Comment                                                                                                                                                                          |

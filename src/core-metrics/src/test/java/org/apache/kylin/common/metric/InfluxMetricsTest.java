@@ -57,6 +57,7 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         NLocalFileMetadataTestCase.staticCreateTestMetadata();
+        getTestConfig().setProperty("kylin.monitor.enabled", "true");
     }
 
     @Test

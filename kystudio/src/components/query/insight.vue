@@ -559,7 +559,7 @@ export default class NewQuery extends Vue {
       }
     }
     .submit-tips {
-      float: right;
+      float: left;
       font-size: 12px;
       line-height: 18px;
       vertical-align: middle;

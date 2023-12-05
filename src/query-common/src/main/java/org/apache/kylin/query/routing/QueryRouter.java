@@ -20,16 +20,21 @@ package org.apache.kylin.query.routing;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.project.NProjectManager;
 
 import lombok.Getter;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.IRealization;
 
 public class QueryRouter {
 
@@ -86,6 +91,29 @@ public class QueryRouter {
         }
 
         public Strategy(KylinConfig config) {
+
+            // add debug rule
+            if (config.isQueryDryRunEnabled() && QueryContext.current().getModelPriorities().length > 0) {
+                // This will remove all candidate which not listed in SQL Hint 'MODEL_PRIORITY', for debug
+                rules.add(new PruningRule() {
+                    @Override
+                    public void apply(Candidate candidate) {
+                        Set<String> models = Sets.newHashSet(QueryContext.current().getModelPriorities());
+                        boolean matched = false;
+                        for (IRealization r : candidate.getRealization().getRealizations()) {
+                            NDataflow df = (NDataflow) r;
+                            if (models.contains(df.getModelAlias().toUpperCase(Locale.ROOT))) {
+                                matched = true;
+                            }
+                        }
+                        if (!matched) {
+                            CapabilityResult capability = new CapabilityResult();
+                            capability.setCapable(false);
+                            candidate.setCapability(capability);
+                        }
+                    }
+                });
+            }
 
             // add all rules
             rules.add(SEGMENT_PRUNING);

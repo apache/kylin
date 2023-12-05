@@ -47,9 +47,6 @@ import org.apache.kylin.guava30.shaded.common.math.LongMath;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * to compatible with legacy aggregation group in pre-newten
- */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class NAggregationGroup implements Serializable {

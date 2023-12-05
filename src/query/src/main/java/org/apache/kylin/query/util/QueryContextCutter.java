@@ -82,7 +82,7 @@ public class QueryContextCutter {
             } catch (NoRealizationFoundException | NoStreamingRealizationFoundException e) {
                 if (isReCutBanned && e instanceof NoStreamingRealizationFoundException) {
                     checkStreamingTableWithAutoModeling();
-                } else if (isReCutBanned || e instanceof NoStreamingRealizationFoundException) {
+                } else if (isReCutBanned || e instanceof NoStreamingRealizationFoundException || QueryContext.current().isDryRun()) {
                     throw e;
                 }
                 reCutStrategy.tryCutToSmallerContexts(root, e);
@@ -115,7 +115,7 @@ public class QueryContextCutter {
         List<OLAPContext> contexts = ContextUtil.listContextsHavingScan();
         contexts.forEach(olapContext -> {
             olapContext.setHasSelected(true);
-            log.info("Context for realization matching: {}", olapContext);
+            log.info("Context to be match {},  {}", olapContext.id, olapContext);
         });
 
         long selectLayoutStartTime = System.currentTimeMillis();
@@ -126,7 +126,7 @@ public class QueryContextCutter {
         }
         log.info("select layout candidate for {} olapContext cost {} ms", contexts.size(),
                 System.currentTimeMillis() - selectLayoutStartTime);
-        QueryContext.current().record("end select realization");
+        QueryContext.current().record("end_select_realization");
         return contexts;
     }
 

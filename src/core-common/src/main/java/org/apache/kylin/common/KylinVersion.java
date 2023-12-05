@@ -184,7 +184,7 @@ public class KylinVersion implements Comparable {
         if (gitInfo != null) {
             return gitInfo;
         }
-        gitInfo = new Pair<>("N/A", "N/A");
+        gitInfo = new Pair<>("-", "-");
         try {
             File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v15);
             if (!commitFile.exists()) {
@@ -192,9 +192,9 @@ public class KylinVersion implements Comparable {
             }
             List<String> lines = FileUtils.readLines(commitFile, Charset.defaultCharset());
             for (String line : lines) {
-                if (line.contains("@") && gitInfo.getFirst().equals("N/A")) {
+                if (line.contains("@") && gitInfo.getFirst().equals("-")) {
                     gitInfo.setFirst(line);
-                } else if (line.contains("timestamp") && gitInfo.getSecond().equals("N/A")) {
+                } else if (line.contains("timestamp") && gitInfo.getSecond().equals("-")) {
                     String[] words = line.split(":");
                     if (words.length == 2) {
                         gitInfo.setSecond(words[1]);

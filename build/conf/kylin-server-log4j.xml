@@ -101,7 +101,7 @@
         <Logger name="org.apache.spark.ContextCleaner" level="WARN"/>
         <Logger name="org.apache.kylin.ext" level="INFO"/>
         <!--  Query log  -->
-        <Logger name="org.apache.kylin.query" level="INFO"/>
+        <Logger name="org.apache.kylin.query" level="DEBUG"/>
         <Logger name="NDataflowCapabilityChecker" level="INFO" />
         <Logger name="org.apache.kylin.common.util.CheckUtil" level="INFO" />
         <Logger name="NQueryLayoutChooser" level="INFO" />

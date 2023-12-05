@@ -36,8 +36,6 @@ import io.swagger.annotations.ApiOperation;
 
 /**
  * Backward capable API for : /kylin/api/tables_and_columns
- **
- * TODO ODBC should support Newten API: /kylin/api/query/tables_and_columns
  *
  * @author yifanzhang
  *

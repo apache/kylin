@@ -92,19 +92,21 @@ public class QueryMetricsListener {
                         MetricsTag.HIT_SECOND_STORAGE.getVal(), queryMetric.isSecondStorage() + "")
                 .distributionStatisticExpiry(Duration.ofDays(1))
                 .sla(KylinConfig.getInstanceFromEnv().getMetricsQuerySlaSeconds())
+                .description("Query duration")
                 .register(meterRegistry)
                 .record(queryMetric.getQueryDuration() * 1.0 / 1000);
 
         if (queryMetric.isSucceed()) {
             DistributionSummary.builder(PrometheusMetrics.QUERY_RESULT_ROWS.getValue()).tags(projectTag)
+                    .description("Number of rows returned by query")
                     .distributionStatisticExpiry(Duration.ofDays(1)).register(meterRegistry)
                     .record(queryMetric.getResultRowCount());
 
-            Counter.builder(PrometheusMetrics.QUERY_JOBS.getValue()).tags(projectTag).register(meterRegistry)
+            Counter.builder(PrometheusMetrics.QUERY_JOBS.getValue()).tags(projectTag).description("Number of spark job by query engine").register(meterRegistry)
                     .increment(queryMetric.getQueryJobCount());
-            Counter.builder(PrometheusMetrics.QUERY_STAGES.getValue()).tags(projectTag).register(meterRegistry)
+            Counter.builder(PrometheusMetrics.QUERY_STAGES.getValue()).tags(projectTag).description("Number of spark stage by query engine").register(meterRegistry)
                     .increment(queryMetric.getQueryStageCount());
-            Counter.builder(PrometheusMetrics.QUERY_TASKS.getValue()).tags(projectTag).register(meterRegistry)
+            Counter.builder(PrometheusMetrics.QUERY_TASKS.getValue()).tags(projectTag).description("Number of spark task by query engine").register(meterRegistry)
                     .increment(queryMetric.getQueryTaskCount());
         }
 
@@ -115,6 +117,7 @@ public class QueryMetricsListener {
                                     .map(e -> modelManager.getDataModelDesc(e.getModelId()).getAlias())
                                     .collect(Collectors.joining(",")),
                             MetricsTag.PROJECT.getVal(), queryMetric.getProjectName())
+                    .description("Total scanned bytes by query")
                     .distributionStatisticExpiry(Duration.ofDays(1)).publishPercentiles(new double[] { 0.8, 0.9 })
                     .register(meterRegistry).record(queryMetric.getTotalScanBytes());
         }

@@ -51,6 +51,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.ReadFsSwitch;
+import org.apache.kylin.common.exception.DryRunSucceedException;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -169,6 +170,10 @@ public class QueryExec {
         magicDirts(sql);
         QueryContext queryContext = QueryContext.current();
         try {
+            if (kylinConfig.isQueryDryRunEnabled()) {
+                logger.trace("Dry run Mode.");
+                QueryContext.current().setDryRun(true);
+            }
             beforeQuery();
             QueryContext.currentTrace().startSpan(QueryTrace.SQL_PARSE_AND_OPTIMIZE);
             RelRoot relRoot = sqlConverter.convertSqlToRelNode(sql);
@@ -508,6 +513,82 @@ public class QueryExec {
     }
 
     private SQLException newSqlException(String sql, String msg, Throwable e) {
-        return new SQLException("Error while executing SQL \"" + sql + "\": " + msg, e);
+        String diagnosticStr = "";
+        String plan = " not exists";
+        boolean dryRun = QueryContext.current().isDryRun();
+        if(e instanceof DryRunSucceedException){
+            DryRunSucceedException d = (DryRunSucceedException)e;
+            plan = d.plan();
+        }
+        if(dryRun) {
+            StringBuilder diagnosticInfo = new StringBuilder(System.getProperty("line.separator"));
+            diagnosticInfo.append("<-------------------- Dry Run Info -------------------->");
+
+            diagnosticInfo.append(SEP)
+                    .append("1. Last Exception :")
+                    .append(SEP).append("  ");
+            diagnosticInfo.append(msg).append(SEP);
+
+            diagnosticInfo.append(SEP)
+                    .append("2. RelNode(with ctx id) :")
+                    .append(SEP).append("  ");
+            diagnosticInfo.append(QueryContext.current().getLastUsedRelNode());
+
+            diagnosticInfo.append(SEP)
+                    .append("3. OLAPContext(s) and matched model(s) :");
+            if(OLAPContext.getThreadLocalContexts() != null) {
+                String olapMatchInfo =
+                        OLAPContext.getNativeRealizations().stream()
+                                .map(r -> String.format(" Ctx=%d, \tMatched=%s, \tIndexType=%s, \tLayoutId=%d",
+                                        r.getCxtId(), r.getModelAlias(), r.getIndexType(), r.getLayoutId()))
+                                .collect(Collectors.joining(SEP));
+                if (olapMatchInfo.length() >= 10) {
+                    diagnosticInfo.append(SEP)
+                            .append(olapMatchInfo)
+                            .append(SEP);
+                }
+
+                for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
+                    diagnosticInfo.append(SEP);
+                    diagnosticInfo.append(" Ctx=").append(ctx.id);
+                    if(ctx.realization == null) {
+                        diagnosticInfo.append(" is not matched by any model/snapshot, expected ")
+                                .append(ctx.tipsForUser());
+                    } else {
+                        diagnosticInfo.append(" is matched by ").append(ctx.realization.getCanonicalName())
+                                .append(", expected ").append(ctx.tipsForUser());
+                    }
+//                    diagnosticInfo.append(", verbose text:").append(ctx);
+                }
+                diagnosticInfo.append(SEP);
+            }
+
+            diagnosticInfo.append(SEP)
+                    .append("4. SQL Text :")
+                    .append(SEP);
+            diagnosticInfo.append(sql)
+                    .append(SEP);
+
+            diagnosticInfo.append(SEP)
+                    .append("5. Physical plan :")
+                    .append(SEP);
+            diagnosticInfo.append(plan).append(SEP);
+
+            diagnosticInfo.append(SEP)
+                    .append("<-------------------- Dry Run Info -------------------->");
+            diagnosticInfo.append(SEP)
+                    .append(DRY_RUN_TIP);
+            diagnosticStr = diagnosticInfo.toString();
+            return new SQLException(diagnosticStr, e);
+        } else {
+            return new SQLException("Error while executing SQL \"" + sql + "\": " + msg, e);
+        }
     }
+
+    public final static String SEP = System.getProperty("line.separator");
+    public final static String DRY_RUN_TIP = SEP
+            + "Tip : Dryrun is a experimental feature for user to create proper model."
+            + SEP + "To enable/disable dry run, please set 'kylin.query.dryrun-enabled=true/false'"
+            + SEP + "in Setting -> Advanced Settings -> Custom Project Configuration."
+            + SEP;
 }

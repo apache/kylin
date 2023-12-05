@@ -30,7 +30,9 @@
       </div>
       <div class="submit-tips" v-if="isWorkspace">
         <i class="el-icon-ksd-info ksd-fs-12" ></i>
-        Control / Command + Enter = <span>{{!isLoading ? $t('runQuery') : $t('stopQuery')}}</span></div>
+        Control / Command + Enter = <span>{{!isLoading ? $t('runQuery') : $t('stopQuery')}}</span>
+        Tip : Dryrun is an experimental feature for user to create proper model. <br>To enable/disable dry run, please set 'kylin.query.dryrun-enabled=true/false' in Setting -> Advanced Settings -> Custom Project Configuration.
+      </div>
     </div>
     <div v-show="isLoading" class="ksd-center ksd-mt-10">
       <el-progress type="circle" :percentage="percent"></el-progress>
@@ -104,7 +106,7 @@ import { kylinConfirm, handleSuccess, handleError } from '../../util/business'
       viewLogs: 'View Logs',
       htraceTips: 'Please make sure Zipkin server is properly deployed according to the manual of performance diagnose package.',
       queryError: 'The query fails.',
-      queryTimeOut: 'The request timeout, please check the network situation and Kylin service instance status. If the resource group is turned on, please make sure that the project is bound to the query resource group and there are available query instances',
+      queryTimeOut: 'The request timeout, please check the network situation and Kylin service instance status.',
       queryTimeOutInCloud: 'The request timeout, please check the network situation and Kylin 5 service instance status.'
     }
   }

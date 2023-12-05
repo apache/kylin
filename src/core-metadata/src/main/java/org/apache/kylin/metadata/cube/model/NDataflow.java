@@ -284,7 +284,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     @Override
     public boolean isOnline() {
-        return getStatus() == RealizationStatusEnum.ONLINE;
+        return getStatus() == RealizationStatusEnum.ONLINE || config.isQueryDryRunEnabled();
     }
 
     @Override

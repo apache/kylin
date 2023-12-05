@@ -43,7 +43,6 @@ public class QueryModelPriorities {
         if (models.length > 0) {
             return models;
         }
-        // for backward compatibility with KE3
         return loadCubePriorityFromComment(sql);
     }
 
@@ -60,7 +59,6 @@ public class QueryModelPriorities {
         return modelHints;
     }
 
-    // for backward compatibility with KE3
     private static final Pattern CUBE_PRIORITY_PATTERN = Pattern
             .compile("(?<=--(\\s){0,2}CubePriority\\().*(?=\\)(\\s)*[\r\n])");
 

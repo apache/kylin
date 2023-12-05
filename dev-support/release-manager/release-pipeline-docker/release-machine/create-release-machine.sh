@@ -36,7 +36,7 @@ docker image rm release-machine:latest
 
 docker build -f Dockerfile_2 -t release-machine:latest .
 docker image tag release-machine:latest apachekylin/release-machine:latest
-docker push apachekylin/release-machine:latest
+#docker push apachekylin/release-machine:latest
 
 #docker login -u xiaoxiangyu
 #docker push apachekylin/release-machine:latest
