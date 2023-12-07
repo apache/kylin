@@ -670,9 +670,6 @@ public class RealizationChooser {
     private static String helpfulMessageForUser(OLAPContext ctx) {
         StringBuilder buf = new StringBuilder(ctx.toHumanReadString());
         buf.append(System.getProperty("line.separator"));
-        if(ctx.getJoinsGraph() != null) {
-            buf.append("  Join graph : ").append(ctx.getJoinsGraph().toString()).append(System.getProperty("line.separator"));
-        }
         buf.append("  Incapable message : ");
         for (List<RealizationCheck.IncapableReason> reasons : ctx.realizationCheck.getModelIncapableReasons().values()) {
             for (RealizationCheck.IncapableReason reason : reasons) {

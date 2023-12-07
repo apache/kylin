@@ -88,7 +88,8 @@ public class SparderQueryPlanExec implements QueryPlanExec {
         if (!(dataContext instanceof SimpleDataContext) || !(((SimpleDataContext) dataContext)).isContentQuery()
                 || KapConfig.wrap(((SimpleDataContext) dataContext).getKylinConfig()).runConstantQueryLocally()) {
             for (OLAPContext context : contexts) {
-                if (context.olapSchema != null && context.storageContext.isEmptyLayout() && !context.isHasAgg()) {
+                if (context.olapSchema != null && context.storageContext.isEmptyLayout() && !context.isHasAgg() &
+                        !QueryContext.current().isDryRun()) {
                     QueryContext.fillEmptyResultSetMetrics();
                     return new ExecuteResult(Lists.newArrayList(), 0);
                 }

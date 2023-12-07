@@ -529,13 +529,9 @@ public class QueryExec {
                     .append(SEP).append("  ");
             diagnosticInfo.append(msg).append(SEP);
 
-            diagnosticInfo.append(SEP)
-                    .append("2. RelNode(with ctx id) :")
-                    .append(SEP).append("  ");
-            diagnosticInfo.append(QueryContext.current().getLastUsedRelNode());
 
             diagnosticInfo.append(SEP)
-                    .append("3. OLAPContext(s) and matched model(s) :");
+                    .append("2. OLAPContext(s) and matched model(s) :");
             if(OLAPContext.getThreadLocalContexts() != null) {
                 String olapMatchInfo =
                         OLAPContext.getNativeRealizations().stream()
@@ -552,16 +548,22 @@ public class QueryExec {
                     diagnosticInfo.append(SEP);
                     diagnosticInfo.append(" Ctx=").append(ctx.id);
                     if(ctx.realization == null) {
-                        diagnosticInfo.append(" is not matched by any model/snapshot, expected ")
+                        diagnosticInfo.append(" is not matched by any model/snapshot, recommend :")
                                 .append(ctx.tipsForUser());
                     } else {
                         diagnosticInfo.append(" is matched by ").append(ctx.realization.getCanonicalName())
-                                .append(", expected ").append(ctx.tipsForUser());
+                                .append(", comparison :").append(ctx.tipsForUser());
                     }
 //                    diagnosticInfo.append(", verbose text:").append(ctx);
                 }
                 diagnosticInfo.append(SEP);
             }
+
+            diagnosticInfo.append(SEP)
+                    .append("3. RelNode(with ctx id) :")
+                    .append(SEP).append("  ");
+            diagnosticInfo.append(QueryContext.current().getLastUsedRelNode().replace("Kap", ""));
+
 
             diagnosticInfo.append(SEP)
                     .append("4. SQL Text :")

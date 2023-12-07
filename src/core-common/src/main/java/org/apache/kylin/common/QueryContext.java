@@ -152,7 +152,7 @@ public class QueryContext implements Closeable {
      */
     @Getter
     @Setter
-    private String lastUsedRelNode;
+    private String lastUsedRelNode = "";
 
     /**
      * For debug purpose, when dry run mode is enabled, the query

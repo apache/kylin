@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
@@ -75,6 +76,7 @@ public class QueryRouter {
         return new Strategy(NProjectManager.getProjectConfig(project));
     }
 
+    @Slf4j
     public static class Strategy {
         private static final PruningRule SEGMENT_PRUNING = new SegmentPruningRule();
         private static final PruningRule PARTITION_PRUNING = new PartitionPruningRule();
@@ -92,6 +94,14 @@ public class QueryRouter {
 
         public Strategy(KylinConfig config) {
 
+            // add all rules
+            rules.add(SEGMENT_PRUNING);
+            rules.add(PARTITION_PRUNING);
+            rules.add(REMOVE_INCAPABLE_REALIZATIONS);
+            if (QueryRouter.isVacantIndexPruningEnabled(config)) {
+                rules.add(VACANT_INDEX_PRUNING);
+            }
+
             // add debug rule
             if (config.isQueryDryRunEnabled() && QueryContext.current().getModelPriorities().length > 0) {
                 // This will remove all candidate which not listed in SQL Hint 'MODEL_PRIORITY', for debug
@@ -104,6 +114,8 @@ public class QueryRouter {
                             NDataflow df = (NDataflow) r;
                             if (models.contains(df.getModelAlias().toUpperCase(Locale.ROOT))) {
                                 matched = true;
+                            } else {
+                                log.debug("Remove " + df.getModelAlias());
                             }
                         }
                         if (!matched) {
@@ -113,14 +125,6 @@ public class QueryRouter {
                         }
                     }
                 });
-            }
-
-            // add all rules
-            rules.add(SEGMENT_PRUNING);
-            rules.add(PARTITION_PRUNING);
-            rules.add(REMOVE_INCAPABLE_REALIZATIONS);
-            if (QueryRouter.isVacantIndexPruningEnabled(config)) {
-                rules.add(VACANT_INDEX_PRUNING);
             }
 
             // add all sorters

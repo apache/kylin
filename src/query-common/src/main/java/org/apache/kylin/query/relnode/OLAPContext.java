@@ -45,6 +45,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -530,29 +531,55 @@ public class OLAPContext {
     }
 
     public final static String SEP = System.getProperty("line.separator");
-    public final static String INDENT = "  ";
+    public final static String INDENT = "   ";
 
-    public final static String olapContextFormat = SEP
-            + "{"
-            + SEP + INDENT + "\"Fact Table\" = \"%s\","
-            + SEP + INDENT + "\"Dimension Tables\" = [%s],"
-            + SEP + INDENT + "\"Recommend Dimension(Group by)\" = [%s],"
-            + SEP + INDENT + "\"Recommend Dimension(Filter cond)\" = [%s],"
-            + SEP + INDENT + "\"Measures\" = [%s],"
-            + SEP + "}"
+    public final static String RECOMMEND_OLAP_INFO = SEP
+            + " {"
+            + SEP + INDENT + "\"Fact Table\" : \"%s\","
+            + SEP + INDENT + "\"Dimension Tables\" : [%s],"
+            + SEP + INDENT + "\"Query Columns\" : [%s],"
+            + SEP + INDENT + "\"Dimension(Group by)\" : [%s],"
+            + SEP + INDENT + "\"Dimension(Filter cond)\" : [%s],"
+            + SEP + INDENT + "\"Measure\" : [%s],"
+            + SEP + INDENT + "\"Join\" : \"" + SEP + "%s\","
+            + SEP + INDENT + "\"Index Id\" : %s,"
+            + SEP + INDENT + "\"Query Column / Index Column\" : \"%d / %d\","
+            + SEP + INDENT + "\"Index Columns\" : [%s]"
+            + SEP + " }"
             + SEP;
 
     public String tipsForUser() {
         Set<String> allTables = allTableScans.stream().map(OLAPTableScan::getTableName).collect(Collectors.toSet());
         if (!allTables.isEmpty() && firstTableScan != null) {
             allTables.remove(firstTableScan.getTableName());
-            return String.format(olapContextFormat,
+            LayoutEntity target = null;
+            List<String> indexAllColumns = Lists.newArrayList();
+            int queryColCnt = -1;
+            long indexColCnt = -1;
+            try {
+                queryColCnt = allColumns.size();
+                target = storageContext.getCandidate().getLayoutEntity();
+                indexColCnt = target.getColOrder().stream().filter(i -> i < 10_000).count();
+                List<NDataModel.NamedColumn> cols = realization.getModel().getAllNamedColumns();
+                indexAllColumns = target.getColOrder().stream().map(i -> i < cols.size() ? cols.get(i).getAliasDotColumn() : "M_" + i).collect(Collectors.toList());
+            } catch (Exception e) {
+                logger.info("Fetch target index failed: " + e.getMessage());
+            }
+
+            return String.format(RECOMMEND_OLAP_INFO,
                     firstTableScan.getTableName(),
-                    Strings.join(allTables.stream().map(c -> "\"" + c + "\"").iterator(), ','),
-                    Strings.join(groupByColumns.stream().map(c -> "\"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
-                    Strings.join(filterColumns.stream().map(c -> "\"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
-                    Strings.join(aggregations.stream().map(c -> "\"" + c.getFullExpression() + "\"").iterator(), ',')
-                    );
+                    Strings.join(allTables.stream().map(c -> " \"" + c + "\"").iterator(), ','),
+                    Strings.join(allColumns.stream().map(c -> " \"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
+                    Strings.join(groupByColumns.stream().map(c -> " \"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
+                    Strings.join(filterColumns.stream().map(c -> " \"" + c.getColumnWithTableAndSchema() + "\"").iterator(), ','),
+                    Strings.join(aggregations.stream().map(c -> " \"" + c.getFullExpression() + "\"").iterator(), ','),
+                    joinsGraph == null ? "" : joinsGraph.toString().replaceAll("Root", "Fact")
+                            .replaceAll("Edge", "Dim")
+                            .replaceAll("TableRef", ""),
+                    target == null ? "-1" : target.getId(),
+                    queryColCnt, indexColCnt,
+                    Strings.join(indexAllColumns.stream().map(c -> " \"" + c + "\"").iterator(), ',')
+            );
         } else {
             return "empty";
         }

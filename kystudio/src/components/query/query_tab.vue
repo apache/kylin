@@ -30,8 +30,8 @@
       </div>
       <div class="submit-tips" v-if="isWorkspace">
         <i class="el-icon-ksd-info ksd-fs-12" ></i>
+        Dryrun is an experimental feature for user to create proper model. To enable/disable Dryrun, please set 'kylin.query.dryrun-enabled=true/false' in Setting -> Advanced Settings -> Custom Project Configuration.  <br>
         Control / Command + Enter = <span>{{!isLoading ? $t('runQuery') : $t('stopQuery')}}</span>
-        Tip : Dryrun is an experimental feature for user to create proper model. <br>To enable/disable dry run, please set 'kylin.query.dryrun-enabled=true/false' in Setting -> Advanced Settings -> Custom Project Configuration.
       </div>
     </div>
     <div v-show="isLoading" class="ksd-center ksd-mt-10">
@@ -292,7 +292,7 @@ export default class QueryTab extends Vue {
       } else {
         clearInterval(_this.ST)
       }
-    }, 300)
+    }, 600)
   }
   get showHtrace () {
     return this.$store.state.system.showHtrace === 'true'

@@ -111,7 +111,8 @@ public class ContextUtil {
     }
 
     public static void dumpCalcitePlan(String msg, RelNode relNode, Logger logger) {
-        if (Boolean.TRUE.equals(CalciteSystemProperty.DEBUG.value()) && logger.isDebugEnabled()) {
+        if ((Boolean.TRUE.equals(CalciteSystemProperty.DEBUG.value()) || QueryContext.current().isDryRun())
+                && logger.isDebugEnabled()) {
             logger.debug("{} :{}{}", msg, System.getProperty("line.separator"), RelOptUtil.toString(relNode));
         }
         if (QueryContext.current().isDryRun() && msg.contains("FIRST ROUND")) {
