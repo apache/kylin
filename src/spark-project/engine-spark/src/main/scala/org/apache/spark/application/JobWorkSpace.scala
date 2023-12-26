@@ -99,7 +99,7 @@ class JobWorkSpace(eventLoop: KylinJobEventLoop, monitor: JobMonitor, worker: Jo
 
   def fail(jf: JobFailed): Unit = {
     try {
-      logError(s"Job failed eventually. Reason: ${jf.reason}", jf.throwable.getCause)
+      logError(s"Job failed eventually. Reason: ${jf.reason}", jf.throwable)
       KylinBuildEnv.get().buildJobInfos.recordJobRetryInfos(RetryInfo(new util.HashMap, jf.throwable))
       worker.getApplication.updateJobErrorInfo(jf)
       stop()
