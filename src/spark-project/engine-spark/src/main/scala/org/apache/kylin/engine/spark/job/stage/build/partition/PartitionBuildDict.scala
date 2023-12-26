@@ -29,7 +29,10 @@ class PartitionBuildDict(jobContext: SegmentJob, dataSegment: NDataSegment, buil
   override def execute(): Unit = {
     val dict: Dataset[Row] = buildDictIfNeed()
     buildParam.setDict(dict)
-  }
 
+    if (buildParam.isSkipBuildDict) {
+      onStageSkipped()
+    }
+  }
   override def getStageName: String = "PartitionBuildDict"
 }

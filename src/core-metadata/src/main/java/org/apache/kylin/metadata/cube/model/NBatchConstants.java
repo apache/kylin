@@ -42,6 +42,7 @@ public interface NBatchConstants {
     String P_PARTITION_IDS = "partitionIds";
     String P_BUCKETS = "buckets";
 
+    String P_IS_INDEX_BUILD = "isIndexBuild";
     String P_INCREMENTAL_BUILD = "incrementalBuild";
     String P_SELECTED_PARTITION_COL = "selectedPartitionCol";
     String P_SELECTED_PARTITION_VALUE = "selectedPartition";

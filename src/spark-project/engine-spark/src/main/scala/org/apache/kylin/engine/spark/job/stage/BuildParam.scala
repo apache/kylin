@@ -49,6 +49,7 @@ class BuildParam {
   private var cachedPartitionStats: Map[Long, Statistics] =
     immutable.Map.newBuilder[Long, Statistics].result()
 
+  private var skipBuildDict: Boolean = _
   private var skipGenerateFlatTable: Boolean = _
   private var skipMaterializedFactTableView: Boolean = _
 
@@ -71,6 +72,12 @@ class BuildParam {
 
   def setSkipMaterializedFactTableView(skipMaterializedFactTableView: Boolean): Unit = {
     this.skipMaterializedFactTableView = skipMaterializedFactTableView
+  }
+
+  def isSkipBuildDict: Boolean = skipBuildDict
+
+  def setSkipBuildDict(skipBuildDict: Boolean): Unit = {
+    this.skipBuildDict = skipBuildDict
   }
 
   def isSkipGenerateFlatTable: Boolean = skipGenerateFlatTable

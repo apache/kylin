@@ -33,6 +33,7 @@ import org.apache.kylin.engine.spark.job.stage.StageExec;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -62,6 +63,7 @@ import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
 public class SegmentBuildJob extends SegmentJob {
 
     private boolean usePlanner = false;
+    private boolean isIndexBuild = false;
 
     public static void main(String[] args) {
         SegmentBuildJob segmentBuildJob = new SegmentBuildJob();
@@ -74,6 +76,10 @@ public class SegmentBuildJob extends SegmentJob {
         String enablePlanner = getParam(NBatchConstants.P_JOB_ENABLE_PLANNER);
         if (enablePlanner != null && Boolean.valueOf(enablePlanner)) {
             usePlanner = true;
+        }
+        String isIndexBuildJob = getParam(NBatchConstants.P_IS_INDEX_BUILD);
+        if (isIndexBuildJob != null && Boolean.valueOf(isIndexBuildJob)) {
+            isIndexBuild = true;
         }
     }
 
@@ -145,6 +151,21 @@ public class SegmentBuildJob extends SegmentJob {
 
                 val buildParam = new BuildParam();
                 MATERIALIZED_FACT_TABLE.createStage(this, seg, buildParam, exec);
+                if (isIndexBuild) {
+                    if (Objects.isNull(buildParam.getBuildFlatTable())) {
+                        val spanTree = new AdaptiveSpanningTree(config,
+                                new AdaptiveSpanningTree.AdaptiveTreeBuilder(seg, this.getReadOnlyLayouts()));
+                        buildParam.setSpanningTree(spanTree);
+                    }
+                    if (!buildParam.getSpanningTree().fromFlatTable()) {
+                        log.info("this is an index build job for segment " +
+                                seg.getId() +
+                                " and all new created indexes will be built from parent index, " +
+                                "will skip build dict and generate flat table");
+                        buildParam.setSkipBuildDict(true);
+                        buildParam.setSkipGenerateFlatTable(true);
+                    }
+                }
                 BUILD_DICT.createStage(this, seg, buildParam, exec);
                 GENERATE_FLAT_TABLE.createStage(this, seg, buildParam, exec);
                 // enable cost based planner according to the parameter
