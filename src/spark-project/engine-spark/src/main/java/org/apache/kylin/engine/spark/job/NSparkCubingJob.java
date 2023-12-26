@@ -183,6 +183,9 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(endTime));
+        if (isIndexBuildJob(jobType)) {
+            job.setParam(NBatchConstants.P_IS_INDEX_BUILD, String.valueOf(true));
+        }
         if (CollectionUtils.isNotEmpty(ignoredSnapshotTables)) {
             job.setParam(NBatchConstants.P_IGNORED_SNAPSHOT_TABLES, String.join(",", ignoredSnapshotTables));
         }
@@ -321,6 +324,10 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
 
     public SparkCleanupTransactionalTableStep getCleanIntermediateTableStep() {
         return getTask(SparkCleanupTransactionalTableStep.class);
+    }
+
+    private static boolean isIndexBuildJob(JobTypeEnum jobType) {
+        return JobTypeEnum.INDEX_BUILD.equals(jobType);
     }
 
     @Override
