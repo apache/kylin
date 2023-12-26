@@ -74,7 +74,7 @@ class BuildParam {
     this.skipMaterializedFactTableView = skipMaterializedFactTableView
   }
 
-  def isSkipBuildDict: Boolean = skipBuildDict;
+  def isSkipBuildDict: Boolean = skipBuildDict
 
   def setSkipBuildDict(skipBuildDict: Boolean): Unit = {
     this.skipBuildDict = skipBuildDict
