@@ -159,11 +159,6 @@
             <scope>test</scope>
             <version>3.4.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.spark</groupId>

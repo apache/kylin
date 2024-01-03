@@ -265,7 +265,7 @@ public class JobServiceTest extends LogOutputTestCase {
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
         // test size
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
         Assert.assertEquals(3, jobs.size());
         jobService.addOldParams(jobs);
@@ -399,8 +399,8 @@ public class JobServiceTest extends LogOutputTestCase {
         Mockito.when(executableDao.getJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
         {
             List<String> jobNames = Lists.newArrayList();
-            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", "default", "total_duration",
-                    true);
+            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", false, "default",
+                    "total_duration", true);
             List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
 
             val totalDurationArrays = jobs.stream().map(ExecutableResponse::getTotalDuration)
@@ -419,9 +419,39 @@ public class JobServiceTest extends LogOutputTestCase {
             }
         }
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "default", "default", "", false);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "default", false, "default", "",
+                false);
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
         Assert.assertEquals(2, jobs.size());
+    }
+
+    @Test
+    public void testFilterJobExactMatch() throws Exception {
+        NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), "default");
+        Mockito.when(jobService.getManager(NExecutableManager.class, "default")).thenReturn(executableManager);
+        ReflectionTestUtils.setField(executableManager, "executableDao", executableDao);
+        val mockJobs = mockDetailJobs(false);
+        Mockito.when(executableDao.getJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
+
+        for (int i = 0; i < 3; i++) {
+            if (i < 2) {
+                mockJobs.get(i).setJobType(JobTypeEnum.SECOND_STORAGE_NODE_CLEAN);
+            } else {
+                mockJobs.get(i).setJobType(JobTypeEnum.TABLE_SAMPLING);
+            }
+        }
+        List<String> jobNames = Lists.newArrayList();
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "def", false, "default", "", false);
+        List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
+        Assert.assertEquals(2, jobs.size());
+
+        JobFilter jobFilter2 = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "def", true, "default", "", false);
+        List<ExecutableResponse> jobs2 = jobService.listJobs(jobFilter2);
+        Assert.assertEquals(0, jobs2.size());
+
+        JobFilter jobFilter3 = new JobFilter(Lists.newArrayList(), jobNames, 0, "", null, true, "default", "", false);
+        List<ExecutableResponse> jobs3 = jobService.listJobs(jobFilter3);
+        Assert.assertEquals(3, jobs3.size());
     }
 
     private List<ProjectInstance> mockProjects() {
@@ -467,7 +497,7 @@ public class JobServiceTest extends LogOutputTestCase {
         Mockito.when(executableManager1.getAllExecutables(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs1);
 
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         List<ExecutableResponse> jobs = jobService.listGlobalJobs(jobFilter, 0, 10).getValue();
         Assert.assertEquals(4, jobs.size());
         Assert.assertEquals("default1", jobs.get(3).getProject());
@@ -1107,7 +1137,7 @@ public class JobServiceTest extends LogOutputTestCase {
         executable.setName("test_create_time");
         manager.addJob(executable);
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
         Assert.assertTrue(jobs.get(0).getCreateTime() > 0);
     }
@@ -1125,7 +1155,7 @@ public class JobServiceTest extends LogOutputTestCase {
         manager.addJob(job1);
         manager.addJob(samplingJob);
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         jobFilter.setSortBy("job_name");
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
 
@@ -1300,7 +1330,8 @@ public class JobServiceTest extends LogOutputTestCase {
         Mockito.when(manager.getAllJobs(Mockito.anyLong(), Mockito.anyLong()))
                 .thenReturn(Collections.singletonList(job1));
 
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), Lists.newArrayList(), 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), Lists.newArrayList(), 4, "", "", false, "default", "",
+                true);
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
 
         Assert.assertEquals(1, jobs.size());
@@ -1959,7 +1990,7 @@ public class JobServiceTest extends LogOutputTestCase {
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
         // test size
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
         List<ExecutableResponse> executableResponses = jobService.addOldParams(jobs);
         ExecutableResponse executable = executableResponses.get(0);

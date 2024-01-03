@@ -257,6 +257,11 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
                 modelManagerMaps.put(executablePO.getProject(), modelManager);
             }
             return createExecutablePOSortBean(executablePO, modelManager);
+        }).filter(executablePO -> {
+            if (!jobFilter.isExactMatch() || StringUtils.isEmpty(jobFilter.getKey())) {
+                return true;
+            }
+            return jobFilter.getKey().equalsIgnoreCase(executablePO.getTargetSubject());
         }).sorted(comparator).collect(Collectors.toList());
     }
 

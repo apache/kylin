@@ -24,6 +24,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.TimeZoneUtils;
@@ -75,14 +76,19 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
         Unsafe.setProperty("needCheckCC", "true");
         val config = KylinConfig.getInstanceFromEnv();
         if (config.isCalciteInClauseEnabled()) {
-            Unsafe.setProperty("calcite.keep-in-clause", "true");
+            Unsafe.setProperty("calcite.keep-in-clause", KylinConfigBase.TRUE);
         } else {
-            Unsafe.setProperty("calcite.keep-in-clause", "false");
+            Unsafe.setProperty("calcite.keep-in-clause", KylinConfigBase.FALSE);
         }
         if (config.isCalciteConvertMultipleColumnsIntoOrEnabled()) {
-            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", "true");
+            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", KylinConfigBase.TRUE);
         } else {
-            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", "false");
+            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", KylinConfigBase.FALSE);
+        }
+        if (config.isCalciteCompatibleWithMsSqlPlusEnabled()) {
+            Unsafe.setProperty("calcite.compatible-with-mssql-plus", KylinConfigBase.TRUE);
+        } else {
+            Unsafe.setProperty("calcite.compatible-with-mssql-plus", KylinConfigBase.FALSE);
         }
         Unsafe.setProperty("calcite.bindable.cache.maxSize", Integer.toString(config.getCalciteBindableCacheSize()));
         Unsafe.setProperty("calcite.bindable.cache.concurrencyLevel",

@@ -200,6 +200,17 @@ public class SumExprPlannerTest extends CalciteRuleTestBase {
     }
 
     @Test
+    public void testSumExpressionSkipProjectJoinTransposeRule() {
+        String sql = "select  sum(  case  when LO_COMMITDATE = '20230501' then LO_DISCOUNT  end )\n" //
+                + "from  (\n" //
+                + "    select LO_COMMITDATE,  LO_DISCOUNT, P_LINEORDER.LO_ORDERDATE from  ssb.P_LINEORDER\n" //
+                + "  ) a\n" //
+                + "where  LO_COMMITDATE = ( select max(LO_COMMITDATE) from ssb.P_LINEORDER )";
+        openSumCaseWhen();
+        checkSQL("ssb", sql, null, null);
+    }
+
+    @Test
     public void testAggPushdownWithCrossJoin1() {
 
         String SQL = "SELECT\n"

@@ -23,10 +23,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +68,6 @@ public class ExecutableContext {
 
     // Only used when the job starts scheduling
     public void addRunningJob(Executable executable) {
-        runningJobThreads.put(executable.getId(), Thread.currentThread());
         runningJobs.put(executable.getId(), executable);
         runningJobInfos.put(executable.getId(), System.currentTimeMillis());
     }
@@ -82,6 +81,10 @@ public class ExecutableContext {
 
     public Thread getRunningJobThread(Executable executable) {
         return runningJobThreads.get(executable.getId());
+    }
+
+    public void addRunningJobThread(Executable executable) {
+        runningJobThreads.put(executable.getId(), Thread.currentThread());
     }
 
     public Map<String, Executable> getRunningJobs() {

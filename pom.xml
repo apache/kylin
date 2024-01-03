@@ -100,7 +100,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <arthas.version>3.6.7-kyarthas-r3</arthas.version>
-        <tomcat-embed.version>9.0.74</tomcat-embed.version>
+        <tomcat-embed.version>9.0.76</tomcat-embed.version>
 
         <!-- Keep same order with dependencyManagement -->
 
@@ -126,7 +126,7 @@
         <!-- Spark versions -->
         <delta.version>2.0.2</delta.version>
 
-        <spark.version>3.2.0-kylin-4.6.9.0</spark.version>
+        <spark.version>3.2.0-kylin-4.6.12.0</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -135,7 +135,7 @@
         <scala-retry>0.3.0</scala-retry>
 
         <!-- Calcite Version -->
-        <calcite.version>1.116.0-kylin-4.x-r029</calcite.version>
+        <calcite.version>1.116.0-kylin-4.x-r033</calcite.version>
         <avatica.version>4.x_1.10-r01</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -360,9 +360,8 @@
         <derby.version>10.14.2.0</derby.version>
         <jcommander.version>1.75</jcommander.version>
         <ant.version>1.10.11</ant.version>
-        <netty-all.version>4.1.89.Final</netty-all.version>
-        <netty.version>3.10.6.Final</netty.version>
-        <netty-codec.version>4.1.89.Final</netty-codec.version>
+        <netty3.version>3.10.6.Final</netty3.version>
+        <netty-handler.version>4.1.94.Final</netty-handler.version>
         <servo-core.version>0.13.2</servo-core.version>
         <apache-api.version>1.0.3</apache-api.version>
         <saas.nacos.discovery.starter.version>2.6.2</saas.nacos.discovery.starter.version>
@@ -371,6 +370,7 @@
         <jackson-databind.version>2.13.4.2</jackson-databind.version>
         <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
         <system-lambda.version>1.2.1</system-lambda.version>
+        <snappy-java.version>1.1.10.1</snappy-java.version>
     </properties>
 
     <modules>
@@ -739,11 +739,6 @@
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-soft-affinity-cache</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-haproxy</artifactId>
-                <version>${netty-codec.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
@@ -2787,14 +2782,8 @@
             <!--spark 2.4-->
             <dependency>
                 <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty-all.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>${netty.version}</version>
-                <scope>provided</scope>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty-handler.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.janino</groupId>
@@ -2954,6 +2943,18 @@
                 <version>${system-lambda.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+                <version>${netty3.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

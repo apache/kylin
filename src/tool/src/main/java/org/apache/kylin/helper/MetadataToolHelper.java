@@ -57,22 +57,21 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.HDFSMetadataTool;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 import lombok.var;
 
 /*
-* this class is only for removing dependency of kylin-tool module, and should be refactor later
-*/
+ * this class is only for removing dependency of kylin-tool module, and should be refactor later
+ */
 public class MetadataToolHelper {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = HelperConstants.DATE_TIME_FORMATTER;
@@ -218,8 +217,8 @@ public class MetadataToolHelper {
         }
     }
 
-    private void copyResourceStore(String projectPath, ResourceStore srcResourceStore,
-            ResourceStore destResourceStore, boolean isProjectLevel, boolean excludeTableExd) {
+    private void copyResourceStore(String projectPath, ResourceStore srcResourceStore, ResourceStore destResourceStore,
+            boolean isProjectLevel, boolean excludeTableExd) {
         if (excludeTableExd) {
             String tableExdPath = projectPath + ResourceStore.TABLE_EXD_RESOURCE_ROOT;
             var projectItems = srcResourceStore.listResources(projectPath);
@@ -373,8 +372,7 @@ public class MetadataToolHelper {
         return 0;
     }
 
-    public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate,
-            int retryTimes) {
+    public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate, int retryTimes) {
         try {
             StorageCleaner storageCleaner = new StorageCleaner(storageCleanup, projects, requestFSRate, retryTimes);
             System.out.println("Start to cleanup HDFS");
@@ -394,7 +392,8 @@ public class MetadataToolHelper {
         return JdbcDataSource.getDataSource(props);
     }
 
-    public void fetch(KylinConfig kylinConfig, String path, String folder, String target, boolean excludeTableExd) throws Exception {
+    public void fetch(KylinConfig kylinConfig, String path, String folder, String target, boolean excludeTableExd)
+            throws Exception {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         if (StringUtils.isBlank(path)) {
             path = KylinConfigBase.getKylinHome() + File.separator + "meta_fetch";
@@ -422,7 +421,8 @@ public class MetadataToolHelper {
                 logger.info("start to copy target file {} from ResourceStore.", target);
                 UnitOfWork.doInTransactionWithRetry(
                         UnitOfWorkParams.builder().readonly(true).unitName(target).processor(() -> {
-                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true, excludeTableExd);
+                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true,
+                                    excludeTableExd);
                             // uuid
                             val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
                             fetchResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),

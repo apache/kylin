@@ -45,6 +45,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.measure.corr.CorrMeasureType;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -54,10 +57,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.util.ICutContextStrategy;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  *
@@ -69,7 +68,7 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
     private ImmutableList<Integer> rewriteGroupKeys; // preserve the ordering of group keys after CC replacement
     private List<ImmutableBitSet> rewriteGroupSets; // group sets with cc replaced
     List<AggregateCall> aggregateCalls;
-    private Set<TblColRef> groupByInnerColumns = new HashSet<>(); // inner columns in group keys, for CC generation
+    private final Set<TblColRef> groupByInnerColumns = new HashSet<>(); // inner columns in group keys, for CC generation
     private Set<OLAPContext> subContexts = Sets.newHashSet();
 
     public KapAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
@@ -203,8 +202,8 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
             TblColRef originalColumn = inputColumnRowType.getColumnByIndex(i);
             if (null != this.context && this.context.getGroupCCColRewriteMapping().containsKey(originalColumn)) {
                 groups.add(this.context.getGroupCCColRewriteMapping().get(originalColumn));
-                groupKeys.add(inputColumnRowType
-                        .getIndexByName(this.context.getGroupCCColRewriteMapping().get(originalColumn).getName()));
+                String colName = this.context.getGroupCCColRewriteMapping().get(originalColumn).getName();
+                groupKeys.add(inputColumnRowType.getIndexByName(colName));
             } else {
                 Set<TblColRef> sourceColumns = inputColumnRowType.getSourceColumnsByIndex(i);
                 groups.addAll(sourceColumns);
@@ -283,17 +282,13 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
             this.rewriteAggCalls = new ArrayList<>(aggregateCalls.size());
             for (int i = 0; i < this.aggregateCalls.size(); i++) {
                 AggregateCall aggCall = this.aggregateCalls.get(i);
-                if (SqlStdOperatorTable.GROUPING == aggCall.getAggregation()) {
+                if (SqlStdOperatorTable.GROUPING == aggCall.getAggregation()
+                        || this.aggregations.get(i).isAggregateOnConstant()) {
                     this.rewriteAggCalls.add(aggCall);
                     continue;
                 }
 
-                FunctionDesc cubeFunc = this.aggregations.get(i);
-                if (cubeFunc.isAggregateOnConstant()) {
-                    this.rewriteAggCalls.add(aggCall);
-                    continue;
-                }
-                aggCall = rewriteAggCall(aggCall, cubeFunc);
+                aggCall = rewriteAggCall(aggCall, this.aggregations.get(i));
                 this.rewriteAggCalls.add(aggCall);
             }
             getContext().setExactlyAggregate(isExactlyMatched());
@@ -329,8 +324,9 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
             return false;
         }
 
-        if (!checkAggCall())
+        if (!checkAggCall()) {
             return false;
+        }
         Set<String> cuboidDimSet = new HashSet<>();
         if (getContext() != null && getContext().storageContext.getCandidate() != null) {
             cuboidDimSet = getContext().storageContext.getCandidate().getLayoutEntity().getOrderedDimensions().values()
@@ -343,6 +339,9 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
         OLAPRel.logger.info("cuboid dimensions: {}", cuboidDimSet);
 
         boolean isDimensionMatch = isDimExactlyMatch(groupByCols, cuboidDimSet);
+        if (KylinConfig.getInstanceFromEnv().isRouteToMetadataEnabled()) {
+            isDimensionMatch = isDimensionMatch && !groupByCols.isEmpty();
+        }
         if (!isDimensionMatch) {
             return false;
         }
@@ -359,17 +358,15 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
                 && dataflow.getQueryableSegments().get(0).getMultiPartitions().size() <= 1;
     }
 
-    private Boolean checkAggCall() {
+    private boolean checkAggCall() {
         for (AggregateCall call : getRewriteAggCalls()) {
             if (!supportedFunction.contains(OLAPAggregateRel.getAggrFuncName(call))) {
                 return false;
             }
             // bitmap uuid is fine with exactly matched cube as what we need to query
             // from the cube is exactly the binary bitmap
-            if (OLAPAggregateRel.getAggrFuncName(call).equals("BITMAP_UUID")) {
-                continue;
-            }
-            if (OLAPAggregateRel.getAggrFuncName(call).equals(FunctionDesc.FUNC_BITMAP_BUILD)) {
+            if (OLAPAggregateRel.getAggrFuncName(call).equals("BITMAP_UUID")
+                    || OLAPAggregateRel.getAggrFuncName(call).equals(FunctionDesc.FUNC_BITMAP_BUILD)) {
                 continue;
             }
             if (call instanceof KylinAggregateCall) {
@@ -417,11 +414,6 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
         this.subContexts = contexts;
     }
 
-    @Override
-    protected void buildRewriteFieldsAndMetricsColumns() {
-        super.buildRewriteFieldsAndMetricsColumns();
-    }
-
     /**
      * optimize its Context Rel after context cut off according some rules
      * 1. push through the Agg Above Join Rel
@@ -430,7 +422,7 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
         // case 1: Agg push through Join
         if (context == null) {
             for (OLAPContext subContext : subContexts) {
-                if (subContext.aggregations.size() > 0)
+                if (!subContext.aggregations.isEmpty())
                     continue;
                 if (ContextUtil.qualifiedForAggInfoPushDown(this, subContext)) {
                     subContext.setTopNode(this);
@@ -444,16 +436,14 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
         if (this.context == null)
             return;
 
-        for (TblColRef colRef : this.context.getGroupByColumns()) {
-            if (!colRef.getName().startsWith("_KY_") && context.belongToContextTables(colRef))
-                this.context.allColumns.add(colRef);
-        }
+        this.context.getGroupByColumns().stream()
+                .filter(colRef -> !colRef.getName().startsWith("_KY_") && context.belongToContextTables(colRef))
+                .forEach(colRef -> this.context.allColumns.add(colRef));
 
         if (!(getInput() instanceof KapProjectRel)) {
-            for (TblColRef colRef : ((KapRel) getInput()).getColumnRowType().getAllColumns()) {
-                if (context.belongToContextTables(colRef) && !colRef.getName().startsWith("_KY_"))
-                    context.allColumns.add(colRef);
-            }
+            ((KapRel) getInput()).getColumnRowType().getAllColumns().stream()
+                    .filter(colRef -> context.belongToContextTables(colRef) && !colRef.getName().startsWith("_KY_"))
+                    .forEach(colRef -> context.allColumns.add(colRef));
             return;
         }
 

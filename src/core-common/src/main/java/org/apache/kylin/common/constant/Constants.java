@@ -48,6 +48,7 @@ public class Constants {
     public static final String KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY = "kylin.source.jdbc.connection-url";
     public static final String KYLIN_SOURCE_JDBC_USER_KEY = "kylin.source.jdbc.user";
     public static final String KYLIN_SOURCE_JDBC_DRIVER_KEY = "kylin.source.jdbc.driver";
+    public static final String KYLIN_JOB_MAX_CONCURRENT_JOBS = "kylin.job.max-concurrent-jobs";
 
     public static final String UNLIMITED = "Unlimited";
     public static final String TRACE_ID = "traceId";

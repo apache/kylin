@@ -108,7 +108,7 @@ public class JobControllerV2 extends BaseController {
 
         JobFilter jobFilter = new JobFilter(statuses,
                 Objects.isNull(jobName) ? Lists.newArrayList() : Lists.newArrayList(jobName), timeFilter, null, key,
-                project, sortBy, reverse);
+                false, project, sortBy, reverse);
         List<ExecutableResponse> executables = null;
         if (!StringUtils.isEmpty(project)) {
             executables = jobService.listJobs(jobFilter);

@@ -75,6 +75,10 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
@@ -99,6 +103,10 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
+import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.aspect.Transaction;
@@ -120,16 +128,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
-
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 
 import lombok.Setter;
 import lombok.val;
@@ -466,9 +464,9 @@ public class MetaStoreService extends BasicService {
             if (config.isDDLLogicalViewEnabled() && missTableDesc.isLogicalView()) {
                 LogicalView logicalView = LogicalViewManager.getInstance(config).get(missTableDesc.getName());
                 if (logicalView != null && !targetProject.equalsIgnoreCase(logicalView.getCreatedProject())) {
-                    throw new KylinException(FAILED_CREATE_MODEL, String.format(Locale.ROOT,
-                        " Logical View %s can only add in project %s",
-                        missTableDesc.getName(), logicalView.getCreatedProject()));
+                    throw new KylinException(FAILED_CREATE_MODEL,
+                            String.format(Locale.ROOT, " Logical View %s can only add in project %s",
+                                    missTableDesc.getName(), logicalView.getCreatedProject()));
                 }
             }
         }

@@ -36,6 +36,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
 
+import java.util.ArrayList;
+import java.util.Objects;
+
 @Controller
 @RequestMapping(value = "/api/epoch", produces = { HTTP_VND_APACHE_KYLIN_JSON })
 public class NEpochController extends NBasicController {
@@ -48,7 +51,11 @@ public class NEpochController extends NBasicController {
     @PostMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
     public EnvelopeResponse<String> updateEpochOwner(@RequestBody EpochRequest epochRequest) {
-        checkCollectionRequiredArg("projects", epochRequest.getProjects());
+        if (Objects.isNull(epochRequest.getProjects())) {
+            // Avoid following NPEs.
+            epochRequest.setProjects(new ArrayList<>(0));
+        }
+        // Empty projects has specified meanings: all projects do change epoch.
         epochRequest.getProjects().forEach(this::checkProjectName);
         checkRequiredArg("force", epochRequest.getForce());
         epochService.updateEpoch(epochRequest.getProjects(), epochRequest.getForce(), epochRequest.isClient());
