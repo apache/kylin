@@ -97,7 +97,7 @@ public class MetadataToolHelper {
     }
 
     public Pair<String, String> backup(KylinConfig kylinConfig, String project, String path, String folder,
-                                       boolean compress, boolean excludeTableExd) throws Exception {
+            boolean compress, boolean excludeTableExd) throws Exception {
         boolean isGlobal = null == project;
         long startAt = System.currentTimeMillis();
         try {
@@ -123,7 +123,7 @@ public class MetadataToolHelper {
     }
 
     Pair<String, String> doBackup(KylinConfig kylinConfig, String project, String path, String folder, boolean compress,
-                                  boolean excludeTableExd) throws Exception {
+            boolean excludeTableExd) throws Exception {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         boolean isUTEnv = kylinConfig.isUTEnv();
 
@@ -203,7 +203,7 @@ public class MetadataToolHelper {
     }
 
     private void backupProjects(NavigableSet<String> projectFolders, ResourceStore resourceStore,
-                                ResourceStore backupResourceStore, boolean excludeTableExd) throws InterruptedException {
+            ResourceStore backupResourceStore, boolean excludeTableExd) throws InterruptedException {
         for (String projectPath : projectFolders) {
             if (projectPath.equals(ResourceStore.METASTORE_UUID_TAG)
                     || projectPath.equals(ResourceStore.METASTORE_IMAGE)) {
@@ -217,8 +217,8 @@ public class MetadataToolHelper {
         }
     }
 
-    private void copyResourceStore(String projectPath, ResourceStore srcResourceStore,
-                                   ResourceStore destResourceStore, boolean isProjectLevel, boolean excludeTableExd) {
+    private void copyResourceStore(String projectPath, ResourceStore srcResourceStore, ResourceStore destResourceStore,
+            boolean isProjectLevel, boolean excludeTableExd) {
         if (excludeTableExd) {
             String tableExdPath = projectPath + ResourceStore.TABLE_EXD_RESOURCE_ROOT;
             var projectItems = srcResourceStore.listResources(projectPath);
@@ -286,7 +286,7 @@ public class MetadataToolHelper {
     }
 
     public void restore(ResourceStore currentResourceStore, ResourceStore restoreResourceStore, String project,
-                        boolean delete) {
+            boolean delete) {
         if (StringUtils.isBlank(project)) {
             logger.info("start to restore all projects");
             var srcProjectFolders = restoreResourceStore.listResources("/");
@@ -340,7 +340,7 @@ public class MetadataToolHelper {
     }
 
     private int doRestore(ResourceStore currentResourceStore, ResourceStore restoreResourceStore,
-                          Set<String> destResources, Set<String> srcResources, boolean delete) throws IOException {
+            Set<String> destResources, Set<String> srcResources, boolean delete) throws IOException {
         val threadViewRS = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
 
         //check destResources and srcResources are null,because  Sets.difference(srcResources, destResources) will report NullPointerException
@@ -372,8 +372,7 @@ public class MetadataToolHelper {
         return 0;
     }
 
-    public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate,
-                             int retryTimes) {
+    public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate, int retryTimes) {
         try {
             StorageCleaner storageCleaner = new StorageCleaner(storageCleanup, projects, requestFSRate, retryTimes);
             System.out.println("Start to cleanup HDFS");
@@ -393,7 +392,8 @@ public class MetadataToolHelper {
         return JdbcDataSource.getDataSource(props);
     }
 
-    public void fetch(KylinConfig kylinConfig, String path, String folder, String target, boolean excludeTableExd) throws Exception {
+    public void fetch(KylinConfig kylinConfig, String path, String folder, String target, boolean excludeTableExd)
+            throws Exception {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         if (StringUtils.isBlank(path)) {
             path = KylinConfigBase.getKylinHome() + File.separator + "meta_fetch";
@@ -421,7 +421,8 @@ public class MetadataToolHelper {
                 logger.info("start to copy target file {} from ResourceStore.", target);
                 UnitOfWork.doInTransactionWithRetry(
                         UnitOfWorkParams.builder().readonly(true).unitName(target).processor(() -> {
-                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true, excludeTableExd);
+                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true,
+                                    excludeTableExd);
                             // uuid
                             val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
                             fetchResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),

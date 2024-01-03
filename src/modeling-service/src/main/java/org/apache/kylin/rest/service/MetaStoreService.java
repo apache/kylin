@@ -18,9 +18,47 @@
 
 package org.apache.kylin.rest.service;
 
-import lombok.Setter;
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.constant.Constants.KE_VERSION;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
+import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
+import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -91,45 +129,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-
-import static org.apache.kylin.common.constant.Constants.KE_VERSION;
-import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
-import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
-import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
-import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
+import lombok.Setter;
+import lombok.val;
+import lombok.var;
 
 @Component("metaStoreService")
 public class MetaStoreService extends BasicService {
@@ -462,9 +464,9 @@ public class MetaStoreService extends BasicService {
             if (config.isDDLLogicalViewEnabled() && missTableDesc.isLogicalView()) {
                 LogicalView logicalView = LogicalViewManager.getInstance(config).get(missTableDesc.getName());
                 if (logicalView != null && !targetProject.equalsIgnoreCase(logicalView.getCreatedProject())) {
-                    throw new KylinException(FAILED_CREATE_MODEL, String.format(Locale.ROOT,
-                        " Logical View %s can only add in project %s",
-                        missTableDesc.getName(), logicalView.getCreatedProject()));
+                    throw new KylinException(FAILED_CREATE_MODEL,
+                            String.format(Locale.ROOT, " Logical View %s can only add in project %s",
+                                    missTableDesc.getName(), logicalView.getCreatedProject()));
                 }
             }
         }
