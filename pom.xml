@@ -93,7 +93,7 @@
     <postgresql.version>42.3.3</postgresql.version>
 
     <!-- Scala versions -->
-    <scala.version>2.12.10</scala.version>
+    <scala.version>2.12.13</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
 
     <reflections.version>0.9.10</reflections.version>
