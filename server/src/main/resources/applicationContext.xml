@@ -118,6 +118,24 @@
                     <property name="hosts" value="${kylin.cache.memcached.hosts}" />
                 </bean>
         -->
+
+        <!-- redis cache config
+        <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+              p:configLocation="classpath:ehcache.xml" p:shared="true"/>
+        <bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.RedisManager" />
+        <bean id="localCacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+              p:cacheManager-ref="ehcache"/>
+        <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
+
+        <bean id="redisConfig" class="org.apache.kylin.cache.redis.RedisConfig">
+            <property name="appName" value="${kylin.cache.redis.appName}" />
+            <property name="timeout" value="${kylin.cache.redis.timeout}" />
+            <property name="host" value="${kylin.cache.redis.host}" />
+            <property name="port" value="${kylin.cache.redis.port}" />
+            <property name="prefix" value="${kylin.cache.redis.prefix}"/>
+        </bean>
+        -->
+
     </beans>
     <beans>
         <bean id="multipartResolver"

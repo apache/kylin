@@ -58,8 +58,10 @@ public class RemoteLocalFailOverCacheManagerTest {
         cacheManager.disableRemoteCacheManager();
         Assert.assertTrue("Memcached failover to ehcache", cacheManager.getCache(QUERY_CACHE) instanceof EhCacheCache);
         cacheManager.enableRemoteCacheManager();
-        Assert.assertTrue("Memcached enabled",
-                cacheManager.getCache(QUERY_CACHE) instanceof MemcachedCacheManager.MemCachedCacheAdaptor);
+        Assert.assertTrue("remoteCache enabled",
+                cacheManager.getCache(QUERY_CACHE) instanceof MemcachedCacheManager.MemCachedCacheAdaptor
+                        || cacheManager.getCache(QUERY_CACHE) instanceof RedisManager.RedisCacheAdaptor
+        );
 //
 //        MemcachedCacheManager remoteCacheManager = cacheManager.getRemoteCacheManager();
 //        for (int i = 0; i < 1000; i++) {

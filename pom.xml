@@ -1140,6 +1140,11 @@
         <artifactId>netty</artifactId>
         <version>3.9.9.Final</version>
       </dependency>
+      <dependency>
+        <groupId>redis.clients</groupId>
+        <artifactId>jedis</artifactId>
+        <version>2.10.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
