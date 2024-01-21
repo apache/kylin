@@ -30,7 +30,7 @@
   <groupId>org.apache.kylin</groupId>
   <artifactId>kylin</artifactId>
   <packaging>pom</packaging>
-  <version>4.0.5-SNAPSHOT</version>
+  <version>4.0.5</version>
 
   <name>Apache Kylin</name>
   <url>http://kylin.apache.org</url>
@@ -242,7 +242,7 @@
   <scm>
     <developerConnection>scm:git:https://github.com/apache/kylin.git</developerConnection>
     <url>https://github.com/apache/kylin</url>
-    <tag>HEAD</tag>
+    <tag>kylin-4.0.5</tag>
   </scm>
 
   <dependencyManagement>
