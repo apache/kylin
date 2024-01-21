@@ -35,6 +35,7 @@ object RuntimeHelper {
 
   final val literalOne = new Column(Literal(1, DataTypes.IntegerType))
   final val literalTs = new Column(Literal(null, DataTypes.TimestampType))
+  final val literalNull = new Column(Literal(null, DataTypes.NullType))
 
   def registerSingleByColName(funcName: String, dataType: DataType): String = {
     val name = dataType.toString
@@ -119,7 +120,7 @@ object RuntimeHelper {
           } else if (DataType.DATETIME_FAMILY.contains(column.getType.getName)) {
             literalTs.as(s"${factTableName}_${columnName}")
           } else {
-            literalOne.as(s"${factTableName}_${columnName}")
+            literalNull.as(s"${factTableName}_${columnName}")
           }
       }
   }

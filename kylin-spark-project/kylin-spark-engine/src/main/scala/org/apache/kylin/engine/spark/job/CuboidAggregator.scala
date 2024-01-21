@@ -136,6 +136,8 @@ object CuboidAggregator {
           } else {
             callUDF(udfName, columns.head).as(id.toString)
           }
+        case "EXTENDED_COLUMN" =>
+          max(columns.last).as(id.toString)
         case _ =>
           max(columns.head).as(id.toString)
       }

@@ -435,6 +435,8 @@ object SparkTypeUtil extends Logging {
         )))
       case "MAX" | "MIN" =>
         function.pra.head.dataType
+      case "EXTENDED_COLUMN" =>
+        function.pra.last.dataType
       case _ => toSparkType(function.returnType.toKylinDataType)
     }
   }

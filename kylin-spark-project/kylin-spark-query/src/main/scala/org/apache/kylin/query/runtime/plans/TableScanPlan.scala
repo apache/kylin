@@ -19,7 +19,6 @@ package org.apache.kylin.query.runtime.plans
 
 import java.util
 import java.util.concurrent.ConcurrentHashMap
-
 import org.apache.calcite.DataContext
 import org.apache.kylin.common.QueryContextFacade
 import org.apache.kylin.cube.CubeInstance
@@ -37,6 +36,7 @@ import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.sql.{DataFrame, SparderContext, _}
 import org.apache.spark.utils.LogEx
 
+import java.util.Locale
 import scala.collection.JavaConverters._
 
 // scalastyle:off
@@ -210,6 +210,10 @@ object TableScanPlan extends LogEx {
             if (tupleInfo.hasField(rewriteFieldName))
               tupleInfo.getFieldIndex(rewriteFieldName)
             else -1
+        } else if (metric.getExpression.toUpperCase(Locale.ROOT).equals("EXTENDED_COLUMN")) {
+          val col = metric.getParameter.getNextParameter.getColRef
+          tupleIdx(i) =
+            if (tupleInfo.hasColumn(col)) tupleInfo.getColumnIndex(col) else -1
         } else { // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
           val col = metric.getParameter.getColRef
           tupleIdx(i) =
