@@ -92,7 +92,7 @@ public class DictionaryBuilderHelper {
             if (resizeBucketSize != bucketPartitionSize) {
                 logger.info("Start building a global dictionary column for {}, need resize from {} to {} ", col.columnName(),
                         bucketPartitionSize, resizeBucketSize);
-                resize(col, desc, resizeBucketSize, afterDistinct.sparkSession());
+                resize(col, desc, bucketPartitionSize, resizeBucketSize, afterDistinct.sparkSession());
                 logger.info("End building a global dictionary column for {}, need resize from {} to {} ", col.columnName(),
                         bucketPartitionSize, resizeBucketSize);
             }
