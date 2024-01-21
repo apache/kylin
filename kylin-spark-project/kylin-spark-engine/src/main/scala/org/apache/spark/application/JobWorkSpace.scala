@@ -28,18 +28,25 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
 
 object JobWorkSpace extends Logging {
-  def execute(args: Array[String]): Int = {
+  def execute(args: Array[String]): Unit = {
     try {
       val (application, appArgs) = resolveArgs(args)
       val eventLoop = new KylinJobEventLoop
       val worker = new JobWorker(application, appArgs, eventLoop)
       val monitor = new JobMonitor(eventLoop)
       val workspace = new JobWorkSpace(eventLoop, monitor, worker)
-      workspace.run()
+      if (System.getProperty("spark.master").equals("yarn") && System.getProperty("spark.submit.deployMode").equals("cluster")) {
+        val res = workspace.run()
+        if (res != 0) {
+          System.exit(res)
+        }
+      } else {
+        System.exit(workspace.run())
+      }
     } catch {
       case throwable: Throwable =>
         logError("Error occurred when init job workspace.", throwable)
-        2
+        System.exit(1)
     }
   }
 
