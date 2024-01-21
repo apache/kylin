@@ -912,6 +912,9 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.cube-auto-ready-enabled", TRUE));
     }
 
+    public boolean isBatchBuildCubeByMonthEnabled(){
+        return Boolean.parseBoolean(getOptional("kylin.job.batch-build-by-month-enabled", TRUE));
+    }
     public int getJobOutputMaxSize() {
         return Integer.parseInt(getOptional("kylin.job.execute-output.max-size", "10485760"));
     }
