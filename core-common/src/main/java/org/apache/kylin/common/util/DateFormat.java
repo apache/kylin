@@ -18,12 +18,17 @@
 package org.apache.kylin.common.util;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DateFormat {
 
@@ -39,6 +44,8 @@ public class DateFormat {
     public static final String YYYYMMDDHHMM = "yyyyMMddHHmm";
     public static final String YYYYMMDDHH = "yyyyMMddHH";
     public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+
+    private static final Logger logger = LoggerFactory.getLogger(DateFormat.class);
 
     public static final String[] SUPPORTED_DATETIME_PATTERN = {
             DEFAULT_DATE_PATTERN,
@@ -123,17 +130,18 @@ public class DateFormat {
     public static long stringToMillis(String str) {
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
-            if (str.length() == 8 && isInputFormatDate(str, COMPACT_DATE_PATTERN))
+            if (str.length() == 8 && isInputFormatDate(str, COMPACT_DATE_PATTERN)) {
                 //TODO: might be prolematic if an actual ts happends to be 8 digits, e.g. 1970-01-01 10:00:01.123
                 return stringToDate(str, COMPACT_DATE_PATTERN).getTime();
-            else if (str.length() == 10 && isInputFormatDate(str, YYYYMMDDHH))
+            } else if (str.length() == 10 && isInputFormatDate(str, YYYYMMDDHH)) {
                 return stringToDate(str, YYYYMMDDHH).getTime();
-            else if (str.length() == 12 && isInputFormatDate(str, YYYYMMDDHHMM))
+            } else if (str.length() == 12 && isInputFormatDate(str, YYYYMMDDHHMM)) {
                 return stringToDate(str, YYYYMMDDHHMM).getTime();
-            else if (str.length() == 14 && isInputFormatDate(str, YYYYMMDDHHMMSS))
+            } else if (str.length() == 14 && isInputFormatDate(str, YYYYMMDDHHMMSS)) {
                 return stringToDate(str, YYYYMMDDHHMMSS).getTime();
-            else
+            } else {
                 return Long.parseLong(str);
+            }
         } else if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 13) {
@@ -193,5 +201,19 @@ public class DateFormat {
     public static boolean isDatePattern(String ptn) {
         return COMPACT_DATE_PATTERN.equals(ptn) || YYYYMMDDHH.equals(ptn) || YYYYMMDDHHMM.equals(ptn)
                 || YYYYMMDDHHMMSS.equals(ptn);
+    }
+
+    public static Long getFormatTimeStamp(long time, String pattern) {
+        try {
+            if (StringUtils.isNotBlank(pattern)) {
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault(Locale.Category.FORMAT));
+                sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+                String timeFormat = sdf.format(new Date(time));
+                time = sdf.parse(timeFormat).getTime();
+            }
+        } catch (Exception e) {
+            logger.warn("format time error", e);
+        }
+        return time;
     }
 }
