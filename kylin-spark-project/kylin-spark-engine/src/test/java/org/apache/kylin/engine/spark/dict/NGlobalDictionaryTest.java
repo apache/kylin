@@ -18,7 +18,6 @@
 
 package org.apache.kylin.engine.spark.dict;
 
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -26,10 +25,14 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.spark.DebugFilesystem;
 import org.apache.spark.HashPartitioner;
+import org.apache.spark.TaskContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.dict.DictHelper;
 import org.apache.spark.dict.NBucketDictionary;
 import org.apache.spark.dict.NGlobalDictHDFSStore;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
@@ -41,10 +44,10 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import org.apache.spark.TaskContext;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.Tuple2;
+import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -112,20 +115,24 @@ public class NGlobalDictionaryTest extends LocalWithSparkSessionTest {
         }
         Dataset<Row> ds = ss.createDataFrame(rowList,
                 new StructType(new StructField[] { DataTypes.createStructField("col1", DataTypes.StringType, true) }));
-        ds.toJavaRDD().mapToPair((PairFunction<Row, String, String>) row -> {
+
+        JavaRDD<Row> dictRdd = ds.toJavaRDD().mapToPair((PairFunction<Row, String, String>) row -> {
             if (row.get(0) == null)
                 return new Tuple2<>(null, null);
             return new Tuple2<>(row.get(0).toString(), null);
-        }).sortByKey().partitionBy(new HashPartitioner(BUCKET_SIZE)).foreachPartition(
-                (VoidFunction<Iterator<Tuple2<String, String>>>) (tuple2Iterator) -> {
+        }).sortByKey().partitionBy(new HashPartitioner(BUCKET_SIZE))
+                .mapPartitions((FlatMapFunction<Iterator<Tuple2<String, String>>, Row>) tuple2Iterator -> {
                     int bucketId = TaskContext.get().partitionId();
                     NBucketDictionary bucketDict = dict.loadBucketDictionary(bucketId);
                     while (tuple2Iterator.hasNext()) {
                         Tuple2<String, String> tuple2 = tuple2Iterator.next();
                         bucketDict.addRelativeValue(tuple2._1);
                     }
-                    bucketDict.saveBucketDict(bucketId);
+                    return JavaConverters.asJavaIteratorConverter(DictHelper.convertToRowIterator(bucketDict)).asJava();
                 });
+        ss.createDataset(dictRdd.rdd(), DictHelper.rowEncoder())
+                .write().format("org.apache.spark.dict.NGlobalDictionaryWritableDataSource")
+                .save(dict.getWorkingDir());
         dict.writeMetaDict(BUCKET_SIZE, config.getGlobalDictV2MaxVersions(), config.getGlobalDictV2VersionTTL());
     }
 

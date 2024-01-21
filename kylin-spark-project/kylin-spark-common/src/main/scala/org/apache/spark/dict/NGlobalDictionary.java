@@ -45,7 +45,7 @@ public class NGlobalDictionary implements Serializable {
         return "/" + project + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT + "/" + sourceTable + "/" + sourceColumn + "/";
     }
 
-    private String getWorkingDir() {
+    public String getWorkingDir() {
         return baseDir + WORKING_DIR;
     }
 
