@@ -343,6 +343,14 @@ public abstract class SparkApplication {
         helper.setConf(SparkConfHelper.COUNT_DISTICT, hasCountDistinct().toString());
         helper.generateSparkConf();
         helper.applySparkConf(sparkConf);
+        helper.setConf(SparkConfHelper.COUNT_DISTICT, hasCountDistinct().toString());
+        if (Boolean.valueOf(configOverride.getOrDefault("spark.dynamicAllocation.enabled", "false"))) {
+            int maxExecutors = Integer.valueOf(configOverride.getOrDefault("spark.dynamicAllocation.maxExecutors",
+                    String.valueOf(Integer.MAX_VALUE)));
+            helper.setConf(SparkConfHelper.MAX_EXECUTORS, String.valueOf(maxExecutors));
+        } else {
+            helper.setConf(SparkConfHelper.MAX_EXECUTORS, String.valueOf(Integer.MAX_VALUE));
+        }
     }
 
     protected String chooseContentSize(Path shareDir) throws IOException {

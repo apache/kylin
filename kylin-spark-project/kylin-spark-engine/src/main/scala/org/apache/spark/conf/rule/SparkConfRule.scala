@@ -137,7 +137,8 @@ class ExecutorInstancesRule extends SparkConfRule {
 
     val needInstance = Math.max(calculateExecutorInsByLayoutSize.toLong, requiredCores.toInt / executorCore)
     val instance = Math.min(needInstance, queueAvailableInstance)
-    val executorInstance = Math.max(instance.toLong, baseExecutorInstances.toLong).toString
+    val dynamicMaxExecutors = helper.getConf(SparkConfHelper.MAX_EXECUTORS)
+    val executorInstance = Math.min(Math.max(instance.toLong, baseExecutorInstances.toLong), dynamicMaxExecutors.toLong).toString
     logInfo(s"Current queueAvailableInstance is $queueAvailableInstance, " +
       s"needInstance is $needInstance, instance is $instance")
     helper.setConf(SparkConfHelper.EXECUTOR_INSTANCES, executorInstance)

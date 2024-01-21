@@ -63,6 +63,8 @@ public class SparkConfHelper {
     public static final String DRIVER_OVERHEAD = "spark.driver.memoryOverhead";
     public static final String DRIVER_CORES = "spark.driver.cores";
     public static final String COUNT_DISTICT = "count_distinct";
+    public static final String MAX_EXECUTORS = "spark.dynamicAllocation.maxExecutors";
+
 
     private static final List<SparkConfRule> EXECUTOR_RULES = ImmutableList.of(new ExecutorMemoryRule(),
             new ExecutorCoreRule(), new ExecutorOverheadRule(), new ExecutorInstancesRule(),
