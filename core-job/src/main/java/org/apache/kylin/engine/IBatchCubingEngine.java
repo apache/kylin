@@ -36,7 +36,7 @@ public interface IBatchCubingEngine {
     public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset);
 
     /** Merge multiple small segments into a big one. */
-    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter);
+    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter, Integer priorityOffset);
 
     /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */
     public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter);

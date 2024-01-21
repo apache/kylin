@@ -114,6 +114,18 @@ public class JobEngineConfig {
         return config.getSchedulerPriorityConsidered();
     }
 
+    public boolean IsJobPreemptiveExecution() {
+        return config.IsJobPreemptiveExecution();
+    }
+
+    public int getLowPriorityBar() {
+        return config.getLowPriorityBar();
+    }
+
+    public int getLowPriorityJobLimit() {
+        return config.getLowPriorityJobLimit();
+    }
+
     /**
      * @return the priority bar for fetching jobs from job priority queue
      */

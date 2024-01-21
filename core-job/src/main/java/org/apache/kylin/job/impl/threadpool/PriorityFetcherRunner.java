@@ -61,7 +61,9 @@ public class PriorityFetcherRunner extends FetcherRunner {
             // fetch job from jobPriorityQueue first to reduce chance to scan job list
             Map<String, Integer> leftJobPriorities = Maps.newHashMap();
             Pair<AbstractExecutable, Integer> executableWithPriority;
-            while ((executableWithPriority = jobPriorityQueue.peek()) != null
+
+            while (jobEngineConfig.IsJobPreemptiveExecution()
+                    && (executableWithPriority = jobPriorityQueue.peek()) != null
                     // the priority of jobs in pendingJobPriorities should be above a threshold
                     && executableWithPriority.getSecond() >= jobEngineConfig.getFetchQueuePriorityBar()) {
                 executableWithPriority = jobPriorityQueue.poll();
@@ -147,7 +149,9 @@ public class PriorityFetcherRunner extends FetcherRunner {
                 jobPriorityQueue.add(new Pair<>(executable, priority));
             }
 
-            while ((executableWithPriority = jobPriorityQueue.poll()) != null && !isJobPoolFull()) {
+            while ((executableWithPriority = jobPriorityQueue.poll()) != null && !isJobPoolFull()
+                    && (executableWithPriority.getSecond() > jobEngineConfig.getLowPriorityBar()
+                    || runningJobs.size() < jobEngineConfig.getLowPriorityJobLimit())) {
                 addToJobPool(executableWithPriority.getFirst(), executableWithPriority.getSecond());
             }
 

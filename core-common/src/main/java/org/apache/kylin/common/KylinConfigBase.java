@@ -805,6 +805,14 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.max-concurrent-jobs", "10"));
     }
 
+    public int getLowPriorityBar() {
+        return Integer.parseInt(getOptional("kylin.job.low-priority-bar", "0"));
+    }
+
+    public int getLowPriorityJobLimit() {
+        return Integer.parseInt(getOptional("kylin.job.low-priority-limit", "10"));
+    }
+
     public String getHiveDependencyFilterList() {
         return this.getOptional("kylin.job.dependency-filter-list", "[^,]*hive-exec[^,]*?\\.jar" + "|"
                 + "[^,]*hive-metastore[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[^,]*?\\.jar");
@@ -874,6 +882,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean getSchedulerPriorityConsidered() {
         return Boolean.parseBoolean(getOptional("kylin.job.scheduler.priority-considered", FALSE));
+    }
+
+    public boolean IsJobPreemptiveExecution() {
+        return Boolean.parseBoolean(getOptional("kylin.job.scheduler.priority-preemptive-execution", TRUE));
     }
 
     public Integer getSchedulerPriorityBarFetchFromQueue() {
