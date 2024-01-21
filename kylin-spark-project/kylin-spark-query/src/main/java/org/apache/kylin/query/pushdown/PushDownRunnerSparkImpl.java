@@ -50,7 +50,7 @@ public class PushDownRunnerSparkImpl extends AbstractPushdownRunner {
         for (int i = 0; i < columnCount; ++i) {
             int nullable = fieldList.get(i).isNullable() ? 1 : 0;
             columnMetas.add(new SelectedColumnMeta(false, false, false, false, nullable, true, Integer.MAX_VALUE,
-                    fieldList.get(i).getName().toUpperCase(Locale.ROOT), fieldList.get(i).getName().toUpperCase(Locale.ROOT), null, null,
+                    fieldList.get(i).getName(), fieldList.get(i).getName(), null, null,
                     null, fieldList.get(i).getPrecision(), fieldList.get(i).getScale(), fieldList.get(i).getDataType(),
                     fieldList.get(i).getDataTypeName(), false, false, false));
         }
