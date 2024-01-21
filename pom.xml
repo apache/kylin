@@ -240,9 +240,7 @@
   </mailingLists>
 
   <scm>
-    <connection>scm:git:git://github.com/apache/kylin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
-    </developerConnection>
+    <developerConnection>scm:git:https://github.com/apache/kylin.git</developerConnection>
     <url>https://github.com/apache/kylin</url>
     <tag>HEAD</tag>
   </scm>
