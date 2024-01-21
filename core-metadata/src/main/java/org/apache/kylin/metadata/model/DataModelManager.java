@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JDBCResourceStore;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.persistence.WriteConflictException;
@@ -106,7 +107,10 @@ public class DataModelManager {
         // touch lower level metadata before registering model listener
         TableMetadataManager.getInstance(config);
         crud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new DataModelSyncListener(), "data_model");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new DataModelSyncListener(), "data_model");
+        }
     }
 
     private class DataModelSyncListener extends Broadcaster.Listener {

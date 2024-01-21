@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JDBCResourceStore;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
@@ -93,7 +94,10 @@ public class ProjectManager {
 
         // touch lower level metadata before registering my listener
         crud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new ProjectSyncListener(), "project");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new ProjectSyncListener(), "project");
+        }
     }
 
     private class ProjectSyncListener extends Broadcaster.Listener {

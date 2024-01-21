@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JDBCResourceStore;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -124,7 +125,10 @@ public class TableMetadataManager {
             }
         };
         srcTableCrud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
+        }
     }
 
     private class SrcTableSyncListener extends Broadcaster.Listener {
@@ -305,7 +309,10 @@ public class TableMetadataManager {
             }
         };
         srcExtCrud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
+        }
     }
 
     private class SrcTableExtSyncListener extends Broadcaster.Listener {
@@ -449,7 +456,10 @@ public class TableMetadataManager {
             }
         };
         extFilterCrud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new ExtFilterSyncListener(), "external_filter");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new ExtFilterSyncListener(), "external_filter");
+        }
     }
 
     private class ExtFilterSyncListener extends Broadcaster.Listener {
