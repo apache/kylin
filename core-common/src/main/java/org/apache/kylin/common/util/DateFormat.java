@@ -132,6 +132,8 @@ public class DateFormat {
                 return stringToDate(str, YYYYMMDDHHMM).getTime();
             else if (str.length() == 14 && isInputFormatDate(str, YYYYMMDDHHMMSS))
                 return stringToDate(str, YYYYMMDDHHMMSS).getTime();
+            else if (str.length() < 8)
+                return Long.parseLong(str) * 24 * 60 * 60 * 1000;
             else
                 return Long.parseLong(str);
         } else if (str.length() == 10) {
