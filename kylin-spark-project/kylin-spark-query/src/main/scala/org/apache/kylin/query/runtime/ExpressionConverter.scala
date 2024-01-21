@@ -173,10 +173,10 @@ object ExpressionConverter {
           case "upper" => upper(k_lit(children.head))
           case "char_length" => length(k_lit(children.head))
           case "character_length" => length(k_lit(children.head))
-          case "replace " =>
+          case "replace" =>
             regexp_replace(k_lit(children.head),
-              children.apply(1).asInstanceOf[String],
-              children.apply(2).asInstanceOf[String])
+              k_lit(children.apply(1)),
+              k_lit(children.apply(2)))
           case "substring" | "substr" =>
             if (children.length == 3) { //substr(str1,startPos,length)
               k_lit(children.head)
