@@ -62,6 +62,7 @@ public class StorageCleanupJob extends AbstractApplication {
     public static final boolean DEFAULT_CLEANUP_DICT = true;
     public static final boolean DEFAULT_CLEANUP_SNAPSHOT = true;
     public static final boolean DEFAULT_CLEANUP_JOB_TMP = false;
+    public static final boolean DEFAULT_CLEANUP_CUBE_STATISTICS = true;
     public static final boolean DEFAULT_CLEANUP = false;
     private static final String GLOBAL_DICT_PREFIX = "/dict/global_dict/";
     private static final String TABLE_SNAPSHOT_PREFIX = "/table_snapshot/";
@@ -102,6 +103,13 @@ public class StorageCleanupJob extends AbstractApplication {
             .create("cleanupJobTmp");
 
     @SuppressWarnings("static-access")
+    protected static final Option OPTION_CLEANUP_CUBE_STATISTICS = OptionBuilder.withArgName("cleanupCubeStatistics")
+            .hasArg().isRequired(false)
+            .withType(Boolean.class.getName())
+            .withDescription("Boolean, whether or not to delete cube statistics files. Default value is " + DEFAULT_CLEANUP_CUBE_STATISTICS + " .")
+            .create("cleanupCubeStatistics");
+
+    @SuppressWarnings("static-access")
     protected static final Option OPTION_CLEANUP_THRESHOLD_HOUR = OptionBuilder.withArgName("cleanupThreshold")
             .hasArg().isRequired(false)
             .withType(Integer.class.getName())
@@ -118,6 +126,7 @@ public class StorageCleanupJob extends AbstractApplication {
     protected boolean cleanupTableSnapshot = DEFAULT_CLEANUP_SNAPSHOT;
     protected boolean cleanupGlobalDict = DEFAULT_CLEANUP_DICT;
     protected boolean cleanupJobTmp = DEFAULT_CLEANUP;
+    protected boolean cleanupCubeStatistics = DEFAULT_CLEANUP_CUBE_STATISTICS;
     protected int cleanupThreshold = DEFAULT_CLEANUP_HOUR_THRESHOLD;
     protected long storageTimeCut;
 
@@ -142,6 +151,7 @@ public class StorageCleanupJob extends AbstractApplication {
         options.addOption(OPTION_CLEANUP_GLOBAL_DICT);
         options.addOption(OPTION_CLEANUP_TABLE_SNAPSHOT);
         options.addOption(OPTION_CLEANUP_JOB_TMP);
+        options.addOption(OPTION_CLEANUP_CUBE_STATISTICS);
         options.addOption(OPTION_CLEANUP_THRESHOLD_HOUR);
         return options;
     }
@@ -159,6 +169,9 @@ public class StorageCleanupJob extends AbstractApplication {
         if (optionsHelper.hasOption(OPTION_CLEANUP_JOB_TMP)) {
             cleanupJobTmp = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CLEANUP_JOB_TMP));
         }
+        if (optionsHelper.hasOption(OPTION_CLEANUP_CUBE_STATISTICS)) {
+            cleanupCubeStatistics = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CLEANUP_CUBE_STATISTICS));
+        }
         if (optionsHelper.hasOption(OPTION_CLEANUP_THRESHOLD_HOUR)) {
             cleanupThreshold = Integer.parseInt(optionsHelper.getOptionValue(OPTION_CLEANUP_THRESHOLD_HOUR));
         }
@@ -166,13 +179,12 @@ public class StorageCleanupJob extends AbstractApplication {
         storageTimeCut = System.currentTimeMillis() - cleanupThreshold * 3600 * 1000L;
         Date cleanBeforeDate = new Date(storageTimeCut);
         logger.info("===================================================================\n" +
-                        "delete : {}; cleanupTableSnapshot : {}; cleanupGlobalDict : {}; cleanupJobTmp : {}; cleanBeforeDate : {}."
-                , delete, cleanupTableSnapshot, cleanupGlobalDict, cleanupJobTmp, cleanBeforeDate);
+                        "delete : {}; cleanupTableSnapshot : {}; cleanupGlobalDict : {}; cleanupJobTmp : {}; cleanupCubeStatistics : {}; cleanBeforeDate : {}."
+                , delete, cleanupTableSnapshot, cleanupGlobalDict, cleanupJobTmp, cleanupCubeStatistics, cleanBeforeDate);
         cleanup();
     }
 
     public void cleanup() throws Exception {
-        //TODO:clean up cube_statistics
 
         ProjectManager projectManager = ProjectManager.getInstance(config);
         CubeManager cubeManager = CubeManager.getInstance(config);
@@ -231,15 +243,66 @@ public class StorageCleanupJob extends AbstractApplication {
             }
         }
 
+        // cleanup unreferenced ${working_path}/cube_statistics/${cube_name}/${segment_id}
+        cleanupCubeStatistics(metadataPath, cubes);
+
         if (cleanupJobTmp) {
             logger.info("Start to clean up stale job_tmp ...");
             for (String prj : projects) {
                 Path prjPath = new Path(config.getJobTmpDir(prj));
-                FileStatus[] jobTmpPaths = fs.listStatus(prjPath);
-                for (FileStatus status : jobTmpPaths) {
-                    if (eligibleStorage(status)) {
-                        deleteOp(status.getPath(), StorageCleanType.JOB_TMP);
+                // maybe only create project, but not create module、cube and build
+                if (fs.exists(prjPath)) {
+                    FileStatus[] jobTmpPaths = fs.listStatus(prjPath);
+                    if (jobTmpPaths != null) {
+                        for (FileStatus status : jobTmpPaths) {
+                            if (eligibleStorage(status)) {
+                                deleteOp(status.getPath(), StorageCleanType.JOB_TMP);
+                            }
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    private void cleanupCubeStatistics(Path metadataPath, List<CubeInstance> cubes) throws Exception {
+        if (!cleanupCubeStatistics) {
+            return;
+        }
+        logger.info("Start to clean up no unreferenced cube_statistics ...");
+        Path cubeStatisticsPath = new Path(metadataPath, "cube_statistics");
+        if (fs.exists(cubeStatisticsPath)) {
+            FileStatus[] cubeNameStatus = fs.listStatus(cubeStatisticsPath);
+            if (cubeNameStatus != null) {
+                List<String> allCube = cubes.stream().map(CubeInstance::getName).collect(Collectors.toList());
+                for (FileStatus status : cubeNameStatus) {
+                    if (eligibleStorage(status)) {
+                        String cubeName = status.getPath().getName();
+                        if (!allCube.contains(cubeName)) {
+                            deleteOp(status.getPath(), StorageCleanType.CUBE_STATISTICS);
+                        }
+                    }
+                }
+            }
+
+            for (CubeInstance cube : cubes) {
+                Path cubePath = new Path(cubeStatisticsPath, cube.getName());
+                if (fs.exists(cubePath)) {
+                    // list all segment directory
+                    List<String> segments = cube.getSegments().stream().map(CubeSegment::getUuid).collect(Collectors.toList());
+                    FileStatus[] segmentStatus = fs.listStatus(cubePath);
+                    if (segmentStatus != null) {
+                        for (FileStatus status : segmentStatus) {
+                            if (eligibleStorage(status)) {
+                                String segment = status.getPath().getName();
+                                if (!segments.contains(segment)) {
+                                    deleteOp(status.getPath(), StorageCleanType.CUBE_STATISTICS);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    logger.warn("Cube path doesn't exist! The path is {}", cubePath);
                 }
             }
         }
@@ -357,5 +420,6 @@ enum StorageCleanType {
     TABLE_SNAPSHOT,
     CUBE_DIR,
     SEGMENT_DIR,
-    JOB_TMP
+    JOB_TMP,
+    CUBE_STATISTICS
 }
