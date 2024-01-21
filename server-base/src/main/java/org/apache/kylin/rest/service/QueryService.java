@@ -326,8 +326,8 @@ public class QueryService extends BasicService {
                 if (cuboid != null) {
                     //Some queries do not involve cuboid, e.g. lookup table query
                     cuboidIds.add(cuboid.getId());
+                    isExactlyMatchSet.add(ctx.isExactlyAggregate);
                 }
-                isExactlyMatchSet.add(ctx.isExactlyAggregate);
 
                 if (ctx.realization != null) {
                     realizationNames.add(ctx.realization.getCanonicalName());
