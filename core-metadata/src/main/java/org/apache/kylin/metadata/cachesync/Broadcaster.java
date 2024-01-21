@@ -67,6 +67,7 @@ public class Broadcaster implements Closeable {
     public static final String SYNC_PRJ_SCHEMA = "project_schema"; // the special entity to indicate project schema has change, e.g. table/model/cube_desc update
     public static final String SYNC_PRJ_DATA = "project_data"; // the special entity to indicate project data has change, e.g. cube/raw_table update
     public static final String SYNC_PRJ_ACL = "project_acl"; // the special entity to indicate query ACL has change, e.g. table_acl/learn_kylin update
+    public static final String SYNC_KILL_JOB = "kill_job"; // the special action to indicate stop job running, e.g. discard job
 
     public static Broadcaster getInstance(KylinConfig config) {
         return config.getManager(Broadcaster.class);
@@ -118,19 +119,21 @@ public class Broadcaster implements Closeable {
                         String[] restServers = config.getRestServers();
                         logger.debug("Servers in the cluster: {}", Arrays.toString(restServers));
                         for (final String node : restServers) {
-                            if (restClientMap.containsKey(node) == false) {
+                            if (!restClientMap.containsKey(node)) {
                                 restClientMap.put(node, new RestClient(node));
                             }
                         }
 
                         String toWhere = broadcastEvent.getTargetNode();
-                        if (toWhere == null)
+                        if (toWhere == null) {
                             toWhere = "all";
+                        }
                         logger.debug("Announcing new broadcast to {}: {}", toWhere, broadcastEvent);
                         
                         for (final String node : restServers) {
-                            if (!(toWhere.equals("all") || toWhere.equals(node)))
+                            if (!(toWhere.equals("all") || toWhere.equals(node))) {
                                 continue;
+                            }
                             
                             announceThreadPool.execute(new Runnable() {
                                 @Override
@@ -209,8 +212,9 @@ public class Broadcaster implements Closeable {
             }
 
             for (String entity : entities) {
-                if (!StringUtils.isBlank(entity))
+                if (!StringUtils.isBlank(entity)) {
                     addListener(lmap, entity, listener);
+                }
             }
             addListener(lmap, SYNC_ALL, listener);
             addListener(lmap, SYNC_PRJ_SCHEMA, listener);
@@ -252,17 +256,20 @@ public class Broadcaster implements Closeable {
         // prevents concurrent modification exception
         List<Listener> list = Lists.newArrayList();
         List<Listener> l1 = listenerMap.get(entity); // normal listeners first
-        if (l1 != null)
+        if (l1 != null) {
             list.addAll(l1);
+        }
 
         if (includeStatic) {
             List<Listener> l2 = staticListenerMap.get(entity); // static listeners second
-            if (l2 != null)
+            if (l2 != null) {
                 list.addAll(l2);
+            }
         }
 
-        if (list.isEmpty())
+        if (list.isEmpty()) {
             return;
+        }
 
         logger.debug("Broadcasting {}, {}, {}", event, entity, cacheKey);
 
@@ -291,6 +298,11 @@ public class Broadcaster implements Closeable {
                 l.onProjectQueryACLChange(this, cacheKey);
             }
             break;
+        case SYNC_KILL_JOB:
+            for (Listener l : list) {
+                l.onKillJob(this, entity, event, cacheKey);
+            }
+            break;
         default:
             for (Listener l : list) {
                 l.onEntityChange(this, entity, event, cacheKey);
@@ -309,8 +321,9 @@ public class Broadcaster implements Closeable {
     }
 
     public void announce(BroadcastEvent event) {
-        if (broadcastEvents == null)
+        if (broadcastEvents == null) {
             return;
+        }
 
         try {
             counter.incrementAndGet();
@@ -361,7 +374,7 @@ public class Broadcaster implements Closeable {
 
     public enum Event {
 
-        CREATE("create"), UPDATE("update"), DROP("drop");
+        CREATE("create"), UPDATE("update"), DROP("drop"), KILL("kill");
         private String text;
 
         Event(String text) {
@@ -398,6 +411,9 @@ public class Broadcaster implements Closeable {
 
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
                 throws IOException {
+        }
+
+        public void onKillJob(Broadcaster broadcaster, String entity, Event event, String jobId) throws IOException {
         }
     }
 

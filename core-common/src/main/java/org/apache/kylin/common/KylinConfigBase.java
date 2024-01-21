@@ -2818,4 +2818,9 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isEnabledNoAggQuery() {
         return Boolean.parseBoolean(getOptional("kylin.query.enable-no-aggregate-query", FALSE));
     }
+
+    public boolean sparkDeployModeIsYarnCluster() {
+        return "yarn".equals(getOptional("kylin.engine.spark-conf.spark.master", ""))
+                && "cluster".equals(getOptional("kylin.engine.spark-conf.spark.submit.deployMode", ""));
+    }
 }

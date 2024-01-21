@@ -74,6 +74,7 @@ import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -90,6 +91,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
+import org.apache.spark.utils.YarnClientUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -142,6 +144,8 @@ public class JobService extends BasicService implements InitializingBean {
 
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
 
+        Broadcaster.getInstance(kylinConfig).registerListener(new KillJobSyncListener(), "kill_job");
+
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -152,6 +156,19 @@ public class JobService extends BasicService implements InitializingBean {
                 }
             }
         }));
+    }
+
+    private class KillJobSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onKillJob(Broadcaster broadcaster, String entity, Broadcaster.Event event, String jobId)
+                throws IOException {
+            // kill spark-submit process
+            boolean destroyed = getExecutableManager().destroyProcess(jobId);
+            // also need to kill yarn application if spark-submit deployMode is 'yarn cluster mode'
+            if (destroyed && getConfig().sparkDeployModeIsYarnCluster()) {
+                YarnClientUtils.killApplication(jobId);
+            }
+        }
     }
 
     private Set<ExecutableState> convertStatusEnumToStates(List<JobStatusEnum> statusList) {
@@ -436,9 +453,10 @@ public class JobService extends BasicService implements InitializingBean {
     private void checkCubeDescSignature(CubeInstance cube) {
         Message msg = MsgPicker.getMsg();
 
-        if (!cube.getDescriptor().checkSignature())
+        if (!cube.getDescriptor().checkSignature()) {
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
+        }
     }
 
     private void checkAllowBuilding(CubeInstance cube) {
