@@ -79,8 +79,12 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
     
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-
-        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials(), Charset.defaultCharset()).asBytes();
+        ManagedUser managedUser = userService.getUser(authentication.getName());
+        if (managedUser == null) {
+            throw new UsernameNotFoundException("User " + authentication.getName() + " not found.");
+        }
+        byte[] hashKey = hf.hashString(managedUser.getUsername() + managedUser.getPassword(),
+                Charset.defaultCharset()).asBytes();
         String userKey = Arrays.toString(hashKey);
 
         Authentication authed;
@@ -127,6 +131,13 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
         }
 
         return authed;
+    }
+
+    public void clearAuthenticationCache(Authentication authentication) {
+        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials(),
+                Charset.defaultCharset()).asBytes();
+        String userKey = Arrays.toString(hashKey);
+        cacheManager.getCache(USER_CACHE).evictIfPresent(userKey);
     }
 
     // in case ldap users changing.

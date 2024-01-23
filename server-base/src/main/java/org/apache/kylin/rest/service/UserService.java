@@ -30,6 +30,8 @@ public interface UserService extends UserDetailsManager {
 
     List<ManagedUser> listUsers(String userName, Boolean isFuzzyMatch) throws IOException;
 
+    ManagedUser getUser(String userName);
+
     List<ManagedUser> listUsers(String userName, String groupName, Boolean isFuzzyMatch) throws IOException;
 
     List<String> listAdminUsers() throws IOException;

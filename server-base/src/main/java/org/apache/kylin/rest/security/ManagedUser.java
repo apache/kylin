@@ -252,8 +252,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), username, password, authorities, disabled, defaultPassword, locked,
-                lockedTime, wrongTime);
+        return Objects.hash(uuid);
     }
 
     @Override
