@@ -192,6 +192,10 @@ public class KylinUserService implements UserService {
         return getManagedUsersByFuzzMatching(userName, isFuzzMatch, userList, null);
     }
 
+    public ManagedUser getUser(String userName) {
+        return getKylinUserManager().get(userName);
+    }
+
     @Override
     public List<ManagedUser> listUsers(String userName, String groupName, Boolean isFuzzMatch) throws IOException {
         List<ManagedUser> userList = getKylinUserManager().list();

@@ -36,6 +36,7 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.request.PasswdChangeRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.security.KylinAuthenticationProvider;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.UserGroupService;
@@ -52,6 +53,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -99,6 +102,12 @@ public class UserController extends BasicController {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private KylinAuthenticationProvider kylinUserAuthProvider;
+
+    @Autowired
+    private SessionRegistry sessionRegistry;
 
     private Pattern passwordPattern;
     private Pattern bcryptPattern;
@@ -241,6 +250,11 @@ public class UserController extends BasicController {
                 token.setDetails(SecurityContextHolder.getContext().getAuthentication().getDetails());
                 SecurityContextHolder.getContext().setAuthentication(token);
             }
+            UsernamePasswordAuthenticationToken oldToken =
+                    new UsernamePasswordAuthenticationToken(existing, user.getPassword(), existing.getAuthorities());
+            kylinUserAuthProvider.clearAuthenticationCache(oldToken);
+            sessionRegistry.getAllSessions(existing, false)
+                    .forEach(SessionInformation::expireNow);
         }
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, get(user.getUsername()), "");

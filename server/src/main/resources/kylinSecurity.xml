@@ -30,6 +30,28 @@
     </scr:global-method-security>
 
 
+    <bean id="concurrencyFilter"
+                class="org.springframework.security.web.session.ConcurrentSessionFilter">
+        <constructor-arg name="sessionRegistry" ref="sessionRegistry" />
+        <constructor-arg name="sessionInformationExpiredStrategy" ref="redirectSessionInformationExpiredStrategy" />
+    </bean>
+    <bean id="redirectSessionInformationExpiredStrategy"
+                class="org.springframework.security.web.session.SimpleRedirectSessionInformationExpiredStrategy">
+        <constructor-arg name="invalidSessionUrl" value="/session-expired.htm" />
+    </bean>
+
+    <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
+    <bean id="sas" class="org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy">
+        <constructor-arg>
+            <list>
+                <bean class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy">
+                </bean>
+                <bean class="org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy">
+                    <constructor-arg ref="sessionRegistry"/>
+                </bean>
+            </list>
+        </constructor-arg>
+    </bean>
     <!-- acl config -->
     <bean id="aclPermissionFactory" class="org.apache.kylin.rest.security.AclPermissionFactory"/>
 
@@ -259,9 +281,10 @@
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
             <scr:form-login login-page="/login"/>
+            <scr:custom-filter position="CONCURRENT_SESSION_FILTER" ref="concurrencyFilter" />
             <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
                         logout-success-url="/."/>
-            <scr:session-management session-fixation-protection="newSession"/>
+            <scr:session-management session-authentication-strategy-ref="sas"/>
         </scr:http>
     </beans>
 
@@ -308,9 +331,10 @@
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
             <scr:form-login login-page="/login"/>
+            <scr:custom-filter position="CONCURRENT_SESSION_FILTER" ref="concurrencyFilter" />
             <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
                         logout-success-url="/."/>
-            <scr:session-management session-fixation-protection="newSession"/>
+            <scr:session-management session-authentication-strategy-ref="sas"/>
         </scr:http>
 
         <!-- Secured non-api urls with SAML SSO -->
@@ -320,6 +344,8 @@
             <scr:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
             <scr:custom-filter before="FIRST" ref="metadataGeneratorFilter"/>
             <scr:custom-filter after="BASIC_AUTH_FILTER" ref="samlFilter"/>
+            <scr:custom-filter position="CONCURRENT_SESSION_FILTER" ref="concurrencyFilter" />
+            <scr:session-management session-authentication-strategy-ref="sas"/>
         </scr:http>
 
 
