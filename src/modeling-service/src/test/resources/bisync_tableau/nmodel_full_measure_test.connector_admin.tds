@@ -120,6 +120,6 @@
   </column>
   <drill-paths/>
   <semantic-values>
-    <semantic-value key="[Country].[Name]" value="&quot;美国&quot;"/>
+    <semantic-value key="[Country].[Name]" value="&quot;US&quot;"/>
   </semantic-values>
 </datasource>

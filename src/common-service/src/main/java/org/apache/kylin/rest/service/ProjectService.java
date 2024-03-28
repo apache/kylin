@@ -25,6 +25,7 @@ import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_USER_KEY;
+import static org.apache.kylin.common.constant.Constants.KYLIN_JOB_MAX_CONCURRENT_JOBS;
 import static org.apache.kylin.common.constant.NonCustomProjectLevelConfig.DATASOURCE_TYPE;
 import static org.apache.kylin.common.exception.ServerErrorCode.DATABASE_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_PROJECT_NAME;
@@ -82,6 +83,7 @@ import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.primitives.Ints;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -430,6 +432,12 @@ public class ProjectService extends BasicService {
         val projectInstance = projectManager.getProject(project);
         if (projectInstance == null) {
             throw new KylinException(PROJECT_NOT_EXIST, project);
+        }
+        if (overrideKylinProps.containsKey(KYLIN_JOB_MAX_CONCURRENT_JOBS)) {
+            val maxConcurrentJobs = Ints.tryParse(overrideKylinProps.get(KYLIN_JOB_MAX_CONCURRENT_JOBS));
+            if (Objects.isNull(maxConcurrentJobs) || maxConcurrentJobs < 0)
+                throw new KylinException(INVALID_PARAMETER,
+                        MsgPicker.getMsg().getIllegalNegative(KYLIN_JOB_MAX_CONCURRENT_JOBS));
         }
         encryptJdbcPassInOverrideKylinProps(overrideKylinProps);
         projectManager.updateProject(project, copyForWrite -> copyForWrite.getOverrideKylinProps()

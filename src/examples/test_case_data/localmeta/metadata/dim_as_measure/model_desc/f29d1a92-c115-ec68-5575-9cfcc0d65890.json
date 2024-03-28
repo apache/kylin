@@ -1,0 +1,97 @@
+{
+  "uuid" : "f29d1a92-c115-ec68-5575-9cfcc0d65890",
+  "last_modified" : 1688008696062,
+  "create_time" : 1687781016992,
+  "version" : "4.0.0.0",
+  "alias" : "ff_clone3",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_DIM_AS_MEASURE",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "REGION_NAME",
+    "column" : "TEST_DIM_AS_MEASURE.REGION_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "BIG_REGION_NAME",
+    "column" : "TEST_DIM_AS_MEASURE.BIG_REGION_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "ARRIVAL_TRANSIT_IN_PRM_AMT",
+    "column" : "TEST_DIM_AS_MEASURE.ARRIVAL_TRANSIT_IN_PRM_AMT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "PRO_MT_SEASON",
+    "column" : "TEST_DIM_AS_MEASURE.PRO_MT_SEASON",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "BIG_REGION_NAME",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_DIM_AS_MEASURE.BIG_REGION_NAME"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_DIM_AS_MEASURE" : {
+        "x" : 594.3035888671874,
+        "y" : 224.26886664496536,
+        "width" : 200.0,
+        "height" : 487.7777777777778
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

@@ -235,14 +235,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjects() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(29, projectInstances.size());
+        Assert.assertEquals(30, projectInstances.size());
     }
 
     @Test
     public void testGetAdminProjects() throws Exception {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getAdminProjects();
-        Assert.assertEquals(29, projectInstances.size());
+        Assert.assertEquals(30, projectInstances.size());
     }
 
     @Test
@@ -256,7 +256,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjectsHasNoPermissionProject() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(29, projectInstances.size());
+        Assert.assertEquals(30, projectInstances.size());
 
     }
 
@@ -529,6 +529,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         testOverrideP.put(" testk1 ", " testv1 ");
         testOverrideP.put("tes   tk2", "test    v2");
         testOverrideP.put("      tes    tk3 ", "    t     estv3    ");
+        testOverrideP.put("kylin.job.max-concurrent-jobs", "10");
 
         projectService.updateProjectConfig(PROJECT, testOverrideP);
 
@@ -537,6 +538,31 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("testv1", kylinConfigExt.get("testk1"));
         Assert.assertEquals("test    v2", kylinConfigExt.get("tes   tk2"));
         Assert.assertEquals("t     estv3", kylinConfigExt.get("tes    tk3"));
+        Assert.assertEquals("10", kylinConfigExt.get("kylin.job.max-concurrent-jobs"));
+
+        try {
+            Map<String, String> testOverrideWithIllegalValue = Maps.newLinkedHashMap();
+            testOverrideWithIllegalValue.put("kylin.query.convert-sum-expression-enabled", "true");
+            testOverrideWithIllegalValue.put("kylin.job.max-concurrent-jobs", "test");
+            projectService.updateProjectConfig(PROJECT, testOverrideWithIllegalValue);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("must be a positive number"));
+        }
+
+        try {
+            Map<String, String> testOverrideWithOutofRangeValue = Maps.newLinkedHashMap();
+            testOverrideWithOutofRangeValue.put("kylin.query.convert-sum-expression-enabled", "true");
+            testOverrideWithOutofRangeValue.put("kylin.job.max-concurrent-jobs", "-1");
+            projectService.updateProjectConfig(PROJECT, testOverrideWithOutofRangeValue);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("must be a positive number"));
+        }
+
+
     }
 
     @Test

@@ -861,7 +861,7 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
 
         new Thread(() -> {
             try {
-                scheduler.getContext().addRunningJob(job);
+                scheduler.getContext().addRunningJobThread(job);
                 job.doWork(scheduler.getContext());
             } catch (ExecuteException ignored) {
             } finally {
