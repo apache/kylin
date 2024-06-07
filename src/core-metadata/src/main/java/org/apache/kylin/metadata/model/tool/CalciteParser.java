@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CalciteParser {
 
     /**
-     * Overwrite {@link HiveSqlDialect#DEFAULT} with backtick quote. 
+     * Overwrite {@link HiveSqlDialect#DEFAULT} with backtick quote.
      */
     public static final HiveSqlDialect HIVE_SQL_DIALECT = new HiveSqlDialect(
             EMPTY_CONTEXT.withDatabaseProduct(SqlDialect.DatabaseProduct.HIVE) //
