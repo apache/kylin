@@ -59,8 +59,6 @@ public class OlapQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         case HIVE:
             return new HiveEnumerator(olapContext);
         case METADATA:
-            // Typically, this branch is considered to be unreachable 
-            // for we use sparder query engine rather than Calcite query engine.
             return new MetadataEnumerator(olapContext);
         default:
             throw new IllegalArgumentException("Wrong type " + type + "!");

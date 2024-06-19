@@ -69,6 +69,8 @@ public class DateFormat {
 
     private static final Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<>();
 
+    private static final Map<String, FastDateFormat> formatMapForEpochDays = new ConcurrentHashMap<>();
+
     private static final Map<String, String> dateFormatRegex = Maps.newHashMap();
 
     private static final Logger logger = LoggerFactory.getLogger(DateFormat.class);
@@ -126,20 +128,25 @@ public class DateFormat {
     }
 
     public static FastDateFormat getDateFormat(String datePattern) {
-        return getDateFormat(datePattern, TimeZone.getDefault());
+        return getDateFormat(datePattern, false);
+    }
+
+    public static FastDateFormat getDateFormat(String datePattern, boolean forEpochDays) {
+        FastDateFormat r = getFormatMap(forEpochDays).get(datePattern);
+        if (r == null) {
+            TimeZone timeZone = forEpochDays ? TimeZone.getTimeZone("GMT") : TimeZone.getDefault();
+            r = FastDateFormat.getInstance(datePattern, timeZone);
+            getFormatMap(forEpochDays).put(datePattern, r);
+        }
+        return r;
+    }
+
+    private static Map<String, FastDateFormat> getFormatMap(boolean forEpochDays) {
+        return forEpochDays ? formatMapForEpochDays : formatMap;
     }
 
     public static FastDateFormat getDateFormat(String datePattern, TimeZone timeZone) {
-        if(timeZone == null){
-            timeZone = TimeZone.getDefault();
-        }
-        String key = datePattern + timeZone.getID();
-        FastDateFormat r = formatMap.get(key);
-        if (r == null) {
-            r = FastDateFormat.getInstance(datePattern, timeZone);
-            formatMap.put(key, r);
-        }
-        return r;
+        return FastDateFormat.getInstance(datePattern, timeZone);
     }
 
     public static String formatToCompactDateStr(long millis) {
@@ -181,7 +188,7 @@ public class DateFormat {
     }
 
     public static String castTimestampToString(long millis) {
-        return castTimestampToString(millis, TimeZone.getDefault());
+        return castTimestampToString(millis, null);
     }
 
     public static String formatToTimeStr(long millis, String pattern) {
@@ -200,30 +207,28 @@ public class DateFormat {
         return stringToDate(str, DEFAULT_DATE_PATTERN);
     }
 
-
     public static Date stringToDate(String str, String pattern) {
-        return stringToDate(str, pattern, TimeZone.getDefault());
+        return stringToDate(str, pattern, false);
     }
 
-    public static Date stringToDate(String str, String pattern, TimeZone timeZone) {
+    public static Date stringToDate(String str, String pattern, boolean forEpochDays) {
         Date date;
         try {
-            date = getDateFormat(pattern, timeZone).parse(str);
+            date = getDateFormat(pattern, forEpochDays).parse(str);
         } catch (ParseException e) {
             throw new IllegalArgumentException("'" + str + "' is not a valid date of pattern '" + pattern + "'", e);
         }
         return date;
     }
 
-
     public static long stringToMillis(String str) {
-        return stringToMillis(str, TimeZone.getDefault());
+        return stringToMillis(str, false);
     }
 
-    public static long stringToMillis(String str, TimeZone timeZone) {
+    public static long stringToMillis(String str, boolean forEpochDays) {
         for (Map.Entry<String, String> regexToPattern : dateFormatRegex.entrySet()) {
             if (str.matches(regexToPattern.getKey()))
-                return stringToDate(str, regexToPattern.getValue(), timeZone).getTime();
+                return stringToDate(str, regexToPattern.getValue(), forEpochDays).getTime();
         }
 
         try {
@@ -300,6 +305,7 @@ public class DateFormat {
     @VisibleForTesting
     public static void cleanCache() {
         formatMap.clear();
+        formatMapForEpochDays.clear();
     }
 
     public static Long getFormatTimeStamp(String time, String pattern) {

@@ -197,8 +197,8 @@ public class DateFormatTest {
     public void testStringToMillis() {
         // 2022-12-01 00:00:00
         long expectedMillis = 1669824000000L;
-        TimeZone timeZone = TimeZone.getTimeZone("GMT+8");
-
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+8"));
+        boolean timeZone = false;
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00", timeZone));
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("202212", timeZone));
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00", timeZone));
@@ -219,7 +219,8 @@ public class DateFormatTest {
     public void testStringToMillisSupplement() {
         long expectedMillis = 1669824000000L;
 
-        TimeZone timeZone = TimeZone.getTimeZone("GMT+8");
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+8"));
+        boolean timeZone = false;
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00", timeZone));
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201T00:00:00.000Z", timeZone));
         Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12", timeZone));

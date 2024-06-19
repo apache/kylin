@@ -4385,6 +4385,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.filter-condition-count", "300"));
     }
 
+    public boolean runQueryLocallyWhenRouteToMetadata() {
+        return Boolean
+                .parseBoolean(getOptional("kylin.query.using-metadata-answer-minmax-of-dimension-locally", FALSE));
+    }
+
     public String getSourceJDBCExtend() {
         return getOptional("kylin.source.jdbc.extend", "");
     }

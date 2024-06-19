@@ -165,7 +165,7 @@ public class Tuple implements ITuple {
             return dateToEpicDays(strValue);// Optiq expects Integer instead of Long. by honma
         case "datetime":
         case "timestamp":
-            return DateFormat.stringToMillis(strValue);
+            return DateFormat.stringToMillis(strValue, true);
         case "tinyint":
             return Byte.parseByte(strValue);
         case "smallint":
@@ -188,7 +188,7 @@ public class Tuple implements ITuple {
     }
 
     private static int dateToEpicDays(String strValue) {
-        long millis = DateFormat.stringToMillis(strValue);
+        long millis = DateFormat.stringToMillis(strValue, true);
         return (int) (millis / (1000 * 3600 * 24));
     }
 

@@ -129,6 +129,8 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
       val logicalPlan = logTime(getLogMessage(execFunc)) {
         if (execFunc == "executeMetadataQuery") {
           TableScanPlan.createMetadataTable(rel)
+        } else if (execFunc == "executeSimpleAggregationQuery") {
+          TableScanPlan.createSingleRow()
         } else {
           createTablePlan(rel, execFunc)
         }

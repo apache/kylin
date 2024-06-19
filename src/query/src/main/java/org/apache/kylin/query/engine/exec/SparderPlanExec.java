@@ -24,6 +24,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
@@ -39,6 +40,7 @@ import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.relnode.OlapRel;
 import org.apache.kylin.query.runtime.SparkEngine;
 import org.apache.kylin.query.util.QueryContextCutter;
+import org.apache.kylin.query.util.QueryHelper;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SparderPlanExec implements QueryPlanExec {
+
+    private KylinConfig kylinConfig;
+    
+    public SparderPlanExec(KylinConfig kylinConfig) {
+        this.kylinConfig = kylinConfig;
+    }
 
     @Override
     public List<List<String>> execute(RelNode rel, MutableDataContext dataContext) {
@@ -75,10 +83,10 @@ public class SparderPlanExec implements QueryPlanExec {
         }
 
         val contexts = ContextUtil.listContexts();
-        for (OlapContext context : contexts) {
-            if (hasEmptyRealization(context)) {
-                return new CalcitePlanExec().executeToIterable(rel, dataContext);
-            }
+        if (KapConfig.wrap(kylinConfig).runConstantQueryLocally()
+                && checkNotAsyncQueryAndCalciteEngineCapable(rel)
+                && contexts.stream().allMatch(context -> hasEmptyRealization(context))) {
+            return new CalcitePlanExec().executeToIterable(rel, dataContext);
         }
 
         // skip if no segment is selected
@@ -105,11 +113,48 @@ public class SparderPlanExec implements QueryPlanExec {
             return new ExecuteResult(Lists.newArrayList(), 0);
         }
 
+        // all OlapContext are constant query, or can be answered by metadata
+        if (checkNotAsyncQueryAndCalciteEngineCapable(rel)
+                && isAllOlapContextCanBeAnsweredLocally(contexts)) {
+            return new CalcitePlanExec().executeToIterable(rel, dataContext);
+        }
+
         // submit rel and dataContext to query engine
         return internalCompute(new SparkEngine(), dataContext, rel.getInput(0));
     }
 
-    private static boolean hasEmptyRealization(OlapContext context) {
+    private boolean checkNotAsyncQueryAndCalciteEngineCapable(RelNode rel) {
+        return !QueryContext.current().getQueryTagInfo().isAsyncQuery() && QueryHelper.isCalciteEngineCapable(rel);
+    }
+
+    private boolean isAllOlapContextCanBeAnsweredLocally(List<OlapContext> olapContexts) {
+        boolean runConstantQueryLocally = KapConfig.wrap(kylinConfig).runConstantQueryLocally();
+        boolean runQueryLocallyWhenRouteToMetadata = kylinConfig.runQueryLocallyWhenRouteToMetadata();
+        for (OlapContext olapContext : olapContexts) {
+            if (!isOlapContextCanBeAnsweredLocally(olapContext, runConstantQueryLocally,
+                    runQueryLocallyWhenRouteToMetadata)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isOlapContextCanBeAnsweredLocally(OlapContext olapContext, boolean runConstantQueryLocally,
+            boolean runQueryLocallyWhenRouteToMetadata) {
+        if (!runConstantQueryLocally && !runQueryLocallyWhenRouteToMetadata) {
+            return false;
+        }
+        RelNode topNode = olapContext.getTopNode();
+        if (runConstantQueryLocally && QueryHelper.isConstantQueryAndCalciteEngineCapable(topNode)) {
+            return true;
+        }
+        if (runConstantQueryLocally && hasEmptyRealization(olapContext)) {
+            return true;
+        }
+        return runQueryLocallyWhenRouteToMetadata && olapContext.checkOlapContextAnsweredByMetadata();
+    }
+
+    private boolean hasEmptyRealization(OlapContext context) {
         return context.getRealization() == null && context.isConstantQueryWithAggregations();
     }
 

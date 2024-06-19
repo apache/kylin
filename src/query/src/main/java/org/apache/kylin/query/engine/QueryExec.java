@@ -67,6 +67,7 @@ import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.optrule.OlapFilterJoinRule;
 import org.apache.kylin.query.optrule.OlapProjectJoinTransposeRule;
 import org.apache.kylin.query.optrule.SumConstantConvertRule;
+import org.apache.kylin.query.optrule.UnionTypeCastRule;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.OlapAggregateRel;
 import org.apache.kylin.query.relnode.OlapContext;
@@ -74,6 +75,7 @@ import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
 import org.apache.kylin.query.util.QueryContextCutter;
+import org.apache.kylin.query.util.QueryHelper;
 import org.apache.kylin.query.util.QueryInterruptChecker;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RelAggPushDownUtil;
@@ -177,7 +179,6 @@ public class QueryExec {
 
     /**
      * parse, optimize sql and execute the sql physically
-     *
      * @param sql
      * @return query result data with column infos
      */
@@ -277,6 +278,7 @@ public class QueryExec {
         Collection<RelOptRule> postOptRules = new LinkedHashSet<>();
         // It will definitely work if it were put here
         postOptRules.add(SumConstantConvertRule.INSTANCE);
+        postOptRules.add(UnionTypeCastRule.INSTANCE);
         if (kylinConfig.isConvertSumExpressionEnabled()) {
             postOptRules.addAll(HepUtils.SumExprRules);
         }
@@ -324,7 +326,6 @@ public class QueryExec {
 
     /**
      * get metadata of columns of the query result
-     *
      * @param sql
      * @return
      * @throws SQLException
@@ -375,7 +376,6 @@ public class QueryExec {
 
     /**
      * set prepare params
-     *
      * @param idx 0-based index
      * @param val
      */
@@ -385,7 +385,6 @@ public class QueryExec {
 
     /**
      * get default schema used in this query
-     *
      * @return
      */
     public String getDefaultSchemaName() {
@@ -398,13 +397,12 @@ public class QueryExec {
 
     /**
      * execute query plan physically
-     *
      * @param rels list of alternative relNodes to execute.
      *             relNodes will be executed one by one and return on the first successful execution
      * @return
      */
     private ExecuteResult executeQueryPlan(List<RelNode> rels) {
-        boolean routeToCalcite = routeToCalciteEngine(rels.get(0));
+        boolean routeToCalcite = QueryHelper.isConstantQueryAndCalciteEngineCapable(rels.get(0));
         dataContext.setContentQuery(routeToCalcite);
         if (!QueryContext.current().getQueryTagInfo().isAsyncQuery()
                 && KapConfig.wrap(kylinConfig).runConstantQueryLocally() && routeToCalcite) {
@@ -422,7 +420,7 @@ public class QueryExec {
             try {
                 ContextUtil.clearThreadLocalContexts();
                 ContextUtil.clearParameter();
-                return new SparderPlanExec().executeToIterable(rel, dataContext);
+                return new SparderPlanExec(kylinConfig).executeToIterable(rel, dataContext);
             } catch (NoRealizationFoundException e) {
                 ExecuteResult result = tryEnhancedAggPushDown(rel);
                 if (result != null) {
@@ -469,7 +467,7 @@ public class QueryExec {
                 transformed, logger);
         try {
             RelAggPushDownUtil.clearUnmatchedJoinDigest();
-            return new SparderPlanExec().executeToIterable(transformed, dataContext);
+            return new SparderPlanExec(kylinConfig).executeToIterable(transformed, dataContext);
         } catch (NoRealizationFoundException e) {
             QueryInterruptChecker.checkThreadInterrupted(
                     "Interrupted SparderQueryOptimized NoRealizationFoundException",

@@ -21,6 +21,8 @@ package org.apache.kylin.query.engine;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -35,10 +37,24 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class QueryExecWithMetaTest extends NLocalWithSparkSessionTest {
     String project = "min_max";
     QueryExec queryExec;
+
+    boolean runMetadataQueryLocally;
+
+    public QueryExecWithMetaTest(boolean runMetadataQueryLocally) {
+        this.runMetadataQueryLocally = runMetadataQueryLocally;
+    }
+
+    @Parameterized.Parameters
+    public static Collection getParameters() {
+        return Arrays.asList(false, true);
+    }
 
     @Override
     @Before
@@ -46,6 +62,8 @@ public class QueryExecWithMetaTest extends NLocalWithSparkSessionTest {
         super.setUp();
         createTestMetadata("src/test/resources/ut_meta/query_min_max_with_meta");
         overwriteSystemProp("kylin.query.using-metadata-answer-minmax-of-dimension", "true");
+        overwriteSystemProp("kylin.query.using-metadata-answer-minmax-of-dimension-locally",
+                Boolean.toString(runMetadataQueryLocally));
         queryExec = new QueryExec(project, getTestConfig());
     }
 
@@ -235,10 +253,19 @@ public class QueryExecWithMetaTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals(1, queryResult.getSize());
         Iterator<List<String>> iterator = queryResult.getRowsIterable().iterator();
         List<String> result = iterator.next();
-        Assert.assertEquals("2147483648,21474836483289,2132,2147483647,-128,127,0,9,0.0,10000.0,"
-                + "0.3255242,85208.3241,10.0000,201.3235,abc,xyz,aaaaaaaa,xxxxxxxxxxxxxxxxxxxxx,abcd,zzzz,"
-                + "2001-01-01,2004-04-17,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
-                + "null,null,null,null,null,null,null,null,null,null,null,null", String.join(",", result));
+        if (runMetadataQueryLocally) {
+            // see org.apache.kylin.query.engine.exec.CalcitePlanExec.rawQueryResultToString
+            // '10.0000' is trimmed to '10'
+            Assert.assertEquals("2147483648,21474836483289,2132,2147483647,-128,127,0,9,0.0,10000.0,"
+                    + "0.3255242,85208.3241,10,201.3235,abc,xyz,aaaaaaaa,xxxxxxxxxxxxxxxxxxxxx,abcd,zzzz,"
+                    + "2001-01-01,2004-04-17,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
+                    + "null,null,null,null,null,null,null,null,null,null,null,null", String.join(",", result));
+        } else {
+            Assert.assertEquals("2147483648,21474836483289,2132,2147483647,-128,127,0,9,0.0,10000.0,"
+                    + "0.3255242,85208.3241,10.0000,201.3235,abc,xyz,aaaaaaaa,xxxxxxxxxxxxxxxxxxxxx,abcd,zzzz,"
+                    + "2001-01-01,2004-04-17,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
+                    + "null,null,null,null,null,null,null,null,null,null,null,null", String.join(",", result));
+        }
     }
 
     private String getSql(String path) throws IOException {

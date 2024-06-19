@@ -37,7 +37,7 @@ public class MetadataEnumerator implements Enumerator<Object[]> {
 
     public MetadataEnumerator(OlapContext olapContext) {
 
-        this.result = olapContext.getColValuesRange();
+        this.result = olapContext.getColValuesRange(true);
         reset();
     }
 

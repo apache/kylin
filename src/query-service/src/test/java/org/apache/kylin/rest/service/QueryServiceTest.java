@@ -130,6 +130,7 @@ import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.DateNumberFilterTransformer;
+import org.apache.kylin.query.util.QueryHelper;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RawSqlParser;
@@ -2627,7 +2628,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
                 + "1 = 1\n" + "and TEST_BANK_INCOME.DT = '2021-11-02'\n"
                 + "and TEST_BANK_INCOME.COUNTRY = 'INDONESIA'\n" + "and TEST_BANK_INCOME.COUNTRY = 'KENYA'";
         QueryExec queryExec = new QueryExec(project, getTestConfig());
-        Class<? extends QueryExec> clazz = queryExec.getClass();
+        Class<? extends QueryHelper> clazz = QueryHelper.class;
         Method isCalciteEngineCapable = clazz.getDeclaredMethod("isCalciteEngineCapable", RelNode.class);
         isCalciteEngineCapable.setAccessible(true);
         RelNode rel1 = queryExec.parseAndOptimize(sql1);

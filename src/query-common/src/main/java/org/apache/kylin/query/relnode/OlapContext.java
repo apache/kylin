@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +50,7 @@ import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -60,6 +63,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.schema.OlapSchema;
 import org.apache.kylin.query.schema.OlapTable;
@@ -510,14 +514,37 @@ public class OlapContext {
             return "executeLookupTableQuery";
         }
 
-        if (canMinMaxDimAnsweredByMetadata(rel)) {
+        if (canMinMaxDimAnsweredByMetadata(rel, true)) {
             return "executeMetadataQuery";
         }
 
         return "executeOlapQuery";
     }
 
-    private boolean canMinMaxDimAnsweredByMetadata(OlapRel rel) {
+    public boolean checkOlapContextAnsweredByMetadata() {
+        OlapRel aggChildTableOrJoin = getAggChildTableOrJoin(topNode);
+        return (null != aggChildTableOrJoin) && canMinMaxDimAnsweredByMetadata(aggChildTableOrJoin, false);
+    }
+
+    private OlapRel getAggChildTableOrJoin(RelNode parentNode) {
+        if (CollectionUtils.isEmpty(parentNode.getInputs())) {
+            return null;
+        }
+        if (!(parentNode instanceof OlapAggregateRel)) {
+            return getAggChildTableOrJoin(parentNode.getInput(0));
+        }
+        RelNode aggChildNode = parentNode.getInput(0);
+        if (!(aggChildNode instanceof OlapProjectRel)) {
+            return getAggChildTableOrJoin(aggChildNode);
+        }
+        RelNode projectChildNode = aggChildNode.getInput(0);
+        if ((projectChildNode instanceof OlapTableScan) || (projectChildNode instanceof OlapJoinRel)) {
+            return (OlapRel) projectChildNode;
+        }
+        return getAggChildTableOrJoin(projectChildNode);
+    }
+
+    private boolean canMinMaxDimAnsweredByMetadata(OlapRel rel, boolean resetAggWhenMatch) {
         if (!KylinConfig.getInstanceFromEnv().isRouteToMetadataEnabled()) {
             return false;
         }
@@ -573,14 +600,22 @@ public class OlapContext {
             return false;
         }
 
-        // reset rewriteAggCalls to aggCall, to avoid using measures.
-        aggregateRel.getRewriteAggCalls().clear();
-        aggregateRel.getRewriteAggCalls().addAll(aggregateRel.getAggCallList());
-        logger.info("Use kylin metadata to answer query with realization : {}", realization);
+        if (resetAggWhenMatch) {
+            // reset rewriteAggCalls to aggCall, to avoid using measures.
+            aggregateRel.getRewriteAggCalls().clear();
+            aggregateRel.getRewriteAggCalls().addAll(aggregateRel.getAggCallList());
+            logger.info("Use kylin metadata to answer query with realization : {}", realization);
+        } else {
+            logger.info("OlapContext can be answered by kylin metadata with realization : {}", realization);
+        }
         return true;
     }
 
     public List<Object[]> getColValuesRange() {
+        return getColValuesRange(false);
+    }
+
+    public List<Object[]> getColValuesRange(boolean isCalciteEngine) {
         Preconditions.checkState(realization instanceof NDataflow, "Only support dataflow");
         // As it is a min/max aggregate function, it only has one parameter.
         List<TblColRef> cols = aggregations.stream() //
@@ -609,11 +644,19 @@ public class OlapContext {
                 if (rangeInfo == null) {
                     minList[colId] = null;
                     maxList[colId] = null;
+                    continue;
+                }
+                ColumnDesc c = col.getColumnDesc();
+                if (isCalciteEngine) {
+                    DataType dataType = c.getUpgradedType();
+                    minList[colId] = convertToColumnDataType(rangeInfo.getMin(), dataType);
+                    maxList[colId] = convertToColumnDataType(rangeInfo.getMax(), dataType);
                 } else {
-                    ColumnDesc c = col.getColumnDesc();
                     RelDataType sqlType = OlapTable.createSqlType(typeFactory, c.getUpgradedType(), c.isNullable());
-                    minList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMin(), sqlType, false);
-                    maxList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMax(), sqlType, false);
+                    minList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMin(), sqlType,
+                            false);
+                    maxList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMax(), sqlType,
+                            false);
                 }
             }
 
@@ -621,6 +664,16 @@ public class OlapContext {
             result.add(maxList);
         }
         return result;
+    }
+
+    private Object convertToColumnDataType(String strVal, DataType dataType) {
+        String dataTypeName = dataType.getName();
+        Object value = Tuple.convertOptiqCellValue(strVal, dataTypeName);
+        if ("decimal".equals(dataTypeName)) {
+            BigDecimal decimalVal = (BigDecimal) value;
+            value = decimalVal.setScale(dataType.getScale(), RoundingMode.HALF_EVEN);
+        }
+        return value;
     }
 
     private String getTblColRefIndex(TblColRef colRef, IRealization df) {
