@@ -422,6 +422,96 @@ public class MultiPartitionPruningTest extends NLocalWithSparkSessionTest implem
     }
 
     @Test
+    public void testMultiPartitionPruningTimestamp() throws Exception {
+        overwriteSystemProp("kylin.build.multi-partition-filter-enabled", "true");
+        val dfName = "8c670664-8d05-466a-802f-83c023b56c79";
+
+        // segment1 [2009-01-01, 2011-01-01] partition value 2010-01-01 00:56:38, 2010-01-01 04:03:59
+        // segment2 [2011-01-01, 2013-01-01] partition value 2010-01-01 04:03:59,
+        //    2010-01-01 08:16:36, 2010-01-02 14:24:50
+        // segment3 [2013-01-01, 2015-01-01] partition value 2010-01-01 08:16:36,
+        //    2010-01-02 14:24:50, 2010-01-03 05:15:09
+        indexDataConstructor.buildMultiSegmentPartitions(dfName, "2009-01-01 00:00:00", "2011-01-01 00:00:00",
+                Lists.newArrayList(10001L), Lists.newArrayList(0L, 1L));
+        indexDataConstructor.buildMultiSegmentPartitions(dfName, "2011-01-01 00:00:00", "2013-01-01 00:00:00",
+                Lists.newArrayList(10001L), Lists.newArrayList(1L, 2L, 3L));
+        indexDataConstructor.buildMultiSegmentPartitions(dfName, "2013-01-01 00:00:00", "2015-01-01 00:00:00",
+                Lists.newArrayList(10001L), Lists.newArrayList(2L, 3L, 4L));
+
+        populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
+
+        val expectedRanges = Lists.<Pair<String, String>> newArrayList();
+        val segmentRange1 = Pair.newPair("2009-01-01", "2011-01-01");
+        val segmentRange2 = Pair.newPair("2011-01-01", "2013-01-01");
+        val segmentRange3 = Pair.newPair("2013-01-01", "2015-01-01");
+        val expectedPartitions = Lists.<List<Long>> newArrayList();
+
+        val baseSql = "select count(*) from test_order left join test_kylin_fact on test_order.order_id = test_kylin_fact.order_id ";
+        val noPartitionFilterSql = baseSql + "where test_date_enc between '2010-01-01' and '2012-01-01' ";
+        val andSql = baseSql
+                + "where test_date_enc > '2012-01-01' and test_date_enc < '2014-01-01' and test_time_enc = '2010-01-02 14:24:50' ";
+        val inSql = baseSql
+                + "where test_date_enc > '2012-01-01' and test_date_enc < '2014-01-01' and test_time_enc in ('2010-01-01 08:16:36', '2010-01-02 14:24:50') ";
+        val notInSql = baseSql
+                + "where test_date_enc between '2009-01-01' and '2011-01-01' and test_time_enc not in ('2010-01-01 00:56:38', '2010-01-01 08:16:36', '2010-01-02 14:24:50', '2010-01-03 05:15:09') ";
+        val emptyResultSql = baseSql
+                + "where test_date_enc between '2009-01-01' and '2011-01-01' and test_time_enc = '2020-01-01 00:00:00' ";
+        val pushdownSql = baseSql
+                + "where test_date_enc between '2011-01-01' and '2015-01-01' and test_time_enc = '2010-01-01 04:03:59' ";
+
+        expectedRanges.add(segmentRange1);
+        expectedRanges.add(segmentRange2);
+        expectedRanges.add(segmentRange3);
+        expectedPartitions.add(Lists.newArrayList(0L, 1L));
+        expectedPartitions.add(Lists.newArrayList(1L, 2L, 3L));
+        expectedPartitions.add(Lists.newArrayList(2L, 3L, 4L));
+        assertResultsAndScanFiles(dfName, baseSql, 8, false, expectedRanges, expectedPartitions);
+
+        expectedRanges.clear();
+        expectedPartitions.clear();
+        expectedRanges.add(segmentRange1);
+        expectedRanges.add(segmentRange2);
+        expectedPartitions.add(Lists.newArrayList(0L, 1L));
+        expectedPartitions.add(Lists.newArrayList(1L, 2L, 3L));
+        assertResultsAndScanFiles(dfName, noPartitionFilterSql, 5, false, expectedRanges, expectedPartitions);
+
+        expectedRanges.clear();
+        expectedPartitions.clear();
+        expectedRanges.add(segmentRange2);
+        expectedRanges.add(segmentRange3);
+        expectedPartitions.add(Lists.newArrayList(3L));
+        expectedPartitions.add(Lists.newArrayList(3L));
+        // NumScanFiles may be 2 if dimension range info has been written, but here is not
+        assertResultsAndScanFiles(dfName, andSql, 1, false, expectedRanges, expectedPartitions);
+
+        expectedPartitions.clear();
+        expectedPartitions.add(Lists.newArrayList(2L, 3L));
+        expectedPartitions.add(Lists.newArrayList(2L, 3L));
+        assertResultsAndScanFiles(dfName, inSql, 4, false, expectedRanges, expectedPartitions);
+
+        expectedRanges.clear();
+        expectedPartitions.clear();
+        expectedRanges.add(segmentRange1);
+        expectedRanges.add(segmentRange2);
+        expectedPartitions.add(Lists.newArrayList(1L));
+        expectedPartitions.add(Lists.newArrayList(1L));
+        assertResultsAndScanFiles(dfName, notInSql, 2, false, expectedRanges, expectedPartitions);
+
+        assertResultsAndScanFiles(dfName, emptyResultSql, 0, true, null, null);
+
+        try {
+            assertResultsAndScanFiles(dfName, pushdownSql, 0, false, null, null);
+        } catch (Exception ex) {
+            Assert.assertTrue(ex.getCause() instanceof NoRealizationFoundException);
+        }
+
+        List<Pair<String, String>> query = new ArrayList<>();
+        query.add(Pair.newPair("", andSql));
+        query.add(Pair.newPair("", inSql));
+        ExecAndComp.execAndCompare(query, getProject(), ExecAndComp.CompareLevel.SAME, "left");
+    }
+
+    @Test
     public void testPartitionPruningChinese() throws Exception {
         val dfName = "9cde9d25-9334-4b92-b229-a00f49453757";
         SparderEnv.getSparkSession().conf().set("spark.sql.adaptive.enabled", "false");

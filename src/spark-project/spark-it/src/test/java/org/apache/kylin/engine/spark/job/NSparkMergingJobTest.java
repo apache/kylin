@@ -33,6 +33,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -183,5 +184,94 @@ public class NSparkMergingJobTest extends NLocalWithSparkSessionTest {
         mergingStep.setParam(NBatchConstants.P_SEGMENT_IDS, "");
         mergingStep.setParam(NBatchConstants.P_DATAFLOW_ID, "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         mergingJob.cancelJob();
+    }
+
+    @Test
+    public void testMultiPartitionMergeSegmentsAndDimRangeInfoLocalEmpty() throws Exception {
+        val project = "default";
+        val modelId = "b780e4e4-69af-449e-b09f-05c90dfa04b6";
+        val segmentId1 = "d2edf0c5-5eb2-4968-9ad5-09efbf659324";
+        val segmentId2 = "ff839b0b-2c23-4420-b332-0df70e36c343";
+
+        val dataflowMgr = NDataflowManager.getInstance(config, project);
+        val dataflow = dataflowMgr.getDataflow(modelId);
+        val segment1 = dataflow.getSegment(segmentId1);
+        val segment2 = dataflow.getSegment(segmentId2);
+
+        fakeEmptyPartitionLayoutData(segment1);
+        fakeEmptyPartitionLayoutData(segment2);
+
+        val layoutList = segment1.getSegDetails().getAllLayouts().stream().map(NDataLayout::getLayout)
+                .collect(Collectors.toList());
+        val partitionIdList = segment1.getAllPartitionIds();
+        NDataSegment mergedSegment = dataflowMgr.mergeSegments(dataflow, new SegmentRange.TimePartitionedSegmentRange(
+                SegmentRange.dateToLong("2020-11-03"), SegmentRange.dateToLong("2020-11-05")), false);
+
+        val segmentId = mergedSegment.getId();
+        val bucketStart = new AtomicLong(0);
+        val jobBucketSet = layoutList.stream().flatMap(layout -> partitionIdList.stream()
+                .map(partition -> new JobBucket(segmentId, layout.getId(), bucketStart.incrementAndGet(), partition)))
+                .collect(Collectors.toSet());
+        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergedSegment, Sets.newLinkedHashSet(layoutList), "ADMIN",
+                RandomUtil.randomUUIDStr(), Sets.newHashSet(partitionIdList), jobBucketSet);
+
+        ExecutableManager execMgr = ExecutableManager.getInstance(config, getProject());
+        execMgr.addJob(mergeJob);
+        // wait job done
+        Assert.assertEquals(ExecutableState.SUCCEED, IndexDataConstructor.wait(mergeJob));
+        val merger = new AfterMergeOrRefreshResourceMerger(config, getProject());
+        NSparkMergingStep mergingStep = mergeJob.getSparkMergingStep();
+        mergingStep.setJobType(JobTypeEnum.INDEX_BUILD);
+        merger.merge(mergingStep);
+
+        val dataflow1 = dataflowMgr.getDataflow(modelId);
+        val dataPartitionSize = dataflow1.getSegment(segmentId).getMultiPartitions().size();
+        Assert.assertEquals(segment1.getMultiPartitions().size(), dataPartitionSize);
+    }
+
+    @Test
+    public void testMultiPartitionMergeSegmentsAndDimRangeInfoNotEmpty() throws Exception {
+        overwriteSystemProp("kylin.build.multi-partition-filter-enabled", "true");
+        val project = "default";
+        val modelId = "b780e4e4-69af-449e-b09f-05c90dfa04b6";
+        val segmentId1 = "d2edf0c5-5eb2-4968-9ad5-09efbf659324";
+        val segmentId2 = "ff839b0b-2c23-4420-b332-0df70e36c343";
+
+        val dataflowMgr = NDataflowManager.getInstance(config, project);
+        val dataflow = dataflowMgr.getDataflow(modelId);
+        val segment1 = dataflow.getSegment(segmentId1);
+        val segment2 = dataflow.getSegment(segmentId2);
+
+        fakeEmptyPartitionLayoutData(segment1);
+        fakeEmptyPartitionLayoutData(segment2);
+
+        val layoutList = segment1.getSegDetails().getAllLayouts().stream().map(NDataLayout::getLayout)
+                .collect(Collectors.toList());
+        val partitionIdList = segment1.getAllPartitionIds();
+        NDataSegment mergedSegment = dataflowMgr.mergeSegmentsWithDimRange(dataflow,
+                new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2020-11-03"),
+                        SegmentRange.dateToLong("2020-11-05")),
+                false, segment1.getDimensionRangeInfoMap());
+
+        val segmentId = mergedSegment.getId();
+        val bucketStart = new AtomicLong(0);
+        val jobBucketSet = layoutList.stream().flatMap(layout -> partitionIdList.stream()
+                .map(partition -> new JobBucket(segmentId, layout.getId(), bucketStart.incrementAndGet(), partition)))
+                .collect(Collectors.toSet());
+        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergedSegment, Sets.newLinkedHashSet(layoutList), "ADMIN",
+                RandomUtil.randomUUIDStr(), Sets.newHashSet(partitionIdList), jobBucketSet);
+
+        ExecutableManager execMgr = ExecutableManager.getInstance(config, getProject());
+        execMgr.addJob(mergeJob);
+        // wait job done
+        Assert.assertEquals(ExecutableState.SUCCEED, IndexDataConstructor.wait(mergeJob));
+        val merger = new AfterMergeOrRefreshResourceMerger(config, getProject());
+        NSparkMergingStep mergingStep = mergeJob.getSparkMergingStep();
+        mergingStep.setJobType(JobTypeEnum.INDEX_BUILD);
+        merger.merge(mergingStep);
+
+        val dataflow1 = dataflowMgr.getDataflow(modelId);
+        val dataPartitionSize = dataflow1.getSegment(segmentId).getMultiPartitions().size();
+        Assert.assertEquals(segment1.getMultiPartitions().size(), dataPartitionSize);
     }
 }

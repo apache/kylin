@@ -32,8 +32,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+
 import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -199,6 +201,18 @@ public class NDataSegment extends RootPersistentEntity implements ISegment, Seri
         this.createTimeUTC = System.currentTimeMillis();
         this.status = SegmentStatusEnum.NEW;
         this.layoutInfo = new LayoutInfo();
+    }
+
+    public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segmentRange,
+                                                  Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        this.dataflow = df;
+        this.segmentRange = segmentRange;
+        this.name = Segments.makeSegmentName(segmentRange);
+        this.uuid = RandomUtil.randomUUIDStr();
+        this.createTimeUTC = System.currentTimeMillis();
+        this.status = SegmentStatusEnum.NEW;
+        this.layoutInfo = new LayoutInfo();
+        this.dimensionRangeInfoMap = dimensionRangeInfoMap;
     }
 
     public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segRange, String uuid) {

@@ -24,6 +24,24 @@
       "date_range_end" : 1604246400000
     },
     "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0": {
+        "min": "AIR",
+        "max": "TRUCK"
+      },
+      "1": {
+        "min": "1",
+        "max": "7"
+      },
+      "2": {
+        "min": "92903",
+        "max": "40834574"
+      },
+      "3": {
+        "min": "54060",
+        "max": "114059"
+      }
+    },
     "parameters" : null,
     "dictionaries" : null,
     "snapshots" : null,
@@ -70,6 +88,24 @@
       "date_range_end" : 1604332800000
     },
     "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0": {
+        "min": "AIR",
+        "max": "TRUCK"
+      },
+      "1": {
+        "min": "1",
+        "max": "7"
+      },
+      "2": {
+        "min": "92903",
+        "max": "40834574"
+      },
+      "3": {
+        "min": "54060",
+        "max": "114059"
+      }
+    },
     "parameters" : null,
     "dictionaries" : null,
     "snapshots" : null,
@@ -133,6 +169,24 @@
       "date_range_end" : 1604419200000
     },
     "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0": {
+        "min": "AIR",
+        "max": "TRUCK"
+      },
+      "1": {
+        "min": "1",
+        "max": "7"
+      },
+      "2": {
+        "min": "92903",
+        "max": "40834574"
+      },
+      "3": {
+        "min": "54060",
+        "max": "114059"
+      }
+    },
     "parameters" : null,
     "dictionaries" : null,
     "snapshots" : null,
@@ -213,6 +267,24 @@
       "date_range_end" : 1604505600000
     },
     "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0": {
+        "min": "AIR",
+        "max": "TRUCK"
+      },
+      "1": {
+        "min": "1",
+        "max": "7"
+      },
+      "2": {
+        "min": "92903",
+        "max": "40834574"
+      },
+      "3": {
+        "min": "54060",
+        "max": "114059"
+      }
+    },
     "parameters" : null,
     "dictionaries" : null,
     "snapshots" : null,

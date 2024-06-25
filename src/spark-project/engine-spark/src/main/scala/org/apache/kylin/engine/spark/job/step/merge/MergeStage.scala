@@ -242,7 +242,7 @@ abstract class MergeStage(private val jobContext: SegmentJob,
     }, project)
   }
 
-  private def mergeDimRange(): java.util.Map[String, DimensionRangeInfo] = {
+  def mergeDimRange(): java.util.Map[String, DimensionRangeInfo] = {
     val emptyDimRangeSeg = unmerged.filter(seg => seg.getDimensionRangeInfoMap.isEmpty)
     val dataflow = NDataflowManager.getInstance(config, project).getDataflow(dataflowId)
     val mergedSegment = dataflow.getSegment(segmentId)

@@ -122,6 +122,9 @@ abstract class PartitionMergeStage(private val jobContext: SegmentJob,
           segmentPartition.setSourceCount(totalCount)
           segmentPartition.getColumnSourceBytes.putAll(evaluated)
         }
+        if (config.isMultiPartitionFilterEnabled) {
+          copiedSegment.setDimensionRangeInfoMap(mergeDimRange())
+        }
         copiedSegment.getMultiPartitions.addAll(newAdds)
         mergeSegmentStatistics(copiedSegment)
         dataflowUpdate.setToUpdateSegs(copiedSegment)

@@ -241,6 +241,9 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
         partitionStats.foreach { case (partitionId, stats) => //
           val segmentPartition = newSegmentPartition(copiedSegment, partitionId, newAdds)
           segmentPartition.setSourceCount(stats.totalCount)
+          if (config.isMultiPartitionFilterEnabled) {
+            copiedSegment.setDimensionRangeInfoMap(calPartitionDimRange(dataSegment, flatTable.getFlatTable))
+          }
           // By design, no fencing.
           val columnBytes = segmentPartition.getColumnSourceBytes
           stats.columnBytes.foreach(kv => columnBytes.put(kv._1, kv._2))

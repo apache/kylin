@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -33,10 +34,12 @@ import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.MergerInfo;
+import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
@@ -51,6 +54,7 @@ import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
@@ -164,6 +168,32 @@ public abstract class MetadataMerger {
         List<SegmentPartition> partitions = localSegment.getMultiPartitions();
         localSegment.setSourceCount(partitions.stream() //
                 .mapToLong(SegmentPartition::getSourceCount).sum());
+        // Merge dimension_range_information_map for one level partition under multi partitions, make sure latest
+        if (localSegment.getDimensionRangeInfoMap().isEmpty()) {
+            localSegment.setDimensionRangeInfoMap(newSegment.getDimensionRangeInfoMap());
+        } else if (newSegment.getDimensionRangeInfoMap().isEmpty()) {
+            localSegment.setDimensionRangeInfoMap(localSegment.getDimensionRangeInfoMap());
+        } else {
+            Map<String, DimensionRangeInfo> mergeDimRangeInfo = Maps.newHashMap();
+            BiMap<Integer, TblColRef> dimCols = newSegment.getDataflow().getIndexPlan().getEffectiveDimCols();
+            Map<String, DimensionRangeInfo> calcDimRangeInfoMap = localSegment.getDimensionRangeInfoMap().entrySet()
+                    .stream().filter(dim -> dimCols.containsKey(Integer.parseInt(dim.getKey())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<String, DimensionRangeInfo> storedDimRangeInfoMap = newSegment.getDimensionRangeInfoMap().entrySet()
+                    .stream().filter(dim -> dimCols.containsKey(Integer.parseInt(dim.getKey())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Set<String> combinedKeys = Stream
+                    .concat(calcDimRangeInfoMap.keySet().stream(), storedDimRangeInfoMap.keySet().stream())
+                    .collect(Collectors.toSet());
+            combinedKeys.forEach(column -> {
+                DimensionRangeInfo rangeInfo1 = calcDimRangeInfoMap.get(column);
+                DimensionRangeInfo rangeInfo2 = storedDimRangeInfoMap.get(column);
+                DimensionRangeInfo updateDimRangeInfo = rangeInfo1.merge(rangeInfo2,
+                        dimCols.get(Integer.parseInt(column)).getType());
+                mergeDimRangeInfo.put(column, updateDimRangeInfo);
+            });
+            localSegment.setDimensionRangeInfoMap(mergeDimRangeInfo);
+        }
         final Map<String, Long> merged = Maps.newHashMap();
         partitions.stream().map(SegmentPartition::getColumnSourceBytes) //
                 .forEach(item -> //

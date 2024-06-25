@@ -404,9 +404,8 @@ trait SegmentExec extends Logging {
   protected def calDimRange(segment: NDataSegment, ds: Dataset[Row]): java.util.HashMap[String, DimensionRangeInfo] = {
     val dimensions = segment.getDataflow.getIndexPlan.getEffectiveDimCols.keySet()
     val dimRangeInfo = new java.util.HashMap[String, DimensionRangeInfo]
-    // Not support multi partition for now
-    if (Objects.isNull(segment.getModel.getMultiPartitionDesc)
-      && config.isDimensionRangeFilterEnabled
+    // // TODO Support for calculating multi partition dimension_range_info_map
+    if (config.isDimensionRangeFilterEnabled
       && !dimensions.isEmpty) {
       val start = System.currentTimeMillis()
       import org.apache.spark.sql.functions._
@@ -429,6 +428,37 @@ trait SegmentExec extends Logging {
       logInfo(s"Segment $segmentId calculate dimension range cost $timeCost ms")
     }
     dimRangeInfo
+  }
+
+  protected def calPartitionDimRange(segment: NDataSegment, ds: Dataset[Row]): java.util.HashMap[String, DimensionRangeInfo] = {
+    val calcDimRangeInfo = calDimRange(segment, ds)
+    val storedDimRangeInfo = segment.getDimensionRangeInfoMap
+    val mergeDimRangeInfo = new java.util.HashMap[String, DimensionRangeInfo]
+
+    val start = System.currentTimeMillis()
+    if (calcDimRangeInfo.isEmpty) {
+      mergeDimRangeInfo.putAll(storedDimRangeInfo)
+    } else if (storedDimRangeInfo.isEmpty) {
+      mergeDimRangeInfo.putAll(calcDimRangeInfo)
+    } else {
+      // By design, Support for calculating dimension_range_information_map for one level partition under multi partitions
+      // Calculate and merge with other partition's dimension range info, cautions are as follows
+      // 1. Take the minimum min value and the maximum max value as the boundary to avoid losing data when query filtering.
+      // 2. No additional consideration of deletion
+      val dimCols = segment.getDataflow.getIndexPlan.getEffectiveDimCols
+      val calcDimRangeInfoMap = calcDimRangeInfo.asScala.filter(dim => dimCols.containsKey(Integer.parseInt(dim._1)))
+      val storedDimRangeInfoMap = storedDimRangeInfo.asScala.filter(dim => dimCols.containsKey(Integer.parseInt(dim._1)))
+
+      (calcDimRangeInfoMap.keySet ++ storedDimRangeInfoMap.keySet).map { column =>
+        val rangeInfo1 = calcDimRangeInfoMap(column)
+        val rangeInfo2 = storedDimRangeInfoMap(column)
+        val updateDimRangeInfo = rangeInfo1.merge(rangeInfo2, dimCols.get(Integer.parseInt(column)).getType)
+        mergeDimRangeInfo.put(column, updateDimRangeInfo)
+      }
+    }
+    val timeCost = System.currentTimeMillis() - start
+    logInfo(s"Partition segment $segmentId calculate dimension range cost $timeCost ms")
+    mergeDimRangeInfo
   }
 
   protected def cleanup(): Unit = {

@@ -396,11 +396,64 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public NDataSegment mergeSegments(NDataflow dataflow, SegmentRange segRange, boolean force) {
-        return mergeSegments(dataflow, segRange, force, null, null);
+        return doMergeSegments(dataflow, segRange, force, null, null, null);
+    }
+
+    @VisibleForTesting
+    public NDataSegment mergeSegmentsWithDimRange(NDataflow dataflow, SegmentRange<Long> segRange, boolean force,
+            Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        return doMergeSegments(dataflow, segRange, force, null, null, dimensionRangeInfoMap);
     }
 
     public NDataSegment mergeSegments(NDataflow dataflow, SegmentRange segRange, boolean force, Integer fileLayer,
             String newSegId) {
+        return doMergeSegments(dataflow, segRange, force, fileLayer, newSegId, null);
+    }
+
+    public void checkForce(Segments<NDataSegment> mergingSegments, NDataSegDetails firstSegDetails, boolean force) {
+        for (int i = 1; i < mergingSegments.size(); i++) {
+            NDataSegment dataSegment = mergingSegments.get(i);
+            NDataSegDetails details = dataSegment.getSegDetails();
+            if (!firstSegDetails.checkLayoutsBeforeMerge(details))
+                throw new KylinException(SEGMENT_MERGE_CHECK_INDEX_ILLEGAL);
+        }
+        if (!force) {
+            for (int i = 0; i < mergingSegments.size() - 1; i++) {
+                if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
+                    throw new KylinException(SEGMENT_MERGE_CONTAINS_GAPS);
+            }
+
+            List<String> emptySegment = Lists.newArrayList();
+            for (NDataSegment seg : mergingSegments) {
+                if (seg.getSegDetails().getTotalRowCount() == 0) {
+                    emptySegment.add(seg.getName());
+                }
+            }
+            if (!emptySegment.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: "
+                                + emptySegment);
+            }
+        }
+    }
+
+    public void checkFirstSegAndFileLayer(NDataSegment first, NDataSegment last, NDataSegment newSegment,
+            NDataflow dataflowCopy, SegmentRange<Long> segRange, Integer fileLayer) {
+        if (first.isOffsetCube()) {
+            newSegment.setSegmentRange(segRange);
+        } else {
+            newSegment.setTimeRange(new TimeRange(first.getTSRange().getStart(), last.getTSRange().getEnd()));
+        }
+        // for streaming merge
+        if (fileLayer != null) {
+            newSegment.getAdditionalInfo().put("file_layer", String.valueOf(fileLayer));
+        } else {
+            validateNewSegments(dataflowCopy, newSegment);
+        }
+    }
+
+    public NDataSegment doMergeSegments(NDataflow dataflow, SegmentRange<Long> segRange, boolean force, Integer fileLayer,
+            String newSegId, Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
         NDataflow dataflowCopy = dataflow.copy();
         if (dataflowCopy.getSegments().isEmpty())
             throw new IllegalArgumentException(dataflow + " has no segments");
@@ -408,7 +461,8 @@ public class NDataflowManager implements IRealizationProvider {
 
         checkCubeIsPartitioned(dataflowCopy);
 
-        NDataSegment newSegment = newSegment(dataflowCopy, segRange);
+        NDataSegment newSegment = dimensionRangeInfoMap == null ? newSegment(dataflowCopy, segRange)
+                : newSegment(dataflowCopy, segRange, dimensionRangeInfoMap);
         NDataflowUpdate update = new NDataflowUpdate(dataflowCopy.getUuid());
 
         //  for streaming merge
@@ -437,47 +491,12 @@ public class NDataflowManager implements IRealizationProvider {
                     + " must contain at least 2 segments, but there is " + mergingSegments.size());
 
         NDataSegment first = mergingSegments.get(0);
-        NDataSegDetails firstSegDetails = first.getSegDetails();
-        for (int i = 1; i < mergingSegments.size(); i++) {
-            NDataSegment dataSegment = mergingSegments.get(i);
-            NDataSegDetails details = dataSegment.getSegDetails();
-            if (!firstSegDetails.checkLayoutsBeforeMerge(details))
-                throw new KylinException(SEGMENT_MERGE_CHECK_INDEX_ILLEGAL);
-        }
-
-        if (!force) {
-            for (int i = 0; i < mergingSegments.size() - 1; i++) {
-                if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
-                    throw new KylinException(SEGMENT_MERGE_CONTAINS_GAPS);
-            }
-
-            List<String> emptySegment = Lists.newArrayList();
-            for (NDataSegment seg : mergingSegments) {
-                if (seg.getSegDetails().getTotalRowCount() == 0) {
-                    emptySegment.add(seg.getName());
-                }
-            }
-            if (emptySegment.size() > 0) {
-                throw new IllegalArgumentException(
-                        "Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: "
-                                + emptySegment);
-            }
-        }
+        checkForce(mergingSegments, first.getSegDetails(), force);
 
         NDataSegment last = mergingSegments.get(mergingSegments.size() - 1);
         newSegment.setSegmentRange(first.getSegRange().coverWith(last.getSegRange()));
 
-        if (first.isOffsetCube()) {
-            newSegment.setSegmentRange(segRange);
-        } else {
-            newSegment.setTimeRange(new TimeRange(first.getTSRange().getStart(), last.getTSRange().getEnd()));
-        }
-        // for streaming merge
-        if (fileLayer != null) {
-            newSegment.getAdditionalInfo().put("file_layer", String.valueOf(fileLayer));
-        } else {
-            validateNewSegments(dataflowCopy, newSegment);
-        }
+        checkFirstSegAndFileLayer(first, last, newSegment, dataflowCopy, segRange, fileLayer);
         checkMergeSegmentThreshold(config, config.getHdfsWorkingDirectory(),
                 mergingSegments.stream().mapToLong(NDataSegment::getStorageBytesSize).sum());
 
@@ -522,6 +541,14 @@ public class NDataflowManager implements IRealizationProvider {
         // BREAKING CHANGE: remove legacy caring as in org.apache.kylin.cube.CubeManager.SegmentAssist.newSegment()
         Preconditions.checkNotNull(segRange);
         return new NDataSegment(df, segRange);
+    }
+
+    @VisibleForTesting
+    NDataSegment newSegment(NDataflow df, SegmentRange<Long> segRange,
+            Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        // BREAKING CHANGE: remove legacy caring as in org.apache.kylin.cube.CubeManager.SegmentAssist.newSegment()
+        Preconditions.checkNotNull(segRange);
+        return new NDataSegment(df, segRange, dimensionRangeInfoMap);
     }
 
     private void validateNewSegments(NDataflow df, NDataSegment newSegments) {
