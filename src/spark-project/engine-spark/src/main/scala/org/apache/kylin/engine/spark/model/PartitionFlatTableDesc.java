@@ -24,10 +24,9 @@ import java.util.Objects;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class PartitionFlatTableDesc extends SegmentFlatTableDesc {
 

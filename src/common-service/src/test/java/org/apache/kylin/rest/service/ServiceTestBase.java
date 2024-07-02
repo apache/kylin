@@ -58,7 +58,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @ActiveProfiles({ "testing", "test" })
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.*", "org.w3c.dom.*",
         "org.apache.cxf.*", "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*",
-        "java.security.*", "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+        "java.security.*", "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class ServiceTestBase extends NLocalFileMetadataTestCase {
 
     @Autowired

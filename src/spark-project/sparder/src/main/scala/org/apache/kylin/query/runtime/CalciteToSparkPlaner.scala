@@ -17,8 +17,6 @@
  */
 package org.apache.kylin.query.runtime
 
-import java.util
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}
 import org.apache.kylin.common.KylinConfig
@@ -30,6 +28,8 @@ import org.apache.kylin.query.runtime.plan._
 import org.apache.kylin.query.runtime.planV3.DeltaLakeTableScanPlan
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+
+import java.util
 
 class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with LogEx {
   private val stack = new util.ArrayDeque[LogicalPlan]()

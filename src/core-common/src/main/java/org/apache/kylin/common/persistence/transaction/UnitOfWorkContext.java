@@ -18,7 +18,6 @@
 package org.apache.kylin.common.persistence.transaction;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -26,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.TransactionLock;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.springframework.transaction.TransactionStatus;
@@ -46,7 +44,6 @@ public class UnitOfWorkContext {
     private final String project;
 
     private KylinConfig.SetAndUnsetThreadLocalConfig localConfig;
-    private Set<TransactionLock> currentLock = new LinkedHashSet<>();
     private Set<String> copyForWriteItems = new HashSet<>();
     private Set<String> readLockPath = new HashSet<>();
     private TransactionStatus transactionStatus = null;
@@ -85,10 +82,6 @@ public class UnitOfWorkContext {
         ResourceStore.clearCache(config);
         localConfig.close();
         localConfig = null;
-    }
-
-    void checkLockStatus() {
-        Preconditions.checkState(currentLock.stream().allMatch(TransactionLock::isHeldByCurrentThread));
     }
 
     void checkReentrant(UnitOfWorkParams params) {

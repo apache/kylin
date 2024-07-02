@@ -23,11 +23,7 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 public class EnhancedUnitOfWork {
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName) {
-        return doInTransactionWithCheckAndRetry(f, UnitOfWork.DEFAULT_EPOCH_ID, unitName);
-    }
-
-    public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, long epochId, String unitName) {
-        return doInTransactionWithCheckAndRetry(f, unitName, UnitOfWork.DEFAULT_MAX_RETRY, epochId);
+        return doInTransactionWithCheckAndRetry(f, unitName, UnitOfWork.DEFAULT_MAX_RETRY);
     }
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes) {
@@ -36,13 +32,8 @@ public class EnhancedUnitOfWork {
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes,
             long epochId) {
-        return doInTransactionWithCheckAndRetry(f, unitName, retryTimes, epochId, null);
-    }
-
-    public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes,
-            long epochId, String tempLockName) {
         return doInTransactionWithCheckAndRetry(UnitOfWorkParams.<T> builder().processor(f).unitName(unitName)
-                .epochId(epochId).maxRetry(retryTimes).tempLockName(tempLockName).build());
+                .maxRetry(retryTimes).epochId(epochId).build());
     }
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWorkParams<T> params) {

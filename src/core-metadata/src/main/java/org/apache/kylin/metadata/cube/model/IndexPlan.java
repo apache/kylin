@@ -178,6 +178,10 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     @Getter
     @JsonProperty("base_agg_index_reduce_high_cardinality_dim")
     private boolean baseAggIndexReduceHighCardinalityDim;
+    @Setter
+    @Getter
+    @JsonProperty("planner_white_list")
+    private List<Long> plannerWhiteList = new ArrayList<>();
 
     public static final String STORAGE_V3_MODEL_DEFAULT_PARTITION_BY_CONF_KEY = "kylin.model.layout.storage.v3-partition-by-columns";
 
@@ -359,11 +363,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
     String getErrorMsg() {
         return Joiner.on(" ").join(errors);
-    }
-
-    @Override
-    public List<String> getLockPaths(String ignored) {
-        return getModel().getLockPaths();
     }
 
     public String getProject() {
@@ -998,12 +997,15 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public Optional<LayoutEntity> removeLayoutSameWith(LayoutEntity layout) {
-        Optional<LayoutEntity> oldLayout = getIdMapping().allLayoutMapping.values().stream()
-                .filter(l -> l.equals(layout)).findFirst();
+        Optional<LayoutEntity> oldLayout = getLayoutSameWith(layout);
         if (oldLayout.isPresent()) {
             removeLayouts(Sets.newHashSet(oldLayout.get().getId()), true, true);
         }
         return oldLayout;
+    }
+
+    public Optional<LayoutEntity> getLayoutSameWith(LayoutEntity layout) {
+        return getIdMapping().allLayoutMapping.values().stream().filter(l -> l.equals(layout)).findFirst();
     }
 
     public boolean needUpdateBaseAggLayout(LayoutEntity replace, boolean isAuto) {

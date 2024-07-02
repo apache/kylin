@@ -58,6 +58,7 @@ public class DimensionRecItemV2 extends RecItemV2 implements Serializable {
         setUuid(String.format(Locale.ROOT, "dimension_%s", RandomUtil.randomUUIDStr()));
     }
 
+    @Override
     public int[] genDependIds(Map<String, RawRecItem> uniqueRecItemMap, String content, NDataModel dataModel) {
         if (uniqueRecItemMap.containsKey(content)) {
             return new int[] { -1 * uniqueRecItemMap.get(content).getId() };

@@ -17,9 +17,6 @@
  */
 package org.apache.spark.sql
 
-import java.io.File
-import java.sql.Types
-
 import org.apache.calcite.rel.`type`.RelDataTypeSystem
 import org.apache.calcite.sql.`type`.SqlTypeFactoryImpl
 import org.apache.commons.io.FileUtils
@@ -31,6 +28,8 @@ import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.apache.spark.sql.types.{DataTypes, StructField}
 import org.apache.spark.sql.util.SparderTypeUtil
 
+import java.io.File
+import java.sql.Types
 import scala.collection.immutable
 
 class SparderTypeUtilTest extends SparderBaseFunSuite {

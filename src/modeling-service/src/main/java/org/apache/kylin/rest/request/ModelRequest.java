@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.request;
 
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -84,6 +83,9 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
 
     @JsonProperty("save_only")
     private boolean saveOnly = false;
+
+    @JsonProperty("with_rec_job")
+    private boolean withRecJob = false;
 
     @JsonProperty("with_segment")
     private boolean withEmptySegment = true;

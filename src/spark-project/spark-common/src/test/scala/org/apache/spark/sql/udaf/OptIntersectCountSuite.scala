@@ -21,7 +21,7 @@ package org.apache.spark.sql.udaf
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
-import org.apache.spark.sql.functions.{col, split, _}
+import org.apache.spark.sql.functions._
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
 class OptIntersectCountSuite extends SparderBaseFunSuite with SharedSparkSession {

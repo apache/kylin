@@ -99,7 +99,7 @@ class InternalTableLoader extends Logging {
       writer = writer.option(ORDER_BY_KEY, orderByKey)
     }
     val format = table.getStorageType.getFormat
-    if (incremental && "true".equals(isRefresh)) {
+    if (incremental) {
       val dateFormat = table.getTablePartition.getDatePartitionFormat
       logInfo(f"Refresh dynamic partitions [${DateFormat.formatToDateStr(startDate.toLong, dateFormat)}," +
         f" ${DateFormat.formatToDateStr(endDate.toLong, dateFormat)})")

@@ -18,7 +18,11 @@
 
 package org.apache.kylin.metadata.recommendation.entity;
 
+import java.util.Map;
+
 import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -35,4 +39,8 @@ public class RecItemV2 {
     private String uniqueContent;
     @JsonProperty("uuid")
     private String uuid;
+
+    public int[] genDependIds(Map<String, RawRecItem> nonLayoutUniqueFlagRecMap, String content, NDataModel dataModel) {
+        throw new UnsupportedOperationException("This method must be overridden.");
+    }
 }

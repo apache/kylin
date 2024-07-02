@@ -18,13 +18,13 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.nio.{BufferOverflowException, ByteBuffer}
-
 import org.apache.kylin.measure.{MeasureAggregator, MeasureIngester, MeasureTypeFactory}
 import org.apache.kylin.metadata.datatype.{DataTypeSerializer, DataType => KyDataType}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
 import org.apache.spark.sql.types._
+
+import java.nio.{BufferOverflowException, ByteBuffer}
 
 sealed abstract class MeasureUDAF extends UserDefinedAggregateFunction {
   override def inputSchema: StructType = initInputSchema

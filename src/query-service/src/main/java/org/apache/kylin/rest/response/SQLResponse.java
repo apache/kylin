@@ -72,6 +72,9 @@ public class SQLResponse implements Serializable {
 
     protected long duration;
 
+    @JsonProperty("cpu_time")
+    protected long cpuTime;
+
     protected boolean isPartial = false;
 
     @JsonProperty("vacant")

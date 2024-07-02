@@ -71,9 +71,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class IndexSuggester {
 
-    private static final String COLUMN_NOT_FOUND_PTN = "The model [%s] matches this query, but the dimension [%s] is missing. ";
-    private static final String MEASURE_NOT_FOUND_PTN = "The model [%s] matches this query, but the measure [%s] is missing. ";
-    private static final String JOIN_NOT_MATCHED = "The join of model [%s] has some difference with the joins of this query. ";
     public static final String COMPUTED_COLUMN_ON_ANTI_FLATTEN_LOOKUP = "Computed column depends on anti flatten lookup table, stop the process of generate index.";
     public static final String COMPUTED_COLUMN_OF_EXCLUDED_COLUMNS = "Computed columns depends on excluded columns, stop the process of generate index.";
     public static final String MEASURE_ON_ANTI_FLATTEN_LOOKUP = "Unsupported measure of anti flatten lookup table, stop the process of generate index. ";
@@ -81,7 +78,9 @@ public class IndexSuggester {
     public static final String OTHER_UNSUPPORTED_MEASURE = "Unsupported measure may caused by turning on only reusing used defined computed column.";
     public static final String FK_ON_ANTI_FLATTEN_LOOKUP = "Unsupported foreign join key of anti flatten lookup table, stop the process of generate index. The foreign key is: ";
     public static final String FK_OF_EXCLUDED_COLUMNS = "Unsupported foreign join key of excluded columns, stop the process of generate index. The foreign key is: ";
-
+    private static final String COLUMN_NOT_FOUND_PTN = "The model [%s] matches this query, but the dimension [%s] is missing. ";
+    private static final String MEASURE_NOT_FOUND_PTN = "The model [%s] matches this query, but the measure [%s] is missing. ";
+    private static final String JOIN_NOT_MATCHED = "The join of model [%s] has some difference with the joins of this query. ";
     private final AbstractContext proposeContext;
     private final AbstractContext.ModelContext modelContext;
     private final IndexPlan indexPlan;

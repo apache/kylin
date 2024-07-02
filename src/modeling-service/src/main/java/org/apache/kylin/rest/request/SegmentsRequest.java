@@ -65,4 +65,7 @@ public class SegmentsRequest implements ProjectInsensitiveRequest {
 
     @JsonProperty("tag")
     private Object tag;
+
+    @JsonProperty("auto_index_plan_enable")
+    private boolean autoIndexPlanEnable = false;
 }

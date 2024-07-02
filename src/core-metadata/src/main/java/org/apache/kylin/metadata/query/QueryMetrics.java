@@ -67,6 +67,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     protected long queryJobCount;
     protected long queryStageCount;
     protected long queryTaskCount;
+    protected long cpuTime;
 
     protected boolean isPushdown;
     protected String engineType;
@@ -150,6 +151,24 @@ public class QueryMetrics extends SchedulerEventNotifier {
             this.indexType = indexType;
             this.modelId = modelId;
             this.snapshots = snapshots;
+        }
+    }
+
+    @Getter
+    @Setter
+    // for query metric extensions
+    public static class QueryMetric implements Serializable {
+
+        protected String name;
+
+        protected Serializable value;
+
+        public QueryMetric() {
+        }
+
+        public QueryMetric(String name, Serializable value) {
+            this.name = name;
+            this.value = value;
         }
     }
 }

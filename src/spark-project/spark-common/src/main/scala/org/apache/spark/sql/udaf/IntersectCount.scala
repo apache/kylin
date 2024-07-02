@@ -18,8 +18,6 @@
 
 package org.apache.spark.sql.udaf
 
-import java.util.regex.Pattern
-
 import com.esotericsoftware.kryo.KryoException
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput, KryoDataOutput, Output}
 import org.apache.spark.internal.Logging
@@ -27,10 +25,11 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType, LongType, StringType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
+import java.util.regex.Pattern
 import scala.collection.JavaConverters._
 
 object IntersectCount {

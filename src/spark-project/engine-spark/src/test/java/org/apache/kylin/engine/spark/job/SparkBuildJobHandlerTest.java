@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.job.execution.NSparkExecutable.SPARK_MASTER;
+import static org.apache.kylin.engine.spark.job.NSparkExecutable.SPARK_MASTER;
 
 import java.util.Map;
 
@@ -27,7 +27,6 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.junit.Assert;
 import org.junit.Test;
 

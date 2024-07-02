@@ -196,7 +196,8 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "priority", required = false, defaultValue = "3") Integer priority,
             @RequestParam(value = "yarn_queue", required = false) String yarnQueue,
             @RequestParam(value = "tag", required = false) Object tag,
-            @RequestParam(value = "index_status", required = false) List<String> indexStatusStr) {
+            @RequestParam(value = "index_status", required = false) List<String> indexStatusStr,
+            @RequestParam(value = "auto_index_plan_enable", required = false) boolean isAutoIndexPlanEnable) {
         String projectName = checkProjectName(project);
         checkParams(ids, names, batchIndexIds, indexStatusStr);
         String modelId = modelService.getModel(modelAlias, projectName).getUuid();
@@ -225,6 +226,7 @@ public class OpenSegmentController extends BaseController {
         req.setPriority(priority);
         req.setYarnQueue(yarnQueue);
         req.setTag(tag);
+        req.setAutoIndexPlanEnable(isAutoIndexPlanEnable);
         return segmentController.addIndexesToSegments(pair.getFirst(), req);
     }
 

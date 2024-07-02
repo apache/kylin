@@ -17,10 +17,10 @@
 
 package org.apache.kylin.cluster
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.hadoop.yarn.api.records.{ApplicationId, ApplicationReport, QueueInfo, YarnApplicationState}
 import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.hadoop.yarn.conf.YarnConfiguration
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.spark.sql.common.LocalMetadata
 import org.junit.Assert
 import org.mockito.Mockito.{doNothing, mock, mockStatic, when}

@@ -31,8 +31,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -120,10 +119,10 @@ public class NSparkCubingStep extends NSparkExecutable {
 
     protected boolean hasWarningStage() {
         ExecutableManager executableManager = getManager();
-        Map<String, List<StageBase>> stagesMap = getStagesMap();
-        for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
+        Map<String, List<StageExecutable>> stagesMap = getStagesMap();
+        for (Map.Entry<String, List<StageExecutable>> entry : stagesMap.entrySet()) {
             String segmentId = entry.getKey();
-            List<StageBase> stages = entry.getValue();
+            List<StageExecutable> stages = entry.getValue();
             boolean hasWarning = stages.stream().anyMatch(stage -> executableManager.getOutput(stage.getId(), segmentId)
                     .getState() == ExecutableState.WARNING);
             if (hasWarning) {

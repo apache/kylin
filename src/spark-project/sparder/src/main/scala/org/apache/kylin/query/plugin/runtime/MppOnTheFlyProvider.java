@@ -19,13 +19,11 @@
 package org.apache.kylin.query.plugin.runtime;
 
 
+import java.util.List;
+
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
-
-import java.util.List;
 
 /**
  * Provides the ability to compute cuboid layout on-the-fly.

@@ -20,7 +20,6 @@ package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.execution.DefaultExecutableOnTable;
-import org.apache.kylin.job.execution.step.JobStepType;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.handler.InternalTableJobHandler.InternalTableJobBuildParam;
@@ -68,9 +67,9 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
         job.setParam(NBatchConstants.P_DELETE_PARTITION_VALUES, param.getDeletePartitionValues());
         job.setParam(NBatchConstants.P_DELETE_PARTITION, param.getDeletePartition());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        JobStepType.BUILD_INTERNAL.createStep(job, config);
+        StepEnum.BUILD_INTERNAL.create(job, config);
         if (isPreloadedCacheEnable(internalTable, projectConfig)) {
-            JobStepType.LOAD_GLUTEN_CACHE.createStep(job, config);
+            StepEnum.LOAD_GLUTEN_CACHE.create(job, config);
         }
         return job;
     }

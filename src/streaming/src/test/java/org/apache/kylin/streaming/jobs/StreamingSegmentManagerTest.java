@@ -19,11 +19,11 @@ package org.apache.kylin.streaming.jobs;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.util.StreamingTestCase;
 import org.apache.spark.sql.SparkSession;
 import org.junit.After;

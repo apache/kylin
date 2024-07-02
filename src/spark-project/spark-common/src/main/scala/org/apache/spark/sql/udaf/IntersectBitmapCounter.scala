@@ -19,13 +19,12 @@
 package org.apache.spark.sql.udaf
 
 import org.apache.kylin.common.util.ByteBufferBackedInputStream
+import org.roaringbitmap.longlong.Roaring64NavigableMap
 
 import java.io.DataInputStream
 import java.nio.ByteBuffer
 import java.util
 import java.util.{Map => JMap}
-import org.roaringbitmap.longlong.Roaring64NavigableMap
-
 import scala.collection.JavaConverters._
 
 class IntersectBitmapCounter() {

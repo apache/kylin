@@ -18,6 +18,7 @@
 
 package org.apache.kylin.tool.util;
 
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +28,7 @@ import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +62,17 @@ public class HadoopConfExtractor {
             defaultAddr = YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS;
         }
 
+        String active;
         String rmWebHost;
         if (HAUtil.isHAEnabled(conf)) {
             YarnConfiguration yarnConf = new YarnConfiguration(conf);
-            String active = RMHAUtils.findActiveRMHAId(yarnConf);
+            try {
+                active = RMHAUtils.findActiveRMHAId(yarnConf);
+            } catch (NoSuchMethodError e) {
+                logger.warn("Original findActiveRMHAId(YarnConfiguration) may not exists, try MRS modified method");
+                active = tryInvokeMRSFindActiveRMHAId(conf);
+            }
+
             rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(webappConfKey, active), defaultAddr,
                     yarnConf);
         } else {
@@ -81,4 +90,15 @@ public class HadoopConfExtractor {
         logger.info("yarn master url: {} ", rmWebHost);
         return rmWebHost;
     }
+
+    private static String tryInvokeMRSFindActiveRMHAId(Configuration conf) {
+        try {
+            Method method = RMHAUtils.class.getMethod("findActiveRMHAId", Configuration.class);
+            return (String) method.invoke(null, conf);
+        } catch (Exception e) {
+            throw new KylinRuntimeException(e);
+        }
+    }
+
+
 }

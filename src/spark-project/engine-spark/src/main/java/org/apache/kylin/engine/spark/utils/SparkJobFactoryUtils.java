@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.engine.spark.job.InternalTableLoadingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingStep;
+import org.apache.kylin.engine.spark.job.NSparkIndexPlanOptimizeJob;
 import org.apache.kylin.engine.spark.job.NSparkLayoutDataOptimizeJob;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
@@ -42,6 +43,7 @@ public class SparkJobFactoryUtils {
         new NTableSamplingJob();
         new NSparkLayoutDataOptimizeJob();
         new InternalTableLoadingJob();
+        new NSparkIndexPlanOptimizeJob();
     }
 
     public static boolean needBuildSnapshots(AbstractExecutable buildTask) {

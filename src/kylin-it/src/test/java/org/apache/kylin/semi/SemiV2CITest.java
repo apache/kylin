@@ -59,7 +59,6 @@ import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem.RawRecType;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
 import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
@@ -68,7 +67,6 @@ import org.apache.kylin.rec.ModelSelectProposer;
 import org.apache.kylin.rec.common.AccelerateInfo;
 import org.apache.kylin.rec.util.AccelerationUtil;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.OptRecRequest;
 import org.apache.kylin.rest.response.LayoutRecDetailResponse;
@@ -147,8 +145,6 @@ public class SemiV2CITest extends SemiAutoTestBase {
     @Spy
     private final IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
     @Spy
-    private final MetadataInvoker metadataInvoker = Mockito.spy(new MetadataInvoker());
-    @Spy
     private final List<ModelChangeSupporter> modelChangeSupporters = Mockito.spy(Arrays.asList(rawRecService));
 
     @Before
@@ -177,7 +173,6 @@ public class SemiV2CITest extends SemiAutoTestBase {
     }
 
     private void prepareACL() {
-        MetadataInvoker.setDelegate(modelService);
         TestingAuthenticationToken auth = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
@@ -358,7 +353,7 @@ public class SemiV2CITest extends SemiAutoTestBase {
         qh1.setSql("select price+1, sum(price+1) from test_kylin_fact group by price+1");
         qh1.setQueryTime(QUERY_TIME);
         qh1.setId(1);
-        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1), false);
+        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1));
 
         // assert before apply recommendations
         NDataModel modelBeforeApplyRecItems = modelManager.getDataModelDesc(modelID);
@@ -439,7 +434,7 @@ public class SemiV2CITest extends SemiAutoTestBase {
         qh1.setSql("select lstg_format_name, sum(price+1) from test_kylin_fact group by lstg_format_name");
         qh1.setQueryTime(QUERY_TIME);
         qh1.setId(1);
-        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1), false);
+        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1));
 
         // assert before apply recommendations
         NDataModel modelBeforeApplyRecItems = modelManager.getDataModelDesc(modelID);
@@ -449,7 +444,7 @@ public class SemiV2CITest extends SemiAutoTestBase {
         List<RawRecItem> rawRecItems = jdbcRawRecStore.queryAll();
         Assert.assertEquals(3, rawRecItems.size());
         rawRecItems.stream().filter(recItem -> recItem.getType() == RawRecItem.RawRecType.ADDITIONAL_LAYOUT
-                || recItem.getType() == RawRecType.MEASURE).forEach(recItem -> {
+                || recItem.getType() == RawRecItem.RawRecType.MEASURE).forEach(recItem -> {
                     recItem.setState(RawRecItem.RawRecState.BROKEN);
                     recItem.setUniqueFlag(null);
                 });
@@ -478,7 +473,7 @@ public class SemiV2CITest extends SemiAutoTestBase {
         });
         OptRecManagerV2.getInstance(getProject()).loadOptRecV2(modelID);
         // generate raw recommendations for origin model again
-        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1), false);
+        rawRecService.generateRawRecommendations(getProject(), Lists.newArrayList(qh1));
         NDataModel modelBeforeApplyRecItemsAgain = modelManager.getDataModelDesc(modelID);
         Assert.assertEquals(14, modelBeforeApplyRecItemsAgain.getAllNamedColumns().size());
         Assert.assertEquals(1, modelBeforeApplyRecItemsAgain.getAllMeasures().size());

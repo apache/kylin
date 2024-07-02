@@ -48,7 +48,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.persistence.metadata.mapper.ProjectMapper;
 import org.apache.kylin.common.persistence.metadata.mapper.TableInfoMapper;
@@ -106,10 +105,10 @@ class JdbcMetadataStoreTest {
                 + "\",\"meta_key\" : \"db.abc2\",\"name\" : \"abc2\", \"project\" : \"pj1\"}")
                 .getBytes(DEFAULT_CHARSET);
         UnitOfWork.doInTransactionWithRetry(() -> {
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/db.abc");
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/db.abc2");
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/db.abc3");
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/db.abc4");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/db.abc");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/db.abc2");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/db.abc3");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/db.abc4");
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             store.checkAndPutResource("TABLE_INFO/db.abc", ByteSource.wrap(
                     ("{ \"uuid\" : \"ffffffff-ffff-ffff-ffff-ffffffffffff\",\"meta_key\" : \"db.abc\",\"name\" : " +
@@ -172,7 +171,7 @@ class JdbcMetadataStoreTest {
     @Test
     void testReload() throws Exception {
         UnitOfWork.doInTransactionWithRetry(() -> {
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/db.abc2");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/db.abc2");
             String uuid = UUID.randomUUID().toString();
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             store.checkAndPutResource("TABLE_INFO/db.abc2",

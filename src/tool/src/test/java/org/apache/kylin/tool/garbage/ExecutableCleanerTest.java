@@ -26,12 +26,10 @@ import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.util.JobContextUtil;
-import org.apache.kylin.rest.delegate.ModelMetadataBaseInvoker;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class ExecutableCleanerTest extends NLocalFileMetadataTestCase {
 
@@ -93,9 +91,6 @@ public class ExecutableCleanerTest extends NLocalFileMetadataTestCase {
 
     private void createJob(String jobId, long createTime) {
         JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(getTestConfig());
-        ModelMetadataBaseInvoker modelMetadataBaseInvoker = Mockito.mock(ModelMetadataBaseInvoker.class);
-        Mockito.when(modelMetadataBaseInvoker.getModelNameById(Mockito.anyString(), Mockito.anyString()))
-                .thenReturn("test");
 
         MockCleanableExecutable executable = new MockCleanableExecutable();
         executable.setParam("test1", "test1");

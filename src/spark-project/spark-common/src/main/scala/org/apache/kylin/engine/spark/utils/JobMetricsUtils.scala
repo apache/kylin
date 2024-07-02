@@ -18,8 +18,6 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import java.util.concurrent.ConcurrentHashMap
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
 import org.apache.spark.sql.SparkSession
@@ -30,6 +28,8 @@ import org.apache.spark.sql.execution.command.DataWritingCommandExec
 import org.apache.spark.sql.execution.joins.{BroadcastHashJoinExec, BroadcastNestedLoopJoinExec, ShuffledHashJoinExec, SortMergeJoinExec}
 import org.apache.spark.sql.execution.streaming.StreamingSymmetricHashJoinExec
 import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
+
+import java.util.concurrent.ConcurrentHashMap
 
 object JobMetricsUtils extends Logging with AdaptiveSparkPlanHelper {
 

@@ -23,12 +23,12 @@ import java.util.Locale;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.asyncprofiler.Message;
 import org.apache.kylin.common.exception.JobErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.profiler.Message;
+import org.apache.kylin.profiler.ProfilerStatus;
 
 import lombok.SneakyThrows;
 

@@ -21,11 +21,11 @@ package org.apache.spark.autoheal
 import java.io.IOException
 import java.util
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler.{JobFailed, ResourceLack, RunJob}
 import org.apache.kylin.engine.spark.utils.SparkConfHelper._
 import org.apache.kylin.guava30.shaded.common.base.Throwables
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.spark.SparkConf
 import org.apache.spark.application.RetryInfo
 import org.apache.spark.dict.IllegalDictEncodeValueException

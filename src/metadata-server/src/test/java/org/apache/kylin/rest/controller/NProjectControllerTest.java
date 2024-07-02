@@ -366,7 +366,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testUpdateProjectGeneralInfo() throws Exception {
         val request = new ProjectGeneralInfoRequest();
-        request.setSemiAutoMode(true);
+        request.setIsSemiAutoMode(true);
         Mockito.doNothing().when(projectService).updateProjectGeneralInfo("default", request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/project_general_info", "default")
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))

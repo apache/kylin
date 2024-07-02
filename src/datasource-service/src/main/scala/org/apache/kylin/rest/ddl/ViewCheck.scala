@@ -34,6 +34,8 @@ import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.{CommandExecutionMode, CommandResultExec, SparkPlan}
 import org.slf4j.LoggerFactory
 
+import java.security.PrivilegedExceptionAction
+import java.util.Locale
 import scala.collection.convert.ImplicitConversions.{`collection AsScalaIterable`, `map AsScala`}
 import scala.collection.mutable.ListBuffer
 

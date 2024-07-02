@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager.NIndexPlanUpdater
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.NDataModel.Measure
-import org.apache.kylin.metadata.model.{FunctionDesc, ManagementType, NDataModel, NDataModelManager, ParameterDesc, SegmentRange, TblColRef}
+import org.apache.kylin.metadata.model._
 import org.apache.spark.dict.{NGlobalDictBuilderAssist, NGlobalDictionaryV2}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.{Dataset, Row}

@@ -37,7 +37,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 @Setter
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -47,19 +49,21 @@ public class MeasureRecItemV2 extends RecItemV2 implements Serializable {
     @JsonProperty("param_order")
     private long[] paramOrder;
 
+    @Override
     public int[] genDependIds(Map<String, RawRecItem> nonLayoutUniqueFlagRecMap, String content, NDataModel dataModel) {
         Set<TableRef> allTables = dataModel.getAllTableRefs();
         Map<String, TableRef> tableMap = Maps.newHashMap();
         allTables.forEach(tableRef -> tableMap.putIfAbsent(tableRef.getAlias(), tableRef));
         Map<String, NDataModel.NamedColumn> namedColumnMap = getNamedColumnMap(dataModel);
-        String[] params = content.split("__");
+        // known limit : column/cc in model with name like '%__%' may cause broken measureRecItem
+        // possible solution: using separator like '#' can fix it, but existing measureRecItem shall be broken...
+        String[] params = content.split(RawRecUtil.MEASURE_PARAM_SEPARATOR);
         int[] dependIDs = new int[params.length - 1];
         for (int i = 1; i < params.length; i++) {
             if (nonLayoutUniqueFlagRecMap.containsKey(params[i])) {
-                // means it's a cc
+                // means it's a cc recItem
                 dependIDs[i - 1] = -1 * nonLayoutUniqueFlagRecMap.get(params[i]).getId();
             } else {
-
                 String[] splits = params[i].split(RawRecUtil.TABLE_COLUMN_SEPARATOR);
                 if (splits.length == 2) {
                     try {
@@ -70,6 +74,7 @@ public class MeasureRecItemV2 extends RecItemV2 implements Serializable {
                         String aliasDotName = String.format(Locale.ROOT, "%s.%s", alias, dependColumn.getName());
                         dependIDs[i - 1] = namedColumnMap.get(aliasDotName).getId();
                     } catch (IllegalArgumentException e) {
+                        log.warn("fail to find depend column due to ", e);
                         dependIDs[i - 1] = Integer.MAX_VALUE;
                     }
                 } else {

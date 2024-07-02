@@ -38,7 +38,6 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.mapper.JobInfoMapper;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -64,8 +63,6 @@ import org.apache.kylin.rec.ProposerJob;
 import org.apache.kylin.rec.SmartMaster;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
-import org.apache.kylin.rest.feign.MetadataInvoker;
-import org.apache.kylin.rest.feign.SmartInvoker;
 import org.apache.kylin.rest.request.OpenSqlAccelerateRequest;
 import org.apache.kylin.rest.response.LayoutRecDetailResponse;
 import org.apache.kylin.rest.response.OpenAccSqlResponse;
@@ -125,8 +122,6 @@ public class ModelRecServiceTest extends SourceTestCase {
     private final RawRecService rawRecService = Mockito.spy(new RawRecService());
     @InjectMocks
     OptRecService optRecService = Mockito.spy(new OptRecService());
-    @InjectMocks
-    MetadataInvoker metadataInvoker = Mockito.spy(new MetadataInvoker());
     @Spy
     private final AclTCRServiceSupporter aclTCRService = Mockito.spy(AclTCRServiceSupporter.class);
     @Spy
@@ -157,7 +152,6 @@ public class ModelRecServiceTest extends SourceTestCase {
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
                 }));
-        SmartInvoker.getInstance().setDelegate(modelSmartService);
 
         modelService.setSemanticUpdater(semanticService);
         modelService.setIndexPlanService(indexPlanService);

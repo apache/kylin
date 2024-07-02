@@ -34,21 +34,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,15 +63,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
-import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.SnapshotRawResource;
 import org.apache.kylin.common.persistence.VersionedRawResource;
-import org.apache.kylin.common.persistence.lock.LockTimeoutException;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.FileSystemUtil;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -89,12 +82,10 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.guava30.shaded.common.util.concurrent.Uninterruptibles;
-import org.springframework.transaction.TransactionException;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import lombok.Getter;
 import lombok.val;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -105,8 +96,8 @@ public class FileSystemMetadataStore extends MetadataStore {
     private static final String COMPRESSED_FILE = "metadata.zip";
     public static final String JSON_SUFFIX = ".json";
     private static final int DEFAULT_FILE_NUMBER = 10000;
-    private static final ThreadLocal<Set<ReentrantLock>> OWNED_LOCKS = ThreadLocal.withInitial(HashSet::new);
-    private static final ConcurrentHashMap<String, ReentrantLock> LOCK_MAP = new ConcurrentHashMap<>();
+    @Delegate
+    private final FileTransactionHelper helper;
     @VisibleForTesting
     protected static volatile ExecutorService fileSystemMetadataExecutor = null;
 
@@ -168,6 +159,7 @@ public class FileSystemMetadataStore extends MetadataStore {
                 }
             }
             auditLogStore = new MemoryAuditLogStore(kylinConfig);
+            helper = new FileTransactionHelper(this);
             log.info("The FileSystem location is {}, hdfs root path : {}", fs.getUri().toString(), rootPath.toString());
         } catch (Exception e) {
             Throwables.throwIfUnchecked(e);
@@ -704,8 +696,8 @@ public class FileSystemMetadataStore extends MetadataStore {
         }
     }
 
-    public void getAndPutAllFileRecursion(FileStatus status, FileSystem fs, MemoryMetaData data, List<Future<?>> futures,
-            BiConsumer<FileStatus, MemoryMetaData> process) {
+    public void getAndPutAllFileRecursion(FileStatus status, FileSystem fs, MemoryMetaData data,
+            List<Future<?>> futures, BiConsumer<FileStatus, MemoryMetaData> process) {
         try {
             for (FileStatus childStatus : fs.listStatus(status.getPath())) {
                 if (childStatus.isDirectory()) {
@@ -802,59 +794,6 @@ public class FileSystemMetadataStore extends MetadataStore {
             path = path.substring(0, path.length() - JSON_SUFFIX.length());
         }
         return path;
-    }
-
-    @Override
-    public TransactionStatus getTransaction() throws TransactionException {
-        return new SimpleTransactionStatus();
-    }
-
-    @Override
-    public void commit(TransactionStatus status) throws TransactionException {
-        releaseOwnedLocks();
-    }
-
-    @Override
-    public void rollback(TransactionStatus status) throws TransactionException {
-        KylinConfig conf = KylinConfig.readSystemKylinConfig();
-        InMemResourceStore mem = (InMemResourceStore) ResourceStore.getKylinMetaStore(conf);
-        Set<String> changesResource = UnitOfWork.get().getCopyForWriteItems();
-        for (String resPath : changesResource) {
-            RawResource raw = mem.getResource(resPath);
-            Pair<MetadataType, String> typeAndKey = MetadataType.splitKeyWithType(resPath);
-            if (raw == null) {
-                raw = RawResource.constructResource(typeAndKey.getFirst(), null, 0, -1, typeAndKey.getSecond());
-            }
-            save(typeAndKey.getFirst(), raw);
-            log.info("Rollback metadata for FileSystemMetadataStore: {}", resPath);
-        }
-        releaseOwnedLocks();
-    }
-
-    private void lockResource(String lockPath) {
-        ReentrantLock lock = LOCK_MAP.computeIfAbsent(lockPath, k -> new ReentrantLock());
-        log.debug("LOCK: try to lock path {}", lockPath);
-        if (OWNED_LOCKS.get().contains(lock)) {
-            log.debug("LOCK: already locked {}", lockPath);
-        } else {
-            try {
-                if (!lock.tryLock(1, TimeUnit.MINUTES)) {
-                    log.debug("LOCK: failed to lock for " + lockPath);
-                    throw new LockTimeoutException(lockPath);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new KylinRuntimeException(e);
-            }
-            log.debug("LOCK: locked {}", lockPath);
-            OWNED_LOCKS.get().add(lock);
-        }
-    }
-
-    private void releaseOwnedLocks() {
-        OWNED_LOCKS.get().forEach(ReentrantLock::unlock);
-        log.debug("LOCK: release lock count {}", OWNED_LOCKS.get().size());
-        OWNED_LOCKS.get().clear();
     }
 
     public interface CompressHandlerInterface {

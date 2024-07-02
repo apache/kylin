@@ -28,7 +28,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.annotation.Clarification;
-import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -37,7 +36,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import lombok.val;
 
 @Clarification(priority = Clarification.Priority.MAJOR, msg = "Enterprise")
-public class FavoriteRuleManager {
+public class FavoriteRuleManager extends BaseRuleManager {
 
     private final FavoriteRuleStore favoriteRuleStore;
     private final String project;
@@ -64,6 +63,12 @@ public class FavoriteRuleManager {
         return FavoriteRule.FAVORITE_RULE_NAMES.stream().map(this::getOrDefaultByName).collect(Collectors.toList());
     }
 
+    public List<FavoriteRule> listAutoIndexPlanRules() {
+        return FavoriteRule.AUTO_INDEX_PLAN_RULE_NAMES.stream()
+                .filter(ruleName -> !ruleName.equals(FavoriteRule.AUTO_INDEX_PLAN_OPTION)).map(this::getOrDefaultByName)
+                .collect(Collectors.toList());
+    }
+
     public FavoriteRule getByName(String name) {
         return favoriteRuleStore.queryByName(project, name);
     }
@@ -78,35 +83,21 @@ public class FavoriteRuleManager {
         return FavoriteRule.getDefaultRuleIfNull(getByName(ruleName), ruleName);
     }
 
-    private FavoriteRule copyForWrite(FavoriteRule rule) {
+    protected FavoriteRule copyForWrite(FavoriteRule rule) {
         // No need to copy, just return the origin object
         // This will be rewrite after metadata is refactored
         return rule;
     }
 
-    public void resetRule() {
-        FavoriteRule.getAllDefaultRule().forEach(this::updateRule);
+    public void resetRecommendRule() {
+        FavoriteRule.getRecommendDefaultRule().forEach(this::updateRule);
     }
 
-    public void updateRule(FavoriteRule rule) {
-        updateRule(rule.getConds(), rule.isEnabled(), rule.getName());
+    public void resetAutoIndexPlanRule() {
+        FavoriteRule.getAutoIndexPlanDefaultRule().forEach(this::updateRule);
     }
 
-    public void updateRule(List<FavoriteRule.AbstractCondition> conditions, boolean isEnabled, String ruleName) {
-        JdbcUtil.withTxAndRetry(getTransactionManager(), () -> {
-            FavoriteRule copy = copyForWrite(getOrDefaultByName(ruleName));
-            copy.setEnabled(isEnabled);
-            List<FavoriteRule.AbstractCondition> newConditions = Lists.newArrayList();
-            if (!conditions.isEmpty()) {
-                newConditions.addAll(conditions);
-            }
-            copy.setConds(newConditions);
-            saveOrUpdate(copy);
-            return null;
-        });
-    }
-
-    private void saveOrUpdate(FavoriteRule rule) {
+    protected void saveOrUpdate(FavoriteRule rule) {
         if (rule.getId() == 0) {
             rule.setProject(project);
             rule.setCreateTime(System.currentTimeMillis());

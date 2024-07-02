@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.job.stage.optimize
 import java.util.concurrent.TimeUnit
 
 import org.apache.kylin.engine.spark.job.SegmentExec.ResultType
-import org.apache.kylin.engine.spark.job.stage.StageExec
+import org.apache.kylin.engine.spark.job.step.StageExec
 import org.apache.kylin.guava30.shaded.common.collect.Queues
 
 import scala.concurrent.Future

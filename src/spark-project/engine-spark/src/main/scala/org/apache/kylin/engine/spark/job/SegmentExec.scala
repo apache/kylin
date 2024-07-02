@@ -27,7 +27,7 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.filter.ParquetBloomFilter
 import org.apache.kylin.engine.spark.job.SegmentExec._
-import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
+import org.apache.kylin.engine.spark.job.step.merge.MergeStage
 import org.apache.kylin.engine.spark.scheduler.JobRuntime
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Queues}
 import org.apache.kylin.metadata.cube.model.NDataLayout.AbnormalType
@@ -38,7 +38,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql._
 import org.apache.spark.sql.datasource.storage.{StorageListener, StorageStoreFactory, WriteTaskStats}
 import org.apache.spark.sql.delta.catalog.DeltaTableV2
-import org.apache.spark.tracker.BuildContext
+import org.apache.spark.tracker.AppStatusContext
 
 import scala.collection.JavaConverters._
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -56,7 +56,7 @@ trait SegmentExec extends Logging {
   protected val dataModel: NDataModel
   protected val storageType: DataStorageType
 
-  protected val resourceContext: BuildContext
+  protected val appStatusContext: AppStatusContext
   protected val runtime: JobRuntime
 
   @volatile protected var anonymousFailure: Option[Throwable] = None
@@ -89,7 +89,7 @@ trait SegmentExec extends Logging {
     var shrinkable = true
     var reportable = false
     while (taskIter.hasNext) {
-      if (resourceContext.isAvailable) {
+      if (appStatusContext.isAvailable) {
         shrinkable = true
         while (taskIter.hasNext && inflight < cwnd) {
           val task = taskIter.next()
@@ -217,7 +217,7 @@ trait SegmentExec extends Logging {
 
   protected def saveV3Metadata(results: java.util.List[LayoutDetailResult]): Unit = {
     if (results.isEmpty) {
-      return null
+      return
     }
     class DFUpdate extends UnitOfWork.Callback[Int] {
       override def process(): Int = {
@@ -256,7 +256,7 @@ trait SegmentExec extends Logging {
 
   protected def saveMetadata(results: java.util.List[LayoutResult]): Unit = {
     if (results.isEmpty) {
-      return null
+      return
     }
     logInfo(s"Segment $segmentId drained layouts: " + //
       s"${results.asScala.map(_.layoutId).mkString("[", ",", "]")}")

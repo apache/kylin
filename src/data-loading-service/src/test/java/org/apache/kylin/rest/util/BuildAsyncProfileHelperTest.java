@@ -28,7 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.profiler.ProfilerStatus;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;

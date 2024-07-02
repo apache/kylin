@@ -36,6 +36,8 @@ import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
@@ -178,9 +180,13 @@ public class IndicesResponse {
             this.lastModifiedTime = layouts.stream().map(LayoutEntity::getUpdateTime).max(Comparator.naturalOrder())
                     .orElse(0L);
             val layoutSet = layouts.stream().map(LayoutEntity::getId).collect(Collectors.toSet());
+            FavoriteRuleManager ruleManager = FavoriteRuleManager
+                    .getInstance(indicesResponse.getDataFlow().getProject());
+            Integer timeWindow = FavoriteRule
+                    .getTimeWindowLength(ruleManager.getValue(FavoriteRule.FREQUENCY_TIME_WINDOW));
             this.queryHitCount = indicesResponse.getDataFlow().getLayoutHitCount().entrySet().stream()
                     .filter(entry -> layoutSet.contains(entry.getKey())).map(Map.Entry::getValue)
-                    .mapToInt(hit -> hit.getFrequency(indexEntity.getIndexPlan().getProject())).sum();
+                    .mapToInt(hit -> hit.getFrequency(timeWindow)).sum();
 
         }
 

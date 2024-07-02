@@ -22,11 +22,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_JOIN_RELATIONSHIP_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.COMPUTE_COLUMN_EXPRESSION;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.COMPUTE_COLUMN_NAME;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.INDEX_PLAN;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.MODEL_DESC;
-import static org.apache.kylin.common.persistence.lock.ResourcePathParser.JOINER;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -1457,20 +1452,6 @@ public class NDataModel extends RootPersistentEntity {
     public String getMeasureNameByMeasureId(int id) {
         Preconditions.checkArgument(Objects.nonNull(effectiveMeasures));
         return effectiveMeasures.containsKey(id) ? effectiveMeasures.get(id).getName() : null;
-    }
-
-    @Override
-    public List<String> getLockPaths(String ignored) {
-        List<String> lockPaths = new ArrayList<>();
-        lockPaths.add(getResourcePath());
-        lockPaths.add(JOINER.join("", project, INDEX_PLAN.value(), getUuid()));
-        lockPaths.add(JOINER.join("", project, MODEL_DESC.value(), alias));
-        for (ComputedColumnDesc ccDesc : computedColumnDescs) {
-            lockPaths.add(JOINER.join("", project, COMPUTE_COLUMN_NAME.value(), ccDesc.getIdentityCcName()));
-            lockPaths.add(JOINER.join("", project, COMPUTE_COLUMN_EXPRESSION.value(),
-                    ccDesc.getInnerExpression().replace('/', '@')));
-        }
-        return lockPaths;
     }
 
     public Collection<NamedColumn> getAllSelectedColumns() {

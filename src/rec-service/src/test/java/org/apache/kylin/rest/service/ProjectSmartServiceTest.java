@@ -50,6 +50,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
 
     private static final String PROJECT = "default";
+    private static final String DEFAULT_LOW_FREQUENCY_THRESHOLD = "5";
     private JdbcTemplate jdbcTemplate;
 
     @InjectMocks
@@ -79,7 +80,6 @@ public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
-        overwriteSystemProp("kylin.cube.low-frequency-threshold", "5");
         createTestMetadata();
         MockitoAnnotations.openMocks(this);
         jdbcTemplate = JdbcUtil.getJdbcTemplate(getTestConfig());
@@ -94,6 +94,13 @@ public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
             jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
+    }
+
+    private void overwriteLowFrequencyRule(String project) {
+        FavoriteRule.Condition cond = new FavoriteRule.Condition(null, DEFAULT_LOW_FREQUENCY_THRESHOLD);
+        FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
+        manager.createRule(
+                new FavoriteRule(Collections.singletonList(cond), FavoriteRule.LOW_FREQUENCY_THRESHOLD, true));
     }
 
     private void createRules() {
@@ -247,9 +254,11 @@ public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetProjectStatisticsOfGC() {
+        final String project = "gc_test";
+        overwriteLowFrequencyRule(project);
         TopRecsUpdateScheduler topRecsUpdateScheduler = new TopRecsUpdateScheduler();
         ReflectionTestUtils.setField(projectSmartService, "topRecsUpdateScheduler", topRecsUpdateScheduler);
-        projectService.garbageCleanup("gc_test", 0);
+        projectService.garbageCleanup(project, 0);
         ProjectStatisticsResponse projectStatistics = projectSmartService.getProjectStatistics("gc_test");
         assertEquals(1, projectStatistics.getDatabaseSize());
         assertEquals(1, projectStatistics.getTableSize());
@@ -258,7 +267,7 @@ public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
         assertEquals(0, projectStatistics.getAdditionalRecPatternCount());
         assertEquals(2, projectStatistics.getRemovalRecPatternCount());
         assertEquals(2, projectStatistics.getRecPatternCount());
-        assertEquals(8, projectStatistics.getEffectiveRuleSize());
+        assertEquals(10, projectStatistics.getEffectiveRuleSize());
         assertEquals(0, projectStatistics.getApprovedRecCount());
         assertEquals(0, projectStatistics.getApprovedAdditionalRecCount());
         assertEquals(0, projectStatistics.getApprovedRemovalRecCount());
@@ -280,7 +289,7 @@ public class ProjectSmartServiceTest extends NLocalFileMetadataTestCase {
         request.setUpdateFrequency("1");
         projectSmartService.updateRegularRule("gc_test", request);
         ProjectStatisticsResponse projectStatistics2 = projectSmartService.getProjectStatistics("gc_test");
-        assertEquals(6, projectStatistics2.getEffectiveRuleSize());
+        assertEquals(8, projectStatistics2.getEffectiveRuleSize());
         topRecsUpdateScheduler.close();
     }
 

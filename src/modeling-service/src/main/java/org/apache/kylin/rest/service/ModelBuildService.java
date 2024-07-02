@@ -103,10 +103,12 @@ import lombok.var;
 @Component("modelBuildService")
 public class ModelBuildService extends AbstractModelService implements ModelBuildSupporter {
 
+    private static final Logger logger = LoggerFactory.getLogger(ModelBuildService.class);
     @Autowired
     private ModelService modelService;
 
-    private static final Logger logger = LoggerFactory.getLogger(ModelBuildService.class);
+    @Autowired
+    private IndexPlanService indexPlanService;
 
     //only fo test
     public JobInfoResponse buildSegmentsManually(String project, String modelId, String start, String end)
@@ -427,10 +429,9 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         buildSegmentOverlapExceptionInfo(overlapSegments);
         modelService.saveDateFormatIfNotExist(project, modelId, params.getPartitionColFormat());
         checkMultiPartitionBuildParam(modelDescInTransaction, params);
-        NDataSegment newSegment = modelService.appendSegment(new AddSegmentRequest(project, modelId,
-                segmentRangeToBuild, params.isNeedBuild() ? SegmentStatusEnum.NEW : SegmentStatusEnum.READY,
+        return modelService.appendSegment(new AddSegmentRequest(project, modelId, segmentRangeToBuild,
+                params.isNeedBuild() ? SegmentStatusEnum.NEW : SegmentStatusEnum.READY,
                 params.getMultiPartitionValues()));
-        return newSegment;
     }
 
     @Override
@@ -439,10 +440,8 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         String modelId = params.getModelId();
 
         NDataModel modelDescInTransaction = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
-        JobManager jobManager = getManager(JobManager.class, project);
         TableDesc table = getManager(NTableMetadataManager.class, project)
                 .getTableDesc(modelDescInTransaction.getRootFactTableName());
-        val df = getManager(NDataflowManager.class, project).getDataflow(modelId);
 
         var segmentRangeToBuild = params.getSpecifiedSegmentRange();
         if (segmentRangeToBuild == null) {
@@ -469,7 +468,6 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         if (!params.isNeedBuild()) {
             return null;
         }
-        // TODO
         JobParam jobParam = new JobParam(newSegment, modelId, getUsername())
                 .withIgnoredSnapshotTables(params.getIgnoredSnapshotTables()).withPriority(params.getPriority())
                 .withYarnQueue(params.getYarnQueue()).withTag(params.getTag());
@@ -519,8 +517,72 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         return buildIndicesInternal(modelId, project, priority, yarnQueue, tag, username);
     }
 
+    public List<BuildIndexResponse> buildAllIndexPlannerIndicesInternal(String project, int priority, String yarnQueue,
+            Object tag, String username) {
+        List<BuildIndexResponse> jobs = new ArrayList<>();
+        // for all models on project
+        val projectInstance = NProjectManager.getInstance(getConfig()).getProject(project);
+        val config = projectInstance.getConfig();
+        if (config.isSemiAutoMode()) {
+            List<NDataModel> indexPlannerModels = NDataModelManager.getInstance(config, project).listAllModels()
+                    .stream().filter(model -> modelService.isAutoIndexPlanEnabled(project, model.getId()))
+                    .collect(Collectors.toList());
+            logger.info("Prepare to create fill index job on project {} for these {} models :{}", project,
+                    indexPlannerModels.size(),
+                    indexPlannerModels.stream().map(NDataModel::getAlias).collect(Collectors.joining(",")));
+            // start to fill data to index-planner indexes
+            indexPlannerModels.forEach(model -> {
+                try {
+                    BuildIndexResponse buildIndexResponse = buildIndexPlannerIndicesInternal(model.getId(), project,
+                            priority, yarnQueue, tag, username);
+                    if (StringUtils.isNotEmpty(buildIndexResponse.getJobId())) {
+                        logger.info(
+                                "Success to create fill index job[{}] on project {} for to index-planner index in model {}",
+                                buildIndexResponse.getJobId(), project, model.getAlias());
+                        jobs.add(buildIndexResponse);
+                    } else {
+                        logger.warn(
+                                "Due to {}, skip to create fill index job on project {} for to index-planner index in model {}",
+                                buildIndexResponse.getType(), project, model.getAlias());
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to fill data to index-planner index for model {}", model.getId(), e);
+                }
+            });
+        }
+        // end build index
+        return jobs;
+    }
+
+    public List<BuildIndexResponse> buildAllIndexPlannerIndicesManually(String project, int priority, String yarnQueue,
+            Object tag) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        String username = getUsername();
+        return buildAllIndexPlannerIndicesInternal(project, priority, yarnQueue, tag, username);
+    }
+
+    public BuildIndexResponse buildIndexPlannerIndicesManually(String modelId, String project, int priority,
+            String yarnQueue, Object tag) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        String username = getUsername();
+        return buildIndexPlannerIndicesInternal(modelId, project, priority, yarnQueue, tag, username);
+    }
+
+    // Only for index planner build job
+    // the index is built using the build spark conf of index planner(the prefix is kylin.index-planner.spark.conf)
+    public BuildIndexResponse buildIndexPlannerIndicesInternal(String modelId, String project, int priority,
+            String yarnQueue, Object tag, String userName) {
+        return buildIndicesInternal(modelId, project, priority, yarnQueue, tag, userName, true);
+    }
+
+    // By default, this method is used to build normal indexes
     private BuildIndexResponse buildIndicesInternal(String modelId, String project, int priority, String yarnQueue,
             Object tag, String userName) {
+        return buildIndicesInternal(modelId, project, priority, yarnQueue, tag, userName, false);
+    }
+
+    private BuildIndexResponse buildIndicesInternal(String modelId, String project, int priority, String yarnQueue,
+            Object tag, String userName, boolean isIndexPlanner) {
         NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
         if (ManagementType.MODEL_BASED != modelDesc.getManagementType()) {
             throw new KylinException(PERMISSION_DENIED, String.format(Locale.ROOT,
@@ -534,6 +596,10 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         }
         JobParam jobParam = new JobParam(modelId, userName).withPriority(priority).withYarnQueue(yarnQueue)
                 .withTag(tag);
+        if (isIndexPlanner) {
+            boolean indexPlanEnabled = indexPlanService.checkAutoIndexPlanEnabled(project, modelId);
+            jobParam.addExtParams(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED, String.valueOf(indexPlanEnabled));
+        }
         jobParam.setProject(project);
         String jobId = getManager(SourceUsageManager.class).licenseCheckWrap(project,
                 () -> getManager(JobManager.class, project).addIndexJob(jobParam));

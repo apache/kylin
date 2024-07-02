@@ -23,6 +23,8 @@ import org.apache.parquet.schema.MessageType
 import org.apache.spark.sql.catalyst.util.RebaseDateTime.RebaseSpec
 import org.apache.spark.sql.types.StructType
 
+import java.time.ZoneId
+
 class ShadeParquetRecordMaterializer(parquetSchema: MessageType,
                                      catalystSchema: StructType,
                                      schemaConverter: ParquetToSparkSchemaConverter,

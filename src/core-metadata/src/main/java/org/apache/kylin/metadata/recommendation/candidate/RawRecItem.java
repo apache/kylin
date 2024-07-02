@@ -49,6 +49,7 @@ import lombok.val;
 public class RawRecItem {
     public static final String IMPORTED = "IMPORTED";
     public static final String QUERY_HISTORY = "QUERY_HISTORY";
+    public static final String INDEX_PLANNER = "INDEX_PLANNER";
 
     private static final String TYPE_ERROR_FORMAT = "incorrect raw recommendation type(%d), type value must from 1 to 4 included";
     private static final String STATE_ERROR_FORMAT = "incorrect raw recommendation state(%d), type value must from 0 to 4 included";

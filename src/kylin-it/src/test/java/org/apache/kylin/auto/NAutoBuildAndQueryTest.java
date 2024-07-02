@@ -327,11 +327,9 @@ public class NAutoBuildAndQueryTest extends SuggestTestBase {
                         "src/test/resources/query/sql_function/query06.sql", // initcap('fp-gtc'), 'Fp-gtc' vs 'Fp-Gtc'
                         "src/test/resources/query/sql_function/query20.sql", // initcap('fp-gtc'), 'Fp-gtc' vs 'Fp-Gtc'
                         "src/test/resources/query/sql_function/query21.sql", // initcap('fp-gtc'), 'Fp-gtc' vs 'Fp-Gtc'
-                        "src/test/resources/query/sql_function/query32.sql", // timestamp accuracy
                         "src/test/resources/query/sql_function/query35.sql", // overlay function
                         "src/test/resources/query/sql_function/sql_function_formatUDF/query02.sql", // date_format
-                        "src/test/resources/query/sql_function/sql_function_formatUDF/query03.sql", // date_format
-                        "src/test/resources/query/sql_function/query33.sql" // timestamp accuracy
+                        "src/test/resources/query/sql_function/sql_function_formatUDF/query03.sql" // date_format
                 ));
         overwriteSystemProp("kylin.smart.conf.computed-column.suggestion.filter-key.enabled", "TRUE");
         overwriteSystemProp("kylin.query.non-equi-join-model-enabled", "TRUE");

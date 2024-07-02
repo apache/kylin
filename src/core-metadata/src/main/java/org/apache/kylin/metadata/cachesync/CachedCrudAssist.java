@@ -117,12 +117,13 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
         if (UnitOfWork.isAlreadyInTransaction()) {
             UnitOfWork.get().getCopyForWriteItems().add(entity.getResourcePath());
         }
-        if (entity.getMvcc() == -1) {
-            return JsonUtil.copyForWrite(entity, serializer, initEntity);
-        }
         T reloadedEntity = store.getResource(entity.getResourcePath(), serializer, true);
         if (reloadedEntity == null) {
-            return null;
+            if (entity.getMvcc() == -1) {
+                return JsonUtil.copyForWrite(entity, serializer, initEntity);
+            } else {
+                return null;
+            }
         } else if (reloadedEntity.isBroken()) {
             return JsonUtil.copyForWrite(entity, serializer, initEntity);
         } else {

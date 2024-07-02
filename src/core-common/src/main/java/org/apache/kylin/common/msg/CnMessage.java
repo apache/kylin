@@ -258,6 +258,7 @@ public class CnMessage extends Message {
         return "选择的任务状态无效。请重新选择";
     }
 
+    @Override
     public String getIllegalSortByFilter() {
         return "选择的排序条件\"%s\"无效。请重新选择";
     }
@@ -538,6 +539,56 @@ public class CnMessage extends Message {
     @Override
     public String getUpdateFrequencyNotEmpty() {
         return "推荐频率不能为空";
+    }
+
+    @Override
+    public String getAutoCompleteModeNotValid() {
+        return "自动补数的方式应该选择固定日期（ABSOLUTE）或相对日期（RELATIVE）";
+    }
+
+    @Override
+    public String getSemiAutoNotEnabled() {
+        return "需要先开启智能推荐以启用自动索引优化";
+    }
+
+    @Override
+    public String getAutoIndexPlanNotEnabled() {
+        return "You need to enable auto-index-plan before job submission";
+    }
+
+    @Override
+    public String getInvalidDateUnit() {
+        return "预期的日期单位是YEAR/WEEK/MONTH/DAY，输入的是%s";
+    }
+
+    @Override
+    public String getWhiteListNotInExistingIndex() {
+        return "要添加白名单的索引%s不在已有索引列表";
+    }
+
+    @Override
+    public String getIndexesNotInWhiteList() {
+        return "要从白名单的删除的索引%s不在白名单";
+    }
+
+    @Override
+    public String getNotAllowedMultipleAutoIndexPlanJob() {
+        return "不支持同时启用多个包含索引自动优化的任务";
+    }
+
+    @Override
+    public String getInstantInitNotAllowed() {
+        return "模型已有数据，不允许设置初始化索引数";
+    }
+
+    @Override
+    public String getInstantInitTooMuch() {
+        return "最多快速创建至 %d 个索引";
+    }
+
+    @Override
+    public String getInstantInitTooLittle() {
+        return "不能小于当前索引数 %d";
     }
 
     @Override
@@ -1532,6 +1583,11 @@ public class CnMessage extends Message {
     @Override
     public String getInvalidRange() {
         return "%s 不是 [%s - %s] 范围内整数";
+    }
+
+    @Override
+    public String getInvalidDateFormat() {
+        return "预期的日期格式是%s，输入的是%s";
     }
 
     @Override

@@ -34,7 +34,6 @@ import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.request.OptRecRequest;
 import org.apache.kylin.rest.response.OptRecResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -57,15 +56,12 @@ public class OptRecServiceGeneralTest extends OptRecV2TestBase {
     OptRecApproveService optRecApproveService = Mockito.spy(new OptRecApproveService());
     @Spy
     private final AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
-    @Spy
-    MetadataInvoker modelMetadataInvoker = Mockito.spy(MetadataInvoker.class);
 
     @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.openMocks(this);
-        MetadataInvoker.setDelegate(modelService);
     }
 
     public OptRecServiceGeneralTest() {

@@ -18,14 +18,14 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.BeforeAndAfterAll
+
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 class TestUdfManager extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll {
 

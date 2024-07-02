@@ -44,6 +44,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -137,6 +138,10 @@ public abstract class ExecutableUtil {
     }
 
     public void checkLayoutsNotEmpty(JobParam jobParam) {
+        String enableAutoIndexPlan = jobParam.getExtParams().get(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED);
+        if (Boolean.parseBoolean(enableAutoIndexPlan)) {
+            return;
+        }
         if (CollectionUtils.isEmpty(jobParam.getProcessLayouts())) {
             log.warn("JobParam {} is no longer valid because no layout awaits building", jobParam);
             throw new KylinException(getCheckIndexErrorCode());

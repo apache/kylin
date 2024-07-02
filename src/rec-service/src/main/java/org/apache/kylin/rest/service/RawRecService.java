@@ -57,6 +57,7 @@ import org.apache.kylin.rec.AbstractContext;
 import org.apache.kylin.rec.ModelReuseContext;
 import org.apache.kylin.rec.ProposerJob;
 import org.apache.kylin.rec.common.AccelerateInfo;
+import org.apache.kylin.rec.util.QueryRecStatsCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,13 @@ public class RawRecService extends BasicService
 
     @Autowired
     OptRecService optRecService;
+
+    public static int recommendationSize(String project) {
+        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(project);
+        FavoriteRule favoriteRule = ruleManager.getOrDefaultByName(FavoriteRule.REC_SELECT_RULE_NAME);
+        FavoriteRule.Condition condition = (FavoriteRule.Condition) favoriteRule.getConds().get(0);
+        return Integer.parseInt(condition.getRightThreshold());
+    }
 
     public void accelerate(String project) {
         projectSmartService.accelerateImmediately(project);
@@ -94,7 +102,7 @@ public class RawRecService extends BasicService
         transferToLayoutRecItemsAndSave(semiContextV2, ArrayListMultimap.create(), nonLayoutUniqueFlagRecMap);
     }
 
-    public void generateRawRecommendations(String project, List<QueryHistory> queryHistories, boolean isManual) {
+    public void generateRawRecommendations(String project, List<QueryHistory> queryHistories) {
         if (CollectionUtils.isEmpty(queryHistories)) {
             return;
         }
@@ -127,6 +135,9 @@ public class RawRecService extends BasicService
         transferToLayoutRecItemsAndSave(semiContextV2, layoutToQHMap, nonLayoutRecItemMap);
 
         markFailAccelerateMessageToQueryHistory(queryHistoryMap, semiContextV2);
+
+        // Do v3 recommendation and query statistics.
+        QueryRecStatsCollector.getInstance().doStatistics(queryHistoryMap, nonLayoutRecItemMap, semiContextV2);
 
         log.info("Semi-Auto-Mode project:{} generate suggestions cost {}ms", project,
                 System.currentTimeMillis() - startTime);
@@ -223,13 +234,6 @@ public class RawRecService extends BasicService
         }
     }
 
-    public static int recommendationSize(String project) {
-        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(project);
-        FavoriteRule favoriteRule = ruleManager.getOrDefaultByName(FavoriteRule.REC_SELECT_RULE_NAME);
-        FavoriteRule.Condition condition = (FavoriteRule.Condition) favoriteRule.getConds().get(0);
-        return Integer.parseInt(condition.getRightThreshold());
-    }
-
     @Override
     public void onUpdate(String project, String modelId) {
         ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(project);
@@ -268,8 +272,8 @@ public class RawRecService extends BasicService
     }
 
     @Override
-    public void onMatchQueryHistory(String project, List<QueryHistory> queries, boolean manual) {
-        generateRawRecommendations(project, queries, manual);
+    public void onMatchQueryHistory(String project, List<QueryHistory> queries) {
+        generateRawRecommendations(project, queries);
     }
 
     void transferToLayoutRecItemsAndSave(AbstractContext semiContextV2,
@@ -329,6 +333,7 @@ public class RawRecService extends BasicService
                     updateLayoutStatistic(recItem, layoutToQHMap, layoutItem.getLayout(), targetModel);
                     if (recItem.isAdditionalRecItemSavable()) {
                         recManager.saveOrUpdate(recItem);
+                        nonLayoutUniqueFlagRecMap.put(layoutItem.getUniqueId(targetModel.getUuid()), recItem);
                     }
                     return null;
                 });

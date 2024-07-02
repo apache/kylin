@@ -27,6 +27,6 @@ public class ProjectGeneralInfoRequest {
     @JsonProperty("description")
     private String description;
     @JsonProperty("semi_automatic_mode")
-    private boolean isSemiAutoMode;
+    private Boolean isSemiAutoMode;
 
 }

@@ -18,10 +18,10 @@
 
 package org.apache.spark
 
-import java.util.Date
-
 import org.apache.spark.resource.ResourceProfile
 import org.apache.spark.status.api.v1._
+
+import java.util.Date
 
 class MockJobData(
                    override val jobId: Int,

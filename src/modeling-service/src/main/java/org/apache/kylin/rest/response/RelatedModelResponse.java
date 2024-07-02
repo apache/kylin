@@ -21,11 +21,11 @@ package org.apache.kylin.rest.response;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.metadata.acl.NDataModelAclParams;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.acl.NDataModelAclParams;
-import org.apache.kylin.metadata.model.NDataModel;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;

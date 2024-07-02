@@ -34,7 +34,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.response.OpenRecApproveResponse;
 import org.apache.kylin.rest.response.OptRecLayoutsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -65,9 +64,6 @@ public class OptRecServiceCompatibleTest extends OptRecV2TestBase {
     private final AclUtil aclUtil = Mockito.spy(AclUtil.class);
     @Spy
     private final IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
-    @Spy
-    MetadataInvoker modelMetadataInvoker = Mockito.spy(MetadataInvoker.class);
-
     @Override
     @Before
     public void setUp() throws Exception {
@@ -78,7 +74,6 @@ public class OptRecServiceCompatibleTest extends OptRecV2TestBase {
         indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         prepareACL();
         QueryHistoryAccelerateScheduler.getInstance().init();
-        MetadataInvoker.setDelegate(modelService);
     }
 
     @Override

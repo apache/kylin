@@ -19,9 +19,6 @@
 package org.apache.spark.application
 
 import org.apache.hadoop.security.AccessControlException
-
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.SparkException
@@ -29,6 +26,9 @@ import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.scheduler.KylinJobEventLoop
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.scalatest.BeforeAndAfter
+
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 class TestJobWorker extends SparderBaseFunSuite with BeforeAndAfter {
 

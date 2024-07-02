@@ -18,9 +18,6 @@
 
 package org.apache.spark.dict
 
-import java.io.IOException
-import java.util
-
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.TaskContext
@@ -29,6 +26,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StringType
 
+import java.io.IOException
+import java.util
 import scala.collection.JavaConverters._
 
 object NGlobalDictBuilderAssist extends Logging {

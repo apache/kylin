@@ -17,12 +17,6 @@
  */
 package org.apache.spark.utils
 
-import java.io.{File, IOException}
-import java.lang.{Integer => JInt}
-import java.net.InetSocketAddress
-import java.util.concurrent.TimeoutException
-import java.util.{Properties, Map => JMap}
-
 import kafka.api.Request
 import kafka.server.{KafkaConfig, KafkaServer}
 import kafka.zk.{AdminZkClient, KafkaZkClient}
@@ -36,6 +30,11 @@ import org.apache.spark.util.{ShutdownHookManager, Utils}
 import org.apache.spark.{SparkConf, SparkException}
 import org.apache.zookeeper.server.{NIOServerCnxnFactory, ZooKeeperServer}
 
+import java.io.{File, IOException}
+import java.lang.{Integer => JInt}
+import java.net.InetSocketAddress
+import java.util.concurrent.TimeoutException
+import java.util.{Properties, Map => JMap}
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal

@@ -25,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
-import org.apache.kylin.job.execution.NSparkExecutable;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +47,11 @@ public class NResourceDetectStep extends NSparkExecutable {
 
     public NResourceDetectStep(DefaultExecutable parent) {
         if (parent instanceof NSparkCubingJob) {
-            this.setSparkSubmitClassName(RDSegmentBuildJob.class.getName());
+            this.setSparkSubmitClassName(BeforeSegmentBuildJob.class.getName());
         } else if (parent instanceof NSparkMergingJob) {
-            this.setSparkSubmitClassName(ResourceDetectBeforeMergingJob.class.getName());
+            this.setSparkSubmitClassName(BeforeSegmentMergeJob.class.getName());
         } else if (parent instanceof NTableSamplingJob) {
-            this.setSparkSubmitClassName(ResourceDetectBeforeSampling.class.getName());
+            this.setSparkSubmitClassName(BeforeTableAnalyzeJob.class.getName());
         } else if (parent instanceof NSparkLayoutDataOptimizeJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeOptimizeJob.class.getName());
         } else {

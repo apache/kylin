@@ -153,6 +153,7 @@ public class OpenModelSmartController extends NBasicController {
         String projectName = checkProjectName(project);
         checkProjectNotSemiAuto(projectName);
         aclEvaluate.checkProjectOperationDesignPermission(projectName);
+        aclEvaluate.checkProjectReadPermission(projectName);
         String modelId = modelService.getModel(modelAlias, projectName).getId();
         checkRequiredArg("modelId", modelId);
         OptRecLayoutsResponse response = optRecService.getOptRecLayoutsResponse(projectName, modelId, recActionType);

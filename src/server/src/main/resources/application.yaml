@@ -123,12 +123,6 @@ arthas:
   http-port: -1
   telnet-port: -1
 
-feign:
-  hystrix:
-    enabled: true
-  circuitbreaker:
-    enabled: true
-
 ---
 spring:
   config:

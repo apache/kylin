@@ -47,9 +47,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.AuditLogStore;
-import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
@@ -526,13 +524,8 @@ public abstract class ResourceStore implements AutoCloseable {
         return getMetadataStore().getAuditLogStore();
     }
 
-    public EpochStore getEpochStore() {
-        return getMetadataStore().getEpochStore();
-    }
-
     public void createMetaStoreUuidIfNotExist() {
         if (!exists(METASTORE_UUID_TAG)) {
-            MemoryLockUtils.doWithLock(METASTORE_UUID_TAG, false, this, () -> null);
             checkAndPutResource(METASTORE_UUID_TAG, new StringEntity("UUID", RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
         }

@@ -18,8 +18,6 @@
 
 package org.apache.kylin.query.util
 
-import java.util
-
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate
@@ -38,6 +36,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.manager.SparderLookupManager
 import org.apache.spark.sql.{Column, SparkOperation}
 
+import java.util
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 

@@ -58,6 +58,10 @@ public class ExecutablePO extends RootPersistentEntity {
     public static final int HIGHEST_PRIORITY = 0;
     public static final int DEFAULT_PRIORITY = 3;
     public static final int LOWEST_PRIORITY = 4;
+
+    private static final String V4_0_TYPE_PREFIX = "io.kyligence.kap.engine.spark.job";
+    private static final String V5_0_TYPE_PREFIX = "org.apache.kylin.engine.spark.job";
+
     @JsonProperty("name")
     private String name;
 
@@ -139,20 +143,8 @@ public class ExecutablePO extends RootPersistentEntity {
         }
     }
 
-    private long getTaskDuration() {
-        ExecutableOutputPO jobOutput = getOutput();
-        if (jobOutput.getDuration() != 0) {
-            var taskDuration = jobOutput.getDuration();
-            if (ExecutableState.RUNNING == ExecutableState.valueOf(jobOutput.getStatus())) {
-                taskDuration = (taskDuration + System.currentTimeMillis() - jobOutput.getLastRunningStartTime());
-            }
-            return taskDuration;
-        }
-        if (jobOutput.getStartTime() == 0) {
-            return 0;
-        }
-        return (jobOutput.getEndTime() == 0 ? System.currentTimeMillis() - jobOutput.getStartTime()
-                : jobOutput.getEndTime() - jobOutput.getStartTime());
+    public String getType() {
+        return backwardConvertType(type);
     }
 
     public String getTargetModelId() {
@@ -177,6 +169,29 @@ public class ExecutablePO extends RootPersistentEntity {
             }
         }
         return jobDuration;
+    }
+
+    private long getTaskDuration() {
+        ExecutableOutputPO jobOutput = getOutput();
+        if (jobOutput.getDuration() != 0) {
+            var taskDuration = jobOutput.getDuration();
+            if (ExecutableState.RUNNING == ExecutableState.valueOf(jobOutput.getStatus())) {
+                taskDuration = (taskDuration + System.currentTimeMillis() - jobOutput.getLastRunningStartTime());
+            }
+            return taskDuration;
+        }
+        if (jobOutput.getStartTime() == 0) {
+            return 0;
+        }
+        return (jobOutput.getEndTime() == 0 ? System.currentTimeMillis() - jobOutput.getStartTime()
+                : jobOutput.getEndTime() - jobOutput.getStartTime());
+    }
+
+    private String backwardConvertType(String oldType) {
+        if (oldType != null && oldType.startsWith(V4_0_TYPE_PREFIX)) {
+            return oldType.replace(V4_0_TYPE_PREFIX, V5_0_TYPE_PREFIX);
+        }
+        return oldType;
     }
 
 }

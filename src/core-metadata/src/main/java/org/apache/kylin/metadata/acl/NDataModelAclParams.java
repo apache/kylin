@@ -20,8 +20,9 @@ package org.apache.kylin.metadata.acl;
 import java.io.Serializable;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 

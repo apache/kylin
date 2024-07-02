@@ -72,7 +72,7 @@ public class NSparkRetryCubingJobTest extends NLocalWithSparkSessionTestBase {
     @Test
     public void testRetryIndexBuildJob() throws InterruptedException, SQLException {
         config.setProperty("kylin.env", "DEV");
-        config.setProperty("kylin.engine.spark.job-jar", "../assembly/target/ke-assembly-4.0.0-SNAPSHOT-job.jar");
+        config.setProperty("kylin.engine.spark.job-jar", "../assembly/target/kylin-assembly-5.0.0-SNAPSHOT-job.jar");
         config.setProperty("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.MockSegmentBuildJobWithRetry");
         val prj = getProject();
         NDataflowManager dsMgr = NDataflowManager.getInstance(config, prj);

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.resources.ModelRawResource;
 import org.apache.kylin.common.persistence.resources.ProjectRawResource;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
@@ -111,7 +109,7 @@ public class FileSystemMetadataStoreTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRegexTablePathFilter() {
         UnitOfWork.doInTransactionWithRetry(() -> {
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/pj1.db.abc2");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/pj1.db.abc2");
             val store1 = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             String uuid = UUID.randomUUID().toString();
             store1.checkAndPutResource("TABLE_INFO/pj1.db.abc2", ByteSource.wrap(("{ \"uuid\" : \"" + uuid

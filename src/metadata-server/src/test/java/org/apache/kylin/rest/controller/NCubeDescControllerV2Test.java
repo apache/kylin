@@ -19,8 +19,8 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.v2.NCubeDescControllerV2;
 import org.apache.kylin.rest.service.ModelService;
 import org.junit.After;

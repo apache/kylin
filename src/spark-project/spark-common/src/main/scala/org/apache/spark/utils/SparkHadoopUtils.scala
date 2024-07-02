@@ -18,8 +18,8 @@
 package org.apache.spark.utils
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.spark.{SparkConf, SparkEnv}
 import org.apache.spark.deploy.SparkHadoopUtil
+import org.apache.spark.{SparkConf, SparkEnv}
 
 /**
  * Convenience utility object for invoking [[SparkHadoopUtil]].

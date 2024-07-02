@@ -23,8 +23,8 @@ import static org.apache.kylin.metadata.datatype.DataType.INT;
 import static org.apache.kylin.metadata.datatype.DataType.STRING;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.common.util.TempMetadataBuilder;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.Before;
 import org.junit.Test;
 

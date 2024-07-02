@@ -71,6 +71,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.manager.SegmentAutoMergeUtil;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -79,7 +80,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TimeRange;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.constant.SnapshotStatus;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.util.SpringContext;
 import org.springframework.stereotype.Component;
@@ -160,7 +160,7 @@ public class JobSyncListener {
     public void onBuildJobFinished(JobFinishedNotifier notifier) {
         try {
             if (notifier.getJobClass().equals(NSparkCubingJob.class.getName()) && notifier.isSucceed()) {
-                MetadataInvoker.getInstance().checkAndAutoMergeSegments(notifier.getProject(), notifier.getSubject(),
+                SegmentAutoMergeUtil.autoMergeSegments(notifier.getProject(), notifier.getSubject(),
                         notifier.getOwner());
             }
         } catch (Exception e) {

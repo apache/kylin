@@ -62,7 +62,7 @@ object SoftAffinityManager extends Logging {
     resourceRWLock.writeLock().lock()
     try {
       // first, check whether the execId exists
-      if (!fixedIdForExecutors.exists( exec => {
+      if (!fixedIdForExecutors.exists(exec => {
         exec.isDefined && exec.get._1.equals(execHostId._1)
       })) {
         val executorSet = nodesExecutorsMap.getOrElseUpdate(execHostId._2,
@@ -90,7 +90,7 @@ object SoftAffinityManager extends Logging {
   def handleExecutorRemoved(execId: String): Unit = {
     resourceRWLock.writeLock().lock()
     try {
-      val execIdx = fixedIdForExecutors.indexWhere( execHost => {
+      val execIdx = fixedIdForExecutors.indexWhere(execHost => {
         if (execHost.isDefined) {
           execHost.get._1.equals(execId)
         } else {

@@ -17,12 +17,12 @@
  */
 package org.apache.spark.sql
 
-import java.time.ZoneId
-import java.util.{Calendar, Locale, TimeZone}
-
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, KapDateTimeUtils}
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.junit.Assert
+
+import java.time.ZoneId
+import java.util.TimeZone
 
 class KapFunctionsTest extends SparderBaseFunSuite with SharedSparkSession {
 

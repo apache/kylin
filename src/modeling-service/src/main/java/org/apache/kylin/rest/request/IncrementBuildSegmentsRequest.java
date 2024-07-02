@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -67,5 +67,11 @@ public class IncrementBuildSegmentsRequest implements ProjectInsensitiveRequest 
 
     @JsonProperty("tag")
     private Object tag;
+
+    @JsonProperty("auto_index_plan_enable")
+    private boolean autoIndexPlanEnable = false;
+
+    @JsonProperty("instant_init_index_num")
+    private Integer instantInitIndexNum;
 
 }

@@ -47,6 +47,7 @@ import org.springframework.util.DigestUtils;
 public class RawRecUtil {
 
     public static final String TABLE_COLUMN_SEPARATOR = "\\$";
+    public static final String MEASURE_PARAM_SEPARATOR = "__";
 
     private RawRecUtil() {
     }
@@ -157,11 +158,11 @@ public class RawRecUtil {
     }
 
     public static Pair<String, RawRecItem> getRawRecItemFromMap(String md5, String content,
-            Map<String, List<String>> md5ToFlags, Map<String, RawRecItem> layoutRecommendations) {
+            Map<String, List<String>> md5ToFlags, Map<String, RawRecItem> uniqueRecItemMap) {
         List<String> flags = md5ToFlags.getOrDefault(md5, new ArrayList<>());
         int maxItemId = 0;
         for (String flag : flags) {
-            RawRecItem item = layoutRecommendations.get(flag);
+            RawRecItem item = uniqueRecItemMap.get(flag);
             if (RawRecUtil.getContent(item).equals(content)) {
                 return Pair.newPair(flag, item);
             }

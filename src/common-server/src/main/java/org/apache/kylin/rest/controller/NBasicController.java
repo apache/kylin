@@ -78,8 +78,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
-import org.apache.kylin.common.exception.FeignErrorResponse;
-import org.apache.kylin.common.exception.FeignRpcException;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
@@ -261,16 +259,6 @@ public class NBasicController {
         getLogger().error("", ex);
         KylinException cause = (KylinException) ex;
         return new ErrorResponse(req.getRequestURL().toString(), cause);
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(FeignRpcException.class)
-    @ResponseBody
-    FeignErrorResponse handleFeignRpcException(HttpServletRequest req, Throwable ex) {
-        getLogger().error("", ex);
-        FeignRpcException cause = (FeignRpcException) ex;
-        String msg = "Exception happened when using feign rpc: " + req.getRequestURL().toString();
-        return new FeignErrorResponse(msg, cause.getExceptionSerialized());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

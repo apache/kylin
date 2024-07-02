@@ -18,10 +18,18 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.INDEXES_NOT_IN_WHITELIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.SQL_NUMBER_EXCEEDS_LIMIT;
+import static org.apache.kylin.common.exception.ServerErrorCode.WHITELIST_NOT_IN_INDEXES;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.AUTO_INDEX_PLAN_RULE_NAMES;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_ENABLE;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -36,6 +44,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
@@ -47,9 +56,13 @@ import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import org.apache.kylin.metadata.favorite.ModelFavoriteRuleManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rec.AbstractContext;
@@ -62,14 +75,14 @@ import org.apache.kylin.rec.common.AccelerateInfo;
 import org.apache.kylin.rec.common.SmartConfig;
 import org.apache.kylin.rec.model.AbstractJoinRule;
 import org.apache.kylin.rec.runner.InMemoryJobRunner;
-import org.apache.kylin.rest.feign.SmartContract;
+import org.apache.kylin.rest.request.AutoIndexPlanRuleUpdateRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.OpenSqlAccelerateRequest;
 import org.apache.kylin.rest.response.LayoutRecDetailResponse;
 import org.apache.kylin.rest.response.SuggestAndOptimizedResponse;
 import org.apache.kylin.rest.response.SuggestionResponse;
 import org.apache.kylin.rest.response.SuggestionResponse.ModelRecResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.service.util.AutoIndexPlanRuleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -78,7 +91,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component("modelSmartService")
-public class ModelSmartService extends AbstractModelService implements SmartContract {
+public class ModelSmartService extends AbstractModelService implements ModelSmartServiceSupporter {
+
+    private static final Integer AUTO_INDEX_PLAN_OPTION_ALWAYS_ON = 1;
+    private static final Integer AUTO_INDEX_PLAN_OPTION_ALWAYS_OFF = 2;
     @Autowired
     private RawRecService rawRecService;
 
@@ -92,9 +108,8 @@ public class ModelSmartService extends AbstractModelService implements SmartCont
     private IndexPlanService indexPlanService;
 
     @Autowired
-    public AclEvaluate aclEvaluate;
+    private ProjectSmartService projectSmartService;
 
-    @Override
     public SuggestAndOptimizedResponse generateSuggestion(OpenSqlAccelerateRequest request, boolean createNewModel) {
         AbstractContext proposeContext = suggestModel(request.getProject(), request.getSqls(),
                 !request.getForce2CreateNewModel(), createNewModel, request.getModelName());
@@ -583,4 +598,129 @@ public class ModelSmartService extends AbstractModelService implements SmartCont
         response.setIndexes(Lists.newArrayList(virtualResponse));
         responseOfNewModels.add(response);
     }
+
+    @Override
+    public Map<String, Object> getAutoIndexPlanRule(String modelId, String project) {
+        Map<String, Object> projectRules = projectSmartService.getAutoIndexPlanRule(project);
+        // use project config as default
+        Map<String, Object> result = new HashMap<>(projectRules);
+        ModelFavoriteRuleManager manager = ModelFavoriteRuleManager.getInstance(project, modelId);
+        FavoriteRule.AUTO_INDEX_PLAN_RULE_NAMES.stream()
+                .filter(ruleName -> !ruleName.equals(FavoriteRule.INDEX_PLANNER_ENABLE)).map(manager::getByName)
+                .filter(Objects::nonNull)
+                .forEach(rule -> result.put(rule.getName(), AutoIndexPlanRuleUtil.getRuleValue(rule)));
+        Integer option = (Integer) AutoIndexPlanRuleUtil
+                .getRuleValue(manager.getByName(FavoriteRule.AUTO_INDEX_PLAN_OPTION));
+        result.put(FavoriteRule.AUTO_INDEX_PLAN_OPTION, option == null ? 0 : option);
+        if (AUTO_INDEX_PLAN_OPTION_ALWAYS_ON.equals(option) && projectSmartService.isEnableAutoSemi(project)) {
+            result.put(FavoriteRule.INDEX_PLANNER_ENABLE, true);
+        } else if (AUTO_INDEX_PLAN_OPTION_ALWAYS_OFF.equals(option)) {
+            result.put(FavoriteRule.INDEX_PLANNER_ENABLE, false);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getIndexPlannerRule(String modelId, String project) {
+        Map<String, Object> projectRules = projectSmartService.getAutoIndexPlanRule(project);
+        // use project config as default
+        Map<String, Object> result = new HashMap<>(projectRules);
+        ModelFavoriteRuleManager manager = ModelFavoriteRuleManager.getInstance(project, modelId);
+        FavoriteRule.INDEX_PLANNER_RULE_NAMES.stream().map(manager::getByName).filter(Objects::nonNull)
+                .forEach(rule -> result.put(rule.getName(), AutoIndexPlanRuleUtil.getRuleValue(rule)));
+        if (!projectSmartService.isEnableAutoSemi(project)) {
+            result.put(FavoriteRule.INDEX_PLANNER_ENABLE, false);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isAutoIndexPlanEnabled(String modelId, String project) {
+        ModelFavoriteRuleManager modelManager = ModelFavoriteRuleManager.getInstance(project, modelId);
+        FavoriteRule modelRule = modelManager.getByName(FavoriteRule.AUTO_INDEX_PLAN_OPTION);
+        Object modelOption = AutoIndexPlanRuleUtil.getRuleValue(modelRule);
+        if (!projectSmartService.isEnableAutoSemi(project)) {
+            return false;
+        }
+        if (modelOption != null) {
+            Integer option = (Integer) modelOption;
+            if (option.equals(AUTO_INDEX_PLAN_OPTION_ALWAYS_ON)) {
+                return true;
+            } else if (option.equals(AUTO_INDEX_PLAN_OPTION_ALWAYS_OFF)) {
+                return false;
+            }
+        }
+        FavoriteRuleManager projectManager = FavoriteRuleManager.getInstance(project);
+        FavoriteRule projectRule = projectManager.getByName(FavoriteRule.INDEX_PLANNER_ENABLE);
+        Object projectSwitch = AutoIndexPlanRuleUtil.getRuleValue(projectRule);
+        return Objects.equals(projectSwitch, true);
+    }
+
+    public void updateAutoIndexPlanRule(String modelId, AutoIndexPlanRuleUpdateRequest request) {
+        aclEvaluate.checkProjectWritePermission(request.getProject());
+        ModelFavoriteRuleManager manager = ModelFavoriteRuleManager.getInstance(request.getProject(), modelId);
+        JdbcUtil.withTxAndRetry(manager.getTransactionManager(), () -> {
+            AUTO_INDEX_PLAN_RULE_NAMES.forEach(ruleName -> {
+                if (INDEX_PLANNER_ENABLE.equals(ruleName)) {
+                    return;
+                }
+                List<FavoriteRule.AbstractCondition> conds = AutoIndexPlanRuleUtil
+                        .getConditionsFromUpdateRequest(ruleName, request);
+                manager.updateRule(conds, true, ruleName);
+            });
+            return null;
+        });
+    }
+
+    public List<Long> getAutoIndexPlanWhiteList(String modelId, String project) {
+        IndexPlan indexPlan = getIndexPlan(modelId, project);
+        return indexPlan.getPlannerWhiteList();
+    }
+
+    public void addToAutoIndexPlanWhiteList(String modelId, String project, List<Long> toAddList) {
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
+        Set<Long> existingLayoutIds = indexPlan.getAllLayoutIds(false);
+        if (!existingLayoutIds.containsAll(toAddList)) {
+            Set<Long> diffSet = new HashSet<>(toAddList);
+            diffSet.removeAll(existingLayoutIds);
+            throw new KylinException(WHITELIST_NOT_IN_INDEXES, String.format(Locale.ROOT,
+                    MsgPicker.getMsg().getWhiteListNotInExistingIndex(), StringUtils.join(diffSet, ",")));
+        }
+        List<Long> existingWhiteList = new ArrayList<>(indexPlan.getPlannerWhiteList());
+        if (existingWhiteList.containsAll(toAddList)) {
+            return;
+        }
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NIndexPlanManager idpMgr = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            idpMgr.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
+                Set<Long> allWhiteList = new LinkedHashSet<>(copyForWrite.getPlannerWhiteList());
+                allWhiteList.addAll(toAddList);
+                copyForWrite.setPlannerWhiteList(new ArrayList<>(allWhiteList));
+            });
+            return null;
+        }, project);
+    }
+
+    public void deleteFromAutoIndexPlanWhiteList(String modelId, String project, List<Long> toRemoveList) {
+        NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
+        IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
+        List<Long> existingWhiteList = new ArrayList<>(indexPlan.getPlannerWhiteList());
+        if (!existingWhiteList.containsAll(toRemoveList)) {
+            Set<Long> diffSet = new HashSet<>(toRemoveList);
+            diffSet.removeAll(existingWhiteList);
+            throw new KylinException(INDEXES_NOT_IN_WHITELIST, String.format(Locale.ROOT,
+                    MsgPicker.getMsg().getIndexesNotInWhiteList(), StringUtils.join(diffSet, ",")));
+        }
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NIndexPlanManager idpMgr = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            idpMgr.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
+                List<Long> allWhiteList = new ArrayList<>(copyForWrite.getPlannerWhiteList());
+                allWhiteList.removeAll(toRemoveList);
+                copyForWrite.setPlannerWhiteList(new ArrayList<>(allWhiteList));
+            });
+            return null;
+        }, project);
+    }
+
 }

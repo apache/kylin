@@ -629,6 +629,46 @@ public class Message {
         return "The recommendation frequency cannot be empty";
     }
 
+    public String getAutoCompleteModeNotValid() {
+        return "ABSOLUTE or RELATIVE should be selected for auto-completion.";
+    }
+
+    public String getSemiAutoNotEnabled() {
+        return "You need to enable semi-auto-mode first to enable auto-index-plan";
+    }
+
+    public String getAutoIndexPlanNotEnabled() {
+        return "You need to enable auto-index-plan before job submission";
+    }
+
+    public String getInvalidDateUnit() {
+        return "The expected date unit is YEAR/WEEK/MONTH/DAY while the input is %s.";
+    }
+
+    public String getWhiteListNotInExistingIndex() {
+        return "The indexes %s to be whitelisted is not in the list of existing indexes.";
+    }
+
+    public String getIndexesNotInWhiteList() {
+        return "The indexes %s to be deleted from the whitelist is not in the whitelist.";
+    }
+
+    public String getNotAllowedMultipleAutoIndexPlanJob() {
+        return "Multiple auto-index-plan job at the same time.";
+    }
+
+    public String getInstantInitNotAllowed() {
+        return "The model already has data and is not allowed to set instant-init-index-num.";
+    }
+
+    public String getInstantInitTooMuch() {
+        return "Quickly create up to %d indexes.";
+    }
+
+    public String getInstantInitTooLittle() {
+        return "Can't be less than the current index number %d.";
+    }
+
     public String getSqlNumberExceedsLimit() {
         return "Up to %s SQLs could be imported at a time";
     }
@@ -1421,6 +1461,10 @@ public class Message {
 
     public String getInvalidRange() {
         return "%s is not integer in range [%s - %s] ";
+    }
+
+    public String getInvalidDateFormat() {
+        return "The expected date format is %s while the input is %s";
     }
 
     public String getlDapUserDataSourceConnectionFailed() {

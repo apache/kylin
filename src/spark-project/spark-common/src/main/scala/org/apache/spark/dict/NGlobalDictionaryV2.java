@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import com.alibaba.nacos.common.JustForTest;
-
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.alibaba.nacos.common.JustForTest;
 
 import lombok.val;
 

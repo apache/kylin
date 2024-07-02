@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -30,6 +29,8 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -45,6 +46,7 @@ import org.apache.kylin.rest.response.JobInfoResponseWithFailure;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
 import org.apache.kylin.rest.service.params.IndexBuildParams;
+import org.apache.kylin.rest.util.ModelUtils;
 import org.apache.kylin.streaming.event.StreamingJobKillEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -138,10 +140,10 @@ public class FusionModelService extends AbstractModelService implements TableFus
     }
 
     private void convertModel(ModelRequest copy, String tableName, String oldAliasName) {
-        copy.getSimplifiedJoinTableDescs().stream()
+        copy.getSimplifiedJoinTableDescs()
                 .forEach(x -> x.getSimplifiedJoinDesc().changeFKTableAlias(oldAliasName, tableName));
-        copy.getSimplifiedDimensions().stream().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
-        copy.getSimplifiedMeasures().stream().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
+        copy.getSimplifiedDimensions().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
+        copy.getSimplifiedMeasures().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
         copy.getPartitionDesc().changeTableAlias(oldAliasName, tableName);
     }
 
@@ -199,26 +201,21 @@ public class FusionModelService extends AbstractModelService implements TableFus
                     false);
             if (existedInStreaming) {
                 throw new KylinException(ServerErrorCode.SEGMENT_UNSUPPORTED_OPERATOR,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getFixStreamingSegment()));
+                        MsgPicker.getMsg().getFixStreamingSegment());
             } else {
                 targetModelId = getBatchModel(modelId, buildSegmentsRequest.getProject()).getUuid();
             }
         } else if (dataModel.getModelType() == NDataModel.ModelType.STREAMING) {
             throw new KylinException(ServerErrorCode.SEGMENT_UNSUPPORTED_OPERATOR,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getFixStreamingSegment()));
+                    MsgPicker.getMsg().getFixStreamingSegment());
         }
 
         return modelBuildService.addIndexesToSegments(IndexBuildParams.builder()
-                        .project(buildSegmentsRequest.getProject())
-                        .modelId(targetModelId)
-                        .segmentIds(buildSegmentsRequest.getSegmentIds())
-                        .layoutIds(buildSegmentsRequest.getIndexIds())
-                        .parallelBuildBySegment(buildSegmentsRequest.isParallelBuildBySegment())
-                        .priority(buildSegmentsRequest.getPriority())
-                        .partialBuild(buildSegmentsRequest.isPartialBuild())
-                        .yarnQueue(buildSegmentsRequest.getYarnQueue())
-                        .tag(buildSegmentsRequest.getTag())
-                        .build());
+                .project(buildSegmentsRequest.getProject()).modelId(targetModelId)
+                .segmentIds(buildSegmentsRequest.getSegmentIds()).layoutIds(buildSegmentsRequest.getIndexIds())
+                .parallelBuildBySegment(buildSegmentsRequest.isParallelBuildBySegment())
+                .priority(buildSegmentsRequest.getPriority()).partialBuild(buildSegmentsRequest.isPartialBuild())
+                .yarnQueue(buildSegmentsRequest.getYarnQueue()).tag(buildSegmentsRequest.getTag()).build());
     }
 
     private NDataModel getBatchModel(String fusionModelId, String project) {
@@ -250,12 +247,25 @@ public class FusionModelService extends AbstractModelService implements TableFus
 
     public void setModelUpdateEnabled(DataResult<List<NDataModel>> dataResult) {
         val dataModelList = dataResult.getValue();
-        dataModelList.stream().filter(model -> model.isStreaming()).forEach(model -> {
+        dataModelList.stream().filter(NDataModel::isStreaming).forEach(model -> {
             if (model.isBroken()) {
                 ((NDataModelResponse) model).setModelUpdateEnabled(false);
             } else {
                 ((NDataModelResponse) model).setModelUpdateEnabled(
                         !FusionIndexService.checkStreamingJobAndSegments(model.getProject(), model.getUuid()));
+            }
+        });
+    }
+
+    public void setAutoIndexPlanEnabled(DataResult<List<NDataModel>> dataResult) {
+        val dataModelList = dataResult.getValue();
+        dataModelList.stream().filter(model -> !model.isStreaming() && !model.isBroken()).forEach(model -> {
+            if (modelService.isAutoIndexPlanEnabled(model.getProject(), model.getId())) {
+                ((NDataModelResponse) model).setAutoIndexPlanEnable(true);
+                IndexPlan indexPlan = getManager(NIndexPlanManager.class, model.getProject())
+                        .getIndexPlan(model.getId());
+                ((NDataModelResponse) model).setInstantInitIndexEnable(
+                        !ModelUtils.isModelHasAnyData((NDataModelResponse) model, indexPlan));
             }
         });
     }

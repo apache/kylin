@@ -36,9 +36,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.dao.JobInfoDao;
@@ -51,11 +49,9 @@ import org.apache.kylin.job.execution.DefaultOutput;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.job.execution.SucceedTestExecutable;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.rest.constant.Constant;
@@ -379,15 +375,15 @@ public class JobErrorTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild(RandomUtil.randomUUIDStr());
+        val build1 = new StageExecutable(RandomUtil.randomUUIDStr());
         build1.setProject(getProject());
-        val build2 = new NStageForMerge(RandomUtil.randomUUIDStr());
+        val build2 = new StageExecutable(RandomUtil.randomUUIDStr());
         build2.setProject(getProject());
-        val build3 = new NStageForSnapshot(RandomUtil.randomUUIDStr());
+        val build3 = new StageExecutable(RandomUtil.randomUUIDStr());
         build3.setProject(getProject());
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -467,15 +463,15 @@ public class JobErrorTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild(RandomUtil.randomUUIDStr());
+        val build1 = new StageExecutable(RandomUtil.randomUUIDStr());
         build1.setProject(getProject());
-        val build2 = new NStageForMerge(RandomUtil.randomUUIDStr());
+        val build2 = new StageExecutable(RandomUtil.randomUUIDStr());
         build2.setProject(getProject());
-        val build3 = new NStageForSnapshot(RandomUtil.randomUUIDStr());
+        val build3 = new StageExecutable(RandomUtil.randomUUIDStr());
         build3.setProject(getProject());
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -514,15 +510,15 @@ public class JobErrorTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild(RandomUtil.randomUUIDStr());
+        val build1 = new StageExecutable(RandomUtil.randomUUIDStr());
         build1.setProject(getProject());
-        val build2 = new NStageForMerge(RandomUtil.randomUUIDStr());
+        val build2 = new StageExecutable(RandomUtil.randomUUIDStr());
         build2.setProject(getProject());
-        val build3 = new NStageForSnapshot(RandomUtil.randomUUIDStr());
+        val build3 = new StageExecutable(RandomUtil.randomUUIDStr());
         build3.setProject(getProject());
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -544,7 +540,7 @@ public class JobErrorTest extends NLocalFileMetadataTestCase {
 
         Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS).untilAsserted(() -> {
             var sumDuration = 0L;
-            for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
+            for (Map.Entry<String, List<StageExecutable>> entry : stagesMap.entrySet()) {
                 sumDuration = entry.getValue().stream().map(stage -> stage.getOutput(entry.getKey()))
                         .map(AbstractExecutable::getDuration).mapToLong(Long::valueOf).sum();
             }

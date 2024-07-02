@@ -19,6 +19,7 @@
 package org.apache.spark.sql.udf
 
 import org.apache.spark.sql.udaf.BitmapSerAndDeSer
+
 import java.util.{List => JList}
 import scala.collection.JavaConverters._
 

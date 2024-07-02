@@ -35,5 +35,6 @@ public class JobFactoryConstant {
     public static final String SNAPSHOT_JOB_FACTORY = "SNAPSHOT_JOB_FACTORY";
     public static final String LAYOUT_DATA_OPTIMIZE_JOB_FACTORY = "OPTIMIZE_JOB_FACTORY";
     public static final String INTERNAL_TABLE_JOB_FACTORY = "INTERNAL_TABLE_JOB_FACTORY";
+    public static final String INDEX_PLAN_OPTIMIZE_JOB_FACTORY = "INDEX_PLAN_OPTIMIZE_JOB_FACTORY";
 
 }

@@ -390,8 +390,11 @@ public class RuleBasedIndex implements Serializable {
         if (excludeDel) {
             genLayouts.removeIf(layout -> layoutBlackList.contains(layout.getId()));
         }
+        return tryLayoutsOfCostBasedPlanner(useCostBasedList, genLayouts);
+    }
 
-        // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+    // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+    private Set<LayoutEntity> tryLayoutsOfCostBasedPlanner(boolean useCostBasedList, Set<LayoutEntity> genLayouts) {
         if (useCostBasedList && layoutsOfCostBasedList != null) {
             // use the recommend white list id
             Set<LayoutEntity> result = Sets.newHashSet();
@@ -400,7 +403,7 @@ public class RuleBasedIndex implements Serializable {
                     result.add(layout);
                 }
             });
-            genLayouts = result;
+            return result;
         }
         return genLayouts;
     }

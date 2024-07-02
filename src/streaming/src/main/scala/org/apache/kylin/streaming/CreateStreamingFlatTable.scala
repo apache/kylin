@@ -18,13 +18,12 @@
 
 package org.apache.kylin.streaming
 
-import java.nio.ByteBuffer
-
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.CreateFlatTable
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, NSparkCubingUtil}
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import org.apache.kylin.metadata.cube.utils.StreamingUtils
 import org.apache.kylin.metadata.model._
@@ -37,10 +36,9 @@ import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
+import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions
 
 class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo) {

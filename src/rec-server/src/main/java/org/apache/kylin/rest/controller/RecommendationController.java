@@ -26,13 +26,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.aspect.WaitForSyncBeforeRPC;
-import org.apache.kylin.rest.request.OpenSqlAccelerateRequest;
 import org.apache.kylin.rest.request.OptRecRequest;
 import org.apache.kylin.rest.request.RecCountUpdateRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.OptRecDetailResponse;
 import org.apache.kylin.rest.response.OptRecLayoutsResponse;
-import org.apache.kylin.rest.response.SuggestAndOptimizedResponse;
 import org.apache.kylin.rest.service.ModelSmartService;
 import org.apache.kylin.rest.service.OptRecService;
 import org.apache.kylin.rest.service.ProjectSmartService;
@@ -200,14 +198,5 @@ public class RecommendationController extends NBasicController {
         projectService.accelerateImmediately(project);
         rawRecService.updateCostsAndTopNCandidates(project);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
-    }
-
-    // feign api
-    @PostMapping(value = "/feign/suggest_optimize_models")
-    @ResponseBody
-    @WaitForSyncBeforeRPC
-    public SuggestAndOptimizedResponse generateSuggestion(@RequestBody OpenSqlAccelerateRequest request,
-            @RequestParam("createNewModel") boolean createNewModel) {
-        return modelSmartService.generateSuggestion(request, createNewModel);
     }
 }

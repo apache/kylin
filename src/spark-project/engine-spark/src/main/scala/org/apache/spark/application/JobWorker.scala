@@ -19,13 +19,14 @@
 package org.apache.spark.application
 
 
-import java.util.concurrent.Executors
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport.JOB_HAS_STOPPED
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
+
+import java.util.concurrent.Executors
 
 class JobWorker(application: SparkApplication, args: Array[String], eventLoop: KylinJobEventLoop) extends Logging {
   private val pool = Executors.newSingleThreadExecutor()

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ChainedStageExecutable {
-    Map<String, List<StageBase>> getStagesMap();
+    Map<String, List<StageExecutable>> getStagesMap();
 
     void setStageMap();
 
@@ -30,7 +30,7 @@ public interface ChainedStageExecutable {
 
     ExecutableState getStatus();
 
-    void setStageMapWithSegment(String id, List<StageBase> steps);
+    void setStageMapWithSegment(String id, List<StageExecutable> steps);
 
     AbstractExecutable addStage(AbstractExecutable executable);
 }

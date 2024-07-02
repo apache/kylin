@@ -27,6 +27,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_FREQUENCY_
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_MIN_HIT_COUNT;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_REC_RULE_VALUE;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_UPDATE_FREQUENCY;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_DATE_UNIT;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_RANGE;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.EFFECTIVE_DAYS_MAX;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.EFFECTIVE_DAYS_MIN;
@@ -41,12 +42,15 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.asynctask.AbstractAsyncTask;
 import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
 import org.apache.kylin.metadata.favorite.AsyncTaskManager;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
 import org.apache.kylin.rest.aspect.WaitForSyncBeforeRPC;
+import org.apache.kylin.rest.request.AutoIndexPlanRuleUpdateRequest;
 import org.apache.kylin.rest.request.FavoriteRuleUpdateRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ProjectStatisticsResponse;
 import org.apache.kylin.rest.service.ProjectSmartService;
 import org.apache.kylin.rest.service.QueryHistoryService;
+import org.apache.kylin.rest.service.util.AutoIndexPlanRuleUtil;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -77,6 +81,56 @@ public class ProjectRecController extends NBasicController {
     @Autowired
     @Qualifier("queryHistoryService")
     private QueryHistoryService qhService;
+
+    protected static void checkUpdateFavoriteRuleArgs(FavoriteRuleUpdateRequest request) {
+        // either disabled or arguments not empty
+        if (request.isFreqEnable() && StringUtils.isEmpty(request.getFreqValue())) {
+            throw new KylinException(EMPTY_FREQUENCY_RULE_VALUE, MsgPicker.getMsg().getFrequencyThresholdCanNotEmpty());
+        }
+        if (request.isDurationEnable()
+                && (StringUtils.isEmpty(request.getMinDuration()) || StringUtils.isEmpty(request.getMaxDuration()))) {
+            throw new KylinException(EMPTY_DURATION_RULE_VALUE, MsgPicker.getMsg().getDelayThresholdCanNotEmpty());
+        }
+        if (request.isCountEnable() && StringUtils.isEmpty(request.getCountValue())) {
+            throw new KylinException(EMPTY_COUNT_RULE_VALUE, MsgPicker.getMsg().getFrequencyThresholdCanNotEmpty());
+        }
+        if (request.isRecommendationEnable() && StringUtils.isEmpty(request.getRecommendationsValue().trim())) {
+            throw new KylinException(EMPTY_REC_RULE_VALUE, MsgPicker.getMsg().getRecommendationLimitNotEmpty());
+        }
+        if (StringUtils.isEmpty(request.getMinHitCount())) {
+            throw new KylinException(EMPTY_MIN_HIT_COUNT, MsgPicker.getMsg().getMinHitCountNotEmpty());
+        }
+        if (StringUtils.isEmpty(request.getEffectiveDays())) {
+            throw new KylinException(EMPTY_EFFECTIVE_DAYS, MsgPicker.getMsg().getEffectiveDaysNotEmpty());
+        }
+        if (StringUtils.isEmpty(request.getUpdateFrequency())) {
+            throw new KylinException(EMPTY_UPDATE_FREQUENCY, MsgPicker.getMsg().getUpdateFrequencyNotEmpty());
+        }
+        checkRange(request.getRecommendationsValue(), 0, Integer.MAX_VALUE);
+        checkRange(request.getMinHitCount(), 1, Integer.MAX_VALUE);
+        checkRange(request.getEffectiveDays(), EFFECTIVE_DAYS_MIN, EFFECTIVE_DAYS_MAX);
+        checkRange(request.getUpdateFrequency(), 1, Integer.MAX_VALUE);
+        checkRange(request.getLowFrequencyThreshold(), 0, Integer.MAX_VALUE);
+        if (!FavoriteRule.DATE_UNIT_CANDIDATES.contains(request.getFrequencyTimeWindow())) {
+            throw new KylinException(INVALID_DATE_UNIT, String.format(Locale.ROOT,
+                    MsgPicker.getMsg().getInvalidDateUnit(), request.getFrequencyTimeWindow()));
+        }
+    }
+
+    private static void checkRange(String value, int start, int end) {
+        boolean inRightRange;
+        try {
+            int i = Integer.parseInt(value);
+            inRightRange = (i >= start && i <= end);
+        } catch (Exception e) {
+            inRightRange = false;
+        }
+
+        if (!inRightRange) {
+            throw new KylinException(INVALID_RANGE,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidRange(), value, start, end));
+        }
+    }
 
     @ApiOperation(value = "getFavoriteRules", tags = {
             "SM" }, notes = "Update Param: freq_enable, freq_value, count_enable, count_value, duration_enable, min_duration, max_duration, submitter_enable, user_groups")
@@ -147,55 +201,32 @@ public class ProjectRecController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
-    protected static void checkUpdateFavoriteRuleArgs(FavoriteRuleUpdateRequest request) {
-        // either disabled or arguments not empty
-        if (request.isFreqEnable() && StringUtils.isEmpty(request.getFreqValue())) {
-            throw new KylinException(EMPTY_FREQUENCY_RULE_VALUE, MsgPicker.getMsg().getFrequencyThresholdCanNotEmpty());
-        }
-
-        if (request.isDurationEnable()
-                && (StringUtils.isEmpty(request.getMinDuration()) || StringUtils.isEmpty(request.getMaxDuration()))) {
-            throw new KylinException(EMPTY_DURATION_RULE_VALUE, MsgPicker.getMsg().getDelayThresholdCanNotEmpty());
-        }
-
-        if (request.isCountEnable() && StringUtils.isEmpty(request.getCountValue())) {
-            throw new KylinException(EMPTY_COUNT_RULE_VALUE, MsgPicker.getMsg().getFrequencyThresholdCanNotEmpty());
-        }
-
-        if (request.isRecommendationEnable() && StringUtils.isEmpty(request.getRecommendationsValue().trim())) {
-            throw new KylinException(EMPTY_REC_RULE_VALUE, MsgPicker.getMsg().getRecommendationLimitNotEmpty());
-        }
-
-        if (StringUtils.isEmpty(request.getMinHitCount())) {
-            throw new KylinException(EMPTY_MIN_HIT_COUNT, MsgPicker.getMsg().getMinHitCountNotEmpty());
-        }
-
-        if (StringUtils.isEmpty(request.getEffectiveDays())) {
-            throw new KylinException(EMPTY_EFFECTIVE_DAYS, MsgPicker.getMsg().getEffectiveDaysNotEmpty());
-        }
-
-        if (StringUtils.isEmpty(request.getUpdateFrequency())) {
-            throw new KylinException(EMPTY_UPDATE_FREQUENCY, MsgPicker.getMsg().getUpdateFrequencyNotEmpty());
-        }
-        checkRange(request.getRecommendationsValue(), 0, Integer.MAX_VALUE);
-        checkRange(request.getMinHitCount(), 1, Integer.MAX_VALUE);
-        checkRange(request.getEffectiveDays(), EFFECTIVE_DAYS_MIN, EFFECTIVE_DAYS_MAX);
-        checkRange(request.getUpdateFrequency(), 1, Integer.MAX_VALUE);
+    // ---------------------- Deprecated It will be deleted later ----------------------
+    @ApiOperation(value = "updateAutoIndexPlanRules", tags = { "AI" })
+    @PutMapping(value = "/{project:.+}/auto_index_plan_rule")
+    @ResponseBody
+    public EnvelopeResponse<String> updateAutoIndexPlanRules(@PathVariable(value = "project") String project,
+            @RequestBody AutoIndexPlanRuleUpdateRequest request) {
+        checkProjectName(project);
+        checkProjectUnmodifiable(project);
+        request.setProject(project);
+        AutoIndexPlanRuleUtil.checkUpdateFavoriteRuleArgs(request);
+        projectSmartService.updateAutoIndexPlanRule(request.getProject(), request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
-    private static void checkRange(String value, int start, int end) {
-        boolean inRightRange;
-        try {
-            int i = Integer.parseInt(value);
-            inRightRange = (i >= start && i <= end);
-        } catch (Exception e) {
-            inRightRange = false;
-        }
-
-        if (!inRightRange) {
-            throw new KylinException(INVALID_RANGE,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidRange(), value, start, end));
-        }
+    @ApiOperation(value = "updateIndexPlannerRules", tags = { "AI" })
+    @PutMapping(value = "/index_planner_rule")
+    @ResponseBody
+    public EnvelopeResponse<String> updateIndexPlannerRules(@RequestBody AutoIndexPlanRuleUpdateRequest request) {
+        String project = request.getProject();
+        checkProjectName(project);
+        checkProjectUnmodifiable(project);
+        request.setProject(project);
+        checkRequiredArg("indexPlannerEnable", request.isIndexPlannerEnable());
+        AutoIndexPlanRuleUtil.checkUpdateFavoriteRuleArgs(request);
+        projectSmartService.updateAutoIndexPlanRule(request.getProject(), request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
 }

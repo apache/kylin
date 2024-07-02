@@ -18,19 +18,18 @@
 
 package org.apache.kylin.streaming.app
 
+import org.apache.commons.collections.CollectionUtils
+import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.guava30.shaded.common.base.Preconditions
 import org.apache.kylin.metadata.cube.cuboid.{NSpanningTree, NSpanningTreeFactory}
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.cube.utils.StreamingUtils
 import org.apache.kylin.metadata.project.NProjectManager
-import org.apache.commons.collections.CollectionUtils
-import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.streaming.CreateStreamingFlatTable
 import org.apache.kylin.streaming.common.{BuildJobEntry, CreateFlatTableEntry, MicroBatchEntry}
 import org.apache.kylin.streaming.jobs.{StreamingDFBuildJob, StreamingJobUtils, StreamingSegmentManager}
-import org.apache.kylin.streaming.jobs.StreamingDFBuildJob
 import org.apache.kylin.streaming.manager.StreamingJobManager
 import org.apache.kylin.streaming.metadata.StreamingJobMeta
 import org.apache.kylin.streaming.request.StreamingJobStatsRequest

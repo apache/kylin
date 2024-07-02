@@ -18,10 +18,10 @@
 
 package org.apache.kylin.cluster
 
-import org.apache.kylin.engine.spark.utils.StorageUtils
 import io.netty.util.internal.ThrowableUtil
 import org.apache.hadoop.yarn.conf.{HAUtil, YarnConfiguration}
 import org.apache.kylin.common.util.{JsonUtil, ShellException}
+import org.apache.kylin.engine.spark.utils.StorageUtils
 import org.apache.spark.internal.Logging
 
 import java.io.{BufferedReader, InputStreamReader}

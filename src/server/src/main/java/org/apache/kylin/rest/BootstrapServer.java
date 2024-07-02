@@ -43,7 +43,6 @@ import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigB
 import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.zookeeper.discovery.ZookeeperInstance;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
@@ -66,7 +65,6 @@ import lombok.val;
 @EnableDiscoveryClient
 @LoadBalancerClient(name = "spring-boot-provider", configuration = org.apache.kylin.rest.LoadBalanced.class)
 @EnableSpringHttpSession
-@EnableFeignClients(basePackages = { "io.kyligence", "org.apache.kylin" })
 @MapperScan("org.apache.kylin.job.mapper")
 public class BootstrapServer implements ISmartApplicationListenerForSystem {
 

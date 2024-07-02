@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.job.{SegmentJob, TableMetaManager}
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
@@ -57,8 +57,8 @@ class TestDimensionTableStat extends SparderBaseFunSuite with SharedSparkSession
     val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
     val segmentJob = Mockito.mock(classOf[SegmentJob])
     Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
-    val buildParam = new BuildParam()
-    new TestFlatTable(segmentJob, seg, buildParam).test(getTestConfig, toBuildTree)
+    val params = new ParamPropagation()
+    new TestFlatTableStage(segmentJob, seg, params).test(getTestConfig, toBuildTree)
 
 
     df.getModel.getJoinTables.asScala.foreach { joinTable =>

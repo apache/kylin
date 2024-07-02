@@ -542,7 +542,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
             val model = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
             modelManager.dropModel(model);
             return null;
-        }, project, UnitOfWork.DEFAULT_MAX_RETRY, UnitOfWork.DEFAULT_EPOCH_ID, job.getId());
+        }, project, UnitOfWork.DEFAULT_MAX_RETRY);
 
         executableManager.addJob(job);
         getConditionFactory().untilAsserted(() -> {
@@ -579,7 +579,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
             val model = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
             modelManager.dropModel(model);
             return null;
-        }, project, UnitOfWork.DEFAULT_MAX_RETRY, UnitOfWork.DEFAULT_EPOCH_ID, job.getId());
+        }, project, UnitOfWork.DEFAULT_MAX_RETRY);
 
         getConditionFactory().untilAsserted(() -> {
             AbstractExecutable job1 = executableManager.getJob(job.getId());
@@ -624,7 +624,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
             val model = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
             modelManager.dropModel(model);
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID, job.getId());
+        }, project, 1);
 
         getConditionFactory().untilAsserted(() -> {
             final AbstractExecutable job1 = executableManager.getJob(job.getId());
@@ -1498,21 +1498,21 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             getManager().restartJob(id);
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID, id);
+        }, project, 1);
     }
 
     private void resumeJobWithLock(String id) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             getManager().resumeJob(id);
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID, id);
+        }, project, 1);
     }
 
     private void pauseJobWithLock(String id) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             getManager().pauseJob(id);
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID, id);
+        }, project, 1);
     }
 
     private void discardJobWithLock(String id) {

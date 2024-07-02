@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common;
 
 import static org.apache.kylin.common.KylinConfigBase.FALSE;
@@ -90,6 +72,7 @@ import lombok.val;
 class KylinConfigBaseTest {
 
     private static final Map<String, PropertiesEntity> map = new HashMap<>();
+
     static {
         map.put("getDeployEnv", new PropertiesEntity("kylin.env", "DEV", "DEV"));
 
@@ -222,10 +205,6 @@ class KylinConfigBaseTest {
         map.put("getCubeAggrGroupIsMandatoryOnlyValid",
                 new PropertiesEntity("kylin.cube.aggrgroup.is-mandatory-only-valid", "true", true));
 
-        map.put("getLowFrequencyThreshold", new PropertiesEntity("kylin.cube.low-frequency-threshold", "5", 5));
-
-        map.put("getFrequencyTimeWindowInDays", new PropertiesEntity("kylin.cube.frequency-time-window", "30", 30));
-
         map.put("isBaseCuboidAlwaysValid",
                 new PropertiesEntity("kylin.cube.aggrgroup.is-base-cuboid-always-valid", "true", true));
 
@@ -354,8 +333,8 @@ class KylinConfigBaseTest {
 
         map.put("getSparkTableSamplingClassName",
                 new PropertiesEntity("kylin.engine.spark.sampling-class-name",
-                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob",
-                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob"));
+                        "org.apache.kylin.engine.spark.job.TableAnalyzeJob",
+                        "org.apache.kylin.engine.spark.job.TableAnalyzeJob"));
 
         map.put("getSparkMergeClassName",
                 new PropertiesEntity("kylin.engine.spark.merge-class-name",
@@ -397,7 +376,7 @@ class KylinConfigBaseTest {
         map.put("getSparkEngineSampleSplitThreshold",
                 new PropertiesEntity("kylin.engine.spark.sample-split-threshold", "256m", "256m"));
 
-        map.put("getSparkEngineTaskImpactInstanceEnabled",
+        map.put("isSparkEngineTaskImpactInstanceEnabled",
                 new PropertiesEntity("kylin.engine.spark.task-impact-instance-enabled", "true", true));
 
         map.put("isSparderAsync", new PropertiesEntity("kylin.query.init-sparder-async", "true", true));
@@ -682,14 +661,6 @@ class KylinConfigBaseTest {
         map.put("isTrackingUrlIpAddressEnabled",
                 new PropertiesEntity("kylin.job.tracking-url-ip-address-enabled", "true", true));
 
-        map.put("getEpochCheckerEnabled", new PropertiesEntity("kylin.server.leader-race.enabled", "true", true));
-
-        map.put("getEpochExpireTimeSecond",
-                new PropertiesEntity("kylin.server.leader-race.heart-beat-timeout", "60", 60L));
-
-        map.put("getEpochCheckerIntervalSecond",
-                new PropertiesEntity("kylin.server.leader-race.heart-beat-interval", "30", 30L));
-
         map.put("getJStackDumpTaskEnabled", new PropertiesEntity("kylin.task.jstack-dump-enabled", "true", true));
 
         map.put("getJStackDumpTaskPeriod", new PropertiesEntity("kylin.task.jstack-dump-interval-minutes", "10", 10L));
@@ -716,9 +687,6 @@ class KylinConfigBaseTest {
         map.put("getRandomAdminPasswordEnabled",
                 new PropertiesEntity("kylin.metadata.random-admin-password.enabled", "true", true));
         map.put("getCatchUpInterval", new PropertiesEntity("kylin.metadata.audit-log.catchup-interval", "5s", 5L));
-        map.put("getUpdateEpochTimeout",
-                new PropertiesEntity("kylin.server.leader-race.update-heart-beat-timeout", "30s", 30L));
-
         map.put("isSessionSecureRandomCreateEnabled",
                 new PropertiesEntity("kylin.web.session.secure-random-create-enabled", "false", false));
         map.put("isSessionJdbcEncodeEnabled",
@@ -1347,18 +1315,6 @@ class KylinConfigBaseTest {
                 new Path(config.getWritingClusterWorkingDir(flatTableDirSuffix)));
         // Reset to prevent impacting other tests
         config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
-    }
-
-    @Test
-    void testGetEpochRenewTimeoutRate() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Assertions.assertEquals(0.8, config.getEpochRenewTimeoutRate());
-        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0.0");
-        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
-        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0");
-        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
-        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "1");
-        Assertions.assertEquals(1.0, config.getEpochRenewTimeoutRate());
     }
 
     @Test

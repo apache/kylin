@@ -18,7 +18,7 @@
 package org.apache.kylin.engine.spark.source;
 
 import static org.apache.calcite.avatica.util.Quoting.BACK_TICK;
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCreateHiveTemporaryTable;
+import static org.apache.kylin.engine.spark.utils.HiveTableRefChecker.isNeedCreateHiveTemporaryTable;
 
 import java.util.ArrayList;
 import java.util.Arrays;

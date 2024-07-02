@@ -17,8 +17,7 @@
  */
 package org.apache.kylin.common.persistence.transaction;
 
-import static org.apache.kylin.common.persistence.lock.TransactionDeadLockHandler.THREAD_NAME_PREFIX;
-
+import java.sql.SQLTransactionRollbackException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -42,9 +41,6 @@ import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.persistence.event.ResourceRelatedEvent;
 import org.apache.kylin.common.persistence.event.StartUnit;
-import org.apache.kylin.common.persistence.lock.DeadLockException;
-import org.apache.kylin.common.persistence.lock.LockInterruptException;
-import org.apache.kylin.common.persistence.lock.TransactionLock;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.resources.SystemRawResource;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -63,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class UnitOfWork {
     public static final String GLOBAL_UNIT = "_global";
-
+    public static final String THREAD_NAME_PREFIX = "Transaction-Thread";
     public static final long DEFAULT_EPOCH_ID = -1L;
     public static final int DEFAULT_MAX_RETRY = 3;
 
@@ -229,7 +225,6 @@ public class UnitOfWork {
     public static UnitOfWorkContext get() {
         val temp = threadLocals.get();
         Preconditions.checkNotNull(temp, "current thread is not accompanied by a UnitOfWork");
-        temp.checkLockStatus();
         return temp;
     }
 
@@ -295,16 +290,6 @@ public class UnitOfWork {
         }
     }
 
-    public static void recordLocks(String resPath, TransactionLock lock, boolean readOnly) {
-        Preconditions.checkState(lock.isHeldByCurrentThread());
-        UnitOfWork.get().getCurrentLock().add(lock);
-        if (readOnly) {
-            UnitOfWork.get().getReadLockPath().add(resPath);
-        } else {
-            UnitOfWork.get().getCopyForWriteItems().add(resPath);
-        }
-    }
-
     private static void handleError(Throwable throwable, UnitOfWorkParams<?> params, int retry, String traceId) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         TransactionStatus status = threadLocals.get().getTransactionStatus();
@@ -317,16 +302,11 @@ public class UnitOfWork {
                         .equals(ErrorCodeSystem.MAINTENANCE_MODE_WRITE_FAILED.getErrorCode())) {
             retry = params.getMaxRetry();
         }
-        if (throwable instanceof DeadLockException) {
+        if (throwable instanceof SQLTransactionRollbackException) {
             log.debug("DeadLock found in this transaction, will retry");
             if (params.isRetryMoreTimeForDeadLockException() && System.currentTimeMillis() < params.getRetryUntil()) {
                 params.setMaxRetry(params.getMaxRetry() + 1);
             }
-        }
-        if (throwable instanceof LockInterruptException) {
-            // Just remove the interrupted flag.
-            Thread.interrupted();
-            log.debug("DeadLock is found by TransactionDeadLockHandler, will retry");
         }
         if (throwable instanceof QuitTxnRightNow) {
             retry = params.getMaxRetry();

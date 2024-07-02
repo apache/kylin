@@ -26,7 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public enum BuiltInMethod {

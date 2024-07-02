@@ -21,9 +21,9 @@ package org.apache.kylin.rest.security;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.kylin.rest.exception.PasswordDecryptionException;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.rest.exception.PasswordDecryptionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

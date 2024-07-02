@@ -22,8 +22,8 @@ import java.net.ConnectException;
 import java.util.Arrays;
 
 import org.apache.kylin.common.AbstractTestCase;
-import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.rest.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

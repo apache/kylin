@@ -18,9 +18,9 @@
 
 package org.apache.kylin.rest.request;
 
-import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

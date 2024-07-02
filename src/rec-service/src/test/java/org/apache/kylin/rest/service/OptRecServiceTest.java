@@ -52,7 +52,6 @@ import org.apache.kylin.metadata.recommendation.ref.MeasureRef;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.OpenRecApproveResponse.RecToIndexResponse;
 import org.apache.kylin.rest.response.OptRecDetailResponse;
@@ -87,9 +86,6 @@ public class OptRecServiceTest extends OptRecV2TestBase {
     private final AclUtil aclUtil = Mockito.spy(AclUtil.class);
     @Spy
     private final IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
-    @Spy
-    MetadataInvoker metadataInvoker = Mockito.spy(MetadataInvoker.class);
-
     @Override
     @Before
     public void setUp() throws Exception {
@@ -100,7 +96,6 @@ public class OptRecServiceTest extends OptRecV2TestBase {
         indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         prepareACL();
         QueryHistoryAccelerateScheduler.getInstance().init();
-        MetadataInvoker.setDelegate(modelService);
     }
 
     @Override

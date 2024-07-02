@@ -38,7 +38,6 @@ import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResourceTool;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -73,7 +72,7 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
                 + "@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=");
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord(ResourceStore.METASTORE_UUID_TAG);
+            UnitOfWork.get().getCopyForWriteItems().add(ResourceStore.METASTORE_UUID_TAG);
             resourceStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG,
                     new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
             return null;
@@ -99,10 +98,10 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
         queryResourceStore.catchup();
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("PROJECT/path1");
-            MemoryLockUtils.lockAndRecord("PROJECT/path2");
-            MemoryLockUtils.lockAndRecord("PROJECT/path3");
-            MemoryLockUtils.lockAndRecord("PROJECT/path4");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
             resourceStore.checkAndPutResource("PROJECT/path1", RawResourceTool.createByteSource("path1"), -1);
             resourceStore.checkAndPutResource("PROJECT/path2", RawResourceTool.createByteSource("path2"), -1);
             resourceStore.checkAndPutResource("PROJECT/path3", RawResourceTool.createByteSource("path3"), -1);
@@ -117,10 +116,10 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
     public void testMetadataCatchupWithBackup() throws Exception {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("PROJECT/path1");
-            MemoryLockUtils.lockAndRecord("PROJECT/path2");
-            MemoryLockUtils.lockAndRecord("PROJECT/path3");
-            MemoryLockUtils.lockAndRecord("PROJECT/path4");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
             resourceStore.checkAndPutResource("PROJECT/path1", RawResourceTool.createByteSource("path1"), -1);
             resourceStore.checkAndPutResource("PROJECT/path2", RawResourceTool.createByteSource("path2"), -1);
             resourceStore.checkAndPutResource("PROJECT/path3", RawResourceTool.createByteSource("path3"), -1);
@@ -167,10 +166,10 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
     public void testMetadata_RemoveAuditLog_Restore() throws Exception {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("PROJECT/path1");
-            MemoryLockUtils.lockAndRecord("PROJECT/path2");
-            MemoryLockUtils.lockAndRecord("PROJECT/path3");
-            MemoryLockUtils.lockAndRecord("PROJECT/path4");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
             resourceStore.checkAndPutResource("PROJECTPROJECT",
                     ByteSource.wrap("{  \"uuid\": \"1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b\"}".getBytes(charset)), -1);
             resourceStore.checkAndPutResource("PROJECT/path1", ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)),

@@ -274,6 +274,7 @@ public class QueryContext implements Closeable {
         private long queryJobCount;
         private long queryStageCount;
         private long queryTaskCount;
+        private long cpuTime;
         private int retryTimes;
         private long dataFetchTime; // see doc in SQLResponse.dataFetchTime
         private String queryExecutedPlan;

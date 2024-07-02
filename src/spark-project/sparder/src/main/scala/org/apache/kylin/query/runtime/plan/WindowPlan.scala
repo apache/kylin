@@ -17,9 +17,6 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import java.sql.Date
-import java.util.{Calendar, Locale}
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.RelCollationImpl
 import org.apache.calcite.rel.RelFieldCollation.Direction
@@ -39,6 +36,8 @@ import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{Column, SparkOperation}
 
+import java.sql.Date
+import java.util.{Calendar, Locale}
 import scala.collection.JavaConverters._
 
 object WindowPlan extends LogEx {

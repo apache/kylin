@@ -18,13 +18,14 @@
 
 package org.apache.kylin.metadata.cube.optimization.event;
 
+import java.util.List;
+
+import org.apache.kylin.metadata.cube.model.NDataflow;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.kylin.metadata.cube.model.NDataflow;
-
-import java.util.List;
 
 @Setter
 @Getter

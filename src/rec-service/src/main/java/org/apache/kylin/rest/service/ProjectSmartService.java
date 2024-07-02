@@ -18,8 +18,11 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.metadata.favorite.FavoriteRule.AUTO_INDEX_PLAN_RULE_NAMES;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.EFFECTIVE_DAYS;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.FAVORITE_RULE_NAMES;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.FREQUENCY_TIME_WINDOW;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.LOW_FREQUENCY_THRESHOLD;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.MIN_HIT_COUNT;
 import static org.apache.kylin.metadata.favorite.FavoriteRule.UPDATE_FREQUENCY;
 
@@ -54,15 +57,18 @@ import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.AutoIndexPlanRuleUpdateRequest;
 import org.apache.kylin.rest.request.FavoriteRuleUpdateRequest;
 import org.apache.kylin.rest.response.ProjectStatisticsResponse;
 import org.apache.kylin.rest.service.QueryHistoryAccelerateScheduler.QueryHistoryAccelerateRunner;
+import org.apache.kylin.rest.service.util.AutoIndexPlanRuleUtil;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -71,10 +77,8 @@ public class ProjectSmartService extends BasicService implements ProjectSmartSer
 
     @Autowired
     private AclEvaluate aclEvaluate;
-
     @Autowired
     private UserService userService;
-
     @Autowired
     private ProjectSmartSupporter projectSmartSupporter;
 
@@ -128,6 +132,14 @@ public class ProjectSmartService extends BasicService implements ProjectSmartSer
         case MIN_HIT_COUNT:
             isEnabled = true;
             conds.add(new FavoriteRule.Condition(null, request.getMinHitCount()));
+            break;
+        case LOW_FREQUENCY_THRESHOLD:
+            isEnabled = true;
+            conds.add(new FavoriteRule.Condition(null, request.getLowFrequencyThreshold()));
+            break;
+        case FREQUENCY_TIME_WINDOW:
+            isEnabled = true;
+            conds.add(new FavoriteRule.Condition(null, request.getFrequencyTimeWindow()));
             break;
         default:
             break;
@@ -415,6 +427,12 @@ public class ProjectSmartService extends BasicService implements ProjectSmartSer
         case UPDATE_FREQUENCY:
             result.put("update_frequency", parseInt(right));
             break;
+        case FREQUENCY_TIME_WINDOW:
+            result.put("frequency_time_window", right);
+            break;
+        case LOW_FREQUENCY_THRESHOLD:
+            result.put("low_frequency_threshold", parseInt(right));
+            break;
         default:
             break;
         }
@@ -461,4 +479,38 @@ public class ProjectSmartService extends BasicService implements ProjectSmartSer
 
         return FavoriteRuleManager.getInstance(project).getOrDefaultByName(ruleName);
     }
+
+    @Override
+    public Map<String, Object> getAutoIndexPlanRule(String project) {
+        Map<String, Object> result = Maps.newHashMap();
+        FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
+        manager.listAutoIndexPlanRules().forEach(rule -> {
+            result.put(rule.getName(), AutoIndexPlanRuleUtil.getRuleValue(rule));
+        });
+        if (!isEnableAutoSemi(project)) {
+            result.put(FavoriteRule.INDEX_PLANNER_ENABLE, false);
+        }
+        return result;
+    }
+
+    public boolean isEnableAutoSemi(String project) {
+        val projectInstance = getManager(NProjectManager.class).getProject(project);
+        val config = projectInstance.getConfig();
+        return config.isSemiAutoMode();
+    }
+
+    public void updateAutoIndexPlanRule(String project, AutoIndexPlanRuleUpdateRequest request) {
+        aclEvaluate.checkProjectWritePermission(project);
+        FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
+        JdbcUtil.withTxAndRetry(manager.getTransactionManager(), () -> {
+            AUTO_INDEX_PLAN_RULE_NAMES.stream()
+                    .filter(ruleName -> !ruleName.equals(FavoriteRule.AUTO_INDEX_PLAN_OPTION)).forEach(ruleName -> {
+                        List<FavoriteRule.AbstractCondition> conds = AutoIndexPlanRuleUtil
+                                .getConditionsFromUpdateRequest(ruleName, request);
+                        manager.updateRule(conds, true, ruleName);
+                    });
+            return null;
+        });
+    }
+
 }

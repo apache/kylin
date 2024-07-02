@@ -17,8 +17,6 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import java.util
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rex.RexCall
 import org.apache.kylin.engine.spark.utils.LogEx
@@ -32,6 +30,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.sql.{Column, SparkOperation}
 
+import java.util
 import scala.collection.JavaConverters._
 
 object JoinPlan extends LogEx {

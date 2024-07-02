@@ -21,6 +21,8 @@ import org.apache.curator.test.TestingServer
 import org.apache.kylin.common.util.{NLocalFileMetadataTestCase, Unsafe}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
+import java.io.File
+
 
 trait LocalMetadata extends BeforeAndAfterAll with BeforeAndAfterEach {
   self: Suite =>

@@ -29,7 +29,6 @@ import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.rec.AbstractContext;
 import org.apache.kylin.rec.util.AccelerationUtil;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.LayoutRecDetailResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -107,8 +106,6 @@ public class MergeModelCtxTest extends SemiAutoTestBase {
         ReflectionTestUtils.setField(optRecService, "aclEvaluate", aclEvaluate);
         ReflectionTestUtils.setField(optRecService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(optRecService, "modelService", modelService);
-        MetadataInvoker.setDelegate(modelService);
-        ReflectionTestUtils.setField(optRecService, "metadataInvoker", new MetadataInvoker());
         ReflectionTestUtils.setField(rawRecService, "optRecService", optRecService);
         ReflectionTestUtils.setField(modelService, "aclEvaluate", aclEvaluate);
         ReflectionTestUtils.setField(modelService, "userGroupService", userGroupService);

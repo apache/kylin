@@ -23,8 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Getter;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import lombok.Getter;
 
 /**
  *

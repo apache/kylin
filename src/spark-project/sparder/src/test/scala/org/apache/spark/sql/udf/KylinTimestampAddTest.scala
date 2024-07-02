@@ -18,13 +18,14 @@
 
 package org.apache.spark.sql.udf
 
-import java.sql.{Date, Timestamp}
 import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
 import org.apache.spark.sql.catalyst.expressions.KylinTimestampAdd
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
-import org.apache.spark.sql.types.{StructField, _}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{FunctionEntity, Row}
 import org.scalatest.BeforeAndAfterAll
+
+import java.sql.{Date, Timestamp}
 
 class KylinTimestampAddTest extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll {
 

@@ -18,10 +18,10 @@
 
 package org.apache.spark.sql.udaf
 
-import java.nio.{BufferOverflowException, ByteBuffer}
 import org.apache.spark.internal.Logging
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
+import java.nio.{BufferOverflowException, ByteBuffer}
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 

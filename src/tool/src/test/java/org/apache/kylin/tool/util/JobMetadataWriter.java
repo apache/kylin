@@ -31,8 +31,6 @@ import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.job.util.JobInfoUtil;
-import org.apache.kylin.rest.delegate.ModelMetadataBaseInvoker;
-import org.mockito.Mockito;
 
 import lombok.SneakyThrows;
 
@@ -41,9 +39,6 @@ public class JobMetadataWriter {
     public static void writeJobMetaData(KylinConfig config, RawResource jobMeta, String project) {
         JobContextUtil.cleanUp();
         JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(config);
-        ModelMetadataBaseInvoker modelMetadataBaseInvoker = Mockito.mock(ModelMetadataBaseInvoker.class);
-        Mockito.when(modelMetadataBaseInvoker.getModelNameById(Mockito.anyString(), Mockito.anyString()))
-                .thenReturn("test");
 
         long updateTime = jobMeta.getTs();
         ExecutablePO executablePO = parseExecutablePO(jobMeta.getByteSource(), updateTime, project);

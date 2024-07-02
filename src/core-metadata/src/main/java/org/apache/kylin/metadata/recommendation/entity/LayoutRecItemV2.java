@@ -55,6 +55,10 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
         return layout.genUniqueContent();
     }
 
+    public String getUniqueId(String modelId) {
+        return modelId + "@" + layout.getId();
+    }
+
     public int[] genDependIds() {
         List<Integer> colOrder = layout.getColOrder();
         int[] arr = new int[colOrder.size()];
@@ -62,6 +66,11 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
             arr[i] = colOrder.get(i);
         }
         return arr;
+    }
+
+    @Override
+    public int[] genDependIds(Map<String, RawRecItem> nonLayoutUniqueFlagRecMap, String content, NDataModel dataModel) {
+        return genDependIds();
     }
 
     public void updateLayoutContent(NDataModel dataModel, Map<String, RawRecItem> nonLayoutUniqueFlagRecMap,

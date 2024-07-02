@@ -80,10 +80,6 @@ public abstract class MetadataStore implements ITransactionManager {
         // for reflection
     }
 
-    @Getter
-    @Setter
-    EpochStore epochStore;
-
     /**
      * @return the resources under the rootPath
      */

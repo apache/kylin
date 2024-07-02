@@ -22,10 +22,12 @@ import static org.apache.kylin.common.persistence.ResourceStore.GLOBAL_PROJECT;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
@@ -53,10 +56,12 @@ import org.apache.kylin.job.domain.PriorityFistRandomOrderJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobMapperFilter;
 import org.apache.kylin.job.runners.JobCheckUtil;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.job.util.JobInfoUtil;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -213,19 +218,13 @@ public class JdbcJobScheduler implements JobScheduler {
 
             List<JobInfo> processingJobInfoList = getProcessingJobInfoWithOrder();
             Map<String, Integer> projectRunningCountMap = Maps.newHashMap();
-            for (JobInfo processingJobInfo : processingJobInfoList) {
-                if (ExecutableState.READY.name().equals(processingJobInfo.getJobStatus())) {
-                    addReadyJobToCache(processingJobInfo);
-                } else {
-                    // count running job by project
-                    String project = processingJobInfo.getProject();
-                    if (!projectRunningCountMap.containsKey(project)) {
-                        projectRunningCountMap.put(project, 0);
-                    }
-                    projectRunningCountMap.put(project, projectRunningCountMap.get(project) + 1);
-                }
-            }
+            Map<String, Set<String>> projectRunningRecModelMap = Maps.newHashMap();
+            Map<String, Integer> projectRunningIndexPlannerBuildJobMap = Maps.newHashMap();
+            collectProcessingJobInfo(processingJobInfoList, projectRunningCountMap, projectRunningRecModelMap,
+                    projectRunningIndexPlannerBuildJobMap);
             Map<String, Integer> projectProduceCountMap = getProjectProduceCount(projectRunningCountMap);
+            Map<String, Integer> projectProduceIndexPlannerBuildJobCountMap = getProjectProduceCount(
+                    projectRunningIndexPlannerBuildJobMap, JobTypeEnum.Category.REC);
 
             boolean produced = false;
             for (Map.Entry<String, Integer> entry : projectProduceCountMap.entrySet()) {
@@ -236,6 +235,7 @@ public class JdbcJobScheduler implements JobScheduler {
                     continue;
                 }
                 PriorityQueue<JobInfo> projectReadyJobCache = readyJobCache.get(project);
+
                 if (CollectionUtils.isEmpty(projectReadyJobCache)) {
                     continue;
                 }
@@ -245,9 +245,12 @@ public class JdbcJobScheduler implements JobScheduler {
                 }
                 // force catchup metadata before produce jobs
                 StreamingUtils.replayAuditlog();
-                logger.info("Begin to produce job for project: {}", project);
-                int count = produceJobForProject(produceCount, projectReadyJobCache);
-                logger.info("Successfully produced {} job for project: {}", count, project);
+                logger.info("Begin to produce job for project: {}, product count: {}", project, produceCount);
+
+                for (int i = 0; i < produceCount; i++) {
+                    produceJobForProject(produceCount, projectReadyJobCache, projectRunningRecModelMap.get(project),
+                            projectProduceIndexPlannerBuildJobCountMap);
+                }
             }
             if (produced) {
                 // maybe more jobs exist, publish job immediately
@@ -260,26 +263,76 @@ public class JdbcJobScheduler implements JobScheduler {
         }
     }
 
-    private int produceJobForProject(int produceCount, PriorityQueue<JobInfo> projectReadyJobCache) {
+    private void collectProcessingJobInfo(List<JobInfo> processingJobInfoList,
+            Map<String, Integer> projectRunningCountMap, Map<String, Set<String>> projectRunningRecModelMap,
+            Map<String, Integer> projectRunningIndexPlannerBuildJobMap) {
+        for (JobInfo processingJobInfo : processingJobInfoList) {
+            if (!projectRunningCountMap.containsKey(processingJobInfo.getProject())) {
+                projectRunningRecModelMap.put(processingJobInfo.getProject(), new HashSet<>());
+            }
+            if (ExecutableState.READY.name().equals(processingJobInfo.getJobStatus())) {
+                addReadyJobToCache(processingJobInfo);
+            } else {
+                // count running job by project
+                String project = processingJobInfo.getProject();
+                if (!projectRunningCountMap.containsKey(project)) {
+                    projectRunningCountMap.put(project, 0);
+                    projectRunningIndexPlannerBuildJobMap.put(project, 0);
+                }
+                projectRunningCountMap.put(project, projectRunningCountMap.get(project) + 1);
+                if (!projectRunningRecModelMap.get(project).contains(processingJobInfo.getModelId())
+                        && isIndexPlannerRecJob(processingJobInfo)) {
+                    projectRunningRecModelMap.get(project).add(processingJobInfo.getModelId());
+                }
+                if (isIndexPlannerBuildJob(processingJobInfo)
+                        && projectRunningIndexPlannerBuildJobMap.containsKey(project)) {
+                    projectRunningIndexPlannerBuildJobMap.put(project,
+                            projectRunningIndexPlannerBuildJobMap.get(project) + 1);
+                }
+            }
+        }
+    }
+
+    private void produceJobForProject(int produceCount, PriorityQueue<JobInfo> projectReadyJobCache,
+            Set<String> runningRecModels, Map<String, Integer> projectRunningIndexPlannerBuildJob) {
         int i = 0;
         while (i < produceCount) {
             if (projectReadyJobCache.isEmpty()) {
                 break;
             }
             JobInfo jobInfo = projectReadyJobCache.poll();
-            if (doProduce(jobInfo)) {
+            if (doProduce(jobInfo, runningRecModels, projectRunningIndexPlannerBuildJob)) {
                 i++;
             }
         }
-        return i;
     }
 
-    private boolean doProduce(JobInfo jobInfo) {
+    private boolean doProduce(JobInfo jobInfo, Set<String> runningRecModels,
+            Map<String, Integer> projectRunningIndexPlannerBuildJob) {
         try {
             if (JobCheckUtil.markSuicideJob(jobInfo)) {
                 logger.info("Suicide job = {} on produce", jobInfo.getJobId());
                 return false;
             }
+
+            if (isIndexPlannerBuildJob(jobInfo)) {
+                if (projectRunningIndexPlannerBuildJob.get(jobInfo.getProject()).intValue() > 0) {
+                    projectRunningIndexPlannerBuildJob.put(jobInfo.getProject(),
+                            projectRunningIndexPlannerBuildJob.get(jobInfo.getProject()).intValue() - 1);
+                } else {
+                    logger.info("Project {} has reached max concurrent limit for index planner fill index job",
+                            jobInfo.getProject());
+                    return false;
+                }
+            }
+            if (isIndexPlannerRecJob(jobInfo)) {
+                if (runningRecModels.contains(jobInfo.getModelId())) {
+                    return false;
+                } else {
+                    runningRecModels.add(jobInfo.getModelId());
+                }
+            }
+
             return JobContextUtil.withTxAndRetry(() -> {
                 String jobId = jobInfo.getJobId();
                 JobLock lock = jobContext.getJobLockMapper().selectByJobId(jobId);
@@ -315,13 +368,19 @@ public class JdbcJobScheduler implements JobScheduler {
         }
     }
 
-    private Map<String, Integer> getProjectProduceCount(Map<String, Integer> projectRunningCountMap) {
+    private Map<String, Integer> getProjectProduceCount(Map<String, Integer> projectRunningCountMap, String jobType) {
         Map<String, Integer> projectProduceCount = Maps.newHashMap();
         NProjectManager projectManager = NProjectManager.getInstance(jobContext.getKylinConfig());
         List<ProjectInstance> allProjects = projectManager.listAllProjects();
         for (ProjectInstance projectInstance : allProjects) {
             String project = projectInstance.getName();
-            int projectMaxConcurrent = projectInstance.getConfig().getMaxConcurrentJobLimit();
+            projectInstance.getConfig().getMaxConcurrentJobLimit();
+            int projectMaxConcurrent;
+            if (JobTypeEnum.Category.REC.equals(jobType)) {
+                projectMaxConcurrent = projectInstance.getConfig().getMaxConcurrentFillIndexJobLimit();
+            } else {
+                projectMaxConcurrent = projectInstance.getConfig().getMaxConcurrentJobLimit();
+            }
             int projectRunningCount = projectRunningCountMap.getOrDefault(project, 0);
             if (projectRunningCount < projectMaxConcurrent) {
                 projectProduceCount.put(project, projectMaxConcurrent - projectRunningCount);
@@ -333,6 +392,10 @@ public class JdbcJobScheduler implements JobScheduler {
         int globalRunningCount = projectRunningCountMap.getOrDefault(GLOBAL_PROJECT, 0);
         projectProduceCount.put(GLOBAL_PROJECT, globalRunningCount == 0 ? 1 : 0);
         return projectProduceCount;
+    }
+
+    private Map<String, Integer> getProjectProduceCount(Map<String, Integer> projectRunningCountMap) {
+        return getProjectProduceCount(projectRunningCountMap, JobTypeEnum.Category.ALL);
     }
 
     private void releaseExpiredLock() {
@@ -542,6 +605,24 @@ public class JdbcJobScheduler implements JobScheduler {
             logger.warn("[UNEXPECTED_THINGS_HAPPENED] project {} job {} should be error but mark failed", project,
                     jobId, e);
         }
+    }
+
+    private boolean isIndexPlannerRecJob(JobInfo jobInfo) {
+        if (!JobTypeEnum.Category.REC.equals(JobTypeEnum.getEnumByName(jobInfo.getJobType()).getCategory())) {
+            return false;
+        }
+        ExecutablePO po = JobInfoUtil.deserializeExecutablePO(jobInfo);
+        return po != null && StringUtils
+                .equalsIgnoreCase(po.getParams().get(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED), "true");
+    }
+
+    private boolean isIndexPlannerBuildJob(JobInfo jobInfo) {
+        if (!JobTypeEnum.Category.BUILD.equals(JobTypeEnum.getEnumByName(jobInfo.getJobType()).getCategory())) {
+            return false;
+        }
+        ExecutablePO po = JobInfoUtil.deserializeExecutablePO(jobInfo);
+        return po != null && StringUtils
+                .equalsIgnoreCase(po.getParams().get(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED), "true");
     }
 
     private AbstractJobExecutable getJobExecutable(JobInfo jobInfo) {

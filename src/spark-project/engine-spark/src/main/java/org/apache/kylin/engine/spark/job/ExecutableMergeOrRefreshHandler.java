@@ -18,23 +18,24 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import static org.apache.kylin.engine.spark.utils.ExecutableHandleUtils.mergeMetadata;
+
 import java.util.List;
 
+import org.apache.kylin.engine.spark.utils.ExecutableHandleUtils;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.job.execution.handler.ExecutableHandleUtils;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 
 import lombok.val;
 
 public class ExecutableMergeOrRefreshHandler extends ExecutableHandler {
 
     public ExecutableMergeOrRefreshHandler(String project, String modelId, String owner, String segmentId,
-                                           String jobId) {
+            String jobId) {
         super(project, modelId, owner, segmentId, jobId);
     }
 
@@ -51,7 +52,7 @@ public class ExecutableMergeOrRefreshHandler extends ExecutableHandler {
         ExecutableHandleUtils.getNeedMergeTasks(executable)
                 .forEach(task -> mergerInfo.addTaskMergeInfo(task, SparkJobFactoryUtils.needBuildSnapshots(task)));
 
-        List<NDataLayout[]> mergedLayout = MetadataInvoker.getInstance().mergeMetadata(project, mergerInfo);
+        List<NDataLayout[]> mergedLayout = mergeMetadata(project, mergerInfo);
         List<AbstractExecutable> tasks = ExecutableHandleUtils.getNeedMergeTasks(executable);
         Preconditions.checkArgument(mergedLayout.size() == tasks.size());
         for (int idx = 0; idx < tasks.size(); idx++) {

@@ -77,7 +77,7 @@ import lombok.var;
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
         "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
-        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ SparderEnv.class, GlutenCacheUtils.class })
 public class GlutenCacheServiceTest extends NLocalFileMetadataTestCase {
     @InjectMocks

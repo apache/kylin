@@ -68,6 +68,7 @@ public class QueryRequestLimits implements AutoCloseable {
                         return true;
                     }
                 } else {
+                    logger.warn("Can’t submit query at the moment as there are {} ongoing queries.", nRunning);
                     return false;
                 }
             }

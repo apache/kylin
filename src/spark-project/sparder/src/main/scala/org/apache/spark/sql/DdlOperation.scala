@@ -23,15 +23,14 @@ import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.{CatalogTable, CatalogTableType, SessionCatalog}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.util.{escapeSingleQuotedString, quoteIdentifier}
+import org.apache.spark.sql.delta.DeltaTableUtils
 import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.datasources.v2.{CreateNamespaceExec, DropNamespaceExec, ShowCreateTableExec}
 import org.apache.spark.sql.execution.{CommandExecutionMode, CommandResultExec, QueryExecution, SparkPlan}
 import org.apache.spark.sql.types.StructField
+
 import java.lang.{String => JString}
 import java.util.{List => JList}
-
-import org.apache.spark.sql.delta.DeltaTableUtils
-
 import scala.collection.JavaConverters._
 
 

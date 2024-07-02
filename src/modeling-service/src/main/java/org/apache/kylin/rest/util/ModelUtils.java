@@ -31,10 +31,14 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
+import org.apache.kylin.rest.response.NDataModelLiteResponse;
+import org.apache.kylin.rest.response.NDataModelResponse;
+import org.apache.kylin.rest.response.NDataSegmentResponse;
 
 import lombok.val;
 
@@ -94,6 +98,22 @@ public class ModelUtils {
             filteredModels.addAll(attr.filter(models));
         }
         return filteredModels;
+    }
+
+    public static boolean isModelHasAnyData(NDataModelResponse modelResponse, IndexPlan indexPlan) {
+        if (modelResponse.getTotalIndexes() == 0) {
+            return false;
+        }
+        List<NDataSegmentResponse> segments = modelResponse.getSegments();
+        if (modelResponse instanceof NDataModelLiteResponse) {
+            segments = ((NDataModelLiteResponse) modelResponse).getRealSegments();
+        }
+        if (segments.isEmpty()) {
+            return false;
+        }
+        // If the model contains only base index then it is considered possible to create the initial index；
+        // otherwise, it cannot be created
+        return indexPlan.getAllLayouts().stream().anyMatch(layoutEntity -> !layoutEntity.isBaseIndex());
     }
 
     public enum MessageType {

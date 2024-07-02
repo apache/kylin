@@ -18,12 +18,11 @@
 package org.apache.kylin.common.persistence;
 
 import java.nio.charset.Charset;
+import java.sql.SQLTransactionRollbackException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.lock.DeadLockException;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
@@ -45,9 +44,9 @@ class UnitOfWorkTest {
     void testTransaction() {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/res");
-            MemoryLockUtils.lockAndRecord("PROJECT/res2");
-            MemoryLockUtils.lockAndRecord("PROJECT/res3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res3");
             resourceStore.checkAndPutResource("PROJECT/res", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
                     -1L);
             resourceStore.checkAndPutResource("PROJECT/res2", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
@@ -67,8 +66,8 @@ class UnitOfWorkTest {
         try {
             UnitOfWork.doInTransactionWithRetry(() -> {
                 val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-                MemoryLockUtils.lockAndRecord("PROJECT/res");
-                MemoryLockUtils.lockAndRecord("PROJECT/res2");
+                UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res");
+                UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res2");
                 resourceStore.checkAndPutResource("PROJECT/res",
                         ByteSource.wrap("{}".getBytes(Charset.defaultCharset())), -1L);
                 resourceStore.checkAndPutResource("PROJECT/res2",
@@ -140,17 +139,17 @@ class UnitOfWorkTest {
     void testReentrant() {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/res");
-            MemoryLockUtils.lockAndRecord("PROJECT/res2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res2");
             resourceStore.checkAndPutResource("PROJECT/res", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
                     -1L);
             resourceStore.checkAndPutResource("PROJECT/res2", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
                     -1L);
             UnitOfWork.doInTransactionWithRetry(() -> {
                 val resourceStore2 = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-                MemoryLockUtils.lockAndRecord("MODEL/1");
-                MemoryLockUtils.lockAndRecord("MODEL/2");
-                MemoryLockUtils.lockAndRecord("MODEL/3");
+                UnitOfWork.get().getCopyForWriteItems().add("MODEL/1");
+                UnitOfWork.get().getCopyForWriteItems().add("MODEL/2");
+                UnitOfWork.get().getCopyForWriteItems().add("MODEL/3");
                 resourceStore2.checkAndPutResource("MODEL/1", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
                         -1L);
                 resourceStore2.checkAndPutResource("MODEL/2", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
@@ -160,7 +159,7 @@ class UnitOfWorkTest {
                 Assertions.assertEquals(resourceStore, resourceStore2);
                 return 0;
             }, UnitOfWork.GLOBAL_UNIT);
-            MemoryLockUtils.lockAndRecord("PROJECT/res3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res3");
             resourceStore.checkAndPutResource("PROJECT/res3", ByteSource.wrap("{}".getBytes(Charset.defaultCharset())),
                     -1L);
             val set = resourceStore.getMetadataStore().listAll();
@@ -233,7 +232,7 @@ class UnitOfWorkTest {
         try {
             UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT)
                     .readonly(false).maxRetry(1).processor(() -> {
-                        MemoryLockUtils.lockAndRecord("PROJECT/res1");
+                        UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res1");
                         long cost = System.currentTimeMillis() - writeStart;
                         Assertions.assertEquals(0, kylinMetaStore.getResource("PROJECT/res1").getMvcc());
                         return 0;
@@ -319,7 +318,7 @@ class UnitOfWorkTest {
             val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT)
                     .readonly(true).maxRetry(1).processor(() -> {
-                        MemoryLockUtils.lockAndRecord("PROJECT/res1");
+                        UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res1");
                         resourceStore.checkAndPutResource("PROJECT/res1",
                                 ByteSource.wrap("{}".getBytes(Charset.defaultCharset())), -1L);
                         return 0;
@@ -348,7 +347,7 @@ class UnitOfWorkTest {
         UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT).readonly(false)
                 .maxRetry(1).processor(() -> {
                     val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-                    MemoryLockUtils.lockAndRecord("PROJECT/res1");
+                    UnitOfWork.get().getCopyForWriteItems().add("PROJECT/res1");
                     resourceStore.checkAndPutResource("PROJECT/res1",
                             ByteSource.wrap("{}".getBytes(Charset.defaultCharset())), -1L);
                     return 0;
@@ -366,10 +365,10 @@ class UnitOfWorkTest {
         try {
             UnitOfWork.doInTransactionWithRetry(
                     UnitOfWorkParams.builder().retryMoreTimeForDeadLockException(true).processor(() -> {
-                        throw new DeadLockException("test");
+                        throw new SQLTransactionRollbackException("test");
                     }).build());
         } catch (Exception e) {
-            Assertions.assertEquals(DeadLockException.class, e.getCause().getClass());
+            Assertions.assertEquals(SQLTransactionRollbackException.class, e.getCause().getClass());
             Assertions.assertTrue(System.currentTimeMillis() - startTime > 2 * 1000);
         }
     }

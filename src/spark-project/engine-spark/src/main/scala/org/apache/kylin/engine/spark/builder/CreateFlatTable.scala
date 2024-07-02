@@ -18,12 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util.Locale
-
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
+import org.apache.kylin.engine.spark.job.step.build.FlatTableStage
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, TableMetaManager}
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
@@ -35,6 +33,7 @@ import org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
+import java.util.Locale
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -237,7 +236,7 @@ object CreateFlatTable extends LogEx {
       }
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
-      val condition = FlatTableAndDictBase.getCondition(join)
+      val condition = FlatTableStage.getCondition(join)
       val nonEquiv = if (join.getNonEquiJoinCondition == null) "" else "non-equi "
       logInfo(s"Root table ${rootFactDesc.getIdentity},"
         + s" join table ${lookupDesc.getAlias},"

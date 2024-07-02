@@ -20,8 +20,6 @@ package org.apache.kylin.common.persistence.transaction;
 import static org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore.HDFS_SCHEME;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
@@ -31,7 +29,6 @@ import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 
 import lombok.Setter;
@@ -121,8 +118,6 @@ public class MessageSynchronization {
     }
 
     public void replayAllMetadata(boolean needCloseReplay) throws IOException {
-        val lockKeys = Lists.newArrayList(TransactionManagerInstance.INSTANCE.getProjectLocksForRead().keySet());
-        lockKeys.sort(Comparator.naturalOrder());
         val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
         String curMetaUrl = null;
         boolean needResetUrl = !config.isJobNode() && config.getMetadataStoreType().equals(HDFS_SCHEME)
@@ -139,9 +134,7 @@ public class MessageSynchronization {
             if (needCloseReplay) {
                 resourceStore.getAuditLogStore().pause();
             }
-            for (String lockKey : lockKeys) {
-                TransactionManagerInstance.INSTANCE.getProjectLock(lockKey).lock();
-            }
+            // TODO lockAll
             log.info("Acquired all locks, start to reload");
 
             resourceStore.reload();
@@ -151,10 +144,7 @@ public class MessageSynchronization {
                 config.setMetadataUrl(curMetaUrl);
                 log.info("Finished replay, reset metadata url to {}", curMetaUrl);
             }
-            Collections.reverse(lockKeys);
-            for (String lockKey : lockKeys) {
-                TransactionManagerInstance.INSTANCE.getProjectLock(lockKey).unlock();
-            }
+            // TODO unlock
             if (needCloseReplay) {
                 // if not stop, reinit return directly
                 resourceStore.getAuditLogStore().reInit();

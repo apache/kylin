@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.job;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +53,9 @@ public class NSparkCubingUtil {
     }
 
     public static Set<Long> str2Longs(String str) {
+        if(StringUtils.isBlank(str)){
+            return Collections.emptySet();
+        }
         Set<Long> r = new LinkedHashSet<>();
         for (String id : str.split(",")) {
             r.add(Long.parseLong(id));

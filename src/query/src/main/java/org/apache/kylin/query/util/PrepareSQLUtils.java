@@ -31,8 +31,8 @@ import org.apache.calcite.config.Lex;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigCannotInitException;
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
+import org.apache.kylin.rest.exception.InternalErrorException;
 
 public class PrepareSQLUtils {
 

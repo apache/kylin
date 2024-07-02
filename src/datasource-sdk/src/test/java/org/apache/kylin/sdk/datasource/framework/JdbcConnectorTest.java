@@ -24,9 +24,9 @@ import java.sql.Types;
 import java.util.LinkedHashMap;
 
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.source.jdbc.H2Database;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

@@ -17,8 +17,6 @@
  */
 package org.apache.spark.sql.execution.utils
 
-import java.util
-
 import org.apache.kylin.common.util.ImmutableBitSet
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.cube.gridtable.NLayoutToGridTableMapping
@@ -31,6 +29,7 @@ import org.apache.spark.sql.util.SparderConstants.COLUMN_NAME_SEPARATOR
 import org.apache.spark.sql.util.{SparderConstants, SparderTypeUtil}
 import org.apache.spark.sql.{LayoutEntityConverter, SparkSession}
 
+import java.util
 import scala.collection.JavaConverters._
 
 // scalastyle:off

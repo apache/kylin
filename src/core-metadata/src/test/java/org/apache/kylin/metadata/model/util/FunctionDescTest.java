@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -37,8 +38,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class FunctionDescTest extends NLocalFileMetadataTestCase {
 

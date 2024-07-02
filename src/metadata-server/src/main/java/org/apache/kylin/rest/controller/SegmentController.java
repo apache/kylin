@@ -37,6 +37,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.request.BuildIndexPlannerIndexRequest;
 import org.apache.kylin.rest.request.BuildIndexRequest;
 import org.apache.kylin.rest.request.BuildSegmentsRequest;
 import org.apache.kylin.rest.request.IncrementBuildSegmentsRequest;
@@ -45,6 +46,7 @@ import org.apache.kylin.rest.request.PartitionsBuildRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentFixRequest;
 import org.apache.kylin.rest.request.SegmentsRequest;
+import org.apache.kylin.rest.response.BuildIndexPlannerIndexResponse;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -113,6 +115,34 @@ public class SegmentController extends NBasicController {
         val response = modelBuildService.buildIndicesManually(modelId, request.getProject(), request.getPriority(),
                 request.getYarnQueue(), request.getTag());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+    }
+
+    @ApiOperation(value = "buildIndicesManually", tags = { "DW" }, notes = "Update URL: {model}")
+    @PostMapping(value = "/index_planner_indices")
+    @ResponseBody
+    public EnvelopeResponse<BuildIndexPlannerIndexResponse> buildIndexPlannerIndicesManually(
+            @RequestBody BuildIndexPlannerIndexRequest request) {
+        checkProjectName(request.getProject());
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
+
+        BuildIndexPlannerIndexResponse buildIndexPlannerIndexResponse = new BuildIndexPlannerIndexResponse();
+        List<BuildIndexResponse> jobs = new ArrayList<>();
+        if (!request.isAllModels()) {
+            String modelId = modelService.getModel(request.getModelName(), request.getProject()).getId();
+            checkRequiredArg(MODEL_ID, modelId);
+            modelService.validateCCType(modelId, request.getProject());
+            val response = modelBuildService.buildIndexPlannerIndicesManually(modelId, request.getProject(),
+                    request.getPriority(), request.getYarnQueue(), request.getTag());
+            jobs.add(response);
+        } else {
+            jobs = modelBuildService.buildAllIndexPlannerIndicesManually(request.getProject(), request.getPriority(),
+                    request.getYarnQueue(), request.getTag());
+        }
+
+        buildIndexPlannerIndexResponse.setJobs(jobs);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, buildIndexPlannerIndexResponse, "");
     }
 
     /* Segments */
@@ -283,6 +313,7 @@ public class SegmentController extends NBasicController {
                 modelId);
         DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
                 partitionColumnFormat);
+
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
         JobInfoResponse response = modelBuildService.buildSegmentsManually(buildSegmentsRequest.getProject(), modelId,
                 buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),

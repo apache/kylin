@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
+import static org.apache.kylin.engine.spark.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
 
 import java.util.Set;
 
@@ -27,7 +27,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.execution.DefaultExecutableOnTable;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.step.JobStepType;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.handler.SnapshotJobHandler;
@@ -98,10 +97,10 @@ public class NSparkSnapshotJob extends DefaultExecutableOnTable {
         }
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        JobStepType.BUILD_SNAPSHOT.createStep(job, config);
+        StepEnum.BUILD_SNAPSHOT.create(job, config);
         if (isNeedCleanUpTransactionalTableJob(tableDesc.isTransactional(), tableDesc.isRangePartition(),
                 config.isReadTransactionalTableEnabled())) {
-            JobStepType.CLEAN_UP_TRANSACTIONAL_TABLE.createStep(job, config);
+            StepEnum.CLEANUP_TRANSACTIONAL_TABLE.create(job, config);
         }
         return job;
     }

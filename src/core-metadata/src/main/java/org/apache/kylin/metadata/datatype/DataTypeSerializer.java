@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesSerializer;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**

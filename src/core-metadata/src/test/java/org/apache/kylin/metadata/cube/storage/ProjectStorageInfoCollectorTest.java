@@ -52,8 +52,8 @@ import org.apache.kylin.metadata.cube.optimization.IndexOptimizer;
 import org.apache.kylin.metadata.cube.optimization.LowFreqLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.MergedLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.SimilarLayoutOptStrategy;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.metrics.HdfsCapacityMetrics;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -75,13 +75,20 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        overwriteSystemProp("kylin.cube.low-frequency-threshold", "5");
+        overwriteLowFrequencyRule(GC_PROJECT, FavoriteRule.LOW_FREQUENCY_THRESHOLD, null, "5");
+        overwriteLowFrequencyRule(DEFAULT_PROJECT, FavoriteRule.LOW_FREQUENCY_THRESHOLD, null, "5");
     }
 
     @After
     public void tearDown() throws Exception {
         JdbcUtil.getJdbcTemplate(getTestConfig()).batchUpdate("SHUTDOWN;");
         this.cleanupTestMetadata();
+    }
+
+    private void overwriteLowFrequencyRule(String project, String config, String leftThreshold, String rightThreshold) {
+        FavoriteRule.Condition cond = new FavoriteRule.Condition(leftThreshold, rightThreshold);
+        FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
+        manager.updateRule(Collections.singletonList(cond), true, config);
     }
 
     @Test
@@ -119,7 +126,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testNullFrequencyMap() {
-        overwriteSystemProp("kylin.cube.low-frequency-threshold", "0");
+        overwriteLowFrequencyRule(DEFAULT_PROJECT, FavoriteRule.LOW_FREQUENCY_THRESHOLD, null, "0");
         val dfManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val df = dfManager.getDataflow(DEFAULT_MODEL_BASIC_ID);
         val garbageLayouts = IndexOptimizer.findGarbageLayouts(df, new LowFreqLayoutOptStrategy());
@@ -163,7 +170,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
         val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE));
-        getTestConfig().setProperty("kylin.cube.frequency-time-window", "90");
+        overwriteLowFrequencyRule(DEFAULT_PROJECT, FavoriteRule.FREQUENCY_TIME_WINDOW, null, "QUARTER");
         val volumeInfo2 = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
         final Set<Long> garbageSet2 = volumeInfo2.getGarbageModelIndexMap().get(DEFAULT_MODEL_BASIC_ID);
         Assert.assertEquals(Sets.newHashSet(20001L, 30001L, 20000010001L, 1000001L), garbageSet2);
@@ -175,7 +182,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
         val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE));
-        getTestConfig().setProperty("kylin.cube.low-frequency-threshold", "2");
+        overwriteLowFrequencyRule(DEFAULT_PROJECT, FavoriteRule.LOW_FREQUENCY_THRESHOLD, null, "2");
         val volumeInfo3 = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
         final Set<Long> garbageSet3 = volumeInfo3.getGarbageModelIndexMap().get(DEFAULT_MODEL_BASIC_ID);
         Assert.assertEquals(Sets.newHashSet(1L, 20001L, 30001L, 20000010001L, 1000001L), garbageSet3);

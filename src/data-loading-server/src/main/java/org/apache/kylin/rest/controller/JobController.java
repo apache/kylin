@@ -26,10 +26,13 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_TYPE_IL
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,11 +49,15 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobFilter;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.request.JobErrorRequest;
 import org.apache.kylin.rest.request.JobUpdateRequest;
 import org.apache.kylin.rest.request.LoadGlutenCacheRequest;
+import org.apache.kylin.rest.request.ReplaceMetaRequest;
 import org.apache.kylin.rest.request.SparkJobTimeRequest;
 import org.apache.kylin.rest.request.SparkJobUpdateRequest;
 import org.apache.kylin.rest.request.StageRequest;
@@ -60,8 +67,11 @@ import org.apache.kylin.rest.response.EventResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
+import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
+import org.apache.kylin.util.DumpInfo;
+import org.apache.kylin.util.MetadataDumpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -413,6 +423,47 @@ public class JobController extends BaseController {
     @ResponseBody
     public void destroyJobProcess(@RequestParam("project") String project) {
         ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).destroyAllProcess();
+    }
+
+    @PostMapping(value = "/replace_metadata")
+    @ApiOperation(value = "replace_metadata", tags = { "DW" })
+    @ResponseBody
+    public EnvelopeResponse<String> updateDumpedMetadata(@RequestBody ReplaceMetaRequest request) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Set<String> dumpList = new LinkedHashSet<>();
+        String project = request.getProject();
+        String modelId = request.getModelId();
+        String viewTable = request.getViewTable();
+        String distMetaUrl = request.getDistMetaUrl();
+
+        NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(modelId);
+        dumpList.addAll(df.collectPrecalculationResource());
+        dumpList.addAll(getLogicalViewMetaDumpList(config, project, viewTable, modelId));
+
+        DumpInfo dumpInfo = new DumpInfo(project, distMetaUrl, dumpList, DumpInfo.DumpType.DATA_LOADING);
+        MetadataDumpUtil.dumpMetadata(dumpInfo);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    private Set<String> getLogicalViewMetaDumpList(KylinConfig config, String project, String viewTable,
+                                                   String modelId) {
+        Set<String> dumpList = new LinkedHashSet<>();
+        if (!config.isDDLLogicalViewEnabled()) {
+            return dumpList;
+        }
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+        if (StringUtils.isNotBlank(modelId)) {
+            Set<String> viewsMeta = viewManager.findLogicalViewsInModel(project, modelId).stream()
+                    .map(LogicalView::getResourcePath).collect(Collectors.toSet());
+            dumpList.addAll(viewsMeta);
+        }
+        if (StringUtils.isNotBlank(viewTable)) {
+            LogicalView logicalView = viewManager.findLogicalViewInProject(project, viewTable);
+            if (logicalView != null) {
+                dumpList.add(logicalView.getResourcePath());
+            }
+        }
+        return dumpList;
     }
 
     @ApiOperation(value = "startProfile", tags = { "DW" }, notes = "")

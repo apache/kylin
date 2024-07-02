@@ -18,10 +18,10 @@
 package org.apache.kylin.streaming.merge;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.util.ReflectionUtils;
 import org.apache.kylin.streaming.util.StreamingTestCase;
 import org.junit.After;

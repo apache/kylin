@@ -21,9 +21,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
 import org.apache.kylin.sdk.datasource.framework.SourceConnectorFactory;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

@@ -35,7 +35,7 @@ class ExecutableContextTest {
     void getJobThreads() {
         val job = new DefaultExecutable();
         val context = new ExecutableContext(Maps.newConcurrentMap(), Maps.newConcurrentMap(),
-                KylinConfig.getInstanceFromEnv(), 0);
+                KylinConfig.getInstanceFromEnv());
         context.addRunningJob(job);
 
         assertNotNull(context.getRunningJobThread(job));

@@ -75,7 +75,7 @@ import lombok.var;
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class })
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
         "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
-        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestCase {
     private static final String PROJECT = "default";
     private static final String DATAFLOW = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";

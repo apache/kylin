@@ -24,7 +24,7 @@ import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.job.service.JobInfoService;
+import org.apache.kylin.rest.service.JobInfoService;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;

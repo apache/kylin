@@ -699,7 +699,7 @@ public class ComputedColumnUtil {
             collectCCUsedSourceCols(usedColumn, ccUsedColsMap, ccUsedSourceCols);
         }
     }
-    
+
     public static List<ComputedColumnDesc> deepCopy(List<ComputedColumnDesc> ccList) {
         List<ComputedColumnDesc> result = Lists.newArrayList();
         try {

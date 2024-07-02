@@ -18,10 +18,10 @@
 
 package org.apache.spark.metrics
 
-import org.apache.spark.status.{TaskDataWrapper, TaskIndexNames}
-import org.apache.spark.{SparkContext, SparkStageInfo}
 import org.apache.spark.status.api.v1
+import org.apache.spark.status.{TaskDataWrapper, TaskIndexNames}
 import org.apache.spark.util.Utils
+import org.apache.spark.{SparkContext, SparkStageInfo}
 
 class AppStatus(sparkContext: SparkContext) {
 

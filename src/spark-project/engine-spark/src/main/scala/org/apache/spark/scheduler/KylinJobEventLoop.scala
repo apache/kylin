@@ -18,12 +18,11 @@
 
 package org.apache.spark.scheduler
 
-import java.util
-import java.util.{List => JList}
-
 import org.apache.kylin.engine.spark.scheduler.{KylinJobEvent, KylinJobListener}
 import org.apache.spark.util.EventLoop
 
+import java.util
+import java.util.{List => JList}
 import scala.collection.JavaConverters._
 
 class KylinJobEventLoop extends EventLoop[KylinJobEvent]("spark-entry-event-loop") {

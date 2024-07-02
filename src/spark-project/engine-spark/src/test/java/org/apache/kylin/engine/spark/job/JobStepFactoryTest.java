@@ -24,10 +24,9 @@ import java.util.stream.Collectors;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
-import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -42,7 +41,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.sparkproject.guava.collect.Sets;
 
 public class JobStepFactoryTest extends NLocalWithSparkSessionTestBase {
     private KylinConfig config;
@@ -70,13 +68,13 @@ public class JobStepFactoryTest extends NLocalWithSparkSessionTestBase {
         Assert.assertEquals(JobTypeEnum.TABLE_SAMPLING, job.getJobType());
 
         final NResourceDetectStep resourceDetectStep = job.getResourceDetectStep();
-        Assert.assertEquals(ResourceDetectBeforeSampling.class.getName(), resourceDetectStep.getSparkSubmitClassName());
+        Assert.assertEquals(BeforeTableAnalyzeJob.class.getName(), resourceDetectStep.getSparkSubmitClassName());
         job.getParams().forEach((key, value) -> Assert.assertEquals(value, resourceDetectStep.getParam(key)));
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), resourceDetectStep.getId()).toString(),
                 resourceDetectStep.getDistMetaUrl());
 
         final NTableSamplingJob.SamplingStep samplingStep = job.getSamplingStep();
-        Assert.assertEquals(TableAnalyzerJob.class.getName(), samplingStep.getSparkSubmitClassName());
+        Assert.assertEquals(TableAnalyzeJob.class.getName(), samplingStep.getSparkSubmitClassName());
         job.getParams().forEach((key, value) -> Assert.assertEquals(value, samplingStep.getParam(key)));
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), samplingStep.getId()).toString(),
                 samplingStep.getDistMetaUrl());
@@ -104,7 +102,7 @@ public class JobStepFactoryTest extends NLocalWithSparkSessionTestBase {
         Assert.assertEquals("89af4ee2-2cdb-4b07-b39e-4c29856309aa", job.getTargetSubject());
 
         NSparkExecutable resourceDetectStep = job.getResourceDetectStep();
-        Assert.assertEquals(RDSegmentBuildJob.class.getName(), resourceDetectStep.getSparkSubmitClassName());
+        Assert.assertEquals(BeforeSegmentBuildJob.class.getName(), resourceDetectStep.getSparkSubmitClassName());
         Assert.assertEquals(ExecutableConstants.STEP_NAME_DETECT_RESOURCE, resourceDetectStep.getName());
         job.getParams().forEach((key, value) -> Assert.assertEquals(value, resourceDetectStep.getParam(key)));
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), resourceDetectStep.getId()).toString(),
@@ -151,8 +149,7 @@ public class JobStepFactoryTest extends NLocalWithSparkSessionTestBase {
         Assert.assertEquals("89af4ee2-2cdb-4b07-b39e-4c29856309aa", job.getTargetSubject());
 
         NSparkExecutable resourceDetectStep = job.getResourceDetectStep();
-        Assert.assertEquals(ResourceDetectBeforeMergingJob.class.getName(),
-                resourceDetectStep.getSparkSubmitClassName());
+        Assert.assertEquals(BeforeSegmentMergeJob.class.getName(), resourceDetectStep.getSparkSubmitClassName());
         Assert.assertEquals(ExecutableConstants.STEP_NAME_DETECT_RESOURCE, resourceDetectStep.getName());
         job.getParams().forEach((key, value) -> Assert.assertEquals(value, resourceDetectStep.getParam(key)));
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), resourceDetectStep.getId()).toString(),

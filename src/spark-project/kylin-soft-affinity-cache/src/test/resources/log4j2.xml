@@ -34,6 +34,7 @@
         <Logger name="org.springframework.security" level="INFO"/>
         <Logger name="org.apache.spark.ContextCleaner" level="WARN"/>
         <Logger name="io.kyligence.kap.ext" level="INFO"/>
+        <Logger name="org.apache.kylin.metadata.epoch" level="INFO"/>
         <Logger name="org.apache.kylin.common.persistence.transaction" level="INFO"/>
     </Loggers>
 </Configuration>

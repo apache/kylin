@@ -260,5 +260,9 @@
             <artifactId>hadoop-mapreduce-client-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-job</artifactId>
+        </dependency>
     </dependencies>
 </project>

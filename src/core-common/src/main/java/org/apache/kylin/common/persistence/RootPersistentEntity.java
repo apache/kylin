@@ -19,7 +19,6 @@
 package org.apache.kylin.common.persistence;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.KylinVersion;
@@ -211,14 +210,6 @@ public abstract class RootPersistentEntity implements AclEntity, Serializable {
 
     public String getResourcePath() {
         return MetadataType.mergeKeyWithType(resourceName(), resourceType());
-    }
-
-    public List<String> getLockPaths() {
-        return getLockPaths(getResourcePath());
-    }
-
-    public List<String> getLockPaths(String resourcePath) {
-        return Collections.singletonList(resourcePath);
     }
 
     @Override

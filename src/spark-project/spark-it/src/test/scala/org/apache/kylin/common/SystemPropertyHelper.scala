@@ -17,8 +17,8 @@
 
 package org.apache.kylin.common
 
-import com.google.common.collect.Maps
 import org.apache.kylin.common.util.Unsafe
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 
 import scala.collection.JavaConverters._
 

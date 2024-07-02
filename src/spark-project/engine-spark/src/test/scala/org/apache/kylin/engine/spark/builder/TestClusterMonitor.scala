@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 

@@ -45,6 +45,8 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{Column, DataFrame, Row, SparderEnv, SparkInternalAgent, SparkOperation, SparkSession}
 
+import java.util.concurrent.ConcurrentHashMap
+import java.{lang, util}
 import scala.collection.JavaConverters._
 
 

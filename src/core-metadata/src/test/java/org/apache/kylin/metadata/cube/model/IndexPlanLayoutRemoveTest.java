@@ -19,12 +19,11 @@
 package org.apache.kylin.metadata.cube.model;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class IndexPlanLayoutRemoveTest extends NLocalFileMetadataTestCase {
     private String projectDefault = "default";

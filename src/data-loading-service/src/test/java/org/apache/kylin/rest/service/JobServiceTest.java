@@ -52,8 +52,8 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.job.InternalTableLoadingJob;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -67,8 +67,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.FiveSecondSucceedTestExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -76,7 +75,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.profiler.ProfilerStatus;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
@@ -335,12 +334,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -431,12 +430,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -526,12 +525,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);

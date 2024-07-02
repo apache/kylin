@@ -18,8 +18,6 @@
 
 package org.apache.spark.scheduler
 
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark._
 import org.apache.spark.errors.SparkCoreErrors
@@ -27,6 +25,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.storage.{RDDBlockId, ShuffleDataBlockId}
 import org.apache.spark.util.Clock
 
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 

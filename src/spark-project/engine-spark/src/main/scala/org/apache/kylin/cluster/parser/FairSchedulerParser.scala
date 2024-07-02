@@ -18,11 +18,10 @@
 
 package org.apache.kylin.cluster.parser
 
-import java.util.{List => JList}
-
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.kylin.cluster.{AvailableResource, ResourceInfo}
 
+import java.util.{List => JList}
 import scala.collection.JavaConverters._
 
 class FairSchedulerParser extends SchedulerParser {

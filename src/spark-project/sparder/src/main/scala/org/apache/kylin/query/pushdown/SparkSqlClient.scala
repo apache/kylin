@@ -30,6 +30,7 @@ import org.apache.kylin.cache.kylin.KylinCacheFileSystem
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.fileseg.FileSegments
+import org.apache.kylin.engine.spark.QueryCostCollector
 import org.apache.kylin.guava30.shaded.common.collect.{ImmutableList, Lists}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.query.StructField
@@ -207,6 +208,7 @@ object SparkSqlClient {
       QueryContext.current().getMetrics.setQueryJobCount(jobCount)
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
+      QueryContext.current().getMetrics.setCpuTime(QueryCostCollector.getAndCleanStatus(QueryContext.current().getQueryId))
       // return result
       (readPushDownResultRow(resultRows, checkInterrupt = true), resultSize, fieldList)
     } catch {

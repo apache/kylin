@@ -91,6 +91,10 @@ public class AccelerateInfo implements Serializable {
         private long layoutId;
         private int semanticVersion;
 
+        public String getUniqueId() {
+            return modelId + "@" + layoutId;
+        }
+
         public boolean consistent(LayoutEntity layout) {
 
             Preconditions.checkNotNull(layout);

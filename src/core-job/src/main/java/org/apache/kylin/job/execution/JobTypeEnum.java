@@ -34,6 +34,8 @@ public enum JobTypeEnum {
     SUB_PARTITION_BUILD(Category.BUILD), // 
     SUB_PARTITION_REFRESH(Category.BUILD), //
 
+    INDEX_PLAN_OPT(Category.REC), //
+
     SNAPSHOT_BUILD(Category.SNAPSHOT), //
     SNAPSHOT_REFRESH(Category.SNAPSHOT), //
 
@@ -72,6 +74,8 @@ public enum JobTypeEnum {
         public static final String ASYNC_QUERY = "ASYNC_QUERY";
         public static final String CRON = "CRON";
         public static final String OTHER = "OTHER";
+        public static final String ALL = "ALL";
+        public static final String REC = "REC";
 
         private Category() {
         }

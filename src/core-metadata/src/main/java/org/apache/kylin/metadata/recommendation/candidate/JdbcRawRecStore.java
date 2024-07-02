@@ -102,7 +102,8 @@ public class JdbcRawRecStore {
     }
 
     public JdbcRawRecStore(KylinConfig config, String tableName) throws Exception {
-        StorageURL url = config.getQueryHistoryUrl();
+        StorageURL url = KylinConfig.getInstanceFromEnv().isUTEnv() ? config.getQueryHistoryUrl()
+                : config.getJDBCDistributedLockURL();
         Properties props = JdbcUtil.datasourceParameters(url);
         DataSource dataSource = JdbcDataSource.getDataSource(props);
         table = new RawRecItemTable(tableName);
@@ -240,7 +241,8 @@ public class JdbcRawRecStore {
             queryBuilder = queryBuilder.and(table.cost, isGreaterThanOrEqualTo(minCost));
         }
 
-        val statementProvider = queryBuilder.and(table.recSource, isNotEqualTo(RawRecItem.IMPORTED)) //
+        val statementProvider = queryBuilder.and(table.recSource, //
+                isNotIn(RawRecItem.IMPORTED, RawRecItem.INDEX_PLANNER)) //
                 .orderBy(table.cost.descending(), table.hitCount.descending(), table.id.descending()) //
                 .limit(topN).offset(offset) //
                 .build().render(RenderingStrategies.MYBATIS3);
@@ -253,6 +255,32 @@ public class JdbcRawRecStore {
     public List<RawRecItem> chooseTopNCandidates(String project, String model, int topN, int offset,
             RawRecItem.RawRecState state) {
         return chooseTopNCandidates(project, model, -1, topN, offset, state);
+    }
+
+    public List<RawRecItem> chooseIndexPlannerCandidates(String project, String model) {
+        int semanticVersion = getSemanticVersion(project, model);
+        if (semanticVersion == NON_EXIST_MODEL_SEMANTIC_VERSION) {
+            log.debug("chooseIndexPlannerCandidates - model({}/{}) does not exist.", project, model);
+            return Lists.newArrayList();
+        }
+        long startTime = System.currentTimeMillis();
+        RawRecItemMapper mapper = sqlSessionTemplate.getMapper(RawRecItemMapper.class);
+        var queryBuilder = select(getSelectFields(table)) //
+                .from(table) //
+                .where(table.project, isEqualTo(project)) //
+                .and(table.semanticVersion, isEqualTo(semanticVersion)) //
+                .and(table.modelID, isEqualTo(model)) //
+                .and(table.type, isEqualTo(RawRecItem.RawRecType.ADDITIONAL_LAYOUT)) //
+                .and(table.state, SqlBuilder.isEqualTo(RawRecItem.RawRecState.RECOMMENDED)); //
+
+        val statementProvider = queryBuilder.and(table.recSource, //
+                isEqualTo(RawRecItem.INDEX_PLANNER)) //
+                .orderBy(table.cost.descending(), table.hitCount.descending(), table.id.descending()) //
+                .build().render(RenderingStrategies.MYBATIS3);
+        List<RawRecItem> rawRecItems = mapper.selectMany(statementProvider);
+        log.info("Query IndexPlannerCandidates for adding to model({}/{}, semanticVersion: {}) takes {} ms.", //
+                project, model, semanticVersion, System.currentTimeMillis() - startTime);
+        return rawRecItems;
     }
 
     public List<RawRecItem> queryImportedRawRecItems(String project, String model, RawRecItem.RawRecState state) {

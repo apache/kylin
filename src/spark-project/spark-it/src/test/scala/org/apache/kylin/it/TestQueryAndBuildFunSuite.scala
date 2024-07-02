@@ -19,9 +19,9 @@ package org.apache.kylin.it
 
 import java.io.File
 
+import org.apache.kylin.common._
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.util.{TestUtils, TimeZoneUtils}
-import org.apache.kylin.common.{JobSupport, KylinConfig, QuerySupport, SSSource}
 import org.apache.kylin.engine.spark.IndexDataWarehouse
 import org.apache.kylin.metadata.cube.model.NDataflowManager.NDataflowUpdater
 import org.apache.kylin.metadata.cube.model.{NDataflow, NDataflowManager}

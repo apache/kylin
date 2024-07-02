@@ -18,13 +18,13 @@
 
 package org.apache.spark.metrics
 
-import org.apache.kylin.engine.spark.utils.StorageUtils
 import org.apache.hadoop.yarn.conf.{HAUtil, YarnConfiguration}
 import org.apache.http.client.config.RequestConfig
-import org.apache.spark.internal.Logging
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
+import org.apache.kylin.engine.spark.utils.StorageUtils
+import org.apache.spark.internal.Logging
 
 object SparkPrometheusMetrics extends Logging {
 

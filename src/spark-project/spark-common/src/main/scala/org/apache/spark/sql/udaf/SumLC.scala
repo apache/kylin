@@ -18,8 +18,7 @@
 
 package org.apache.spark.sql.udaf
 
-import java.util.Locale
-
+import com.esotericsoftware.kryo.io.{Input, KryoDataInput, KryoDataOutput, Output}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.measure.sumlc.SumLCCounter
 import org.apache.spark.internal.Logging
@@ -28,7 +27,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.types._
 
-import com.esotericsoftware.kryo.io.{Input, KryoDataInput, KryoDataOutput, Output}
+import java.util.Locale
 
 /**
  * Build sum_lc measure, has two implements，

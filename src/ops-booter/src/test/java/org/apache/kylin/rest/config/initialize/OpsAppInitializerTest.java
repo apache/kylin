@@ -53,7 +53,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest({ ClusterManager.class, JobInfoTool.class, MetadataTool.class })
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
         "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
-        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class OpsAppInitializerTest extends NLocalFileMetadataTestCase {
     OpsService opsService;

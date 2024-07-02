@@ -18,12 +18,11 @@
 
 package org.apache.kylin.cluster.parser
 
-import java.util.{List => JList}
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.kylin.cluster.{AvailableResource, ResourceInfo}
-import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 
+import java.util.{List => JList}
 import scala.collection.JavaConverters._
 
 class CapacitySchedulerParser extends SchedulerParser {

@@ -128,6 +128,7 @@ public class OptRecV2 {
         }
 
         initLayoutRefs(queryBestLayoutRecItems());
+        initLayoutRefs(queryIndexPlannerRecItems());
         initLayoutRefs(queryImportedRawRecItems());
         initRemovalLayoutRefs(queryBestRemovalLayoutRecItems());
 
@@ -258,6 +259,11 @@ public class OptRecV2 {
                 .getOrDefaultByName(FavoriteRule.REC_SELECT_RULE_NAME);
         int topN = Integer.parseInt(((FavoriteRule.Condition) favoriteRule.getConds().get(0)).getRightThreshold());
         return RawRecSelection.getInstance().selectBestLayout(topN, uuid, project);
+    }
+
+    private List<RawRecItem> queryIndexPlannerRecItems() {
+        RawRecManager rawRecManager = RawRecManager.getInstance(project);
+        return rawRecManager.queryIndexPlannerRecItems(project, uuid);
     }
 
     private List<RawRecItem> queryImportedRawRecItems() {

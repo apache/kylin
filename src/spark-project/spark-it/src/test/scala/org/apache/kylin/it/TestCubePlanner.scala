@@ -78,7 +78,7 @@ class TestCubePlanner extends SparderBaseFunSuite
 
   def build(): Unit = {
     // build one segment
-    buildOneSegementForCubePlanner(DF_NAME)
+    buildOneSegmentForCubePlanner(DF_NAME)
     // replace metadata with new one after build
     dumpMetadata()
     SchemaProcessor.checkSchema(spark, DF_NAME, DEFAULT_PROJECT)
@@ -87,7 +87,7 @@ class TestCubePlanner extends SparderBaseFunSuite
 
   def rebuild(): Unit = {
     // build one segment
-    buildOneSegementForCubePlanner(DF_NAME)
+    buildOneSegmentForCubePlanner(DF_NAME)
     // replace metadata with new one after build
     dumpMetadata()
   }

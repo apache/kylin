@@ -29,15 +29,15 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.util.{RandomUtil, Unsafe}
 import org.apache.kylin.engine.spark.ExecutableUtils
 import org.apache.kylin.engine.spark.job.{NSparkCubingJob, NSparkCubingStep, NSparkMergingJob, NSparkMergingStep}
+import org.apache.kylin.engine.spark.merger.{AfterBuildResourceMerger, AfterMergeOrRefreshResourceMerger}
 import org.apache.kylin.engine.spark.utils.{FileNames, HDFSUtils}
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
-import org.apache.kylin.job.execution._
+import org.apache.kylin.job.execution.{AbstractExecutable, ExecutableManager, ExecutableState}
 import org.apache.kylin.job.util.JobContextUtil
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.SegmentRange
 import org.apache.kylin.metadata.realization.RealizationStatusEnum
 import org.apache.kylin.query.runtime.plan.TableScanPlan
-import org.apache.kylin.rest.service.merger.{AfterBuildResourceMerger, AfterMergeOrRefreshResourceMerger}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.common.SparderQueryTest
@@ -47,7 +47,6 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 import scala.collection.JavaConverters._
 
-
 trait JobSupport
   extends BeforeAndAfterAll
     with BeforeAndAfterEach
@@ -56,7 +55,7 @@ trait JobSupport
   val DEFAULT_PROJECT = "default"
   val schedulerInterval = "1"
   // var scheduler: NDefaultScheduler = _
-  val systemProp = Maps.newHashMap[String, String]()
+  val systemProp: java.util.HashMap[String, String] = Maps.newHashMap[String, String]()
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -94,7 +93,7 @@ trait JobSupport
                        prj: String = DEFAULT_PROJECT): Unit = {
     val config: KylinConfig = KylinConfig.getInstanceFromEnv
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, prj)
-    var df: NDataflow = dsMgr.getDataflow(dfName)
+    val df: NDataflow = dsMgr.getDataflow(dfName)
     val update: NDataflowUpdate = new NDataflowUpdate(df.getUuid)
     update.setStatus(status)
     dsMgr.updateDataflow(update)
@@ -124,7 +123,7 @@ trait JobSupport
     val layouts: java.util.List[LayoutEntity] =
       df.getIndexPlan.getAllLayouts
     val round1: java.util.List[LayoutEntity] = Lists.newArrayList(layouts)
-    builCuboid(dfName,
+    buildCuboid(dfName,
       SegmentRange.TimePartitionedSegmentRange.createInfinite,
       Sets.newLinkedHashSet(round1),
       prj)
@@ -140,8 +139,7 @@ trait JobSupport
     model.getLookupTables.asScala.foreach({
       table =>
         val parent = FileNames.snapshotFileWithWorkingDir(table.getTableDesc, workingDirectory)
-        Assert.assertTrue(s"$parent should ony one file, please check " +
-          s"org.apache.kylin.rest.service.merger.AfterBuildResourceMerger.updateSnapshotTableIfNeed ",
+        Assert.assertTrue(s"$parent should ony one snapshot file.",
           HDFSUtils.listSortedFileFrom(parent).size == 1)
     })
   }
@@ -191,10 +189,10 @@ trait JobSupport
   }
 
   @throws[Exception]
-  protected def builCuboid(cubeName: String,
-                           segmentRange: SegmentRange[_ <: Comparable[_]],
-                           toBuildLayouts: java.util.Set[LayoutEntity],
-                           prj: String): NDataSegment = {
+  protected def buildCuboid(cubeName: String,
+                            segmentRange: SegmentRange[_ <: Comparable[_]],
+                            toBuildLayouts: java.util.Set[LayoutEntity],
+                            prj: String): NDataSegment = {
     val config: KylinConfig = KylinConfig.getInstanceFromEnv
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, prj)
     val execMgr: ExecutableManager = ExecutableManager.getInstance(config, prj)
@@ -269,11 +267,11 @@ trait JobSupport
   }
 
   @throws[Exception]
-  def buildOneSegementForCubePlanner(dfName: String,
-                                     prj: String = DEFAULT_PROJECT): Unit = {
+  def buildOneSegmentForCubePlanner(dfName: String,
+                                    prj: String = DEFAULT_PROJECT): Unit = {
     val config = KylinConfig.getInstanceFromEnv
     val dsMgr = NDataflowManager.getInstance(config, DEFAULT_PROJECT)
-    var df = dsMgr.getDataflow(dfName)
+    val df = dsMgr.getDataflow(dfName)
     Assert.assertTrue(config.getHdfsWorkingDirectory.startsWith("file:"))
 
     // cleanup all segments first
@@ -285,13 +283,13 @@ trait JobSupport
 
     // build one segment for cube planner
     val layouts = df.getIndexPlan.getAllLayouts
-    var start = SegmentRange.dateToLong("2010-01-01")
-    var end = SegmentRange.dateToLong("2023-01-01")
-    var segment = buildSegment(dfName,
+    val start = SegmentRange.dateToLong("2010-01-01")
+    val end = SegmentRange.dateToLong("2023-01-01")
+    val segment = buildSegment(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
-    logInfo(s"build cube planner segment: ${segment}")
+    logInfo(s"build cube planner segment: $segment")
 
     // validate the first segment for build
     val firstSegment = dsMgr.getDataflow(dfName).getSegments().get(0)
@@ -306,7 +304,6 @@ trait JobSupport
                                 prj: String = DEFAULT_PROJECT): Unit = {
     val config = KylinConfig.getInstanceFromEnv
     val dsMgr = NDataflowManager.getInstance(config, DEFAULT_PROJECT)
-    val execMgr = ExecutableManager.getInstance(config, DEFAULT_PROJECT)
     var df = dsMgr.getDataflow(dfName)
     Assert.assertTrue(config.getHdfsWorkingDirectory.startsWith("file:"))
     // cleanup all segments first
@@ -322,7 +319,7 @@ trait JobSupport
     val layouts = df.getIndexPlan.getAllLayouts
     var start = SegmentRange.dateToLong("2010-01-01")
     var end = SegmentRange.dateToLong("2012-06-01")
-    var segment = builCuboid(dfName,
+    var segment = buildCuboid(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
@@ -330,7 +327,7 @@ trait JobSupport
 
     start = SegmentRange.dateToLong("2012-06-01")
     end = SegmentRange.dateToLong("2013-01-01")
-    segment = builCuboid(dfName,
+    segment = buildCuboid(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
@@ -338,7 +335,7 @@ trait JobSupport
 
     start = SegmentRange.dateToLong("2013-01-01")
     end = SegmentRange.dateToLong("2013-06-01")
-    segment = builCuboid(dfName,
+    segment = buildCuboid(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
@@ -346,7 +343,7 @@ trait JobSupport
 
     start = SegmentRange.dateToLong("2013-06-01")
     end = SegmentRange.dateToLong("2015-01-01")
-    segment = builCuboid(dfName,
+    segment = buildCuboid(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
@@ -433,7 +430,7 @@ trait JobSupport
         val path = paths.next()
         val beforeSort = sparkSession.read.parquet(path.getPath.toString)
         val afterSort = beforeSort.sort(beforeSort.schema.names.map(col): _*)
-        val str = SparderQueryTest.checkAnswer(beforeSort, afterSort, true)
+        val str = SparderQueryTest.checkAnswer(beforeSort, afterSort, checkOrder = true)
         if (str != null) {
           // scalastyle:off println
           beforeSort.collect().foreach(println)

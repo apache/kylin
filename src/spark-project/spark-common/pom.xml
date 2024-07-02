@@ -132,7 +132,6 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-unsafe_2.12</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.apache.gluten</groupId>
             <artifactId>gluten-substrait</artifactId>

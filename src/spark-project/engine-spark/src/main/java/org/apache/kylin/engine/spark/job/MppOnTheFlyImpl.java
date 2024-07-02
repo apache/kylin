@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.cache.kylin.KylinCacheFileSystem;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.engine.spark.job.stage.BuildParam;
-import org.apache.kylin.engine.spark.job.stage.build.MaterializedFactTableView;
+import org.apache.kylin.engine.spark.job.step.ParamPropagation;
+import org.apache.kylin.engine.spark.job.step.build.MaterializeFactView;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -84,7 +84,7 @@ public class MppOnTheFlyImpl implements MppOnTheFlyProvider {
     /**
      * Mimic the logic of building cuboid layout from SegmentBuildJob.build()
      * <p/>
-     * Work hard to reuse the existing SegmentJob & FlatTableAndDictBase etc.
+     * Work hard to reuse the existing SegmentJob & FlatTableStage etc.
      */
     public LogicalPlan computeLayout(NDataSegment virtualSeg, long layoutId, SparkSession ss) {
         KylinConfig config = virtualSeg.getDataflow().getConfig();
@@ -93,9 +93,9 @@ public class MppOnTheFlyImpl implements MppOnTheFlyProvider {
 
             LayoutEntity layoutEntity = virtualSeg.getIndexPlan().getLayoutEntity(layoutId);
             MockJobContext jobContext = new MockJobContext(virtualSeg, layoutId, ss);
-            BuildParam buildParam = new BuildParam();
+            ParamPropagation params = new ParamPropagation();
 
-            MaterializedFactTableView tool = new MaterializedFactTableView(jobContext, virtualSeg, buildParam);
+            MaterializeFactView tool = new MaterializeFactView(jobContext, virtualSeg, params);
             Dataset<Row> layoutDS = tool.computeLayoutFromSourceAllInOne(layoutEntity);
 
             return layoutDS == null ? null : layoutDS.queryExecution().logical();

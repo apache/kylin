@@ -59,6 +59,8 @@ import org.apache.kylin.metadata.cube.optimization.GarbageLayoutType;
 import org.apache.kylin.metadata.cube.optimization.IndexOptimizerFactory;
 import org.apache.kylin.metadata.cube.optimization.event.ApproveRecsEvent;
 import org.apache.kylin.metadata.cube.utils.IndexPlanReduceUtil;
+import org.apache.kylin.metadata.job.JobTokenItem;
+import org.apache.kylin.metadata.job.JobTokenManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -713,14 +715,29 @@ public class OptRecApproveService extends BasicService {
     }
 
     public OptRecResponse approve(String project, OptRecRequest request) {
-        aclEvaluate.checkProjectOperationDesignPermission(project);
-        return approveInternal(project, request);
+        if (request.getJobId() != null && request.getToken() != null) {
+            JobTokenManager tokenManager = JobTokenManager.getInstance(getConfig());
+            JobTokenItem tokenItem = tokenManager.query(request.getJobId());
+            String encrypt = tokenManager.encrypt(request.getToken());
+            if (tokenItem != null && !encrypt.equalsIgnoreCase(tokenItem.getToken())) {
+                OptRecResponse optRecResponse = new OptRecResponse();
+                optRecResponse.setProject(project);
+                optRecResponse.setModelId(request.getModelId());
+                optRecResponse.setAddedLayouts(Lists.newArrayList());
+                optRecResponse.setRemovedLayouts(Lists.newArrayList());
+                return optRecResponse;
+            }
+            OptRecResponse optRecResponse = approveInternal(project, request);
+            tokenManager.delete(request.getJobId());
+            return optRecResponse;
+        } else {
+            aclEvaluate.checkProjectOperationDesignPermission(project);
+            return approveInternal(project, request);
+        }
     }
 
     private OptRecResponse approveInternal(String project, OptRecRequest request) {
-        aclEvaluate.checkProjectOperationDesignPermission(project);
         String modelId = request.getModelId();
-
         if (!FusionIndexService.checkUpdateIndexEnabled(project, modelId)) {
             throw new KylinException(STREAMING_INDEX_UPDATE_DISABLE, MsgPicker.getMsg().getStreamingIndexesApprove());
         }
@@ -894,6 +911,7 @@ public class OptRecApproveService extends BasicService {
             return;
         }
 
+        aclEvaluate.checkProjectOperationDesignPermission(project);
         OptRecRequest optRecRequest = new OptRecRequest();
         optRecRequest.setProject(project);
         optRecRequest.setModelId(modelId);

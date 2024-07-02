@@ -24,13 +24,12 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.project.NProjectManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,19 +45,18 @@ public class LowFreqLayoutOptStrategy extends AbstractOptStrategy {
 
     @Override
     public Set<Long> doCollect(List<LayoutEntity> inputLayouts, NDataflow dataflow, boolean needLog) {
-        ProjectInstance projectInstance = NProjectManager.getInstance(dataflow.getConfig())
-                .getProject(dataflow.getProject());
         Map<Long, FrequencyMap> hitFrequencyMap = dataflow.getLayoutHitCount();
-        int days = projectInstance.getConfig().getFrequencyTimeWindowInDays();
         Set<Long> garbageLayouts = Sets.newHashSet();
+        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(dataflow.getProject());
+        int days = FavoriteRule.getTimeWindowLength(ruleManager.getValue(FavoriteRule.FREQUENCY_TIME_WINDOW));
+        Integer lowFrequency = Integer.parseInt(ruleManager.getValue(FavoriteRule.LOW_FREQUENCY_THRESHOLD));
         inputLayouts.forEach(layout -> {
             if (TimeUtil.minusDays(System.currentTimeMillis(), days) >= layout.getUpdateTime()) {
                 FrequencyMap frequencyMap = hitFrequencyMap.get(layout.getId());
                 if (frequencyMap == null) {
                     frequencyMap = new FrequencyMap();
                 }
-
-                if (frequencyMap.isLowFrequency(dataflow.getProject())) {
+                if (frequencyMap.isLowFrequency(days, lowFrequency)) {
                     garbageLayouts.add(layout.getId());
                 }
             }

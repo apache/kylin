@@ -30,9 +30,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -47,10 +45,8 @@ import org.apache.kylin.job.execution.ChainedStageExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.rest.constant.Constant;
@@ -149,15 +145,15 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild();
+        val build1 = new StageExecutable();
         build1.setProject(getProject());
-        val build2 = new NStageForMerge();
+        val build2 = new StageExecutable();
         build2.setProject(getProject());
-        val build3 = new NStageForSnapshot();
+        val build3 = new StageExecutable();
         build3.setProject(getProject());
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -214,18 +210,18 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new StageBase();
+        val build1 = new StageExecutable();
         build1.setProject(getProject());
         Assert.assertNull(build1.doWork(null));
-        val build2 = new StageBase(RandomUtil.randomUUIDStr());
+        val build2 = new StageExecutable(RandomUtil.randomUUIDStr());
         build2.setProject(getProject());
         Assert.assertNull(build2.doWork(null));
-        val build3 = new StageBase(new Object());
+        val build3 = new StageExecutable(new Object());
         build3.setProject(getProject());
         Assert.assertNull(build3.doWork(null));
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -269,15 +265,15 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild();
+        val build1 = new StageExecutable();
         build1.setProject(getProject());
-        val build2 = new NStageForBuild();
+        val build2 = new StageExecutable();
         build2.setProject(getProject());
-        val build3 = new NStageForBuild();
+        val build3 = new StageExecutable();
         build3.setProject(getProject());
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -314,12 +310,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild();
-        val build2 = new NStageForBuild();
-        val build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        val build1 = new StageExecutable();
+        val build2 = new StageExecutable();
+        val build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -347,7 +343,7 @@ public class StageTest extends NLocalFileMetadataTestCase {
     }
 
     /**
-     useless for yinglong
+     * useless for yinglong
      */
     @Ignore
     @Test
@@ -366,9 +362,9 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        val build1 = new NStageForBuild();
-        val build2 = new NStageForBuild();
-        val build3 = new NStageForBuild();
+        val build1 = new StageExecutable();
+        val build2 = new StageExecutable();
+        val build3 = new StageExecutable();
         sparkExecutable.addStage(build1);
         sparkExecutable.addStage(build2);
         sparkExecutable.addStage(build3);
@@ -378,8 +374,8 @@ public class StageTest extends NLocalFileMetadataTestCase {
 
         List<AbstractExecutable> tasks = executable.getTasks();
         tasks.forEach(task -> {
-            final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
-            for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+            final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+            for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                 Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                         .forEach(stage -> //
                 manager.updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.DISCARDED, null, null));
@@ -455,12 +451,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase stage1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase stage2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase stage3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable stage1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable stage2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable stage3 = (StageExecutable) sparkExecutable.addStage(build3);
         val stageIds = Sets.newHashSet(stage1.getId(), stage2.getId(), stage3.getId());
         sparkExecutable.setStageMap();
         manager.addJob(executable);
@@ -512,12 +508,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase stage1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase stage2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase stage3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable stage1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable stage2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable stage3 = (StageExecutable) sparkExecutable.addStage(build3);
         val stageIds = Sets.newHashSet(stage1.getId(), stage2.getId(), stage3.getId());
         sparkExecutable.setStageMap();
 
@@ -596,12 +592,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase stage1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase stage2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase stage3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable stage1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable stage2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable stage3 = (StageExecutable) sparkExecutable.addStage(build3);
         val stageIds = Sets.newHashSet(stage1.getId(), stage2.getId(), stage3.getId());
         sparkExecutable.setStageMap();
 

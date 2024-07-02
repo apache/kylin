@@ -36,8 +36,8 @@ import lombok.Setter;
  */
 public class TestWithStageExecutable extends BaseTestExecutable implements ChainedStageExecutable {
 
-    private final transient List<StageBase> stages = Lists.newCopyOnWriteArrayList();
-    private final Map<String, List<StageBase>> stagesMap = Maps.newConcurrentMap();
+    private final transient List<StageExecutable> stages = Lists.newCopyOnWriteArrayList();
+    private final Map<String, List<StageExecutable>> stagesMap = Maps.newConcurrentMap();
 
     @Setter
     @Getter
@@ -63,7 +63,7 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
     }
 
     @Override
-    public Map<String, List<StageBase>> getStagesMap() {
+    public Map<String, List<StageExecutable>> getStagesMap() {
         return stagesMap;
     }
 
@@ -83,8 +83,8 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
     }
 
     @Override
-    public void setStageMapWithSegment(String id, List<StageBase> steps) {
-        final List<StageBase> old = stagesMap.getOrDefault(id, Lists.newCopyOnWriteArrayList());
+    public void setStageMapWithSegment(String id, List<StageExecutable> steps) {
+        final List<StageExecutable> old = stagesMap.getOrDefault(id, Lists.newCopyOnWriteArrayList());
         old.addAll(steps);
         stagesMap.put(id, steps);
     }
@@ -96,7 +96,7 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
         step.setId(getId() + "_" + String.format(Locale.ROOT, "%02d", stepId));
         step.setParent(this);
         step.setStepId(stepId);
-        this.stages.add(((StageBase) step));
+        this.stages.add(((StageExecutable) step));
         return step;
     }
 }

@@ -19,14 +19,13 @@
 package org.apache.spark.sql.udaf
 
 import org.apache.kylin.common.util.ByteBufferOutputStream
-
-import java.io.DataOutputStream
-import java.nio.ByteBuffer
 import org.apache.spark.sql.catalyst.expressions.{BoundReference, GenericInternalRow, Literal}
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.apache.spark.sql.types.{BinaryType, DateType, LongType}
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
+import java.io.DataOutputStream
+import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 
 class IntersectCountSuite extends SparderBaseFunSuite {

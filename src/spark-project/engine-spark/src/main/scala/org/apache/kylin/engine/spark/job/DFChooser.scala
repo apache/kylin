@@ -18,22 +18,21 @@
 
 package org.apache.kylin.engine.spark.job
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
-import org.apache.kylin.engine.spark.builder._
-import org.apache.kylin.engine.spark.utils.SparkDataSource._
-import org.apache.kylin.metadata.cube.cuboid.{NCuboidLayoutChooser, NSpanningTree}
-import org.apache.kylin.metadata.cube.model._
-import org.apache.kylin.metadata.model.NDataModel
-import org.apache.kylin.metadata.model.NDataModel.TableKind
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.metadata.model.{SegmentStatusEnum, TblColRef}
+import org.apache.kylin.engine.spark.builder._
+import org.apache.kylin.engine.spark.utils.SparkDataSource._
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
+import org.apache.kylin.metadata.cube.cuboid.{NCuboidLayoutChooser, NSpanningTree}
+import org.apache.kylin.metadata.cube.model._
+import org.apache.kylin.metadata.model.NDataModel.TableKind
+import org.apache.kylin.metadata.model.{NDataModel, SegmentStatusEnum, TblColRef}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql._
+import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

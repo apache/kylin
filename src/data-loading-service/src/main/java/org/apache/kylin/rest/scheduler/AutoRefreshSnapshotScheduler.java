@@ -26,17 +26,12 @@ import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.scheduler.EpochStartedNotifier;
-import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
@@ -45,8 +40,6 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -223,31 +216,6 @@ public class AutoRefreshSnapshotScheduler {
             } else {
                 deleteProjectSnapshotAutoUpdateDir(project.getName());
             }
-        }
-    }
-}
-
-@Slf4j
-@Configuration
-@Order
-class AutoRefreshSnapshotConfig {
-    @Autowired
-    private AutoRefreshSnapshotScheduler scheduler;
-
-    @PostConstruct
-    public void init() {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (kylinConfig.isJobNode()) {
-            EventBusFactory.getInstance().register(this, false);
-        }
-    }
-
-    @Subscribe
-    public void registerScheduler(EpochStartedNotifier notifier) {
-        try {
-            scheduler.afterPropertiesSet();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         }
     }
 }

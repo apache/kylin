@@ -111,31 +111,23 @@ import shaded.parquet.com.fasterxml.jackson.databind.ObjectMapper;
 @PrepareForTest({ KylinConfig.class, NProjectManager.class })
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
         "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
-        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
-
-    private MockMvc mockMvc;
-
-    @Mock
-    private SegmentController nModelController;
-
-    @Mock
-    private ModelService modelService;
-
-    @Mock
-    private FusionModelService fusionModelService;
-
-    @Mock
-    private AclEvaluate aclEvaluate;
-
-    @Mock
-    private FusionIndexService fusionIndexService;
 
     @InjectMocks
     private final OpenSegmentController openSegmentController = Mockito.spy(new OpenSegmentController());
-
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
-
+    private MockMvc mockMvc;
+    @Mock
+    private SegmentController nModelController;
+    @Mock
+    private ModelService modelService;
+    @Mock
+    private FusionModelService fusionModelService;
+    @Mock
+    private AclEvaluate aclEvaluate;
+    @Mock
+    private FusionIndexService fusionIndexService;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Before
@@ -309,7 +301,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, null, false, 3,
-                null, null, null);
+                null, null, null, false);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/models/{model_name}/segments/completion", modelName)
                 .param("project", "default") //
                 .param("parallel", "false") //
@@ -318,7 +310,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .param("priority", "0").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, null, false, 0,
-                null, null, null);
+                null, null, null, false);
     }
 
     @Test
@@ -347,7 +339,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, batchIndexIds,
-                true, 3, null, null, null);
+                true, 3, null, null, null, false);
     }
 
     @Test

@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.metadata.favorite.FavoriteRule;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.RetentionRange;
 import org.apache.kylin.metadata.model.VolatileRange;
@@ -147,20 +148,26 @@ public class ProjectConfigResponse {
     @JsonProperty("package_version")
     private String packageVersion;
 
-    public void setFrequencyTimeWindow(int frequencyTimeWindow) {
-        switch (frequencyTimeWindow) {
-            case 1:
-                this.frequencyTimeWindow = "DAY";
-                break;
-            case 7:
-                this.frequencyTimeWindow = "WEEK";
-                break;
-            case 30:
-                this.frequencyTimeWindow = "MONTH";
-                break;
-            default:
-                break;
-        }
+    @JsonProperty("index_planner_enable")
+    private boolean indexPlannerEnable = false;
+    @JsonProperty("index_planner_max_index_count")
+    private Integer indexPlannerMaxIndexCount = 100;
+    @JsonProperty("index_planner_max_change_count")
+    private Integer indexPlannerMaxChangeCount = 10;
+    @JsonProperty("index_planner_level")
+    private String indexPlannerLevel = FavoriteRule.IndexPlannerLevelType.BALANCED.name();
 
-    }
+    // ---------------------- Deprecated It will be deleted later ----------------------
+    @JsonProperty("auto_index_plan_auto_change_index_enable")
+    private boolean autoIndexPlanAutoChangeIndexEnable = true;
+    @JsonProperty("auto_index_plan_auto_complete_mode")
+    private String autoIndexPlanAutoCompleteMode = "RELATIVE";
+    @JsonProperty("auto_index_plan_absolute_begin_date")
+    private String autoIndexPlanAbsoluteBeginDate;
+    @JsonProperty("auto_index_plan_relative_time_unit")
+    private String autoIndexPlanRelativeTimeUnit = "MONTH";
+    @JsonProperty("auto_index_plan_relative_time_interval")
+    private Integer autoIndexPlanRelativeTimeInterval = 12;
+    @JsonProperty("auto_index_plan_segment_job_enable")
+    private boolean autoIndexPlanSegmentJobEnable = true;
 }

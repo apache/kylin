@@ -24,5 +24,5 @@ import org.apache.kylin.common.extension.KylinExtension;
 import org.apache.kylin.metadata.query.QueryHistory;
 
 public interface QuerySmartSupporter extends KylinExtension {
-    void onMatchQueryHistory(String project, List<QueryHistory> queries, boolean manual);
+    void onMatchQueryHistory(String project, List<QueryHistory> queries);
 }

@@ -18,8 +18,6 @@
 
 package org.apache.spark.sql
 
-import java.sql.Timestamp
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.model.FusionModelManager
@@ -28,6 +26,7 @@ import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
 
+import java.sql.Timestamp
 import scala.collection.mutable.{HashMap => MutableHashMap}
 
 

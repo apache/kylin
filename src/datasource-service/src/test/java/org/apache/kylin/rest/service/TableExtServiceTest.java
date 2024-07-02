@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeServer;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -168,8 +168,8 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         tableDesc.setUuid(RandomUtil.randomUUIDStr());
 
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            MemoryLockUtils.lockAndRecord("TABLE_EXD/default.DEFAULT.TABLE1");
-            MemoryLockUtils.lockAndRecord("TABLE_INFO/default.DEFAULT.TABLE1");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_EXD/default.DEFAULT.TABLE1");
+            UnitOfWork.get().getCopyForWriteItems().add("TABLE_INFO/default.DEFAULT.TABLE1");
             NTableMetadataManager tableMetadataManager = NTableMetadataManager
                     .getInstance(KylinConfig.getInstanceFromEnv(), "default");
             tableMetadataManager.saveTableExt(tableExtDesc);

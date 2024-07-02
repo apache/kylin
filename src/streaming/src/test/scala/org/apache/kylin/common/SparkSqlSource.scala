@@ -17,14 +17,13 @@
  */
 package org.apache.kylin.common
 
-import java.io.File
-
 import org.apache.kylin.metadata.cube.model.{NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.model.TableDesc
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.util.SparderTypeUtil
 
+import java.io.File
 import scala.collection.JavaConverters._
 
 trait SparkSqlSource {

@@ -40,6 +40,9 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.util.ThreadUtils
 
+import java.util.concurrent.Executors
+import java.util.{Objects, List => JList}
+import java.{lang, util}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}

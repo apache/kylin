@@ -20,7 +20,7 @@ package org.apache.kylin.job.execution;
 
 import org.apache.kylin.guava30.shaded.common.base.MoreObjects;
 
-public class SuccessTestStage extends StageBase {
+public class SuccessTestStage extends StageExecutable {
     public SuccessTestStage() {
         super();
         this.setName("SuccessTestStage");

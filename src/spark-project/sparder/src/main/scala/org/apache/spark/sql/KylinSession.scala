@@ -29,8 +29,8 @@ import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.util.{AddressUtil, HadoopUtil, Unsafe}
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater
-import org.apache.kylin.query.plugin.asyncprofiler.QueryAsyncProfilerSparkPlugin
 import org.apache.kylin.query.plugin.diagnose.DiagnoseSparkPlugin
+import org.apache.kylin.query.plugin.profiler.QueryAsyncProfilerSparkPlugin
 import org.apache.kylin.query.util.ExtractFactory
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{ContainerInitializeListener, SparkListener, SparkListenerApplicationEnd}

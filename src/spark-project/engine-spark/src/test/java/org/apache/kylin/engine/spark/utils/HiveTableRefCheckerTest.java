@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark.utils;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -57,6 +57,7 @@ import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
 import org.apache.kylin.rest.request.MultiPartitionConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
+import org.apache.kylin.rest.request.ProjectAutoSemiUpdateRequest;
 import org.apache.kylin.rest.request.ProjectConfigRequest;
 import org.apache.kylin.rest.request.ProjectConfigResetRequest;
 import org.apache.kylin.rest.request.ProjectExclusionRequest;
@@ -366,6 +367,15 @@ public class NProjectController extends NBasicController {
     public EnvelopeResponse<String> updateProjectGeneralInfo(@PathVariable("project") String project,
             @RequestBody ProjectGeneralInfoRequest projectGeneralInfoRequest) {
         projectService.updateProjectGeneralInfo(project, projectGeneralInfoRequest);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "updateprojectAutoSemi", tags = { "SM" }, notes = "Add URL: {project}; ")
+    @PutMapping(value = "/{project:.+}/auto_semi_config")
+    @ResponseBody
+    public EnvelopeResponse<String> updateProjectAutoSemi(@PathVariable("project") String project,
+            @RequestBody ProjectAutoSemiUpdateRequest projectAutoSemiUpdateRequest) {
+        projectService.updateAutoSemiConfig(project, projectAutoSemiUpdateRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 

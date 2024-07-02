@@ -18,15 +18,14 @@
 
 package org.apache.spark.sql.udaf
 
-import java.nio.ByteBuffer
-
 import org.apache.kylin.measure.hllc.{HLLCAggregator, HLLCounter}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.expressions.aggregate.{AggregateFunction, ImperativeAggregate, TypedImperativeAggregate}
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.types._
+
+import java.nio.ByteBuffer
 
 // scalastyle:off
 @ExpressionDescription(usage = "ApproxCountDistinct(expr)")

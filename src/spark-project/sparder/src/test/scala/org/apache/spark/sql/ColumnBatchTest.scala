@@ -18,15 +18,15 @@
 
 package org.apache.spark.sql
 
-import java.sql.{Date, Timestamp}
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.calcite.avatica.util.DateTimeUtils.ymdToUnixDate
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.spark.sql.catalyst.expressions.KapSubtractMonths
 import org.apache.spark.sql.catalyst.util.KapDateTimeUtils
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
+
+import java.sql.{Date, Timestamp}
 
 // scalastyle:off
 class ColumnBatchTest extends SparderBaseFunSuite with SharedSparkSession {

@@ -19,10 +19,10 @@ package org.apache.kylin.rest.response;
 
 import java.util.List;
 
-import org.apache.kylin.metadata.cube.model.NDataLayout;
-import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexEntity.Source;
+import org.apache.kylin.metadata.cube.model.NDataLayout;
+import org.apache.kylin.metadata.model.IStorageAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

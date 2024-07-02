@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.metadata.cube.model.{IndexEntity, NDataSegDetails, NDataSegment}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.mockito.Mockito

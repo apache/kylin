@@ -18,13 +18,13 @@
 
 package org.apache.kylin.rest.service
 
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.commons.collections4.{CollectionUtils, MapUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.constant.Constants
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.kylin.job.snapshot.SnapshotJobUtils
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableDesc}
 import org.apache.kylin.rest.model.SnapshotSourceTableStats

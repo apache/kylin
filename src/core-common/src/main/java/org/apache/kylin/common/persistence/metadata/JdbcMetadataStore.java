@@ -26,8 +26,6 @@ import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.
 import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.MVCC_FIELD;
 import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.UUID_FIELD;
 import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ;
-import static org.springframework.transaction.TransactionDefinition.TIMEOUT_DEFAULT;
 
 import java.io.File;
 import java.io.InputStream;
@@ -63,14 +61,11 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.security.util.InMemoryResource;
-import org.springframework.transaction.IllegalTransactionStateException;
-import org.springframework.transaction.TransactionException;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import lombok.Getter;
 import lombok.val;
 import lombok.var;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -87,6 +82,9 @@ public class JdbcMetadataStore extends MetadataStore {
     private final JdbcTemplate jdbcTemplate;
     private final boolean isUT;
 
+    @Delegate
+    private final JdbcTransactionHelper helper;
+
     public JdbcMetadataStore(KylinConfig config) throws Exception {
         super(config);
         val url = config.getMetadataUrl();
@@ -98,12 +96,12 @@ public class JdbcMetadataStore extends MetadataStore {
         isUT = config.isUTEnv();
         auditLogStore = new JdbcAuditLogStore(config, jdbcTemplate, transactionManager,
                 table + JdbcAuditLogStore.AUDIT_LOG_SUFFIX);
-        epochStore = EpochStore.getEpochStore(config);
         sqlSessionFactory = MetadataMapperFactory.getSqlSessionFactory(dataSource);
         createIfNotExist(table);
         if (isUT) {
             resetMapperTableNameIfNeed(url, sqlSessionFactory);
         }
+        helper = new JdbcTransactionHelper(transactionManager);
     }
 
     @Override
@@ -275,30 +273,5 @@ public class JdbcMetadataStore extends MetadataStore {
             data.setOffset(offset);
             return data;
         });
-    }
-
-    // --- Transaction Implement ---
-
-    @Override
-    public TransactionStatus getTransaction() throws TransactionException {
-        val definition = new DefaultTransactionDefinition();
-        definition.setIsolationLevel(ISOLATION_REPEATABLE_READ);
-        definition.setTimeout(TIMEOUT_DEFAULT);
-        TransactionStatus status = transactionManager.getTransaction(definition);
-        if (!status.isNewTransaction()) {
-            throw new IllegalTransactionStateException("Expect an new transaction here. Please check the code if "
-                    + "the UnitOfWork.doInTransactionWithRetry() is wrapped by JdbcUtil.withTransaction()");
-        }
-        return status;
-    }
-
-    @Override
-    public void commit(TransactionStatus status) throws TransactionException {
-        transactionManager.commit(status);
-    }
-
-    @Override
-    public void rollback(TransactionStatus status) throws TransactionException {
-        transactionManager.rollback(status);
     }
 }

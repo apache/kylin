@@ -18,11 +18,13 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import static org.apache.kylin.engine.spark.utils.ExecutableHandleUtils.mergeMetadataForTable;
+
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker;
+import org.apache.kylin.engine.spark.utils.HiveTableRefChecker;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.JobContext;
@@ -33,8 +35,6 @@ import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.step.JobStepType;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.handler.TableSamplingJobHandler;
@@ -44,7 +44,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,11 +95,11 @@ public class NTableSamplingJob extends DefaultExecutableOnTable {
 
         KylinConfig globalConfig = KylinConfig.getInstanceFromEnv();
         KylinConfig config = NProjectManager.getInstance(globalConfig).getProject(project).getConfig();
-        JobStepType.RESOURCE_DETECT.createStep(job, config);
-        JobStepType.SAMPLING.createStep(job, config);
+        StepEnum.RESOURCE_DETECT.create(job, config);
+        StepEnum.SAMPLING.create(job, config);
         if (HiveTableRefChecker.isNeedCleanUpTransactionalTableJob(tableDesc.isTransactional(),
                 tableDesc.isRangePartition(), config.isReadTransactionalTableEnabled())) {
-            JobStepType.CLEAN_UP_TRANSACTIONAL_TABLE.createStep(job, config);
+            StepEnum.CLEANUP_TRANSACTIONAL_TABLE.create(job, config);
         }
         log.info("sampling job create success on table {}", tableDesc.getIdentity());
         return job;
@@ -166,7 +165,7 @@ public class NTableSamplingJob extends DefaultExecutableOnTable {
             }
             MergerInfo mergerInfo = new MergerInfo(project, ExecutableHandler.HandlerType.SAMPLING);
             mergerInfo.addTaskMergeInfo(this);
-            MetadataInvoker.getInstance().mergeMetadataForSamplingOrSnapshot(project, mergerInfo);
+            mergeMetadataForTable(project, mergerInfo);
             return result;
         }
 

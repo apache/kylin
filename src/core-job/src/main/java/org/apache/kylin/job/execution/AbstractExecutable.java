@@ -753,7 +753,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
             long taskDuration) {
         val stagesMap = task.getStagesMap();
         if (stagesMap.size() == 1) {
-            for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
+            for (Map.Entry<String, List<StageExecutable>> entry : stagesMap.entrySet()) {
                 taskDuration = entry.getValue().stream()
                         .map(stage -> getStageDuration(stage.getOutput(entry.getKey()), getParent())) //
                         .mapToLong(Long::valueOf) //

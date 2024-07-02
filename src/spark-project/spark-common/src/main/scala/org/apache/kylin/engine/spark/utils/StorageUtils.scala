@@ -17,8 +17,6 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import scala.collection.JavaConverters._
-
 import org.apache.hadoop.fs.{FileSystem, Path, PathFilter}
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.kylin.common.KapConfig
@@ -27,9 +25,10 @@ import org.apache.kylin.engine.spark.filter.ParquetBloomFilter
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.metadata.cube.model.LayoutEntity
 import org.apache.kylin.metadata.model.NDataModel
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+
+import scala.collection.JavaConverters._
 
 object StorageUtils extends Logging {
   val MB: Long = 1024 * 1024

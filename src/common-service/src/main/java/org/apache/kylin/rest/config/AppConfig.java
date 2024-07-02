@@ -163,7 +163,7 @@ public class AppConfig implements WebMvcConfigurer {
     @Bean
     @ConditionalOnMissingBean(QuerySmartSupporter.class)
     public QuerySmartSupporter querySmartSupporter() {
-        return (project, queries, manual) -> {
+        return (project, queries) -> {
             // noop
         };
     }

@@ -64,7 +64,7 @@ import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
@@ -115,7 +115,8 @@ public class RealizationChooser {
     private static final ExecutorService selectCandidateService = new ThreadPoolExecutor(
             KylinConfig.getInstanceFromEnv().getQueryRealizationChooserThreadCoreNum(),
             KylinConfig.getInstanceFromEnv().getQueryRealizationChooserThreadMaxNum(), 60L, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("RealChooser"), new ThreadPoolExecutor.CallerRunsPolicy());
+            new SynchronousQueue<>(), new DaemonThreadFactory("RealChooser"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
     private RealizationChooser() {
     }

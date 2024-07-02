@@ -130,7 +130,6 @@ public class ResourceGroupLoadBalancerTest extends NLocalFileMetadataTestCase {
 
     /**
      * test different project params that in request body
-     * choose the given project' epoch
      * @param requestProject
      * @param project
      * @throws IOException

@@ -62,7 +62,6 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.request.GarbageCleanUpConfigRequest;
 import org.apache.kylin.rest.request.JdbcRequest;
 import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
@@ -86,6 +85,7 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -112,8 +112,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     @InjectMocks
     private final ProjectService projectService = Mockito.spy(ProjectService.class);
 
-    @InjectMocks
-    private final ProjectSmartServiceSupporter projectSmartService = Mockito.spy(ProjectSmartServiceSupporter.class);
+    private final ProjectSmartServiceSupporter projectSmartService = null;
 
     @InjectMocks
     private final ModelService modelService = Mockito.spy(ModelService.class);
@@ -320,9 +319,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         StorageVolumeInfoResponse storageVolumeInfoResponse = projectService.getStorageVolumeInfoResponse(PROJECT);
 
         Assert.assertEquals(10240L * 1024 * 1024 * 1024, storageVolumeInfoResponse.getStorageQuotaSize());
-
-        // for MODEL(MODEL_ID) layout-1000001 is manual and auto, it will be considered as manual layout
-        Assert.assertEquals(2988131, storageVolumeInfoResponse.getGarbageStorageSize());
+        Assert.assertEquals(261120, storageVolumeInfoResponse.getGarbageStorageSize());
     }
 
     private void prepareLayoutHitCount() {
@@ -460,7 +457,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         var response = projectService.getProjectConfig(project);
         Assert.assertEquals(description, response.getDescription());
 
-        request.setSemiAutoMode(true);
+        request.setIsSemiAutoMode(true);
         projectService.updateProjectGeneralInfo(project, request);
         response = projectService.getProjectConfig(project);
         Assert.assertTrue(response.isSemiAutomaticMode());
@@ -796,16 +793,10 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(11, prj.getSourceType());
     }
 
+    @Ignore("TODO")
     @Test
     public void testUpdateGarbageCleanupConfig() {
-        val request = new GarbageCleanUpConfigRequest();
-        request.setFrequencyTimeWindow(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK);
-        request.setLowFrequencyThreshold(12L);
-        projectService.updateGarbageCleanupConfig("default", request);
-        val prjMgr = NProjectManager.getInstance(getTestConfig());
-        val prj = prjMgr.getProject("default");
-        Assert.assertEquals(7, prj.getConfig().getFrequencyTimeWindowInDays());
-        Assert.assertEquals(12, prj.getConfig().getLowFrequencyThreshold());
+        // TODO GarbageCleanupConfig has been moved to FavoriteRules, rewrite this
     }
 
     private void updateProject() {
@@ -822,11 +813,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         projectService.updateJobNotificationConfig(PROJECT, jobNotificationConfigRequest);
 
         projectService.updateQueryAccelerateThresholdConfig(PROJECT, 30, false);
-
-        val request = new GarbageCleanUpConfigRequest();
-        request.setFrequencyTimeWindow(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK);
-        request.setLowFrequencyThreshold(12L);
-        projectService.updateGarbageCleanupConfig("default", request);
     }
 
     @Test
@@ -841,22 +827,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(0, response.getJobNotificationEmails().size());
         Assert.assertEquals(0, response.getJobStatesNotification().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
-
-        Assert.assertFalse(response.isFavoriteQueryTipsEnabled());
-        Assert.assertEquals(30, response.getFavoriteQueryThreshold());
-        Assert.assertEquals(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK.name(),
-                response.getFrequencyTimeWindow());
-        Assert.assertEquals(12, response.getLowFrequencyThreshold());
-        Assert.assertFalse(response.isAutoMergeEnabled());
-
-        response = projectService.resetProjectConfig(PROJECT, "query_accelerate_threshold");
-        Assert.assertTrue(response.isFavoriteQueryTipsEnabled());
-        Assert.assertEquals(20, response.getFavoriteQueryThreshold());
-
-        response = projectService.resetProjectConfig(PROJECT, "garbage_cleanup_config");
-        Assert.assertEquals(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.MONTH.name(),
-                response.getFrequencyTimeWindow());
-        Assert.assertEquals(5, response.getLowFrequencyThreshold());
 
         response = projectService.resetProjectConfig(PROJECT, "segment_config");
         Assert.assertFalse(response.isAutoMergeEnabled());

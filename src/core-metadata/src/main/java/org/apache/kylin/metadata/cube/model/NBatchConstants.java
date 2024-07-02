@@ -71,6 +71,16 @@ public interface NBatchConstants {
     String P_DELETE_PARTITION_VALUES = "deletePartitionValues";
     String P_DELETE_PARTITION = "deletePartition";
 
+
+    /** index planner job parameters */
+    String P_PLANNER_INITIALIZE_CUBOID_COUNT = "kylin.planner.initializeCuboidCount";
+    String P_PLANNER_MAX_CUBOID_COUNT = "kylin.planner.maxCuboidCount";
+    String P_PLANNER_MAX_CUBOID_CHANGE_COUNT = "kylin.planner.maxCuboidChangeCount";
+    String P_PLANNER_DATA_RANGE_START = "kylin.planner.dataRangeStart";
+    String P_PLANNER_DATA_RANGE_END = "kylin.planner.dataRangeEnd";
+    String P_PLANNER_AUTO_APPROVE_ENABLED = "kylin.planner.autoApproveEnabled";
+    String P_PLANNER_OPERATION_TOKEN = "kylin.planner.operationToken";
+
     // ut only
     String P_BREAK_POINT_LAYOUTS = "breakPointLayouts";
 }

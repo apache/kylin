@@ -106,21 +106,19 @@ public class QueryScopeProposer extends AbstractModelProposer {
 
     protected static class ScopeBuilder {
 
+        private final Map<String, ComputedColumnDesc> ccMap;
+        private final NDataModel dataModel;
+        private final AbstractContext.ModelContext modelContext;
         // column_identity <====> NamedColumn
         Map<String, NDataModel.NamedColumn> candidateNamedColumns = Maps.newLinkedHashMap();
         Map<FunctionDesc, NDataModel.Measure> candidateMeasures = Maps.newLinkedHashMap();
         Set<TblColRef> dimensionAsMeasureColumns = Sets.newHashSet();
-        private final Map<String, ComputedColumnDesc> ccMap;
-
         Set<TblColRef> allTableColumns = Sets.newHashSet();
         JoinTableDesc[] joins = new JoinTableDesc[0];
 
         private Set<String> newCcUuids;
         private int maxColId = -1;
         private int maxMeasureId = NDataModel.MEASURE_ID_BASE - 1;
-
-        private final NDataModel dataModel;
-        private final AbstractContext.ModelContext modelContext;
 
         protected ScopeBuilder(NDataModel dataModel, AbstractContext.ModelContext modelContext) {
             this.dataModel = dataModel;

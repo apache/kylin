@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-import org.apache.kylin.rest.feign.SmartInvoker;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.OpenSqlAccelerateRequest;
 import org.apache.kylin.rest.response.OpenAccSqlResponse;
@@ -55,6 +54,9 @@ public class ModelRecService extends AbstractModelService {
 
     @Autowired
     private OptRecService optRecService;
+
+    @Autowired
+    private ModelSmartService modelSmartService;
 
     @Autowired
     private ModelService modelService;
@@ -165,7 +167,7 @@ public class ModelRecService extends AbstractModelService {
     }
 
     public SuggestionResponse suggestOptimizeModels(OpenSqlAccelerateRequest request, boolean createNewModel) {
-        SuggestAndOptimizedResponse response = SmartInvoker.getInstance().generateSuggestion(request, createNewModel);
+        SuggestAndOptimizedResponse response = modelSmartService.generateSuggestion(request, createNewModel);
         SuggestionResponse suggestionResponse;
         if (request.isAcceptRecommendation()) {
             suggestionResponse = saveModelAndApproveRecommendations(response, request);

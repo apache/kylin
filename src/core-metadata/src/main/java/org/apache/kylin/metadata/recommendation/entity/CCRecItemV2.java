@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -60,5 +61,10 @@ public class CCRecItemV2 extends RecItemV2 implements Serializable {
             arr[i] = integer;
         }
         return arr;
+    }
+
+    @Override
+    public int[] genDependIds(Map<String, RawRecItem> nonLayoutUniqueFlagRecMap, String content, NDataModel dataModel) {
+        return genDependIds(dataModel);
     }
 }

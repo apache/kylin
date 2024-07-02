@@ -22,7 +22,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.CONFIG_NONEXIST_
 import static org.apache.kylin.common.exception.ServerErrorCode.DIAG_FAILED;
 import static org.apache.kylin.common.exception.ServerErrorCode.DIAG_UUID_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeSystem.NOT_DEADLOCK_THREAD_IDS;
 import static org.apache.kylin.tool.constant.DiagTypeEnum.FULL;
 import static org.apache.kylin.tool.constant.DiagTypeEnum.JOB;
 import static org.apache.kylin.tool.constant.DiagTypeEnum.QUERY;
@@ -30,14 +29,10 @@ import static org.apache.kylin.tool.constant.StageEnum.DONE;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ThreadInfo;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +42,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -55,8 +49,6 @@ import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.persistence.lock.DeadLockInfo;
-import org.apache.kylin.common.persistence.lock.TransactionDeadLockHandler;
 import org.apache.kylin.common.persistence.transaction.MessageSynchronization;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.BufferedLogger;
@@ -64,7 +56,6 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -409,30 +400,5 @@ public class SystemService extends BasicService {
             logger.info("Clean current sparder event log for RPC");
             RoutineToolHelper.cleanEventLog(RoutineToolHelper.CleanType.SPARDER, null);
         }
-    }
-
-    public List<DeadLockInfo> detectDeadLock() {
-        Set<ThreadInfo> threadInfoSet = TransactionDeadLockHandler.getInstance().getThreadsToBeKill();
-        if (CollectionUtils.isEmpty(threadInfoSet)) {
-            return Collections.emptyList();
-        }
-        return threadInfoSet.stream().map(DeadLockInfo::new).collect(Collectors.toList());
-    }
-
-    public void killDeadLockThread(List<Long> ids) {
-        TransactionDeadLockHandler deadLockHandler = TransactionDeadLockHandler.getInstance();
-
-        Set<Long> threadIdSet = Sets.newHashSet(ids);
-        threadIdSet.removeAll(deadLockHandler.getThreadIdToBeKill());
-        if (CollectionUtils.isNotEmpty(threadIdSet)) {
-            throw new KylinException(NOT_DEADLOCK_THREAD_IDS, StringUtils.join(threadIdSet, ","));
-        }
-        deadLockHandler.killThreadsById(Sets.newHashSet(ids));
-    }
-
-    public void killAllDeadLockThread() {
-        TransactionDeadLockHandler deadLockHandler = TransactionDeadLockHandler.getInstance();
-        Set<Long> threadIdToBeKill = deadLockHandler.getThreadIdToBeKill();
-        deadLockHandler.killThreadsById(threadIdToBeKill);
     }
 }

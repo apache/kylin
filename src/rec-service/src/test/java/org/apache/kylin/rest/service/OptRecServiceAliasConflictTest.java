@@ -34,7 +34,6 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.request.OptRecRequest;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
@@ -57,8 +56,6 @@ public class OptRecServiceAliasConflictTest extends OptRecV2TestBase {
     OptRecApproveService optRecApproveService = Mockito.spy(new OptRecApproveService());
     @Spy
     private final AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
-    @Spy
-    MetadataInvoker modelMetadataInvoker = Mockito.spy(MetadataInvoker.class);
 
     public OptRecServiceAliasConflictTest() {
         super("../rec-service/src/test/resources/ut_rec_v2/cc_name_conflict",
@@ -69,7 +66,6 @@ public class OptRecServiceAliasConflictTest extends OptRecV2TestBase {
     public void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.openMocks(this);
-        MetadataInvoker.setDelegate(modelService);
     }
 
     @Test

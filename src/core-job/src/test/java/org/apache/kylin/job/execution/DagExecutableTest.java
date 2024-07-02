@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -175,7 +174,7 @@ class DagExecutableTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(executable2.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         final Map<String, Executable> dagExecutablesMap = job.getTasks().stream()
                 .collect(Collectors.toMap(Executable::getId, executable -> executable));
@@ -440,7 +439,7 @@ class DagExecutableTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(executable3.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         List<Executable> executables = job.getTasks().stream().map(task -> ((Executable) task))
                 .collect(Collectors.toList());
@@ -746,7 +745,7 @@ class DagExecutableTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task1.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val stack = ExceptionUtils.getStackTrace(new MockJobException());
         val reason = new MockJobException().getMessage();

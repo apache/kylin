@@ -151,6 +151,10 @@ public class RawRecManager {
         return jdbcRawRecStore.chooseTopNCandidates(project, model, limit, 0, RawRecItem.RawRecState.RECOMMENDED);
     }
 
+    public List<RawRecItem> queryIndexPlannerRecItems(String project, String model) {
+        return jdbcRawRecStore.chooseIndexPlannerCandidates(project, model);
+    }
+
     public List<RawRecItem> queryImportedRawRecItems(String project, String model) {
         return jdbcRawRecStore.queryImportedRawRecItems(project, model, RawRecItem.RawRecState.RECOMMENDED);
     }

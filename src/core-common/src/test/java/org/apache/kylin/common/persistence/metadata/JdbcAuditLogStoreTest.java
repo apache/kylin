@@ -48,7 +48,6 @@ import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.jdbc.AuditLogRowMapper;
 import org.apache.kylin.common.persistence.transaction.AuditLogReplayWorker;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -90,9 +89,9 @@ class JdbcAuditLogStoreTest {
     private void prepare2Resource() {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/abc");
-            MemoryLockUtils.lockAndRecord("PROJECT/abc2");
-            MemoryLockUtils.lockAndRecord("PROJECT/abc3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/abc");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/abc2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/abc3");
             store.checkAndPutResource("PROJECT/abc", ByteSource
                     .wrap(("{\"name\" : \"abc\",\"uuid\" : \"" + UUID.randomUUID() + "\"}").getBytes(charset)), -1);
             store.checkAndPutResource("PROJECT/abc2", ByteSource
@@ -342,7 +341,7 @@ class JdbcAuditLogStoreTest {
     void testGetMinMaxId(JdbcInfo info) throws IOException {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
         UnitOfWork.doInTransactionWithRetry(() -> {
-            MemoryLockUtils.lockAndRecord(ResourceStore.METASTORE_UUID_TAG);
+            UnitOfWork.get().getCopyForWriteItems().add(ResourceStore.METASTORE_UUID_TAG);
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             store.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
@@ -589,7 +588,7 @@ class JdbcAuditLogStoreTest {
     public void testGet() throws IOException {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/123");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/123");
             store.checkAndPutResource("PROJECT/123",
                     ByteSource.wrap(
                             ("{ \"uuid\" : \"" + UUID.randomUUID() + "\",\"meta_key\" : \"123\",\"name\" : \"123\"}")

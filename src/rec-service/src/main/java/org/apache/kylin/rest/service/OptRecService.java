@@ -59,7 +59,6 @@ import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.kylin.metadata.recommendation.ref.RecommendationRef;
 import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.model.FuzzyKeySearcher;
 import org.apache.kylin.rest.request.OptRecRequest;
 import org.apache.kylin.rest.response.OptRecDepResponse;
@@ -81,9 +80,6 @@ public class OptRecService extends AbstractModelService {
     public static final String RECOMMENDATION_SOURCE = "recommendation_source";
     public static final String OPERATION_ERROR_MSG = "The operation types of recommendation includes: add_index, removal_index and all(by default)";
     public static final String ALL = OptRecService.RecActionType.ALL.name();
-
-    @Autowired(required = false)
-    private MetadataInvoker metadataInvoker;
 
     @Autowired
     private ModelService modelService;
@@ -286,7 +282,6 @@ public class OptRecService extends AbstractModelService {
      * 3. all, fetch all recommendations
      */
     public OptRecLayoutsResponse getOptRecLayoutsResponse(String project, String modelId, String recActionType) {
-        aclEvaluate.checkProjectReadPermission(project);
         return getOptRecLayoutsResponseInner(project, modelId, recActionType);
     }
 

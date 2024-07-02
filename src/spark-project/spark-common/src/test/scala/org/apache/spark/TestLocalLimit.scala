@@ -17,9 +17,9 @@
  */
 package org.apache.spark
 
-import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.DataFrameEnhancement._
 import org.apache.spark.sql.catalyst.plans.logical.LocalLimit
+import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 
 class TestLocalLimit extends SparderBaseFunSuite with SharedSparkSession {
 

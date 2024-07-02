@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.step.JobStepType;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.handler.LayoutDataOptimizeJobHandler;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
@@ -85,8 +84,8 @@ public class NSparkLayoutDataOptimizeJob extends DefaultExecutableOnModel {
         job.setParam(P_PROJECT_NAME, project);
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         log.info("Create index data optimize job for {}.", modelId);
-        JobStepType.RESOURCE_DETECT.createStep(job, dataflow.getConfig());
-        JobStepType.LAYOUT_DATA_OPTIMIZE.createStep(job, dataflow.getConfig());
+        StepEnum.RESOURCE_DETECT.create(job, dataflow.getConfig());
+        StepEnum.LAYOUT_DATA_OPTIMIZE.create(job, dataflow.getConfig());
         return job;
     }
 

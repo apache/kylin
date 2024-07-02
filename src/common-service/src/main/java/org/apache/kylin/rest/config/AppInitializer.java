@@ -30,8 +30,6 @@ import org.apache.kylin.common.constant.Constant;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.TransactionDeadLockHandler;
-import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -154,11 +152,10 @@ public class AppInitializer {
 
             SparkJobFactoryUtils.initJobFactory();
             ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
-            TransactionDeadLockHandler.getInstance().start();
         } else {
             val auditLogStore = new JdbcAuditLogStore(kylinConfig);
-            val epochStore = EpochStore.getEpochStore(kylinConfig);
             kylinConfig.setQueryHistoryUrl(kylinConfig.getQueryHistoryUrl().toString());
+            kylinConfig.setJDBCQueryHistoryURL(kylinConfig.getQueryHistoryUrl().toString());
             kylinConfig.setStreamingStatsUrl(kylinConfig.getStreamingStatsUrl().toString());
             kylinConfig.setJdbcShareStateUrl(kylinConfig.getJdbcShareStateUrl().toString());
             if (kylinConfig.getMetadataStoreType().equals("hdfs")) {
@@ -169,9 +166,9 @@ public class AppInitializer {
             val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
             resourceStore.getMetadataStore().setAuditLogStore(auditLogStore);
             resourceStore.catchup();
-            resourceStore.getMetadataStore().setEpochStore(epochStore);
         }
 
+        kylinConfig.setQueryHistoryUrl(kylinConfig.getQueryHistoryUrl().toString());
         kylinConfig.getDistributedLockFactory().initialize();
         if (!isResource) {
             warmUpSystemCache();

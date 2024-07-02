@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -285,6 +286,10 @@ public abstract class AbstractContext {
         }
 
         return models;
+    }
+
+    public NDataModel getProposedModel(String modelId) {
+        return getProposedModels().stream().filter(m -> Objects.equals(m.getId(), modelId)).findAny().orElse(null);
     }
 
     @Getter

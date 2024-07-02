@@ -17,12 +17,6 @@
  */
 package org.apache.kylin.streaming
 
-import java.lang
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
-import java.sql.{Date, Timestamp}
-import java.util.{Locale, Objects}
-
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.commons.lang3.{ObjectUtils, StringUtils}
 import org.apache.kylin.common.util.DateFormat
@@ -32,6 +26,11 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
 
+import java.lang
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.sql.{Date, Timestamp}
+import java.util.{Locale, Objects}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 

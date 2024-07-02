@@ -40,6 +40,10 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.CONFIG_NOT_
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.job.execution.JobTypeEnum.Category.CRON;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_ENABLE;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_LEVEL;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_MAX_CHANGE_COUNT;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_MAX_INDEX_COUNT;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,6 +100,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cube.storage.ProjectStorageInfoCollector;
 import org.apache.kylin.metadata.cube.storage.StorageInfoEnum;
 import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import org.apache.kylin.metadata.favorite.ModelFavoriteRuleManager;
 import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -115,6 +120,7 @@ import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
 import org.apache.kylin.rest.request.MultiPartitionConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
+import org.apache.kylin.rest.request.ProjectAutoSemiUpdateRequest;
 import org.apache.kylin.rest.request.ProjectExclusionRequest;
 import org.apache.kylin.rest.request.ProjectGeneralInfoRequest;
 import org.apache.kylin.rest.request.ProjectInternalTableConfigRequest;
@@ -165,7 +171,9 @@ public class ProjectService extends BasicService {
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODE_MINUTE = "MINUTE";
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODES = "DAY, HOURS, MINUTE";
     private static final String KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME = "kylin.query.pushdown.runner-class-name";
-
+    private static final String DEFAULT_VAL = "default";
+    @Autowired
+    UserService userService;
     @Autowired
     private AclEvaluate aclEvaluate;
 
@@ -184,14 +192,6 @@ public class ProjectService extends BasicService {
 
     @Autowired(required = false)
     private ProjectSmartServiceSupporter projectSmartService;
-
-    @Autowired(required = false)
-    private ProjectSmartSupporter projectSmartSupporter;
-
-    @Autowired
-    UserService userService;
-
-    private static final String DEFAULT_VAL = "default";
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     @Transaction(project = -1)
@@ -616,10 +616,6 @@ public class ProjectService extends BasicService {
 
         response.setJobNotificationEmails(Lists.newArrayList(config.getAdminDls()));
 
-        response.setFrequencyTimeWindow(config.getFrequencyTimeWindowInDays());
-
-        response.setLowFrequencyThreshold(config.getLowFrequencyThreshold());
-
         response.setYarnQueue(config.getOptional(config.getQueueKey(), DEFAULT_VAL));
 
         response.setExposeComputedColumn(config.exposeComputedColumn());
@@ -628,7 +624,16 @@ public class ProjectService extends BasicService {
 
         response.setPrincipal(projectInstance.getPrincipal());
         // return favorite rules
-        response.setFavoriteRules(projectSmartService != null ? projectSmartService.getFavoriteRules(project) : null);
+        if (projectSmartService != null) {
+            Map<String, Object> favoriteRules = projectSmartService.getFavoriteRules(project);
+            if (!favoriteRules.isEmpty()) {
+                response.setFrequencyTimeWindow(Objects.toString(favoriteRules.get("frequency_time_window")));
+                response.setLowFrequencyThreshold(
+                        Integer.parseInt(Objects.toString(favoriteRules.get("low_frequency_threshold"))));
+                response.setFavoriteRules(favoriteRules);
+                setAutoIndexPlanRule(response, projectSmartService.getAutoIndexPlanRule(project));
+            }
+        }
 
         response.setScd2Enabled(config.isQueryNonEquiJoinModelEnabled());
 
@@ -657,6 +662,32 @@ public class ProjectService extends BasicService {
         response.setPackageTimestamp(infos.getSecond());
 
         return response;
+    }
+
+    private void setAutoIndexPlanRule(ProjectConfigResponse response, Map<String, Object> autoIndexRule) {
+
+        response.setIndexPlannerEnable(Boolean.parseBoolean(Objects.toString(autoIndexRule.get(INDEX_PLANNER_ENABLE))));
+        response.setIndexPlannerMaxIndexCount(
+                Integer.parseInt(Objects.toString(autoIndexRule.get(INDEX_PLANNER_MAX_INDEX_COUNT))));
+        response.setIndexPlannerMaxChangeCount(
+                Integer.parseInt(Objects.toString(autoIndexRule.get(INDEX_PLANNER_MAX_CHANGE_COUNT))));
+        response.setIndexPlannerLevel(Objects.toString(autoIndexRule.get(INDEX_PLANNER_LEVEL)));
+
+        // ---------------------- Deprecated It will be deleted later ----------------------
+        response.setAutoIndexPlanAutoChangeIndexEnable(
+                Boolean.parseBoolean(Objects.toString(autoIndexRule.get("auto_index_plan_auto_change_index_enable"))));
+        response.setAutoIndexPlanAutoCompleteMode(
+                Objects.toString(autoIndexRule.get("auto_index_plan_auto_complete_mode")));
+        response.setAutoIndexPlanAbsoluteBeginDate(
+                Objects.toString(autoIndexRule.get("auto_index_plan_absolute_begin_date"), null));
+        response.setAutoIndexPlanRelativeTimeUnit(
+                Objects.toString(autoIndexRule.get("auto_index_plan_relative_time_unit"), null));
+        Object timeInterval = autoIndexRule.get("auto_index_plan_relative_time_interval");
+        if (timeInterval != null) {
+            response.setAutoIndexPlanRelativeTimeInterval(Integer.parseInt(Objects.toString(timeInterval)));
+        }
+        response.setAutoIndexPlanSegmentJobEnable(
+                Boolean.parseBoolean(Objects.toString(autoIndexRule.get("auto_index_plan_segment_job_enable"))));
     }
 
     public void setSnapshotAutoRefreshParams(ProjectConfigResponse response, String cron) {
@@ -910,9 +941,20 @@ public class ProjectService extends BasicService {
     public void updateProjectGeneralInfo(String project, ProjectGeneralInfoRequest projectGeneralInfoRequest) {
         getManager(NProjectManager.class).updateProject(project, copyForWrite -> {
             copyForWrite.setDescription(projectGeneralInfoRequest.getDescription());
-            copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
-                    String.valueOf(projectGeneralInfoRequest.isSemiAutoMode()));
+            // For compatibility with historical versions
+            if (projectGeneralInfoRequest.getIsSemiAutoMode() != null) {
+                copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
+                        String.valueOf(projectGeneralInfoRequest.getIsSemiAutoMode()));
+            }
         });
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
+    @Transaction(project = 0)
+    public void updateAutoSemiConfig(String project, ProjectAutoSemiUpdateRequest projectAutoSemiUpdateRequest) {
+        getManager(NProjectManager.class).updateProject(project,
+                copyForWrite -> copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
+                        String.valueOf(projectAutoSemiUpdateRequest.isSemiAutoMode())));
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
@@ -969,6 +1011,8 @@ public class ProjectService extends BasicService {
         QueryHistoryIdOffsetManager.getInstance(project).delete();
         // delete favorite rule
         FavoriteRuleManager.getInstance(project).deleteByProject();
+        // delete model favorite rule
+        ModelFavoriteRuleManager.getInstance(project).deleteByProject();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
@@ -1016,6 +1060,7 @@ public class ProjectService extends BasicService {
                 .get(DATASOURCE_TYPE.getValue());
     }
 
+    //TODO low-frequency-threshold & frequency-time-window have been moved to FavoriteRules.
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
     @Transaction(project = 0)
     public void updateGarbageCleanupConfig(String project, GarbageCleanUpConfigRequest garbageCleanUpConfigRequest) {
@@ -1062,6 +1107,9 @@ public class ProjectService extends BasicService {
             break;
         case "table_exclusion_config":
             resetTableExclusionConfig(project);
+            break;
+        case "auto_index_plan_rule":
+            resetAutoIndexPlanConfig(project);
             break;
         default:
             throw new KylinException(INVALID_PARAMETER,
@@ -1113,11 +1161,12 @@ public class ProjectService extends BasicService {
     }
 
     private void resetProjectRecommendationConfig(String project) {
-        FavoriteRuleManager.getInstance(project).resetRule();
+        FavoriteRuleManager.getInstance(project).resetRecommendRule();
         NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project).listAllModels()
                 .forEach(model -> projectModelSupporter.onModelUpdate(project, model.getUuid()));
     }
 
+    //TODO low-frequency-threshold & frequency-time-window have been moved to FavoriteRules.
     private void resetGarbageCleanupConfig(String project) {
         Set<String> toBeRemovedProps = Sets.newHashSet();
         toBeRemovedProps.add("kylin.cube.low-frequency-threshold");
@@ -1129,6 +1178,12 @@ public class ProjectService extends BasicService {
         Set<String> toBeRemovedProps = Sets.newHashSet();
         toBeRemovedProps.add("kylin.metadata.table-exclusion-enabled");
         removeProjectOverrideProps(project, toBeRemovedProps);
+    }
+
+    private void resetAutoIndexPlanConfig(String project) {
+        FavoriteRuleManager.getInstance(project).resetAutoIndexPlanRule();
+        NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project).listAllModels()
+                .forEach(model -> projectModelSupporter.onModelUpdate(project, model.getUuid()));
     }
 
     private void resetSegmentConfig(String project) {

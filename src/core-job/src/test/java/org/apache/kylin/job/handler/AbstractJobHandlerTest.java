@@ -18,9 +18,9 @@
 
 package org.apache.kylin.job.handler;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

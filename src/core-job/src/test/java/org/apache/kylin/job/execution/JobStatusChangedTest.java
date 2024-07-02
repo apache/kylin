@@ -22,6 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mail.MailNotificationType;
 import org.apache.kylin.common.util.LogOutputTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +34,7 @@ public class JobStatusChangedTest extends LogOutputTestCase {
 
     @Before
     public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         getTestConfig().setMetadataUrl(
                 "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=");

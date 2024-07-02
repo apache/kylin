@@ -18,27 +18,19 @@
 package org.apache.kylin.engine.spark.job.exec
 
 import java.io.IOException
-import java.util.Locale
 
-import org.apache.kylin.engine.spark.job.stage.StageExec
+import org.apache.kylin.engine.spark.job.StepExec
 
 import scala.collection.JavaConverters._
 
-class OptimizeExec(id: String) extends BuildExec(id) {
+class OptimizeExec(id: String) extends StepExec(id) {
 
   @throws(classOf[IOException])
   def optimize(): Unit = {
-    for (stage <- subStages.asScala) {
+    for (stage <- subStageList.asScala) {
       logInfo(s"Start sub stage ${stage.getStageName}")
-      stage.toWork()
+      stage.doExecute()
       logInfo(s"End sub stage ${stage.getStageName}")
     }
-  }
-
-  override def addStage(stage: StageExec): Unit = {
-    val stageId = subStages.size + 1
-
-    stage.setId(getId + "_" + String.format(Locale.ROOT, "%02d", Integer.valueOf(stageId)))
-    this.subStages.add(stage)
   }
 }

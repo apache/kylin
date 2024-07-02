@@ -129,6 +129,12 @@ public class NDataModelResponse extends NDataModel {
     @JsonProperty("model_update_enabled")
     private boolean modelUpdateEnabled = true;
 
+    @JsonProperty("auto_index_plan_enable")
+    private boolean autoIndexPlanEnable;
+
+    @JsonProperty("instant_index_init_enable")
+    private boolean instantInitIndexEnable;
+
     @EqualsAndHashCode.Include
     @JsonProperty("computed_columns")
     @JsonInclude(JsonInclude.Include.NON_NULL) // output to frontend

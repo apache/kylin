@@ -621,6 +621,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 sqlResponse.setDuration(0);
             } else {
                 sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+                sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
             }
             logQuery(sqlRequest, sqlResponse);
 
@@ -781,6 +782,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             if (checkCondition(queryCacheEnabled, "query cache is disabled") && !sqlRequest.isIfBigQuery()) {
                 // set duration for caching condition checking
                 sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+                sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
                 queryCacheManager.cacheSuccessQuery(sqlRequest, sqlResponse);
             }
         } catch (Throwable e) { // calcite may throw AssertError
@@ -811,6 +813,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlResponse.setTimeout(queryContext.getQueryTagInfo().isTimeout());
             setAppMaterURL(sqlResponse);
             sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+            sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
             if (queryCacheEnabled && e.getCause() != null) {
                 putIntoExceptionCache(sqlRequest, sqlResponse, e);
             }

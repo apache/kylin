@@ -45,19 +45,14 @@ import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
-import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataLayoutDetails;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.exception.LookupTableException;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.ComputedColumnCheckRequest;
-import org.apache.kylin.rest.request.DataFlowUpdateRequest;
 import org.apache.kylin.rest.request.ModelCheckRequest;
 import org.apache.kylin.rest.request.ModelCloneRequest;
 import org.apache.kylin.rest.request.ModelConfigRequest;
@@ -98,7 +93,6 @@ import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -120,7 +114,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Controller
 @EnableDiscoveryClient
-@EnableFeignClients
 @RequestMapping(value = "/api/models", produces = { HTTP_VND_APACHE_KYLIN_JSON })
 public class NModelController extends NBasicController {
     public static final String MODEL_ID = "modelId";
@@ -173,6 +166,7 @@ public class NModelController extends NBasicController {
                 onlyNormalDim, lite);
         DataResult<List<NDataModel>> filterModels = modelService.getModels(request);
         fusionModelService.setModelUpdateEnabled(filterModels);
+        fusionModelService.setAutoIndexPlanEnabled(filterModels);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, filterModels, "");
     }
 
@@ -210,17 +204,34 @@ public class NModelController extends NBasicController {
     @PostMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
     public EnvelopeResponse<BuildBaseIndexResponse> createModel(@RequestBody ModelRequest modelRequest) {
-        checkProjectName(modelRequest.getProject());
+        String project = checkProjectName(modelRequest.getProject());
         modelService.validatePartitionDesc(modelRequest.getPartitionDesc());
         String partitionDateFormat = modelRequest.getPartitionDesc() == null ? null
                 : modelRequest.getPartitionDesc().getPartitionDateFormat();
         DataRangeUtils.validateDataRange(modelRequest.getStart(), modelRequest.getEnd(), partitionDateFormat);
         try {
             NDataModel model = modelService.createModel(modelRequest.getProject(), modelRequest);
+            try {
+                if (modelRequest.isWithRecJob()) {
+                    indexPlanService.optIndexPlan(model.getId(), null, modelRequest.getProject(), 3, null, null);
+                }
+            } catch (Exception e) {
+                log.error("Create rec job failed, due to:", e);
+            }
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
                     BuildBaseIndexResponse.from(modelService.getIndexPlan(model.getId(), model.getProject())), "");
         } catch (LookupTableException e) {
             throw new KylinException(FAILED_CREATE_MODEL, e);
+        }
+    }
+
+    private void executeOptIndexPlan(String project, String modelId, boolean recOptIndexJob) {
+        try {
+            if (recOptIndexJob) {
+                indexPlanService.optIndexPlan(modelId, null, project, 3, null, null);
+            }
+        } catch (Exception e) {
+            log.error("Create rec job failed, due to:", e);
         }
     }
 
@@ -457,7 +468,7 @@ public class NModelController extends NBasicController {
     @PutMapping(value = "/semantic")
     @ResponseBody
     public EnvelopeResponse<BuildBaseIndexResponse> updateSemantic(@RequestBody ModelRequest request) {
-        checkProjectName(request.getProject());
+        String project = checkProjectName(request.getProject());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(request.getProject(), request.getId());
         DataRangeUtils.validateDataRange(request.getStart(), request.getEnd(), partitionColumnFormat);
         modelService.validatePartitionDesc(request.getPartitionDesc());
@@ -469,6 +480,7 @@ public class NModelController extends NBasicController {
             } else {
                 response = fusionModelService.updateDataModelSemantic(request.getProject(), request);
             }
+            executeOptIndexPlan(project, request.getId(), request.isWithRecJob());
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
         } catch (LookupTableException e) {
             log.error("Update model failed", e);
@@ -767,77 +779,5 @@ public class NModelController extends NBasicController {
         checkProjectName(project);
         NDataLayoutDetails details = modelService.getLayoutDetail(project, modelId, layoutId);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, details, "");
-    }
-
-    // feign API for smart module
-
-    @PostMapping(value = "/feign/update_recommendations_count")
-    @ResponseBody
-    public void updateRecommendationsCount(@RequestParam("project") String project,
-            @RequestParam("modelId") String modelId, @RequestParam("size") int size) {
-        modelService.updateRecommendationsCount(project, modelId, size);
-    }
-
-    @PostMapping(value = "/feign/update_dataflow")
-    @ResponseBody
-    public void updateDataflow(@RequestBody DataFlowUpdateRequest dataFlowUpdateRequest) {
-        modelService.updateDataflow(dataFlowUpdateRequest);
-    }
-
-    @PostMapping(value = "/feign/update_dataflow_maxBucketId")
-    @ResponseBody
-    public void updateDataflow(@RequestParam("project") String project, @RequestParam("dfId") String dfId,
-            @RequestParam("segmentId") String segmentId, @RequestParam("maxBucketId") long maxBucketIt) {
-        modelService.updateDataflow(project, dfId, segmentId, maxBucketIt);
-    }
-
-    @PostMapping(value = "/feign/update_index_plan")
-    @ResponseBody
-    public void updateIndexPlan(@RequestParam("project") String project, @RequestParam("uuid") String uuid,
-            @RequestBody IndexPlan indexplan, @RequestParam("action") String action) {
-        modelService.updateIndexPlan(project, uuid, indexplan, action);
-    }
-
-    @PostMapping(value = "/feign/update_dataflow_status")
-    @ResponseBody
-    public void updateDataflowStatus(@RequestParam("project") String project, @RequestParam("uuid") String uuid,
-            @RequestParam("status") RealizationStatusEnum status) {
-        modelService.updateDataflowStatus(project, uuid, status);
-    }
-
-    @PostMapping(value = "/feign/merge_metadata")
-    @ResponseBody
-    public List<NDataLayout[]> mergeMetadata(@RequestParam("project") String project,
-            @RequestBody MergerInfo mergerInfo) {
-        return modelService.mergeMetadata(project, mergerInfo);
-    }
-
-    @PostMapping(value = "/feign/make_segment_ready")
-    @ResponseBody
-    public void makeSegmentReady(@RequestParam("project") String project, @RequestParam("modelId") String modelId,
-            @RequestParam("segmentId") String segmentId,
-            @RequestParam("errorOrPausedJobCount") int errorOrPausedJobCount) {
-        modelService.makeSegmentReady(project, modelId, segmentId, errorOrPausedJobCount);
-    }
-
-    @PostMapping(value = "/feign/merge_metadata_for_sampling_or_snapshot")
-    @ResponseBody
-    public void mergeMetadataForSamplingOrSnapshot(@RequestParam("project") String project,
-            @RequestBody MergerInfo mergerInfo) {
-        modelService.mergeMetadataForSamplingOrSnapshot(project, mergerInfo);
-    }
-
-    @PostMapping(value = "/feign/merge_metadata_for_loading_internal_table")
-    @ResponseBody
-    public void mergeMetadataForLoadingInternalTable(@RequestParam("project") String project,
-            @RequestBody MergerInfo mergerInfo) {
-        modelService.mergeMetadataForSamplingOrSnapshot(project, mergerInfo);
-    }
-
-    @PostMapping(value = "/feign/check_and_auto_merge_segments")
-    @ResponseBody
-    public void checkAndAutoMergeSegments(@RequestParam("project") String project,
-            @RequestParam("modelId") String modelId, @RequestParam("owner") String owner) {
-        modelService.checkAndAutoMergeSegments(project, modelId, owner);
     }
 }

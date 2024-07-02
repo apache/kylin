@@ -115,6 +115,7 @@ public class QueryMetricsContext extends QueryMetrics {
         this.queryJobCount = context.getMetrics().getQueryJobCount();
         this.queryStageCount = context.getMetrics().getQueryStageCount();
         this.queryTaskCount = context.getMetrics().getQueryTaskCount();
+        this.cpuTime = context.getMetrics().getCpuTime();
         this.isPushdown = context.getQueryTagInfo().isPushdown();
         this.isTimeout = context.getQueryTagInfo().isTimeout();
         if (context.getQueryTagInfo().isStorageCacheUsed() && context.getEngineType() != null) {
@@ -151,6 +152,8 @@ public class QueryMetricsContext extends QueryMetrics {
                 context.getMetrics().getSegCount(),
                 Objects.nonNull(this.errorType) && !this.errorType.equals(QueryHistory.NO_REALIZATION_FOUND_ERROR));
         queryHistoryInfo.setRealizationMetrics(realizationMetricList);
+
+        queryHistoryInfo.setQueryMetrics(collectQueryMetrics());
 
         List<List<String>> querySnapshots = new ArrayList<>();
         for (NativeQueryRealization qcReal : QueryContext.current().getQueryRealizations()) {
@@ -212,6 +215,12 @@ public class QueryMetricsContext extends QueryMetrics {
         if (context.getMetrics().getFinalCause() != null) {
             this.errorType = QueryHistory.OTHER_ERROR;
         }
+    }
+
+    public List<QueryMetric> collectQueryMetrics() {
+        List<QueryMetric> queryMetrics = new ArrayList<>();
+        queryMetrics.add(new QueryMetric(QueryHistory.CPU_TIME,this.cpuTime));
+        return queryMetrics;
     }
 
     public List<RealizationMetrics> collectRealizationMetrics(List<NativeQueryRealization> queryRealizations) {

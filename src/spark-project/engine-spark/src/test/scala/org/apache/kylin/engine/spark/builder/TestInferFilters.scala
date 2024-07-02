@@ -19,8 +19,8 @@
 package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
+import org.apache.kylin.engine.spark.job.step.build.FlatTableStage
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob}
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
@@ -48,11 +48,11 @@ class TestInferFilters extends SparderBaseFunSuite with AdaptiveSparkPlanHelper 
   }
 
   override def beforeEach(): Unit = {
-    FlatTableAndDictBase.inferFiltersEnabled = true
+    FlatTableStage.inferFiltersEnabled = true
   }
 
   override def afterEach(): Unit = {
-    FlatTableAndDictBase.inferFiltersEnabled = false
+    FlatTableStage.inferFiltersEnabled = false
   }
 
   test("infer filters from join desc") {
@@ -68,10 +68,10 @@ class TestInferFilters extends SparderBaseFunSuite with AdaptiveSparkPlanHelper 
     val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
     val segmentJob = Mockito.mock(classOf[SegmentJob])
     Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
-    val buildParam = new BuildParam()
-    new TestFlatTable(segmentJob, seg, buildParam).test(getTestConfig, toBuildTree)
+    val params = new ParamPropagation()
+    new TestFlatTableStage(segmentJob, seg, params).test(getTestConfig, toBuildTree)
 
-    val filters = getFilterPlan(buildParam.getFlatTable.queryExecution.executedPlan)
+    val filters = getFilterPlan(params.getFlatTable.queryExecution.executedPlan)
 
     Assert.assertTrue(Set("EDW.TEST_CAL_DT.CAL_DT", "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
       "DEFAULT.TEST_ORDER.TEST_DATE_ENC").subsetOf(FiltersUtil.getAllEqualColSets))

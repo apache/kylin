@@ -28,11 +28,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.exception.OutOfMaxCombinationException;
 import org.apache.kylin.common.exception.code.ErrorCodeServer;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
-import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-
 import org.apache.kylin.guava30.shaded.common.collect.Iterators;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

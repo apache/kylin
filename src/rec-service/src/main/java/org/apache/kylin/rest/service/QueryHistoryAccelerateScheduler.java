@@ -187,7 +187,7 @@ public class QueryHistoryAccelerateScheduler {
                     submitterToGroups, idToQHInfoList);
             queryHistoryDAO.batchUpdateQueryHistoriesInfo(idToQHInfoList);
             if (querySmartSupporter != null) {
-                querySmartSupporter.onMatchQueryHistory(project, matchedCandidate, isManual());
+                querySmartSupporter.onMatchQueryHistory(project, matchedCandidate);
             }
         }
 

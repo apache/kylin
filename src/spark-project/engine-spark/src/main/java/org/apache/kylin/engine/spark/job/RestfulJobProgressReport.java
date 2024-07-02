@@ -22,13 +22,11 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.KylinException.CODE_SUCCESS;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -50,16 +48,16 @@ public class RestfulJobProgressReport implements IJobProgressReport {
     /**
      * http request the spark job controller
      *
-     * @param json
+     * @param json The payload json string.
      */
     @Override
     public synchronized boolean updateSparkJobInfo(Map<String, String> params, String url, String json) {
         String serverAddress = System.getProperty("spark.driver.rest.server.address", "127.0.0.1:7070");
         String requestApi = String.format(Locale.ROOT, "http://%s%s", serverAddress, url);
-        Long timeOut = Long.parseLong(params.get(ParamsConstants.TIME_OUT));
+        int timeOut = Integer.parseInt(params.get(ParamsConstants.TIME_OUT));
         try {
-            RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(timeOut.intValue())
-                    .setConnectTimeout(timeOut.intValue()).setConnectionRequestTimeout(timeOut.intValue())
+            RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(timeOut)
+                    .setConnectTimeout(timeOut).setConnectionRequestTimeout(timeOut)
                     .setStaleConnectionCheckEnabled(true).build();
             CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
             HttpPut httpPut = new HttpPut(requestApi);
@@ -69,18 +67,18 @@ public class RestfulJobProgressReport implements IJobProgressReport {
             HttpResponse response = httpClient.execute(httpPut);
             int code = response.getStatusLine().getStatusCode();
             InputStream inputStream = response.getEntity().getContent();
-            String responseContent = IOUtils.toString(inputStream, Charset.defaultCharset());
-            Map<String, String> kylinResponse = JsonUtil.readValueAsMap(responseContent);
+            @SuppressWarnings("rawtypes")
+            HashMap kylinResponse = JsonUtil.readValue(inputStream, HashMap.class);
             if (code == HttpStatus.SC_OK && kylinResponse.get("code").equals(CODE_SUCCESS)) {
                 return true;
             } else {
-                logger.warn("update spark job failed, info: {}", responseContent);
-                if (kylinResponse.get("msg").startsWith(JOB_HAS_STOPPED)) {
+                logger.warn("update spark job failed, info: {}", kylinResponse);
+                if (kylinResponse.get("msg").toString().startsWith(JOB_HAS_STOPPED)) {
                     throw new IllegalStateException(JOB_HAS_STOPPED);
                 }
             }
         } catch (Exception e) {
-            if(!KylinConfig.getInstanceFromEnv().isUTEnv()) {
+            if (!KylinConfig.getInstanceFromEnv().isUTEnv()) {
                 logger.error("http request {} failed!", requestApi, e);
             }
             if (e instanceof IllegalStateException && e.getMessage().equals(JOB_HAS_STOPPED)) {

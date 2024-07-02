@@ -50,7 +50,6 @@ import org.apache.kylin.engine.spark.builder.InternalTableLoader;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.service.InternalTableLoadingService;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -673,8 +672,8 @@ public class InternalTableServiceTest extends AbstractTestCase {
         TransactionException exception = Assertions.assertThrows(TransactionException.class,
                 () -> internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(),
                         partitionCols, "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name()));
-        Assertions.assertEquals(String.format(Locale.ROOT, MsgPicker.getMsg().getSameInternalTableNameExist(),
-                        table.getName()),
+        Assertions.assertEquals(
+                String.format(Locale.ROOT, MsgPicker.getMsg().getSameInternalTableNameExist(), table.getName()),
                 exception.getCause().getMessage());
         if (!internalTableFolder.delete()) {
             Assertions.fail();

@@ -167,6 +167,9 @@ public class ExecutableParams {
 
     public static Set<JobBucket> getBuckets(String content) {
         final Set<JobBucket> buckets = Sets.newHashSet();
+        if(content == null){
+            return buckets;
+        }
         try {
             val bucketParams = JsonUtil.readValue(content,
                     new TypeReference<HashMap<String, Map<Long, Map<Long, Long>>>>() {

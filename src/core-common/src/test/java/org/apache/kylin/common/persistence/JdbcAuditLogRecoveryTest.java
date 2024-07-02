@@ -31,7 +31,6 @@ import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.AuditLogReplayWorker;
@@ -97,14 +96,14 @@ public class JdbcAuditLogRecoveryTest {
         val auditLogStore = (JdbcAuditLogStore) systemStore.getAuditLogStore();
         UnitOfWork.doInTransactionWithRetry(() -> {
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/a");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/a");
             store.checkAndPutResource("PROJECT/a", new StringEntity("a", RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
             return null;
         }, "a");
         UnitOfWork.doInTransactionWithRetry(() -> {
             val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("PROJECT/b");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/b");
             store.checkAndPutResource("PROJECT/b", new StringEntity("b", RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
             return null;
@@ -117,7 +116,7 @@ public class JdbcAuditLogRecoveryTest {
                     Thread.sleep(500);
                     val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
                     val path = "PROJECT/a-" + System.currentTimeMillis();
-                    MemoryLockUtils.lockAndRecord(path);
+                    UnitOfWork.get().getCopyForWriteItems().add(path);
                     val originAbc = store.getResource(path, true);
                     store.checkAndPutResource(path, RawResourceTool.createByteSourceByPath(path),
                             System.currentTimeMillis(), originAbc == null ? -1 : originAbc.getMvcc());
@@ -172,7 +171,7 @@ public class JdbcAuditLogRecoveryTest {
                     val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
                     IntStream.range(1000, 1000 + size).forEach(id -> {
                         String path = "PROJECT/b-" + id;
-                        MemoryLockUtils.lockAndRecord(path);
+                        UnitOfWork.get().getCopyForWriteItems().add(path);
                         val originAbc = store.getResource(path, true);
                         store.checkAndPutResource(path, RawResourceTool.createByteSourceByPath(path + "-version2"),
                                 System.currentTimeMillis(), originAbc == null ? -1 : originAbc.getMvcc());

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.util
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 
@@ -71,7 +70,7 @@ private[job] trait PartitionExec {
     pipe.offer(PartitionResult(layout.getId, partitionId, newBucketId, taskStats))
   }
 
-  override protected def wrapDimensions(layout: LayoutEntity): util.Set[Integer] = {
+  override protected def wrapDimensions(layout: LayoutEntity): java.util.Set[Integer] = {
     // Implicitly included with multi level partition columns
     val dimensions = NSparkCubingUtil.combineIndices(partitionColumns, layout.getOrderedDimensions.keySet())
     logInfo(s"Layout dimensions: ${layout.getId} ${dimensions.asScala.mkString("[", ",", "]")}")

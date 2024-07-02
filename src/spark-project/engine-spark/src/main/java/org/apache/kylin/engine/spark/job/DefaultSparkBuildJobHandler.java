@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.job.execution.NSparkExecutable.SPARK_MASTER;
+import static org.apache.kylin.engine.spark.job.NSparkExecutable.SPARK_MASTER;
 
 import java.io.File;
 import java.io.IOException;

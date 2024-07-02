@@ -71,7 +71,7 @@ import org.apache.kylin.metadata.query.QueryHistoryRequest;
 import org.apache.kylin.metadata.query.util.QueryHisTransformStandardUtil;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
-import org.apache.kylin.query.plugin.asyncprofiler.AsyncProfiling;
+import org.apache.kylin.query.plugin.profiler.AsyncProfiling;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;

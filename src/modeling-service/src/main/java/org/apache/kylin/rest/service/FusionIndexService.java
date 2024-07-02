@@ -641,9 +641,11 @@ public class FusionIndexService extends BasicService {
         val config = KylinConfig.getInstanceFromEnv();
         StreamingJobManager mgr = StreamingJobManager.getInstance(config, project);
         StreamingJobMeta meta = mgr.getStreamingJobByUuid(jobId);
-
         NDataflowManager dataflowManager = NDataflowManager.getInstance(config, project);
         NDataflow df = dataflowManager.getDataflow(modelId);
+        if(meta == null){
+            return !df.getSegments().isEmpty();
+        }
         return runningStatus.contains(meta.getCurrentStatus()) || !df.getSegments().isEmpty();
     }
 }

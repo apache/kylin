@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.junit.Assert
+
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 class TestThreadUtils extends SparderBaseFunSuite {
 

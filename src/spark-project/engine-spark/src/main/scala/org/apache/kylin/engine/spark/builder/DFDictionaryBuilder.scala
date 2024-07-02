@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.engine.spark.builder
 
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.cube.model.NDataSegment

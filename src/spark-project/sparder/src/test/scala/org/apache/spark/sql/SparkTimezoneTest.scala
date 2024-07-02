@@ -17,11 +17,11 @@
  */
 package org.apache.spark.sql
 
-import java.util.TimeZone
-
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
+import java.util.TimeZone
 
 class SparkTimezoneTest extends SparderBaseFunSuite with SharedSparkSession {
 

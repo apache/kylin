@@ -18,13 +18,13 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util.Objects
-import org.apache.kylin.guava30.shaded.common.collect.Maps
-
-import javax.security.auth.login.AppConfigurationEntry
 import org.apache.hadoop.security.authentication.util.KerberosUtil
 import org.apache.kylin.common.util.Unsafe
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.zookeeper.client.ZooKeeperSaslClient
+
+import java.util.Objects
+import javax.security.auth.login.AppConfigurationEntry
 
 class ZKJaasConfiguration(private val principal: String,
                           private val keyTab: String) extends javax.security.auth.login.Configuration {

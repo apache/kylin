@@ -22,9 +22,9 @@ import java.sql.SQLException;
 
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.springframework.jdbc.core.RowMapper;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.SneakyThrows;
 import lombok.val;
 

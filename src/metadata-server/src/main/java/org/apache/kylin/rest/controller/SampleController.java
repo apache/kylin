@@ -23,7 +23,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NA
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLING_RANGE_INVALID;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -31,14 +30,13 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.service.DTableService;
-import org.apache.kylin.job.service.TableSampleService;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.aspect.WaitForSyncBeforeRPC;
 import org.apache.kylin.rest.request.SamplingRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.service.DTableService;
 import org.apache.kylin.rest.service.ModelBuildSupporter;
+import org.apache.kylin.rest.service.TableSampleService;
 import org.apache.kylin.rest.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -117,16 +115,6 @@ public class SampleController extends NBasicController {
         checkSamplingTable(qualifiedTableName);
         boolean hasSamplingJob = tableSampleService.hasSamplingJob(project, qualifiedTableName);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasSamplingJob, "");
-    }
-
-    @PostMapping(value = "/feign/sampling")
-    @ResponseBody
-    @WaitForSyncBeforeRPC
-    public List<String> sampling(@RequestBody Set<String> tables, @RequestParam("project") String project,
-            @RequestParam("rows") int rows, @RequestParam("priority") int priority,
-            @RequestParam(value = "yarnQueue", required = false, defaultValue = "") String yarnQueue,
-            @RequestParam(value = "tag", required = false) Object tag) {
-        return tableSampleService.sampling(tables, project, rows, priority, yarnQueue, tag);
     }
 
     public static void checkSamplingRows(int rows) {

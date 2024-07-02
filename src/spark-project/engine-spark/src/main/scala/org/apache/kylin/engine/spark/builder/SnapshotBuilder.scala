@@ -18,10 +18,6 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.io.IOException
-import java.util
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap, Executors}
-import java.util.{Objects, UUID}
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 import org.apache.hadoop.security.AccessControlException
@@ -29,10 +25,10 @@ import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.common.{KapConfig, KylinConfig}
-import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.job.{DFChooser, KylinBuildEnv}
 import org.apache.kylin.engine.spark.utils.{FileNames, LogUtils}
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.model.{NDataModel, NTableMetadataManager, TableDesc, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.source.SourceFactory
@@ -42,6 +38,10 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql._
 import org.apache.spark.utils.ProxyThreadUtils
 
+import java.io.IOException
+import java.util
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap, Executors}
+import java.util.{Objects, UUID}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -209,7 +209,7 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
   }
 
   def executeParallelBuildSnapshot(ss: SparkSession, toBuildTableDesc: Set[TableDesc], baseDir: String,
-                           snapSizeMap: ConcurrentMap[String, Result], fs: FileSystem, snapshotParallelBuildTimeoutSeconds: Int): Unit = {
+                                   snapSizeMap: ConcurrentMap[String, Result], fs: FileSystem, snapshotParallelBuildTimeoutSeconds: Int): Unit = {
 
     val kylinConf = KylinConfig.getInstanceFromEnv
     val project = toBuildTableDesc.iterator.next.getProject
@@ -271,6 +271,7 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
       }
     })
   }
+
   // scalastyle:off
   def executeBuildSnapshot(ss: SparkSession, toBuildTableDesc: Set[TableDesc], baseDir: String,
                            isParallelBuild: Boolean, snapshotParallelBuildTimeoutSeconds: Int): util.Map[String, Result] = {
