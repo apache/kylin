@@ -105,8 +105,12 @@ public class ContextUtil {
             ((OlapRel) rel).getColumnRowType().getAllColumns().stream().filter(context::isOriginAndBelongToCtxTables)
                     .forEach(context.getAllColumns()::add);
         } else if (rel instanceof OlapWindowRel) {
-            ((OlapWindowRel) rel).getGroupingColumns().stream().filter(context::isOriginAndBelongToCtxTables)
+            OlapWindowRel olapWindowRel = (OlapWindowRel) rel;
+            olapWindowRel.getGroupingColumns().stream().filter(context::isOriginAndBelongToCtxTables)
                     .forEach(context.getAllColumns()::add);
+            if (!olapWindowRel.isExistParentProjectNeedPushInfo()) {
+                amendAllColsIfNoAgg(olapWindowRel.getInput());
+            }
         } else if (rel instanceof OlapJoinRel) {
             amendAllColsIfNoAgg(rel.getInput(0));
             amendAllColsIfNoAgg(rel.getInput(1));

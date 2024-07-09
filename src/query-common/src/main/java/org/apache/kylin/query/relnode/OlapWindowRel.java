@@ -20,6 +20,7 @@ package org.apache.kylin.query.relnode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +56,8 @@ public class OlapWindowRel extends Window implements OlapRel {
     @Setter
     private Set<OlapContext> subContexts = Sets.newHashSet();
 
+    private boolean existParentProjectNeedPushInfo;
+
     public OlapWindowRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<RexLiteral> constants,
             RelDataType rowType, List<Window.Group> groups) {
         super(cluster, traitSet, input, constants, rowType, groups);
@@ -87,10 +90,31 @@ public class OlapWindowRel extends Window implements OlapRel {
         if (context != null) {
             this.context.setHasWindow(true);
             if (this == context.getTopNode() && !context.isHasAgg())
-                ContextUtil.amendAllColsIfNoAgg(this);
+                amendContextColumns(olapImpl);
         } else {
             ContextUtil.updateSubContexts(getGroupingColumns(), subContexts);
         }
+    }
+
+    private void amendContextColumns(OlapImpl olapImpl) {
+        this.existParentProjectNeedPushInfo = checkParentProjectNeedPushInfo(olapImpl.getParentNodeStack());
+        ContextUtil.amendAllColsIfNoAgg(this);
+    }
+
+    public boolean checkParentProjectNeedPushInfo(Deque<RelNode> allParents) {
+        for (RelNode parent : allParents) {
+            if (parent instanceof OlapProjectRel) {
+                OlapProjectRel parentProject = (OlapProjectRel) parent;
+                if (parentProject.isNeedPushInfoToSubCtx()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isExistParentProjectNeedPushInfo() {
+        return existParentProjectNeedPushInfo;
     }
 
     protected ColumnRowType buildColumnRowType() {
