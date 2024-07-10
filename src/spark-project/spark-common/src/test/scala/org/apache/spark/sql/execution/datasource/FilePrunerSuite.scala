@@ -18,18 +18,21 @@
 
 package org.apache.spark.sql.execution.datasource
 
+
+import org.apache.hadoop.fs.{FileStatus, Path}
+import org.apache.hadoop.mapred.FileOutputCommitter
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow}
 import org.apache.kylin.metadata.model.{SegmentStatusEnum, Segments}
-import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.util
 import scala.collection.JavaConverters._
 
-class FilePrunerSuite extends SparderBaseFunSuite {
+class FilePrunerSuite extends AnyFunSuite {
 
   test("KE-37730: test check segment status") {
     val segment = new NDataSegment
@@ -51,4 +54,19 @@ class FilePrunerSuite extends SparderBaseFunSuite {
     assert(catchEx.getMessage.equals("Cannot find target segment, and missing segment id: 2;"))
   }
 
+  test("KE-43799: test check hadoop make file") {
+    assert(FilePruner.isHadoopMakeFile(setFileStatus(FileOutputCommitter.SUCCEEDED_FILE_NAME)))
+    assert(FilePruner.isHadoopMakeFile(setFileStatus(FileOutputCommitter.TEMP_DIR_NAME)))
+    assert(!FilePruner.isHadoopMakeFile(setFileStatus("test")))
+    assert(!FilePruner.isHadoopMakeFile(null))
+    assert(!FilePruner.isHadoopMakeFile(new FileStatus))
+
+    def setFileStatus(pathName: String): FileStatus = {
+      val path = Mockito.mock(classOf[Path])
+      Mockito.when(path.getName).thenReturn(pathName)
+      val file = new FileStatus
+      file.setPath(path)
+      file
+    }
+  }
 }

@@ -18,10 +18,8 @@
 
 package org.apache.spark.sql.execution.datasource
 
-import java.sql.{Date, Timestamp}
-import java.util
-
 import org.apache.hadoop.fs.{FileStatus, Path}
+import org.apache.hadoop.mapred.FileOutputCommitter
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
@@ -42,6 +40,8 @@ import org.apache.spark.sql.types.{BooleanType, StructType}
 import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.util.collection.BitSet
 
+import java.sql.{Date, Timestamp}
+import java.util
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -331,6 +331,7 @@ case class FilePruner(val session: SparkSession,
       maybeStatuses.get
     } else {
       val statuses = path.getFileSystem(session.sparkContext.hadoopConfiguration).listStatus(path)
+        .filter(fileStatus => !FilePruner.isHadoopMakeFile(fileStatus))
       fsc.putLeafFiles(path, statuses)
       ShardFileStatusCache.refreshSegmentBuildTimeCache(segmentId, lastBuildTime)
       statuses
@@ -619,6 +620,15 @@ object FilePruner {
         }
       })
       throw new TargetSegmentNotFoundException(missSegId.toString)
+    }
+  }
+
+  def isHadoopMakeFile(fileStatus: FileStatus): Boolean = {
+    try {
+      fileStatus.getPath.getName.equals(FileOutputCommitter.SUCCEEDED_FILE_NAME) ||
+        fileStatus.getPath.getName.equals(FileOutputCommitter.TEMP_DIR_NAME)
+    } catch {
+      case _: Exception => false
     }
   }
 }
