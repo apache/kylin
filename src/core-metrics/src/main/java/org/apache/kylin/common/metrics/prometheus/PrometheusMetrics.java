@@ -44,7 +44,9 @@ public enum PrometheusMetrics {
     JOB_MINUTES("kylin_job_minutes", Type.PROJECT_METRIC), //
     JOB_LONG_RUNNING("kylin_long_running_jobs", Type.PROJECT_METRIC), //
 
-    MODEL_BUILD_DURATION("kylin_model_build_minutes", Type.PROJECT_METRIC | Type.MODEL_METRIC);
+    MODEL_BUILD_DURATION("kylin_model_build_minutes", Type.PROJECT_METRIC | Type.MODEL_METRIC),
+
+    PROJECT_LIST("kylin_project_list", Type.PROJECT_METRIC);
 
     private static class Type {
         public static final int GLOBAL = 0;

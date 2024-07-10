@@ -108,6 +108,9 @@ public class MetricsConfig {
             for (String outDatedProject : outDatedProjects) {
                 log.info("Remove project metrics for {}", outDatedProject);
                 MetricsGroup.removeProjectMetrics(outDatedProject);
+                if (KylinConfig.getInstanceFromEnv().isPrometheusMetricsEnabled()) {
+                    MetricsRegistry.deletePrometheusProjectMetrics(outDatedProject);
+                }
                 MetricsRegistry.removeProjectFromStorageSizeMap(outDatedProject);
             }
 
