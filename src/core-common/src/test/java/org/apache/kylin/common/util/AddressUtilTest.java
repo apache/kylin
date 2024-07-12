@@ -81,6 +81,27 @@ class AddressUtilTest {
     }
 
     @Test
+    void testCheckHost() {
+        AddressUtil.validateHost("127.0.0.1:7070");
+        AddressUtil.validateHost("127.0.0.1");
+        AddressUtil.validateHost("707");
+        AddressUtil.validateHost("");
+        testCheckHostFail("127.0.0.1:");
+        testCheckHostFail(":7070");
+        testCheckHostFail("127.0.0.1:7070>");
+    }
+
+    void testCheckHostFail(String host) {
+        try {
+            AddressUtil.validateHost(host);
+            Assertions.fail();
+        } catch (Exception e) {
+            Assertions.assertInstanceOf(IllegalArgumentException.class, e);
+            Assertions.assertTrue(e.getMessage().contains("Url contains disallowed chars, host: "));
+        }
+    }
+
+    @Test
     void testIsSameHost() {
         Assertions.assertTrue(AddressUtil.isSameHost(hostInfoFetcher.getHostname()));
         Assertions.assertFalse(AddressUtil.isSameHost("unknown"));

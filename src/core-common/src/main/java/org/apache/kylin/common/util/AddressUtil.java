@@ -121,4 +121,10 @@ public class AddressUtil {
     public static void clearLocalIpAddressCache() {
         localIpAddressCache = null;
     }
+
+    public static void validateHost(String host) {
+        if (StringUtils.isNotBlank(host) && !StringHelper.validateHost(host)) {
+            throw new IllegalArgumentException("Url contains disallowed chars, host: " + host);
+        }
+    }
 }

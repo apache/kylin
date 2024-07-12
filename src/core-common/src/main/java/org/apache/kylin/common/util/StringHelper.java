@@ -149,6 +149,10 @@ public class StringHelper {
         return Pattern.compile("^(http(s)?://)?[a-zA-Z0-9._-]+(:[0-9]+)?(/[a-zA-Z0-9._-]+)*/?$").matcher(s).matches();
     }
 
+    public static boolean validateHost(String s) {
+        return Pattern.compile("^(http(s)?://)?[a-zA-Z0-9._-]+(:[0-9]+)?").matcher(s).matches();
+    }
+
     public static boolean validateDbName(String s) {
         return Pattern.compile("^[0-9a-zA-Z_-]+$").matcher(s).matches();
     }

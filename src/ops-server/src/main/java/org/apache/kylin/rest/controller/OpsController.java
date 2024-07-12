@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -134,6 +135,7 @@ public class OpsController extends NBasicController {
             @RequestBody DiagPackageRequest diagPackageRequest, @RequestHeader HttpHeaders headers,
             final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isNotBlank(diagPackageRequest.getJobId())) {
             diagPackageRequest.setStart("");
             diagPackageRequest.setEnd("");
@@ -162,6 +164,7 @@ public class OpsController extends NBasicController {
             @RequestBody QueryDiagPackageRequest queryDiagPackageRequest, @RequestHeader HttpHeaders headers,
             final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             String uuid = systemService.dumpLocalQueryDiagPackage(queryDiagPackageRequest.getQueryId(),
                     queryDiagPackageRequest.getProject(), headers);
@@ -188,6 +191,7 @@ public class OpsController extends NBasicController {
             @RequestParam(value = "project", required = false) String project, final HttpServletRequest request)
             throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             return systemService.getExtractorStatus(id, project);
         } else {
@@ -206,6 +210,7 @@ public class OpsController extends NBasicController {
             @RequestParam(value = "id") String id, @RequestParam(value = "project", required = false) String project,
             final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             setDownloadResponse(systemService.getDiagPackagePath(id, project), MediaType.APPLICATION_OCTET_STREAM_VALUE,
                     response);
@@ -224,6 +229,7 @@ public class OpsController extends NBasicController {
     public EnvelopeResponse<String> remoteStopPackage(@RequestParam(value = "host", required = false) String host,
             @RequestParam(value = "id") String id, final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             systemService.stopDiagTask(id);
             return new EnvelopeResponse<>(CODE_SUCCESS, "", "");

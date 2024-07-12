@@ -722,7 +722,9 @@ public abstract class KylinConfigBase implements Serializable {
         // Caution: config 'kylin.server.address' is essential in yarn cluster mode.
         // The value may be the address of loadbalancer
         // format: ip:port
-        return getOptional("kylin.server.address", getDefaultServerAddress());
+        String serverAddress = getOptional("kylin.server.address", getDefaultServerAddress());
+        AddressUtil.validateHost(serverAddress);
+        return serverAddress;
     }
 
     private String getDefaultServerAddress() {

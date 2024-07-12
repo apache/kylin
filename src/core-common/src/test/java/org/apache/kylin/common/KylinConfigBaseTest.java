@@ -1562,6 +1562,23 @@ class KylinConfigBaseTest {
         val withoutExpected = "," + celebornJar.getAbsolutePath() + "," + mysqlJar.getAbsolutePath();
         Assertions.assertEquals(withoutExpected, withoutGluten);
     }
+
+    void testGetServerAddress() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.server.address", "127.0.0.1");
+        Assertions.assertEquals("127.0.0.1", config.getServerAddress());
+        config.setProperty("kylin.server.address", "8080");
+        Assertions.assertEquals("8080", config.getServerAddress());
+
+        try {
+            config.setProperty("kylin.server.address", "8080>");
+            config.getServerAddress();
+            Assertions.fail();
+        } catch (Exception e) {
+            Assertions.assertInstanceOf(IllegalArgumentException.class, e);
+            Assertions.assertTrue(e.getMessage().contains("Url contains disallowed chars, host: "));
+        }
+    }
 }
 
 class EnvironmentUpdateUtils {

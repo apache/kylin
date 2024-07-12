@@ -95,7 +95,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         String[] tables = { "DEFAULT.TEST_KYLIN_FACT", "DEFAULT.TEST_ACCOUNT" };
         String[] tableNames = { "TEST_KYLIN_FACT", "TEST_ACCOUNT" };
         List<Pair<TableDesc, TableExtDesc>> result = mockTablePair(2, "DEFAULT");
-        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doNothing().when(tableExtService).loadTable(result.get(0).getFirst(), result.get(0).getSecond(),
                 "default");
         Mockito.doNothing().when(tableExtService).loadTable(result.get(1).getFirst(), result.get(1).getSecond(),
@@ -123,7 +123,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         crossAccountTableReq.add(s3TableExtInfo1);
         crossAccountTableReq.add(s3TableExtInfo2);
         List<Pair<TableDesc, TableExtDesc>> result = mockTablePair(2, "DEFAULT", "TABLE");
-        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doNothing().when(tableExtService).loadTable(result.get(0).getFirst(), result.get(0).getSecond(),
                 "default");
         Mockito.doNothing().when(tableExtService).loadTable(result.get(1).getFirst(), result.get(1).getSecond(),
@@ -193,7 +193,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         List<Pair<TableDesc, TableExtDesc>> result = mockTablePair(3, "EDW");
         Mockito.doNothing().when(tableExtService).loadTable(result.get(1).getFirst(), result.get(1).getSecond(),
                 "default");
-        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         loadTableResponse.setLoaded(Sets.newHashSet(tableIdentities));
 
         Mockito.doReturn(Lists.newArrayList(tableNames)).when(tableService).getSourceTableNames(Mockito.any(),
@@ -220,7 +220,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(getTestConfig(), "default");
         tableManager.removeSourceTable("EDW.TEST_CAL_DT");
         Mockito.doReturn(Lists.newArrayList("EDW")).when(tableService).getSourceDbNames("default");
-        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(result).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         LoadTableResponse response = tableExtService.loadDbTables(new String[] { "EDW" }, "default", true);
         Assert.assertEquals(0, response.getLoaded().size());
     }
@@ -551,7 +551,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testLoadTablesWithShortCircuit() throws Exception {
         List<Pair<TableDesc, TableExtDesc>> lt1000 = mockTablePair(8, "TB");
-        Mockito.doReturn(lt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(lt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         TableLoadRequest request = new TableLoadRequest();
         request.setDatabases(new String[] { "DEFAULT" });
         request.setProject("default");
@@ -559,7 +559,7 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(8, lt1000response.getFailed().size());
 
         List<Pair<TableDesc, TableExtDesc>> gt1000 = mockTablePair(1001, "TB");
-        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
 
         request.setTables(mockInputDBOrTable());
@@ -571,13 +571,13 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         request.setDatabases(null);
         gt1000.forEach(
                 t -> Mockito.doNothing().when(tableExtService).loadTable(t.getFirst(), t.getSecond(), "default"));
-        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
 
         request.setDatabases(null);
         request.setTables(new String[] { "TEST_KYLIN_FACT" });
         List<Pair<TableDesc, TableExtDesc>> table8 = mockTablePair(8, "TB");
-        Mockito.doReturn(table8).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Mockito.doReturn(table8).when(tableService).extractTableMeta(Mockito.any(), Mockito.any(), Mockito.any());
         LoadTableResponse response1 = tableExtService.loadTablesWithShortCircuit(request);
         Assert.assertEquals(8, response1.getFailed().size());
 

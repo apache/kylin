@@ -144,6 +144,37 @@ class StringHelperTest {
     }
 
     @Test
+    void testValidateHost() {
+        Assertions.assertTrue(StringHelper.validateHost("127.0.0.1"));
+        Assertions.assertTrue(StringHelper.validateHost("kylin.apache.org"));
+        Assertions.assertTrue(StringHelper.validateHost("kylin"));
+        Assertions.assertTrue(StringHelper.validateHost("http://127.0.0.1"));
+        Assertions.assertTrue(StringHelper.validateHost("http://127.0.0.1:80"));
+        Assertions.assertTrue(StringHelper.validateHost("https://kylin.apache.org"));
+        Assertions.assertTrue(StringHelper.validateHost("http://kylin"));
+        Assertions.assertTrue(StringHelper.validateHost("http://ky-lin"));
+        Assertions.assertTrue(StringHelper.validateHost("http://ky.lin"));
+        Assertions.assertTrue(StringHelper.validateHost("http://ky_lin"));
+        Assertions.assertTrue(StringHelper.validateHost("http://ky_lin:80"));
+    }
+
+    @Test
+    void testValidIllegalHost() {
+        Assertions.assertFalse(StringHelper.validateHost("http://127.0.0.1/a_p.i"));
+        Assertions.assertFalse(StringHelper.validateHost("http://127.0.0.1:80/"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/$(rm -rf /)"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/`rm -rf`"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/'&ls"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/;ls"));
+        Assertions.assertFalse(StringHelper.validateHost("http://kylin/>ls"));
+        Assertions.assertFalse(StringHelper.validateHost(""));
+        Assertions.assertFalse(StringHelper.validateHost("http://ky-lin:80/"));
+        Assertions.assertFalse(StringHelper.validateHost("http://ky.lin/"));
+        Assertions.assertFalse(StringHelper.validateHost("http://ky_lin/"));
+    }
+
+    @Test
     void testValidateDB() {
         Assertions.assertTrue(StringHelper.validateDbName("db_TEST-01"));
         Assertions.assertFalse(StringHelper.validateDbName("db&&ls"));

@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.SparderUIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,7 @@ public class SparderUIService extends BasicService {
         val server = getServer(servletRequest);
         if (StringUtils.isNotBlank(server) && !TRUE.equalsIgnoreCase(servletRequest.getHeader(ROUTED))
                 && routeService.needRoute()) {
+            AddressUtil.validateHost(server);
             log.info("proxy sparder UI to server : [{}]", server);
             val queryString = servletRequest.getQueryString();
             proxyToServer(server, queryString, restTemplate, servletRequest, servletResponse);
@@ -111,6 +113,7 @@ public class SparderUIService extends BasicService {
         }
         if (StringUtils.isNotBlank(realServer) && !TRUE.equalsIgnoreCase(servletRequest.getHeader(ROUTED))
                 && routeService.needRoute()) {
+            AddressUtil.validateHost(realServer);
             log.info("proxy sparder UI to server : [{}] queryId : [{}] Id : [{}]", realServer, queryId, id);
             val queryString = "id=" + id;
             proxyToServer(realServer, queryString, restTemplate, servletRequest, servletResponse);

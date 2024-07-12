@@ -428,7 +428,8 @@ public class TableExtService extends BasicService {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         return ugi.doAs((PrivilegedExceptionAction<List<Pair<TableDesc, TableExtDesc>>>) () -> {
             ProjectInstance projectInstance = getManager(NProjectManager.class).getProject(project);
-            List<Pair<TableDesc, TableExtDesc>> extractTableMetas = tableService.extractTableMeta(tables, project);
+            List<Pair<TableDesc, TableExtDesc>> extractTableMetas = tableService.extractTableMeta(tables, project,
+                    tableResponse);
             if (config.getTableAccessFilterEnable() && projectInstance.isProjectKerberosEnabled()) {
                 return extractTableMetas.stream().map(pair -> {
                     TableDesc tableDesc = pair.getFirst();

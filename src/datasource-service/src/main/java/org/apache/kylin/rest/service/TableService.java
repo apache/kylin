@@ -43,6 +43,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,6 +157,7 @@ import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.request.TableDescRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.NHiveTableNameResponse;
 import org.apache.kylin.rest.response.NInitTablesResponse;
 import org.apache.kylin.rest.response.OpenPreReloadTableResponse;
@@ -345,6 +347,11 @@ public class TableService extends BasicService {
     }
 
     public List<Pair<TableDesc, TableExtDesc>> extractTableMeta(String[] tables, String project) {
+        return extractTableMeta(tables, project, null);
+    }
+
+    public List<Pair<TableDesc, TableExtDesc>> extractTableMeta(String[] tables, String project,
+            LoadTableResponse tableResponse) {
         // de-dup
         SetMultimap<String, String> databaseTables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
@@ -356,7 +363,10 @@ public class TableService extends BasicService {
         // load all tables first Pair<TableDesc, TableExtDesc>
         ProjectInstance projectInstance = getManager(NProjectManager.class).getProject(project);
         ISourceMetadataExplorer explr = SourceFactory.getSource(projectInstance).getSourceMetadataExplorer();
-        List<Pair<Map.Entry<String, String>, Object>> results = databaseTables.entries().parallelStream().map(entry -> {
+
+        List<Pair<TableDesc, TableExtDesc>> successResults = Collections.synchronizedList(new ArrayList<>());
+        List<String> failedTableNames = Collections.synchronizedList(new ArrayList<>());
+        databaseTables.entries().parallelStream().forEach(entry -> {
             try {
                 Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
                 TableDesc tableDesc = pair.getFirst();
@@ -366,24 +376,23 @@ public class TableService extends BasicService {
                         entry.getKey().toUpperCase(Locale.ROOT) + "." + entry.getValue().toUpperCase(Locale.ROOT)));
                 TableExtDesc extDesc = pair.getSecond();
                 Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
-                return new Pair<Map.Entry<String, String>, Object>(entry, pair);
+                successResults.add(pair);
             } catch (Exception e) {
-                return new Pair<Map.Entry<String, String>, Object>(entry, e);
+                logger.error("Failed to extract meta data of table:{}.{}", entry.getKey(), entry.getValue(), e);
+                failedTableNames.add(entry.getKey() + "." + entry.getValue());
             }
-        }).collect(Collectors.toList());
-        List<Pair<Map.Entry<String, String>, Object>> errorList = results.stream()
-                .filter(pair -> pair.getSecond() instanceof Throwable).collect(Collectors.toList());
-        if (!errorList.isEmpty()) {
-            errorList.forEach(e -> logger.error(e.getFirst().getKey() + "." + e.getFirst().getValue(),
-                    (Throwable) (e.getSecond())));
-            String errorTables = StringUtils
-                    .join(errorList.stream().map(error -> error.getFirst().getKey() + "." + error.getFirst().getValue())
-                            .collect(Collectors.toList()), ",");
+        });
+        if (!failedTableNames.isEmpty()) {
+            String errorTables = StringUtils.join(failedTableNames, "\n");
             String errorMessage = String.format(Locale.ROOT, MsgPicker.getMsg().getHiveTableNotFound(), errorTables);
-            throw new KylinException(TABLE_NOT_EXIST, errorMessage);
+            if (Objects.isNull(tableResponse)) {
+                throw new KylinException(TABLE_NOT_EXIST, errorMessage);
+            } else {
+                tableResponse.getFailed().addAll(failedTableNames);
+                logger.error("Skip load these failed tables:\n{}", errorTables);
+            }
         }
-        return results.stream().map(pair -> (Pair<TableDesc, TableExtDesc>) pair.getSecond())
-                .collect(Collectors.toList());
+        return successResults;
     }
 
     public List<String> getSourceDbNames(String project) throws Exception {
