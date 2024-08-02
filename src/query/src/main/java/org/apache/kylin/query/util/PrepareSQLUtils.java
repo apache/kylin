@@ -47,8 +47,9 @@ public class PrepareSQLUtils {
         int startOffset = 0;
         int placeHolderIdx = -1;
         int paramIdx = 0;
+        char identQuoting = identQuoting();
 
-        placeHolderIdx = findNextPlaceHolder(prepareSQL, startOffset);
+        placeHolderIdx = findNextPlaceHolder(prepareSQL, startOffset, identQuoting);
         while (placeHolderIdx != -1 && paramIdx < params.length) {
             String paramLiteral = convertToLiteralString(params[paramIdx]);
             prepareSQL = prepareSQL.substring(0, placeHolderIdx) + paramLiteral
@@ -56,7 +57,7 @@ public class PrepareSQLUtils {
 
             paramIdx += 1;
             startOffset = placeHolderIdx + paramLiteral.length();
-            placeHolderIdx = findNextPlaceHolder(prepareSQL, startOffset);
+            placeHolderIdx = findNextPlaceHolder(prepareSQL, startOffset, identQuoting);
         }
 
         if (paramIdx != params.length) {
@@ -179,14 +180,14 @@ public class PrepareSQLUtils {
         }
     }
 
-    private static int findNextPlaceHolder(String prepareSQL, int start) {
+    private static int findNextPlaceHolder(String prepareSQL, int start, char identQuoting) {
         boolean openingIdentQuote = false;
         boolean openingLiteralQuote = false;
         while (start < prepareSQL.length()) {
             if (prepareSQL.charAt(start) == LITERAL_QUOTE) {
                 // skip quoted literal
                 openingLiteralQuote = !openingLiteralQuote;
-            } else if (!openingLiteralQuote && prepareSQL.charAt(start) == identQuoting()) {
+            } else if (!openingLiteralQuote && prepareSQL.charAt(start) == identQuoting) {
                 // skip quoted identifier
                 openingIdentQuote = !openingIdentQuote;
             }
