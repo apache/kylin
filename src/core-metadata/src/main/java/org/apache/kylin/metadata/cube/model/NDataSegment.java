@@ -624,6 +624,12 @@ public class NDataSegment extends RootPersistentEntity implements ISegment, Seri
     }
 
     public Map<String, Long> getColumnSourceBytes() {
+        if (sourceCount == 0) {
+            if (!columnSourceBytes.isEmpty()) {
+                log.warn("Segment[{}] sourceCount is 0, but columnSourceBytes non-empty.", getId());
+            }
+            return Maps.newHashMap();
+        }
         return columnSourceBytes;
     }
 

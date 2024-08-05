@@ -216,7 +216,7 @@ abstract class MergeStage(private val jobContext: SegmentJob,
         val usageManager = SourceUsageManager.getInstance(config)
         val totalCount = unmerged.map(_.getSourceCount).sum
         val evaluated = unmerged.flatMap { segment => //
-          val existed = if (segment.getColumnSourceBytes.isEmpty) {
+          val existed = if (segment.getColumnSourceBytes.isEmpty && segment.getSourceCount != 0) {
             usageManager.calcAvgColumnSourceBytes(segment)
           } else {
             segment.getColumnSourceBytes
