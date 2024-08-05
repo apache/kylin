@@ -50,8 +50,6 @@ public class LogicalViewLoader {
     public static final ScheduledExecutorService executorService = Executors
             .newSingleThreadScheduledExecutor(new NamedThreadFactory("logical_view"));
     private static ScheduledFuture<?> syncViewScheduler;
-    private static boolean hasChecked = false;
-    private static boolean isLogicalViewConfigLegal = true;
 
     public static void initScheduler() {
         LOADED_LOGICAL_VIEWS.clear();
@@ -201,18 +199,11 @@ public class LogicalViewLoader {
         if (!KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled()) {
             return;
         }
-        if (!hasChecked) {
-            try {
-                // check if logical view database is duplicated with hive databases
-                SourceFactory.getSparkSource().getSourceMetadataExplorer().listDatabases();
-            } catch (Exception e) {
-                LOGGER.warn("Error when list databases....", e);
-                isLogicalViewConfigLegal = false;
-            } finally {
-                hasChecked = true;
-            }
-        }
-        if (!isLogicalViewConfigLegal) {
+        try {
+            // check if logical view database is duplicated with hive databases
+            SourceFactory.getSparkSource().getSourceMetadataExplorer().listDatabases();
+        } catch (Exception e) {
+            LOGGER.warn("Error when list databases....", e);
             throw new KylinException(DDL_CHECK_ERROR,
                     "Logical view database should not be duplicated with normal " + "hive database!!!");
         }
