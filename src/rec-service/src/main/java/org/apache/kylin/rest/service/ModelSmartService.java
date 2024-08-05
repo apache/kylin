@@ -461,6 +461,14 @@ public class ModelSmartService extends AbstractModelService implements SmartCont
 
     private void collectResponseOfReusedModels(AbstractContext.ModelContext modelContext,
             List<ModelRecResponse> responseOfReusedModels) {
+        if (modelContext.isSnapshotSelected()) {
+            return;
+        }
+        collectResponseOfReusedModelsInner(modelContext, responseOfReusedModels);
+    }
+
+    private void collectResponseOfReusedModelsInner(AbstractContext.ModelContext modelContext,
+            List<ModelRecResponse> responseOfReusedModels) {
         Map<Long, Set<String>> layoutToSqlSet = mapLayoutToSqlSet(modelContext);
         Map<String, ComputedColumnDesc> oriCCMap = Maps.newHashMap();
         List<ComputedColumnDesc> oriCCList = modelContext.getOriginModel().getComputedColumnDescs();

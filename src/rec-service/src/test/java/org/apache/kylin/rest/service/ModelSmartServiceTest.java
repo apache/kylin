@@ -277,8 +277,11 @@ public class ModelSmartServiceTest extends SourceTestCase {
                         + "INNER JOIN \"DEFAULT\".\"TEST_COUNTRY\" as \"BUYER_COUNTRY\"\n"
                         + "ON \"BUYER_ACCOUNT\".\"ACCOUNT_COUNTRY\"=\"BUYER_COUNTRY\".\"COUNTRY\" group by test_kylin_fact.cal_dt");
         AbstractContext proposeContext = modelSmartService.suggestModel(getProject(), sqls, true, true);
+        Assert.assertEquals(3, proposeContext.getModelContexts().size());
+        Assert.assertEquals(1, proposeContext.getModelContexts().stream()
+                .filter(modelContext -> !modelContext.isSnapshotSelected()).count());
         val response = modelSmartService.buildModelSuggestionResponse(proposeContext);
-        Assert.assertEquals(3, response.getReusedModels().size());
+        Assert.assertEquals(1, response.getReusedModels().size());
         Assert.assertEquals(0, response.getNewModels().size());
         response.getReusedModels().forEach(recommendedModelResponse -> {
             List<LayoutRecDetailResponse> indexes = recommendedModelResponse.getIndexes();
@@ -286,8 +289,11 @@ public class ModelSmartServiceTest extends SourceTestCase {
         });
 
         AbstractContext proposeContext2 = modelSmartService.suggestModel(getProject(), sqls.subList(0, 2), true, true);
+        Assert.assertEquals(2, proposeContext2.getModelContexts().size());
+        Assert.assertEquals(0, proposeContext2.getModelContexts().stream()
+                .filter(modelContext -> !modelContext.isSnapshotSelected()).count());
         val response2 = modelSmartService.buildModelSuggestionResponse(proposeContext2);
-        Assert.assertEquals(2, response2.getReusedModels().size());
+        Assert.assertEquals(0, response2.getReusedModels().size());
         Assert.assertEquals(0, response2.getNewModels().size());
         response2.getReusedModels().forEach(recommendedModelResponse -> {
             List<LayoutRecDetailResponse> indexes = recommendedModelResponse.getIndexes();
