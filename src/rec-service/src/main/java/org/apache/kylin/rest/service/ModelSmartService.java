@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -179,11 +178,11 @@ public class ModelSmartService extends AbstractModelService implements SmartCont
                 String layoutStr = layoutMap.keySet().stream().map(Object::toString).collect(Collectors.joining(","));
                 log.info(String.format(Locale.ROOT, "Discard table index %s in model [%s] via api control.", layoutStr,
                         model.getAlias()));
-                Optional<AbstractContext.ModelContext> optional = proposeContext.getModelContexts().stream()
+                List<AbstractContext.ModelContext> contextList = proposeContext.getModelContexts().stream()
                         .filter(modelContext -> modelContext.getTargetModel() != null
                                 && modelContext.getTargetModel().getUuid().equals(model.getUuid()))
-                        .findFirst();
-                optional.ifPresent(modelContext -> modelContext.getIndexRexItemMap().entrySet()
+                        .collect(Collectors.toList());
+                contextList.forEach(modelContext -> modelContext.getIndexRexItemMap().entrySet()
                         .removeIf(entry -> layoutMap.containsKey(entry.getValue().getLayout().getId())));
             }
         }

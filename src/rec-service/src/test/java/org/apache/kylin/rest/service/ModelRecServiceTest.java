@@ -816,4 +816,32 @@ public class ModelRecServiceTest extends SourceTestCase {
         IndexPlan indexPlan1 = indexPlanManager.getIndexPlan(openSuggestionResponse2.getModels().get(0).getUuid());
         Assert.assertEquals(2, indexPlan1.getAllLayouts().size());
     }
+
+    @Test
+    public void testIndexDisabledWhenRecIndexDuplicate() {
+        String project = "default";
+        String sql1 = "SELECT c.* FROM (SELECT a.*, b.* FROM\n"
+                + "     (SELECT ID1 AS id FROM TEST_MEASURE) a RIGHT JOIN (SELECT *\n"
+                + "      FROM (SELECT ID1 AS id FROM TEST_MEASURE) d) b ON a.id=b.id) c";
+        String sql2 = "SELECT c.* FROM (SELECT a.*, b.* FROM\n"
+                + "        (SELECT ID1 AS id, NAME1 AS aName FROM TEST_MEASURE) a RIGHT JOIN (SELECT *\n"
+                + "         FROM (SELECT ID1 AS id, NAME1 AS dName FROM TEST_MEASURE) d) b ON a.id=b.id) c";
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), project);
+        String modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
+        Assert.assertEquals(1, indexPlan.getAllLayouts().size());
+        Assert.assertEquals(0, indexPlan.getAllLayouts().stream().filter(LayoutEntity::isBase).count());
+
+        OpenSqlAccelerateRequest request = new OpenSqlAccelerateRequest();
+        request.setProject(project);
+        request.setSqls(Arrays.asList(sql1, sql2));
+        request.setForce2CreateNewModel(false);
+        request.setAcceptRecommendation(false);
+        request.setDiscardTableIndex(true);
+        OpenSuggestionResponse openSuggestionResponse = modelRecService.suggestOrOptimizeModels(request);
+        Assert.assertTrue(openSuggestionResponse.getErrorSqlList().isEmpty());
+        Assert.assertEquals(1, openSuggestionResponse.getModels().size());
+        Assert.assertFalse(
+                openSuggestionResponse.getModels().get(0).getIndexes().get(0).getDimensions().get(0).isNew());
+    }
 }
