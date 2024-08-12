@@ -22,8 +22,6 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
-import org.apache.spark.sql.catalyst.expressions.codegen.Block.BlockHelper
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.udaf.BitmapFuncType.BitmapFuncType
 import org.apache.spark.sql.udaf._
@@ -108,8 +106,8 @@ object KapFunctions {
   def approx_count_distinct_decode(column: Column, precision: Int): Column =
     Column(ApproxCountDistinctDecode(column.expr, Literal(precision)))
 
-  def k_truncate(column: Column, scale: Int): Column = {
-    Column(TRUNCATE(column.expr, Literal(scale)))
+  def k_truncate(column: Column, scale: Column): Column = {
+    Column(Truncate(column.expr, scale.expr))
   }
 
   def intersect_count(separator: String, upperBound: Int, columns: Column*): Column = {
@@ -159,105 +157,6 @@ object KapFunctions {
     Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       filterType.expr, BinaryType, separator, upperBound
     ).toAggregateExpression())
-  }
-
-  case class TRUNCATE(child: Expression, scale: Expression)
-    extends RoundBase(child, scale, BigDecimal.RoundingMode.DOWN, "ROUND_DOWN")
-      with Serializable with ImplicitCastInputTypes {
-    def this(child: Expression) = this(child, Literal(0))
-
-    private lazy val scaleV: Any = scale.eval(EmptyRow)
-
-    override protected lazy val _scale: Int = scaleV.asInstanceOf[Int]
-
-    override lazy val dataType: DataType = child.dataType match {
-      // if the new scale is bigger which means we are scaling up,
-      // keep the original scale as `Decimal` does
-      case DecimalType.Fixed(p, s) => DecimalType(p, scala.math.max(if (_scale > s) s else _scale, 0))
-      case t => t
-    }
-
-    override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-      val ce = child.genCode(ctx)
-      val modeStr = "ROUND_DOWN"
-      val evaluationCode = dataType match {
-        case DecimalType.Fixed(_, _) =>
-          s"""
-             |java.math.BigDecimal dec1 = ${ce.value}.toJavaBigDecimal().movePointRight(${_scale})
-             |          .setScale(0, java.math.BigDecimal.$modeStr).movePointLeft(${_scale});
-             |        ${ev.value} = new Decimal().set(scala.math.BigDecimal.exact(dec1));
-             |        ${ev.isNull} = ${ev.value} == null;
-         """.stripMargin
-        case ByteType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.$modeStr).byteValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case ShortType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.$modeStr).shortValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case IntegerType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.$modeStr).intValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case LongType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.$modeStr).longValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case FloatType => // if child eval to NaN or Infinity, just return it.
-          s"""
-          if (Float.isNaN(${ce.value}) || Float.isInfinite(${ce.value})) {
-            ${ev.value} = ${ce.value};
-          } else {
-            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
-              setScale(${_scale}, java.math.BigDecimal.$modeStr).floatValue();
-          }"""
-        case DoubleType => // if child eval to NaN or Infinity, just return it.
-          s"""
-          if (Double.isNaN(${ce.value}) || Double.isInfinite(${ce.value})) {
-            ${ev.value} = ${ce.value};
-          } else {
-            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
-              setScale(${_scale}, java.math.BigDecimal.$modeStr).doubleValue();
-          }"""
-      }
-      if (scaleV == null) { // if scale is null, no need to eval its child at all
-        ev.copy(code =
-          code"""
-        boolean ${ev.isNull} = true;
-        ${CodeGenerator.javaType(dataType)} ${ev.value} = ${CodeGenerator.defaultValue(dataType)};""")
-      } else {
-        ev.copy(code =
-          code"""
-        ${ce.code}
-        boolean ${ev.isNull} = ${ce.isNull};
-        ${CodeGenerator.javaType(dataType)} ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
-        if (!${ev.isNull}) {
-          $evaluationCode
-        }""")
-      }
-    }
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-      val newChildren = Seq(newLeft, newRight)
-      super.legacyWithNewChildren(newChildren)
-    }
   }
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column, buildVersion: Column): Column = {

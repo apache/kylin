@@ -30,6 +30,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.udf._
 import org.apache.spark.unsafe.types.UTF8String
 
+import java.math.RoundingMode
 import java.time.ZoneId
 import java.util.Locale
 import scala.collection.JavaConverters._
@@ -310,41 +311,137 @@ case class KylinTimestampDiff(left: Expression, mid: Expression, right: Expressi
   }
 }
 
-case class Truncate(_left: Expression, _right: Expression) extends BinaryExpression with ExpectsInputTypes {
-  override def left: Expression = _left
+case class Truncate(child: Expression, scale: Expression) extends BinaryExpression {
 
-  override def right: Expression = _right
+  override def left: Expression = child
+  override def right: Expression = scale
 
-  override def inputTypes: Seq[AbstractDataType] =
-    Seq(TypeCollection(IntegerType, LongType, DoubleType, DecimalType, IntegerType, FloatType, ShortType, ByteType), IntegerType)
+  private val mode: RoundingMode = RoundingMode.DOWN
+  private val modeStr: String = "ROUND_DOWN"
 
-  def this(exp: Expression) = this(exp, Literal(0, IntegerType))
+  def this(child: Expression) = this(child, Literal(0, IntegerType))
 
-  override protected def nullSafeEval(input1: Any, input2: Any): Any = {
-    val value2 = input2.asInstanceOf[Int]
-    left.dataType match {
-      case IntegerType => TruncateImpl.evaluate(input1.asInstanceOf[Int], value2)
-      case DoubleType => TruncateImpl.evaluate(input1.asInstanceOf[Double], value2)
-      case FloatType => TruncateImpl.evaluate(input1.asInstanceOf[Float], value2)
-      case ShortType => TruncateImpl.evaluate(input1.asInstanceOf[Short], value2)
-      case ByteType => TruncateImpl.evaluate(input1.asInstanceOf[Byte], value2)
-      case LongType => TruncateImpl.evaluate(input1.asInstanceOf[Long], value2)
-      case DecimalType() => TruncateImpl.evaluate(input1.asInstanceOf[Decimal], value2)
+  override lazy val dataType: DataType = child.dataType match {
+    // if the new scale is bigger which means we are scaling up,
+    // keep the original scale as `Decimal` does
+    case DecimalType.Fixed(p, s) =>
+      try {
+        val scaleEV = scale.eval(EmptyRow)
+        val scaleValue = scaleEV.asInstanceOf[Int]
+        DecimalType(p, scala.math.max(scala.math.min(s, scaleValue), 0))
+      } catch {
+        case _: Exception => left.dataType
+      }
+    case t => t
+  }
+
+  override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val ce = child.genCode(ctx)
+    val scaleEV = scale.genCode(ctx)
+    val scaleValue = if (scaleEV == null) null else scaleEV.value
+
+    val evaluationCode = left.dataType match {
+      case DecimalType.Fixed(_, _) =>
+        s"""
+           |java.math.BigDecimal value = ${ce.value}.toJavaBigDecimal().setScale(${scaleValue}, java.math.BigDecimal.${modeStr});
+           |${ev.value} = Decimal.apply(value);
+           |${ev.isNull} = ${ev.value} == null;
+         """.stripMargin
+      case ByteType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).byteValue();"""
+      case ShortType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).shortValue();"""
+      case IntegerType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).intValue();"""
+      case LongType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).longValue();"""
+      case FloatType => // if child eval to NaN or Infinity, just return it.
+        s"""
+          if (Float.isNaN(${ce.value}) || Float.isInfinite(${ce.value})) {
+            ${ev.value} = ${ce.value};
+          } else {
+            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
+              setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).floatValue();
+          }"""
+      case DoubleType => // if child eval to NaN or Infinity, just return it.
+        s"""
+          if (Double.isNaN(${ce.value}) || Double.isInfinite(${ce.value})) {
+            ${ev.value} = ${ce.value};
+          } else {
+            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
+              setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).doubleValue();
+          }"""
+    }
+
+    val javaType = CodeGenerator.javaType(dataType)
+    if (scaleEV == null || java.lang.Boolean.parseBoolean(s"${scaleEV.isNull}")) { // if scale is null, no need to eval its child at all
+      ev.copy(code = code"""
+        boolean ${ev.isNull} = true;
+        $javaType ${ev.value} = ${CodeGenerator.defaultValue(dataType)};""")
+    } else {
+      ev.copy(code = code"""
+        ${ce.code}
+        ${scaleEV.code}
+        boolean ${ev.isNull} = ${ce.isNull};
+        $javaType ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
+        if (!${ev.isNull} && !${scaleEV.isNull}) {
+          $evaluationCode
+        }""")
     }
   }
 
-  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val tr = TruncateImpl.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (arg1, arg2) => {
-      s"""$tr.evaluate($arg1, $arg2)"""
-    })
+  override def eval(input: InternalRow): Any = {
+    val scaleEV = scale.eval(input)
+    if (scaleEV == null) { // if scale is null, no need to eval its child at all
+      null
+    } else {
+      val evalE = child.eval(input)
+      if (evalE == null) {
+        null
+      } else {
+        nullSafeEval(evalE, scaleEV.asInstanceOf[Int])
+      }
+    }
   }
 
-  override def dataType: DataType = left.dataType
+  override def nullSafeEval(input1: Any, input2: Any): Any = {
+    val scaleValue = input2.asInstanceOf[Int]
+    left.dataType match {
+      case DecimalType.Fixed(p, s) =>
+        val decimal = input1.asInstanceOf[Decimal]
+        val value = decimal.toJavaBigDecimal.setScale(scaleValue, mode)
+        Decimal.apply(value)
+      case ByteType => new java.math.BigDecimal(input1.asInstanceOf[Byte]).setScale(scaleValue, mode).byteValue()
+      case ShortType => new java.math.BigDecimal(input1.asInstanceOf[Short]).setScale(scaleValue, mode).shortValue()
+      case IntegerType => new java.math.BigDecimal(input1.asInstanceOf[Int]).setScale(scaleValue, mode).intValue()
+      case LongType => new java.math.BigDecimal(input1.asInstanceOf[Long]).setScale(scaleValue, mode).longValue()
+      case FloatType =>
+        val f = input1.asInstanceOf[Float]
+        if (f.isNaN || f.isInfinite) {
+          f
+        } else {
+          new java.math.BigDecimal(input1.asInstanceOf[Float]).setScale(scaleValue, mode).floatValue()
+        }
+      case DoubleType =>
+        val d = input1.asInstanceOf[Double]
+        if (d.isNaN || d.isInfinite) {
+          d
+        } else {
+          new java.math.BigDecimal(input1.asInstanceOf[Double]).setScale(scaleValue, mode).doubleValue()
+        }
+    }
+  }
 
-  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-    val newChildren = Seq(newLeft, newRight)
-    super.legacyWithNewChildren(newChildren)
+  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Truncate = {
+    copy(child = newLeft, scale = newRight)
   }
 }
 

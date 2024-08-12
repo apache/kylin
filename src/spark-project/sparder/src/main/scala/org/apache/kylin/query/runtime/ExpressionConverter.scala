@@ -219,9 +219,9 @@ object ExpressionConverter {
                 .convertSqlTypeToSparkType(relDataType)))
           case "truncate" =>
             if (children.size == 1) {
-              k_truncate(k_lit(children.head), 0)
+              k_truncate(k_lit(children.head), k_lit(0))
             } else {
-              k_truncate(k_lit(children.head), children.apply(1).asInstanceOf[Int])
+              k_truncate(k_lit(children.head), k_lit(children.apply(1)))
             }
           // datetime functions
           case "to_char" | "date_format" =>

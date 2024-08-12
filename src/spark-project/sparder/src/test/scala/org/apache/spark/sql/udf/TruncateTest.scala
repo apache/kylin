@@ -50,8 +50,11 @@ class TruncateTest extends SparderBaseFunSuite with SharedSparkSession with Befo
   test("test truncate decimal") {
     verifyResult("select truncate(123.45, 3)", Seq("123.45"))
     verifyResult("select truncate(123.45, 2)", Seq("123.45"))
-    verifyResult("select truncate(123.45, 1)", Seq("123.40"))
-    verifyResult("select truncate(123.45, 0)", Seq("123.00"))
+    verifyResult("select truncate(123.45, 1)", Seq("123.4"))
+    verifyResult("select truncate(123.45, 0)", Seq("123"))
+    verifyResult("select truncate(123.45)", Seq("123"))
+    verifyResult("select truncate(123.45, -1)", Seq("120"))
+    verifyResult("select truncate(123.45, -2)", Seq("100"))
   }
 
   test("test null") {
