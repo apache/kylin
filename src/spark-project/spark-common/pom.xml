@@ -135,33 +135,8 @@
 
         <dependency>
             <groupId>org.apache.gluten</groupId>
-            <artifactId>gluten-core</artifactId>
+            <artifactId>gluten-substrait</artifactId>
             <version>${gluten.version}</version>
-            <scope>${gluten.deps.scope}</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.gluten</groupId>
-                    <artifactId>spark-sql-columnar-shims-spark32</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.gluten</groupId>
-                    <artifactId>spark-sql-columnar-shims-spark33</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.gluten</groupId>
-                    <artifactId>spark-sql-columnar-shims-spark34</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.gluten</groupId>
-                    <artifactId>spark-sql-columnar-shims-spark35</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gluten</groupId>
-            <artifactId>gluten-core</artifactId>
-            <version>${gluten.version}</version>
-            <type>test-jar</type>
             <scope>${gluten.deps.scope}</scope>
             <exclusions>
                 <exclusion>
@@ -218,12 +193,6 @@
             <artifactId>backends-clickhouse</artifactId>
             <version>${gluten.version}</version>
             <scope>${gluten.deps.scope}</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.gluten</groupId>
-                    <artifactId>gluten-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.gluten</groupId>

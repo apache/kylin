@@ -25,7 +25,7 @@ import java.{lang, util}
 
 import org.apache.calcite.rel.`type`.{RelDataType, RelDataTypeField}
 import org.apache.commons.io.IOUtils
-import org.apache.gluten.utils.QueryPlanSelector
+import org.apache.gluten.extension.GlutenSessionExtensions
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.exception.code.ErrorCodeServer
 import org.apache.kylin.common.exception.{BigQueryException, NewQueryRefuseException}
@@ -274,7 +274,7 @@ object ResultPlan extends LogEx {
 
   def getResult(df: DataFrame, rowType: RelDataType): ExecuteResult = withScope(df) {
     if (!ContextUtil.getNativeRealizations.isEmpty && !KylinConfig.getInstanceFromEnv.queryIndexUseGluten()) {
-      df.sparkSession.sparkContext.setLocalProperty(QueryPlanSelector.GLUTEN_ENABLE_FOR_THREAD_KEY, "false")
+      df.sparkSession.sparkContext.setLocalProperty(GlutenSessionExtensions.GLUTEN_ENABLE_FOR_THREAD_KEY, "false")
     }
     val queryTagInfo = QueryContext.current().getQueryTagInfo
     if (queryTagInfo.isAsyncQuery) {

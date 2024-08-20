@@ -17,11 +17,11 @@
  */
 package org.apache.spark.sql.common
 
-import org.apache.gluten.GlutenConfig
-import org.apache.gluten.extension.GlutenPlan
+import org.apache.gluten.config.GlutenConfig
+import org.apache.gluten.execution.GlutenPlan
+import org.apache.gluten.extension.GlutenSessionExtensions
 import org.apache.gluten.test.FallbackUtil
 import org.apache.gluten.test.FallbackUtil.collectWithSubqueries
-import org.apache.gluten.utils.QueryPlanSelector
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanExec
@@ -53,13 +53,13 @@ object GlutenTestUtil {
   def glutenEnabled(spark: SparkSession): Boolean = {
     spark.conf.get("spark.plugins", "").contains("GlutenPlugin") &&
       spark.conf.get(
-        GlutenConfig.GLUTEN_ENABLE_KEY,
-        GlutenConfig.GLUTEN_ENABLE_BY_DEFAULT.toString).toBoolean && glutenEnabledForCurrentThread(spark)
+        GlutenConfig.GLUTEN_ENABLED_KEY,
+        GlutenConfig.GLUTEN_ENABLED_BY_DEFAULT.toString).toBoolean && glutenEnabledForCurrentThread(spark)
   }
 
   private def glutenEnabledForCurrentThread(spark: SparkSession): Boolean = {
     val enabled =
-      spark.sparkContext.getLocalProperty(QueryPlanSelector.GLUTEN_ENABLE_FOR_THREAD_KEY)
+      spark.sparkContext.getLocalProperty(GlutenSessionExtensions.GLUTEN_ENABLE_FOR_THREAD_KEY)
     if (enabled != null) {
       enabled.toBoolean
     } else {

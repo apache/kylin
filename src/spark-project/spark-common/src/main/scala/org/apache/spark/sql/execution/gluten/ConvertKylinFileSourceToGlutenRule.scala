@@ -18,8 +18,7 @@
 
 package org.apache.spark.sql.execution.gluten
 
-import org.apache.gluten.execution.FileSourceScanExecTransformer
-import org.apache.gluten.extension.GlutenPlan
+import org.apache.gluten.execution.{FileSourceScanExecTransformer, GlutenPlan, ValidatablePlan}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.utils.PushDownUtil
@@ -28,12 +27,13 @@ import org.apache.spark.sql.execution.{KylinFileSourceScanExec, LayoutFileSource
 class ConvertKylinFileSourceToGlutenRule(val session: SparkSession) extends Rule[SparkPlan] {
 
   private def tryReturnGlutenPlan(glutenPlan: GlutenPlan, originPlan: SparkPlan): SparkPlan = {
-    if (glutenPlan.doValidate().ok()) {
-      logDebug(s"Columnar Processing for ${originPlan.getClass} is currently supported.")
-      glutenPlan
-    } else {
-      logDebug(s"Columnar Processing for ${originPlan.getClass} is currently unsupported.")
-      originPlan
+    glutenPlan match {
+      case plan: ValidatablePlan if plan.doValidate().ok() =>
+        logDebug(s"Columnar Processing for ${originPlan.getClass} is currently supported.")
+        glutenPlan
+      case _ =>
+        logDebug(s"Columnar Processing for ${originPlan.getClass} is currently unsupported.")
+        originPlan
     }
   }
 

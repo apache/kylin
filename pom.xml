@@ -128,12 +128,12 @@
         <kafka.version>2.8.2</kafka.version>
 
         <!-- Spark versions -->
-        <spark.version>3.3.0-kylin-4.6.26.0</spark.version>
+        <spark.version>3.3.0-kylin-5.2.2-SNAPSHOT</spark.version>
         <delta.version>2.3.0</delta.version>
         <delta-standalone.version>0.6.0</delta-standalone.version>
         <iceberg.version>1.4.1</iceberg.version>
 
-        <gluten.version>1.3.0-kylin-240829-SNAPSHOT</gluten.version>
+        <gluten.version>1.3.0-kylin-250110-SNAPSHOT</gluten.version>
         <gluten.deps.scope>compile</gluten.deps.scope>
         <substrait.version>0.5.0</substrait.version>
         <celeborn.version>0.3.0-incubating</celeborn.version>

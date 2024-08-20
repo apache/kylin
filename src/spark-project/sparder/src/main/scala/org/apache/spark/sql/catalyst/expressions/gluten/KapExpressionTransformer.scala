@@ -20,7 +20,6 @@ import org.apache.gluten.exception.GlutenNotSupportException
 import org.apache.gluten.expression._
 import org.apache.gluten.extension.ExpressionExtensionTrait
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.KapFunctions.TRUNCATE
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate._
 import org.apache.spark.sql.types._
@@ -58,7 +57,7 @@ case class CustomerExpressionTransformer() extends ExpressionExtensionTrait {
     Sig[KapAddMonths]("kap_add_months"),
     Sig[KapSubtractMonths]("kap_months_between"),
     Sig[YMDintBetween]("kap_ymd_int_between"),
-    Sig[TRUNCATE]("truncate"),
+    Sig[Truncate]("truncate"),
     Sig[KylinSplitPart]("kylin_split_part"),
     Sig[KylinInstr]("kylin_instr"),
     Sig[PreciseCardinality]("ke_bitmap_cardinality"),
@@ -141,7 +140,7 @@ case class CustomerExpressionTransformer() extends ExpressionExtensionTrait {
           ExpressionConverter.replaceWithExpressionTransformer(kapYmdIntBetween.left, attributeSeq),
           ExpressionConverter.replaceWithExpressionTransformer(kapYmdIntBetween.right, attributeSeq)),
         kapYmdIntBetween)
-    case truncate: TRUNCATE =>
+    case truncate: Truncate =>
       GenericExpressionTransformer(
         "truncate",
         Seq(

@@ -244,6 +244,8 @@ public class PlannerFactory {
         // see KAP#16036
         planner.removeRule(CoreRules.UNION_MERGE);
         planner.removeRule(CoreRules.PROJECT_REMOVE);
+        // This rule pruning of Aggregate operators may cause aggregate index matching failure.See AL-9852
+        planner.removeRule(CoreRules.PROJECT_AGGREGATE_MERGE);
 
         // skip corr expansion during model suggestion
         if (!KylinConfig.getInstanceFromEnv().getSkipCorrReduceRule()) {
