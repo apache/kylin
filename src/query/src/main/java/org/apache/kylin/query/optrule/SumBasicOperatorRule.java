@@ -91,7 +91,7 @@ public class SumBasicOperatorRule extends RelOptRule {
             }
             return matches;
         } catch (SumExprUnSupportException e) {
-            logger.trace("Current rel unable to apply SumBasicOperatorRule", e);
+            logger.trace("Current rel unable to apply SumBasicOperatorRule {}", e.getMessage());
             return false;
         }
     }
@@ -258,9 +258,7 @@ public class SumBasicOperatorRule extends RelOptRule {
             AggExpression aggExpression = aggExpressions.get(aggIndex);
             AggregateCall aggCall = aggExpression.getAggCall();
             String aggName = "AGG$" + aggIndex;
-            SqlAggFunction aggFunction = SqlKind.COUNT == aggCall.getAggregation().getKind() //
-                    ? SqlStdOperatorTable.SUM
-                    : aggCall.getAggregation();
+            SqlAggFunction aggFunction = OlapRuleUtils.getTopAggFunc(aggCall);
             topAggregates.add(AggregateCall.create(aggFunction, false, false,
                     Lists.newArrayList(groupOffset + aggIndex), -1, aggCall.getType(), aggName));
         }

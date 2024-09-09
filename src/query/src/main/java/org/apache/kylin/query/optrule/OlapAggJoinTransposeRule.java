@@ -62,9 +62,11 @@ import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.relnode.OlapAggregateRel;
 import org.apache.kylin.query.relnode.OlapJoinRel;
 import org.apache.kylin.query.util.RuleUtils;
+import org.jetbrains.annotations.NotNull;
 
 public class OlapAggJoinTransposeRule extends RelOptRule {
 
@@ -277,8 +279,7 @@ public class OlapAggJoinTransposeRule extends RelOptRule {
         List<RexNode> projects = new ArrayList<>(rexBuilder.identityProjects(relBuilder.peek().getRowType()));
         for (Ord<AggregateCall> aggCall : Ord.zip(aggregate.getAggCallList())) {
             final SqlAggFunction aggregation = aggCall.e.getAggregation();
-            final SqlSplittableAggFunction splitter = Preconditions
-                    .checkNotNull(aggregation.unwrap(SqlSplittableAggFunction.class));
+            SqlSplittableAggFunction splitter = getSqlSplittableAggFunction(aggregation);
             final Integer leftSubTotal = sides.get(0).split.get(aggCall.i);
             final Integer rightSubTotal = sides.get(1).split.get(aggCall.i);
             newAggCalls.add(splitter.topSplit(rexBuilder, registry(projects), groupIndicatorCount,
@@ -322,6 +323,14 @@ public class OlapAggJoinTransposeRule extends RelOptRule {
                 relBuilder.aggregate(relBuilder.groupKey(groupSet, groupSets), newAggCalls);
             }
         }
+    }
+
+    private static @NotNull SqlSplittableAggFunction getSqlSplittableAggFunction(SqlAggFunction aggregation) {
+        SqlSplittableAggFunction splitter = Objects.requireNonNull(aggregation.unwrap(SqlSplittableAggFunction.class));
+        if (splitter.equals(SqlSplittableAggFunction.SumSplitter.INSTANCE)) {
+            splitter = KylinSumSplitter.INSTANCE;
+        }
+        return splitter;
     }
 
     private static List<RexNode> createNewProjects(RexBuilder rexBuilder, List<RexNode> projects) {

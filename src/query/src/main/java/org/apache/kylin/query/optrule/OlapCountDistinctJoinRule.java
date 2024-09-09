@@ -33,6 +33,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.relnode.OlapAggregateRel;
 import org.apache.kylin.query.relnode.OlapJoinRel;
 import org.apache.kylin.query.relnode.OlapProjectRel;
@@ -112,6 +113,10 @@ public class OlapCountDistinctJoinRule extends RelOptRule {
                 if (agg.getAggregation().getKind() == SqlKind.COUNT) {
                     topAggCalls.add(AggregateCall.create(SqlStdOperatorTable.SUM0, false, false,
                             Lists.newArrayList(topAggArgsIndex++), -1, agg.type, agg.name));
+                } else if (agg.getAggregation().getKind() == SqlKind.SUM) {
+                    topAggCalls.add(AggregateCall.create(KylinSumSplitter.KYLIN_SUM, false, false, false,
+                            Lists.newArrayList(topAggArgsIndex++), -1, agg.distinctKeys, agg.collation, agg.type,
+                            agg.name));
                 } else {
                     topAggCalls.add(agg.copy(Lists.newArrayList(topAggArgsIndex++), agg.filterArg));
                 }

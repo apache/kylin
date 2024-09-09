@@ -54,6 +54,7 @@ public class EnhancedAggPushDownPlannerTest extends CalciteRuleTestBase {
         overwriteSystemProp("kylin.query.enhanced-agg-pushdown-enabled", "true");
         overwriteSystemProp("kylin.query.convert-count-distinct-expression-enabled", "true");
         overwriteSystemProp("kylin.query.convert-sum-expression-enabled", "true");
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
     }
 
     @After

@@ -41,7 +41,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -157,10 +156,7 @@ public class OlapSumCastTransposeRule extends RelOptRule {
                 if (RuleUtils.containCast(value)) {
                     bottomProjectList.set(index, ((RexCall) (value)).operands.get(0));
                     RelDataType type = ((RexCall) (value)).operands.get(0).getType();
-                    if (type instanceof BasicSqlType && SqlTypeName.INTEGER == type.getSqlTypeName()) {
-                        type = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT),
-                                type.isNullable());
-                    }
+                    type = typeSystem.deriveSumType(typeFactory, type);
                     aggExpression.setType(type);
                 }
             }

@@ -46,6 +46,7 @@ public class CountDistinctExprPlannerTest extends CalciteRuleTestBase {
     public void setUp() {
         createTestMetadata();
         overwriteSystemProp("kylin.query.optimized-sum-cast-double-rule-enabled", "FALSE");
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
     }
 
     @After

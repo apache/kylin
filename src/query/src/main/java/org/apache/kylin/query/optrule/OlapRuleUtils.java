@@ -18,11 +18,15 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 
 public class OlapRuleUtils {
 
@@ -40,4 +44,23 @@ public class OlapRuleUtils {
         return false;
     }
 
+    /**
+     * Return replacement agg function for top agg build.
+     * Beware that KYLIN_SUM is a special agg function of keeping decimal precision unchanged
+     * and only suitable for small part of rules.
+     *
+     * @param aggCall original agg call
+     * @return the replacement agg function
+     */
+    static SqlAggFunction getTopAggFunc(AggregateCall aggCall) {
+        SqlKind kind = aggCall.getAggregation().getKind();
+        switch (kind) {
+            case COUNT:
+                return SqlStdOperatorTable.SUM0;
+            case SUM:
+                return KylinSumSplitter.KYLIN_SUM;
+            default:
+                return aggCall.getAggregation();
+        }
+    }
 }

@@ -46,6 +46,7 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.base.Function;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.query.engine.meta.PlannerContext;
+import org.apache.kylin.query.optrule.ExtendedAggregateMergeRule;
 import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
 import org.apache.kylin.query.optrule.CorrReduceFunctionRule;
@@ -249,6 +250,10 @@ public class PlannerFactory {
         if (!KylinConfig.getInstanceFromEnv().getSkipCorrReduceRule()) {
             planner.addRule(CorrReduceFunctionRule.INSTANCE);
         }
+
+        // replacement for calcite AggregateMergeRule with newly merged agg call type changed
+        planner.removeRule(CoreRules.AGGREGATE_MERGE);
+        planner.addRule(ExtendedAggregateMergeRule.INSTANCE);
     }
 
     private ConverterRule selectJoinRuleByConfig() {

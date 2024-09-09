@@ -4517,4 +4517,12 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isForcedToPushDown() {
         return Boolean.parseBoolean(getOptional("kylin.query.pushdown-force", FALSE));
     }
+
+    public boolean isMultiPartitionFilterEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.build.multi-partition-filter-enabled", FALSE));
+    }
+
+    public boolean isImprovedSumDecimalPrecisionEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.improved-sum-decimal-precision.enabled", FALSE));
+    }
 }

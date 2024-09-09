@@ -24,14 +24,21 @@ import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.query.schema.OlapTable;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @MetadataInfo
-class KylinRelDataTypeSystemTest {
+class KylinRelDataTypeSystemTest extends AbstractTestCase {
+
+    @BeforeEach
+    void beforeEach() {
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
+    }
 
     @Test
     void testLegalDecimalType() {
@@ -115,7 +122,7 @@ class KylinRelDataTypeSystemTest {
         DataType dataType7 = DataType.getType("decimal(7, 10)");
         RelDataType relDataType7 = OlapTable.createSqlType(typeFactory, dataType7, true);
         RelDataType returnType7 = typeSystem.deriveSumType(typeFactory, relDataType7);
-        Assertions.assertEquals(19, returnType7.getPrecision());
+        Assertions.assertEquals(17, returnType7.getPrecision());
         Assertions.assertEquals(10, returnType7.getScale());
     }
 }

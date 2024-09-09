@@ -35,7 +35,6 @@ import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
@@ -86,7 +85,7 @@ public class SumConstantConvertRule extends RelOptRule {
             }
             return matches;
         } catch (SumExprUnSupportException e) {
-            logger.trace("Current rel unable to apply SumBasicOperatorRule", e);
+            logger.trace("Current rel unable to apply SumConstantConvertRule {}", e.getMessage());
             return false;
         }
     }
@@ -238,8 +237,7 @@ public class SumConstantConvertRule extends RelOptRule {
             AggExpression aggExpression = aggExpressions.get(aggIndex);
             AggregateCall aggCall = aggExpression.getAggCall();
             String aggName = "TOP_AGG$" + aggIndex;
-            SqlAggFunction aggFunction = SqlKind.COUNT == aggCall.getAggregation().getKind() ? SqlStdOperatorTable.SUM0
-                    : aggCall.getAggregation();
+            SqlAggFunction aggFunction = OlapRuleUtils.getTopAggFunc(aggCall);
             topAggregates.add(AggregateCall.create(aggFunction, false, false,
                     Lists.newArrayList(groupOffset + aggIndex), -1, aggCall.getType(), aggName));
         }

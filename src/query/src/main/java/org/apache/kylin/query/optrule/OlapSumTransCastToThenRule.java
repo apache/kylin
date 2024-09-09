@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.optrule;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -179,7 +180,7 @@ public class OlapSumTransCastToThenRule extends RelOptRule {
             AggregateCall curAgg = aggCalls.get(i);
             if ((curCastInfo = getCastInfoForSum(curAgg, castInfos)) != null && !curCastInfo.isAllConstants()) {
                 needCastSumIndex.add(i);
-                newAggs.add(createAggCall(curAgg, curCastInfo));
+                newAggs.add(createAggCall(relBuilder, curAgg, curCastInfo));
             } else {
                 newAggs.add(curAgg);
             }
@@ -196,9 +197,11 @@ public class OlapSumTransCastToThenRule extends RelOptRule {
         call.transformTo(relBuilder.build());
     }
 
-    private AggregateCall createAggCall(AggregateCall curAgg, CastInfo curCastInfo) {
+    private AggregateCall createAggCall(RelBuilder relBuilder, AggregateCall curAgg, CastInfo curCastInfo) {
+        RelDataType type = curAgg.getAggregation().inferReturnType(relBuilder.getTypeFactory(),
+                Collections.singletonList(curCastInfo.getColumnType()));
         return AggregateCall.create(curAgg.getAggregation(), curAgg.isDistinct(), curAgg.isApproximate(),
-                curAgg.getArgList(), curAgg.filterArg, curCastInfo.getColumnType(), curAgg.name);
+                curAgg.getArgList(), curAgg.filterArg, type, curAgg.name);
     }
 
     private CastInfo getCastInfoForSum(AggregateCall call, List<CastInfo> castInfos) {

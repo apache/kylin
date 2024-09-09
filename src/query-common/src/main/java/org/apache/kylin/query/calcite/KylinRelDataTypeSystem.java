@@ -29,7 +29,9 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class KylinRelDataTypeSystem extends RelDataTypeSystemImpl {
@@ -37,6 +39,7 @@ public class KylinRelDataTypeSystem extends RelDataTypeSystemImpl {
     private static final int MINIMUM_ADJUSTED_SCALE = 6;
     private static final int MAX_PRECISION = 38;
     private static final int MAX_SCALE = 38;
+    public static final int SUM_RESULT_PRECISION_INCREASE = 10;
 
     @Override
     public RelDataType deriveAvgAggType(RelDataTypeFactory typeFactory, RelDataType argumentType) {
@@ -63,8 +66,14 @@ public class KylinRelDataTypeSystem extends RelDataTypeSystemImpl {
                 return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT),
                         argumentType.isNullable());
             case DECIMAL:
-                return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DECIMAL,
-                        Math.max(19, argumentType.getPrecision()), argumentType.getScale()), argumentType.isNullable());
+                // TODO Use improved sum decimal precision by default in future
+                int precision = Math.max(19, argumentType.getPrecision());
+                if (getProjectConfig().isImprovedSumDecimalPrecisionEnabled()) {
+                    precision = Math.min(MAX_PRECISION, argumentType.getPrecision() + SUM_RESULT_PRECISION_INCREASE);
+                }
+                return typeFactory.createTypeWithNullability(
+                        typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, argumentType.getScale()),
+                        argumentType.isNullable());
             default:
                 break;
             }
@@ -203,5 +212,9 @@ public class KylinRelDataTypeSystem extends RelDataTypeSystemImpl {
         default:
             return super.getDefaultScale(typeName);
         }
+    }
+
+    public static KylinConfig getProjectConfig() {
+        return NProjectManager.getProjectConfig(QueryContext.current().getProject());
     }
 }

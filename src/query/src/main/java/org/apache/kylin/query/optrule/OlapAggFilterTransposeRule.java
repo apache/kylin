@@ -24,7 +24,6 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.SubstitutionVisitor;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -34,11 +33,13 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.relnode.OlapAggregateRel;
 import org.apache.kylin.query.relnode.OlapFilterRel;
 import org.apache.kylin.query.relnode.OlapJoinRel;
@@ -128,7 +129,7 @@ public class OlapAggFilterTransposeRule extends RelOptRule {
         final List<AggregateCall> topAggCallList = Lists.newArrayList();
         int i = newGroupSet.cardinality();
         for (AggregateCall aggregateCall : aggregate.getAggCallList()) {
-            final SqlAggFunction rollup = SubstitutionVisitor.getRollup(aggregateCall.getAggregation());
+            final SqlAggFunction rollup = getRollupFunctionForTopAgg(aggregateCall.getAggregation());
             if (rollup == null) {
                 // This aggregate cannot be rolled up.
                 return;
@@ -143,5 +144,13 @@ public class OlapAggFilterTransposeRule extends RelOptRule {
         final Aggregate topAggregate = aggregate.copy(aggregate.getTraitSet(), newFilter, aggregate.indicator,
                 topGroupSet.build(), newGroupingSets2, topAggCallList);
         call.transformTo(topAggregate);
+    }
+
+    private SqlAggFunction getRollupFunctionForTopAgg(SqlAggFunction func) {
+        SqlAggFunction rollup = func.getRollup();
+        if (rollup != null && rollup.getKind() == SqlKind.SUM) {
+            rollup = KylinSumSplitter.KYLIN_SUM;
+        }
+        return rollup;
     }
 }

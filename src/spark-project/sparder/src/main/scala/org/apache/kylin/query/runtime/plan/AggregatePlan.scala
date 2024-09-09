@@ -24,6 +24,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.measure.percentile.PercentileCounter
 import org.apache.kylin.metadata.model.FunctionDesc
+import org.apache.kylin.query.calcite.KylinRelDataTypeSystem
 import org.apache.kylin.query.relnode.{KylinAggregateCall, OlapAggregateRel, OlapProjectRel}
 import org.apache.kylin.query.util.RuntimeHelper
 import org.apache.spark.sql.KapFunctions.{k_lit, sum0}
@@ -237,16 +238,29 @@ object AggregatePlan extends LogEx {
                   s"expecting approx_percentile(col, percentage [, accuracy]), percentage/accuracy must be of constant literal")
             }
           case FunctionDesc.FUNC_SUM =>
-            if (isSum0(call)) {
-              sum0(
-                col(argNames.head).cast(
-                  SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
-                .alias(aggName)
+            // TODO Use improved sum decimal precision by default in future
+            if (KylinRelDataTypeSystem.getProjectConfig.isImprovedSumDecimalPrecisionEnabled) {
+              if (isSum0(call)) {
+                sum0(col(argNames.head))
+                  .cast(SparderTypeUtil.convertSqlTypeToSparkType(inputType))
+                  .alias(aggName)
+              } else {
+                sum(col(argNames.head))
+                  .cast(SparderTypeUtil.convertSqlTypeToSparkType(inputType))
+                  .alias(aggName)
+              }
             } else {
-              sum(
-                col(argNames.head).cast(
-                  SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
-                .alias(aggName)
+              if (isSum0(call)) {
+                sum0(
+                  col(argNames.head).cast(
+                    SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
+                  .alias(aggName)
+              } else {
+                sum(
+                  col(argNames.head).cast(
+                    SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
+                  .alias(aggName)
+              }
             }
           case FunctionDesc.FUNC_COUNT =>
             count(if (argNames.isEmpty) k_lit(1) else col(argNames.head))

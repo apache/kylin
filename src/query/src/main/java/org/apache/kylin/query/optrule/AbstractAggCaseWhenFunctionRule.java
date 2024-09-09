@@ -21,8 +21,10 @@ package org.apache.kylin.query.optrule;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,13 +39,16 @@ import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -51,6 +56,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.util.AggExpressionUtil;
 import org.apache.kylin.query.util.AggExpressionUtil.AggExpression;
@@ -203,8 +209,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                 newChildExps.add(oriProject.getProjects().get(i));
             } else {
                 // simply fill zero values for values that we are not going to use
-                newChildExps
-                        .add(relBuilder.getRexBuilder().makeZeroLiteral(oriProject.getProjects().get(i).getType()));
+                newChildExps.add(relBuilder.getRexBuilder().makeZeroLiteral(oriProject.getProjects().get(i).getType()));
             }
         }
         relBuilder.project(newChildExps);
@@ -274,8 +279,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
             topGroupSetBuilder.set(i);
         }
         ImmutableBitSet topGroupSet = topGroupSetBuilder.build();
-        List<AggregateCall> topAggregates = buildTopAggregate(oldAgg.getAggCallList(), topGroupSet.cardinality(),
-                aggExpressions);
+        List<AggregateCall> topAggregates = buildTopAggregate(oldAgg, topGroupSet.cardinality(), aggExpressions);
         RelBuilder.GroupKey topGroupKey = newGroupSets == null ? relBuilder.groupKey(topGroupSet)
                 : relBuilder.groupKey(topGroupSet, newGroupSets);
         relBuilder.aggregate(topGroupKey, topAggregates);
@@ -404,9 +408,9 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                     newArgs.add(whenNode);
                     RexNode thenNode = valuesList.get(whenIndex);
                     if (isNeedTackCast(thenNode)) {
-                        thenNode = relBuilder.getRexBuilder().makeCast(((RexCall) thenNode).type,
-                                relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(),
-                                        aggExpression.getTopProjValuesInput()[whenIndex]));
+                        RelDataType expandedType = expandCastDataType(relBuilder, aggExpression, thenNode);
+                        thenNode = relBuilder.getRexBuilder().makeCast(expandedType, relBuilder.getRexBuilder()
+                                .makeInputRef(relBuilder.peek(), aggExpression.getTopProjValuesInput()[whenIndex]));
                     } else if (RuleUtils.isNotNullLiteral(thenNode)) {
                         // keep null or sum(null)?
                         thenNode = relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(),
@@ -416,7 +420,8 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                 }
                 RexNode elseNode = valuesList.get(whenIndex);
                 if (isNeedTackCast(elseNode)) {
-                    elseNode = relBuilder.getRexBuilder().makeCast(((RexCall) elseNode).type, relBuilder.getRexBuilder()
+                    RelDataType expandedType = expandCastDataType(relBuilder, aggExpression, elseNode);
+                    elseNode = relBuilder.getRexBuilder().makeCast(expandedType, relBuilder.getRexBuilder()
                             .makeInputRef(relBuilder.peek(), aggExpression.getTopProjValuesInput()[whenIndex]));
                 } else if (RuleUtils.isNotNullLiteral(elseNode)) {
                     // keep null or sum(null)?
@@ -437,14 +442,26 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
         return topProjectList;
     }
 
-    private List<AggregateCall> buildTopAggregate(List<AggregateCall> oldAggregates, int groupOffset,
-            List<AggExpression> aggExpressions) {
+    private static RelDataType expandCastDataType(RelBuilder relBuilder, AggExpression aggExpression,
+            RexNode thenOrElseNode) {
+        RelDataType expandedType = thenOrElseNode.getType();
+        SqlAggFunction func = aggExpression.getAggCall().getAggregation();
+        // should expand decimal precision for sum
+        if (SqlTypeUtil.isDecimal(thenOrElseNode.getType()) && func.getKind() == SqlKind.SUM) {
+            expandedType = func.inferReturnType(relBuilder.getTypeFactory(),
+                    Collections.singletonList(aggExpression.getExpression().getType()));
+        }
+        return expandedType;
+    }
+
+    private List<AggregateCall> buildTopAggregate(Aggregate agg, int groupOffset, List<AggExpression> aggExpressions) {
+        List<AggregateCall> oldAggregates = agg.getAggCallList();
         List<AggregateCall> topAggregates = Lists.newArrayList();
         for (int aggIndex = 0; aggIndex < oldAggregates.size(); aggIndex++) {
             AggExpression aggExpression = aggExpressions.get(aggIndex);
             AggregateCall aggCall = aggExpression.getAggCall();
             String aggName = "AGG$" + aggIndex;
-            topAggregates.add(AggregateCall.create(getTopAggFunc(aggCall), false, false,
+            topAggregates.add(AggregateCall.create(getTopAggFunc0(aggCall), false, false,
                     Lists.newArrayList(groupOffset + aggIndex), -1, aggCall.getType(), aggName));
         }
         return topAggregates;
@@ -465,6 +482,14 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
     protected abstract SqlAggFunction getBottomAggFunc(AggregateCall aggCall);
 
     protected abstract SqlAggFunction getTopAggFunc(AggregateCall aggCall);
+
+    protected SqlAggFunction getTopAggFunc0(AggregateCall aggCall) {
+        SqlKind kind = aggCall.getAggregation().getKind();
+        if (Objects.requireNonNull(kind) == SqlKind.SUM) {
+            return KylinSumSplitter.KYLIN_SUM;
+        }
+        return getTopAggFunc(aggCall);
+    }
 
     protected boolean isValidAggColumnExpr(RexNode rexNode) {
         return true;

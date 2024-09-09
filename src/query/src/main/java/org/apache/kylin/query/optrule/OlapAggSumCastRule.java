@@ -20,6 +20,7 @@ package org.apache.kylin.query.optrule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,13 +36,10 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.sql.type.BasicSqlType;
-import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
@@ -61,6 +59,7 @@ import org.slf4j.LoggerFactory;
  * <li> when expr return type is int, sum(expr) return type is bigint
  * <li> when expr return type is smallint, sum(expr) return type is bigint
  * <li> when expr return type is tinyint, sum(expr) return type is bigint
+ * <li> when expr return type is decimal(p,s), sum(expr) return type is decimal with precision expanded
  * <p>
  * <p/>
  * Limitation: return type of expression must be number.
@@ -102,7 +101,8 @@ public class OlapAggSumCastRule extends RelOptRule {
         if (!hasAggSum)
             return;
         boolean isHasAggSumCastDouble = false;
-        RelDataTypeFactory sqlTypeFactory = new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+        RelBuilder relBuilder = ruleCall.builder();
+        RelDataTypeFactory typeFactory = relBuilder.getTypeFactory();
         List<RexNode> bottomProjectRexNodes = new LinkedList<>();
         List<RexNode> rewriteProjectRexNodes = new LinkedList<>();
         List<RexNode> exprList = oldProject.getProjects();
@@ -129,13 +129,8 @@ public class OlapAggSumCastRule extends RelOptRule {
                     List<RexNode> operands = ((RexCall) curProjectExp).getOperands();
                     RexNode curRexNode = operands.get(0);
                     AggregateCall newAggCall;
-                    RelDataType returnDataType = curRexNode.getType();
-                    if (SqlTypeName.INTEGER == curRexNode.getType().getSqlTypeName()
-                            || SqlTypeName.SMALLINT == curRexNode.getType().getSqlTypeName()
-                            || SqlTypeName.TINYINT == curRexNode.getType().getSqlTypeName()) {
-                        returnDataType = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.BIGINT);
-                        returnDataType = sqlTypeFactory.createTypeWithNullability(returnDataType, true);
-                    }
+                    RelDataType returnDataType = aggregateCall.getAggregation().inferReturnType(typeFactory,
+                            Collections.singletonList(curRexNode.getType()));
                     if (groupBySet.contains(i)) {
                         newAggCall = new AggregateCall(aggregateCall.getAggregation(), false,
                                 Arrays.asList(exprList.size() + rewriteProjectRexNodes.size()), returnDataType,
@@ -151,23 +146,23 @@ public class OlapAggSumCastRule extends RelOptRule {
             }
             bottomProjectRexNodes.add(curProjectExp);
         }
-        if (!isHasAggSumCastDouble)
+
+        if (!isHasAggSumCastDouble) {
             return;
+        }
+
         bottomProjectRexNodes.addAll(rewriteProjectRexNodes);
-        RelBuilder relBuilder = ruleCall.builder();
         relBuilder.push(oldProject.getInput());
         relBuilder.project(bottomProjectRexNodes);
         List<AggregateCall> newAggregateCallList = new ArrayList<>(oldAgg.getAggCallList().size());
         oldAgg.getAggCallList().forEach(aggCall -> {
             AggregateCall newAggCall = rewriteAggCallMap.get(aggCall);
-            if (newAggCall != null) {
-                newAggregateCallList.add(newAggCall);
-            } else {
-                newAggregateCallList.add(aggCall);
+            if (newAggCall == null) {
+                newAggCall = aggCall;
             }
+            newAggregateCallList.add(newAggCall);
         });
-        RelBuilder.GroupKey groupKey = oldAgg.getGroupSets() == null
-                ? relBuilder.groupKey(oldAgg.getGroupSet())
+        RelBuilder.GroupKey groupKey = oldAgg.getGroupSets() == null ? relBuilder.groupKey(oldAgg.getGroupSet())
                 : relBuilder.groupKey(oldAgg.getGroupSet(), oldAgg.getGroupSets());
         relBuilder.aggregate(groupKey, newAggregateCallList);
         List<RexNode> topProjList = buildTopProject(relBuilder, oldAgg, rewriteAggCallMap);

@@ -20,6 +20,7 @@ package org.apache.kylin.query.optrule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -145,11 +146,11 @@ public class CountDistinctCaseWhenFunctionRule extends AbstractAggCaseWhenFuncti
 
     @Override
     protected SqlAggFunction getTopAggFunc(AggregateCall aggCall) {
-        SqlAggFunction aggFunction = aggCall.getAggregation();
-        if (SqlKind.COUNT == aggCall.getAggregation().getKind()) {
-            aggFunction = aggCall.isDistinct() ? createBitmapCountAggFunc() : SqlStdOperatorTable.SUM0;
+        SqlKind kind = aggCall.getAggregation().getKind();
+        if (Objects.requireNonNull(kind) == SqlKind.COUNT) {
+            return aggCall.isDistinct() ? createBitmapCountAggFunc() : SqlStdOperatorTable.SUM0;
         }
-        return aggFunction;
+        return aggCall.getAggregation();
     }
 
     private static SqlAggFunction createBitmapAggFunc() {

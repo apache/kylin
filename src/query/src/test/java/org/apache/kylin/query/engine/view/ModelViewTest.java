@@ -61,6 +61,7 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         overwriteSystemProp("kylin.query.auto-model-view-enabled", "TRUE");
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
         this.createTestMetadata();
         // Use default Factory for Open Core
         QueryExtension.setFactory(new QueryExtension.Factory());
@@ -214,6 +215,6 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
 
         val relNode = new QueryExec(projectName, KylinConfig.getInstanceFromEnv())
                 .parseAndOptimize(String.format("select sum(PRICE) from %s.%s", projectName, modelName));
-        Assert.assertEquals("DECIMAL(35, 6)", relNode.getRowType().getFieldList().get(0).getType().toString());
+        Assert.assertEquals("DECIMAL(38, 6)", relNode.getRowType().getFieldList().get(0).getType().toString());
     }
 }

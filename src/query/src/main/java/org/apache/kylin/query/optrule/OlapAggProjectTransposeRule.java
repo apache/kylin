@@ -39,6 +39,7 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelBuilderFactory;
@@ -47,6 +48,7 @@ import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.relnode.OlapAggregateRel;
 import org.apache.kylin.query.relnode.OlapFilterRel;
 import org.apache.kylin.query.relnode.OlapJoinRel;
@@ -248,11 +250,15 @@ public class OlapAggProjectTransposeRule extends RelOptRule {
             countArgMap.put(startIndex, aggregateCall.type);
             List<Integer> topAggArgList = new ArrayList<>();
             topAggArgList.add(newProjects.size() + startIndex);
-            if (!aggregateCall.getAggregation().getName().equals("COUNT")) {
-                topAggCalls.add(AggregateCall.create(aggregateCall.getAggregation(), false, false, topAggArgList, -1,
-                        aggregateCall.type, aggregateCall.name));
-            } else {
+
+            if (aggregateCall.getAggregation().getKind() == SqlKind.COUNT) {
                 topAggCalls.add(AggregateCall.create(SqlStdOperatorTable.SUM0, false, false, topAggArgList, -1,
+                        aggregateCall.type, aggregateCall.name));
+            } else if (aggregateCall.getAggregation().getKind() == SqlKind.SUM) {
+                topAggCalls.add(AggregateCall.create(KylinSumSplitter.KYLIN_SUM, false, false, false, topAggArgList, -1,
+                        aggregateCall.distinctKeys, aggregateCall.collation, aggregateCall.type, aggregateCall.name));
+            } else {
+                topAggCalls.add(AggregateCall.create(aggregateCall.getAggregation(), false, false, topAggArgList, -1,
                         aggregateCall.type, aggregateCall.name));
             }
             startIndex++;

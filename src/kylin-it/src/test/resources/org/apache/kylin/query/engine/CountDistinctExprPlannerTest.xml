@@ -225,7 +225,7 @@ OlapToEnumerableConverter
         OlapAggregateRel(group-set=[[0]], groups=[null], AGG$0=[SUM($1)], AGG$1=[SUM($2)], ctx=[])
           OlapProjectRel(CAL_DT=[$0], $f1=[CASE(=($1, 2012-10-30), $3, null:DECIMAL(19, 4))], EXPR$3=[$2], ctx=[])
             OlapAggregateRel(group-set=[[0, 1]], groups=[null], AGG$0=[SUM($2)], AGG$1=[SUM($3)], AGG$2=[SUM($4)], ctx=[])
-              OlapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], $f2=[*($2, 9)], SUM_CASE$0$0=[$3], SUM_CASE$0$1=[$4], ctx=[])
+              OlapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], $f2=[CAST(*($2, 9)):DECIMAL(38, 4)], SUM_CASE$0$0=[$3], SUM_CASE$0$1=[$4], ctx=[])
                 OlapAggregateRel(group-set=[[0, 1]], groups=[null], TOP_AGG$0=[SUM($2)], TOP_AGG$1=[SUM($3)], TOP_AGG$2=[SUM($4)], ctx=[])
                   OlapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], SUM_OP$0=[$2], SUM_CASE$0$0=[$3], $f4=[*(0, $4)], ctx=[])
                     OlapAggregateRel(group-set=[[0, 1]], groups=[null], SUM_OP$0=[SUM($2)], SUM_CASE$0$0=[SUM($3)], SUM_CONST$2=[COUNT()], ctx=[])

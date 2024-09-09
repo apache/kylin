@@ -70,6 +70,7 @@ public class SumExprPlannerTest extends CalciteRuleTestBase {
     @Before
     public void setUp() {
         createTestMetadata();
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
     }
 
     @After
