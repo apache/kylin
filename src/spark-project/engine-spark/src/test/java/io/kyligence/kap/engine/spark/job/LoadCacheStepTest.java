@@ -22,12 +22,14 @@ import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_ERROR;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_EXECUTE_ERROR;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_RESPONSE_EMPTY;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 
 import java.util.Locale;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
@@ -38,10 +40,8 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.tool.restclient.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -60,20 +60,26 @@ class LoadCacheStepTest {
         };
         val project = "default";
         val commands = Sets.newHashSet("test command");
-        val httpResponse = Mockito.mock(HttpResponse.class);
+        val httpClient = Mockito.mock(CloseableHttpClient.class);
+        val httpClientBuilder = Mockito.mock(HttpClientBuilder.class);
+        val httpResponse = Mockito.mock(CloseableHttpResponse.class);
         val httpEntity = Mockito.mock(HttpEntity.class);
         val kylinConfig = Mockito.mock(KylinConfig.class);
         var restResult = JsonUtil.writeValueAsBytes(RestResponse.ok(true));
 
         try (MockedStatic<KylinConfig> kylinConfigMockedStatic = Mockito.mockStatic(KylinConfig.class);
                 MockedStatic<EntityUtils> entityUtilsMockedStatic = Mockito.mockStatic(EntityUtils.class);
-                MockedConstruction<RestClient> ignored2 = Mockito.mockConstruction(RestClient.class,
-                        (mock, context) -> Mockito.doReturn(httpResponse).when(mock).forwardPost(any(), anyString()))) {
+                MockedStatic<HttpClients> httpClientsMockedStatic = Mockito.mockStatic(HttpClients.class);) {
             kylinConfigMockedStatic.when(KylinConfig::getInstanceFromEnv).thenReturn(kylinConfig);
+            httpClientsMockedStatic.when(HttpClients::custom).thenReturn(httpClientBuilder);
 
             Mockito.when(kylinConfig.isUTEnv()).thenReturn(false);
             Mockito.when(kylinConfig.getServerPort()).thenReturn("6161");
+            Mockito.when(kylinConfig.getGlutenCacheRequestTimeout()).thenReturn(24 * 60 * 60 * 1000);
             Mockito.when(httpResponse.getEntity()).thenReturn(httpEntity);
+            Mockito.when(httpClientBuilder.setDefaultRequestConfig(any())).thenReturn(httpClientBuilder);
+            Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
+            Mockito.when(httpClient.execute(any())).thenReturn(httpResponse);
 
             entityUtilsMockedStatic.when(() -> EntityUtils.toByteArray(httpEntity)).thenReturn(restResult);
             mockStep.routeCacheToAllQueryNode(project, commands);

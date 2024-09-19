@@ -39,6 +39,7 @@ import org.apache.kylin.job.handler.InternalTableJobHandler;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.job.service.InternalTableLoadingService;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -67,42 +68,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.val;
 
 @MetadataInfo
-class InternalTableLoadCacheStepTest extends AbstractTestCase {
-    static final String PROJECT = "default";
-    static final String TABLE_INDENTITY = "DEFAULT.TEST_KYLIN_FACT";
-    static final String DATE_COL = "CAL_DT";
-
-    @Mock
-    private AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
-    @Spy
-    private InternalTableLoadingService internalTableLoadingService = Mockito.spy(new InternalTableLoadingService());
-    @InjectMocks
-    private InternalTableService internalTableService = Mockito.spy(new InternalTableService());
-
-    @InjectMocks
-    private TableService tableService = mock(TableService.class);
-
-    @BeforeAll
-    public static void beforeClass() {
-        NLocalWithSparkSessionTestBase.beforeClass();
-    }
-
-    @AfterAll
-    public static void afterClass() {
-        NLocalWithSparkSessionTestBase.afterClass();
-    }
-
-    @BeforeEach
-    void setUp() throws Exception {
-        MockitoAnnotations.openMocks(this);
-        SecurityContextHolder.getContext()
-                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
-        SparkJobFactoryUtils.initJobFactory();
-        overwriteSystemProp("kylin.source.provider.9", "org.apache.kylin.engine.spark.mockup.CsvSource");
-        ReflectionUtils.setField(internalTableService, "aclEvaluate", aclEvaluate);
-        ReflectionUtils.setField(internalTableService, "internalTableLoadingService", internalTableLoadingService);
-    }
-
+@OverwriteProp.OverwriteProps(value = {
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.gluten.enabled", value = "true"),
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.plugins", value = "GlutenPlugin"),
+        @OverwriteProp(key = "kylin.internal-table-enabled", value = "true") })
+class InternalTableLoadCacheStepTest extends InternalTableLoadingJobTest {
     @Test
     void doWork() throws Exception {
         val config = KylinConfig.getInstanceFromEnv();

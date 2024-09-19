@@ -294,20 +294,6 @@ public class RestClient {
         return response;
     }
 
-    public HttpResponse forwardPost(byte[] requestEntity, String targetUrl) throws IOException {
-        String url = baseUrl + targetUrl;
-        HttpPost httpPost = new HttpPost(url);
-        httpPost.addHeader(ROUTED, "true");
-        httpPost.setEntity(new ByteArrayEntity(requestEntity, ContentType.APPLICATION_JSON));
-        HttpResponse response = client.execute(httpPost);
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            String msg = EntityUtils.toString(response.getEntity());
-            throw new KylinException(CommonErrorCode.FAILED_FORWARD_METADATA_ACTION,
-                    "Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n" + msg);
-        }
-        return response;
-    }
-
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", "application/json");

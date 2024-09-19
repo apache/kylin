@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.LogConstant;
@@ -94,7 +95,9 @@ public class RouteService extends BasicService {
                     executeAsyncTask(asyncFutures, () -> deleteAllFolder(server.getInstance(), request, result));
                 }
             }
-            cancelTimeoutAsyncTask(KylinConfig.getInstanceFromEnv(), asyncFutures, startTime,
+            val kylinMultiTenantRouteTaskTimeOut = KylinConfig.getInstanceFromEnv()
+                    .getKylinMultiTenantRouteTaskTimeOut();
+            cancelTimeoutAsyncTask(kylinMultiTenantRouteTaskTimeOut, asyncFutures, startTime,
                     "deleteAllFolderMultiTenantMode");
             return result.getCount() == 0;
         } catch (InterruptedException e) {
@@ -117,11 +120,11 @@ public class RouteService extends BasicService {
         return data;
     }
 
-    public void cancelTimeoutAsyncTask(KylinConfig kylinConfig, Map<Future<?>, Long> asyncFutures, long startTime,
-            String message) throws InterruptedException {
-        while (asyncFutures.size() > 0) {
+    public void cancelTimeoutAsyncTask(long timeout, Map<Future<?>, Long> asyncFutures, long startTime, String message)
+            throws InterruptedException {
+        while (MapUtils.isNotEmpty(asyncFutures)) {
             asyncFutures.forEach((asyncTask, start) -> {
-                if (getRemainingTime(kylinConfig, start) <= 0) {
+                if (getRemainingTime(timeout, start) <= 0) {
                     asyncTask.cancel(true);
                 }
             });
@@ -130,7 +133,7 @@ public class RouteService extends BasicService {
                 log.info("all running asyncTask[{}] is done", message);
                 break;
             }
-            if (getRemainingTime(kylinConfig, startTime) <= 0) {
+            if (getRemainingTime(timeout, startTime) <= 0) {
                 log.warn("cancel all running asyncTask[{}], DoneAsyncTask count: [{}], AllAsyncTask count : [{}]",
                         message, doneTaskCount, asyncFutures.size());
                 asyncFutures.keySet().stream().filter(asyncTask -> !asyncTask.isDone())
@@ -141,8 +144,8 @@ public class RouteService extends BasicService {
         }
     }
 
-    private long getRemainingTime(KylinConfig kylinConfig, long startTime) {
-        return kylinConfig.getKylinMultiTenantRouteTaskTimeOut() - (System.currentTimeMillis() - startTime);
+    private long getRemainingTime(long timeout, long startTime) {
+        return timeout - (System.currentTimeMillis() - startTime);
     }
 
     public <T> void executeAsyncTask(Map<Future<?>, Long> asyncFutures, Callable<T> task) {
@@ -189,7 +192,9 @@ public class RouteService extends BasicService {
                     });
                 }
             }
-            cancelTimeoutAsyncTask(KylinConfig.getInstanceFromEnv(), asyncFutures, startTime,
+            val kylinMultiTenantRouteTaskTimeOut = KylinConfig.getInstanceFromEnv()
+                    .getKylinMultiTenantRouteTaskTimeOut();
+            cancelTimeoutAsyncTask(kylinMultiTenantRouteTaskTimeOut, asyncFutures, startTime,
                     "cleanupStorageMultiTenantMode");
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
@@ -243,6 +248,7 @@ public class RouteService extends BasicService {
             log.warn("route url[{}] but cacheCommands is empty !!!", url);
             return true;
         }
+        val startTime = System.currentTimeMillis();
         byte[] requestEntity = JsonUtil.writeValueAsBytes(cacheCommands);
         Map<Future<?>, Long> asyncFutures = Maps.newConcurrentMap();
         val queryServers = clusterManager.getQueryServers();
@@ -251,7 +257,8 @@ public class RouteService extends BasicService {
             executeAsyncTask(asyncFutures,
                     () -> cacheGluten(queryServer.getHost(), servletRequest, url, requestEntity, result));
         }
-        waitCacheRouteTaskDone(asyncFutures);
+        val glutenCacheRequestTimeout = KylinConfig.getInstanceFromEnv().getGlutenCacheRequestTimeout();
+        cancelTimeoutAsyncTask(glutenCacheRequestTimeout, asyncFutures, startTime, "routeGlutenCache");
         if (checkLimits && checkGlutenCacheLimits(asyncFutures)) {
             throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getQueryTooManyRunning());
         }
@@ -274,16 +281,6 @@ public class RouteService extends BasicService {
                 result.countDown();
             }
             return response;
-        }
-    }
-
-    public void waitCacheRouteTaskDone(Map<Future<?>, Long> tasks) throws InterruptedException {
-        while (true) {
-            val doneCount = tasks.keySet().stream().filter(Future::isDone).count();
-            if (tasks.size() == doneCount) {
-                break;
-            }
-            TimeUnit.SECONDS.sleep(10);
         }
     }
 
