@@ -30,6 +30,7 @@ import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.CuboidAggregator;
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
+import org.apache.kylin.engine.spark.job.step.ParamPropagation;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
@@ -222,7 +223,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
         NDataModel model = df.getModel();
 
         NCubeJoinedFlatTableDesc flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan(), segmentRange, true);
-        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null);
+        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null, new ParamPropagation());
         Dataset<Row> ds = flatTable.generateDataset(false, true);
 
         StructType schema = ds.schema();

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.job.{CuboidAggregator, UdfManager}
 import org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
@@ -35,6 +36,7 @@ import org.apache.spark.sql.{Dataset, Row}
 import org.junit.Assert
 
 import java.util
+import java.util.Collections
 import scala.collection.JavaConverters._
 
 // scalastyle:off
@@ -57,9 +59,13 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     val df: NDataflow = dsMgr.getDataflow(CUBE_ID1)
     var indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(getTestConfig, DEFAULT_PROJECT)
-    val dfCopy = df.copy()
-    val lastSegmentCopy = dfCopy.getLastSegment.copy()
-    checkFlatTableEncoding(dfCopy.getUuid, lastSegmentCopy, 0)
+    val seg = df.getLastSegment
+    dsMgr.updateDataflowDetailsLayouts(seg, new util.ArrayList[java.lang.Long](seg.getLayoutIds), Collections.emptyList())
+    checkFlatTableEncoding(df.getUuid, dsMgr.getDataflow(CUBE_ID1).getLastSegment, 1)
+    dsMgr.updateDataflowDetailsLayouts(seg, Collections.emptyList(), new util.ArrayList[java.lang.Long](seg.getLayoutIds))
+    dsMgr.updateDataflow(df.getUuid, (copyForWrite: NDataflow) => {
+      copyForWrite.getLastSegment.setDictReady(false)
+    })
 
     var modelMgr: NDataModelManager = NDataModelManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     var model: NDataModel = modelMgr.getDataModelDesc(MODEL_ID)
@@ -88,7 +94,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
       }
     })
 
-    checkFlatTableEncoding(dfCopy.getUuid, lastSegmentCopy, 1)
+    checkFlatTableEncoding(df.getUuid, dsMgr.getDataflow(CUBE_ID1).getLastSegment, 1)
   }
 
   test("[INDEX_BUILD] - Check if the number of columns in the encode matches the number of columns in agg") {
@@ -156,7 +162,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
 
     val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan, seg.getSegRange, true)
     val encodeColSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(seg, nSpanningTree.getAllIndexEntities)
-    val flatTable = new CreateFlatTable(flatTableDesc, seg, nSpanningTree, spark, null)
+    val flatTable = new CreateFlatTable(flatTableDesc, seg, nSpanningTree, spark, null, new ParamPropagation)
     val afterJoin = flatTable.generateDataset(true)
     dictColSet.asScala.foreach(
       col => {

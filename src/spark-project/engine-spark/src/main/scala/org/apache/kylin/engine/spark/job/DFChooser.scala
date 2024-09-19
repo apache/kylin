@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.builder._
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.guava30.shaded.common.base.Preconditions
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
@@ -203,7 +204,7 @@ class DFChooser(toBuildTree: NSpanningTree,
 
     val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
     val flatTableDesc = new NCubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, needJoin)
-    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, ss, sourceInfo)
+    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, ss, sourceInfo, new ParamPropagation)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, needJoin)
     sourceInfo.setFlattableDS(afterJoin)
     sourceInfo.setAllColumns(flatTableDesc.getAllColumns)

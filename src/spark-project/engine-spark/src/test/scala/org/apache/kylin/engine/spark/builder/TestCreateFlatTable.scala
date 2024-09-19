@@ -21,6 +21,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.DFChooser
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, SegmentRange}
@@ -137,7 +138,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
     val toBuildTree = NSpanningTreeFactory.fromLayouts(seg.getIndexPlan.getAllLayouts, MODEL_NAME1)
     val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
     val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan, seg.getSegRange, needJoin)
-    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, spark, null)
+    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, spark, null, new ParamPropagation)
     val afterJoin = flatTable.generateDataset(needEncode)
     afterJoin
   }

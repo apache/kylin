@@ -19,13 +19,15 @@ package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.builder.DFDictionaryBuilder.getLatestDictBuildVersion
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.TaskContext
 import org.apache.spark.application.NoRetryException
-import org.apache.spark.dict.NGlobalDictionaryV2
+import org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED
+import org.apache.spark.dict.{NGlobalDictStoreFactory, NGlobalDictionaryV2}
 import org.apache.spark.sql.execution.{ExplainMode, ExtendedMode}
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StringType
@@ -35,6 +37,7 @@ import java.io.IOException
 import java.util
 import java.util.concurrent.locks.Lock
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class DFDictionaryBuilder(
                            val dataset: Dataset[Row],
@@ -43,32 +46,39 @@ class DFDictionaryBuilder(
                            val colRefSet: util.Set[TblColRef]) extends LogEx with Serializable {
 
   @throws[IOException]
-  def buildDictSet(buildVersion: Long): Unit = {
-    colRefSet.asScala.foreach(col => safeBuild(col, buildVersion))
+  def buildDictSet(globalDictBuildVersionMap: mutable.HashMap[String, Long]): Unit = {
+    colRefSet.asScala.foreach(col => safeBuild(col, globalDictBuildVersionMap))
     changeAQEConfig(true)
   }
 
-  private val AQE = "spark.sql.adaptive.enabled";
+  private val AQE = "spark.sql.adaptive.enabled"
   private val originalAQE = ss.conf.get(AQE)
 
   @throws[IOException]
-  private[builder] def safeBuild(ref: TblColRef, buildVersion: Long): Unit = {
+  private[builder] def safeBuild(ref: TblColRef, globalDictBuildVersionMap: mutable.HashMap[String, Long]): Unit = {
     val sourceColumn = ref.getIdentity
     ZKHelper.tryZKJaasConfiguration(ss)
     val lock: Lock = KylinConfig.getInstanceFromEnv.getDistributedLockFactory
       .getLockForCurrentThread(getLockPath(sourceColumn))
     lock.lock()
     try {
+      logInfo(s"Calculate bucket size for dict $sourceColumn")
       val dictColDistinct = dataset.select(wrapCol(ref)).distinct
-      ss.sparkContext.setJobDescription("Calculate bucket size " + ref.getIdentity)
+      val resizeBuildVersion = generateBuildVersion(ref) // global dict new build version if resize happens
+      ss.sparkContext.setJobDescription(s"Calculate bucket size for dict $sourceColumn")
       val bucketPartitionSize = logTime(s"calculating bucket size for $sourceColumn") {
-        DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct)
+        DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct, resizeBuildVersion)
       }
+
+      val buildVersion: Long = generateBuildVersion(ref) // global dict final build version for current build
+      globalDictBuildVersionMap.put(sourceColumn, buildVersion)
+      logInfo(s"Start to build global dict $sourceColumn with version: $buildVersion")
       build(ref, bucketPartitionSize, dictColDistinct, buildVersion)
     } finally lock.unlock()
   }
 
-  private[builder] def changeAQEConfig(isDictBuildFinished: Boolean = false) : Boolean = {
+  // Workaround: https://olapio.atlassian.net/browse/KE-41645
+  private[builder] def changeAQEConfig(isDictBuildFinished: Boolean = false): Boolean = {
     if (!seg.getConfig.isGlobalDictAQEEnabled && !isDictBuildFinished) {
       logInfo("Temporarily Close AQE for dict build job")
       ss.conf.set(AQE, false)
@@ -79,17 +89,16 @@ class DFDictionaryBuilder(
     originalAQE.toBoolean
   }
 
-  def dictBuilderInfo(bucketPartitionSize: Int, df: Dataset[Row] ) : String = {
-      s"""
-         |==========================[DICT REPARTITION INFO]===============================
-         |Partition Size :${df.rdd.getNumPartitions}
-         |Bucket Partition Size: $bucketPartitionSize
-         |AQE Enabled: ${ss.conf.get(AQE)}
-         |Physical Plan:\n ${df.queryExecution.explainString(ExplainMode.fromString(ExtendedMode.name))}
-         |==========================[DICT REPARTITION INFO]===============================
+  def dictBuilderInfo(bucketPartitionSize: Int, df: Dataset[Row]): String = {
+    s"""
+       |==========================[DICT REPARTITION INFO]===============================
+       |Partition Size :${df.rdd.getNumPartitions}
+       |Bucket Partition Size: $bucketPartitionSize
+       |AQE Enabled: ${ss.conf.get(AQE)}
+       |Physical Plan:\n ${df.queryExecution.explainString(ExplainMode.fromString(ExtendedMode.name))}
+       |==========================[DICT REPARTITION INFO]===============================
       """.stripMargin
   }
-
 
   @throws[IOException]
   private[builder] def build(ref: TblColRef, bucketPartitionSize: Int,
@@ -100,7 +109,7 @@ class DFDictionaryBuilder(
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
 
     changeAQEConfig(false)
-    ss.sparkContext.setJobDescription("Build dict " + ref.getIdentity)
+    ss.sparkContext.setJobDescription(s"Build dict ${ref.getIdentity} with version $buildVersion")
 
     val dictCol = col(afterDistinct.schema.fields.head.name)
     // https://issues.apache.org/jira/browse/SPARK-32051
@@ -110,14 +119,14 @@ class DFDictionaryBuilder(
     logInfo(dictBuilderInfo(bucketPartitionSize, afterDistinctRepartition))
 
     afterDistinctRepartition.foreachPartition((iter: Iterator[Row]) => {
-        val partitionID = TaskContext.get().partitionId()
-        logInfo(s"Build partition dict col: ${ref.getIdentity}, partitionId: $partitionID")
-        val broadcastGlobalDict = broadcastDict.value
-        val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
-        iter.foreach(r => bucketDict.addRelativeValue(r.getString(0)))
+      val partitionID = TaskContext.get().partitionId()
+      logInfo(s"Build partition dict col: ${ref.getIdentity}, partitionId: $partitionID")
+      val broadcastGlobalDict = broadcastDict.value
+      val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
+      iter.foreach(r => bucketDict.addRelativeValue(r.getString(0)))
 
-        bucketDict.saveBucketDict(partitionID)
-      })
+      bucketDict.saveBucketDict(partitionID)
+    })
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.getConfig.getGlobalDictV2MaxVersions, seg.getConfig.getGlobalDictV2VersionTTL)
 
@@ -141,9 +150,41 @@ class DFDictionaryBuilder(
 
   private def getLockPath(pathName: String) = s"/${seg.getProject}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 
+  /**
+   * Method to generate global dict build version.
+   * Should be used after distributed lock acquired.
+   *
+   * @param ref the TblColRef contains global dict to be built
+   * @return buildVersion
+   */
+  private def generateBuildVersion(ref: TblColRef): Long = {
+    val buildVersion = System.currentTimeMillis()
+    val latestDictVersion = getLatestDictBuildVersion(seg, ref)
+    if (latestDictVersion != NO_VERSION_SPECIFIED && buildVersion <= latestDictVersion) {
+      latestDictVersion + 1
+    } else {
+      buildVersion
+    }
+  }
+
   def wrapCol(ref: TblColRef): Column = {
     val colName = NSparkCubingUtil.convertFromDotWithBackTick(ref.getBackTickIdentity)
     expr(colName).cast(StringType)
   }
 
+}
+
+object DFDictionaryBuilder {
+
+  def getLatestDictBuildVersion(seg: NDataSegment, ref: TblColRef): Long = {
+    val dictBaseDir = NGlobalDictionaryV2.toDictBasePath(seg.getConfig.getHdfsWorkingDirectory, seg.getProject,
+      ref.getTable, ref.getName)
+    val dictStore = NGlobalDictStoreFactory.getResourceStore(dictBaseDir)
+    val dictVersions = dictStore.listAllVersions()
+    if (dictVersions.nonEmpty) {
+      Long2long(dictVersions(dictVersions.length - 1))
+    } else {
+      NO_VERSION_SPECIFIED
+    }
+  }
 }

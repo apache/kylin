@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,11 @@ import com.alibaba.nacos.common.JustForTest;
 import lombok.val;
 
 public class NGlobalDictionaryV2 implements Serializable {
+
+    public static String toDictBasePath(String workingDir, String project, String table, String column) {
+        workingDir = workingDir == null ? StringUtils.EMPTY : workingDir;
+        return workingDir + "/" + project + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT + "/" + table + "/" + column + "/";
+    }
 
     public static final String SEPARATOR = "_0_DOT_0_";
 
@@ -55,7 +61,7 @@ public class NGlobalDictionaryV2 implements Serializable {
         this.sourceTable = dictInfo[1];
         this.sourceColumn = dictInfo[2];
         this.baseDir = dictInfo[3];
-        this.baseDir = baseDir + getResourceDir();
+        this.baseDir = toDictBasePath(baseDir, project, sourceTable, sourceColumn);
         this.buildVersion = buildVersion;
         this.metadata = getMetaInfo();
         if (metadata != null) {
@@ -76,7 +82,7 @@ public class NGlobalDictionaryV2 implements Serializable {
         this.project = project;
         this.sourceTable = sourceTable;
         this.sourceColumn = sourceColumn;
-        this.baseDir = baseDir + getResourceDir();
+        this.baseDir = toDictBasePath(baseDir, project, sourceTable, sourceColumn);
         this.buildVersion = buildVersion;
         this.metadata = getMetaInfo();
         if (metadata != null) {
@@ -85,7 +91,7 @@ public class NGlobalDictionaryV2 implements Serializable {
     }
 
     public String getResourceDir() {
-        return "/" + project + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT + "/" + sourceTable + "/" + sourceColumn + "/";
+        return toDictBasePath(null, project, sourceTable, sourceColumn);
     }
 
     private String getWorkingDir() {

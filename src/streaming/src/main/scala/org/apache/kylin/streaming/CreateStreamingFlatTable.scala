@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.CreateFlatTable
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, NSparkCubingUtil}
 import org.apache.kylin.guava30.shaded.common.base.Preconditions
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
@@ -41,7 +42,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
-  CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo) {
+  CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo, new ParamPropagation) {
 
   import org.apache.kylin.engine.spark.builder.CreateFlatTable._
 

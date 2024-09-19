@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.builder
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.job.step.build.FlatTableStage
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, TableMetaManager}
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
@@ -29,7 +30,6 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import org.apache.kylin.metadata.model._
-import org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
@@ -45,7 +45,8 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
                       var seg: NDataSegment,
                       val toBuildTree: NSpanningTree,
                       val ss: SparkSession,
-                      val sourceInfo: NBuildSourceInfo) extends LogEx {
+                      val sourceInfo: NBuildSourceInfo,
+                      val buildParam: ParamPropagation) extends LogEx {
 
   import org.apache.kylin.engine.spark.builder.CreateFlatTable._
 
@@ -115,14 +116,12 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
                                dictCols: Set[TblColRef],
                                encodeCols: Set[TblColRef]): Dataset[Row] = {
     val ccDataset = withColumn(ds, ccCols)
-    var buildVersion = System.currentTimeMillis()
     if (seg.isDictReady) {
       logInfo(s"Skip already built dict, segment: ${seg.getId} of dataflow: ${seg.getDataflow.getId}")
-      buildVersion = NO_VERSION_SPECIFIED
     } else {
-      buildDict(ccDataset, dictCols, buildVersion)
+      buildDict(ccDataset, dictCols)
     }
-    encodeColumn(ccDataset, encodeCols, buildVersion)
+    encodeColumn(ccDataset, encodeCols)
   }
 
   private def withColumn(ds: Dataset[Row], withCols: Set[TblColRef]): Dataset[Row] = {
@@ -133,21 +132,21 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
     withDs
   }
 
-  private def buildDict(ds: Dataset[Row], dictCols: Set[TblColRef], buildVersion: Long): Unit = {
+  private def buildDict(ds: Dataset[Row], dictCols: Set[TblColRef]): Unit = {
     val matchedCols = if (seg.getIndexPlan.isSkipEncodeIntegerFamilyEnabled) {
       filterOutIntegerFamilyType(ds, dictCols)
     } else {
       selectColumnsInTable(ds, dictCols)
     }
     val builder = new DFDictionaryBuilder(ds, seg, ss, Sets.newHashSet(matchedCols.asJavaCollection))
-    builder.buildDictSet(buildVersion)
+    builder.buildDictSet(buildParam.getGlobalDictBuildVersionMap)
   }
 
-  private def encodeColumn(ds: Dataset[Row], encodeCols: Set[TblColRef], buildVersion: Long): Dataset[Row] = {
+  private def encodeColumn(ds: Dataset[Row], encodeCols: Set[TblColRef]): Dataset[Row] = {
     val matchedCols = selectColumnsInTable(ds, encodeCols)
     var encodeDs = ds
     if (matchedCols.nonEmpty) {
-      encodeDs = DFTableEncoder.encodeTable(ds, seg, matchedCols.asJava, buildVersion)
+      encodeDs = DFTableEncoder.encodeTable(ds, seg, matchedCols.asJava, buildParam.getGlobalDictBuildVersionMap)
     }
     encodeDs
   }

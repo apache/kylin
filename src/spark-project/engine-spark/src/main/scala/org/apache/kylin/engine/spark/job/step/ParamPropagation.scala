@@ -70,6 +70,10 @@ class ParamPropagation {
   // [layout, [partition, sanity]]
   private var cachedLayoutPartitionSanity: Option[mutable.HashMap[Long, mutable.HashMap[Long, Long]]] = None
 
+  private val globalDictBuildVersionMap: mutable.HashMap[String, Long] = new mutable.HashMap[String, Long]()
+
+  def getGlobalDictBuildVersionMap: mutable.HashMap[String, Long] = globalDictBuildVersionMap
+
   def isSkipPersistFactView: Boolean = skipPersistFactView
 
   def setSkipPersistFactView(skipPersistFactView: Boolean): Unit = {

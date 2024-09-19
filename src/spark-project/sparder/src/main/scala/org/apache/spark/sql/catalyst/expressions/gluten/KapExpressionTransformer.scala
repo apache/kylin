@@ -71,10 +71,9 @@ case class CustomerExpressionTransformer() extends ExpressionExtensionTrait {
   )
 
   /** Replace extension expression to transformer. */
-  override def replaceWithExtensionExpressionTransformer(
-                                                          substraitExprName: String,
-                                                          expr: Expression,
-                                                          attributeSeq: Seq[Attribute]): ExpressionTransformer = expr match {
+  override def replaceWithExtensionExpressionTransformer(substraitExprName: String,
+                                                         expr: Expression,
+                                                         attributeSeq: Seq[Attribute]): ExpressionTransformer = expr match {
     case preciseCardinality: PreciseCardinality =>
       new KeBitmapFunctionTransformer(
         substraitExprName,
@@ -152,13 +151,12 @@ case class CustomerExpressionTransformer() extends ExpressionExtensionTrait {
         s"${expr.getClass} or $expr is not currently supported.")
   }
 
-  override def getAttrsIndexForExtensionAggregateExpr(
-                                                       aggregateFunc: AggregateFunction,
-                                                       mode: AggregateMode,
-                                                       exp: AggregateExpression,
-                                                       aggregateAttributeList: Seq[Attribute],
-                                                       aggregateAttr: ListBuffer[Attribute],
-                                                       resIndex: Int): Int = {
+  override def getAttrsIndexForExtensionAggregateExpr(aggregateFunc: AggregateFunction,
+                                                      mode: AggregateMode,
+                                                      exp: AggregateExpression,
+                                                      aggregateAttributeList: Seq[Attribute],
+                                                      aggregateAttr: ListBuffer[Attribute],
+                                                      resIndex: Int): Int = {
     var resIdx = resIndex
     exp.mode match {
       case Partial | PartialMerge =>
@@ -177,8 +175,7 @@ case class CustomerExpressionTransformer() extends ExpressionExtensionTrait {
     }
   }
 
-  override def buildCustomAggregateFunction(
-                                             aggregateFunc: AggregateFunction): (Option[String], Seq[DataType]) = {
+  override def buildCustomAggregateFunction(aggregateFunc: AggregateFunction): (Option[String], Seq[DataType]) = {
     val substraitAggFuncName = aggregateFunc match {
       case countDistinct: PreciseCountDistinct =>
         countDistinct.dataType match {

@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.job;
 
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +37,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.engine.QueryExec;
+import org.apache.spark.dict.NGlobalDictionaryV2;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
 import org.junit.Assert;
@@ -70,7 +72,7 @@ public class NSparkRetryCubingJobTest extends NLocalWithSparkSessionTestBase {
     }
 
     @Test
-    public void testRetryIndexBuildJob() throws InterruptedException, SQLException {
+    public void testRetryIndexBuildJob() throws InterruptedException, SQLException, IOException {
         config.setProperty("kylin.env", "DEV");
         config.setProperty("kylin.engine.spark.job-jar", "../assembly/target/kylin-assembly-5.0.0-SNAPSHOT-job.jar");
         config.setProperty("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.MockSegmentBuildJobWithRetry");
@@ -90,6 +92,13 @@ public class NSparkRetryCubingJobTest extends NLocalWithSparkSessionTestBase {
         val dfID = "5e67c064-46d1-7893-7620-95d27f8cacee";
         NDataflow df = dsMgr.getDataflow(dfID);
         NDataSegment segment = df.getFirstSegment();
+
+        // create an empty dictionary to pass through the build version check
+        // and trigger IllegalDictEncodeValueException when encoding
+        NGlobalDictionaryV2 dictionary = new NGlobalDictionaryV2(prj, "SSB.LINEORDER", "LO_ORDERPRIOTITY", segment.getConfig().getHdfsWorkingDirectory(), System.currentTimeMillis());
+        dictionary.prepareWrite();
+        dictionary.writeMetaDict(1, 1, 60 * 1000);
+
         // build new added index 30001 and 20000010001
         Set<LayoutEntity> toBuildLayouts = new HashSet<>();
         toBuildLayouts.add(df.getIndexPlan().getLayoutEntity(30001L));
