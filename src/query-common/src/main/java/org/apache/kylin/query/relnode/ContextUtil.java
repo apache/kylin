@@ -196,12 +196,15 @@ public class ContextUtil {
                 String modelId = realization.getModel().getUuid();
                 String modelAlias = realization.getModel().getFusionModelAlias();
                 if (!ctx.getStorageContext().getStreamCandidate().isEmpty()) {
+                    // for streaming realization
                     realizations.add(streamRlz(ctx, realizationType, modelId, modelAlias, lookupTables));
-                    if (ctx.getRealization() instanceof HybridRealization) {
-                        modelId = ((HybridRealization) ctx.getRealization()).getBatchRealization().getUuid();
+                    if (realization instanceof HybridRealization) {
+                        HybridRealization batchRealization = (HybridRealization) realization;
+                        String batchModelId = batchRealization.getBatchRealization().getUuid();
+                        realizations.add(batchRlz(ctx, realizationType, batchModelId, modelAlias, lookupTables));
                     }
-                }
-                if (!ctx.getStorageContext().getBatchCandidate().isEmpty()) {
+                } else {
+                    // for batch realization
                     realizations.add(batchRlz(ctx, realizationType, modelId, modelAlias, lookupTables));
                 }
             }
@@ -221,8 +224,12 @@ public class ContextUtil {
 
     private static String detectType(OlapContext ctx, Map<String, NLookupCandidate.Type> lookupMap) {
         String realizationType;
-        if (ctx.getStorageContext().isDataSkipped() && ctx.getStorageContext().isFilterCondAlwaysFalse()) {
-            realizationType = QueryMetrics.FILTER_CONFLICT;
+        if (ctx.getStorageContext().isDataSkipped()) {
+            if (ctx.getStorageContext().isFilterCondAlwaysFalse()) {
+                realizationType = QueryMetrics.FILTER_CONFLICT;
+            } else {
+                realizationType = null;
+            }
         } else if (ctx.getStorageContext().getLookupCandidate() != null) {
             realizationType = QueryMetrics.TABLE_SNAPSHOT;
             lookupMap.put(ctx.getFirstTableIdentity(), ctx.getStorageContext().getLookupCandidate().getType());

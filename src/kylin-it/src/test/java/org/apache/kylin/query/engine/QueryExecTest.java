@@ -19,11 +19,14 @@
 package org.apache.kylin.query.engine;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.util.TestUtils;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.util.QueryHelper;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
@@ -33,7 +36,7 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-@MetadataInfo
+@MetadataInfo(overlay = "src/test/resources/ut_meta/heterogeneous_segment_2")
 class QueryExecTest {
 
     public String getProject() {
@@ -121,6 +124,29 @@ class QueryExecTest {
             if (prevRunLocalConf != null) {
                 Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", prevRunLocalConf);
             }
+        }
+    }
+
+    @Test
+    void testModelRealizationAndOutOfSegmentRange() {
+        SparderEnv.skipCompute();
+        try {
+            // PART_DT>'2024-01-01', out of segment range
+            String sql = "select PART_DT, count(*) from KYLIN_SALES inner join kylin_account on SELLER_ID=ACCOUNT_ID"
+                    + " where PART_DT>'2024-01-01' group by PART_DT";
+            SparkSession session = SparderEnv.getSparkSession();
+            Dataset<Row> dataset = QueryHelper.sql(session, "heterogeneous_segment_2", sql);
+            Assertions.assertNotNull(dataset);
+
+            List<NativeQueryRealization> realizationList = ContextUtil.getNativeRealizations();
+            Assertions.assertEquals(1, realizationList.size());
+            NativeQueryRealization realization = realizationList.get(0);
+            Assertions.assertNotNull(realization.getModelId());
+            Assertions.assertNotNull(realization.getModelAlias());
+            Assertions.assertNull(realization.getLayoutId());
+            Assertions.assertNull(realization.getType());
+        } finally {
+            SparderEnv.cleanCompute();
         }
     }
 }

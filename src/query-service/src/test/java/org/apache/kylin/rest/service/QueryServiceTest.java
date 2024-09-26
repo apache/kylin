@@ -23,7 +23,6 @@ import static org.apache.kylin.common.QueryContext.PUSHDOWN_HIVE;
 import static org.apache.kylin.common.QueryTrace.EXECUTION;
 import static org.apache.kylin.common.QueryTrace.SPARK_JOB_EXECUTION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
-import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.apache.kylin.rest.metrics.QueryMetricsContextTest.getInfluxdbFields;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.security.acls.domain.BasePermission.ADMINISTRATION;
@@ -492,7 +491,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
         Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
         NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT", NLookupCandidate.Type.SNAPSHOT);
-        mockOlapCtx.getStorageContext().setDataSkipped(true);
+        mockOlapCtx.getStorageContext().setDataSkipped(false);
         mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
         ContextUtil.registerContext(mockOlapCtx);
         mockQueryWithSqlMassage();
@@ -505,7 +504,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
         Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
         NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT", NLookupCandidate.Type.INTERNAL_TABLE);
-        mockOlapCtx.getStorageContext().setDataSkipped(true);
+        mockOlapCtx.getStorageContext().setDataSkipped(false);
         mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
         ContextUtil.registerContext(mockOlapCtx);
         mockQueryWithSqlMassage();
