@@ -204,9 +204,24 @@ public class NDataModelManager {
         return crud.listByFilter(filter).stream().map(NDataModel::getAlias).collect(Collectors.toList());
     }
 
-    public NDataModel dropModel(NDataModel desc) {
-        crud.delete(desc);
-        return desc;
+    public NDataModel dropModel(NDataModel model) {
+        crud.delete(model);
+        dropRelatedCc(model);
+        return model;
+    }
+
+    private void dropRelatedCc(NDataModel model) {
+        // drop relations of model <-> cc
+        Manager<CcModelRelationDesc> relationManager = Manager.getInstance(config, project, CcModelRelationDesc.class);
+        List<CcModelRelationDesc> items = relationManager
+                .listByFilter(RawResourceFilter.equalFilter("modelUuid", model.getUuid()));
+        items.forEach(relationManager::delete);
+
+        // drop cc
+        Set<String> ccUuids = items.stream().map(CcModelRelationDesc::getCcUuid).collect(Collectors.toSet());
+        relationManager.listAll().stream().map(CcModelRelationDesc::getCcUuid).forEach(ccUuids::remove);
+        ComputedColumnManager ccManager = config.getManager(project, ComputedColumnManager.class);
+        ccUuids.forEach(cc -> ccManager.get(cc).ifPresent(ccManager::delete));
     }
 
     public NDataModel dropModel(String id) {
@@ -214,8 +229,7 @@ public class NDataModelManager {
         if (model == null) {
             return null;
         }
-        crud.delete(model);
-        return model;
+        return dropModel(model);
     }
 
     public Set<String> listAllModelAlias() {

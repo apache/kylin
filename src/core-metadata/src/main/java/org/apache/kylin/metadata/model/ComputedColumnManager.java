@@ -84,12 +84,11 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
             });
         }
 
-        if (entity.getUuid() == null) {
-            entity.setUuid(RandomUtil.randomUUIDStr());
-        }
-        // reset mvcc for new cc
-        entity.setMvcc(-1);
-        return super.createAS(entity);
+        // reset mvcc and uuid for new cc
+        ComputedColumnDesc copied = this.copy(entity);
+        copied.setUuid(RandomUtil.randomUUIDStr());
+        copied.setMvcc(-1);
+        return super.createAS(copied);
     }
 
     private boolean noNeedToUpdate(ComputedColumnDesc existing, ComputedColumnDesc entity) {
