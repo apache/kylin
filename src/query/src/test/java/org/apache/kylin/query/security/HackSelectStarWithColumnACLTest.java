@@ -512,6 +512,16 @@ class HackSelectStarWithColumnACLTest {
             String converted = TRANSFORMER.convert(sql, PROJECT, SCHEMA);
             Assertions.assertEquals(expected, converted);
         }
+        // quoted lower case table name
+        {
+            String sql = "select * from \"default\".\"test_kylin_fact\"";
+            String expected = "select * from ( "
+                    + "select \"TEST_KYLIN_FACT\".\"ORDER_ID\", \"TEST_KYLIN_FACT\".\"PRICE\", "
+                    + "\"TEST_KYLIN_FACT\".\"ITEM_COUNT\" "
+                    + "from \"DEFAULT\".\"TEST_KYLIN_FACT\") as \"test_kylin_fact\"";
+            String converted = TRANSFORMER.convert(sql, PROJECT, SCHEMA);
+            Assertions.assertEquals(expected, converted);
+        }
     }
 
     @Test

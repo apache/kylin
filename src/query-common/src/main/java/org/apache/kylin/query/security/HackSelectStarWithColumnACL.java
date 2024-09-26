@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -118,12 +119,14 @@ public class HackSelectStarWithColumnACL implements IQueryTransformer, IPushDown
         private final String defaultSchema;
         private final List<AclTCR> aclTCRList;
         private final NTableMetadataManager tableMgr;
+        private final boolean sourceNameCaseSensitiveEnabled;
         private final boolean isPushdownSelectStarCaseSensitiveEnable;
         private final boolean isPushdownSelectStarLowerCaseEnable;
 
         SelectStarAuthVisitor(String project, String defaultSchema, QueryContext.AclInfo aclInfo) {
             this.defaultSchema = defaultSchema;
             KylinConfig config = NProjectManager.getProjectConfig(project);
+            this.sourceNameCaseSensitiveEnabled = config.getSourceNameCaseSensitiveEnabled();
             this.isPushdownSelectStarCaseSensitiveEnable = config.getPushdownSelectStarCaseSensitiveEnable();
             this.isPushdownSelectStarLowerCaseEnable = config.getPushdownSelectStarLowercaseEnable();
             this.tableMgr = NTableMetadataManager.getInstance(config, project);
@@ -210,7 +213,11 @@ public class HackSelectStarWithColumnACL implements IQueryTransformer, IPushDown
             List<String> names = operand.names;
             String schema = names.size() == 1 ? defaultSchema : names.get(0);
             String table = names.size() == 1 ? names.get(0) : names.get(1);
-            TableDesc tableDesc = tableMgr.getTableDesc(schema + '.' + table);
+            String tableMetadataKey = schema + '.' + table;
+            if (!sourceNameCaseSensitiveEnabled) {
+                tableMetadataKey = tableMetadataKey.toUpperCase(Locale.ROOT);
+            }
+            TableDesc tableDesc = tableMgr.getTableDesc(tableMetadataKey);
             if (tableDesc == null) {
                 throw new KylinRuntimeException("Failed to parse table: " + operand);
             }
