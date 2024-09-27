@@ -63,6 +63,10 @@ public class JobMybatisConfig implements InitializingBean {
 
     private static final String CREATE_JOB_INFO_INDEX_2 = "create.job.info.index2";
 
+    public static final String JOB_INFO_SUFFIX = "_job_info_v2";
+
+    public static final String JOB_LOCK_SUFFIX = "_job_lock_v2";
+
     private DataSource dataSource;
 
     private String database;
@@ -102,8 +106,8 @@ public class JobMybatisConfig implements InitializingBean {
                 keIdentified = "UT_" + uuid;
             }
         }
-        jobInfoTableName = keIdentified + "_job_info";
-        jobLockTableName = keIdentified + "_job_lock";
+        jobInfoTableName = keIdentified + JOB_INFO_SUFFIX;
+        jobLockTableName = keIdentified + JOB_LOCK_SUFFIX;
         database = Database.MYSQL.databaseId;
 
         Method[] declaredMethods = ReflectionUtils.getDeclaredMethods(dataSource.getClass());

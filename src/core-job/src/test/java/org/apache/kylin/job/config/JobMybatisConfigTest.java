@@ -18,6 +18,9 @@
 
 package org.apache.kylin.job.config;
 
+import static org.apache.kylin.job.config.JobMybatisConfig.JOB_INFO_SUFFIX;
+import static org.apache.kylin.job.config.JobMybatisConfig.JOB_LOCK_SUFFIX;
+
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -74,8 +77,8 @@ public class JobMybatisConfigTest extends NLocalFileMetadataTestCase {
             // do nothing
         }
         Assert.assertEquals(JobMybatisConfig.Database.MYSQL.databaseId, jobMybatisConfig.getDatabase());
-        Assert.assertEquals("test_job_info", jobMybatisConfig.getJobInfoTableName());
-        Assert.assertEquals("test_job_lock", jobMybatisConfig.getJobLockTableName());
+        Assert.assertEquals("test" + JOB_INFO_SUFFIX, jobMybatisConfig.getJobInfoTableName());
+        Assert.assertEquals("test" + JOB_LOCK_SUFFIX, jobMybatisConfig.getJobLockTableName());
     }
 
     @Test
@@ -94,8 +97,8 @@ public class JobMybatisConfigTest extends NLocalFileMetadataTestCase {
             // do nothing
         }
         Assert.assertEquals(JobMybatisConfig.Database.POSTGRESQL.databaseId, jobMybatisConfig.getDatabase());
-        Assert.assertEquals("test_job_info", jobMybatisConfig.getJobInfoTableName());
-        Assert.assertEquals("test_job_lock", jobMybatisConfig.getJobLockTableName());
+        Assert.assertEquals("test" + JOB_INFO_SUFFIX, jobMybatisConfig.getJobInfoTableName());
+        Assert.assertEquals("test" + JOB_LOCK_SUFFIX, jobMybatisConfig.getJobLockTableName());
     }
 
     @Test
@@ -113,8 +116,8 @@ public class JobMybatisConfigTest extends NLocalFileMetadataTestCase {
         } catch (KylinRuntimeException e) {
             // do nothing
         }
-        Assert.assertEquals("file_job_info", jobMybatisConfig.getJobInfoTableName());
-        Assert.assertEquals("file_job_lock", jobMybatisConfig.getJobLockTableName());
+        Assert.assertEquals("file" + JOB_INFO_SUFFIX, jobMybatisConfig.getJobInfoTableName());
+        Assert.assertEquals("file" + JOB_LOCK_SUFFIX, jobMybatisConfig.getJobLockTableName());
         config.setProperty("kylin.env", "UT");
     }
 
@@ -129,13 +132,13 @@ public class JobMybatisConfigTest extends NLocalFileMetadataTestCase {
 
         jobMybatisConfig.afterPropertiesSet();
 
-        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file_job_info"));
-        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file_job_lock"));
+        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file" + JOB_INFO_SUFFIX));
+        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file" + JOB_LOCK_SUFFIX));
 
         jobMybatisConfig.afterPropertiesSet();
 
-        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file_job_info"));
-        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file_job_lock"));
+        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file" + JOB_INFO_SUFFIX));
+        Assert.assertTrue(JdbcUtil.isTableExists(dataSource.getConnection(), "file" + JOB_LOCK_SUFFIX));
     }
 
     @Test
