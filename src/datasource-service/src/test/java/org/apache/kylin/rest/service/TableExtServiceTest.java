@@ -585,6 +585,10 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         request.setTables(new String[] { "TEST_KYLIN_FACT" });
         LoadTableResponse response2 = tableExtService.loadTablesWithShortCircuit(request);
         Assert.assertEquals(8, response2.getFailed().size());
+
+        // load as internal table when gluten not enabled
+        request.setLoadAsInternal(true);
+        Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
     }
 
     private String[] mockInputDBOrTable() {

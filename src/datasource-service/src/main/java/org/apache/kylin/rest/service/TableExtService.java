@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.GLUTEN_NOT_ENABLED_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ONCE_LOAD_TABLE_LIMIT;
@@ -360,6 +361,11 @@ public class TableExtService extends BasicService {
             List<Pair<TableDesc, TableExtDesc>> loadTables, Boolean loadAsInternal, String storageType) {
         int batchSize = NProjectManager.getProjectConfig(project).getLoadTableBatchSize();
         List<List<Pair<TableDesc, TableExtDesc>>> batches = splitIntoBatches(loadTables, batchSize);
+        // check if gluten enabled before load table
+        if (loadAsInternal && !KylinConfig.getInstanceFromEnv().queryUseGlutenEnabled()) {
+            throw new KylinException(GLUTEN_NOT_ENABLED_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getGlutenNotEnabled()));
+        }
         for (List<Pair<TableDesc, TableExtDesc>> batch : batches) {
             try {
                 microBatchLoadTable(project, tableResponse, batch, loadAsInternal, storageType);

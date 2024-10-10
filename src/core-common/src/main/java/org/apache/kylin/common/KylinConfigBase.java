@@ -4395,7 +4395,8 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean queryUseGlutenEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.storage.columnar.spark-conf.spark.gluten.enabled", FALSE));
+        return Boolean.parseBoolean(this.getOptional("kylin.storage.columnar.spark-conf.spark.gluten.enabled", FALSE))
+                && this.getOptional("kylin.storage.columnar.spark-conf.spark.plugins", "").contains("GlutenPlugin");
     }
 
     public String getFragmentType() {

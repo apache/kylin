@@ -184,6 +184,10 @@ public class Message {
         return "Invalid internal table parameters.";
     }
 
+    public String getGlutenNotEnabled() {
+        return "Gluten is disabled in query function, please enable it and try again.";
+    }
+
     public String getDatePartitionColumnNotFound() {
         return "Date format partition column must be set in an incremental load table.";
     }

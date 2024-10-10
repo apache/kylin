@@ -188,6 +188,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getGlutenNotEnabled() {
+        return "查询Gluten开关未开启，请打开后重试。";
+    }
+
+    @Override
     public String getIncorrectDateformat() {
         return "时间分区格式 \"%s\" 不正确。";
     }
