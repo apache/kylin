@@ -40,13 +40,13 @@ public interface InternalTableMapper extends BasicMapper<InternalTableRawResourc
     @Override
     default UpdateDSL<UpdateModel> updateAllColumns(InternalTableRawResource record, UpdateDSL<UpdateModel> dsl) {
         dsl = BasicMapper.super.updateAllColumns(record, dsl);
-        return dsl.set(internalTable.name).equalTo(record::getName).set(internalTable.tableIdentity)
-                .equalTo(record::getTableIdentity);
+        return dsl.set(internalTable.name).equalTo(record::getName).set(internalTable.dbName)
+                .equalTo(record::getDbName);
     }
 
     @Override
     default BasicColumn[] getSelectList() {
-        return getSelectListWithAdditions(internalTable.name, internalTable.tableIdentity);
+        return getSelectListWithAdditions(internalTable.name, internalTable.dbName);
     }
 
     @Override
@@ -67,7 +67,7 @@ public interface InternalTableMapper extends BasicMapper<InternalTableRawResourc
             @Result(column = "uuid", property = "uuid", jdbcType = JdbcType.CHAR),
             @Result(column = "project", property = "project", jdbcType = JdbcType.VARCHAR),
             @Result(column = "name", property = "name", jdbcType = JdbcType.VARCHAR),
-            @Result(column = "table_identity", property = "tableIdentity", jdbcType = JdbcType.VARCHAR),
+            @Result(column = "db_name", property = "dbName", jdbcType = JdbcType.VARCHAR),
             @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT),
             @Result(column = "ts", property = "ts", jdbcType = JdbcType.BIGINT),
             @Result(column = "reserved_filed_1", property = "reservedFiled1", jdbcType = JdbcType.VARCHAR),

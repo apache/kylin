@@ -61,7 +61,7 @@ public class KylinPasswordResetCLITest extends LogOutputTestCase {
     @After
     public void teardown() throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         cleanupTestMetadata();
     }
 

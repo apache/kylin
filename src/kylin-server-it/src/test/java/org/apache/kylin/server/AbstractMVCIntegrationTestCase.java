@@ -75,7 +75,7 @@ public abstract class AbstractMVCIntegrationTestCase extends NLocalFileMetadataT
     @After
     public void tearDown() throws Exception {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
         if (zkTestServer != null) {

@@ -105,7 +105,7 @@ public class OptRecV2TestBase extends NLocalFileMetadataTestCase {
         JobContextUtil.cleanUp();
         this.createTestMetadata();
         jdbcTemplate = JdbcUtil.getJdbcTemplate(getTestConfig());
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         jdbcRawRecStore = new JdbcRawRecStore(getTestConfig());
 
         modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
@@ -121,7 +121,7 @@ public class OptRecV2TestBase extends NLocalFileMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }

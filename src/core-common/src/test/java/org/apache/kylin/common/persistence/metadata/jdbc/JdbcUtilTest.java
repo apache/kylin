@@ -57,27 +57,27 @@ public class JdbcUtilTest {
     @Test
     public void testIsIndexExists() throws SQLException {
         String table = "INDEXTEST";
+        String index = "IX_1";
         connection.createStatement().execute("create table " + table + "(col1 int, col2 varchar)");
-        connection.createStatement().execute("create index ix_1 on " + table + "(col1)");
+        connection.createStatement().execute("create index " + index + " on " + table + "(col1)");
 
-        Connection connectionAutoRelease = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
-                null);
-        Assert.assertTrue(JdbcUtil.isIndexExists(connectionAutoRelease, table, "ix_1"));
+        Connection connectionAutoRelease = DriverManager
+                .getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa", null);
+        Assert.assertTrue(JdbcUtil.isIndexExists(connectionAutoRelease, table, index));
         Assert.assertTrue(connectionAutoRelease.isClosed());
 
-        Connection connectionManuallyRelease = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
-                null);
-        Assert.assertTrue(JdbcUtil.isIndexExists(connectionManuallyRelease, table, "ix_1", false));
+        Connection connectionManuallyRelease = DriverManager
+                .getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa", null);
+        Assert.assertTrue(JdbcUtil.isIndexExists(connectionManuallyRelease, table, index, false));
         Assert.assertFalse(connectionManuallyRelease.isClosed());
 
-        Connection connectionAutoRelease1 = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
-                null);
+        Connection connectionAutoRelease1 = DriverManager
+                .getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa", null);
         Assert.assertTrue(JdbcUtil.isTableExists(connectionAutoRelease1, table));
         Assert.assertTrue(connectionAutoRelease1.isClosed());
 
-
-        Connection connectionManuallyRelease1 = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
-                null);
+        Connection connectionManuallyRelease1 = DriverManager
+                .getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa", null);
         Assert.assertTrue(JdbcUtil.isTableExists(connectionManuallyRelease1, table, false));
         Assert.assertFalse(connectionManuallyRelease1.isClosed());
 

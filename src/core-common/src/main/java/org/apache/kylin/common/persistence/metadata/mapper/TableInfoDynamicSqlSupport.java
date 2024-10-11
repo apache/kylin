@@ -31,7 +31,7 @@ public final class TableInfoDynamicSqlSupport {
     public static final class TableInfo extends BasicSqlTable<TableInfo> {
         public final SqlColumn<String> name = column("name", JDBCType.VARCHAR);
 
-        public final SqlColumn<String> tableIdentity = column("table_identity", JDBCType.VARCHAR);
+        public final SqlColumn<String> dbName = column("db_name", JDBCType.VARCHAR);
         public TableInfo() {
             super("table_info", TableInfo::new);
         }

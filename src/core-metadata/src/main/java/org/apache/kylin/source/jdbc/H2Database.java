@@ -46,6 +46,21 @@ public class H2Database {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
+    private static final String[] ALL_TABLES_DROP = new String[] { //
+            "`edw`.`test_cal_dt`", //
+            "`default`.`test_category_groupings`", //
+            "`default`.`test_kylin_fact`", //
+            "`default`.`test_order`", //
+            "`edw`.`test_seller_type_dim`", //
+            "`edw`.`test_sites`", //
+            "`default`.`test_account`", //
+            "`default`.`test_country`", //
+            "`ssb`.`customer`", //
+            "`ssb`.`dates`", //
+            "`ssb`.`p_lineorder`", //
+            "`ssb`.`lineorder`", //
+            "`ssb`.`part`", //
+            "`ssb`.`supplier`" }; //
     private static final String[] ALL_TABLES = new String[] { //
             "edw.test_cal_dt", //
             "default.test_category_groupings", //
@@ -92,9 +107,10 @@ public class H2Database {
     public void dropAll() throws SQLException {
         try (Statement stmt = h2Connection.createStatement()) {
             StringBuilder sqlBuilder = new StringBuilder();
-            for (String tblName : ALL_TABLES)
-                sqlBuilder.append("DROP TABLE ").append(tblName).append(";\n");
-            sqlBuilder.append("DROP SCHEMA DEFAULT;\nDROP SCHEMA EDW;\n");
+            for (String tblName : ALL_TABLES_DROP)
+                sqlBuilder.append("DROP TABLE IF EXISTS ").append(tblName).append(";\n");
+            sqlBuilder.append(
+                    "DROP SCHEMA IF EXISTS `DEFAULT`;\nDROP SCHEMA IF EXISTS `EDW`;\nDROP SCHEMA IF EXISTS `SSB`;");
 
             stmt.executeUpdate(sqlBuilder.toString());
         }
@@ -116,8 +132,9 @@ public class H2Database {
                 String cvsFilePath = tempFile.getPath();
                 try (Statement stmt = h2Connection.createStatement()) {
 
-                    String createDBSql = "CREATE SCHEMA IF NOT EXISTS DEFAULT;\n" + "CREATE SCHEMA IF NOT EXISTS EDW;\n"
-                            + "CREATE SCHEMA IF NOT EXISTS SSB;\n" + "SET SCHEMA DEFAULT;\n";
+                    String createDBSql = "CREATE SCHEMA IF NOT EXISTS `DEFAULT`;\n"
+                            + "CREATE SCHEMA IF NOT EXISTS `EDW`;\n" + "CREATE SCHEMA IF NOT EXISTS `SSB`;\n"
+                            + "SET SCHEMA `DEFAULT`;\n";
                     stmt.executeUpdate(createDBSql);
 
                     String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
@@ -147,7 +164,7 @@ public class H2Database {
         StringBuilder ddl = new StringBuilder();
         StringBuilder csvColumns = new StringBuilder();
 
-        ddl.append("CREATE TABLE IF NOT EXISTS " + tableDesc.getIdentity() + "\n");
+        ddl.append("CREATE TABLE IF NOT EXISTS `" + tableDesc.getDatabase() + "`.`" + tableDesc.getName() + "`\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {
@@ -176,7 +193,8 @@ public class H2Database {
             if ("T".equalsIgnoreCase(col.getIndex())) {
                 StringBuilder ddl = new StringBuilder();
                 ddl.append("CREATE INDEX IF NOT EXISTS IDX_").append(tableDesc.getName()).append("_").append(x)
-                        .append(" ON ").append(tableDesc.getIdentity()).append("(").append(col.getName()).append(")");
+                        .append(" ON ").append("`").append(tableDesc.getDatabase()).append("`.`")
+                        .append(tableDesc.getName()).append("`(").append(col.getName()).append(")");
                 ddl.append("\n");
                 result.add(ddl.toString());
                 x++;

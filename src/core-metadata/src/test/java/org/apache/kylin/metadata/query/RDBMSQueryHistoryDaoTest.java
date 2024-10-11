@@ -245,18 +245,18 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         List<QueryStatistics> dayQueryStatistics = queryHistoryDAO.getQueryCountByTime(1580052311000L, 1580484313000L,
                 "day", PROJECT);
         Assert.assertEquals(3, dayQueryStatistics.size());
-        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
+        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(0).getCount());
-        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
+        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(1).getCount());
-        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
+        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(2).getCount());
         fillZeroForQueryStatistics(dayQueryStatistics, 1580052311000L, 1580484313000L, DAY);
-        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
+        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(0).getCount());
-        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
+        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(1).getCount());
-        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
+        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
         Assert.assertEquals(1, dayQueryStatistics.get(2).getCount());
         Assert.assertEquals("2020-01-26T00:00:00Z", dayQueryStatistics.get(3).getTime().toString());
         Assert.assertEquals(0, dayQueryStatistics.get(3).getCount());
@@ -340,19 +340,19 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         List<QueryStatistics> dayQueryStatistics = queryHistoryDAO.getAvgDurationByTime(1580052311000L, 1580484313000L,
                 "day", PROJECT);
         Assert.assertEquals(3, dayQueryStatistics.size());
-        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
-        Assert.assertEquals(3, dayQueryStatistics.get(0).getMeanDuration(), 0.1);
-        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
-        Assert.assertEquals(1, dayQueryStatistics.get(1).getMeanDuration(), 0.1);
-        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
-        Assert.assertEquals(2, dayQueryStatistics.get(2).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
+        Assert.assertEquals(1, dayQueryStatistics.get(0).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
+        Assert.assertEquals(2, dayQueryStatistics.get(1).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
+        Assert.assertEquals(3, dayQueryStatistics.get(2).getMeanDuration(), 0.1);
         fillZeroForQueryStatistics(dayQueryStatistics, 1580052311000L, 1580484313000L, DAY);
-        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
-        Assert.assertEquals(3, dayQueryStatistics.get(0).getMeanDuration(), 0.1);
-        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
-        Assert.assertEquals(1, dayQueryStatistics.get(1).getMeanDuration(), 0.1);
-        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
-        Assert.assertEquals(2, dayQueryStatistics.get(2).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-29T00:00:00Z", dayQueryStatistics.get(0).getTime().toString());
+        Assert.assertEquals(1, dayQueryStatistics.get(0).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-30T00:00:00Z", dayQueryStatistics.get(1).getTime().toString());
+        Assert.assertEquals(2, dayQueryStatistics.get(1).getMeanDuration(), 0.1);
+        Assert.assertEquals("2020-01-31T00:00:00Z", dayQueryStatistics.get(2).getTime().toString());
+        Assert.assertEquals(3, dayQueryStatistics.get(2).getMeanDuration(), 0.1);
         Assert.assertEquals("2020-01-26T00:00:00Z", dayQueryStatistics.get(3).getTime().toString());
         Assert.assertEquals(0, dayQueryStatistics.get(3).getMeanDuration(), 0.1);
         Assert.assertEquals("2020-01-27T00:00:00Z", dayQueryStatistics.get(4).getTime().toString());
@@ -548,21 +548,21 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         // after update
         List<QueryHistory> queryHistoryList = queryHistoryDAO.getAllQueryHistories();
 
-        Assert.assertEquals(queryMetrics1.id, queryHistoryList.get(2).getId());
+        Assert.assertEquals(queryMetrics1.id, queryHistoryList.get(0).getId());
         Assert.assertEquals(QueryHistoryInfo.HistoryState.SUCCESS,
-                queryHistoryList.get(2).getQueryHistoryInfo().getState());
-
-        Assert.assertEquals(queryMetrics2.id, queryHistoryList.get(3).getId());
-        Assert.assertEquals(QueryHistoryInfo.HistoryState.FAILED,
-                queryHistoryList.get(3).getQueryHistoryInfo().getState());
-
-        Assert.assertEquals(queryMetrics3.id, queryHistoryList.get(0).getId());
-        Assert.assertEquals(QueryHistoryInfo.HistoryState.PENDING,
                 queryHistoryList.get(0).getQueryHistoryInfo().getState());
 
-        Assert.assertEquals(queryMetrics4.id, queryHistoryList.get(1).getId());
-        Assert.assertEquals(QueryHistoryInfo.HistoryState.PENDING,
+        Assert.assertEquals(queryMetrics2.id, queryHistoryList.get(1).getId());
+        Assert.assertEquals(QueryHistoryInfo.HistoryState.FAILED,
                 queryHistoryList.get(1).getQueryHistoryInfo().getState());
+
+        Assert.assertEquals(queryMetrics3.id, queryHistoryList.get(2).getId());
+        Assert.assertEquals(QueryHistoryInfo.HistoryState.PENDING,
+                queryHistoryList.get(2).getQueryHistoryInfo().getState());
+
+        Assert.assertEquals(queryMetrics4.id, queryHistoryList.get(3).getId());
+        Assert.assertEquals(QueryHistoryInfo.HistoryState.PENDING,
+                queryHistoryList.get(3).getQueryHistoryInfo().getState());
     }
 
     @Test
@@ -756,8 +756,8 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         queryHistoryRequest.setProject(PROJECT);
         List<QueryStatistics> modelList = queryHistoryDAO.getQueryHistoriesModelIds(queryHistoryRequest);
         Assert.assertEquals(2, modelList.size());
-        Assert.assertEquals("RDBMS", modelList.get(0).getEngineType());
-        Assert.assertEquals("HIVE", modelList.get(1).getEngineType());
+        Assert.assertEquals("HIVE", modelList.get(0).getEngineType());
+        Assert.assertEquals("RDBMS", modelList.get(1).getEngineType());
     }
 
     @Test

@@ -52,7 +52,7 @@ public final class JdbcEpochStoreTest extends AbstractEpochStoreTest {
     @AfterEach
     public void destroy() throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 
     JdbcTemplate getJdbcTemplate() throws Exception {

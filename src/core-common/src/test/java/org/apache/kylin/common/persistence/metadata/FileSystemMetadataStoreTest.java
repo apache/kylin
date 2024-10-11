@@ -115,8 +115,8 @@ public class FileSystemMetadataStoreTest extends NLocalFileMetadataTestCase {
             val store1 = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
             String uuid = UUID.randomUUID().toString();
             store1.checkAndPutResource("TABLE_INFO/pj1.db.abc2", ByteSource.wrap(("{ \"uuid\" : \"" + uuid
-                    + "\",\"meta_key\" : \"pj1.db.abc2\",\"name\" : \"abc2\", \"project\" : \"pj1\",\"table_identity\""
-                    + " : \"db.abc2\", \"id\" : \"20002\" }").getBytes(DEFAULT_CHARSET)), -1);
+                    + "\",\"meta_key\" : \"pj1.db.abc2\",\"name\" : \"abc2\", \"project\" : \"pj1\",\"database\""
+                    + " : \"db\", \"id\" : \"20002\" }").getBytes(DEFAULT_CHARSET)), -1);
             return 0;
         }, "pj1");
 
@@ -141,12 +141,8 @@ public class FileSystemMetadataStoreTest extends NLocalFileMetadataTestCase {
             Assert.assertEquals(0, tableInfo.size());
 
             RawResourceFilter filter4 = new RawResourceFilter();
-            filter4.addConditions(new RawResourceFilter.Condition("tableIdentity", new ArrayList<Object>() {
-                {
-                    add("db.abc2");
-                    add("abc2");
-                }
-            }, RawResourceFilter.Operator.IN));
+            filter4.addConditions("dbName", Arrays.asList("db.xxx", "db"), RawResourceFilter.Operator.IN)
+                    .addConditions("name", Arrays.asList("abc2", "xxx"), RawResourceFilter.Operator.IN);
             tableInfo = store1.getMatchedResourcesWithoutContent("TABLE_INFO", filter4);
             checkTable(tableInfo);
 
@@ -156,8 +152,9 @@ public class FileSystemMetadataStoreTest extends NLocalFileMetadataTestCase {
             store1.getMatchedResourcesWithoutContent("HISTORY_SOURCE_USAGE", filter5);
 
             RawResourceFilter filter6 = new RawResourceFilter();
-            filter6.addConditions(new RawResourceFilter.Condition("tableIdentity", Collections.singletonList("db.a"),
-                    RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE));
+            filter6.addConditions("dbName", Collections.singletonList("D"),
+                    RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE).addConditions("name",
+                            Collections.singletonList("c2"), RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE);
             var context = convertConditionsToFilter(filter6, MetadataType.TABLE_INFO);
             Assert.assertEquals("TABLE_INFO", context.getResPath());
             tableInfo = store1.getMatchedResourcesWithoutContent("TABLE_INFO", filter6);

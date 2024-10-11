@@ -232,7 +232,7 @@ public class JobContextUtil {
         try {
             if (null != transactionManager) {
                 JdbcTemplate jdbcTemplate = new JdbcTemplate(transactionManager.getDataSource());
-                jdbcTemplate.execute("DROP ALL OBJECTS");
+                jdbcTemplate.execute("SHUTDOWN;");
             }
         } catch (Exception e) {
             log.error("Drop UT job table failed.", e);

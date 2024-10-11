@@ -146,7 +146,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         try {
             jdbcRawRecStore = new JdbcRawRecStore(getTestConfig());
         } catch (Exception e) {

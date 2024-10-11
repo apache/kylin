@@ -102,6 +102,6 @@ class MetadataBackupServiceJdbcMetadataTest {
             long newCount = jdbcTemplate.queryForObject("select count(1) from " + table, Long.class);
             return newCount == 20;
         });
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 }

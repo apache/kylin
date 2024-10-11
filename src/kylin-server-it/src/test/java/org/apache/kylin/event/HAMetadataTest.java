@@ -88,7 +88,7 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         cleanupTestMetadata();
         queryResourceStore.close();
         ((JdbcAuditLogStore) queryResourceStore.getAuditLogStore()).forceClose();

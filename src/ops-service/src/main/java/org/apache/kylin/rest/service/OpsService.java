@@ -136,15 +136,16 @@ public class OpsService {
                 metadataBackupStatusInfo = JsonUtil.readValue(value, MetadataBackupStatusInfo.class);
                 return metadataBackupStatusInfo;
             } catch (Exception e) {
-                retryTime--;
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    log.error(e.getMessage(), e);
-                    Thread.currentThread().interrupt();
-                }
                 log.error(e.getMessage(), e);
                 metadataBackupStatusInfo.setStatus(MetadataBackupStatus.UNKNOWN);
+                if (--retryTime >= 0) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException ex) {
+                        log.error(e.getMessage(), e);
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
         } while (retryTime >= 0);
         return metadataBackupStatusInfo;

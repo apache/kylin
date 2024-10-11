@@ -135,7 +135,7 @@ public class QueryHistoryAccelerateSchedulerParallelTest extends NLocalFileMetad
     public void tearDown() throws Exception {
         queryHistoryDAO.dropQueryHistoryTable();
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }

@@ -107,7 +107,7 @@ public abstract class SuggestTestBase extends NLocalWithSparkSessionTest {
     public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         super.cleanupTestMetadata();
         ResourceStore.clearCache();

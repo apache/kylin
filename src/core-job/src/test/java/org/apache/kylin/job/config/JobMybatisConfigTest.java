@@ -50,7 +50,7 @@ public class JobMybatisConfigTest extends NLocalFileMetadataTestCase {
     @After
     public void tearDown() {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }

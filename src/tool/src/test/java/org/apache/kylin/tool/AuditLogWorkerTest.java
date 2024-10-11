@@ -96,7 +96,7 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
     @After
     public void destroy() throws Exception {
         //        val jdbcTemplate = getJdbcTemplate();
-        //        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        //        jdbcTemplate.batchUpdate("SHUTDOWN;");
         //        cleanupTestMetadata();
     }
 

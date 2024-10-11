@@ -22,18 +22,15 @@ import static org.apache.kylin.common.persistence.metadata.mapper.TableInfoDynam
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.SelectKey;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.kylin.common.persistence.metadata.jdbc.ContentTypeHandler;
 import org.apache.kylin.common.persistence.metadata.jdbc.SqlWithRecordLockProviderAdapter;
 import org.apache.kylin.common.persistence.resources.TableInfoRawResource;
 import org.mybatis.dynamic.sql.BasicColumn;
-import org.mybatis.dynamic.sql.insert.render.InsertStatementProvider;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.UpdateDSL;
 import org.mybatis.dynamic.sql.update.UpdateModel;
@@ -43,13 +40,13 @@ public interface TableInfoMapper extends BasicMapper<TableInfoRawResource> {
     @Override
     default UpdateDSL<UpdateModel> updateAllColumns(TableInfoRawResource record, UpdateDSL<UpdateModel> dsl) {
         dsl = BasicMapper.super.updateAllColumns(record, dsl);
-        return dsl.set(sqlTable.name).equalTo(record::getName).set(sqlTable.tableIdentity)
-                .equalTo(record::getTableIdentity);
+        return dsl.set(sqlTable.name).equalTo(record::getName).set(sqlTable.dbName)
+                .equalTo(record::getDbName);
     }
 
     @Override
     default BasicColumn[] getSelectList() {
-        return getSelectListWithAdditions(sqlTable.name, sqlTable.tableIdentity);
+        return getSelectListWithAdditions(sqlTable.name, sqlTable.dbName);
     }
 
     @Override
@@ -70,7 +67,7 @@ public interface TableInfoMapper extends BasicMapper<TableInfoRawResource> {
             @Result(column = "uuid", property = "uuid", jdbcType = JdbcType.CHAR),
             @Result(column = "project", property = "project", jdbcType = JdbcType.VARCHAR),
             @Result(column = "name", property = "name", jdbcType = JdbcType.VARCHAR),
-            @Result(column = "table_identity", property = "tableIdentity", jdbcType = JdbcType.VARCHAR),
+            @Result(column = "db_name", property = "dbName", jdbcType = JdbcType.VARCHAR),
             @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT),
             @Result(column = "ts", property = "ts", jdbcType = JdbcType.BIGINT),
             @Result(column = "reserved_filed_1", property = "reservedFiled1", jdbcType = JdbcType.VARCHAR),

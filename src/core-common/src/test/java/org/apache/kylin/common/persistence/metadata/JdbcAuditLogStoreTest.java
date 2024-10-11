@@ -84,7 +84,7 @@ class JdbcAuditLogStoreTest {
     @AfterEach
     public void destroy() throws Exception {
         val jdbcTemplate = getJdbcTemplate(KylinConfig.getInstanceFromEnv());
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 
     private void prepare2Resource() {

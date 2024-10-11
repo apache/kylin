@@ -139,9 +139,9 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
     public void teardown() {
         try {
             val jdbcTemplate = getJdbcTemplate();
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         } catch (Exception e) {
-            logger.warn("drop all objects error.", e);
+            logger.warn("SHUTDOWN; error.", e);
         }
         JobContextUtil.cleanUp();
         cleanupTestMetadata();

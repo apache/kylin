@@ -91,6 +91,8 @@ public class NBuildAndQueryMetricsTest extends AbstractMVCIntegrationTestCase {
     private static final String CSV_TABLE_DIR = TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv";
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
+    protected Connection h2Connection;
+    protected H2Database h2DB;
     @Autowired
     protected UserService userService;
     @Autowired
@@ -296,11 +298,11 @@ public class NBuildAndQueryMetricsTest extends AbstractMVCIntegrationTestCase {
                 "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl");
         getTestConfig().setProperty("kylin.query.pushdown-enabled", "true");
         // Load H2 Tables (inner join)
-        Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
-        H2Database h2DB = new H2Database(h2Connection, getTestConfig(), "default");
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
+        h2DB = new H2Database(h2Connection, getTestConfig(), "default");
         h2DB.loadAllTables();
 
-        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=DEFAULT");
+        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=`DEFAULT`");
         overwriteSystemProp("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
         overwriteSystemProp("kylin.query.pushdown.jdbc.username", "sa");
         overwriteSystemProp("kylin.query.pushdown.jdbc.password", "");
@@ -309,7 +311,7 @@ public class NBuildAndQueryMetricsTest extends AbstractMVCIntegrationTestCase {
     private void cleanPushdownEnv() throws Exception {
         getTestConfig().setProperty("kylin.query.pushdown-enabled", "false");
         // Load H2 Tables (inner join)
-        Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default", "sa", "");
+        h2DB.dropAll();
         h2Connection.close();
     }
 

@@ -35,10 +35,6 @@ import lombok.Setter;
 
 public abstract class ATable extends RootPersistentEntity {
 
-    @Getter
-    @Setter
-    @JsonProperty("project")
-    protected String project;
     protected final DatabaseDesc database = new DatabaseDesc();
     protected String identity = null;
     protected String name;

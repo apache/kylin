@@ -94,7 +94,7 @@ public class RecCandidateToolTest extends NLocalFileMetadataTestCase {
     @After
     public void teardown() {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }

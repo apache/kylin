@@ -35,6 +35,6 @@ public class InternalTableRawResource extends RawResource {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("table_identity")
-    private String tableIdentity;
+    @JsonProperty("database")
+    private String dbName;
 }

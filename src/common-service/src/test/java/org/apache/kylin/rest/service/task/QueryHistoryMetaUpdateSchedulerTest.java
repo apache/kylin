@@ -115,7 +115,7 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
     @After
     public void tearDown() throws Exception {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }

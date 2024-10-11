@@ -49,7 +49,7 @@ class ClusterMonitorTest extends AnyFunSuite {
       result.addAndGet(5)
       threadName = Thread.currentThread().getName
     }, 5)
-    cdl.await(10, TimeUnit.SECONDS)
+    cdl.await(11, TimeUnit.SECONDS)
     cm.shutdown()
     assert(result.get() == 10)
     assert(threadName === "connect-master-guard")

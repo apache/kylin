@@ -135,7 +135,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
         H2Database h2DB = new H2Database(h2Connection, getTestConfig(), "default");
         h2DB.loadAllTables();
 
-        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=DEFAULT");
+        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=`DEFAULT`");
         overwriteSystemProp("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
         overwriteSystemProp("kylin.query.pushdown.jdbc.username", "sa");
         overwriteSystemProp("kylin.query.pushdown.jdbc.password", "");
@@ -174,7 +174,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.engineType").value(QueryContext.PUSHDOWN_RDBMS))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.storageCacheUsed").value(false))
                 .andDo(MockMvcResultHandlers.print()).andReturn();
-
+        h2DB.dropAll();
         h2Connection.close();
     }
 

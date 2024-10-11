@@ -31,7 +31,7 @@ public final class InternalTableDynamicSqlSupport {
     public static final class InternalTable extends BasicSqlTable<InternalTable> {
         public final SqlColumn<String> name = column("name", JDBCType.VARCHAR);
 
-        public final SqlColumn<String> tableIdentity = column("table_identity", JDBCType.VARCHAR);
+        public final SqlColumn<String> dbName = column("db_name", JDBCType.VARCHAR);
 
         public InternalTable() {
             super("internal_table", InternalTable::new);

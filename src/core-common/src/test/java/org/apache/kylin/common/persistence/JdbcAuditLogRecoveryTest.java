@@ -82,7 +82,7 @@ public class JdbcAuditLogRecoveryTest {
     @AfterEach
     public void destroy() throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 
     @Test

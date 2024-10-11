@@ -285,6 +285,8 @@ public class OpsServiceTest extends NLocalFileMetadataTestCase {
         JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());
         String path1 = operator1.startBackup();
 
+        await().atMost(5, TimeUnit.SECONDS).until(() -> OpsService.getMetadataBackupList(UnitOfWork.GLOBAL_UNIT)
+                .stream().anyMatch(response -> response.getPath().equals(path1)));
         List<MetadataBackupResponse> projectMetadataBackupList1 = OpsService
                 .getMetadataBackupList(UnitOfWork.GLOBAL_UNIT).stream()
                 .filter(response -> response.getPath().equals(path1)).collect(Collectors.toList());
@@ -298,6 +300,8 @@ public class OpsServiceTest extends NLocalFileMetadataTestCase {
         MockedMetadataRestore operator2 = new MockedMetadataRestore(OpsService.GLOBAL_METADATA_BACKUP_PATH, fileSystem,
                 username, UnitOfWork.GLOBAL_UNIT);
         String path2 = operator2.startBackup();
+        await().atMost(5, TimeUnit.SECONDS).until(() -> OpsService.getMetadataBackupList(UnitOfWork.GLOBAL_UNIT)
+                .stream().anyMatch(response -> response.getPath().equals(path2)));
         List<MetadataBackupResponse> projectMetadataBackupList2 = OpsService
                 .getMetadataBackupList(UnitOfWork.GLOBAL_UNIT).stream()
                 .filter(response -> response.getPath().equals(path2)).collect(Collectors.toList());
