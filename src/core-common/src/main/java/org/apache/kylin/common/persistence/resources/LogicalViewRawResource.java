@@ -27,6 +27,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class LogicalViewRawResource extends RawResource {
-    @JsonProperty("project")
+    @JsonProperty("created_project")
     private String project;
 }
