@@ -503,7 +503,8 @@ public class MetaStoreService extends BasicService {
     @VisibleForTesting
     public static String getModelMetadataProjectName(Map<String, RawResource> rawResourceMap) {
         RawResource raw = rawResourceMap.values().stream()
-                .filter(rawResource -> rawResource != null && rawResource.getProject() != null).findAny().orElse(null);
+                .filter(rawResource -> rawResource != null && rawResource.getProject() != null
+                        && rawResource.getMetaType() == MetadataType.MODEL).findAny().orElse(null);
         if (raw == null) {
             throw new KylinException(MODEL_METADATA_FILE_ERROR, MsgPicker.getMsg().getModelMetadataPackageInvalid());
         }
