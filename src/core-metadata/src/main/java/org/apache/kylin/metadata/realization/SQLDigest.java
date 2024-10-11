@@ -94,7 +94,7 @@ public class SQLDigest {
 
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
-        this.isRawQuery = isRawQuery();
+        this.isRawQuery = isDigestOfRawQuery();
         this.limit = limit;
         this.limitPrecedesAggr = limitPrecedesAggr;
 
@@ -102,7 +102,7 @@ public class SQLDigest {
         this.allColumns = Collections.unmodifiableSet(allColumns);
     }
 
-    private boolean isRawQuery() {
+    public boolean isDigestOfRawQuery() {
         return this.groupByColumns.isEmpty() && // select a group by a -> not raw
                 this.aggregations.isEmpty(); // has aggr -> not raw
         // the reason to choose aggregations rather than metricColumns
@@ -133,7 +133,7 @@ public class SQLDigest {
         if (!(o instanceof SQLDigest))
             return false;
         SQLDigest sqlDigest = (SQLDigest) o;
-        return isRawQuery() == sqlDigest.isRawQuery() && limit == sqlDigest.limit
+        return isDigestOfRawQuery() == sqlDigest.isDigestOfRawQuery() && limit == sqlDigest.limit
                 && limitPrecedesAggr == sqlDigest.limitPrecedesAggr && factTable.equals(sqlDigest.factTable)
                 && equalsIgnoreOrder(allColumns, sqlDigest.allColumns)
                 && equalsIgnoreOrder(joinDescs, sqlDigest.joinDescs)
@@ -321,6 +321,6 @@ public class SQLDigest {
     @Override
     public int hashCode() {
         return Objects.hash(factTable, allColumns, joinDescs, groupByColumns, subqueryJoinParticipants, metricColumns,
-                aggregations, filterColumns, sortColumns, sortOrders, isRawQuery(), limit, limitPrecedesAggr);
+                aggregations, filterColumns, sortColumns, sortOrders, isDigestOfRawQuery(), limit, limitPrecedesAggr);
     }
 }

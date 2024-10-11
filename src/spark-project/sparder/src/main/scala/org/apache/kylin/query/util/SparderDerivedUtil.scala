@@ -169,7 +169,7 @@ case class SparderDerivedUtil(gtInfoTableName: String,
     val pkCols = join.getPrimaryKey
     val tableDesc = metaMgr.getTableDesc(derivedTableName)
     val pkIndex = pkCols.map(pkCol => tableDesc.findColumnByName(pkCol).getZeroBasedIndex)
-    val path: String = if (dataSeg.getConfig.isInternalTableEnabled && tableDesc.getHasInternal) {
+    val path: String = if (dataSeg.getConfig.isInternalTableEnabled && tableDesc.isHasInternal) {
       InternalTableManager.getInstance(dataSeg.getConfig, dataSeg.getProject)
         .getInternalTableDesc(tableDesc.getIdentity)
         .getLocation

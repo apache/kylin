@@ -109,6 +109,23 @@ public class MetadataTestUtils {
         }, project);
     }
 
+    public static void mockSnapshotPath(String project, String tableIdentity, String snapshotPath) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NTableMetadataManager mgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            mgr.updateTableDesc(tableIdentity, copyForWrite -> copyForWrite.setLastSnapshotPath(snapshotPath));
+            return null;
+        }, project);
+    }
+
+    public static void mockInternalTable(String project, String tableIdentity, boolean hasInternalTable) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NTableMetadataManager mgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            String path = "hdfs://localhost:9000/" + tableIdentity;
+            mgr.updateTableDesc(tableIdentity, copyForWrite -> copyForWrite.setHasInternal(hasInternalTable));
+            return null;
+        }, project);
+    }
+
     public static void toSemiAutoMode(String project) {
         updateProjectConfig(project, "kylin.metadata.semi-automatic-mode", "true");
     }

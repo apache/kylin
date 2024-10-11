@@ -95,7 +95,7 @@ public class TableDesc extends ATable implements Serializable, ISourceAware {
     @Getter
     @Setter
     @JsonProperty("has_Internal")
-    private Boolean hasInternal = false;
+    private boolean hasInternal = false;
 
     //Sticky table
     @Getter

@@ -26,10 +26,12 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.relnode.OlapSortRel;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.kylin.util.OlapContextTestUtil;
 import org.junit.After;
 import org.junit.Assert;
@@ -53,6 +55,58 @@ public class RealizationChooserTest extends NLocalWithSparkSessionTest {
     @After
     public void tearDown() throws Exception {
         super.tearDown();
+    }
+
+    @Test
+    public void testIsLookupCandidateMatched() throws SqlParseException {
+        String sql = "select a.NAME from TEST_BANK_INCOME a ";
+        OlapContext olap = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+        boolean b1 = RealizationChooser.isLookupCandidateMatched(olap, NLookupCandidate.Policy.AGG_THEN_SNAPSHOT);
+        Assert.assertTrue(b1);
+        boolean b2 = RealizationChooser.isLookupCandidateMatched(olap, NLookupCandidate.Policy.SNAPSHOT);
+        Assert.assertFalse(b2);
+        boolean b3 = RealizationChooser.isLookupCandidateMatched(olap, NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE);
+        Assert.assertTrue(b3);
+        boolean b4 = RealizationChooser.isLookupCandidateMatched(olap, NLookupCandidate.Policy.INTERNAL_TABLE);
+        Assert.assertFalse(b4);
+    }
+
+    @Test
+    public void testDeduceLookupTableType() throws SqlParseException {
+        String tableIdentity = "DEFAULT.TEST_BANK_INCOME";
+        String snapshotPath = "hdfs://localhost:9000/" + tableIdentity;
+        MetadataTestUtils.mockSnapshotPath(getProject(), tableIdentity, snapshotPath);
+        {
+            String sql = "select a.NAME from TEST_BANK_INCOME a ";
+            OlapContext olap = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            NLookupCandidate.Policy policy = olap.deduceLookupTableType();
+            Assert.assertEquals(NLookupCandidate.Policy.SNAPSHOT, policy);
+        }
+
+        {
+            String sql = "select a.NAME from TEST_BANK_INCOME a group by a.NAME ";
+            OlapContext olap = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            NLookupCandidate.Policy policy = olap.deduceLookupTableType();
+            Assert.assertEquals(NLookupCandidate.Policy.AGG_THEN_SNAPSHOT, policy);
+        }
+
+        overwriteSystemProp("kylin.internal-table-enabled", "true");
+        MetadataTestUtils.mockSnapshotPath(getProject(), tableIdentity, "");
+        MetadataTestUtils.mockInternalTable(getProject(), tableIdentity, true);
+        {
+            String sql = "select a.NAME from TEST_BANK_INCOME a ";
+            OlapContext olap = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            NLookupCandidate.Policy policy = olap.deduceLookupTableType();
+            Assert.assertEquals(NLookupCandidate.Policy.INTERNAL_TABLE, policy);
+        }
+
+        {
+            String sql = "select a.NAME from TEST_BANK_INCOME a group by a.NAME ";
+            OlapContext olap = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            NLookupCandidate.Policy policy = olap.deduceLookupTableType();
+            Assert.assertEquals(NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE, policy);
+        }
+
     }
 
     @Test

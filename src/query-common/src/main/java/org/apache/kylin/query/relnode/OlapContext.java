@@ -76,7 +76,7 @@ public class OlapContext {
 
     private static final Logger logger = LoggerFactory.getLogger(OlapContext.class);
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
-    public static final HashSet<String> UNSUPPORTED_FUNCTION_IN_LOOKUP = new HashSet<>(
+    public static final Set<String> UNSUPPORTED_FUNCTION_IN_LOOKUP = new HashSet<>(
             Collections.singleton(FunctionDesc.FUNC_INTERSECT_COUNT));
 
     private final int id;
@@ -450,8 +450,8 @@ public class OlapContext {
         joinsGraph.normalize();
     }
 
-    public NLookupCandidate.Type deduceLookupTableType() {
-        NLookupCandidate.Type type = NLookupCandidate.Type.NONE;
+    public NLookupCandidate.Policy deduceLookupTableType() {
+        NLookupCandidate.Policy policy = NLookupCandidate.Policy.NONE;
         boolean noUnsupportedAgg = getSQLDigest().getAggregations().stream()
                 .noneMatch(fun -> UNSUPPORTED_FUNCTION_IN_LOOKUP.contains(fun.getExpression()));
         boolean noCc = getSQLDigest().getAllColumns().stream().noneMatch(col -> col.getColumnDesc().isComputedColumn());
@@ -461,18 +461,22 @@ public class OlapContext {
             String factTable = getSQLDigest().getFactTable();
             NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(olapConfig, project);
             TableDesc tableDesc = tableMgr.getTableDesc(factTable);
-            if (tableDesc != null) {
-                if (olapConfig.isInternalTableEnabled() && tableDesc.getHasInternal()) {
-                    logger.info("Hit internal table {}", factTable);
-                    type = NLookupCandidate.Type.INTERNAL_TABLE;
-                } else if (!olapConfig.isInternalTableEnabled()
-                        && !StringUtils.isBlank(tableDesc.getLastSnapshotPath())) {
-                    logger.info("Hit the snapshot {}, the path is: {}", factTable, tableDesc.getLastSnapshotPath());
-                    type = NLookupCandidate.Type.SNAPSHOT;
-                }
+            if (tableDesc == null) {
+                return policy;
+            }
+            if (olapConfig.isInternalTableEnabled() && tableDesc.isHasInternal()) {
+                logger.info("Hit internal table {}", factTable);
+                policy = getSQLDigest().isDigestOfRawQuery()//
+                        ? NLookupCandidate.Policy.INTERNAL_TABLE
+                        : NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE;
+            } else if (!olapConfig.isInternalTableEnabled() && !StringUtils.isBlank(tableDesc.getLastSnapshotPath())) {
+                logger.info("Hit the snapshot {}, the path is: {}", factTable, tableDesc.getLastSnapshotPath());
+                policy = getSQLDigest().isDigestOfRawQuery() //
+                        ? NLookupCandidate.Policy.SNAPSHOT
+                        : NLookupCandidate.Policy.AGG_THEN_SNAPSHOT;
             }
         }
-        return type;
+        return policy;
     }
 
     public String incapableMsg() {

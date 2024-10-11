@@ -781,7 +781,7 @@ public class TableService extends BasicService {
 
     public void unloadTable(String project, String tableIdentity) {
         NTableMetadataManager tableMetadataManager = getManager(NTableMetadataManager.class, project);
-        if (tableMetadataManager.getTableDesc(tableIdentity).getHasInternal()) {
+        if (tableMetadataManager.getTableDesc(tableIdentity).isHasInternal()) {
             internalTableService.dropInternalTable(project, tableIdentity);
         }
         getManager(NTableMetadataManager.class, project).removeTableExt(tableIdentity);

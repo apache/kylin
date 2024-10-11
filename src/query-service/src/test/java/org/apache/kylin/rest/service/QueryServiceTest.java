@@ -490,7 +490,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "default");
         OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
         Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
-        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT", NLookupCandidate.Type.SNAPSHOT);
+        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT",
+                NLookupCandidate.Policy.SNAPSHOT);
         mockOlapCtx.getStorageContext().setDataSkipped(false);
         mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
         ContextUtil.registerContext(mockOlapCtx);
@@ -503,7 +504,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "default");
         OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
         Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
-        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT", NLookupCandidate.Type.INTERNAL_TABLE);
+        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT",
+                NLookupCandidate.Policy.INTERNAL_TABLE);
         mockOlapCtx.getStorageContext().setDataSkipped(false);
         mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
         ContextUtil.registerContext(mockOlapCtx);
@@ -655,10 +657,9 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
     private void mockQueryWithSqlMassage() throws Exception {
         Mockito.doAnswer(invocation -> {
-                    QueryContext.current().setQueryRealizations(ContextUtil.getNativeRealizations());
-                    return new QueryResult();
-                }).when(queryService.queryRoutingEngine)
-                .queryWithSqlMassage(Mockito.any());
+            QueryContext.current().setQueryRealizations(ContextUtil.getNativeRealizations());
+            return new QueryResult();
+        }).when(queryService.queryRoutingEngine).queryWithSqlMassage(Mockito.any());
     }
 
     private void mockOlapContextWithOneModelInfo(String modelId, String modelAlias, long layoutId) throws Exception {

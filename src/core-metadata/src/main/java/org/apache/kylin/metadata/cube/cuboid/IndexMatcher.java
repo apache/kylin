@@ -224,7 +224,7 @@ public abstract class IndexMatcher {
             NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(projectConfig, project);
             TableDesc tableDesc = tableMgr.getTableDesc(tableIdentity);
             boolean present = tableDesc != null
-                    && ((projectConfig.isInternalTableEnabled() && tableDesc.getHasInternal())
+                    && ((projectConfig.isInternalTableEnabled() && tableDesc.isHasInternal())
                             || !projectConfig.isInternalTableEnabled()
                                     && !StringUtils.isBlank(tableDesc.getLastSnapshotPath()));
             if (present) {

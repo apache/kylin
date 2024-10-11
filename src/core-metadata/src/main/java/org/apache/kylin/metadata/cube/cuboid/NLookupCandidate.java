@@ -19,9 +19,11 @@
 package org.apache.kylin.metadata.cube.cuboid;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealizationCandidate;
 
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Both Snapshot and InternalTable can be used as LookupCandidate.
@@ -30,11 +32,13 @@ import lombok.Getter;
 public class NLookupCandidate implements IRealizationCandidate {
 
     private final String table;
-    private final Type type;
+    private final Policy policy;
+    @Setter
+    private CapabilityResult capabilityResult;
 
-    public NLookupCandidate(String table, Type type) {
+    public NLookupCandidate(String table, Policy policy) {
         this.table = table;
-        this.type = type;
+        this.policy = policy;
     }
 
     @Override
@@ -42,15 +46,23 @@ public class NLookupCandidate implements IRealizationCandidate {
         return 0d;
     }
 
-    public enum Type {
+    public enum Policy {
         SNAPSHOT,
 
+        /** This policy prioritizes matching the aggregate index first;
+         * if that fails, it defaults to the snapshot. */
+        AGG_THEN_SNAPSHOT,
+
         INTERNAL_TABLE,
+
+        /** This policy prioritizes matching the aggregate index first;
+         * if that fails, it defaults to the internal table. */
+        AGG_THEN_INTERNAL_TABLE,
 
         NONE
     }
 
-    public static Type getType(KylinConfig config) {
-        return config.isInternalTableEnabled() ? Type.INTERNAL_TABLE : Type.SNAPSHOT;
+    public static Policy getDerivedPolicy(KylinConfig config) {
+        return config.isInternalTableEnabled() ? Policy.INTERNAL_TABLE : Policy.SNAPSHOT;
     }
 }

@@ -115,7 +115,7 @@ public class InternalTableService extends BasicService {
                 String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTableNotFound(), tableIdentity);
                 throw new KylinException(TABLE_NOT_EXIST, errorMsg);
             }
-            if (originTable.getHasInternal()) {
+            if (originTable.isHasInternal()) {
                 throw new KylinException(INTERNAL_TABLE_ERROR, "Table is already an internal table");
             }
             checkParameters(partitionCols, originTable, datePartitionFormat);

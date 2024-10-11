@@ -60,7 +60,7 @@ public class ContextReCutStrategy implements ICutContextStrategy {
                 : new ContextCutImpl(getReCutter().getCtxSeq());
         setReCutter(cutter);
         ContextUtil.listContextsHavingScan().stream()
-                .filter(context -> context.deduceLookupTableType() == NLookupCandidate.Type.NONE).forEach(context -> {
+                .filter(context -> context.deduceLookupTableType() == NLookupCandidate.Policy.NONE).forEach(context -> {
                     if (context.isHasSelected() && context.getRealization() == null
                             && (!context.isHasPreCalcJoin() || context.getBoundedModelAlias() != null)) {
                         throw e;

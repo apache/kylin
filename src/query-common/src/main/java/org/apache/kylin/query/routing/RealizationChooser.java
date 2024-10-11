@@ -193,14 +193,10 @@ public class RealizationChooser {
             return;
         }
 
-        NLookupCandidate.Type type = context.deduceLookupTableType();
-        if (type != NLookupCandidate.Type.NONE) {
-            NLookupCandidate lookupCandidate = new NLookupCandidate(context.getSQLDigest().getFactTable(), type);
-            CapabilityResult result = new CapabilityResult();
-            result.setCapable(true);
-            result.setCandidate(false, lookupCandidate);
-            result.setCost(lookupCandidate.getCost());
-            context.getStorageContext().setLookupCandidate(lookupCandidate);
+        NLookupCandidate.Policy policy = context.deduceLookupTableType();
+        if (policy != NLookupCandidate.Policy.NONE && policy != NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE
+                && policy != NLookupCandidate.Policy.AGG_THEN_SNAPSHOT) {
+            matchLookupCandidate(context, policy);
             return;
         }
 
@@ -208,7 +204,7 @@ public class RealizationChooser {
         String project = context.getOlapSchema().getProject();
         KylinConfig olapConfig = context.getOlapSchema().getConfig();
         Multimap<NDataModel, IRealization> modelMap = filterQualifiedModelMap(context);
-        checkNoRealizationFound(context, modelMap);
+        checkNoRealizationFound(context, modelMap, policy);
 
         // Step 2.1 try to exactly match model
         List<Candidate> candidates = trySelectCandidates(context, modelMap, false, false);
@@ -224,6 +220,9 @@ public class RealizationChooser {
         }
 
         if (candidates.isEmpty()) {
+            if (isLookupCandidateMatched(context, policy)) {
+                return;
+            }
             checkNoRealizationWithStreaming(context);
             RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
             throw new NoRealizationFoundException("No realization found for " + context.incapableMsg());
@@ -255,8 +254,30 @@ public class RealizationChooser {
         }
     }
 
-    private static void checkNoRealizationFound(OlapContext context, Multimap<NDataModel, IRealization> modelMap) {
-        if (!modelMap.isEmpty()) {
+    public static boolean isLookupCandidateMatched(OlapContext context, NLookupCandidate.Policy policy) {
+        if (policy == NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE) {
+            matchLookupCandidate(context, NLookupCandidate.Policy.INTERNAL_TABLE);
+            return true;
+        } else if (policy == NLookupCandidate.Policy.AGG_THEN_SNAPSHOT) {
+            matchLookupCandidate(context, NLookupCandidate.Policy.SNAPSHOT);
+            return true;
+        }
+        return false;
+    }
+
+    private static void matchLookupCandidate(OlapContext context, NLookupCandidate.Policy policy) {
+        NLookupCandidate lookupCandidate = new NLookupCandidate(context.getSQLDigest().getFactTable(), policy);
+        CapabilityResult result = new CapabilityResult();
+        result.setCapable(true);
+        result.setCandidate(false, lookupCandidate);
+        result.setCost(lookupCandidate.getCost());
+        lookupCandidate.setCapabilityResult(result);
+        context.getStorageContext().setLookupCandidate(lookupCandidate);
+    }
+
+    private static void checkNoRealizationFound(OlapContext context, Multimap<NDataModel, IRealization> modelMap,
+            NLookupCandidate.Policy policy) {
+        if (!modelMap.isEmpty() || isLookupCandidateMatched(context, policy)) {
             return;
         }
         checkNoRealizationWithStreaming(context);
