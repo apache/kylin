@@ -32,6 +32,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -123,6 +124,7 @@ public class NProjectManagerTest extends NLocalFileMetadataTestCase {
         }
     }
 
+    @Ignore("To avoid database table locks, the number of projects is no longer strictly limited.")
     @Test
     public void createProjectParallel() throws InterruptedException {
         KylinConfig conf = getTestConfig();

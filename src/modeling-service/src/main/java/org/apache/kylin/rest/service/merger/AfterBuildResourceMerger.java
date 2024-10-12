@@ -86,10 +86,10 @@ public class AfterBuildResourceMerger extends MetadataMerger {
             ResourceStore remoteStore) {
         val localDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
         val remoteDataflowManager = NDataflowManager.getInstance(remoteStore.getConfig(), getProject());
-        val remoteDataflow = remoteDataflowManager.getDataflow(dataflowId).copy();
+        val remoteDataflow = remoteDataflowManager.getDataflow(dataflowId);
 
         val dfUpdate = new NDataflowUpdate(dataflowId);
-        val theSeg = remoteDataflow.getSegment(segmentId);
+        val theSeg = remoteDataflow.getSegment(segmentId).copy();
         val toRemoveSegments = remoteDataflowManager.getToRemoveSegs(remoteDataflow, theSeg);
 
         if (theSeg.getModel().isMultiPartitionModel()) {
@@ -134,7 +134,7 @@ public class AfterBuildResourceMerger extends MetadataMerger {
         val localDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
         val dataflow = localDataflowManager.getDataflow(flowName);
         val remoteDataflowManager = NDataflowManager.getInstance(remoteStore.getConfig(), getProject());
-        val remoteDataflow = remoteDataflowManager.getDataflow(flowName).copy();
+        val remoteDataflow = remoteDataflowManager.getDataflow(flowName);
 
         val dfUpdate = new NDataflowUpdate(flowName);
         val addCuboids = Lists.<NDataLayout> newArrayList();
@@ -143,7 +143,7 @@ public class AfterBuildResourceMerger extends MetadataMerger {
         List<NDataSegment> segsToUpdate = Lists.newArrayList();
         for (String segId : segmentIds) {
             val localSeg = dataflow.getSegment(segId);
-            val remoteSeg = remoteDataflow.getSegment(segId);
+            val remoteSeg = remoteDataflow.getSegment(segId).copy();
             // ignore if local segment is not ready
             if (isUnavailableSegment(localSeg)) {
                 continue;
@@ -190,9 +190,9 @@ public class AfterBuildResourceMerger extends MetadataMerger {
             Set<Long> layoutIds, ResourceStore remoteStore, Set<Long> partitionIds) {
 
         val localDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
-        val localDataflow = localDataflowManager.getDataflow(flowName).copy();
+        val localDataflow = localDataflowManager.getDataflow(flowName);
         val remoteDataflowManager = NDataflowManager.getInstance(remoteStore.getConfig(), getProject());
-        val remoteDataflow = remoteDataflowManager.getDataflow(flowName).copy();
+        val remoteDataflow = remoteDataflowManager.getDataflow(flowName);
         val dataflow = localDataflowManager.getDataflow(flowName);
         val dfUpdate = new NDataflowUpdate(flowName);
         val upsertCuboids = Lists.<NDataLayout> newArrayList();
@@ -200,8 +200,8 @@ public class AfterBuildResourceMerger extends MetadataMerger {
         List<NDataSegment> segsToUpdate = Lists.newArrayList();
 
         for (String segId : segmentIds) {
-            val localSeg = localDataflow.getSegment(segId);
-            val remoteSeg = remoteDataflow.getSegment(segId);
+            val localSeg = localDataflow.getSegment(segId).copy();
+            val remoteSeg = remoteDataflow.getSegment(segId).copy();
             // ignore if local segment is not ready
             if (isUnavailableSegment(localSeg)) {
                 continue;

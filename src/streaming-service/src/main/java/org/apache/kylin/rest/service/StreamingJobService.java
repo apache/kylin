@@ -247,8 +247,7 @@ public class StreamingJobService extends BasicService {
             NDataflowManager dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             val df = dfMgr.getDataflow(modelId);
             if (df != null) {
-                NDataflow copy = df.copy();
-                val seg = copy.getSegment(segId);
+                val seg = df.getSegment(segId).copy();
                 if (!defaultSourceCount.equals(sourceCount)) {
                     seg.setSourceCount(sourceCount);
                 }

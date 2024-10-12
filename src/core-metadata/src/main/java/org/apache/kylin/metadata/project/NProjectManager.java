@@ -104,7 +104,6 @@ public class NProjectManager {
 
         ProjectInstance currentProject = getProject(projectName);
         if (currentProject == null) {
-            lockProjectTable();
             //circuit breaker
             NCircuitBreaker.verifyProjectCreation(listAllProjects().size());
 
@@ -232,10 +231,6 @@ public class NProjectManager {
             }
         });
         crud.delete(project);
-    }
-
-    private void lockProjectTable() {
-        getStore().batchLock(MetadataType.PROJECT, new RawResourceFilter());
     }
 
     public interface NProjectUpdater {

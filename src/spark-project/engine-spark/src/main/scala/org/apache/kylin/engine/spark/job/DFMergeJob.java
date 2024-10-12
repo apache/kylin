@@ -124,8 +124,7 @@ public class DFMergeJob extends SparkApplication {
         infos.clearMergingSegments();
         infos.recordMergingSegments(mergingSegments);
 
-        NDataflow flowCopy = dataflow.copy();
-        NDataSegment segCopy = flowCopy.getSegment(segmentId);
+        NDataSegment segCopy = dataflow.getSegment(segmentId).copy();
 
         mergeColumnSizeForNewSegment(segCopy, mergingSegments);
         NDataflowUpdate update = new NDataflowUpdate(dataflowId);
@@ -317,8 +316,7 @@ public class DFMergeJob extends SparkApplication {
         logger.info("Persist merged flat tables to path {} with schema [{}], " + "new segment id: {}, dataFlowId: {}",
                 newPath, names, segmentId, dataFlowId);
 
-        NDataflow dfCopied = dataFlow.copy();
-        NDataSegment segmentCopied = dfCopied.getSegment(segmentId);
+        NDataSegment segmentCopied = dataFlow.getSegment(segmentId).copy();
         segmentCopied.setFlatTableReady(true);
 
         NDataflowUpdate update = new NDataflowUpdate(dataFlowId);

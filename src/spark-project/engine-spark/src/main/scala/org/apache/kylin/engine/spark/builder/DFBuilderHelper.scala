@@ -99,9 +99,8 @@ object DFBuilderHelper extends Logging {
     // this config is initialized at SparkApplication in which the HDFSMetaStore has been specified
     val config = KylinConfig.getInstanceFromEnv
 
-    // copy the latest df & seg
-    val dfCopy = NDataflowManager.getInstance(config, project).getDataflow(dfId).copy()
-    val segCopy = dfCopy.getSegment(segId)
+    // copy the latest seg
+    val segCopy = NDataflowManager.getInstance(config, project).getDataflow(dfId).getSegment(segId).copy()
     val dfUpdate = new NDataflowUpdate(dfId)
     checkpointOps(segCopy)
     dfUpdate.setToUpdateSegs(segCopy)

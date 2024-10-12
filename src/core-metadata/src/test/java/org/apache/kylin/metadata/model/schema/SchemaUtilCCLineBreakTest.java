@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +41,7 @@ public class SchemaUtilCCLineBreakTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         this.createTestMetadata("src/test/resources/ut_meta/schema_utils/original_project_cc_linebreak");
+        ComputedColumnUtil.setEXTRACTOR((model, config, cc) -> cc);
     }
 
     @After

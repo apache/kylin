@@ -33,15 +33,22 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @MetadataInfo
 public class QueryUtilTest {
+
+    @BeforeAll
+    public static void setUpForClass() {
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
+    }
 
     @Test
     void testMaxResultRowsEnabled() {

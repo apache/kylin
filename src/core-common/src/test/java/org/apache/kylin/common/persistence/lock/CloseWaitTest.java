@@ -66,7 +66,7 @@ class CloseWaitTest {
             server.setHandler(new TransactionHandler());
             server.start();
             InMemResourceStore inMemResourceStore = (InMemResourceStore) ResourceStore.getKylinMetaStore(config);
-            store = new TransparentResourceStore(inMemResourceStore.getMetadataStore(), config);
+            store = new TransparentResourceStore(inMemResourceStore, config);
             TransactionDeadLockHandler.getInstance().start();
         }
     }

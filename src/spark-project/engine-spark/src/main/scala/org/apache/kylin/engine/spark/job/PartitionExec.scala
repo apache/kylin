@@ -99,15 +99,15 @@ private[job] trait PartitionExec {
       override def process(): Int = {
         // Merge into the newest data segment.
         val manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, project)
-        val copiedDataflow = manager.getDataflow(dataflowId).copy()
-        val copiedSegment = copiedDataflow.getSegment(segmentId)
+        val df = manager.getDataflow(dataflowId)
+        val copiedSegment = df.getSegment(segmentId).copy()
 
         val dataLayouts = results.asScala.groupBy(_.layoutId).values.map { grouped =>
           val head = grouped.head
           val layoutId = head.layoutId
           val existedLayout = copiedSegment.getLayout(layoutId)
           val dataLayout = if (Objects.isNull(existedLayout)) {
-            NDataLayout.newDataLayout(copiedDataflow, segmentId, layoutId)
+            NDataLayout.newDataLayout(df, segmentId, layoutId)
           } else {
             existedLayout
           }

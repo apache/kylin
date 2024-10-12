@@ -89,7 +89,6 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.HybridRealization;
@@ -132,8 +131,10 @@ public class RealizationChooser {
         List<Future<?>> futureList = Lists.newArrayList();
         try {
             CountDownLatch latch = new CountDownLatch(contexts.size());
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
             for (OlapContext ctx : contexts) {
-                TtlRunnable r = Objects.requireNonNull(TtlRunnable.get(() -> selectCandidate0(project, latch, ctx)));
+                TtlRunnable r = Objects
+                        .requireNonNull(TtlRunnable.get(() -> selectCandidate0(project, latch, ctx, config)));
                 Future<?> future = selectCandidateService.submit(r);
                 futureList.add(future);
             }
@@ -161,8 +162,8 @@ public class RealizationChooser {
         }
     }
 
-    private static void selectCandidate0(String project, CountDownLatch latch, OlapContext ctx) {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+    private static void selectCandidate0(String project, CountDownLatch latch, OlapContext ctx,
+            KylinConfig kylinConfig) {
         String queryId = QueryContext.current().getQueryId();
         try (KylinConfig.SetAndUnsetThreadLocalConfig ignored0 = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
                 SetThreadName ignored1 = new SetThreadName(Thread.currentThread().getName() + " QueryId %s", queryId);
@@ -172,14 +173,12 @@ public class RealizationChooser {
             NDataModelManager.getInstance(kylinConfig, project);
             NDataflowManager.getInstance(kylinConfig, project);
             NIndexPlanManager.getInstance(kylinConfig, project);
-            NProjectLoader.updateCache(project);
 
             // select candidate for OlapContext
             attemptSelectCandidate(ctx);
         } catch (KylinTimeoutException e) {
             logger.error("realization chooser thread task interrupted due to query [{}] timeout", queryId);
         } finally {
-            NProjectLoader.removeCache();
             latch.countDown();
         }
     }
@@ -639,9 +638,11 @@ public class RealizationChooser {
         }
 
         // Remove models without ready segments
-        List<Map.Entry<NDataModel, IRealization>> noReadySegEntries = multimap.entries().stream()
-                .filter(entry -> !hasReadySegments(entry.getKey())).collect(Collectors.toList());
-        multimap.entries().removeAll(noReadySegEntries);
+        if (!QueryContext.current().isForModeling()) {
+            List<Map.Entry<NDataModel, IRealization>> noReadySegEntries = multimap.entries().stream()
+                    .filter(entry -> !hasReadySegments(entry.getKey())).collect(Collectors.toList());
+            multimap.entries().removeAll(noReadySegEntries);
+        }
 
         // Filter models in modelPriority comments
         String[] modelPriorities = QueryContext.current().getModelPriorities();

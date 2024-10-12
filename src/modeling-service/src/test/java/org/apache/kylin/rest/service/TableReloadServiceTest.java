@@ -306,7 +306,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
                 }
             });
             val df = dfManager.updateDataflow(MODEL_ID, copyForWrite -> {
-                copyForWrite.setSegments(new Segments<>());
+                copyForWrite.setSegmentUuids(new Segments<>());
             });
             dfManager.fillDfManually(df, Lists.newArrayList(SegmentRange.TimePartitionedSegmentRange.createInfinite()));
             val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);

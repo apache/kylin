@@ -100,7 +100,7 @@ public class RefreshJobUtil extends ExecutableUtil {
     @Override
     public void computePartitions(JobParam jobParam) {
         NDataflowManager dfm = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject());
-        val df = dfm.getDataflow(jobParam.getModel()).copy();
+        val df = dfm.getDataflow(jobParam.getModel());
         val segment = df.getSegment(jobParam.getSegment());
         if (JobTypeEnum.INDEX_REFRESH == jobParam.getJobTypeEnum()) {
             jobParam.setTargetPartitions(segment.getMultiPartitions().stream().map(SegmentPartition::getPartitionId)

@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.QueryRoutingEngine;
@@ -214,7 +214,7 @@ public class QueryGroupingSetsTest extends SemiAutoTestBase {
 
         QueryExec queryExec = new QueryExec(project, KylinConfig.getInstanceFromEnv());
         RelNode root = queryExec.parseAndOptimize(sql);
-        QueryContextCutter.selectRealization(project, root, BackdoorToggles.isModelingSql());
+        QueryContextCutter.selectRealization(project, root, QueryContext.current().isForModeling());
 
         List<OlapProjectRel> projectRels = findProjectNodes(root);
         for (OlapProjectRel projectNode : projectRels) {
@@ -234,7 +234,7 @@ public class QueryGroupingSetsTest extends SemiAutoTestBase {
 
         QueryExec queryExec = new QueryExec(project, KylinConfig.getInstanceFromEnv());
         RelNode root = queryExec.parseAndOptimize(sql);
-        QueryContextCutter.selectRealization(project, root, BackdoorToggles.isModelingSql());
+        QueryContextCutter.selectRealization(project, root, QueryContext.current().isForModeling());
 
         List<OlapProjectRel> projectRels = findProjectNodes(root);
         String digest = projectRels.get(0).getDigest();

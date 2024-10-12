@@ -100,9 +100,9 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
 
         df = df.copy();
         Assert.assertFalse(df.isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().getSegDetails().isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().getLayout(1).isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().getSegDetails().isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().getLayout(1).isCachedAndShared());
     }
 
     @Test
@@ -229,7 +229,7 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(2, df.getSegments().size());
 
         mgr.updateDataflow(df.getId(), copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
 
         for (NDataSegment segment : segsSet) {

@@ -26,6 +26,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.job.exception.JobSubmissionException;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.Segments;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -38,11 +39,13 @@ public class JobInfoResponseWithFailure extends JobInfoResponse {
     List<FailedSegmentJobWithReason> failedSegments = new LinkedList<>();
 
     public void addFailedSeg(NDataflow dataflow, JobSubmissionException jobSubmissionException) {
+        Segments<NDataSegment> segments = dataflow.getSegments();
         for (Map.Entry<String, KylinException> entry : jobSubmissionException.getSegmentFailInfos().entrySet()) {
             String segId = entry.getKey();
             KylinException kylinException = entry.getValue();
 
-            FailedSegmentJobWithReason failedSeg = new FailedSegmentJobWithReason(dataflow, dataflow.getSegment(segId));
+            FailedSegmentJobWithReason failedSeg = new FailedSegmentJobWithReason(dataflow, segments,
+                    dataflow.getSegment(segId));
             String code = getErrorCode(kylinException);
             Error errorInfo = new Error(code, kylinException.getMessage());
             failedSeg.setError(errorInfo);
@@ -64,8 +67,8 @@ public class JobInfoResponseWithFailure extends JobInfoResponse {
     @Data
     public static class FailedSegmentJobWithReason extends NDataSegmentResponse {
 
-        public FailedSegmentJobWithReason(NDataflow dataflow, NDataSegment segment) {
-            super(dataflow, segment);
+        public FailedSegmentJobWithReason(NDataflow dataflow, Segments<NDataSegment> segments, NDataSegment segment) {
+            super(dataflow, segments, segment);
         }
 
         @JsonProperty("error")

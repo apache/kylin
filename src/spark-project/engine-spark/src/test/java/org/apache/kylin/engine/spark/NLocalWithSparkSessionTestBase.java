@@ -36,8 +36,10 @@ import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -124,6 +126,7 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
             return null;
         }).config(sparkConf).getOrCreate();
         SparderEnv.setSparkSession(ss);
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     static void cleanupAnyExistingSession() {

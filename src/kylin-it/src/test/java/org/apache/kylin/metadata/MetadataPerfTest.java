@@ -397,7 +397,7 @@ public class MetadataPerfTest extends NLocalFileMetadataTestCase {
             seg.setStatus(SegmentStatusEnum.READY);
             segments.add(seg);
         }
-        df.setSegments(segments);
+        df.setSegmentUuids(segments);
         JsonUtil.writeValueIndent(new FileOutputStream(dfFile), df);
 
         val detailJobMap = Maps.<String, String> newHashMap();

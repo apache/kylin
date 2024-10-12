@@ -84,6 +84,9 @@ public class ComputedColumnDesc extends RootPersistentEntity implements Serializ
     @JsonProperty
     @EqualsAndHashCode.Exclude
     private String comment;
+    @JsonProperty
+    @EqualsAndHashCode.Exclude
+    private String expressionMD5; // the md5 of subJoinGraph & ccRexStr
 
     public void init(NDataModel model, String rootFactTableName) {
         Map<String, TableRef> aliasMap = model.getAliasMap();

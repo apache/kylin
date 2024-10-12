@@ -76,7 +76,6 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         NDataflow df = new NDataflow();
         df.config = (KylinConfigExt) plan.getConfig();
         df.setUuid(plan.getUuid());
-        df.setSegments(new Segments<>());
         df.setStatus(realizationStatusEnum);
 
         return df;
@@ -122,20 +121,12 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     @JsonProperty("segment_uuids")
     private List<String> segmentUuids = new ArrayList<>();
 
-    private Segments<NDataSegment> segments = new Segments<>();
-
     // ================================================================
 
     public void initAfterReload(KylinConfigExt config, String project) {
         long start = System.currentTimeMillis();
         this.project = project;
         this.config = config;
-        NDataSegmentManager manager = config.getManager(project, NDataSegmentManager.class);
-        this.segments = new Segments<>(segmentUuids.stream()
-                .map(uuid -> manager.getWithoutInitDataflow(uuid)
-                        .orElseThrow(() -> new IllegalStateException("Cannot get segment for uuid: " + uuid)))
-                .collect(Collectors.toList()));
-        this.segments.forEach(segment -> segment.setDataflow(this));
         this.setDependencies(calcDependencies());
         long time = System.currentTimeMillis() - start;
         if (time > EXPENSIVE_DATAFLOW_INITIALIZATION) {
@@ -150,7 +141,6 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
         List<RootPersistentEntity> dependencies = Lists.newArrayList(indexPlan != null ? indexPlan
                 : new MissingRootPersistentEntity(MetadataType.mergeKeyWithType(getId(), MetadataType.INDEX_PLAN)));
-        dependencies.addAll(this.segments);
         return dependencies;
     }
 
@@ -172,12 +162,23 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         return MetadataType.DATAFLOW;
     }
 
+    private NDataSegmentManager getSegmentManager() {
+        return NDataSegmentManager.getInstance(config, getProject());
+    }
+
+    public Segments<NDataSegment> getSegments() {
+        if (segmentUuids.isEmpty()) {
+            return new Segments<>();
+        }
+        return getSegmentManager().getSegmentsUnderDataflow(this);
+    }
+
     public Set<String> collectPrecalculationResource() {
         Set<String> r = new LinkedHashSet<>();
 
         // dataflow & segments
         r.add(this.getResourcePath());
-        for (NDataSegment seg : segments) {
+        for (NDataSegment seg : getSegments()) {
             r.add(seg.getResourcePath());
             r.add(seg.getSegDetails().getResourcePath());
         }
@@ -319,12 +320,12 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     @Override
     public long getDateRangeStart() {
-        return segments.getTSStart();
+        return getSegments().getTSStart();
     }
 
     @Override
     public long getDateRangeEnd() {
-        return segments.getTSEnd();
+        return getSegments().getTSEnd();
     }
 
     public NDataSegment getSegment(String segId) {
@@ -339,18 +340,12 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         return null;
     }
 
-    public List<NDataSegment> getSegments(Set<String> segIds) {
-        List<NDataSegment> segs = Lists.newArrayList();
-        for (NDataSegment seg : segments) {
-            if (segIds.contains(seg.getId())) {
-                segs.add(seg);
-            }
-        }
-        return segs;
+    public Segments<NDataSegment> getSegments(Set<String> segIds) {
+        return getSegmentManager().getSegments(this, segIds);
     }
 
     public NDataSegment getSegmentByName(String segName) {
-        for (NDataSegment seg : segments) {
+        for (NDataSegment seg : getSegments()) {
             if (seg.getName().equals(segName))
                 return seg;
         }
@@ -358,7 +353,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     public Segments<NDataSegment> getMergingSegments(NDataSegment mergedSegment) {
-        return segments.getMergingSegments(mergedSegment);
+        return getSegments().getMergingSegments(mergedSegment);
     }
 
     public Segments<NDataSegment> getQueryableSegments() {
@@ -366,15 +361,15 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     public Segments<NDataSegment> getSegments(SegmentStatusEnum... statusLst) {
-        return segments.getSegments(statusLst);
+        return getSegments().getSegments(statusLst);
     }
 
     public Segments<NDataSegment> getFlatSegments() {
-        return segments.getFlatSegments();
+        return getSegments().getFlatSegments();
     }
 
     public Segments<NDataSegment> calculateToBeSegments(NDataSegment newSegment) {
-        return segments.calculateToBeSegments(newSegment);
+        return getSegments().calculateToBeSegments(newSegment);
     }
 
     public NDataSegment getFirstSegment() {
@@ -423,7 +418,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     public Segments<NDataSegment> getSegmentsByRange(SegmentRange range) {
-        return segments.getSegmentsByRange(range);
+        return getSegments().getSegmentsByRange(range);
     }
 
     public List<NDataSegment> getQueryableSegmentsByRange(SegmentRange range) {
@@ -466,17 +461,12 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         this.status = status;
     }
 
-    public Segments<NDataSegment> getSegments() {
-        return isCachedAndShared() ? new Segments(segments) : segments;
-    }
-
-    public void setSegments(Segments<NDataSegment> segments) {
+    public void setSegmentUuids(Segments<NDataSegment> segments) {
         checkIsNotCachedAndShared();
 
         Collections.sort(segments);
         segments.validate();
 
-        this.segments = segments;
         this.segmentUuids = segments.stream().map(RootPersistentEntity::getUuid).collect(Collectors.toList());
         // need to offline model to avoid answering query
         if (segments.isEmpty() && RealizationStatusEnum.ONLINE == this.getStatus()) {
@@ -526,7 +516,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
             return null;
         } else {
             val retentionRange = segmentConfig.getRetentionRange();
-            return segments.getSegmentsToRemoveByRetention(retentionRange.getRetentionRangeType(),
+            return getSegments().getSegmentsToRemoveByRetention(retentionRange.getRetentionRangeType(),
                     retentionRange.getRetentionRangeNumber());
         }
     }

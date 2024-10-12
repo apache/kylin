@@ -219,11 +219,10 @@ public class SegmentBuildJob extends SegmentJob {
         UnitOfWork.doInTransactionWithRetry(() -> {
             NDataflowManager dataflowManager = NDataflowManager.getInstance(config, project);
             NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
-            NDataflow newDF = dataflow.copy();
             val update = new NDataflowUpdate(dataflow.getUuid());
             List<NDataSegment> nDataSegments = Lists.newArrayList();
             for (Map.Entry<String, Object> entry : segmentSourceSize.entrySet()) {
-                NDataSegment segment = newDF.getSegment(entry.getKey());
+                NDataSegment segment = dataflow.getSegment(entry.getKey()).copy();
                 segment.setSourceBytesSize((Long) entry.getValue());
                 nDataSegments.add(segment);
             }

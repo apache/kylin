@@ -415,7 +415,7 @@ public class TableService extends BasicService {
         for (String tableName : tables) {
             TableNameResponse tableNameResponse = new TableNameResponse();
             tableNameResponse.setTableName(tableName);
-            String tableNameWithDB = String.format(Locale.ROOT, "%s.%s", database, tableName);
+            String tableNameWithDB = database + "." + tableName;
             checkTableExistOrLoad(tableNameResponse, tableManager.getTableDesc(tableNameWithDB));
             tableNameResponses.add(tableNameResponse);
         }
@@ -579,7 +579,7 @@ public class TableService extends BasicService {
 
     @VisibleForTesting
     TableDesc getAuthorizedTableDesc(String project, boolean isAclGreen, TableDesc originTable, List<AclTCR> aclTCRS) {
-        if (isAclGreen || aclEvaluate.hasProjectAdminPermission(project)) {
+        if (isAclGreen) {
             return originTable;
         }
         return getManager(AclTCRManager.class, project).getAuthorizedTableDesc(originTable, aclTCRS);
@@ -1108,12 +1108,12 @@ public class TableService extends BasicService {
             String roleArn = targetExtDesc.getDataSourceProps().get(TableExtDesc.S3_ROLE_PROPERTY_KEY);
             String endpoint = targetExtDesc.getDataSourceProps().get(TableExtDesc.S3_ENDPOINT_KEY);
             if (null != tableExtDesc) {
-                tableExtDesc.addDataSourceProp(TableExtDesc.S3_ROLE_PROPERTY_KEY, roleArn);
-                tableExtDesc.addDataSourceProp(TableExtDesc.S3_ENDPOINT_KEY, endpoint);
-                TableExtDesc copyExt = tableManager.copyForWrite(tableExtDesc);
-                tableManager.saveTableExt(copyExt);
+                tableManager.updateTableExt(tableIdentity, copyForWrite -> {
+                    copyForWrite.addDataSourceProp(TableExtDesc.S3_ROLE_PROPERTY_KEY, roleArn);
+                    copyForWrite.addDataSourceProp(TableExtDesc.S3_ENDPOINT_KEY, endpoint);
+                });
                 // refresh spark session and broadcast
-                addAndBroadcastSparkSession(copyExt.getRoleCredentialInfo());
+                addAndBroadcastSparkSession(targetExtDesc.getRoleCredentialInfo());
             }
             return jobs;
         }
@@ -1298,7 +1298,7 @@ public class TableService extends BasicService {
 
         TableDesc loadDesc = context.getTableDesc();
         if (keepTomb) {
-            val copy = tableManager.copyForWrite(originTable);
+            val copy = tableManager.copy(originTable);
             val originColMap = Stream.of(copy.getColumns())
                     .collect(Collectors.toMap(ColumnDesc::getName, Function.identity()));
             val newColMap = Stream.of(context.getTableDesc().getColumns())
@@ -1747,7 +1747,7 @@ public class TableService extends BasicService {
             if (StringUtils.isEmpty(table)
                     || tableName.toUpperCase(Locale.ROOT).contains(table.toUpperCase(Locale.ROOT))) {
                 TableNameResponse response = new TableNameResponse();
-                String tableNameWithDB = String.format(Locale.ROOT, "%s.%s", database, tableName);
+                String tableNameWithDB = database + "." + tableName;
                 checkTableExistOrLoad(response, tableManager.getTableDesc(tableNameWithDB));
                 response.setTableName(tableName);
                 responses.add(response);

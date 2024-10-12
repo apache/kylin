@@ -39,7 +39,6 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
@@ -99,8 +98,8 @@ public class StreamingDFBuildJob extends DFBuildJob {
         if (config.isUTEnv()) {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 NDataflowManager dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-                NDataflow newDF = dfMgr.getDataflow(buildJobEntry.dataflowId()).copy();
-                NDataSegment segUpdate = newDF.getSegment(buildJobEntry.batchSegment().getId());
+                NDataSegment segUpdate = dfMgr.getDataflow(buildJobEntry.dataflowId())
+                        .getSegment(buildJobEntry.batchSegment().getId()).copy();
                 segUpdate.setStatus(SegmentStatusEnum.READY);
                 segUpdate.setSourceCount(buildJobEntry.flatTableCount());
                 val dfUpdate = new NDataflowUpdate(buildJobEntry.dataflowId());

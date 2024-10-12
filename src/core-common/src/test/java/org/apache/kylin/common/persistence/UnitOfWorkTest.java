@@ -250,12 +250,14 @@ class UnitOfWorkTest {
         AtomicBoolean stop = new AtomicBoolean();
         Thread writeLockHelder = new Thread(() -> {
             UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT)
-                    .readonly(false).maxRetry(1).processor(() -> {
+                    .maxRetry(1).processor(() -> {
                         val resourceStoreInTransaction = ResourceStore
                                 .getKylinMetaStore(KylinConfig.getInstanceFromEnv());
                         System.out.println("Write thread start to lock");
-                        MemoryLockUtils.lockAndRecord("PROJECT/res1");
-                        resourceStoreInTransaction.checkAndPutResource("PROJECT/res1",
+                        String resPath = "PROJECT/res1";
+                        UnitOfWork.get().getCopyForWriteItems().add(resPath);
+                        resourceStoreInTransaction.getResource(resPath, true);
+                        resourceStoreInTransaction.checkAndPutResource(resPath,
                                 ByteSource.wrap("{}".getBytes(Charset.defaultCharset())), -1L);
                         synchronized (condition) {
                             condition.notify();
@@ -296,10 +298,10 @@ class UnitOfWorkTest {
         }).start();
         long start = System.currentTimeMillis();
         UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT) //
-                .readonly(true).maxRetry(1).processor(() -> {
+                .maxRetry(1).processor(() -> {
                     System.out.println("Read thread start to lock.");
                     RawResource raw = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv())
-                            .getResource("PROJECT/res1");
+                            .getResource("PROJECT/res1", true);
                     System.out.println("Read thread lock succeed.");
                     long cost = System.currentTimeMillis() - start;
                     System.out.println("Read thread cost " + cost + "ms, mvcc:" + (raw == null ? -2 : raw.getMvcc()));

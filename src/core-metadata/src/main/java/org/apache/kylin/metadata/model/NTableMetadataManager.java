@@ -305,6 +305,8 @@ public class NTableMetadataManager {
             copyForWrite.setSampleRows(other.getSampleRows());
             copyForWrite.setTotalRows(other.getTotalRows());
             copyForWrite.setJodID(other.getJodID());
+            copyForWrite.setExcluded(other.isExcluded());
+            copyForWrite.setExcludedColumns(other.getExcludedColumns());
             if (other.getOriginalSize() != -1) {
                 copyForWrite.setOriginalSize(other.getOriginalSize());
             }

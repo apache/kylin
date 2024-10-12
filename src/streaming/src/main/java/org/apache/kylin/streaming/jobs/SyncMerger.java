@@ -66,8 +66,8 @@ public class SyncMerger {
                 EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                     NDataflowManager dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
                             mergeJobEntry.project());
-                    NDataflow copy = dfMgr.getDataflow(mergeJobEntry.dataflowId()).copy();
-                    val seg = copy.getSegment(mergeJobEntry.afterMergeSegment().getId());
+                    NDataflow df = dfMgr.getDataflow(mergeJobEntry.dataflowId());
+                    val seg = df.getSegment(mergeJobEntry.afterMergeSegment().getId()).copy();
                     seg.setStatus(SegmentStatusEnum.READY);
                     seg.setSourceCount(mergeJobEntry.afterMergeSegmentSourceCount());
                     val dfUpdate = new NDataflowUpdate(mergeJobEntry.dataflowId());

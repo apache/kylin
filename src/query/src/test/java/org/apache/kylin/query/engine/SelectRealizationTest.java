@@ -33,7 +33,7 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexExecutorImpl;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
@@ -82,7 +82,7 @@ class SelectRealizationTest {
                         + "FROM \"SSB\".\"LINEORDER\" \"LINEORDER\"\n" + "GROUP BY 1.1000000000000001 ) \"t0\"\n"
                         + "ON LINEORDER.LO_ORDERDATE = t0.X_measure__0\n" + "GROUP BY 1.1000000000000001");
         RelNode node = queryOptimizer.optimize(relRoot).rel;
-        val olapContexts = QueryContextCutter.selectRealization(prj, node, BackdoorToggles.isModelingSql());
+        val olapContexts = QueryContextCutter.selectRealization(prj, node, QueryContext.current().isForModeling());
         Assertions.assertNotNull(olapContexts);
         Assertions.assertFalse(olapContexts.isEmpty());
     }

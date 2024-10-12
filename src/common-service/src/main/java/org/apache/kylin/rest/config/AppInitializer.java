@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HostInfoFetcher;
 import org.apache.kylin.engine.spark.filter.QueryFiltersCollector;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -152,6 +153,7 @@ public class AppInitializer {
             }
 
             SparkJobFactoryUtils.initJobFactory();
+            ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
             TransactionDeadLockHandler.getInstance().start();
         } else {
             val auditLogStore = new JdbcAuditLogStore(kylinConfig);

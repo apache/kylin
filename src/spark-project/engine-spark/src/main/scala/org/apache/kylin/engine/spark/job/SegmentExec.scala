@@ -265,13 +265,13 @@ trait SegmentExec extends Logging {
 
         // Merge into the newest data segment.
         val manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, project)
-        val copiedDataflow = manager.getDataflow(dataflowId).copy()
+        val df = manager.getDataflow(dataflowId)
 
         val dataLayouts = results.asScala.map { lr =>
           val layoutId = lr.layoutId
           val taskStats = lr.stats
           val sourceStats = lr.sourceStats
-          val dataLayout = NDataLayout.newDataLayout(copiedDataflow, segmentId, layoutId)
+          val dataLayout = NDataLayout.newDataLayout(df, segmentId, layoutId)
           // Job id should be set.
           dataLayout.setBuildJobId(jobId)
           if (taskStats.numRows == -1) {

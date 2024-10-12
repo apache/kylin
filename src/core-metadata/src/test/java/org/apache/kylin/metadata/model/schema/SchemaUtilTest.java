@@ -46,6 +46,7 @@ import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.model.ModelJoinRelationTypeEnum;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,6 +64,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         this.createTestMetadata("src/test/resources/ut_meta/schema_utils/original_project");
+        ComputedColumnUtil.setEXTRACTOR((model, config, cc) -> cc);
     }
 
     @After

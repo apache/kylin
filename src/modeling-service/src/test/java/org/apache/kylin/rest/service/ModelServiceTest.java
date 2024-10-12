@@ -684,7 +684,7 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(SegmentStatusEnumToDisplay.LOADING, segments.get(0).getStatusToDisplay());
 
         // refreshing
-        val segment2 = dataflowManager.getDataflow(dataflowId).copy().getSegments().get(1);
+        val segment2 = dataflowManager.getDataflow(dataflowId).copy().getSegments().get(1).copy();
         segment2.getMultiPartitions().get(0).setStatus(PartitionStatusEnum.REFRESH);
         val dfUpdate = new NDataflowUpdate(dataflowId);
         dfUpdate.setToUpdateSegs(segment2);
@@ -740,7 +740,7 @@ public class ModelServiceTest extends SourceTestCase {
         val dataflowManager = NDataflowManager.getInstance(getTestConfig(), project);
         dataflowManager.appendPartitions(dataflowId, segment1Id, Lists.<String[]> newArrayList(new String[] { "4" }));
         // make the first partition in segment2 to refresh status
-        val segment2 = dataflowManager.getDataflow(dataflowId).copy().getSegment(segment2Id);
+        val segment2 = dataflowManager.getDataflow(dataflowId).copy().getSegment(segment2Id).copy();
         segment2.getMultiPartitions().get(0).setStatus(PartitionStatusEnum.REFRESH);
         val dfUpdate = new NDataflowUpdate(dataflowId);
         dfUpdate.setToUpdateSegs(segment2);
@@ -1772,9 +1772,8 @@ public class ModelServiceTest extends SourceTestCase {
         deserialized
                 .setComputedColumnDescs(ComputedColumnUtil.deepCopy(dataModelDescs.get(0).getComputedColumnDescs()));
 
-        Field field = ComputedColumnDesc.class.getDeclaredField("expression");
-        Unsafe.changeAccessibleObject(field, true);
-        field.set(deserialized.getComputedColumnDescs().get(0), "1+1");
+        deserialized.getComputedColumnDescs().get(0).setExpression("1+1");
+        deserialized.getComputedColumnDescs().get(0).setInnerExpression("1+1");
 
         expectedEx.expect(new BaseMatcher() {
             @Override

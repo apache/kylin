@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -53,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NProjectLoader {
 
-    private static final ThreadLocal<ProjectBundle> cache = new ThreadLocal<>();
+    private static final TransmittableThreadLocal<ProjectBundle> cache = new TransmittableThreadLocal<>();
 
     public static void updateCache(@Nullable String project) {
         if (StringUtils.isNotEmpty(project) && !project.startsWith("_")) {

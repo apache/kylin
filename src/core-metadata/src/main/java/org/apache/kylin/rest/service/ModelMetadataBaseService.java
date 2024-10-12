@@ -107,9 +107,9 @@ public class ModelMetadataBaseService {
             if (null != dataFlowUpdateRequest.getResetToReadyPartitions()) {
                 Set<String> segments = dataFlowUpdateRequest.getToRemoveSegmentPartitions().getFirst();
                 Set<Long> partitions = dataFlowUpdateRequest.getToRemoveSegmentPartitions().getSecond();
-                NDataflow df = dfManager.getDataflow(update.getDataflowId()).copy();
+                NDataflow df = dfManager.getDataflow(update.getDataflowId());
                 for (String id : segments) {
-                    NDataSegment segment = df.getSegment(id);
+                    NDataSegment segment = df.getSegment(id).copy();
                     segment.getMultiPartitions().forEach(partition -> {
                         if (partitions.contains(partition.getPartitionId())
                                 && PartitionStatusEnum.REFRESH == partition.getStatus()) {

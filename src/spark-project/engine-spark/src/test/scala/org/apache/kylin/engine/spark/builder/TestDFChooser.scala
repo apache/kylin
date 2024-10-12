@@ -58,7 +58,8 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
     val df: NDataflow = dsMgr.getDataflow(CUBE_ID1)
     var indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     val dfCopy = df.copy()
-    checkFlatTableEncoding(dfCopy.getUuid, dfCopy.getLastSegment, 0)
+    val lastSegmentCopy = dfCopy.getLastSegment.copy()
+    checkFlatTableEncoding(dfCopy.getUuid, lastSegmentCopy, 0)
 
     var modelMgr: NDataModelManager = NDataModelManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     var model: NDataModel = modelMgr.getDataModelDesc(MODEL_ID)
@@ -87,7 +88,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
       }
     })
 
-    checkFlatTableEncoding(dfCopy.getUuid, dfCopy.getLastSegment, 1)
+    checkFlatTableEncoding(dfCopy.getUuid, lastSegmentCopy, 1)
   }
 
   test("[INDEX_BUILD] - Check if the number of columns in the encode matches the number of columns in agg") {

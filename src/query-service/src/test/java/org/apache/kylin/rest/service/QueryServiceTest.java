@@ -102,6 +102,7 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -127,6 +128,7 @@ import org.apache.kylin.query.engine.QueryRoutingEngine;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.DateNumberFilterTransformer;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
@@ -236,6 +238,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         createTestMetadata();
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
         queryService = Mockito.spy(new QueryService());
         queryService.queryRoutingEngine = Mockito.spy(QueryRoutingEngine.class);
         Mockito.when(SpringContext.getBean(CacheSignatureQuerySupporter.class)).thenReturn(queryService);
@@ -1309,7 +1312,9 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
                 .valueOf(dataflowManager.getDataflow(modelId).getLastSegment().getLayout(layoutId).getCreateTime());
         Assert.assertEquals(expected, signature.split(",")[1].split(";")[1]);
         response.setSignature(signature);
-        dataflowManager.updateDataflow(modelId, copyForWrite -> copyForWrite.setSegments(new Segments<>()));
+        dataflowManager.updateDataflow(modelId, copyForWrite -> {
+            copyForWrite.setSegmentUuids(new Segments<>());
+        });
         Assert.assertTrue(QueryCacheSignatureUtil.checkCacheExpired(response, project));
     }
 
@@ -1423,7 +1428,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         queryService.queryWithCache(request);
 
         dataflowManager.updateDataflow(modelId, copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
         // case of cache expired
         final SQLResponse thirdSuccess = queryService.queryWithCache(request);

@@ -53,9 +53,11 @@ public abstract class AbstractAuditLogReplayWorker {
     protected final AuditLogStore auditLogStore;
     protected final KylinConfig config;
 
+    protected volatile ScheduledExecutorService consumeExecutor;
+
     // only a thread is necessary
-    protected volatile ScheduledExecutorService consumeExecutor = Executors.newScheduledThreadPool(1,
-            new DaemonThreadFactory("ReplayWorker"));
+    protected static volatile ScheduledExecutorService publicExecutorPool = Executors.newScheduledThreadPool(1,
+            new DaemonThreadFactory("PublicReplayWorker"));
 
     protected final AtomicBoolean isStopped = new AtomicBoolean(false);
 
@@ -88,10 +90,12 @@ public abstract class AbstractAuditLogReplayWorker {
 
     public void close(boolean isGracefully) {
         isStopped.set(true);
-        if (isGracefully) {
-            ExecutorServiceUtil.shutdownGracefully(consumeExecutor, 60);
-        } else {
-            ExecutorServiceUtil.forceShutdown(consumeExecutor);
+        if (!consumeExecutor.equals(publicExecutorPool)) {
+            if (isGracefully) {
+                ExecutorServiceUtil.shutdownGracefully(consumeExecutor, 60);
+            } else {
+                ExecutorServiceUtil.forceShutdown(consumeExecutor);
+            }
         }
     }
 

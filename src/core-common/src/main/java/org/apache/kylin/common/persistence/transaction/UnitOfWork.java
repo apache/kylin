@@ -30,6 +30,7 @@ import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeSystem;
 import org.apache.kylin.common.logging.SetLogCategory;
+import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.TombRawResource;
@@ -202,7 +203,7 @@ public class UnitOfWork {
         MetadataStore metadataStore = underlying.getMetadataStore();
 
         KylinConfig configCopy = KylinConfig.createKylinConfig(config);
-        TransparentResourceStore rs = new TransparentResourceStore(metadataStore, configCopy);
+        TransparentResourceStore rs = new TransparentResourceStore((InMemResourceStore) underlying, configCopy);
         ResourceStore.setRS(configCopy, rs);
         unitOfWork.setLocalConfig(KylinConfig.setAndUnsetThreadLocalConfig(configCopy));
 

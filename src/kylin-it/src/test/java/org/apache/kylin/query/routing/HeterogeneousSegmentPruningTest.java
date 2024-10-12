@@ -74,9 +74,9 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         dfManager.appendPartitions(dfId, segment1Uuid, newPartition);
         dfManager.appendPartitions(dfId, segment2Uuid, newPartition);
         dfManager.appendPartitions(dfId, segment3Uuid, newPartition);
-        val layout1 = dataflowCopy.getSegment(segment1Uuid).getLayout(1L);
-        val layout2 = dataflowCopy.getSegment(segment2Uuid).getLayout(1L);
-        val layout3 = dataflowCopy.getSegment(segment3Uuid).getLayout(1L);
+        val layout1 = dataflowCopy.getSegment(segment1Uuid).copy().getLayout(1L);
+        val layout2 = dataflowCopy.getSegment(segment2Uuid).copy().getLayout(1L);
+        val layout3 = dataflowCopy.getSegment(segment3Uuid).copy().getLayout(1L);
         layout1.getMultiPartition().add(new LayoutPartition(4L));
         layout2.getMultiPartition().add(new LayoutPartition(4L));
         layout3.getMultiPartition().add(new LayoutPartition(4L));

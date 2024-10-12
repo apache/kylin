@@ -39,18 +39,25 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @MetadataInfo
 class PushDownUtilTest extends AbstractTestCase {
+
+    @BeforeAll
+    public static void setUpForClass() {
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
+    }
 
     private static void setAdminAuthentication() {
         TestingAuthenticationToken auth = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);

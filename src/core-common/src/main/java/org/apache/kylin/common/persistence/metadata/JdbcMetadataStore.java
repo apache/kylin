@@ -20,7 +20,6 @@ package org.apache.kylin.common.persistence.metadata;
 import static org.apache.kylin.common.exception.CommonErrorCode.FAILED_UPDATE_METADATA;
 import static org.apache.kylin.common.persistence.metadata.MetadataMapperFactory.convertConditionsToDSLCompleter;
 import static org.apache.kylin.common.persistence.metadata.MetadataMapperFactory.resetMapperTableNameIfNeed;
-import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
 import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.CONTENT_FIELD;
 import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.META_KEY_PROPERTIES_NAME;
@@ -108,7 +107,8 @@ public class JdbcMetadataStore extends MetadataStore {
     }
 
     @Override
-    public <T extends RawResource> List<T> get(MetadataType type, RawResourceFilter filter, boolean needLock, boolean needContent) {
+    public <T extends RawResource> List<T> get(MetadataType type, RawResourceFilter filter, boolean needLock,
+            boolean needContent) {
         return get(type, filter, needLock, needContent, null);
     }
 
@@ -171,10 +171,11 @@ public class JdbcMetadataStore extends MetadataStore {
             Optional<RawResource> record;
             if (rawResource.getContent() != null) {
                 RawResource proxy = RawResourceCompressProxy.createProxy(rawResource);
-                record = mapper.selectOneWithColumns(
-                            c -> c.where(metaKeyCol, isEqualTo(proxy::getMetaKey)).and(mvccCol,
-                                    isEqualTo(proxy.getMvcc() - 1)),
-                            new BasicColumn[] { mapper.getSqlColumn(UUID_FIELD) });
+                record = mapper
+                        .selectOneWithColumnsAndRecordLock(
+                                c -> c.where(metaKeyCol, isEqualTo(proxy::getMetaKey)).and(mvccCol,
+                                        isEqualTo(proxy.getMvcc() - 1)),
+                                new BasicColumn[] { mapper.getSqlColumn(UUID_FIELD) });
                 if (record.isPresent()) {
                     affectedRow = mapper.updateByPrimaryKeyAndMvcc(proxy);
                 } else {
@@ -182,7 +183,8 @@ public class JdbcMetadataStore extends MetadataStore {
                     affectedRow = mapper.insertOne(proxy);
                 }
             } else {
-                record = mapper.selectOneWithColumns(c -> c.where(metaKeyCol, isEqualTo(rawResource::getMetaKey)),
+                record = mapper.selectOneWithColumnsAndRecordLock(
+                        c -> c.where(metaKeyCol, isEqualTo(rawResource::getMetaKey)),
                         new BasicColumn[] { mapper.getSqlColumn(UUID_FIELD) });
                 if (!record.isPresent()) {
                     return -1;
@@ -238,8 +240,7 @@ public class JdbcMetadataStore extends MetadataStore {
         } else if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName()
                 .equals("com.mysql.jdbc.Driver")) {
             fileName = "metadata-jdbc-mysql.properties";
-        } else if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName()
-                           .equals("org.h2.Driver")) {
+        } else if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().equals("org.h2.Driver")) {
             fileName = "metadata-jdbc-h2.properties";
         }
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);

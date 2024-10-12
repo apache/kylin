@@ -150,7 +150,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
         var dfMgr = NDataflowManager.getInstance(testConfig, PROJECT);
         var df = dfMgr.getDataflow(dataflowId).copy();
-        var seg = df.getSegments(SegmentStatusEnum.NEW).get(0);
+        var seg = df.getSegments(SegmentStatusEnum.NEW).get(0).copy();
         seg.getAdditionalInfo().put("file_layer", "1");
         val update = new NDataflowUpdate(df.getUuid());
         update.setToUpdateSegs(seg);

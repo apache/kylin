@@ -193,9 +193,6 @@ public abstract class ResourceStore implements AutoCloseable {
         return listResourcesImpl(folderPath, filter, true);
     }
 
-    /**
-     * return null if given path is not a folder or not exists
-     */
     protected abstract NavigableSet<String> listResourcesImpl(String folderPath, RawResourceFilter filter,
             boolean recursive);
 
@@ -218,7 +215,7 @@ public abstract class ResourceStore implements AutoCloseable {
 
     protected abstract boolean existsImpl(String resPath);
 
-    public abstract void batchLock(MetadataType type, RawResourceFilter filter);
+    public abstract int batchLock(MetadataType type, RawResourceFilter filter);
 
     /**
      * Read a resource, return null in case of not found or is a folder.
@@ -297,7 +294,10 @@ public abstract class ResourceStore implements AutoCloseable {
         List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
 
         for (String res : resources) {
-            result.add(getResourceImpl(res, false));
+            RawResource nullAbleResource = getResourceImpl(res, false);
+            if (nullAbleResource != null) {
+                result.add(nullAbleResource);
+            }
         }
         return result;
     }
@@ -360,6 +360,10 @@ public abstract class ResourceStore implements AutoCloseable {
     protected abstract String getReadableResourcePathImpl(String resPath);
 
     public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
+        putResourceWithoutCheck(resPath, bs, timeStamp, newMvcc, false);
+    }
+
+    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc, boolean force) {
         throw new NotImplementedException("Only implemented in InMemoryResourceStore");
     }
 
@@ -375,10 +379,6 @@ public abstract class ResourceStore implements AutoCloseable {
             auditLogStore.restore(restoreOffset);
         } catch (IOException ignore) {
         }
-    }
-
-    public void putResourceByReplyWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
-        throw new NotImplementedException("Only implemented in InMemoryResourceStore");
     }
 
     public abstract void reload() throws IOException;

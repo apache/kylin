@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -44,6 +45,7 @@ import org.apache.kylin.common.persistence.VersionConflictException;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.metadata.AuditLogStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -72,6 +74,9 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         idTimeoutMills = config.getEventualReplayDelayItemTimeout();
         replayDelayBatch = config.getEventualReplayDelayItemBatch();
         idEarliestTimeoutMills = TimeUnit.HOURS.toMillis(3);
+        consumeExecutor = restorer instanceof JdbcAuditLogStore
+                ? Executors.newScheduledThreadPool(1, new DaemonThreadFactory("ReplayWorker"))
+                : publicExecutorPool;
     }
 
     public void startSchedule(long currentId, boolean syncImmediately) {

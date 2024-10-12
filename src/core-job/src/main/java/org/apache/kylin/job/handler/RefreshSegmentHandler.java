@@ -43,11 +43,11 @@ public class RefreshSegmentHandler extends AbstractJobHandler {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         NDataflowManager dfm = NDataflowManager.getInstance(kylinConfig, jobParam.getProject());
-        NDataflow dataflow = dfm.getDataflow(jobParam.getModel()).copy();
+        NDataflow dataflow = dfm.getDataflow(jobParam.getModel());
 
         if (jobParam.isMultiPartitionJob()) {
             // update partition status to refresh
-            val segment = dataflow.getSegment(jobParam.getSegment());
+            val segment = dataflow.getSegment(jobParam.getSegment()).copy();
             segment.getMultiPartitions().forEach(partition -> {
                 if (jobParam.getTargetPartitions().contains(partition.getPartitionId())) {
                     partition.setStatus(PartitionStatusEnum.REFRESH);

@@ -416,7 +416,7 @@ public class NDataflowManager implements IRealizationProvider {
             if (!StringUtils.isEmpty(newSegId)) {
                 newSegment.setId(newSegId);
                 if (dataflowCopy.getSegment(newSegId) != null) {
-                    return dataflowCopy.getSegment(newSegment.getId());
+                    return dataflowCopy.getSegment(newSegment.getId()).copy();
                 }
             }
             val segments = dataflow.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING).stream()
@@ -431,6 +431,7 @@ public class NDataflowManager implements IRealizationProvider {
         }
 
         Segments<NDataSegment> mergingSegments = dataflowCopy.getMergingSegments(newSegment);
+        mergingSegments = new Segments<>(mergingSegments.stream().map(NDataSegment::copy).collect(Collectors.toList()));
         if (mergingSegments.size() <= 1)
             throw new IllegalArgumentException("Range " + newSegment.getSegRange()
                     + " must contain at least 2 segments, but there is " + mergingSegments.size());
@@ -559,12 +560,7 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public NDataflow copy(NDataflow df) {
-        NDataflow copied = crud.copyBySerialization(df);
-        List<NDataSegment> copiedSegments = copied.getSegments().stream().map(NDataSegment::copy)
-                .collect(Collectors.toList());
-        copiedSegments.forEach(seg -> seg.setDataflow(copied));
-        copied.setSegments(new Segments<>(copiedSegments));
-        return copied;
+        return crud.copyBySerialization(df);
     }
 
     public void fillDfManually(NDataflow df, List<SegmentRange> ranges) {
@@ -599,13 +595,14 @@ public class NDataflowManager implements IRealizationProvider {
      */
     public NDataflow updateDataflow(String dfId, NDataflowUpdater updater) {
         NDataflow cached = getDataflow(dfId);
+        Segments<NDataSegment> existingSegments = cached.getSegments();
         NDataflow copy = copyForWrite(cached);
         updater.modify(copy);
 
         Set<String> copySegIdSet = copy.getSegments().stream().map(NDataSegment::getId).collect(Collectors.toSet());
         val nDataSegDetailsManager = NDataSegDetailsManager.getInstance(copy.getConfig(), project);
         val dataLayoutDetailsManager = NDataLayoutDetailsManager.getInstance(copy.getConfig(), project);
-        for (NDataSegment segment : cached.getSegments()) {
+        for (NDataSegment segment : existingSegments) {
             if (!copySegIdSet.contains(segment.getId())) {
                 nDataSegDetailsManager.removeForSegment(segment.getId());
                 if (!cached.getModel().isBroken() && cached.getModel().getStorageType().isV3Storage()) {
@@ -694,7 +691,7 @@ public class NDataflowManager implements IRealizationProvider {
             Arrays.stream(Optional.ofNullable(update.getToRemoveLayouts()).orElse(new NDataLayout[0]))
                     .forEach(removeLayout -> df.getLayoutHitCount().remove(removeLayout.getLayoutId()));
 
-            df.setSegments(newSegs);
+            df.setSegmentUuids(newSegs);
 
             val newStatus = Optional.ofNullable(update.getStatus()).orElse(df.getStatus());
             df.setStatus(newStatus);
@@ -810,7 +807,7 @@ public class NDataflowManager implements IRealizationProvider {
         }
         val affectedLayouts = Lists.newArrayList();
         for (NDataSegment segment : updateSegments) {
-            val layouts = segment.getSegDetails().getAllLayouts();
+            val layouts = segment.copy().getSegDetails().getAllLayouts();
             layouts.forEach(dataLayout -> {
                 if (dataLayout.removeMultiPartition(toBeDeletedPartIds)) {
                     affectedLayouts.add(dataLayout);

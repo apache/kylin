@@ -52,17 +52,17 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         NDataflowUpdate update = new NDataflowUpdate(dataflowId);
 
         val localDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
-        val localDataflow = localDataflowManager.getDataflow(dataflowId).copy();
+        val localDataflow = localDataflowManager.getDataflow(dataflowId);
 
         NDataflowManager distMgr = NDataflowManager.getInstance(remoteResourceStore.getConfig(), getProject());
-        NDataflow distDataflow = distMgr.getDataflow(update.getDataflowId()).copy();
+        NDataflow distDataflow = distMgr.getDataflow(update.getDataflowId());
 
         List<NDataSegment> toUpdateSegments = Lists.newArrayList();
         List<NDataLayout> toUpdateCuboids = Lists.newArrayList();
 
         NDataSegment mergedSegment;
-        NDataSegment remoteSegment = distDataflow.getSegment(segmentIds.iterator().next());
-        NDataSegment localSegment = localDataflow.getSegment(segmentIds.iterator().next());
+        NDataSegment remoteSegment = distDataflow.getSegment(segmentIds.iterator().next()).copy();
+        NDataSegment localSegment = localDataflow.getSegment(segmentIds.iterator().next()).copy();
         val availableLayoutIds = getAvailableLayoutIds(localDataflow, layoutIds);
 
         // only add layouts which still in segments, others maybe deleted by user
@@ -83,8 +83,8 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         } else {
             mergedSegment = upsertSegmentPartition(localSegment, remoteSegment, partitions);
             for (val segId : segmentIds) {
-                val remoteSeg = distDataflow.getSegment(segId);
-                val localSeg = localDataflow.getSegment(segId);
+                val remoteSeg = distDataflow.getSegment(segId).copy();
+                val localSeg = localDataflow.getSegment(segId).copy();
                 for (long layoutId : availableLayoutIds) {
                     NDataLayout remoteLayout = remoteSeg.getLayout(layoutId);
                     NDataLayout localLayout = localSeg.getLayout(layoutId);
@@ -129,11 +129,11 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         NDataflowUpdate update = new NDataflowUpdate(dataflowId);
 
         NDataflowManager distMgr = NDataflowManager.getInstance(remoteResourceStore.getConfig(), getProject());
-        NDataflow distDataflow = distMgr.getDataflow(update.getDataflowId()).copy(); // avoid changing cached objects
+        NDataflow distDataflow = distMgr.getDataflow(update.getDataflowId());
 
         List<NDataSegment> toUpdateSegments = Lists.newArrayList();
         List<NDataLayout> toUpdateCuboids = Lists.newArrayList();
-        NDataSegment mergedSegment = distDataflow.getSegment(segmentIds.iterator().next());
+        NDataSegment mergedSegment = distDataflow.getSegment(segmentIds.iterator().next()).copy();
 
         if (mergedSegment.getStatus() == SegmentStatusEnum.NEW)
             mergedSegment.setStatus(SegmentStatusEnum.READY);

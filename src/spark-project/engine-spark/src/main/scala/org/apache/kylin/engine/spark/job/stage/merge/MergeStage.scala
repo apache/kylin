@@ -185,8 +185,7 @@ abstract class MergeStage(private val jobContext: SegmentJob,
     logInfo(s"Persist merged FLAT-TABLE $newPath with schema $schema")
 
     val dataflowManager = NDataflowManager.getInstance(config, project)
-    val copiedDataflow = dataflowManager.getDataflow(dataflowId).copy()
-    val copiedSegment = copiedDataflow.getSegment(segmentId)
+    val copiedSegment = dataflowManager.getDataflow(dataflowId).getSegment(segmentId).copy()
     copiedSegment.setFlatTableReady(true)
     val update = new NDataflowUpdate(dataflowId)
     update.setToUpdateSegs(copiedSegment)
@@ -262,8 +261,7 @@ abstract class MergeStage(private val jobContext: SegmentJob,
           .mapValues(_.map(_._2).reduce(_ + _)) //
           .asJava
         val dataflowManager = NDataflowManager.getInstance(config, project)
-        val copiedDataflow = dataflowManager.getDataflow(dataflowId).copy()
-        val copiedSegment = copiedDataflow.getSegment(segmentId)
+        val copiedSegment = dataflowManager.getDataflow(dataflowId).getSegment(segmentId).copy()
         val dataflowUpdate = new NDataflowUpdate(dataflowId)
         copiedSegment.setSourceCount(totalCount)
         copiedSegment.setDimensionRangeInfoMap(mergeDimRange())

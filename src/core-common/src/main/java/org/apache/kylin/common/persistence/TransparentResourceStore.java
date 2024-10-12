@@ -18,13 +18,10 @@
 
 package org.apache.kylin.common.persistence;
 
-import static org.apache.kylin.common.persistence.MetadataType.NEED_CACHED_METADATA;
-import static org.apache.kylin.common.persistence.MetadataType.mergeKeyWithType;
 import static org.apache.kylin.common.persistence.MetadataType.splitKeyWithType;
 import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.META_KEY_PROPERTIES_NAME;
 
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -35,7 +32,6 @@ import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 
 import lombok.Getter;
@@ -49,16 +45,18 @@ public class TransparentResourceStore extends ResourceStore {
     @Getter
     private final List<RawResource> resources;
 
-    @Getter
-    private final Map<String, RawResource> auditLogDiffRs;
+    private final InMemResourceStore underlying;
+
+    private final InMemResourceStore overlay;
     
     private final boolean needToComputeRawDiff;
 
-    public TransparentResourceStore(MetadataStore metadataStore, KylinConfig kylinConfig) {
+    public TransparentResourceStore(InMemResourceStore underlying, KylinConfig kylinConfig) {
         super(kylinConfig);
-        this.metadataStore = metadataStore;
+        this.underlying = underlying;
+        this.overlay = new InMemResourceStore(kylinConfig);
+        this.metadataStore = underlying.getMetadataStore();
         this.resources = Lists.newArrayList();
-        this.auditLogDiffRs = Maps.newHashMap();
         this.needToComputeRawDiff = kylinConfig.isAuditLogJsonPatchEnabled()
                 && (metadataStore instanceof JdbcMetadataStore)
                 && (kylinConfig.isUTEnv() || !UnitOfWork.get().isSkipAuditLog());
@@ -71,30 +69,32 @@ public class TransparentResourceStore extends ResourceStore {
 
     @Override
     protected NavigableSet<String> listResourcesImpl(String folderPath, RawResourceFilter filter, boolean recursive) {
-        MetadataType type = MetadataType.valueOf(folderPath);
+        NavigableSet<String> fromUnderlying = underlying.listResourcesImpl(folderPath, filter, recursive);
+        NavigableSet<String> fromOverlay = overlay.listResourcesImpl(folderPath, filter, recursive);
         TreeSet<String> ret = new TreeSet<>();
-        if (type == MetadataType.ALL) {
-            if (recursive && !getConfig().isUTEnv()) {
-                throw new IllegalArgumentException("Fetching all metadata in the transaction is not allowed.");
-            } else if (recursive && getConfig().isUTEnv()) {
-                return getMetadataStore().listAll();
-            } else if (!recursive) {
-                NEED_CACHED_METADATA.forEach(t -> ret.add(t.name()));
-                return ret;
-            }
+        if (fromUnderlying != null)
+            ret.addAll(fromUnderlying);
+        if (fromOverlay != null)
+            ret.addAll(fromOverlay);
+        if (!folderPath.equals(MetadataType.ALL.name()) || recursive) {
+            ret.removeIf(key -> overlay.getResourceImpl(key, false) == TombRawResource.getINSTANCE());
         }
-        List<RawResource> rawResources = getMetadataStore().get(type, filter, false, false);
-        rawResources.forEach(raw -> ret.add(mergeKeyWithType(raw.getMetaKey(), type)));
+
         return ret;
     }
 
     @Override
     protected boolean existsImpl(String resPath) {
-        return getResourceImpl(resPath, false) != null;
+        RawResource overlayResource = overlay.getResourceImpl(resPath, false);
+        if (overlayResource != null) {
+            return overlayResource != TombRawResource.getINSTANCE();
+        }
+
+        return underlying.exists(resPath);
     }
 
-    public void batchLock(MetadataType type, RawResourceFilter filter) {
-        getMetadataStore().get(type, filter, true, false);
+    public int batchLock(MetadataType type, RawResourceFilter filter) {
+        return getMetadataStore().get(type, filter, true, false).size();
     }
 
     @Override
@@ -103,19 +103,36 @@ public class TransparentResourceStore extends ResourceStore {
     }
 
     private RawResource getResourceImpl(String resPath, boolean needLock, boolean needContent) {
+        if (!needLock) {
+            return getResourceFromCache(resPath);
+        }
         Pair<MetadataType, String> metaKeyAndType = splitKeyWithType(resPath);
         MetadataType type = metaKeyAndType.getFirst();
         String metaKey = metaKeyAndType.getSecond();
         RawResourceFilter filter = RawResourceFilter.equalFilter(META_KEY_PROPERTIES_NAME, metaKey);
         val raw = getMetadataStore().get(type, filter, needLock, needContent);
-        if (raw.size() != 1) {
-            return null;
-        }
-        RawResource rawResource = raw.get(0);
-        if (needLock && needToComputeRawDiff) {
-            auditLogDiffRs.put(resPath, rawResource);
-        }
+        RawResource rawResource = raw.size() == 1 ? raw.get(0) : null;
+        updateOverlay(resPath, rawResource);
         return rawResource;
+    }
+    
+    private void updateOverlay(String resPath, RawResource resource) {
+        if (resource == null) {
+            overlay.putTomb(resPath);
+        } else {
+            overlay.putResourceWithoutCheck(resPath, resource.getByteSource(), resource.getTs(), resource.getMvcc(),
+                    true);
+        }
+    }
+
+    private RawResource getResourceFromCache(String resPath) {
+        val r = overlay.getResourceImpl(resPath, false);
+        if (r != null) {
+            return r == TombRawResource.getINSTANCE() ? null //deleted
+                    : r; // updated
+        }
+
+        return underlying.getResourceImpl(resPath, false);
     }
 
     @Override
@@ -137,10 +154,10 @@ public class TransparentResourceStore extends ResourceStore {
             // If the same metadata is written multiple times in the transaction, the last write metadata will be
             // retained in underlying for generating json patch
             if (needToComputeRawDiff) {
-                RawResource before = auditLogDiffRs.get(resPath);
+                RawResource before = getResource(resPath);
                 raw.fillContentDiffFromRaw(before);
-                auditLogDiffRs.put(resPath, raw);
             }
+            updateOverlay(resPath, raw);
             resources.add(raw);
             return raw;
         } else {
@@ -156,10 +173,8 @@ public class TransparentResourceStore extends ResourceStore {
         RawResource raw = RawResource.constructResource(type, null);
         raw.setMetaKey(metaKey);
         getMetadataStore().save(type, raw);
+        updateOverlay(resPath, null);
         resources.add(new TombRawResource(raw.getMetaKey(), raw.getMetaType()));
-        if (needToComputeRawDiff) {
-            auditLogDiffRs.remove(resPath);
-        }
     }
 
     @Override

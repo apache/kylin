@@ -103,14 +103,16 @@ public enum MetadataType {
                     LOGICAL_VIEW, STREAMING_JOB, QUERY_RECORD, CC_MODEL_RELATION, TABLE_MODEL_RELATION));
 
     public static final Set<MetadataType> WITH_PROJECT_PREFIX_METADATA = Collections
-            .unmodifiableSet(Sets.newHashSet(MetadataType.TABLE_EXD, MetadataType.TABLE_INFO, MetadataType.KAFKA_CONFIG,
-                    MetadataType.JAR_INFO, MetadataType.DATA_PARSER, MetadataType.TMP_REC));
+            .unmodifiableSet(Sets.newHashSet(TABLE_EXD, TABLE_INFO, KAFKA_CONFIG, JAR_INFO, DATA_PARSER, TMP_REC));
 
     public static final Set<String> ALL_TYPE_STR = Collections
             .unmodifiableSet(Arrays.stream(MetadataType.values()).map(Enum::name).collect(Collectors.toSet()));
 
     public static final Set<MetadataType> NEED_CACHED_METADATA = Collections.unmodifiableSet(
             Arrays.stream(MetadataType.values()).filter(type -> type != MetadataType.ALL).collect(Collectors.toSet()));
+
+    public static final Set<MetadataType> CASE_INSENSITIVE_METADATA = Collections
+            .unmodifiableSet(Sets.newHashSet(PROJECT, USER_INFO, USER_GROUP));
 
     public static MetadataType create(String value) {
         try {

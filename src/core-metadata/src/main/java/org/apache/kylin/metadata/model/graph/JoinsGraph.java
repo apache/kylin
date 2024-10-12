@@ -34,17 +34,16 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
-
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.val;
 
 public class JoinsGraph implements Serializable {
@@ -488,22 +487,30 @@ public class JoinsGraph implements Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Root: ").append(center);
-        // build next edges
-        for (Edge e : getEdgesByFKSideWithoutSwap(center)) {
-            buildGraphStr(sb, e, 1);
-        }
-        return sb.toString();
+        return buildGraphStr(null, 0, false, false);
     }
 
-    private void buildGraphStr(StringBuilder sb, @NonNull Edge edge, int indent) {
-        sb.append(IntStream.range(0, indent).mapToObj(i -> "  ")
-                .collect(Collectors.joining("", "\n", String.valueOf(edge))));
-        // build next edges
-        for (Edge e : getEdgesByFKSideWithoutSwap(edge.pkSide())) {
-            buildGraphStr(sb, e, indent + 1);
+    public String toString(boolean needSort, boolean useTableIdentity) {
+        return buildGraphStr(null, 0, needSort, useTableIdentity);
+    }
+
+    private String buildGraphStr(Edge edge, int indent, boolean needSort, boolean useTableIdentity) {
+        String curNode;
+        if (indent == 0) {
+            curNode = "Root: " + (useTableIdentity ? center.getTableIdentity() : center);
+        } else {
+            curNode = IntStream.range(0, indent).mapToObj(i -> "  ")
+                    .collect(Collectors.joining("", "\n", edge.toString(needSort, useTableIdentity)));
         }
+        // build next edges
+        List<String> subEdges = new ArrayList<>();
+        for (Edge e : getEdgesByFKSideWithoutSwap(indent == 0 ? center : edge.pkSide())) {
+            subEdges.add(buildGraphStr(e, indent + 1, needSort, useTableIdentity));
+        }
+        if (needSort) {
+            subEdges.sort(String::compareTo);
+        }
+        return curNode + Joiner.on("").join(subEdges);
     }
 
     private <T> void addIfAbsent(List<T> edges, T edge) {

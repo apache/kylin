@@ -72,10 +72,6 @@ public class BackdoorToggles {
         return getBoolean(DEBUG_TOGGLE_DISABLE_FUZZY_KEY);
     }
 
-    public static boolean isModelingSql() {
-        return getBoolean(QUERY_FROM_AUTO_MODELING);
-    }
-
     public static String getPartitionDumpDir() {
         return getString(DEBUG_TOGGLE_PARTITION_DUMP_DIR);
     }
@@ -253,8 +249,6 @@ public class BackdoorToggles {
      }
      */
     public static final String DISABLE_RAW_QUERY_HACKER = "DISABLE_RAW_QUERY_HACKER";
-
-    public static final String QUERY_FROM_AUTO_MODELING = "QUERY_FROM_AUTO_MODELING";
 
     public static final String QUERY_NON_EQUI_JOIN_MODEL_ENABLED = "QUERY_NON_EQUI_JOIN_MODEL_ENABLED";
 

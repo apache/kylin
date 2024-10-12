@@ -23,7 +23,10 @@ import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow}
 import org.apache.kylin.metadata.model.{SegmentStatusEnum, Segments}
 import org.apache.spark.sql.common.SparderBaseFunSuite
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
 
+import java.util
 import scala.collection.JavaConverters._
 
 class FilePrunerSuite extends SparderBaseFunSuite {
@@ -34,8 +37,9 @@ class FilePrunerSuite extends SparderBaseFunSuite {
     segment.setStatus(SegmentStatusEnum.READY)
     val segmentList = new Segments[NDataSegment]
     segmentList.add(segment)
-    val mockDataFlow = new NDataflow
-    mockDataFlow.setSegments(segmentList)
+    val mockDataFlow = Mockito.mock(classOf[NDataflow])
+    Mockito.when(mockDataFlow.getSegments(any[util.Set[String]]))
+      .thenAnswer(_ => new Segments[NDataSegment](segmentList))
 
     val segDir1 = SegmentDirectory("1", List.empty[Long], null)
     val segDir2 = SegmentDirectory("2", List.empty[Long], null)

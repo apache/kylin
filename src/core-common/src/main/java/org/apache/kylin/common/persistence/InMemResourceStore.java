@@ -19,6 +19,7 @@
 package org.apache.kylin.common.persistence;
 
 import static org.apache.kylin.common.persistence.MetadataType.ALL_TYPE_STR;
+import static org.apache.kylin.common.persistence.MetadataType.CASE_INSENSITIVE_METADATA;
 import static org.apache.kylin.common.persistence.MetadataType.NEED_CACHED_METADATA;
 import static org.apache.kylin.common.persistence.MetadataType.mergeKeyWithType;
 import static org.apache.kylin.common.persistence.MetadataType.splitKeyWithType;
@@ -49,14 +50,14 @@ public class InMemResourceStore extends ResourceStore {
     private static final Logger logger = LoggerFactory.getLogger(InMemResourceStore.class);
 
     @Getter
-    private final Map<MetadataType, ConcurrentSkipListMap<String, VersionedRawResource>> data;
+    private final Map<MetadataType, Map<String, VersionedRawResource>> data;
 
     public InMemResourceStore(KylinConfig kylinConfig) {
         super(kylinConfig);
         data = new ConcurrentHashMap<>();
-        NEED_CACHED_METADATA
-                .forEach(type -> data.put(type, new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER)));
-
+        NEED_CACHED_METADATA.forEach(type -> data.put(type,
+                CASE_INSENSITIVE_METADATA.contains(type) ? new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER)
+                        : new ConcurrentHashMap<>()));
     }
 
     /**
@@ -92,8 +93,9 @@ public class InMemResourceStore extends ResourceStore {
     }
 
     @Override
-    public void batchLock(MetadataType type, RawResourceFilter filter) {
+    public int batchLock(MetadataType type, RawResourceFilter filter) {
         // Do nothing for inMemResourceStore.
+        return 0;
     }
 
     @Override
@@ -108,6 +110,11 @@ public class InMemResourceStore extends ResourceStore {
             return null;
         }
         return orDefault.getRawResource();
+    }
+
+    protected void putTomb(String resPath) {
+        Pair<MetadataType, String> metaKeyAndType = splitKeyWithType(resPath);
+        data.get(metaKeyAndType.getFirst()).put(metaKeyAndType.getSecond(), TombVersionedRawResource.getINSTANCE());
     }
 
     @Override
@@ -185,29 +192,15 @@ public class InMemResourceStore extends ResourceStore {
     }
 
     @Override
-    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
+    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc, boolean force) {
         Pair<MetadataType, String> meteKeyAndType = splitKeyWithType(resPath);
         MetadataType type = meteKeyAndType.getFirst();
         String metaKey = meteKeyAndType.getSecond();
         synchronized (data) {
-            if (kylinConfig.isJobNode() && data.get(type).containsKey(metaKey)) {
+            if (!force && kylinConfig.isJobNode() && data.get(type).containsKey(metaKey)) {
                 throw new IllegalStateException(
                         "resource " + resPath + " already exists, use check and put api instead");
             }
-            RawResource rawResource = RawResource.constructResource(type, bs);
-            rawResource.setMvcc(newMvcc);
-            rawResource.setTs(timeStamp);
-            rawResource.setMetaKey(metaKey);
-            data.get(type).put(metaKey, new VersionedRawResource(rawResource));
-        }
-    }
-
-    @Override
-    public void putResourceByReplyWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
-        Pair<MetadataType, String> meteKeyAndType = splitKeyWithType(resPath);
-        MetadataType type = meteKeyAndType.getFirst();
-        String metaKey = meteKeyAndType.getSecond();
-        synchronized (data) {
             RawResource rawResource = RawResource.constructResource(type, bs);
             rawResource.setMvcc(newMvcc);
             rawResource.setTs(timeStamp);

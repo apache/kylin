@@ -247,8 +247,7 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
     UnitOfWork.doInTransactionWithRetry(new Callback[Unit] {
       override def process(): Unit = {
         val dataflowManager = NDataflowManager.getInstance(config, project);
-        val copiedDataflow = dataflowManager.getDataflow(dataflowId).copy()
-        val copiedSegment = copiedDataflow.getSegment(segmentId)
+        val copiedSegment = dataflowManager.getDataflow(dataflowId).getSegment(segmentId).copy()
         val dataflowUpdate = new NDataflowUpdate(dataflowId)
         val newAdds = Lists.newArrayList[SegmentPartition]()
         partitionStats.foreach { case (partitionId, stats) => //

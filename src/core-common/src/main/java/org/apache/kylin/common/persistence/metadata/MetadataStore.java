@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
+import static org.apache.kylin.common.persistence.MetadataType.CASE_INSENSITIVE_METADATA;
 import static org.apache.kylin.common.persistence.MetadataType.NEED_CACHED_METADATA;
 import static org.apache.kylin.common.persistence.MetadataType.splitKeyWithType;
 
@@ -150,20 +151,22 @@ public abstract class MetadataStore implements ITransactionManager {
 
     public static class MemoryMetaData {
         @Getter
-        private final Map<MetadataType, ConcurrentSkipListMap<String, VersionedRawResource>> data;
+        private final Map<MetadataType, Map<String, VersionedRawResource>> data;
 
         @Getter
         @Setter
         private Long offset;
 
-        private MemoryMetaData(Map<MetadataType, ConcurrentSkipListMap<String, VersionedRawResource>> data) {
+        private MemoryMetaData(Map<MetadataType, Map<String, VersionedRawResource>> data) {
             this.data = data;
         }
 
         public static MemoryMetaData createEmpty() {
-            Map<MetadataType, ConcurrentSkipListMap<String, VersionedRawResource>> data = new ConcurrentHashMap<>();
-            NEED_CACHED_METADATA
-                    .forEach(type -> data.put(type, new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER)));
+            Map<MetadataType, Map<String, VersionedRawResource>> data = new ConcurrentHashMap<>();
+            NEED_CACHED_METADATA.forEach(type -> data.put(type,
+                    CASE_INSENSITIVE_METADATA.contains(type)
+                            ? new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER)
+                            : new ConcurrentHashMap<>()));
             return new MemoryMetaData(data);
         }
 

@@ -77,6 +77,7 @@ public class PartitionPruningRuleTest extends NLocalWithSparkSessionTest {
         NDataflowUpdate dataflowUpdate = new NDataflowUpdate(modelId);
         List<NDataLayout> toUpdateLayouts = new ArrayList<>();
         for (NDataSegment segment : dataflowCopied.getSegments()) {
+            segment = segment.copy();
             toUpdateLayouts.add(segment.getLayout(1));
             for (int i = 0; i < newPartitionsNum; i++) {
                 LayoutPartition layoutPartition = new LayoutPartition(i + 100);

@@ -41,12 +41,14 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.engine.NDataModelWrapper;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,6 +64,7 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
         this.createTestMetadata();
         // Use default Factory for Open Core
         QueryExtension.setFactory(new QueryExtension.Factory());
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @After

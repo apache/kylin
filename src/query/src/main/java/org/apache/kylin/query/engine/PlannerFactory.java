@@ -42,7 +42,7 @@ import org.apache.calcite.rel.stream.StreamRules;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.base.Function;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.query.engine.meta.PlannerContext;
@@ -252,8 +252,8 @@ public class PlannerFactory {
     }
 
     private ConverterRule selectJoinRuleByConfig() {
-        return (kylinConfig.isQueryNonEquiJoinModelEnabled() && !BackdoorToggles.isModelingSql())
-                || (kylinConfig.isNonEquiJoinRecommendationEnabled() && BackdoorToggles.isModelingSql()) //
+        return (kylinConfig.isQueryNonEquiJoinModelEnabled() && !QueryContext.current().isForModeling())
+                || (kylinConfig.isNonEquiJoinRecommendationEnabled() && QueryContext.current().isForModeling()) //
                         ? OlapJoinRule.NON_EQUI_INSTANCE
                         : OlapJoinRule.INSTANCE;
     }

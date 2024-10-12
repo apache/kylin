@@ -46,6 +46,7 @@ import org.apache.kylin.metadata.favorite.FavoriteRule;
 import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.recommendation.candidate.LayoutMetric;
@@ -54,6 +55,7 @@ import org.apache.kylin.metadata.recommendation.ref.LayoutRef;
 import org.apache.kylin.metadata.recommendation.ref.ModelColumnRef;
 import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.kylin.metadata.recommendation.ref.RecommendationRef;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -116,6 +118,8 @@ public class OptRecV2TestBase extends NLocalFileMetadataTestCase {
         recItems.forEach(recItem -> recItem.setState(RawRecItem.RawRecState.INITIAL));
         recItems.sort(Comparator.comparingInt(RawRecItem::getId));
         jdbcRawRecStore.saveWithoutCheck(recItems, false);
+
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @After

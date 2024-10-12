@@ -109,7 +109,7 @@ public class IndexBuildJobUtil extends ExecutableUtil {
     @Override
     public void computePartitions(JobParam jobParam) {
         NDataflowManager dfm = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject());
-        val df = dfm.getDataflow(jobParam.getModel()).copy();
+        val df = dfm.getDataflow(jobParam.getModel());
         val segments = df.getSegments(jobParam.getTargetSegments());
         val partitionIds = Sets.<Long> newHashSet();
         segments.forEach(segment -> {

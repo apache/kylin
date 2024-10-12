@@ -909,7 +909,7 @@ public class AutoMergeTest extends NLocalFileMetadataTestCase {
             segments.add(newSegment);
             df = dataflowManager.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
             field.set(df, false);
-            df.setSegments(segments);
+            df.setSegmentUuids(segments);
             deleteAllJobs(DEFAULT_PROJECT);
             mockAddSegmentSuccess();
             val executables = getRunningExecutables(DEFAULT_PROJECT, df.getModel().getId());

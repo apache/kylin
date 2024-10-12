@@ -34,7 +34,7 @@ class InternalTableDescTest {
     void testNullProperties() {
         NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
                 "default");
-        TableDesc originTable = tableMetadataManager.getTableDesc("default.TEST_KYLIN_FACT");
+        TableDesc originTable = tableMetadataManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         InternalTableDesc table = new InternalTableDesc(originTable);
 
         table.setStorageType(null);

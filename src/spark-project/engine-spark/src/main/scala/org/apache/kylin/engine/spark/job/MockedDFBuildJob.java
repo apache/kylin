@@ -136,11 +136,11 @@ public class MockedDFBuildJob extends SparkApplication {
 
             // mock flat table persist and set segment flatTableReady
             if (config.isPersistFlatTableEnabled()) {
-                NDataflow dfCopy = NDataflowManager.getInstance(config, project).getDataflow(dfName).copy();
+                NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(dfName);
                 NDataflowUpdate update = new NDataflowUpdate(dfName);
                 List<NDataSegment> segsToUpdate = Lists.newArrayList();
                 for (String segId : segmentIds) {
-                    NDataSegment seg = dfCopy.getSegment(segId);
+                    NDataSegment seg = df.getSegment(segId).copy();
                     seg.setFlatTableReady(true);
                     segsToUpdate.add(seg);
                 }

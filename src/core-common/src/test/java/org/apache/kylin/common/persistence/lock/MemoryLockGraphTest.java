@@ -48,7 +48,7 @@ class MemoryLockGraphTest {
     void deadLockWithParallelThreadTest() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         InMemResourceStore inMemResourceStore = (InMemResourceStore) ResourceStore.getKylinMetaStore(config);
-        TransparentResourceStore store = new TransparentResourceStore(inMemResourceStore.getMetadataStore(), config);
+        TransparentResourceStore store = new TransparentResourceStore(inMemResourceStore, config);
         AtomicBoolean shouldContinue = new AtomicBoolean(true);
         Runnable suggest = () -> {
             while (shouldContinue.get()) {

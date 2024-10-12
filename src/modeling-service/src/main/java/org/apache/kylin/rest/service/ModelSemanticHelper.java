@@ -66,6 +66,7 @@ import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -1024,11 +1025,13 @@ public class ModelSemanticHelper extends BasicService {
     private void handleReloadData(NDataModel newModel, NDataModel oriModel, String project, String start, String end) {
         val config = KylinConfig.getInstanceFromEnv();
         val dataflowManager = NDataflowManager.getInstance(config, project);
+        val segmentManager = NDataSegmentManager.getInstance(config, project);
         var df = dataflowManager.getDataflow(newModel.getUuid());
         val segments = df.getFlatSegments();
 
+        segments.forEach(segmentManager::delete);
         dataflowManager.updateDataflow(df.getUuid(), copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
 
         String modelId = newModel.getUuid();

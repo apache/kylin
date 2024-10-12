@@ -21,7 +21,9 @@ package org.apache.kylin.server;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.After;
 import org.junit.Before;
@@ -61,6 +63,7 @@ public abstract class AbstractMVCIntegrationTestCase extends NLocalFileMetadataT
     @BeforeClass
     public static void setupResource() {
         staticCreateTestMetadata();
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @Before

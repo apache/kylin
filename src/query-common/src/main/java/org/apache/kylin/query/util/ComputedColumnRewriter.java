@@ -182,7 +182,7 @@ public class ComputedColumnRewriter {
         return QueryUtil.adaptCalciteSyntax(ccSql);
     }
 
-    private static String extractCcRexNode(NDataModel model, KylinConfig kylinConfig, String innerExpression)
+    public static String extractCcRexNode(NDataModel model, KylinConfig kylinConfig, String innerExpression)
             throws SqlParseException {
         String project = model.getProject();
         String extendedQuery = extendToQuery(model, project, innerExpression);

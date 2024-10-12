@@ -199,7 +199,6 @@ import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 import org.apache.kylin.metadata.model.util.scd2.SCD2CondChecker;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -1041,7 +1040,7 @@ public class ModelService extends AbstractModelService
         val segs = dataflow == null ? Segments.empty() : dataflow.getSegments(segmentIds);
         List<AbstractExecutable> runningJob = job.getStatus() == ExecutableState.RUNNING ? Lists.newArrayList(job)
                 : Lists.newArrayList();
-        return segs.stream().map(segment -> new NDataSegmentResponse(dataflow, segment, runningJob))
+        return segs.stream().map(segment -> new NDataSegmentResponse(dataflow, segs, segment, runningJob))
                 .collect(Collectors.toList());
     }
 
@@ -1081,7 +1080,8 @@ public class ModelService extends AbstractModelService
                         indexPlan.getAllLayoutIds(false), segment))
                 .filter(segment -> !StringUtils.isNotEmpty(status) || status.equalsIgnoreCase(
                         SegmentUtil.getSegmentStatusToDisplay(segs, segment, executables, null).toString()))
-                .map(segment -> new NDataSegmentResponse(dataflow, segment, executables)).collect(Collectors.toList());
+                .map(segment -> new NDataSegmentResponse(dataflow, segs, segment, executables))
+                .collect(Collectors.toList());
         return segmentResponseList;
     }
 
@@ -1720,7 +1720,7 @@ public class ModelService extends AbstractModelService
 
         //update target seg's status
         val dfUpdate = new NDataflowUpdate(modelId);
-        val seg = df.copy().getSegment(segmentId);
+        val seg = df.getSegment(segmentId).copy();
         seg.setStatus(SegmentStatusEnum.READY);
         dfUpdate.setToUpdateSegs(seg);
         dfMgr.updateDataflow(dfUpdate);
@@ -2807,27 +2807,21 @@ public class ModelService extends AbstractModelService
     }
 
     void preProcessBeforeModelSave(NDataModel model, String project) {
-        NDataModelManager modelManager = getManager(NDataModelManager.class, project);
-        model.init(getConfig(), project, modelManager.getCCRelatedModels(model), true);
+        model.init(getConfig(), project, Collections.emptyList(), true);
         massageModelFilterCondition(model);
 
         checkCCNameAmbiguity(model);
 
-        try {
-            NProjectLoader.updateCache(project);
-            // Update CC expression from query transformers
-            QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(project, getCurrentUserGroups());
-            for (ComputedColumnDesc ccDesc : model.getComputedColumnDescs()) {
-                String ccExpression = PushDownUtil.massageComputedColumn(model, project, ccDesc, aclInfo);
-                ccDesc.setInnerExpression(ccExpression);
-                TblColRef tblColRef = model.findColumn(ccDesc.getTableAlias(), ccDesc.getColumnName());
-                tblColRef.getColumnDesc().setComputedColumnExpr(ccExpression);
-            }
-
-            ComputedColumnEvalUtil.evalDataTypeOfCCInBatch(model, model.getComputedColumnDescs());
-        } finally {
-            NProjectLoader.removeCache();
+        // Update CC expression from query transformers
+        QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(project, getCurrentUserGroups());
+        for (ComputedColumnDesc ccDesc : model.getComputedColumnDescs()) {
+            String ccExpression = PushDownUtil.massageComputedColumn(model, project, ccDesc, aclInfo);
+            ccDesc.setInnerExpression(ccExpression);
+            TblColRef tblColRef = model.findColumn(ccDesc.getTableAlias(), ccDesc.getColumnName());
+            tblColRef.getColumnDesc().setComputedColumnExpr(ccExpression);
         }
+
+        ComputedColumnEvalUtil.evalDataTypeOfCCInBatch(model, model.getComputedColumnDescs());
     }
 
     @Transaction(project = 0)
@@ -2958,7 +2952,7 @@ public class ModelService extends AbstractModelService
         IndexPlan indexPlan = getIndexPlan(modelId, project);
         NDataflow dataflow = dataflowManager.getDataflow(indexPlan.getUuid());
 
-        List<String> notExistIds = Stream.of(ids).filter(segmentId -> null == dataflow.getSegment(segmentId))
+        List<String> notExistIds = Stream.of(ids).filter(segmentId -> !dataflow.getSegmentUuids().contains(segmentId))
                 .filter(Objects::nonNull).collect(Collectors.toList());
         if (shouldThrown && !CollectionUtils.isEmpty(notExistIds)) {
             throw new KylinException(SEGMENT_NOT_EXIST_ID, StringUtils.join(notExistIds, ","));

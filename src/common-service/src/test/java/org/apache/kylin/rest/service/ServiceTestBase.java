@@ -23,7 +23,9 @@ import java.util.Arrays;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -68,6 +70,7 @@ public class ServiceTestBase extends NLocalFileMetadataTestCase {
         staticCreateTestMetadata();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @AfterClass

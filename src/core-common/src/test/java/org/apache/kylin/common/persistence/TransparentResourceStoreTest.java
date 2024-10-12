@@ -55,7 +55,7 @@ class TransparentResourceStoreTest {
     private ResourceStore getStore() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         ResourceStore underlying = ResourceStore.getKylinMetaStore(config);
-        return new TransparentResourceStore(underlying.getMetadataStore(), config);
+        return new TransparentResourceStore((InMemResourceStore) underlying, config);
     }
 
     @Test

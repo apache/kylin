@@ -33,8 +33,10 @@ import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.source.jdbc.H2Database;
 import org.junit.After;
@@ -74,6 +76,8 @@ public class SourceTestCase extends NLocalFileMetadataTestCase {
         getStore().deleteResource("INDEX_PLAN/039eef32-9691-4c88-93ba-d65c58a1ab7a");
         getStore().deleteResource("MODEL/3f8941de-d01c-42b8-91b5-44646390864b");
         projectManager.forceDropProject("bad_query_test");
+
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @After

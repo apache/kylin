@@ -477,7 +477,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         tableService.filterSamplingRows("newten", tableDescResponse, false, aclTCRs);
 
         Assert.assertEquals(1, tableDescResponse.getSamplingRows().size());
-        Assert.assertEquals("country_a,10.10,11.11,name_%a",
+        Assert.assertEquals("country_a,11.11,name_%a",
                 String.join(",", tableDescResponse.getSamplingRows().get(0)));
     }
 

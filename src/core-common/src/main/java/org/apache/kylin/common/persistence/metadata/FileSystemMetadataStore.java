@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
 import static org.apache.kylin.common.constant.Constants.CORE_META_DIR;
 import static org.apache.kylin.common.persistence.metadata.FileSystemFilterFactory.MATCH_ALL_EVAL;
 import static org.apache.kylin.common.persistence.metadata.FileSystemFilterFactory.convertConditionsToFilter;
@@ -397,7 +399,7 @@ public class FileSystemMetadataStore extends MetadataStore {
             }
 
             val bs = ByteSource.wrap(raw.getContent());
-            try (FSDataOutputStream out = fs.create(p, true)) {
+            try (FSDataOutputStream out = createFileWithDefaultPermission(p)) {
                 IOUtils.copy(bs.openStream(), out);
                 out.hflush();
                 fs.setTimes(p, raw.getTs(), -1);
@@ -416,6 +418,11 @@ public class FileSystemMetadataStore extends MetadataStore {
             throw new KylinRuntimeException(e);
         }
         return 1;
+    }
+
+    private FSDataOutputStream createFileWithDefaultPermission(Path f) throws IOException {
+        return fs.create(f, null, true, fs.getConf().getInt(IO_FILE_BUFFER_SIZE_KEY, IO_FILE_BUFFER_SIZE_DEFAULT),
+                fs.getDefaultReplication(f), fs.getDefaultBlockSize(f), null);
     }
 
     @Override

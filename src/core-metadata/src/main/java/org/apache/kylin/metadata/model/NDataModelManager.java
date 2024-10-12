@@ -265,9 +265,8 @@ public class NDataModelManager {
     public NDataModel createDataModelDesc(NDataModel model, String owner) {
         NDataModel copy = copyForWrite(model);
 
-        lockModelsUnderProject();
+        // Lock-free lightweight checking
         checkDuplicateModel(model);
-
         //check model count
         List<NDataModel> allModels = listAllModels();
         NCircuitBreaker.verifyModelCreation(allModels.size());
@@ -356,8 +355,8 @@ public class NDataModelManager {
         ComputedColumnManager ccManager = config.getManager(project, ComputedColumnManager.class);
         Manager<CcModelRelationDesc> relationManager = Manager.getInstance(config, project, CcModelRelationDesc.class);
 
-        List<ComputedColumnDesc> newCC = model.getComputedColumnDescs().stream().map(ccManager::saveCCWithCheck)
-                .collect(Collectors.toList());
+        List<ComputedColumnDesc> newCC = model.getComputedColumnDescs().stream()
+                .map(cc -> ccManager.saveCCWithCheck(model, cc)).collect(Collectors.toList());
         model.setComputedColumnUuids(newCC.stream().map(ComputedColumnDesc::getUuid).collect(Collectors.toList()));
         model.setComputedColumnDescs(newCC);
 
@@ -430,12 +429,12 @@ public class NDataModelManager {
         if (model.getComputedColumnDescs().isEmpty()) {
             return Lists.newArrayList();
         }
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        NDataflowManager manager = NDataflowManager.getInstance(kylinConfig, project);
+        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.readSystemKylinConfig(), project);
+        NDataflowManager innerManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         return manager.listAllDataflows(true).stream() //
                 .filter(df -> df.checkBrokenWithRelatedInfo() || !df.getModel().getComputedColumnDescs().isEmpty()) //
-                .map(df -> NDataflowManager.getInstance(kylinConfig, project).getDataflow(df.getId()))
-                .filter(df -> !df.checkBrokenWithRelatedInfo()) //
+                .map(df -> innerManager.getDataflow(df.getId()))
+                .filter(df -> df != null && !df.checkBrokenWithRelatedInfo()) //
                 .map(NDataflow::getModel).collect(Collectors.toList());
     }
 

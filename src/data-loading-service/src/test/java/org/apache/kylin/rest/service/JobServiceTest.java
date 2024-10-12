@@ -1015,7 +1015,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         response = ExecutableResponse.create(job, null);
         Assert.assertEquals(Long.MAX_VALUE, response.getDataRangeEnd());
 
-        TableDesc originTable = manager.getTableDesc("default.TEST_KYLIN_FACT");
+        TableDesc originTable = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         internalManager.createInternalTable(new InternalTableDesc(originTable));
 
         job.setParam(NBatchConstants.P_TABLE_NAME, originTable.getIdentity());

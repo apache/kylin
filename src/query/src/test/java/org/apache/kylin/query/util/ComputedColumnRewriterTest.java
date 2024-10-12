@@ -20,9 +20,17 @@ package org.apache.kylin.query.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 @MetadataInfo
@@ -71,5 +79,48 @@ class ComputedColumnRewriterTest {
             String rexStr = ComputedColumnRewriter.getRexNodeStr(KylinConfig.getInstanceFromEnv(), "default", sql);
             assertEquals(expected, rexStr);
         }
+    }
+
+    @Test
+    void demo() throws SqlParseException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NDataModelManager manager = NDataModelManager.getInstance(config, "default");
+        NDataModel model = manager.getDataModelDescByAlias("nmodel_basic_inner");
+        List<String> ccs = getStrings();
+        long s = System.currentTimeMillis();
+        for(String cc : ccs) {
+            long start = System.currentTimeMillis();
+            String rexStr = ComputedColumnRewriter.extractCcRexNode(model, config, cc);
+            System.out.println(rexStr);
+            System.out.println("cost: " + (System.currentTimeMillis() - start));
+        }
+        System.out.println("total cost: " + (System.currentTimeMillis() - s));
+
+        for(String cc : ccs) {
+            long start = System.currentTimeMillis();
+            ComputedColumnDesc ccDesc = new ComputedColumnDesc();
+            ccDesc.setExpression(cc);
+            String graphStr = ComputedColumnUtil.getCCExprRelatedSubgraph(ccDesc, model).toString(true, true);
+            System.out.println(graphStr);
+            System.out.println("cost: " + (System.currentTimeMillis() - start));
+        }
+        System.out.println("total cost: " + (System.currentTimeMillis() - s));
+    }
+
+    @NotNull
+    private static List<String> getStrings() {
+        List<String> ccs = new ArrayList<>();
+        ccs.add("TEST_KYLIN_FACT.TRANS_ID + 1");
+        ccs.add("TEST_ORDER.ORDER_ID + 1");
+        ccs.add("BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL + 1");
+        ccs.add("TEST_ORDER.ORDER_ID + 7 + BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL");
+        ccs.add("TEST_ORDER.ORDER_ID + 7 + SELLER_ACCOUNT.ACCOUNT_BUYER_LEVEL");
+        ccs.add("TEST_ORDER.ORDER_ID * 77 + BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL");
+        ccs.add("TEST_ORDER.ORDER_ID + 77 * SELLER_ACCOUNT.ACCOUNT_BUYER_LEVEL");
+        
+        for(int i=8; i< 50; i++) {
+            ccs.add("TEST_ORDER.ORDER_ID + " + i + " + BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL");
+        }
+        return ccs;
     }
 }

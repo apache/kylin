@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
+import org.apache.kylin.metadata.model.Segments;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -100,11 +101,12 @@ public class NDataSegmentResponse extends NDataSegment {
         super(false);
     }
 
-    public NDataSegmentResponse(NDataflow dataflow, NDataSegment segment) {
-        this(dataflow, segment, null);
+    public NDataSegmentResponse(NDataflow dataflow, Segments<NDataSegment> segments, NDataSegment segment) {
+        this(dataflow, segments, segment, null);
     }
 
-    public NDataSegmentResponse(NDataflow dataflow, NDataSegment segment, List<AbstractExecutable> executables) {
+    public NDataSegmentResponse(NDataflow dataflow, Segments<NDataSegment> segments, NDataSegment segment,
+            List<AbstractExecutable> executables) {
         super(segment);
         id = segment.getUuid();
         createTime = getCreateTimeUTC();
@@ -136,7 +138,7 @@ public class NDataSegmentResponse extends NDataSegment {
         setBytesSize(segment.getStorageBytesSize());
         getAdditionalInfo().put(SEGMENT_PATH, dataflow.getSegmentHdfsPath(segment.getId()));
         getAdditionalInfo().put(FILE_COUNT, segment.getStorageFileCount() + "");
-        setStatusToDisplay(SegmentUtil.getSegmentStatusToDisplay(dataflow.getSegments(), segment, executables, null));
+        setStatusToDisplay(SegmentUtil.getSegmentStatusToDisplay(segments, segment, executables, null));
         setSourceBytesSize(segment.getSourceBytesSize());
         setLastBuildTime(segment.getLastBuildTime());
         setMaxBucketId(segment.getMaxBucketId());

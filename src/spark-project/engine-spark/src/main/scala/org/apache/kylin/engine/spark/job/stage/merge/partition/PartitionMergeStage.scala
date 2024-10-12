@@ -105,8 +105,7 @@ abstract class PartitionMergeStage(private val jobContext: SegmentJob,
     UnitOfWork.doInTransactionWithRetry(new Callback[Unit] {
       override def process(): Unit = {
         val dataflowManager = NDataflowManager.getInstance(config, project)
-        val copiedDataflow = dataflowManager.getDataflow(dataflowId).copy()
-        val copiedSegment = copiedDataflow.getSegment(segmentId)
+        val copiedSegment = dataflowManager.getDataflow(dataflowId).getSegment(segmentId).copy()
         val dataflowUpdate = new NDataflowUpdate(dataflowId)
         val newAdds = Lists.newArrayList[SegmentPartition]()
         unmerged.flatMap(_.getMultiPartitions.asScala) //

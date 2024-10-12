@@ -23,12 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.measure.topn.TopNCounter;
@@ -38,8 +37,6 @@ import org.apache.kylin.metadata.model.SegmentRange.TimePartitionedSegmentRange;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.relnode.OlapContext;
-import org.apache.kylin.rec.SmartContext;
-import org.apache.kylin.rec.SmartMaster;
 import org.apache.kylin.util.ExecAndComp.CompareLevel;
 import org.apache.kylin.util.ExecAndCompExt;
 import org.apache.kylin.util.OlapContextTestUtil;
@@ -194,10 +191,11 @@ public class NTopNTest extends NLocalWithSparkSessionTest {
 
     }
 
-    private void verifyTopnResult(List<Pair<String, String>> queries, NDataflow dataflow) {
+    private void verifyTopnResult(List<Pair<String, String>> queries, NDataflow dataflow) throws SqlParseException {
         //verify topN measure will answer the multi-Dimension query
         for (Pair<String, String> nameAndQueryPair : queries) {
-            OlapContext context = getOlapContext(nameAndQueryPair.getSecond()).get(0);
+            OlapContext context = OlapContextTestUtil
+                    .getOlapContexts(dataflow.getProject(), nameAndQueryPair.getSecond(), true).get(0);
             Map<String, String> aliasMapping = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
             context.fixModel(dataflow.getModel(), aliasMapping);
             CapabilityResult capabilityResult = context.getStorageContext().getBatchCandidate().getCapabilityResult();
@@ -207,15 +205,5 @@ public class NTopNTest extends NLocalWithSparkSessionTest {
             Assert.assertEquals(context.getAllColumns(),
                     Sets.newHashSet(capabilityInfluence.getInvolvedMeasure().getFunction().getColRefs()));
         }
-    }
-
-    private List<OlapContext> getOlapContext(String sql) {
-        val context = new SmartContext(KylinConfig.getInstanceFromEnv(), getProject(), new String[] { sql });
-        SmartMaster smartMaster = new SmartMaster(context);
-        smartMaster.getProposer("SQLAnalysisProposer").execute();
-        List<OlapContext> ctxs = Lists.newArrayList();
-        smartMaster.getContext().getModelContexts()
-                .forEach(nModelContext -> ctxs.addAll(nModelContext.getModelTree().getOlapContexts()));
-        return ctxs;
     }
 }

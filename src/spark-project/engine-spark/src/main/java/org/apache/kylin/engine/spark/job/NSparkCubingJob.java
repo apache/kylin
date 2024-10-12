@@ -300,7 +300,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
             return;
         }
         NDataflowManager dfManager = NDataflowManager.getInstance(getConfig(), getProject());
-        NDataflow df = dfManager.getDataflow(getSparkCubingStep().getDataflowId()).copy();
+        NDataflow df = dfManager.getDataflow(getSparkCubingStep().getDataflowId());
         Set<String> segmentIds = getSparkCubingStep().getSegmentIds();
         Set<Long> partitions = getSparkCubingStep().getTargetPartitions();
         Set<String> existsSegments = Sets.newHashSet();

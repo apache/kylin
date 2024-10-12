@@ -207,10 +207,9 @@ public class DFBuildJob extends SparkApplication {
             map.put(entry.getKey(), (long) (Long.parseLong(entry.getValue().toString()) * multiple));
         }
         NDataflow dataflow = dfMgr.getDataflow(dataflowId);
-        NDataflow newDF = dataflow.copy();
         val update = new NDataflowUpdate(dataflow.getUuid());
         List<NDataSegment> nDataSegments = Lists.newArrayList();
-        NDataSegment segment = newDF.getSegment(id);
+        NDataSegment segment = dataflow.getSegment(id).copy();
         segment.setSourceCount(rowCount);
         segment.getColumnSourceBytes().putAll(map);
         nDataSegments.add(segment);
@@ -239,11 +238,10 @@ public class DFBuildJob extends SparkApplication {
 
     protected void updateSegmentSourceBytesSize(String dataflowId, Map<String, Object> toUpdateSegmentSourceSize) {
         NDataflow dataflow = dfMgr.getDataflow(dataflowId);
-        NDataflow newDF = dataflow.copy();
         val update = new NDataflowUpdate(dataflow.getUuid());
         List<NDataSegment> dataSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
-            NDataSegment segment = newDF.getSegment(entry.getKey());
+            NDataSegment segment = dataflow.getSegment(entry.getKey()).copy();
             if (Objects.isNull(segment)) {
                 logger.info("Skip empty segment {} when updating segment source", entry.getKey());
                 continue;
@@ -458,10 +456,7 @@ public class DFBuildJob extends SparkApplication {
         // reset flags in mem meta-store before being dumped to meta_out
         // segment resumable flags shouldn't cross building jobs
         Optional.ofNullable(segmentIds).orElseGet(Collections::emptySet).forEach(segId -> {
-            NDataSegment readOnlySeg = getSegment(segId);
-            NDataflow readOnlyDf = readOnlySeg.getDataflow();
-            NDataflow dfCopy = readOnlyDf.copy();
-            NDataSegment segCopy = dfCopy.getSegment(readOnlySeg.getId());
+            NDataSegment segCopy = getSegment(segId).copy();
 
             // reset
             segCopy.setDictReady(false);
@@ -470,7 +465,7 @@ public class DFBuildJob extends SparkApplication {
             }
             segCopy.setFactViewReady(false);
 
-            NDataflowUpdate dfUpdate = new NDataflowUpdate(readOnlyDf.getId());
+            NDataflowUpdate dfUpdate = new NDataflowUpdate(segCopy.getModelUuid());
             dfUpdate.setToUpdateSegs(segCopy);
 
             NDataflowManager.getInstance(config, project).updateDataflow(dfUpdate);

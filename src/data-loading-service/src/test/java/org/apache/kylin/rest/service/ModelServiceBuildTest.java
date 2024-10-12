@@ -1353,7 +1353,7 @@ public class ModelServiceBuildTest extends SourceTestCase {
         val df2 = dataflowManager.getDataflow(dataModel.getUuid());
         modelService.deleteSegmentById("741ca86a-1f13-46da-a59f-95fb68615e3a", "default",
                 new String[] { segments.get(2).getId(), segments.get(3).getId() }, false);
-        Assert.assertEquals(6, df2.getSegments().size());
+        Assert.assertEquals(4, df2.getSegments().size());
     }
 
     @Test

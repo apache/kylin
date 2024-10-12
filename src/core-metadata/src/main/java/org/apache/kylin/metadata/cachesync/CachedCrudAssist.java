@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.cachesync;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -34,6 +33,7 @@ import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.TransparentResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.ThreadUtil;
@@ -41,6 +41,7 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CustomKeyEquivalenceCacheBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.model.exception.ModelBrokenException;
 import org.apache.kylin.util.BrokenEntityProxy;
 
 import lombok.AccessLevel;
@@ -69,7 +70,7 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
         this.type = type;
         this.project = project;
         this.serializer = new JsonSerializer<>(entityType);
-        this.cache = CustomKeyEquivalenceCacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
+        this.cache = CustomKeyEquivalenceCacheBuilder.newBuilder(type).build();
         this.checker = new CacheReloadChecker<>(store, this);
 
         this.checkCopyOnWrite = store.getConfig().isCheckCopyOnWrite();
@@ -218,14 +219,28 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
     public T get(String resourceName) {
         return get(resourceName, false);
     }
+
     private T get(String resourceName, boolean needLock) {
-        val raw = store.getResource(resourcePath(resourceName), needLock);
+        String resourcePath = resourcePath(resourceName);
+        if (store instanceof TransparentResourceStore && needLock) {
+            // Read from metadataStore directly, no need to update cache
+            T entity = store.getResource(resourcePath, serializer, true);
+            if (entity != null) {
+                try {
+                    entity = initEntityAfterReload(entity, resourceName);
+                } catch (ModelBrokenException ignore) {
+                    entity = initBrokenEntity(entity, resourceName);
+                }
+            }
+            return entity;
+        }
+        val raw = store.getResource(resourcePath, needLock);
         if (raw == null || (project != null && raw.getProject() != null && !project.equals(raw.getProject()))) {
             cache.invalidate(resourceName);
             return null;
         }
         if (checker.needReload(resourceName)) {
-            reloadAt(resourcePath(resourceName));
+            reloadAt(resourcePath);
         }
         return cache.getIfPresent(resourceName);
     }

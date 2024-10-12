@@ -23,13 +23,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.CommonErrorCode;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.Manager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,14 +68,20 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
         return ComputedColumnDesc.class;
     }
 
-    public ComputedColumnDesc saveCCWithCheck(ComputedColumnDesc entity) {
+    public ComputedColumnDesc saveCCWithCheck(NDataModel model, ComputedColumnDesc entity) {
         ComputedColumnDesc existing = getByName(entity.getTableIdentity(), entity.getColumnName());
         if (existing == null) {
+            // In case of the cc's name is changed
             existing = get(entity.resourceName()).orElse(null);
         }
         if (existing != null) {
             if (noNeedToUpdate(existing, entity)) {
                 return existing;
+            }
+            List<String> otherModels = relationModels(existing.getUuid(), model.getUuid());
+            if (!otherModels.isEmpty() && ccSemanticsChanged(existing, otherModels.get(0), entity, model)) {
+                throw new KylinException(CommonErrorCode.FAILED_UPDATE_METADATA,
+                        "CC used in multiple models cannot be updated." + entity);
             }
             return super.update(existing.getUuid(), copyForWrite -> {
                 copyForWrite.setColumnName(entity.getColumnName());
@@ -81,6 +91,7 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
                 copyForWrite.setTableAlias(entity.getTableAlias());
                 copyForWrite.setTableIdentity(entity.getTableIdentity());
                 copyForWrite.setComment(entity.getComment());
+                ComputedColumnUtil.computeMd5(config, model, copyForWrite);
             });
         }
 
@@ -88,6 +99,7 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
         ComputedColumnDesc copied = this.copy(entity);
         copied.setUuid(RandomUtil.randomUUIDStr());
         copied.setMvcc(-1);
+        ComputedColumnUtil.computeMd5(config, model, copied);
         return super.createAS(copied);
     }
 
@@ -99,6 +111,29 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
                 && Objects.equals(existing.getExpression(), entity.getExpression())
                 && Objects.equals(existing.getComment(), entity.getComment())
                 && Objects.equals(existing.getColumnName(), entity.getColumnName());
+    }
+    
+    protected List<String> relationModels(String uuid, String modelUuid) {
+        Manager<CcModelRelationDesc> relationManager = Manager.getInstance(config, project, CcModelRelationDesc.class);
+        return relationManager.listByFilter(RawResourceFilter.equalFilter("ccUuid", uuid)).stream()
+                .map(CcModelRelationDesc::getModelUuid)
+                .filter(relationModelUuid -> !relationModelUuid.equals(modelUuid)).collect(Collectors.toList());
+    }
+
+    private boolean ccSemanticsChanged(ComputedColumnDesc existing, String existingModelUuid, ComputedColumnDesc entity,
+            NDataModel model) {
+        if (!config.validateComputedColumn()) {
+            return false;
+        }
+        String existingMD5 = existing.getExpressionMD5();
+        if (existingMD5 == null) {
+            NDataModel originModel = NDataModelManager.getInstance(config, project).getDataModelDesc(existingModelUuid);
+            ComputedColumnUtil.computeMd5(config, originModel, existing);
+            existingMD5 = existing.getExpressionMD5();
+        }
+        ComputedColumnUtil.computeMd5(config, model, entity);
+        String newMD5 = entity.getExpressionMD5();
+        return !existingMD5.equals(newMD5);
     }
 
     public ComputedColumnDesc getByName(String tableIdentity, String columnName) {

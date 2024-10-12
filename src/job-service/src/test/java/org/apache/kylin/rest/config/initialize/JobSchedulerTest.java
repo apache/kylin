@@ -224,7 +224,7 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         }, DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(df.getSegments().get(0), MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
-        val segmentResponse = new NDataSegmentResponse(df, df.getSegments().get(0), executables);
+        val segmentResponse = new NDataSegmentResponse(df, df.getSegments(), df.getSegments().get(0), executables);
         Assert.assertEquals(1, segmentResponse.getLockedIndexCount());
         Assert.assertEquals(18, getProcessLayout(executables.get(0)));
     }

@@ -26,7 +26,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
-import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
@@ -64,7 +63,8 @@ public class SparderPlanExec implements QueryPlanExec {
 
         // select realizations
         QueryContext.currentTrace().startSpan(QueryTrace.MODEL_MATCHING);
-        QueryContextCutter.selectRealization(QueryContext.current().getProject(), rel, BackdoorToggles.isModelingSql());
+        QueryContextCutter.selectRealization(QueryContext.current().getProject(), rel,
+                QueryContext.current().isForModeling());
 
         QueryContext.current().getQueryPlan().setCalcitePlan(RelOptUtil.toString(rel));
         ContextUtil.dumpCalcitePlan("Calcite PLAN AFTER SELECT REALIZATION:", rel, log);

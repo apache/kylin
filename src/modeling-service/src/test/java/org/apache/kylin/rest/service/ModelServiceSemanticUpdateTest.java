@@ -77,9 +77,11 @@ import org.apache.kylin.metadata.model.NDataModel.NamedColumn;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.ModelParatitionDescRequest;
@@ -166,6 +168,7 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
             //
         }
         JobContextUtil.getJobInfoDao(getTestConfig());
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @After
@@ -517,7 +520,7 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
         ccList.add(cc3);
         ComputedColumnManager ccManager = ComputedColumnManager.getInstance(getTestConfig(), getProject());
         ccList.forEach(cc -> {
-            ComputedColumnDesc created = ccManager.saveCCWithCheck(cc);
+            ComputedColumnDesc created = ccManager.saveCCWithCheck(model, cc);
             model.getComputedColumnUuids().add(created.getUuid());
         });
 

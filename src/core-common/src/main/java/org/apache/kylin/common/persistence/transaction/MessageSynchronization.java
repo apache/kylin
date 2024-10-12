@@ -113,7 +113,7 @@ public class MessageSynchronization {
             ByteSource byteSource = raw.getContentDiff() != null ? RawResource.applyContentDiffFromRaw(oldRaw, raw)
                     : raw.getByteSource();
             if (resourceStore.getMetadataStore() instanceof FileSystemMetadataStore) {
-                resourceStore.putResourceByReplyWithoutCheck(resPath, byteSource, raw.getTs(), raw.getMvcc());
+                resourceStore.putResourceWithoutCheck(resPath, byteSource, raw.getTs(), raw.getMvcc(), true);
             } else {
                 resourceStore.checkAndPutResource(resPath, byteSource, raw.getTs(), raw.getMvcc() - 1);
             }

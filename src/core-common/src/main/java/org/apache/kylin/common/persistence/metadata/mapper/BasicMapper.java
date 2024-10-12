@@ -29,8 +29,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.ibatis.annotations.InsertProvider;
+import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.metadata.MetadataMapperFactory;
+import org.apache.kylin.common.persistence.metadata.jdbc.SqlWithRecordLockProviderAdapter;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.SqlColumn;
@@ -148,12 +150,8 @@ public interface BasicMapper<T extends RawResource> extends CommonCountMapper, C
         return MyBatis3Utils.deleteFrom(this::delete, getSqlTable(), completer);
     }
 
-    default Optional<T> selectOne(SelectDSLCompleter completer) {
-        return selectOneWithColumns(completer, getSelectList());
-    }
-
-    default Optional<T> selectOneWithColumns(SelectDSLCompleter completer, BasicColumn[] selectCols) {
-        return MyBatis3Utils.selectOne(this::selectOne, selectCols, getSqlTable(), completer);
+    default Optional<T> selectOneWithColumnsAndRecordLock(SelectDSLCompleter completer, BasicColumn[] selectCols) {
+        return MyBatis3Utils.selectOne(this::selectOneWithRecordLock, selectCols, getSqlTable(), completer);
     }
 
     List<T> selectMany(SelectStatementProvider selectStatementProvider);
@@ -164,6 +162,10 @@ public interface BasicMapper<T extends RawResource> extends CommonCountMapper, C
     int insert(InsertStatementProvider<T> insertStatement);
 
     Optional<T> selectOne(SelectStatementProvider selectStatement);
+
+    @SelectProvider(type = SqlWithRecordLockProviderAdapter.class, method = "select")
+    Optional<T> selectOneWithRecordLock(SelectStatementProvider selectStatement);
+
 
     default List<T> select(SelectDSLCompleter completer) {
         return MyBatis3Utils.selectList(this::selectMany, getSelectList(), getSqlTable(), completer);

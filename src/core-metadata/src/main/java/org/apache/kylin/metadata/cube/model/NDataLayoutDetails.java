@@ -139,7 +139,7 @@ public class NDataLayoutDetails extends RootPersistentEntity implements Serializ
                 return conditionBuilder.buildDateRangeCondition(partitionDesc, null, segmentRange).replace(
                         partitionDesc.getPartitionDateColumnRef().getBackTickExp(),
                         "`" + df.getModel().getPartitionColumnId() + "`");
-            }).reduce((current, res) -> res + " and " + current).orElse("");
+            }).reduce((current, res) -> res + " or " + current).orElse("");
             return expr;
         } else
             return null;

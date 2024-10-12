@@ -18,15 +18,22 @@
 
 package org.apache.kylin.metadata.cube.model;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 public class NDataSegmentManager extends Manager<NDataSegment> {
     private static final Logger logger = LoggerFactory.getLogger(NDataSegmentManager.class);
@@ -101,5 +108,16 @@ public class NDataSegmentManager extends Manager<NDataSegment> {
             return Optional.empty();
         }
         return Optional.ofNullable(crud.get(resourceName));
+    }
+    
+    public Segments<NDataSegment> getSegmentsUnderDataflow(NDataflow df) {
+        return getSegments(df, df.getSegmentUuids());
+    }
+
+    public Segments<NDataSegment> getSegments(NDataflow df, Collection<String> segIds) {
+        List<NDataSegment> segments = segIds.stream().map(uuid -> getWithoutInitDataflow(uuid).orElse(null))
+                .filter(Objects::nonNull).collect(Collectors.toList());
+        segments.forEach(seg -> seg.setDataflow(df));
+        return new Segments<>(segments);
     }
 }

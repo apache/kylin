@@ -19,7 +19,9 @@
 package org.apache.kylin.metadata.model.graph;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -134,9 +136,21 @@ public class Edge implements Serializable {
     @Override
     public String toString() {
         // Edge: TableRef[TEST_KYLIN_FACT] LEFT JOIN TableRef[TEST_ORDER] ON [ORDER_ID] = [ORDER_ID]
-        return "Edge: " + join.getFKSide() + getJoinTypeStr() + join.getPKSide() + " ON "
-                + Arrays.toString(Arrays.stream(leftCols).map(ColumnDesc::getName).toArray()) + " = "
-                + Arrays.toString(Arrays.stream(rightCols).map(ColumnDesc::getName).toArray());
+        return toString(false, false);
+    }
+
+    public String toString(boolean needSortJoinKeys, boolean useTableIdentity) {
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < leftCols.length; i++) {
+            indices.add(i);
+        }
+        if (needSortJoinKeys) {
+            indices.sort((i1, i2) -> leftCols[i1].getName().compareTo(leftCols[i2].getName()));
+        }
+        return "Edge: " + (useTableIdentity ? join.getFKSide().getTableIdentity() : join.getFKSide()) + getJoinTypeStr()
+                + (useTableIdentity ? join.getPKSide().getTableIdentity() : join.getPKSide()) + " ON "
+                + Arrays.toString(indices.stream().map(idx -> leftCols[idx].getName()).toArray()) + " = "
+                + Arrays.toString(indices.stream().map(idx -> rightCols[idx].getName()).toArray());
     }
 
     private String getJoinTypeStr() {
