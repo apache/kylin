@@ -44,6 +44,7 @@ import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURC
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
 import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,6 +61,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
@@ -1521,6 +1523,31 @@ class KylinConfigBaseTest {
         Assertions.assertEquals(2, map.get(13).size());
         Assertions.assertEquals(3003, map.get(9).get(2));
         Assertions.assertEquals(5002, map.get(13).get(1));
+    }
+
+    @Test
+    public void getKylinExtJarsPath() throws Exception {
+        val config = KylinConfig.getInstanceFromEnv();
+        val kylinHome = KylinConfig.getKylinHome();
+        val libExtDir = new File(kylinHome + File.separator + "lib/ext");
+        FileUtils.forceMkdir(libExtDir);
+        val glutenJar = new File(libExtDir, "gluten.jar");
+        FileUtils.write(glutenJar, "gluten jar");
+        val celebornJar = new File(libExtDir, "celeborn-client-spark-3.jar");
+        FileUtils.write(celebornJar, "celeborn client spark3 jar");
+        val mysqlJar = new File(libExtDir, "mysqlJar.jar");
+        FileUtils.write(mysqlJar, "mysqlJar jar");
+        val glutenCelebornJar = new File(libExtDir, "gluten-celeborn-clickhouse-jar-with-dependencies.jar");
+        FileUtils.write(glutenCelebornJar, "gluten celeborn jar");
+
+        val withGluten = config.getKylinExtJarsPath(true);
+        val withGlutenExpected = "," + glutenJar.getAbsolutePath() + "," + celebornJar.getAbsolutePath() + ","
+                + mysqlJar.getAbsolutePath() + "," + glutenCelebornJar.getAbsolutePath();
+        Assertions.assertEquals(withGlutenExpected, withGluten);
+
+        val withoutGluten = config.getKylinExtJarsPath(false);
+        val withoutExpected = "," + celebornJar.getAbsolutePath() + "," + mysqlJar.getAbsolutePath();
+        Assertions.assertEquals(withoutExpected, withoutGluten);
     }
 }
 

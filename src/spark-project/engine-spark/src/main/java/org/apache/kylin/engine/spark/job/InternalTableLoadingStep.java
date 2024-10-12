@@ -91,4 +91,8 @@ public class InternalTableLoadingStep extends NSparkExecutable {
         return result;
     }
 
+    @Override
+    public boolean isInternalTableSparkJob() {
+        return true;
+    }
 }

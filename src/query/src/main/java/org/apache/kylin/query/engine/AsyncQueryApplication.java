@@ -42,6 +42,7 @@ import org.apache.kylin.metadata.query.util.QueryHistoryUtil;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.spark.sql.KapFunctions;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.udf.UdfManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,11 @@ public class AsyncQueryApplication extends SparkApplication {
         } finally {
             QueryMetricsContext.reset();
         }
+    }
+
+    @Override
+    public void reportSparkJobExtraInfo(SparkSession sparkSession) {
+        // do nothing
     }
 
     @Override

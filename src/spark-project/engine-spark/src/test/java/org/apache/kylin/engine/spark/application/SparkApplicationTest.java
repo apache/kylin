@@ -18,12 +18,22 @@
 
 package org.apache.kylin.engine.spark.application;
 
+import static org.apache.kylin.job.constant.ExecutableConstants.COLUMNAR_SHUFFLE_MANAGER;
+import static org.apache.kylin.job.constant.ExecutableConstants.GLUTEN_PLUGIN;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_PLUGINS;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_SHUFFLE_MANAGER;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -31,12 +41,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.job.BuildJobInfos;
+import org.apache.kylin.engine.spark.job.InternalTableLoadJob;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.job.MockJobProgressReport;
 import org.apache.kylin.engine.spark.job.ParamsConstants;
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport;
+import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import org.apache.kylin.engine.spark.scheduler.JobFailed;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -49,9 +62,11 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.application.MockClusterManager;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
@@ -63,7 +78,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.val;
 
 public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
-
 
     File tempDir = new File("./temp/");
     File file1 = new File(tempDir, "temp1_" + ResourceDetectUtils.fileName());
@@ -98,7 +112,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         map2.put("1", 200L);
         ResourceDetectUtils.write(new Path(file2.getAbsolutePath()), map2);
 
-        Assert.assertEquals("300b", application.chooseContentSize(new Path(tempDir.getAbsolutePath())));
+        assertEquals("300b", application.chooseContentSize(new Path(tempDir.getAbsolutePath())));
     }
 
     @Test
@@ -134,7 +148,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         params.put(ParamsConstants.JOB_TMP_DIR, getTestConfig().getJobTmpDir("test_job_output", true));
         Mockito.doReturn(Boolean.TRUE).when(report).updateSparkJobInfo(params, "/kylin/api/jobs/spark", payloadJson);
 
-        Assert.assertTrue(report.updateSparkJobExtraInfo(params, "/kylin/api/jobs/spark", "test_job_output",
+        assertTrue(report.updateSparkJobExtraInfo(params, "/kylin/api/jobs/spark", "test_job_output",
                 "cb91189b-2b12-4527-aa35-0130e7d54ec0", extraInfo));
 
         Mockito.verify(report).updateSparkJobInfo(params, "/kylin/api/jobs/spark", payloadJson);
@@ -144,7 +158,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         Mockito.doReturn("http://sandbox.hortonworks.com:8088/proxy/application_1561370224051_0160/").when(application)
                 .getTrackingUrl(null, ss);
         Mockito.doReturn(Boolean.FALSE).when(report).updateSparkJobInfo(params, "/kylin/api/jobs/spark", payloadJson);
-        Assert.assertFalse(report.updateSparkJobExtraInfo(params, "/kylin/api/jobs/spark", "test_job_output",
+        assertFalse(report.updateSparkJobExtraInfo(params, "/kylin/api/jobs/spark", "test_job_output",
                 "cb91189b-2b12-4527-aa35-0130e7d54ec0", extraInfo));
 
         Mockito.verify(report, Mockito.times(3)).updateSparkJobInfo(params, "/kylin/api/jobs/spark", payloadJson);
@@ -180,7 +194,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         Mockito.when(sparkApplication.checkRangePartitionTableIsExist(Mockito.any())).thenCallRealMethod();
         tableRefs.add(tableRef);
         nDataModel.setAllTableRefs(tableRefs);
-        Assert.assertFalse(sparkApplication.checkRangePartitionTableIsExist(nDataModel));
+        assertFalse(sparkApplication.checkRangePartitionTableIsExist(nDataModel));
 
         NDataModel nDataModel2 = new NDataModel();
         nDataModel2.setUuid(UUID.randomUUID().toString());
@@ -196,7 +210,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         tableRefs.clear();
         tableRefs.add(tableRef);
         nDataModel2.setAllTableRefs(tableRefs);
-        Assert.assertTrue(sparkApplication.checkRangePartitionTableIsExist(nDataModel2));
+        assertTrue(sparkApplication.checkRangePartitionTableIsExist(nDataModel2));
     }
 
     @Test
@@ -206,15 +220,16 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         SparkApplication application = new SparkApplication() {
             @Override
             protected void doExecute() {
+                // do nothing
             }
         };
         File upload = new File(path);
         FileUtils.forceMkdir(upload);
-        Assert.assertTrue(upload.exists());
+        assertTrue(upload.exists());
         config.setProperty(config.getKubernetesUploadPathKey(), path);
         ReflectionTestUtils.setField(application, "config", config);
         application.extraDestroy();
-        Assert.assertFalse(upload.exists());
+        assertFalse(upload.exists());
     }
 
     @Test
@@ -223,6 +238,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         SparkApplication application = new SparkApplication() {
             @Override
             protected void doExecute() {
+                // do nothing
             }
         };
         application.config = config;
@@ -240,15 +256,68 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         sparkConf.set("spark.eventLog.enabled", "false");
         sparkConf.set("spark.eventLog.dir", notExistedLogDir.toString());
         application.exchangeSparkConf(sparkConf);
-        assert !fs.exists(notExistedLogDir);
+        assertFalse(fs.exists(notExistedLogDir));
         sparkConf.set("spark.eventLog.enabled", "true");
         application.exchangeSparkConf(sparkConf);
-        assert fs.exists(notExistedLogDir);
+        assertTrue(fs.exists(notExistedLogDir));
         sparkConf.set("spark.eventLog.dir", existedLogDir.toString());
         application.exchangeSparkConf(sparkConf);
-        assert fs.exists(existedLogDir);
+        assertTrue(fs.exists(existedLogDir));
         sparkConf.set("spark.eventLog.dir", "");
         application.exchangeSparkConf(sparkConf);
+    }
+
+    @Test
+    public void testNotInternalTableLoadJobRemoveGluten() throws Exception {
+        val sparkPrefix = "kylin.engine.spark-conf.";
+        val config = getTestConfig();
+        config.setProperty("kylin.env", "PROD");
+        config.setProperty(sparkPrefix + SPARK_PLUGINS, GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin");
+        config.setProperty(sparkPrefix + "spark.gluten.enable", "true");
+        config.setProperty(sparkPrefix + "spark.master", "yarn");
+        config.setProperty(sparkPrefix + "spark.eventLog.enabled", "false");
+        val application = new SparkApplication() {
+            @Override
+            protected void doExecute() {
+                // do nothing
+            }
+        };
+        application.config = config;
+        assertWithGluten(application);
+
+        application.className = InternalTableLoadJob.class.getName();
+        assertWithGluten(application);
+
+        application.className = SegmentBuildJob.class.getName();
+        assertWithOutGluten(application);
+    }
+
+    private static void assertWithGluten(SparkApplication application) throws Exception {
+        val sparkConf = new SparkConf();
+        sparkConf.set("spark.master", "yarn");
+        sparkConf.set("spark.eventLog.enabled", "false");
+        application.exchangeSparkConf(sparkConf);
+        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
+                "atomicSparkConf"));
+        val actalSparkConf = atomicSparkConf.get();
+        assertEquals(COLUMNAR_SHUFFLE_MANAGER, actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
+        assertEquals("true", actalSparkConf.get("spark.gluten.enable"));
+        assertEquals(GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
+        assertEquals("yarn", actalSparkConf.get("spark.master"));
+        assertEquals("false", actalSparkConf.get("spark.eventLog.enabled"));
+    }
+
+    private static void assertWithOutGluten(SparkApplication application) throws Exception {
+        val sparkConf = new SparkConf();
+        sparkConf.set("spark.master", "yarn");
+        sparkConf.set("spark.eventLog.enabled", "false");
+        application.exchangeSparkConf(sparkConf);
+        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
+                "atomicSparkConf"));
+        val actalSparkConf = atomicSparkConf.get();
+        assertFalse(Arrays.stream(actalSparkConf.getAll()).anyMatch(conf -> conf._1.contains("gluten")));
+        assertEquals("sort", actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
+        assertEquals("org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
     }
 
     @Test
@@ -258,6 +327,7 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         SparkApplication application = Mockito.spy(new SparkApplication() {
             @Override
             protected void doExecute() {
+                // do nothing
             }
         });
 
@@ -291,5 +361,43 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
 
         Mockito.verify(application.getReport(), Mockito.times(1)).updateSparkJobInfo(paramsMap, "/kylin/api/jobs/error",
                 json);
+    }
+
+    @Test
+    public void reportSparkJobExtraInfo() {
+        overwriteSystemProp("kylin.env", "PROD");
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name",
+                MockClusterManager.class.getCanonicalName());
+        val appId = RandomUtil.randomUUIDStr();
+        val config = getTestConfig();
+        val sparkSession = Mockito.mock(SparkSession.class);
+        val sparkContext = Mockito.mock(SparkContext.class);
+        Mockito.when(sparkSession.sparkContext()).thenReturn(sparkContext);
+        Mockito.when(sparkContext.applicationId()).thenReturn(appId);
+        Mockito.when(sparkContext.conf()).thenReturn(new SparkConf());
+        val application = Mockito.spy(new SparkApplication() {
+            @Override
+            protected void doExecute() {
+                // only for test
+            }
+        });
+        MockJobProgressReport mockJobProgressReport = Mockito.spy(new MockJobProgressReport());
+        Mockito.when(application.getReport()).thenReturn(mockJobProgressReport);
+        ReflectionTestUtils.setField(application, "config", config);
+        val atomicBuildEnv = new AtomicReference<KylinBuildEnv>(KylinBuildEnv.getOrCreate(config));
+        ReflectionTestUtils.setField(application, "atomicBuildEnv", atomicBuildEnv);
+        application.reportSparkJobExtraInfo(sparkSession);
+
+        val paramsMap = Maps.<String, String> newHashMap();
+        paramsMap.put(ParamsConstants.TIME_OUT, String.valueOf(config.getUpdateJobInfoTimeout()));
+        paramsMap.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(null, true));
+        val json = Maps.<String, String> newHashMap();
+        json.put("queue_name", "default");
+        json.put("job_last_running_start_time", null);
+        json.put("cores", "0");
+        json.put("memory", "0");
+        json.put("yarn_app_id", appId);
+        Mockito.verify(application.getReport(), Mockito.times(1)).updateSparkJobExtraInfo(paramsMap,
+                "/kylin/api/jobs/spark", null, null, json);
     }
 }

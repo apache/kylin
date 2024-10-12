@@ -35,6 +35,15 @@ public class SchemaConverterTest {
 
     @Test
     void testCatalogConvert() {
+        String sql = "select t1.id t_id from SSB.P_LINEORDER t1 left join \"SSB\".\"PART\" on t1.PARTKEY = PART.PARTKEY "
+                + "union all select * from SSB.LINEORDER union all select * from \"DEFAULT\".TEST_COUNTRY t";
+
+        String expectedSql = "select t1.id t_id from \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"P_LINEORDER\" t1 "
+                + "left join \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"PART\" on t1.PARTKEY = PART.PARTKEY "
+                + "union all select * from \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"LINEORDER\" "
+                + "union all select * from \"INTERNAL_CATALOG\".\"default\".\"DEFAULT\".\"TEST_COUNTRY\" t";
+        Assertions.assertEquals(sql, converter.convert(sql, "default", null));
+
         getTestConfig().setProperty("kylin.internal-table-enabled", "true");
 
         InternalTableManager innerTableMgr = InternalTableManager.getInstance(getTestConfig(), "default");
@@ -43,17 +52,23 @@ public class SchemaConverterTest {
             innerTableMgr.createInternalTable(new InternalTableDesc(tableDesc));
         }
 
-        String sql = "select t1.id t_id from SSB.P_LINEORDER t1 left join \"SSB\".\"PART\" on t1.PARTKEY = PART.PARTKEY "
-                + "union all select * from SSB.LINEORDER union all select * from \"DEFAULT\".TEST_COUNTRY t";
-
-        String expectedSql = "select t1.id t_id from \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"P_LINEORDER\" t1 "
-                + "left join \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"PART\" on t1.PARTKEY = PART.PARTKEY "
-                + "union all select * from \"INTERNAL_CATALOG\".\"default\".\"SSB\".\"LINEORDER\" "
-                + "union all select * from \"INTERNAL_CATALOG\".\"default\".\"DEFAULT\".\"TEST_COUNTRY\" t";
-
         Assertions.assertEquals(sql, converter.convert(sql, "default", null));
 
         QueryContext.current().getQueryTagInfo().setPushdown(true);
+
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "true");
+        Assertions.assertEquals(sql, converter.convert(sql, "default", null));
+
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(false);
+        Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "false");
+        Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+        Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
     }
 }

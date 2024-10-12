@@ -20,8 +20,15 @@ package org.apache.kylin.job.common;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_INDEX_FAIL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_EMPTY;
+import static org.apache.kylin.job.constant.ExecutableConstants.COLUMNAR_SHUFFLE_MANAGER;
+import static org.apache.kylin.job.constant.ExecutableConstants.GLUTEN_PLUGIN;
+import static org.apache.kylin.job.constant.ExecutableConstants.GLUTEN_PREFIX;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_PLUGINS;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_SHUFFLE_MANAGER;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeProducer;
@@ -150,5 +158,26 @@ public abstract class ExecutableUtil {
      * Only multi partition model
      */
     public void computePartitions(JobParam jobParam) {
+    }
+
+    public static Map<String, String> removeGultenParams(Map<String, String> params) {
+        params.computeIfPresent(SPARK_PLUGINS, (pluginKey, pluginValue) -> {
+            String tempPluginValue = pluginValue;
+            String comma = ",";
+            if (StringUtils.contains(pluginValue, GLUTEN_PLUGIN)) {
+                tempPluginValue = Arrays.stream(tempPluginValue.split(comma))
+                        .filter(p -> !StringUtils.equals(p, GLUTEN_PLUGIN)).collect(Collectors.joining(comma));
+            }
+            return tempPluginValue;
+        });
+        params.computeIfPresent(SPARK_SHUFFLE_MANAGER, (pluginKey, pluginValue) -> {
+            String tempPluginValue = pluginValue;
+            if (StringUtils.equals(pluginValue, COLUMNAR_SHUFFLE_MANAGER)) {
+                tempPluginValue = "sort";
+            }
+            return tempPluginValue;
+        });
+        return params.entrySet().stream().filter(e -> !e.getKey().startsWith(GLUTEN_PREFIX))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

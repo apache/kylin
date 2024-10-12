@@ -1564,7 +1564,7 @@ public abstract class KylinConfigBase implements Serializable {
         return SizeConvertUtil.byteStringAs(getOptional("kylin.streaming.custom-jar-size", "20mb"), ByteUnit.BYTE);
     }
 
-    public String getKylinExtJarsPath() {
+    public String getKylinExtJarsPath(Boolean withGluten) {
         String kylinHome = getKylinHome();
         if (StringUtils.isEmpty(kylinHome)) {
             return "";
@@ -1575,6 +1575,9 @@ public abstract class KylinConfigBase implements Serializable {
         }
         StringBuilder extJar = new StringBuilder();
         for (File file : files) {
+            if (!withGluten && StringUtils.containsIgnoreCase(file.getName(), "gluten")) {
+                continue;
+            }
             extJar.append(",");
             extJar.append(file.getAbsolutePath());
         }

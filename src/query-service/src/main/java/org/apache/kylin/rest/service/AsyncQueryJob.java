@@ -61,6 +61,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.job.DefaultSparkBuildJobHandler;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -137,7 +138,7 @@ public class AsyncQueryJob extends NSparkExecutable {
         if (UserGroupInformation.isSecurityEnabled()) {
             overrides.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
         }
-        return overrides;
+        return ExecutableUtil.removeGultenParams(overrides);
     }
 
     @Override
@@ -147,7 +148,7 @@ public class AsyncQueryJob extends NSparkExecutable {
 
     @Override
     protected String getExtJar() {
-        return getConfig().getKylinExtJarsPath();
+        return getConfig().getKylinExtJarsPath(false);
     }
 
     @Override
@@ -229,5 +230,7 @@ public class AsyncQueryJob extends NSparkExecutable {
         if (!KylinInfoExtension.getFactory().checkKylinInfo()) {
             props.setProperty("kylin.streaming.enabled", KylinConfig.FALSE);
         }
+        props.put("kylin.internal-table-enabled", KylinConfig.FALSE);
+        props.remove("kylin.storage.columnar.spark-conf.spark.sql.catalog.INTERNAL_CATALOG");
     }
 }

@@ -25,6 +25,12 @@ public final class ExecutableConstants {
     private ExecutableConstants() {
     }
 
+    public static final String SPARK_PLUGINS = "spark.plugins";
+    public static final String GLUTEN_PREFIX = "spark.gluten.";
+    public static final String GLUTEN_PLUGIN = "org.apache.gluten.GlutenPlugin";
+    public static final String COLUMNAR_SHUFFLE_MANAGER = "org.apache.spark.shuffle.sort.ColumnarShuffleManager";
+    public static final String SPARK_SHUFFLE_MANAGER = "spark.shuffle.manager";
+
     public static final String YARN_APP_ID = "yarn_application_id";
     public static final String YARN_APP_IDS = "yarn_application_ids";
     public static final String YARN_APP_IDS_DELIMITER = ",";

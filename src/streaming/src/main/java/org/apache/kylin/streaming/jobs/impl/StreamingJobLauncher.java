@@ -397,7 +397,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
                 .setConf(SparkLauncher.EXECUTOR_EXTRA_CLASSPATH, Paths.get(kylinJobJar).getFileName().toString())
                 .setConf(SPARK_DRIVER_OPTS, wrapDriverJavaOptions(sparkConf))
                 .setConf(SPARK_EXECUTOR_OPTS, wrapExecutorJavaOptions(sparkConf))
-                .setConf(SPARK_YARN_AM_OPTS, wrapYarnAmJavaOptions(sparkConf)).addJar(config.getKylinExtJarsPath())
+                .setConf(SPARK_YARN_AM_OPTS, wrapYarnAmJavaOptions(sparkConf)).addJar(config.getKylinExtJarsPath(true))
                 .addFile(config.getLogSparkStreamingExecutorPropertiesFile()).setAppResource(kylinJobJar)
                 .setMainClass(mainClazz).addAppArgs(appArgs);
         handler = sparkLauncher.startApplication(listener);

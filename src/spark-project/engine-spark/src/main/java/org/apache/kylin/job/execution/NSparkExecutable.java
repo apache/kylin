@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.execution;
 
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_PLUGINS;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -60,6 +62,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.JobContext;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.util.JobContextUtil;
@@ -118,7 +121,6 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
 
     public static final String JOB_LAST_RUNNING_START_TIME = "jobLastRunningStartTime";
 
-    protected static final String SPARK_PLUGINS = "spark.plugins";
     protected ISparkJobHandler sparkJobHandler;
 
     private final transient List<StageBase> stages = Lists.newCopyOnWriteArrayList();
@@ -473,6 +475,9 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
 
         if (UserGroupInformation.isSecurityEnabled()) {
             confMap.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
+        }
+        if (!isInternalTableSparkJob()) {
+            return ExecutableUtil.removeGultenParams(confMap);
         }
         return confMap;
     }

@@ -958,4 +958,8 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
             return true;
         });
     }
+
+    public boolean isInternalTableSparkJob() {
+        return false;
+    }
 }

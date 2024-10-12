@@ -55,6 +55,10 @@ public class SchemaConverter implements IPushDownConverter {
             log.debug("Pushdown tag is not found, skip it.");
             return originSql;
         }
+        if (QueryContext.current().getQueryTagInfo().isAsyncQuery() && config.isUniqueAsyncQueryYarnQueue()) {
+            log.debug("Async query, skip it");
+            return originSql;
+        }
         try {
             String transformedSql = transform(originSql, project, config);
             QueryContext.current().setPushdownEngine("GLUTEN");

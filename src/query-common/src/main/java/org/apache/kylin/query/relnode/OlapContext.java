@@ -38,6 +38,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -76,7 +77,7 @@ public class OlapContext {
 
     private static final Logger logger = LoggerFactory.getLogger(OlapContext.class);
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
-    public static final Set<String> UNSUPPORTED_FUNCTION_IN_LOOKUP = new HashSet<>(
+    public static final HashSet<String> UNSUPPORTED_FUNCTION_IN_LOOKUP = new HashSet<>(
             Collections.singleton(FunctionDesc.FUNC_INTERSECT_COUNT));
 
     private final int id;
@@ -464,7 +465,7 @@ public class OlapContext {
             if (tableDesc == null) {
                 return policy;
             }
-            if (olapConfig.isInternalTableEnabled() && tableDesc.isHasInternal()) {
+            if (olapConfig.isInternalTableEnabled() && tableDesc.isHasInternal() && !isAsyncQuery(olapConfig)) {
                 logger.info("Hit internal table {}", factTable);
                 policy = getSQLDigest().isDigestOfRawQuery()//
                         ? NLookupCandidate.Policy.INTERNAL_TABLE
@@ -477,6 +478,10 @@ public class OlapContext {
             }
         }
         return policy;
+    }
+
+    public boolean isAsyncQuery(KylinConfig olapConfig) {
+        return QueryContext.current().getQueryTagInfo().isAsyncQuery() && olapConfig.isUniqueAsyncQueryYarnQueue();
     }
 
     public String incapableMsg() {
