@@ -173,7 +173,7 @@
       </if>
       (lock_node IS NULL OR lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP) AND job_type = 'OFFLINE'
     </where>
-    ORDER BY priority ASC
+      ORDER BY priority ASC,create_time ASC
     <if test="batchSize&gt;=0">
       LIMIT #{batchSize,jdbcType=INTEGER}
     </if>
@@ -190,7 +190,7 @@
     SELECT lock_id
     FROM ${jobLockTable}
     WHERE job_type = 'OFFLINE' and (lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP OR lock_node IS NULL)
-    ORDER BY create_time
+      ORDER BY priority ASC,create_time ASC
     <if test="batchSize&gt;=0">
       LIMIT #{batchSize,jdbcType=INTEGER}
     </if>

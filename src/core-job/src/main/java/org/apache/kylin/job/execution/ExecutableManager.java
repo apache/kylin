@@ -24,7 +24,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STATE_T
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_UPDATE_STATUS_FAILED;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_IDS;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_IDS_DELIMITER;
-import static org.apache.kylin.job.dao.ExecutablePO.HIGHEST_PRIORITY;
 import static org.apache.kylin.job.execution.AbstractExecutable.RUNTIME_INFO;
 
 import java.io.BufferedReader;
@@ -219,7 +218,6 @@ public class ExecutableManager {
 
         AbstractExecutable cronJob = JobFactory.createJobWithDefaultParams(factory, jobType);
         if (cronJob != null) {
-            cronJob.setPriority(HIGHEST_PRIORITY);
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).addJob(cronJob);
                 return null;
