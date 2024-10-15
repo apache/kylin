@@ -364,7 +364,7 @@ public class TableExtService extends BasicService {
         // check if gluten enabled before load table
         if (loadAsInternal && !KylinConfig.getInstanceFromEnv().queryUseGlutenEnabled()) {
             throw new KylinException(GLUTEN_NOT_ENABLED_ERROR,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getGlutenNotEnabled()));
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getGlutenDisabled()));
         }
         for (List<Pair<TableDesc, TableExtDesc>> batch : batches) {
             try {

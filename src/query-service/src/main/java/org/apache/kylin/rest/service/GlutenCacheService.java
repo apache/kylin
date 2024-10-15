@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.GLUTEN_NOT_ENABLED_ERROR;
+import static org.apache.kylin.common.exception.ServerErrorCode.INTERNAL_TABLE_ERROR;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_EXECUTE_ERROR;
 import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
 import static org.apache.kylin.metadata.model.SegmentStatusEnum.WARNING;
@@ -31,10 +33,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.logging.SetLogCategory;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.model.GlutenCacheExecuteResult;
 import org.apache.kylin.rest.request.IndexGlutenCacheRequest;
 import org.apache.kylin.rest.request.InternalTableGlutenCacheRequest;
@@ -104,10 +110,18 @@ public class GlutenCacheService extends BasicService {
 
     public void internalTableGlutenCache(InternalTableGlutenCacheRequest request, HttpServletRequest servletRequest)
             throws Exception {
+        val config = KylinConfig.getInstanceFromEnv();
+        if (!config.queryUseGlutenEnabled()) {
+            throw new KylinException(GLUTEN_NOT_ENABLED_ERROR, MsgPicker.getMsg().getGlutenDisabled());
+        }
+        val project = request.getProject();
+        val projectConfig = NProjectManager.getProjectConfig(project);
+        if (!projectConfig.isInternalTableEnabled()) {
+            throw new KylinException(INTERNAL_TABLE_ERROR, MsgPicker.getMsg().getInternalTableDisabled());
+        }
         val columns = request.getColumns().stream().map(StringUtils::upperCase).collect(Collectors.toList());
         val table = StringUtils.upperCase(request.getDatabase() + "." + request.getTable());
         val start = request.getStart();
-        val project = request.getProject();
         val cacheTableCommand = GlutenCacheUtils.generateCacheTableCommand(getConfig(), project, table, start, columns,
                 true);
         log.info("InternalTable[{}] cache command is [{}]", table, cacheTableCommand);
@@ -115,6 +129,10 @@ public class GlutenCacheService extends BasicService {
     }
 
     public void indexGlutenCache(IndexGlutenCacheRequest request, HttpServletRequest servletRequest) throws Exception {
+        val config = KylinConfig.getInstanceFromEnv();
+        if (!config.queryUseGlutenEnabled()) {
+            throw new KylinException(GLUTEN_NOT_ENABLED_ERROR, MsgPicker.getMsg().getGlutenDisabled());
+        }
         val project = request.getProject();
         val modelAlias = request.getModel();
         val indexes = request.getIndexes();

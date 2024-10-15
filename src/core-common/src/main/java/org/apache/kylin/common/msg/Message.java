@@ -184,7 +184,7 @@ public class Message {
         return "Invalid internal table parameters.";
     }
 
-    public String getGlutenNotEnabled() {
+    public String getGlutenDisabled() {
         return "Gluten is disabled in query function, please enable it and try again.";
     }
 
@@ -460,6 +460,10 @@ public class Message {
 
     public String getNotInternalTable() {
         return "Table \"%s\" is not an internal table. Please check and try again.";
+    }
+
+    public String getInternalTableDisabled() {
+        return "InternalTable is disabled, please enable it and try again.";
     }
 
     public String getSamplingFailedForIllegalTableName() {

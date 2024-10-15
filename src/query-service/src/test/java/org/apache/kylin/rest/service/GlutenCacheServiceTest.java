@@ -31,12 +31,17 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.msg.CnMessage;
+import org.apache.kylin.common.msg.Message;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.streaming.ReflectionUtils;
 import org.apache.kylin.rest.model.GlutenCacheExecuteResult;
 import org.apache.kylin.rest.request.IndexGlutenCacheRequest;
@@ -118,6 +123,9 @@ public class GlutenCacheServiceTest extends NLocalFileMetadataTestCase {
     public void setUp() throws Exception {
         createTestMetadata();
         config = getTestConfig();
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.TRUE);
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.plugins", "GlutenPlugin");
+        config.setProperty("kylin.internal-table-enabled", KylinConfig.TRUE);
         PowerMockito.mockStatic(SparderEnv.class, GlutenCacheUtils.class);
 
         PowerMockito
@@ -374,6 +382,87 @@ public class GlutenCacheServiceTest extends NLocalFileMetadataTestCase {
             Assert.assertEquals(String.format(Locale.ROOT, "Model[%s] StorageType is V3, start/end need null", MODEL),
                     e.getMessage());
         }
+    }
 
+    @Test
+    public void indexGlutenCacheDisabled() throws Exception {
+        val servletRequest = new MockHttpServletRequest();
+        val request = new IndexGlutenCacheRequest();
+        request.setModel(MODEL);
+        request.setProject(PROJECT);
+        request.setIndexes(INDEXES);
+
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.FALSE);
+        try {
+            MsgPicker.setMsg("cn");
+            glutenCacheService.indexGlutenCache(request, servletRequest);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertEquals(CnMessage.getInstance().getGlutenDisabled(), e.getMessage());
+        }
+        try {
+            MsgPicker.setMsg("en");
+            glutenCacheService.indexGlutenCache(request, servletRequest);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertEquals(Message.getInstance().getGlutenDisabled(), e.getMessage());
+        }
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.TRUE);
+    }
+
+    @Test
+    public void internalTableGlutenCacheDisabled() throws Exception {
+        val servletRequest = new MockHttpServletRequest();
+        val request = new InternalTableGlutenCacheRequest();
+        request.setProject(PROJECT);
+        request.setDatabase(DATABASE);
+        request.setTable(TABLE);
+        request.setStart(START);
+        request.setColumns(COLUMNS);
+
+        {
+            config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.FALSE);
+            try {
+                MsgPicker.setMsg("cn");
+                glutenCacheService.internalTableGlutenCache(request, servletRequest);
+                Assert.fail();
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof KylinException);
+                Assert.assertEquals(CnMessage.getInstance().getGlutenDisabled(), e.getMessage());
+            }
+            try {
+                MsgPicker.setMsg("en");
+                glutenCacheService.internalTableGlutenCache(request, servletRequest);
+                Assert.fail();
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof KylinException);
+                Assert.assertEquals(Message.getInstance().getGlutenDisabled(), e.getMessage());
+            }
+            config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.TRUE);
+        }
+
+        {
+            val projectConfig = NProjectManager.getProjectConfig(PROJECT);
+            projectConfig.setProperty("kylin.internal-table-enabled", KylinConfig.FALSE);
+            try {
+                MsgPicker.setMsg("cn");
+                glutenCacheService.internalTableGlutenCache(request, servletRequest);
+                Assert.fail();
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof KylinException);
+                Assert.assertEquals(CnMessage.getInstance().getInternalTableDisabled(), e.getMessage());
+            }
+            try {
+                MsgPicker.setMsg("en");
+                glutenCacheService.internalTableGlutenCache(request, servletRequest);
+                Assert.fail();
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof KylinException);
+                Assert.assertEquals(Message.getInstance().getInternalTableDisabled(), e.getMessage());
+            }
+            projectConfig.setProperty("kylin.internal-table-enabled", KylinConfig.TRUE);
+        }
     }
 }
