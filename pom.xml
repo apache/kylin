@@ -251,7 +251,7 @@
 
         <groovy-all.version>2.4.21</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
-        <protobuf-java.version>3.23.4</protobuf-java.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
 
         <!-- Sonar -->
         <sonar.scala.version>${scala.version}</sonar.scala.version>
@@ -418,7 +418,7 @@
         <okio.version>3.4.0</okio.version>
         <license.version>5.0.8</license.version>
         <snappy-java.version>1.1.10.4</snappy-java.version>
-        <avro.version>1.11.3</avro.version>
+        <avro.version>1.11.4</avro.version>
         <stax2-api.version>4.2.1</stax2-api.version>
         <zjsonpatch.version>0.4.16</zjsonpatch.version>
     </properties>
