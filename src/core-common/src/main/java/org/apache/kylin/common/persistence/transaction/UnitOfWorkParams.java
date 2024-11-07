@@ -66,6 +66,9 @@ public class UnitOfWorkParams<T> {
     @Builder.Default
     private boolean skipAuditLog = false;
 
+    @Builder.Default
+    private boolean skipReplay = false;
+
     private String tempLockName;
     
     @Builder.Default

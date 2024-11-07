@@ -281,6 +281,9 @@ public class UnitOfWork {
         }
 
         long startTime = System.currentTimeMillis();
+        if (UnitOfWork.get().isSkipReplay()) {
+            return;
+        }
         try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
             transparentRS.getAuditLogStore().catchupWithMaxTimeout();
             long endTime = System.currentTimeMillis();

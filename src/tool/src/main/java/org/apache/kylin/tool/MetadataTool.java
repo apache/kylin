@@ -200,7 +200,7 @@ public class MetadataTool extends ExecutableApplication {
             //     helper.list(kylinConfig, target);
         } else if (optionsHelper.hasOption(OPERATE_RESTORE)) {
             boolean delete = optionsHelper.hasOption(OPTION_AFTER_TRUNCATE);
-            UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().processor(() -> {
+            UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().skipReplay(true).processor(() -> {
                 restoreMetadata(project, path, delete);
                 return null;
             }).unitName(GLOBAL_UNIT).all(true).build());
