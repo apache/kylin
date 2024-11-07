@@ -473,7 +473,6 @@ public class MigrateKEMetadataTool {
         }
         final Properties props = config.exportToProperties();
         KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
-        val dstResourceStore = (InMemResourceStore) ResourceStore.getKylinMetaStore(dstConfig);
 
         String type = inputPath.endsWith(".zip") ? FileSystemMetadataStore.Type.ZIP.name() : DIR.name();
         if (outputPath == null) {
@@ -487,34 +486,37 @@ public class MigrateKEMetadataTool {
             log.info("outputPath: " + outputPath);
         }
 
+        String outputZipFile = null;
+        if (outputPath.endsWith(".zip")) {
+            // metnauadata_url doesn't support zip file
+            outputZipFile = outputPath;
+            outputPath = outputPath.substring(0, outputPath.lastIndexOf("/"));
+        }
 
         Path metadataPath = new Path(outputPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem(metadataPath);
+        if (!fs.exists(metadataPath)) {
+            fs.mkdirs(metadataPath);
+        }
         if (type.equals(FileSystemMetadataStore.Type.ZIP.name())) {
-            if (!fs.exists(metadataPath.getParent())) {
-                fs.mkdirs(metadataPath.getParent());
-            }
             dstConfig.setMetadataUrl(outputPath + "@file,zip=1");
         } else {
-            if (!fs.exists(metadataPath)) {
-                fs.mkdirs(metadataPath);
-            }
             dstConfig.setMetadataUrl(outputPath);
         }
+        val dstResourceStore = (InMemResourceStore) ResourceStore.getKylinMetaStore(dstConfig);
 
         FileSystemMetadataStore outputMetadataStore = (FileSystemMetadataStore) MetadataStore
                 .createMetadataStore(dstConfig);
         MetadataStore.MemoryMetaData memoryMetaData = loadOldMetaData(outputMetadataStore, inputPath, type);
         dstResourceStore.resetData(memoryMetaData);
-        dumpToNewFormat(outputMetadataStore, dstResourceStore, type);
+        dumpToNewFormat(outputMetadataStore, dstResourceStore, type, outputZipFile);
     }
 
-    private void dumpToNewFormat(FileSystemMetadataStore fileStore, ResourceStore resourceStore, String type)
-            throws IOException, InterruptedException, ExecutionException {
+    private void dumpToNewFormat(FileSystemMetadataStore fileStore, ResourceStore resourceStore, String type,
+            String outputZipFile) throws IOException, InterruptedException, ExecutionException {
         val resources = resourceStore.listResourcesRecursively(MetadataType.ALL.name());
         if (FileSystemMetadataStore.Type.ZIP.name().equals(type)) {
-            fileStore.dumpToZip(resourceStore, resources,
-                    new Path(resourceStore.getConfig().getMetadataUrl().getIdentifier()));
+            fileStore.dumpToZip(resourceStore, resources, new Path(outputZipFile));
         } else {
             fileStore.dumpToFile(resourceStore, resources);
         }
