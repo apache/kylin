@@ -20,20 +20,33 @@ package org.apache.kylin.common.msg;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 public class MsgPicker {
-    private static TransmittableThreadLocal<Message> msg = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<Message> msg = new ThreadLocal<>();
+    private static final String CHINESE_LANGUAGE_CODE = "cn";
 
+    /**
+     * Sets the message based on the given language code.
+     * If the language code is null or not recognized, sets the default English message.
+     *
+     * @param lang the language code (e.g., "cn" for Chinese)
+     */
     public static void setMsg(String lang) {
-        //if ("cn".equals(lang))
-        //msg.set(CnMessage.getInstance());
-        //else
-        msg.set(Message.getInstance());
+        if (CHINESE_LANGUAGE_CODE.equals(lang)) {
+            msg.set(CnMessage.getInstance());
+        } else {
+            msg.set(Message.getInstance());
+        }
     }
 
+    /**
+     * Gets the current message. If no message is set, returns the default English message.
+     *
+     * @return the current message or the default English message if none is set
+     */
     public static Message getMsg() {
         Message ret = msg.get();
-        if (ret == null) { // use English by default
+        if (ret == null) {
             ret = Message.getInstance();
-            msg.set(Message.getInstance());
+            msg.set(ret);
         }
         return ret;
     }

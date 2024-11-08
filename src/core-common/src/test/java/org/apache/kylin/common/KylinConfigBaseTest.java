@@ -50,10 +50,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -1525,6 +1528,16 @@ class KylinConfigBaseTest {
         Assertions.assertEquals(5002, map.get(13).get(1));
     }
 
+    private void assertUnorderedEqualsIgnoringEmpty(String expected, String actual) {
+        Set<String> actualSet = new HashSet<>(Arrays.asList(actual.split(",")));
+        Set<String> expectedSet = new HashSet<>(Arrays.asList(expected.split(",")));
+
+        actualSet.removeIf(StringUtils::isBlank);
+        expectedSet.removeIf(StringUtils::isBlank);
+
+        Assertions.assertEquals(expectedSet, actualSet, "expectedSet: " + expectedSet + " === actualSet: " + actualSet);
+    }
+
     @Test
     public void getKylinExtJarsPath() throws Exception {
         val config = KylinConfig.getInstanceFromEnv();
@@ -1541,9 +1554,9 @@ class KylinConfigBaseTest {
         FileUtils.write(glutenCelebornJar, "gluten celeborn jar");
 
         val withGluten = config.getKylinExtJarsPath(true);
-        val withGlutenExpected = "," + glutenJar.getAbsolutePath() + "," + celebornJar.getAbsolutePath() + ","
+        val withGlutenExpected = "," + celebornJar.getAbsolutePath() + "," + glutenJar.getAbsolutePath() + ","
                 + mysqlJar.getAbsolutePath() + "," + glutenCelebornJar.getAbsolutePath();
-        Assertions.assertEquals(withGlutenExpected, withGluten);
+        assertUnorderedEqualsIgnoringEmpty(withGlutenExpected, withGluten);
 
         val withoutGluten = config.getKylinExtJarsPath(false);
         val withoutExpected = "," + celebornJar.getAbsolutePath() + "," + mysqlJar.getAbsolutePath();

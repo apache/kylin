@@ -34,6 +34,9 @@
 
 package org.apache.spark.sql.execution
 
+import java.io.File
+
+import org.apache.gluten.execution.BatchScanExecTransformer
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase
 import org.apache.spark.sql._
@@ -44,14 +47,15 @@ import org.apache.spark.sql.execution.adaptive.{AdaptiveExecutionContext, Adapti
 import org.apache.spark.sql.execution.aggregate.HashAggregateExec
 import org.apache.spark.sql.execution.command.DataWritingCommandExec
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.execution.datasources.{HadoopFsRelation, InMemoryFileIndex, PartitionSpec}
 import org.apache.spark.sql.execution.exchange.ShuffleExchangeExec
-import org.apache.spark.sql.hive.QueryMetricUtils
+import org.apache.spark.sql.execution.metric.SQLMetrics
+import org.apache.spark.sql.hive.{HiveTableScanExecTransformer, MockHiveTableScanExecFactory, QueryMetricUtils}
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.util.Utils
-
-import java.io.File
+import org.mockito.Mockito._
 
 class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
 
@@ -59,7 +63,7 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
 
   lazy val metaStore: NLocalFileMetadataTestCase = new NLocalFileMetadataTestCase
 
-  protected def metadata : Seq[String] = {
+  protected def metadata: Seq[String] = {
     Seq(fitPathForUT(ut_meta))
   }
 
@@ -250,6 +254,78 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
     assert(2 == collectScanMetrics2._1)
     assert(2 == collectScanMetrics2._2)
 
+  }
+
+  def testLeafExecMetrics(leafExecNode: LeafExecNode, setScanRows: (Int) => Unit, setScanBytes: (Int) => Unit): Unit = {
+    setScanRows(1000)
+    setScanBytes(56698)
+    val collectScanMetrics = QueryMetricUtils.collectScanMetrics(leafExecNode)
+    assert(1000 == collectScanMetrics._1.get(0))
+    assert(56698 == collectScanMetrics._2.get(0))
+    val collectScanMetrics2 = QueryMetricUtils.collectAdaptiveSparkPlanExecMetrics(leafExecNode, 200, 250)
+    assert(1200 == collectScanMetrics2._1)
+    assert(56948 == collectScanMetrics2._2)
+    val dataWritingCommandExec = mock(classOf[DataWritingCommandExec])
+    when(dataWritingCommandExec.metrics).thenReturn(
+      Map(
+        "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+        "readBytes" -> SQLMetrics.createMetric(sparkContext, "readBytes"),
+        "outputBytes" -> SQLMetrics.createMetric(sparkContext, "outputBytes")
+      )
+    )
+    // these metrics should not be counted
+    dataWritingCommandExec.metrics("numOutputRows").+=(1000)
+    dataWritingCommandExec.metrics("readBytes").+=(5691)
+    dataWritingCommandExec.metrics("outputBytes").+=(5691)
+    when(dataWritingCommandExec.child).thenReturn(leafExecNode)
+    val collectScanMetrics3 = QueryMetricUtils.collectScanMetrics(dataWritingCommandExec)
+    assert(1000 == collectScanMetrics3._1.get(0))
+    assert(56698 == collectScanMetrics3._2.get(0))
+    val collectScanMetrics4 = QueryMetricUtils.collectAdaptiveSparkPlanExecMetrics(leafExecNode, 200, 250)
+    assert(1200 == collectScanMetrics4._1)
+    assert(56948 == collectScanMetrics4._2)
+  }
+
+  test("sparkPlan metrics for Batch scanBytes and ScanRows") {
+    val mockBatchScanExec = mock(classOf[BatchScanExec])
+    when(mockBatchScanExec.metrics).thenReturn(
+      Map(
+        "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+        "readBytes" -> SQLMetrics.createMetric(sparkContext, "read bytes")
+      )
+    )
+    val mockBatchScanExecTransformer = mock(classOf[BatchScanExecTransformer])
+    when(mockBatchScanExecTransformer.metrics).thenReturn(
+      Map(
+        "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+        "outputBytes" -> SQLMetrics.createMetric(sparkContext, "outputBytes")
+      )
+    )
+    testLeafExecMetrics(mockBatchScanExec, mockBatchScanExec.metrics("numOutputRows").+=(_),
+      mockBatchScanExec.metrics("readBytes").+=(_))
+    testLeafExecMetrics(mockBatchScanExecTransformer, mockBatchScanExecTransformer.metrics("numOutputRows").+=(_),
+      mockBatchScanExecTransformer.metrics("outputBytes").+=(_))
+  }
+
+  test("sparkPlan metrics for Hive scanBytes and ScanRows") {
+    val mockHiveTableScanExec = MockHiveTableScanExecFactory.getHiveTableScanExec
+    when(mockHiveTableScanExec.metrics).thenReturn(
+      Map(
+        "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+        "readBytes" -> SQLMetrics.createMetric(sparkContext, "read bytes")
+      )
+    )
+    testLeafExecMetrics(mockHiveTableScanExec, mockHiveTableScanExec.metrics("numOutputRows").+=(_),
+      mockHiveTableScanExec.metrics("readBytes").+=(_))
+    val mockHiveTableScanExecTrans = mock(classOf[HiveTableScanExecTransformer])
+    when(mockHiveTableScanExecTrans.metrics).thenReturn(
+      Map(
+        "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+        "outputBytes" -> SQLMetrics.createMetric(sparkContext, "outputBytes")
+      )
+    )
+    testLeafExecMetrics(mockHiveTableScanExecTrans, mockHiveTableScanExecTrans.metrics("numOutputRows").+=(_),
+      mockHiveTableScanExecTrans.metrics("outputBytes").+=(_))
   }
 
 }
