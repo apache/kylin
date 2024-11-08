@@ -278,6 +278,7 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
     dataWritingCommandExec.metrics("readBytes").+=(5691)
     dataWritingCommandExec.metrics("outputBytes").+=(5691)
     when(dataWritingCommandExec.child).thenReturn(leafExecNode)
+    when(dataWritingCommandExec.children).thenReturn(IndexedSeq(leafExecNode))
     val collectScanMetrics3 = QueryMetricUtils.collectScanMetrics(dataWritingCommandExec)
     assert(1000 == collectScanMetrics3._1.get(0))
     assert(56698 == collectScanMetrics3._2.get(0))

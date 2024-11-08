@@ -507,4 +507,16 @@ public class NAutoBuildAndQueryTest extends SuggestTestBase {
         new TestScenario(CompareLevel.SAME, "query/sql_agg_left_join").execute();
     }
 
+    @Test
+    public void testInRowOperator() throws Exception {
+        // run gluten, after KE-44563 is fixed
+        ExecAndCompExt.currentTestGlutenDisabledSqls.set(Sets.newHashSet(
+                "src/test/resources/query/sql_in_row/query01.sql",
+                "src/test/resources/query/sql_in_row/query02.sql"));
+        
+        new TestScenario(CompareLevel.SAME, "query/sql_in_row").execute();
+
+        ExecAndCompExt.currentTestGlutenDisabledSqls.remove();
+    }
+
 }

@@ -26,6 +26,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.query.util.UnsupportedSparkFunctionException
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.KapFunctions._
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.util.SparderTypeUtil
@@ -135,11 +136,28 @@ object ExpressionConverter {
       case MINUS_PREFIX =>
         assert(children.size == 1)
         negate(k_lit(children.head))
-      case IN => val values = children.drop(1).map(c => k_lit(c).expr)
-        in(k_lit(children.head).expr, values)
+      case IN =>
+        val (columns, values) = children.map(c => k_lit(c).expr).partition {
+          case _: AttributeReference | _: UnresolvedAttribute => true
+          case _ => false
+        }
+        if (columns.size > 1) {
+          in(CreateStruct(columns), values)
+        } else {
+          val values = children.drop(1).map(c => k_lit(c).expr)
+          in(k_lit(children.head).expr, values)
+        }
       case NOT_IN =>
-        val values = children.drop(1).map(c => k_lit(c).expr)
-        not(in(k_lit(children.head).expr, values))
+        val (columns, values) = children.map(c => k_lit(c).expr).partition {
+          case _: AttributeReference | _: UnresolvedAttribute => true
+          case _ => false
+        }
+        if (columns.size > 1) {
+          not(in(CreateStruct(columns), values))
+        } else {
+          val values = children.drop(1).map(c => k_lit(c).expr)
+          not(in(k_lit(children.head).expr, values))
+        }
       case DIVIDE =>
         assert(children.size == 2)
         k_lit(children.head).divide(k_lit(children.last))
@@ -292,6 +310,10 @@ object ExpressionConverter {
         }
       case ARRAY_VALUE_CONSTRUCTOR =>
         array(children.map(child => k_lit(child)): _*)
+      case ROW =>
+        call_udf("named_struct", children.zipWithIndex.flatMap { case (child, i) =>
+          Seq(lit(s"col${i + 1}"), k_lit(child))
+        }: _*)
       case IS_NOT_DISTINCT_FROM =>
         k_lit(children.head).eqNullSafe(k_lit(children.apply(1)))
       // TDVT SQL626 - null compare with true/false is special
