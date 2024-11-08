@@ -26,9 +26,11 @@ import java.util.Objects;
 import javax.validation.constraints.Size;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.springframework.validation.FieldError;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,7 +57,7 @@ public class SQLRequest implements Serializable, ProjectInsensitiveRequest, Vali
     private Integer offset = 0;
     private Integer limit = 0;
     private boolean acceptPartial = false;
-    private boolean forcedToPushDown = false;
+    private Boolean forcedToPushDown;
     @JsonProperty("forced_to_index")
     private boolean forcedToIndex = false;
     private String stopId;
@@ -142,5 +144,10 @@ public class SQLRequest implements Serializable, ProjectInsensitiveRequest, Vali
             }
         }
         return "";
+    }
+
+    public boolean isForcedToPushDown() {
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
+        return this.forcedToPushDown != null ? this.forcedToPushDown : projectConfig.isForcedToPushDown();
     }
 }

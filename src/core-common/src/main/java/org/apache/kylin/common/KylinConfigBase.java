@@ -4504,4 +4504,8 @@ public abstract class KylinConfigBase implements Serializable {
         }
         return Sets.newHashSet(config.split(","));
     }
+    
+    public boolean isForcedToPushDown() {
+        return Boolean.parseBoolean(getOptional("kylin.query.pushdown-force", FALSE));
+    }
 }
