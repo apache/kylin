@@ -67,22 +67,23 @@ object GlutenTestConfig extends Logging {
     conf.set("spark.databricks.delta.stalenessLimit", "3600000")
     conf.set("spark.gluten.sql.columnar.backend.ch.worker.id", "1")
     conf.set("spark.gluten.sql.columnar.coalesce.batches", "false")
-    conf.set("spark.gluten.sql.columnar.backend.ch.runtime_conf.logger.level", "error")
+    conf.set("spark.gluten.sql.columnar.backend.ch.runtime_config.logger.level", "error")
     conf.set("spark.io.compression.codec", "LZ4")
     conf.set("spark.gluten.sql.columnar.shuffle.customizedCompression.codec", "LZ4")
     conf.set("spark.gluten.sql.columnar.backend.ch.customized.shuffle.codec.enable", "true")
     conf.set("spark.gluten.sql.columnar.backend.ch.customized.buffer.size", "4096")
     conf.set("spark.gluten.sql.columnar.backend.ch.files.per.partition.threshold", "5")
-    conf.set("spark.gluten.sql.columnar.backend.ch.runtime_conf.enable_nullable", "true")
+    conf.set("spark.gluten.sql.columnar.backend.ch.runtime_config.enable_nullable", "true")
     conf.set(
-      "spark.gluten.sql.columnar.backend.ch.runtime_conf.local_engine.settings.metrics_perf_events_enabled", "false")
+      "spark.gluten.sql.columnar.backend.ch.runtime_config.local_engine.settings.metrics_perf_events_enabled", "false")
     conf.set("spark.gluten.sql.columnar.backend.ch.runtime_config.logger.level", "ERROR")
     conf.set(
-      "spark.gluten.sql.columnar.backend.ch.runtime_conf.local_engine.settings.max_bytes_before_external_group_by",
+      "spark.gluten.sql.columnar.backend.ch.runtime_config.local_engine.settings.max_bytes_before_external_group_by",
       "5000000000")
     conf.set("spark.gluten.sql.columnar.maxBatchSize", "32768")
     conf.set("spark.gluten.sql.columnar.backend.ch.shuffle.hash.algorithm", "sparkMurmurHash3_32")
     conf.set("spark.gluten.sql.columnar.backend.ch.runtime_config.use_local_format", "true")
+    conf.set("spark.gluten.sql.columnar.backend.ch.runtime_settings.use_excel_serialization", "true")
   }
 
 }
