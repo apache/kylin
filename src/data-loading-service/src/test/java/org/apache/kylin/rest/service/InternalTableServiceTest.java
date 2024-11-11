@@ -418,16 +418,19 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assertions.assertTrue(count > 0);
 
         // refresh all loaded table
-        response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false,
-                true, "", "", null);
+        endDate = "1325779200000"; // 2012-01-06
+        response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, true,
+                startDate, endDate, null);
         Assert.assertFalse(response.getJobs().isEmpty());
+        jobId = response.getJobs().get(0).getJobId();
+        waitJobToFinished(config, jobId);
         // check refresh time out of loaded range
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
                 table.getName(), table.getDatabase(), false, true, "1316556800000", "", null));// 2011-09-21 ~ ~
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
                 table.getName(), table.getDatabase(), false, true, "1326556800000", "", null));// 2012-01-15 ~ ~
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "", endDate, null));// ~ ~ 2012-01-07
+                table.getName(), table.getDatabase(), false, true, "", "1325865600000", null));// ~ ~ 2012-01-07
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
                 table.getName(), table.getDatabase(), false, true, startDate, "1326556800000", null));// 2012-01-01 ~ 2012-01-15
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,

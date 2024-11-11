@@ -72,10 +72,7 @@ class InternalTableLoader extends Logging {
     val bucketNum = table.getBucketNumber
     val primaryKey = table.getTblProperties.get(NBatchConstants.P_PRIMARY_KEY)
     val orderByKey = table.getTblProperties.get(NBatchConstants.P_ORDER_BY_KEY)
-    val outPutMode = isRefresh match {
-      case "true" => OVERWRITE
-      case "false" => APPEND
-    }
+    val outPutMode = OVERWRITE
     var writer = sourceData.write.option(STORAGE_POLICY, storagePolicy)
 
     if (tablePartition != null) {

@@ -18,15 +18,7 @@
 
 package org.apache.kylin.job.handler;
 
-import java.util.List;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.job.domain.JobInfo;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.manager.JobManager;
@@ -71,15 +63,6 @@ public class InternalTableJobHandler extends AbstractJobHandler {
     @Override
     protected void checkBeforeHandle(JobParam jobParam) {
         String project = jobParam.getProject();
-        String table = jobParam.getTable();
-        List<JobInfo> existingJobs = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
-                .fetchNotFinalJobsByTypes(project, Lists.newArrayList(JobTypeEnum.INTERNAL_TABLE_BUILD.name(),
-                        JobTypeEnum.INTERNAL_TABLE_REFRESH.name(), JobTypeEnum.INTERNAL_TABLE_DELETE_PARTITION.name()),
-                        Lists.newArrayList(table));
-        ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        if (CollectionUtils.isNotEmpty(existingJobs)) {
-            existingJobs.forEach(jobInfo -> execMgr.discardJob(jobInfo.getJobId()));
-        }
         JobManager.checkStorageQuota(project);
     }
 
