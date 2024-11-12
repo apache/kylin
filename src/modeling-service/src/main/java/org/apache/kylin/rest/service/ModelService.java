@@ -1354,22 +1354,19 @@ public class ModelService extends AbstractModelService
     public void renameDataModel(String project, String modelId, String newAlias, String description) {
         aclEvaluate.checkProjectWritePermission(project);
         NDataModelManager modelManager = getManager(NDataModelManager.class, project);
-        NDataModel nDataModel = getModelById(modelId, project);
-        //rename
-
-        if (description != null && nDataModel.getAlias().equalsIgnoreCase(newAlias)) {
-            nDataModel.setDescription(description);
-        } else {
-            checkAliasExist(modelId, newAlias, project);
-            checkAliasIsExceededLimit(newAlias);
-            nDataModel.setAlias(newAlias);
-            if (description != null) {
+        modelManager.updateDataModel(modelId, nDataModel -> {
+            //rename
+            if (description != null && nDataModel.getAlias().equalsIgnoreCase(newAlias)) {
                 nDataModel.setDescription(description);
+            } else {
+                checkAliasExist(modelId, newAlias, project);
+                checkAliasIsExceededLimit(newAlias);
+                nDataModel.setAlias(newAlias);
+                if (description != null) {
+                    nDataModel.setDescription(description);
+                }
             }
-        }
-
-        NDataModel modelUpdate = modelManager.copyForWrite(nDataModel);
-        modelManager.updateDataModelDesc(modelUpdate);
+        });
     }
 
     @Transaction(project = 0)
