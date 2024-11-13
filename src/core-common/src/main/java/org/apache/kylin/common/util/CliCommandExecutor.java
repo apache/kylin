@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.slf4j.LoggerFactory;
@@ -191,8 +192,10 @@ public class CliCommandExecutor {
             pid = ProcessUtils.getPid(proc);
             logger.info("sub process {} on behalf of job {}, start to run...", pid, jobId);
             EventBusFactory.getInstance().postSync(new ProcessStart(pid, jobId));
-
-            StringBuilder result = new StringBuilder();
+            int maxCommandLineOutputLength = KylinConfig.getInstanceFromEnv().getMaxCommandLineOutputLength();
+            int headSize = maxCommandLineOutputLength / 2;
+            StringBuilderHelper result = StringBuilderHelper.headTail(headSize,
+                    maxCommandLineOutputLength - headSize);
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;

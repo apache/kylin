@@ -134,6 +134,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static final String SERVER_NAME_STRING = "spring.application.name";
 
     protected static final Map<String, String> STATIC_SYSTEM_ENV = new ConcurrentHashMap<>(System.getenv());
+    public static final int BYTES_PER_CHAR = 2;
 
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
@@ -1809,6 +1810,12 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isStreamingConfigEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.streaming.enabled", FALSE));
+    }
+
+    public int getMaxCommandLineOutputLength() {
+        // default 10MB, if the command line output length over this value
+        // the output will be truncated as 5MB head and 5MB tail.
+        return Integer.parseInt(getOptional("kylin.command.max-output-bytes", String.valueOf(10 * 1024 * 1024))) / BYTES_PER_CHAR;
     }
 
     public boolean isStreamingEnabled() {

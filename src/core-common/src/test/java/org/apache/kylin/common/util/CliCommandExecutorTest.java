@@ -17,10 +17,15 @@
  */
 package org.apache.kylin.common.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.lang.reflect.Method;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -29,6 +34,7 @@ import org.mockito.Mockito;
 
 import lombok.val;
 
+@MetadataInfo(onlyProps = true)
 public class CliCommandExecutorTest {
 
     @Test
@@ -76,6 +82,57 @@ public class CliCommandExecutorTest {
         Assert.assertEquals(1, fileList.length);
         Assert.assertEquals(fileList[0].getName(), tempFile.getName());
 
+    }
+
+    @Test
+    void testLargeOutputSlice() throws Exception {
+        // These test assert the kylin.command.max-output-length is 5M chars as 10 MB size
+        int maxCommandLineOutputLength = KylinConfig.getInstanceFromEnv().getMaxCommandLineOutputLength();
+        assertEquals(5 * 1024 * 1024, maxCommandLineOutputLength);
+        CliCommandExecutor cliCommandExecutor = new CliCommandExecutor();
+        // generate a large output and expect the output is truncated
+        CliCommandExecutor.CliCmdExecResult res = cliCommandExecutor.execute(
+                "echo 'testhead' && line=$(printf 'a%.0s' {1..1251}) && yes \"$line\" 2>/dev/null | head -n 5505 && echo 'testtail'",
+                null);
+        assertEquals(maxCommandLineOutputLength, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
+        // multiline long string
+        res = cliCommandExecutor
+                .execute("echo 'testhead' && line=$(printf 'a%.0s' {1..111}) && yes \"$line\" 2>/dev/null | head -n " + 1024 * 52
+                        + "&& echo 'testtail'", null);
+        assertEquals(maxCommandLineOutputLength, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
+        // multiline short string
+        res = cliCommandExecutor.execute("echo 'testhead' && line=$(printf 'a%.0s' {1..9}) && yes \"$line\" 2>/dev/null | head -n "
+                + 1024 * 513 + "&& echo 'testtail'", null);
+        assertEquals(maxCommandLineOutputLength, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
+
+        // generate large output less than 10 mb and expect the same output
+        res = cliCommandExecutor.execute(
+                "echo 'testhead' && line=$(printf 'a%.0s' {1..1251}) && yes \"$line\" 2>/dev/null | head -n 1000 && echo 'testtail'",
+                null);
+        final int HEAD_TAIL_LEN = 18;
+        assertEquals(1252 * 1000 + HEAD_TAIL_LEN, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
+
+        // multiline long string
+        res = cliCommandExecutor
+                .execute("echo 'testhead' && line=$(printf 'a%.0s' {1..111}) && yes \"$line\" 2>/dev/null | head -n " + 1024 * 10
+                        + "&& echo 'testtail'", null);
+        assertEquals(112 * 10 * 1024 + HEAD_TAIL_LEN, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
+        // multiline short string
+        res = cliCommandExecutor.execute("echo 'testhead' && line=$(printf 'a%.0s' {1..9}) && yes \"$line\" 2>/dev/null | head -n "
+                + 1024 * 100 + "&& echo 'testtail'", null);
+        assertEquals(10 * 100 * 1024 + HEAD_TAIL_LEN, res.getCmd().length());
+        assertTrue(res.getCmd().startsWith("testhead"));
+        assertTrue(res.getCmd().endsWith("testtail\n"));
     }
 }
 
