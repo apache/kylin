@@ -66,13 +66,18 @@ class InternalTableLoader extends Logging {
                         storagePolicy: String,
                         incremental: Boolean): Unit = {
     val location = table.generateInternalTableLocation
-    val sourceData = getSourceData(ss, table, startDate, endDate, incremental)
+    var sourceData = getSourceData(ss, table, startDate, endDate, incremental)
     val tablePartition = table.getTablePartition
     val bucketColumn = table.getBucketColumn
     val bucketNum = table.getBucketNumber
     val primaryKey = table.getTblProperties.get(NBatchConstants.P_PRIMARY_KEY)
     val orderByKey = table.getTblProperties.get(NBatchConstants.P_ORDER_BY_KEY)
     val outPutMode = OVERWRITE
+
+    if (tablePartition != null && table.isSortByPartitionEnabled) {
+      val partitionColumn = tablePartition.getPartitionColumns
+      sourceData = sourceData.sort(partitionColumn(0), partitionColumn.slice(1, partitionColumn.length): _*)
+    }
     var writer = sourceData.write.option(STORAGE_POLICY, storagePolicy)
 
     if (tablePartition != null) {

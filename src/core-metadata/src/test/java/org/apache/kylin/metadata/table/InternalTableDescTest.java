@@ -67,4 +67,36 @@ class InternalTableDescTest {
         Assertions.assertEquals(dateFormat, table.getDatePartitionFormat());
         Assertions.assertEquals(3, table.getTblProperties().size());
     }
+
+    @Test
+    void testSortByPartitionConf() {
+        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                "default");
+        TableDesc originTable = tableMetadataManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        InternalTableDesc table = new InternalTableDesc(originTable);
+
+        HashMap<String, String> tblProperties = new HashMap<>();
+
+        table.setTblProperties(tblProperties);
+        table.optimizeTblProperties();
+        Assertions.assertTrue(table.isSortByPartitionEnabled());
+
+        tblProperties.put("sortByPartition", "false");
+        table.setTblProperties(tblProperties);
+        table.optimizeTblProperties();
+        Assertions.assertFalse(table.isSortByPartitionEnabled());
+
+        // disable sort-by-partition in kylinConfig
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.internal-table.sort-by-partition.enabled", "false");
+
+        tblProperties.clear();
+        table.setTblProperties(tblProperties);
+        table.optimizeTblProperties();
+        Assertions.assertFalse(table.isSortByPartitionEnabled());
+
+        tblProperties.put("sortByPartition", "true");
+        table.setTblProperties(tblProperties);
+        table.optimizeTblProperties();
+        Assertions.assertTrue(table.isSortByPartitionEnabled());
+    }
 }

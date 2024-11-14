@@ -32,6 +32,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -51,6 +52,7 @@ public class InternalTableDesc extends ATable implements Serializable {
     private static final String PRELOADED_CACHE = "preloadedCache";
     private static final String PRIMARY_KEY = "primaryKey";
     private static final String SORT_BY_KEY = "sortByKey";
+    private static final String SORT_BY_PARTITION_BEFORE_SAVE = "sortByPartition";
     public static final int INIT_SIZE = 0;
 
     @Getter
@@ -172,6 +174,14 @@ public class InternalTableDesc extends ATable implements Serializable {
 
     public boolean isPreloadedCacheEnable() {
         return Boolean.parseBoolean(tblProperties.getOrDefault(PRELOADED_CACHE, KylinConfig.FALSE));
+    }
+
+    public boolean isSortByPartitionEnabled() {
+        if (tblProperties.containsKey(SORT_BY_PARTITION_BEFORE_SAVE)) {
+            return Boolean.parseBoolean(tblProperties.get(SORT_BY_PARTITION_BEFORE_SAVE));
+        } else {
+            return NProjectManager.getProjectConfig(project).isInternalTableSortByPartitionEnabled();
+        }
     }
 
     public String generateInternalTableLocation() {
