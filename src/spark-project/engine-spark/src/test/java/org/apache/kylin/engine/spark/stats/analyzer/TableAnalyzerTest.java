@@ -24,19 +24,31 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.GlutenDisabled;
 import org.apache.kylin.GlutenRunner;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
+import org.apache.kylin.engine.spark.job.TableAnalysisJob;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import lombok.val;
 import lombok.var;
@@ -45,6 +57,8 @@ import lombok.var;
 public class TableAnalyzerTest extends NLocalWithSparkSessionTestBase {
 
     private NTableMetadataManager tableMgr;
+    @Mock
+    private Appender appender = Mockito.mock(Appender.class);
 
     @Before
     public void setup() {
@@ -56,6 +70,15 @@ public class TableAnalyzerTest extends NLocalWithSparkSessionTestBase {
         sparkConf.set(SparkConfHelper.EXECUTOR_CORES, "1");
         ss = SparkSession.builder().config(sparkConf).getOrCreate();
         SparderEnv.setSparkSession(ss);
+
+        Mockito.when(appender.getName()).thenReturn("mocked");
+        Mockito.when(appender.isStarted()).thenReturn(true);
+        ((Logger) LogManager.getRootLogger()).addAppender(appender);
+    }
+
+    @After
+    public void after() {
+        ((Logger) LogManager.getRootLogger()).removeAppender(appender);
     }
 
     @Test
@@ -163,5 +186,23 @@ public class TableAnalyzerTest extends NLocalWithSparkSessionTestBase {
         Assert.assertEquals(10, tableExt.getSampleRows().size());
         Assert.assertEquals(100.0 / 10000, tableExt.getTotalRows() / 10000.0, 0.1);
 
+    }
+
+    @Test
+    public void testJdbcTableSkipCalculateViewMetas() {
+        val tableDesc = Mockito.mock(TableDesc.class);
+        Mockito.when(tableDesc.getSourceType()).thenReturn(ISourceAware.ID_JDBC);
+        Mockito.when(tableDesc.getBackTickIdentity()).thenReturn("UT.TEST");
+
+        val tableAnalyzeExec = new TableAnalysisJob(tableDesc, getProject(), 100, ss, RandomUtil.randomUUIDStr());
+        tableAnalyzeExec.calculateViewMetasIfNeeded(tableDesc);
+
+        ArgumentCaptor<LogEvent> logCaptor = ArgumentCaptor.forClass(LogEvent.class);
+        Mockito.verify(appender, Mockito.atLeast(0)).append(logCaptor.capture());
+        var log = logCaptor.getAllValues().stream()
+                .filter(event -> event.getLoggerName().equals(TableAnalysisJob.class.getName()))
+                .filter(event -> event.getLevel().equals(Level.INFO))
+                .map(event -> event.getMessage().getFormattedMessage()).findFirst().orElseThrow(AssertionError::new);
+        Assert.assertEquals("Table [UT.TEST] sourceType is JDBC, skip to calculate view meta", log);
     }
 }
