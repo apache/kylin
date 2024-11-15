@@ -9,5 +9,6 @@
   "query_hit_count" : 0,
   "last_query_time" : 0,
   "layout_query_hit_count" : { },
-  "segments" : [ ]
+  "project" : "learn_kylin",
+  "segment_uuids" : [ ]
 }
