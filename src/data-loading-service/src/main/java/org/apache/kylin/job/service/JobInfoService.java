@@ -96,6 +96,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -619,7 +620,10 @@ public class JobInfoService extends BasicService implements JobSupporter {
             return;
         }
         killExistApplication(job);
-        getManager(ExecutableManager.class, project).discardJob(job.getId());
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            getManager(ExecutableManager.class, project).discardJob(job.getId());
+            return true;
+        }, project);
 
         if (getConfig().isMailEnabled()) {
             job.notifyUser(MailNotificationType.JOB_DISCARDED);

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
@@ -52,6 +53,25 @@ public interface AuditLogStore extends Closeable {
         val store = ResourceStore.getKylinMetaStore(getConfig());
         getReplayWorker().catchupFrom(store.getOffset());
         getReplayWorker().waitForCatchup(getMaxId(), getConfig().getCatchUpTimeout());
+    }
+
+    // If the current thread is in a transaction, the latest auditlogId cannot be obtained during
+    // catchup because the transaction level is repeatable.
+    // So, let's do the catchup in a new thread.
+    default void catchupWithTimeoutInNewThread() {
+        Thread catchupThread = new Thread(() -> {
+            try {
+                this.catchupWithTimeout();
+            } catch (TimeoutException e) {
+                throw new KylinRuntimeException(e);
+            }
+        });
+        catchupThread.start();
+        try {
+            catchupThread.join();
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     default void catchupWithMaxTimeout() throws TimeoutException {

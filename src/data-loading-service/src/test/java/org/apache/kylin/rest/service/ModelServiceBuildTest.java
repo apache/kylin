@@ -30,6 +30,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_STA
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -96,6 +97,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentTimeRequest;
@@ -120,6 +122,9 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
@@ -1064,6 +1069,100 @@ public class ModelServiceBuildTest extends SourceTestCase {
         Assert.assertEquals(1, executables.size());
         Assert.assertEquals(2, job.getTargetPartitions().size());
         Assert.assertEquals(3, ExecutableParams.getBuckets(job.getParam("buckets")).size());
+    }
+
+    @Test
+    public void testParallelSubmitBuildJob() throws Exception {
+        val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val project = "default";
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        ExecutableManager executableManager = ExecutableManager.getInstance(getTestConfig(), project);
+        doParallelSubmitBuildJob("1633017600000", "1633104000000", "1633190400000");
+
+        Assert.assertEquals(2, dataflowManager.getDataflow(modelId).getSegments().size());
+        Assert.assertEquals(2, executableManager.getAllExecutables().size());
+    }
+
+    @Test
+    public void testParallelSubmitBuildJobWithOverlap() throws Exception {
+        val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val project = "default";
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        ExecutableManager executableManager = ExecutableManager.getInstance(getTestConfig(), project);
+        doParallelSubmitBuildJob("1633017600000", "1633104000000", null);
+
+        Assert.assertEquals(1, dataflowManager.getDataflow(modelId).getSegments().size());
+        Assert.assertEquals(1, executableManager.getAllExecutables().size());
+    }
+
+    private void doParallelSubmitBuildJob(String start, String end, String end2) throws Exception {
+        val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val project = "default";
+
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataflow dataflow = dataflowManager.getDataflow(modelId);
+        val model = dataflow.getModel();
+        indexDataConstructor.cleanSegments(modelId);
+
+        Thread t1 = new Thread(getSubmitJob(project, model, start, end));
+        Thread t2 = new Thread(getSubmitJob(project, model, end2 == null ? start : end, end2 == null ? end : end2));
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+    }
+
+    private Runnable getSubmitJob(String project, NDataModel model, String start, String end) {
+        return () -> {
+            try {
+                Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                modelBuildService.incrementBuildSegmentsManually(new IncrementBuildSegmentParams(project,
+                        model.getUuid(), start, end, model.getPartitionDesc(), null, null, true, null));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    @Test
+    public void testParallelSubmitRefreshJob() throws InterruptedException {
+        String project = getProject();
+        val modelId = "741ca86a-1f13-46da-a59f-95fb68615e3a";
+        ExecutableManager executableManager = ExecutableManager.getInstance(getTestConfig(), project);
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), project);
+        val df = dataflowManager.getDataflow(modelId);
+        // remove the existed seg
+        indexDataConstructor.cleanSegments(modelId);
+
+        long start = SegmentRange.dateToLong("2010-01-02");
+        long end = SegmentRange.dateToLong("2010-01-03");
+        SegmentRange segmentRange = new SegmentRange.TimePartitionedSegmentRange(start, end);
+        val dataSegment = indexDataConstructor.addSegment(modelId, segmentRange, SegmentStatusEnum.READY, null);
+        NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
+        update.setToAddOrUpdateLayouts(
+                generateAllDataLayout(getProject(), modelId, Collections.singletonList(dataSegment)));
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(
+                () -> NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).updateDataflow(update),
+                getProject());
+
+        Runnable submitJob = () -> {
+            Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            indexDataConstructor.transactionWrap(project,
+                    () -> modelBuildService.refreshSegmentById(new RefreshSegmentParams(project,
+                            "741ca86a-1f13-46da-a59f-95fb68615e3a", new String[] { dataSegment.getId() })));
+        };
+        Thread t1 = new Thread(submitJob);
+        Thread t2 = new Thread(submitJob);
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+
+        Assert.assertEquals(2, dataflowManager.getDataflow(modelId).getSegments().size());
+        Assert.assertEquals(1, executableManager.getAllExecutables().size());
     }
 
     @Test

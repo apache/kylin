@@ -1275,11 +1275,17 @@ public class ModelServiceTest extends SourceTestCase {
 
     @Test
     public void testRenameModel() {
-        modelService.renameDataModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "new_name", "");
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            modelService.renameDataModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "new_name", "");
+            return null;
+        }, "test");
         List<NDataModelResponse> models = modelService.getModels("new_name", "default", true, "", null, "last_modify",
                 true);
         Assert.assertEquals("new_name", models.get(0).getAlias());
-        modelService.renameDataModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "New_Name", "test desc");
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            modelService.renameDataModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "New_Name", "test desc");
+            return null;
+        }, "test2");
         models = modelService.getModels("new_name", "default", true, "", null, "last_modify", true);
         Assert.assertEquals("new_name", models.get(0).getAlias());
         Assert.assertEquals("test desc", models.get(0).getDescription());

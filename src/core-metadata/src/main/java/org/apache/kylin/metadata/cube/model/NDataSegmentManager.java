@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.persistence.MetadataType;
-import org.apache.kylin.common.persistence.RawResourceFilter;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.model.Segments;
@@ -115,8 +115,25 @@ public class NDataSegmentManager extends Manager<NDataSegment> {
     }
 
     public Segments<NDataSegment> getSegments(NDataflow df, Collection<String> segIds) {
+        return getSegmentsWithForceCatchupIfInconsistent(df, segIds, true);
+    }
+
+    private Segments<NDataSegment> getSegmentsWithForceCatchupIfInconsistent(NDataflow df, Collection<String> segIds,
+            boolean needCatch) {
         List<NDataSegment> segments = segIds.stream().map(uuid -> getWithoutInitDataflow(uuid).orElse(null))
                 .filter(Objects::nonNull).collect(Collectors.toList());
+        if (segments.size() < segIds.size()) {
+            logger.warn("Segments are inconsistency with dataflow, force to catchup: {}", needCatch);
+            if (needCatch) {
+                try {
+                    ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).getAuditLogStore()
+                            .catchupWithTimeoutInNewThread();
+                } catch (KylinRuntimeException e) {
+                    logger.warn("Manually catchup auditlog Failed.", e);
+                }
+                return getSegmentsWithForceCatchupIfInconsistent(df, segIds, false);
+            }
+        }
         segments.forEach(seg -> seg.setDataflow(df));
         return new Segments<>(segments);
     }
