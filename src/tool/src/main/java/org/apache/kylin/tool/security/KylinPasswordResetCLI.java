@@ -79,8 +79,8 @@ public class KylinPasswordResetCLI {
         UnitOfWork.doInTransactionWithRetry(() -> {
             KylinConfig conf = KylinConfig.getInstanceFromEnv();
             NKylinUserManager.getInstance(conf).updateUser("ADMIN", copyForWrite -> {
-                user.setPassword(pwdEncoder.encode(password));
-                user.setDefaultPassword(true);
+                copyForWrite.setPassword(pwdEncoder.encode(password));
+                copyForWrite.setDefaultPassword(true);
             });
             return true;
         }, UnitOfWork.GLOBAL_UNIT);

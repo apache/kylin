@@ -99,7 +99,7 @@ public class KylinPasswordResetCLITest extends LogOutputTestCase {
         ResourceStore.clearCache(config);
         config.clearManagers();
         val afterManager = NKylinUserManager.getInstance(config);
-
+        Assert.assertFalse(pwdEncoder.matches("KYLIN2", afterManager.get(user.getUsername()).getPassword()));
         Assert.assertFalse(pwdEncoder.matches("KYLIN", afterManager.get(user.getUsername()).getPassword()));
         Assert.assertTrue(output.toString(Charset.defaultCharset().name()).startsWith("The metadata backup path is"));
         Assert.assertTrue(output.toString(Charset.defaultCharset().name())
@@ -107,13 +107,21 @@ public class KylinPasswordResetCLITest extends LogOutputTestCase {
                         + StringConstant.ANSI_RED + "] succeed. The password is "));
         Assert.assertTrue(output.toString(Charset.defaultCharset().name())
                 .endsWith("Please keep the password properly." + StringConstant.ANSI_RESET + "\n"));
-
         val url = getTestConfig().getMetadataUrl();
         val jdbcTemplate = getJdbcTemplate();
-        val all = jdbcTemplate.query("select * from " + url.getIdentifier() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX, new AuditLogRowMapper());
+        val all = jdbcTemplate.query("select * from " + url.getIdentifier() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX,
+                new AuditLogRowMapper());
         Assert.assertTrue(all.stream().anyMatch(auditLog -> auditLog.getResPath().equals("USER_INFO/ADMIN")));
 
         System.setOut(System.out);
+        // reset password to KYLIN
+        overwriteSystemProp("kylin.metadata.random-admin-password.enabled", "false");
+        KylinPasswordResetCLI.reset();
+
+        ResourceStore.clearCache(config);
+        config.clearManagers();
+        val afterManager2 = NKylinUserManager.getInstance(config);
+        Assert.assertTrue(pwdEncoder.matches("KYLIN", afterManager2.get(user.getUsername()).getPassword()));
     }
 
     JdbcTemplate getJdbcTemplate() throws Exception {
