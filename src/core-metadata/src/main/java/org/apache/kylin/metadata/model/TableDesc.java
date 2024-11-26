@@ -44,8 +44,10 @@ import org.apache.kylin.metadata.table.ATable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -92,10 +94,9 @@ public class TableDesc extends ATable implements Serializable, ISourceAware {
     @JsonProperty("table_type")
     private String tableType;
 
-    @Getter
-    @Setter
-    @JsonProperty("has_Internal")
-    private boolean hasInternal = false;
+    private Boolean hasInternal;
+
+    private boolean hasInternalDeprecated = false;
 
     //Sticky table
     @Getter
@@ -180,10 +181,9 @@ public class TableDesc extends ATable implements Serializable, ISourceAware {
     @JsonProperty("transactional")
     private boolean isTransactional;
 
-    @Setter
-    @Getter
-    @JsonProperty("rangePartition")
-    private boolean isRangePartition;
+    private Boolean isRangePartition;
+
+    private boolean rangePartitionDeprecated;
 
     @Setter
     @Getter
@@ -204,6 +204,8 @@ public class TableDesc extends ATable implements Serializable, ISourceAware {
         this.createTime = other.createTime;
         this.name = other.name;
         this.hasInternal = other.hasInternal;
+        this.hasInternalDeprecated = other.hasInternalDeprecated;
+        this.rangePartitionDeprecated = other.rangePartitionDeprecated;
         this.sourceType = other.sourceType;
         this.tableType = other.tableType;
         this.dataGen = other.dataGen;
@@ -233,6 +235,48 @@ public class TableDesc extends ATable implements Serializable, ISourceAware {
         this.partitionDesc = other.partitionDesc;
         this.tableComment = other.tableComment;
         setMvcc(other.getMvcc());
+    }
+
+    @JsonGetter("range_partition")
+    public boolean isRangePartition() {
+        return isRangePartition == null ? rangePartitionDeprecated : isRangePartition;
+    }
+
+    @JsonSetter("range_partition")
+    public void setRangePartition(boolean isRangePartition) {
+        this.isRangePartition = isRangePartition;
+    }
+
+    @JsonGetter("has_internal")
+    public boolean isHasInternal() {
+        return hasInternal == null ? hasInternalDeprecated : hasInternal;
+    }
+
+    @JsonSetter("has_internal")
+    public void setHasInternal(boolean hasInternal) {
+        this.hasInternal = hasInternal;
+    }
+
+    /**
+     * This setter exists for compatibility with older data versions
+     * that utilize the has_Internal json field. Please use {@link TableDesc#setHasInternal} instead.
+     * @deprecated since 5.2.2
+     */
+    @JsonSetter("has_Internal")
+    @Deprecated
+    public void setHasInternalDeprecated(boolean hasInternalDeprecated) {
+        this.hasInternalDeprecated = hasInternalDeprecated;
+    }
+
+    /**
+     * This setter exists for compatibility with older data versions
+     * that utilize the rangePartition json field. Please use {@link TableDesc#setRangePartition} instead.
+     * @deprecated since 5.2.2
+     */
+    @JsonSetter("rangePartition")
+    @Deprecated
+    public void setRangePartitionDeprecated(boolean rangePartitionDeprecated) {
+        this.rangePartitionDeprecated = rangePartitionDeprecated;
     }
 
     /**
