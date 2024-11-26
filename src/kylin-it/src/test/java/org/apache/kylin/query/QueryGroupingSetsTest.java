@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.common.KylinConfig;
@@ -112,6 +113,8 @@ public class QueryGroupingSetsTest extends SemiAutoTestBase {
     @After
     public void teardown() throws Exception {
         queryHistoryDAO.deleteAllQueryHistory();
+        ReflectionTestUtils.invokeMethod(
+                Objects.requireNonNull(ReflectionTestUtils.getField(queryService, "slowQueryDetector")), "interrupt");
         super.tearDown();
         QueryHistoryAccelerateScheduler.shutdown();
     }

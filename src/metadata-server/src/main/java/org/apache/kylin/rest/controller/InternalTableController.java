@@ -67,8 +67,8 @@ public class InternalTableController extends NBasicController {
     public EnvelopeResponse<String> createInternalTable(@RequestParam(value = "project") String project,
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table, @RequestBody InternalTableRequest request) throws Exception {
-        checkProjectName(project);
-        if (StringUtils.isEmpty(table) || StringUtils.isEmpty(database)) {
+        project = checkProjectName(project);
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, "Table or database can not be null, please check again.");
         }
         internalTableService.createInternalTable(project, table, database, request.getPartitionCols(),
@@ -82,7 +82,7 @@ public class InternalTableController extends NBasicController {
     public EnvelopeResponse<String> dropInternalTable(@RequestParam(value = "project") String project,
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table) throws Exception {
-        checkProjectName(project);
+        project = checkProjectName(project);
         String dbTblName = database + "." + table;
         internalTableService.dropInternalTable(project, dbTblName);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -94,8 +94,8 @@ public class InternalTableController extends NBasicController {
     public EnvelopeResponse<String> truncateInternalTable(@RequestParam(value = "project") String project,
             @RequestParam(value = "database") String database, @RequestParam(value = "table") String table)
             throws Exception {
-        checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        project = checkProjectName(project);
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         String tableIdentity = database + "." + table;
@@ -109,8 +109,8 @@ public class InternalTableController extends NBasicController {
     public EnvelopeResponse<String> dropPartitions(@RequestParam(value = "project") String project,
             @RequestParam(value = "database") String database, @RequestParam(value = "table") String table,
             @RequestParam(value = "partitions") String[] partitionValues) throws Exception {
-        checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        project = checkProjectName(project);
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         // If partitionValues is null, all files will be cleared
@@ -127,8 +127,8 @@ public class InternalTableController extends NBasicController {
             @PathVariable(value = "project") String project, @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table, @RequestBody InternalTableBuildRequest request)
             throws Exception {
-        checkProjectName(project);
-        if (StringUtils.isEmpty(table) || StringUtils.isEmpty(database)) {
+        project = checkProjectName(project);
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableNameCannotEmpty());
         }
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(project, table, database,
@@ -143,8 +143,8 @@ public class InternalTableController extends NBasicController {
     public EnvelopeResponse<String> updateTable(@RequestParam(value = "project") String project,
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table, @RequestBody InternalTableRequest request) throws Exception {
-        checkProjectName(project);
-        if (StringUtils.isEmpty(table) || StringUtils.isEmpty(database)) {
+        project = checkProjectName(project);
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, "Table or database can not be null, please check again.");
         }
         if (table.isEmpty()) {
@@ -160,10 +160,24 @@ public class InternalTableController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<DataResult<List<InternalTableDescResponse>>> getTableList(
             @RequestParam(value = "project") String project,
+            @RequestParam(value = "need_details", required = false, defaultValue = "false") boolean needDetails,
+            @RequestParam(value = "is_fuzzy", required = false, defaultValue = "false") boolean isFuzzy,
+            @RequestParam(value = "database", required = false) String database,
+            @RequestParam(value = "table", required = false) String table,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) {
-        checkProjectName(project);
-        val rep = internalTableService.getTableList(project);
+        project = checkProjectName(project);
+
+        String fuzzyKey = "";
+        if (StringUtils.isNotBlank(database) && StringUtils.isNotBlank(table)) {
+            fuzzyKey = StringUtils.trim(database) + "." + StringUtils.trim(table);
+        } else if (StringUtils.isBlank(database)) {
+            fuzzyKey = StringUtils.trim(table);
+        } else if (StringUtils.isBlank(table)) {
+            fuzzyKey = StringUtils.trim(database);
+        }
+
+        val rep = internalTableService.getTableList(project, isFuzzy, needDetails, fuzzyKey);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(rep, offset, limit), "");
     }
 
@@ -175,8 +189,9 @@ public class InternalTableController extends NBasicController {
             @PathVariable(value = "table") String table,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) {
-        checkProjectName(project);
+        project = checkProjectName(project);
         val rep = internalTableService.getTableDetail(project, database, table);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(rep, offset, limit), "");
     }
+
 }

@@ -77,8 +77,8 @@ public class InternalTableLoadingService extends BasicService {
             if (isIncremental && (Objects.isNull(internalTable.getTablePartition())
                     || Objects.isNull(internalTable.getTablePartition().getPartitionColumns())
                     || internalTable.getTablePartition().getPartitionColumns().length == 0)) {
-                throw new KylinException(INTERNAL_TABLE_ERROR,
-                        "Incremental build is not supported for unPartitioned table");
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned());
+                throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
             }
             // check refresh time exceed loaded range
             InternalTablePartition tablePartition = internalTable.getTablePartition();

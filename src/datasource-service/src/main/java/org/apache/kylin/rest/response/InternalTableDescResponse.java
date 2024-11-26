@@ -18,7 +18,13 @@
 
 package org.apache.kylin.rest.response;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.table.InternalTableDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -57,4 +63,30 @@ public class InternalTableDescResponse {
     @JsonProperty("tbl_properties")
     private Map<String, String> tblProperties;
 
+    @JsonProperty("columns_info")
+    private List<ColumnDesc> columns;
+
+    public static InternalTableDescResponse convertToResponse(InternalTableDesc internalTableDesc,
+            boolean needDetails) {
+        InternalTableDescResponse response = new InternalTableDescResponse();
+        response.setTableName(internalTableDesc.getName());
+        response.setUuid(internalTableDesc.getUuid());
+        response.setDatabaseName(internalTableDesc.getDatabase());
+        response.setRowCount(internalTableDesc.getRowCount());
+        response.setStorageSize(internalTableDesc.getStorageSize());
+        response.setHitCount(internalTableDesc.getHitCount());
+
+        String[] partitionColumns = internalTableDesc.getPartitionColumns();
+        String partitionColumn = ArrayUtils.isNotEmpty(partitionColumns) ? partitionColumns[0] : null;
+        response.setTimePartitionCol(partitionColumn);
+
+        response.setUpdateTime(internalTableDesc.getLastModified());
+        response.setDatePartitionFormat(internalTableDesc.getDatePartitionFormat());
+        response.setTblProperties(internalTableDesc.getTblProperties());
+
+        if (needDetails) {
+            response.setColumns(Arrays.asList(internalTableDesc.getColumns()));
+        }
+        return response;
+    }
 }

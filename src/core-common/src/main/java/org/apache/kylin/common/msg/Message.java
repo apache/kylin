@@ -446,6 +446,30 @@ public class Message {
         return "Can’t find internal table \"%s\". Please check and try again.";
     }
 
+    public String getInternalTableEmpty() {
+        return "Can't update non empty internal table \"%s\", Please check and try again.";
+    }
+
+    public String getSameInternalTableNameExist() {
+        return "Internal table %s already exists, please choose a different name.";
+    }
+
+    public String getInternalTablePath() {
+        return "Failed to create internal table location.";
+    }
+
+    public String getInternalTableUnpartitioned() {
+        return "Incremental build is not supported for unPartitioned table.";
+    }
+
+    public String getInternalTableNullPartitionFormat() {
+        return "date_partition_format can not be null, please check again.";
+    }
+
+    public String getInternalTableNoDataCol() {
+        return "couldn't find date_col present in partition_cols, please check again. ";
+    }
+
     public String getTimeExceedPartitionRange() {
         return "Refresh time exceed loaded range :\"%s\" ~ \"%s\", Please check and try again. ";
     }

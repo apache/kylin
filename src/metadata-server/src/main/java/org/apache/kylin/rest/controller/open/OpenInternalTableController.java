@@ -67,7 +67,7 @@ public class OpenInternalTableController extends NBasicController {
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table, @RequestBody InternalTableRequest request) throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         return internalTableController.createInternalTable(projectName, database, table, request);
@@ -78,6 +78,10 @@ public class OpenInternalTableController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<DataResult<List<InternalTableDescResponse>>> getTableList(
             @RequestParam(value = "project") String project,
+            @RequestParam(value = "need_details", required = false, defaultValue = "false") boolean needDetails,
+            @RequestParam(value = "is_fuzzy", required = false, defaultValue = "false") boolean isFuzzy,
+            @RequestParam(value = "database", required = false) String database,
+            @RequestParam(value = "table", required = false) String table,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) {
         String projectName = checkProjectName(project);
@@ -85,10 +89,12 @@ public class OpenInternalTableController extends NBasicController {
             checkNonNegativeIntegerArg("page_offset", offset);
         }
         if (null != limit) {
-            checkNonNegativeIntegerArg("page_offset", limit);
+            checkNonNegativeIntegerArg("page_size", limit);
         }
-        checkNonNegativeIntegerArg("page_size", limit);
-        return internalTableController.getTableList(projectName, offset, limit);
+        if (StringUtils.isBlank(table) && StringUtils.isBlank(database) && isFuzzy) {
+            throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
+        }
+        return internalTableController.getTableList(projectName, isFuzzy, needDetails, database, table, offset, limit);
     }
 
     @ApiOperation(value = "get_table_detail", tags = { "AI" })
@@ -100,7 +106,7 @@ public class OpenInternalTableController extends NBasicController {
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         if (null != offset) {
@@ -119,7 +125,7 @@ public class OpenInternalTableController extends NBasicController {
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table, @RequestBody InternalTableRequest request) throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         return internalTableController.updateTable(projectName, database, table, request);
@@ -133,7 +139,7 @@ public class OpenInternalTableController extends NBasicController {
             @PathVariable(value = "table") String table, @RequestBody InternalTableBuildRequest request)
             throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         return internalTableController.loadIntoInternalTable(projectName, database, table, request);
@@ -146,7 +152,7 @@ public class OpenInternalTableController extends NBasicController {
             @RequestParam(value = "project") String project, @RequestParam(value = "database") String database,
             @RequestParam(value = "table") String table) throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         return internalTableController.truncateInternalTable(projectName, database, table);
@@ -160,7 +166,7 @@ public class OpenInternalTableController extends NBasicController {
             @RequestParam(value = "table") String table, @RequestParam(value = "partitions") String[] partitionValues)
             throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         if (null == partitionValues || partitionValues.length == 0) {
@@ -177,7 +183,7 @@ public class OpenInternalTableController extends NBasicController {
             @PathVariable(value = "database") String database, //
             @PathVariable(value = "table") String table) throws Exception {
         String projectName = checkProjectName(project);
-        if (StringUtils.isEmpty(StringUtils.trim(table)) || StringUtils.isEmpty(StringUtils.trim(database))) {
+        if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
         return internalTableController.dropInternalTable(projectName, database, table);

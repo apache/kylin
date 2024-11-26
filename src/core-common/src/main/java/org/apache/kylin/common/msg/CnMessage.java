@@ -941,6 +941,36 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getInternalTableEmpty() {
+        return "无法更新非空内表 \"%s\"。 请检查后重试。";
+    }
+
+    @Override
+    public String getSameInternalTableNameExist() {
+        return "表：\"%s\" 已经存在，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTablePath() {
+        return "创建内表路径失败，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableUnpartitioned() {
+        return "不支持增量构建为分区内表，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableNullPartitionFormat() {
+        return "日期分区格式不能为空， 请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableNoDataCol() {
+        return "在分区列中无法找到日期列，请检查后重试。";
+    }
+
+    @Override
     public String getTimeExceedPartitionRange() {
         return "刷新时间超出已加载范围 :\"%s\" ~ \"%s\"，请检查后重试。 ";
     }

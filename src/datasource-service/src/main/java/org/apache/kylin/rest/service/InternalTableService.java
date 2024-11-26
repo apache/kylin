@@ -116,7 +116,9 @@ public class InternalTableService extends BasicService {
                 throw new KylinException(TABLE_NOT_EXIST, errorMsg);
             }
             if (originTable.isHasInternal()) {
-                throw new KylinException(INTERNAL_TABLE_ERROR, "Table is already an internal table");
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getSameInternalTableNameExist(),
+                        originTable.getName());
+                throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
             }
             checkParameters(partitionCols, originTable, datePartitionFormat);
             InternalTableDesc internalTable = new InternalTableDesc(originTable);
@@ -155,11 +157,11 @@ public class InternalTableService extends BasicService {
             Optional<ColumnDesc> dateCol = partitionColList.stream().filter(col -> col.getTypeName().equals("date"))
                     .findFirst();
             if (StringUtils.isEmpty(datePartitionFormat) && dateCol.isPresent()) {
-                throw new KylinException(EMPTY_PARAMETER, "date_partition_format can not be null, please check again");
+                throw new KylinException(EMPTY_PARAMETER,
+                        String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableNullPartitionFormat()));
             }
             if (!StringUtils.isEmpty(datePartitionFormat) && !dateCol.isPresent()) {
-                throw new KylinException(EMPTY_PARAMETER,
-                        "couldn't find date_col present in partition_cols, please check again");
+                throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getInternalTableNoDataCol());
             }
             checkIfFormatMatchCol(dateCol, originTable, datePartitionFormat);
         }
@@ -229,7 +231,8 @@ public class InternalTableService extends BasicService {
                 throw new KylinException(INTERNAL_TABLE_NOT_EXIST, errorMsg);
             }
             if (internalTable.getRowCount() > 0L) {
-                throw new KylinException(INTERNAL_TABLE_ERROR, "Non-empty internal table can not be updated");
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableEmpty(), dbTblName);
+                throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
             }
             checkParameters(partitionCols, originTable, datePartitionFormat);
             if (partitionCols != null && partitionCols.length != 0) {
@@ -255,7 +258,8 @@ public class InternalTableService extends BasicService {
             Path location = new Path(path);
             fs.mkdirs(location);
         } catch (IOException e) {
-            throw new KylinException(INTERNAL_TABLE_ERROR, "Failed to create internal table location", e);
+            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTablePath());
+            throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
         }
     }
 
@@ -397,28 +401,27 @@ public class InternalTableService extends BasicService {
                 startDate, endDate, yarnQueue);
     }
 
-    public List<InternalTableDescResponse> getTableList(String project) {
+    public List<InternalTableDescResponse> getTableList(String project, boolean isFuzzy, boolean needDetails,
+            String fuzzyKey) {
         InternalTableManager internalTableManager = getManager(InternalTableManager.class, project);
         List<InternalTableDesc> tableList = internalTableManager.listAllTables();
-        List<InternalTableDescResponse> descList = Lists.newArrayList();
-        tableList.forEach(internalTableDesc -> {
-            InternalTableDescResponse internalTableDescResponse = new InternalTableDescResponse();
-            internalTableDescResponse.setTableName(internalTableDesc.getName());
-            internalTableDescResponse.setUuid(internalTableDesc.getUuid());
-            internalTableDescResponse.setDatabaseName(internalTableDesc.getDatabase());
-            internalTableDescResponse.setRowCount(internalTableDesc.getRowCount());
-            internalTableDescResponse.setStorageSize(internalTableDesc.getStorageSize());
-            internalTableDescResponse.setHitCount(internalTableDesc.getHitCount());
-            String[] partitionColumns = internalTableDesc.getPartitionColumns();
-            String partitionColumn = (partitionColumns == null || partitionColumns.length == 0) ? null
-                    : internalTableDesc.getPartitionColumns()[0];
-            internalTableDescResponse.setTimePartitionCol(partitionColumn);
-            internalTableDescResponse.setUpdateTime(internalTableDesc.getLastModified());
-            internalTableDescResponse.setDatePartitionFormat(internalTableDesc.getDatePartitionFormat());
-            internalTableDescResponse.setTblProperties(internalTableDesc.getTblProperties());
-            descList.add(internalTableDescResponse);
-        });
-        return descList;
+        if (StringUtils.isNotBlank(fuzzyKey)) {
+            if (isFuzzy) {
+                String regex = fuzzyKey.replace(".", ".*");
+                tableList = tableList.stream().filter(table -> table.getIdentity().matches("(?i).*" + regex + ".*"))
+                        .collect(Collectors.toList());
+            } else {
+                tableList = tableList.stream()
+                        .filter(table -> StringUtils.equalsIgnoreCase(table.getIdentity(), fuzzyKey))
+                        .collect(Collectors.toList());
+            }
+            if (tableList.isEmpty()) {
+                throw new KylinException(INTERNAL_TABLE_NOT_EXIST,
+                        String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableNotFound(), fuzzyKey));
+            }
+        }
+        return tableList.stream().map(table -> InternalTableDescResponse.convertToResponse(table, needDetails))
+                .collect(Collectors.toList());
     }
 
     public List<InternalTablePartitionDetail> getTableDetail(String project, String databaseName, String tableName) {
