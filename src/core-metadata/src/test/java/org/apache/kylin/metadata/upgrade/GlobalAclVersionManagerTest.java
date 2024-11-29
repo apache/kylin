@@ -17,36 +17,48 @@
  */
 package org.apache.kylin.metadata.upgrade;
 
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.junit.After;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.TestUtils;
+import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.rest.aspect.Transaction;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GlobalAclVersionManagerTest extends NLocalFileMetadataTestCase {
-
-    @Before
-    public void setup() {
-        createTestMetadata();
-    }
-
-    @After
-    public void tearDown() {
-        cleanupTestMetadata();
-    }
+@MetadataInfo(onlyProps = true)
+@JdbcMetadataInfo
+public class GlobalAclVersionManagerTest {
 
     @Test
+    @Transaction
     public void testBasic() {
         GlobalAclVersion globalAclVersion = new GlobalAclVersion();
         globalAclVersion.setAclVersion(GlobalAclVersion.DATA_PERMISSION_SEPARATE);
         Assert.assertEquals("SYSTEM/acl_version", globalAclVersion.getResourcePath());
-        GlobalAclVersionManager manager = new GlobalAclVersionManager(getTestConfig());
-        manager.delete();
+        GlobalAclVersionManager manager = new GlobalAclVersionManager(TestUtils.getTestConfig());
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            GlobalAclVersionManager m = new GlobalAclVersionManager(TestUtils.getTestConfig());
+            m.delete();
+            return null;
+        }, "delete");
         Assert.assertFalse(manager.exists());
-        manager.save(globalAclVersion);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            GlobalAclVersionManager m = new GlobalAclVersionManager(TestUtils.getTestConfig());
+            m.save(globalAclVersion);
+            return null;
+        }, "save");
         Assert.assertTrue(manager.exists());
-        manager.save(globalAclVersion);
-        manager.delete();
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            GlobalAclVersionManager m = new GlobalAclVersionManager(TestUtils.getTestConfig());
+            m.save(globalAclVersion);
+            return null;
+        }, "save");
+        Assert.assertTrue(manager.exists());
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            GlobalAclVersionManager m = new GlobalAclVersionManager(TestUtils.getTestConfig());
+            m.delete();
+            return null;
+        }, "delete");
         Assert.assertFalse(manager.exists());
     }
 }

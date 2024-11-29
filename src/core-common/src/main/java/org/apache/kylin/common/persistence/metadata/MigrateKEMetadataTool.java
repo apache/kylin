@@ -20,6 +20,8 @@ package org.apache.kylin.common.persistence.metadata;
 import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE_META_KEY_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_META_KEY_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.REC_FILE;
+import static org.apache.kylin.common.persistence.ResourceStore.UPGRADE_META_KEY_PREFIX;
+import static org.apache.kylin.common.persistence.ResourceStore.UPGRADE_META_KEY_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE_META_KEY_TAG;
 import static org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore.Type.DIR;
 
@@ -104,6 +106,7 @@ public class MigrateKEMetadataTool {
 
     public static final String ZIP_SUFFIX = ".zip";
     public static final String PROJECT_KEY = "project";
+    public static final String SEPRATOR = "/";
     public final Map<String, Map<String, String>> modelUuidMap = new ConcurrentHashMap<>();
     private final Map<String, Map<String, String>> segUuidMap = new ConcurrentHashMap<>();
 
@@ -238,7 +241,7 @@ public class MigrateKEMetadataTool {
         }
     }
 
-    private RawResource loadByStream(String resourcePath, long ts, MetadataStore.MemoryMetaData data, DataInputStream in)
+    RawResource loadByStream(String resourcePath, long ts, MetadataStore.MemoryMetaData data, DataInputStream in)
             throws IOException {
         if (in.available() == 0) {
             return null;
@@ -251,9 +254,11 @@ public class MigrateKEMetadataTool {
             return factory.createSystemRawResource(VERSION_FILE_META_KEY_TAG, ts, in);
         } else if (resourcePath.endsWith(METASTORE_IMAGE_META_KEY_TAG)) {
             return factory.createSystemRawResource(METASTORE_IMAGE_META_KEY_TAG, ts, in);
+        } else if (resourcePath.startsWith(UPGRADE_META_KEY_PREFIX)) {
+            return factory.createSystemRawResource(UPGRADE_META_KEY_TAG, ts, in);
         } else if (resourcePath.contains(ResourceStore.METASTORE_TRASH_RECORD_KEY)) {
             return null;
-        } else if (resourcePath.contains("/" + REC_FILE + "/")) {
+        } else if (resourcePath.contains(SEPRATOR + REC_FILE + SEPRATOR)) {
             return factory.createRecResource(resourcePath, ts, in);
         } else {
             byte[] byteArray = IOUtils.toByteArray(in);
@@ -307,26 +312,26 @@ public class MigrateKEMetadataTool {
      * @return The tuple of project, type and metaKey
      */
     public static Tuple3<String, MetadataType, String> splitFilePath(String resourcePath) {
-        if ("/".equals(resourcePath)) {
+        if (SEPRATOR.equals(resourcePath)) {
             return new Tuple3<>(resourcePath, MetadataType.ALL, null);
-        } else if (resourcePath.startsWith("/") && resourcePath.length() > 1) {
+        } else if (resourcePath.startsWith(SEPRATOR) && resourcePath.length() > 1) {
             resourcePath = resourcePath.substring(1);
         }
 
         if (resourcePath.contains("_global/sys_acl/user")) {
-            String[] split = resourcePath.split("/");
+            String[] split = resourcePath.split(SEPRATOR);
             return new Tuple3<>(split[0], MetadataType.USER_GLOBAL_ACL, split[3]);
         } else if (resourcePath.contains("_global/acl")) {
-            String[] split = resourcePath.split("/");
+            String[] split = resourcePath.split(SEPRATOR);
             return new Tuple3<>(split[0], MetadataType.OBJECT_ACL, split[2]);
         } else if (resourcePath.contains("/acl/user")) {
-            String[] split = resourcePath.split("/");
+            String[] split = resourcePath.split(SEPRATOR);
             return new Tuple3<>(split[0], MetadataType.ACL, split[0] + "." + "u" + "." + split[3]);
         } else if (resourcePath.contains("/acl/group")) {
-            String[] split = resourcePath.split("/");
+            String[] split = resourcePath.split(SEPRATOR);
             return new Tuple3<>(split[0], MetadataType.ACL, split[0] + "." + "g" + "." + split[3]);
         }
-        String[] split = resourcePath.split("/", 3);
+        String[] split = resourcePath.split(SEPRATOR, 3);
         if (split.length < 3) {
             throw new KylinRuntimeException("resourcePath is invalid: " + resourcePath);
         }
@@ -403,7 +408,7 @@ public class MigrateKEMetadataTool {
         KylinConfig inputConfig = KylinConfig.getInstanceFromEnv();
         KapConfig kapConf = KapConfig.wrap(inputConfig);
         if (inputPath != null) {
-            inputPath = StringUtils.appendIfMissing(inputPath, "/");
+            inputPath = StringUtils.appendIfMissing(inputPath, SEPRATOR);
         } else {
             inputPath = inputConfig.getMetadataUrl().getIdentifier();
         }
@@ -490,7 +495,7 @@ public class MigrateKEMetadataTool {
         if (outputPath.endsWith(".zip")) {
             // metnauadata_url doesn't support zip file
             outputZipFile = outputPath;
-            outputPath = outputPath.substring(0, outputPath.lastIndexOf("/"));
+            outputPath = outputPath.substring(0, outputPath.lastIndexOf(SEPRATOR));
         }
 
         Path metadataPath = new Path(outputPath);
@@ -690,6 +695,13 @@ public class MigrateKEMetadataTool {
                 StringEntity versionEntity = new StringEntity(VERSION_FILE_META_KEY_TAG, version);
                 content = JsonUtil.writeValueAsIndentBytes(versionEntity);
                 break;
+            case UPGRADE_META_KEY_TAG:
+                Map<String, String> aclVersionMap = JsonUtil
+                        .readValueAsMap(IOUtils.toString(in, StandardCharsets.UTF_8).trim());
+                // add a name field to compatible with system table
+                aclVersionMap.put("name", tagName);
+                content = JsonUtil.writeValueAsIndentBytes(aclVersionMap);
+                break;
             default:
                 break;
             }
@@ -703,10 +715,10 @@ public class MigrateKEMetadataTool {
         }
 
         public RawResource createRecResource(String resPath, long ts, DataInputStream in) throws IOException {
-            if (resPath.startsWith("/")) {
+            if (resPath.startsWith(SEPRATOR)) {
                 resPath = resPath.substring(1);
             }
-            String[] split = resPath.split("/");
+            String[] split = resPath.split(SEPRATOR);
             String project = split[0];
             String uuid = split[2].replace(FileSystemMetadataStore.JSON_SUFFIX, "");
             byte[] byteArray = IOUtils.toByteArray(in);
@@ -817,8 +829,8 @@ public class MigrateKEMetadataTool {
         private RawResource createLayoutResource(Tuple3<String, MetadataType, String> resPathPair, byte[] byteArray)
                 throws IOException {
             String proj = resPathPair._1();
-            String dataflowUuid = resPathPair._3().split("/")[0];
-            String layoutUuid = resPathPair._3().split("/")[1].replace(".json", "");
+            String dataflowUuid = resPathPair._3().split(SEPRATOR)[0];
+            String layoutUuid = resPathPair._3().split(SEPRATOR)[1].replace(".json", "");
             if (KylinConfig.getInstanceFromEnv().isUTEnv()) {
                 String uniqueModelUuid = getUniqueUuid(modelUuidMap, proj, dataflowUuid);
                 String uniqueSegUuid = getUniqueUuid(segUuidMap, uniqueModelUuid, layoutUuid);
@@ -900,7 +912,7 @@ public class MigrateKEMetadataTool {
     }
 
     public static boolean verifyNonMetadataFile(String resourcePath) {
-        if (resourcePath.startsWith("/")) {
+        if (resourcePath.startsWith(SEPRATOR)) {
             resourcePath = resourcePath.substring(1);
         }
         String[] nonMetadata = new String[] { "kylin.properties", ".DS_Store" };
@@ -917,12 +929,12 @@ public class MigrateKEMetadataTool {
             }
         }
         for (String s : metadataShouldBeIgnored) {
-            if (s.startsWith("/") ? resourcePath.contains(s) : resourcePath.startsWith(s)) {
+            if (s.startsWith(SEPRATOR) ? resourcePath.contains(s) : resourcePath.startsWith(s)) {
                 return true;
             }
         }
         for (String s : metadataWithoutJsonPostfix) {
-            if (s.startsWith("/") ? resourcePath.contains(s) : resourcePath.startsWith(s)) {
+            if (s.startsWith(SEPRATOR) ? resourcePath.contains(s) : resourcePath.startsWith(s)) {
                 return false;
             }
         }

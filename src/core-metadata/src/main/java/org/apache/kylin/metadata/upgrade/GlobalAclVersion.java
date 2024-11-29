@@ -18,6 +18,7 @@
 package org.apache.kylin.metadata.upgrade;
 
 import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,10 +34,14 @@ import lombok.Setter;
 @NoArgsConstructor
 public class GlobalAclVersion extends RootPersistentEntity {
     public static final String DATA_PERMISSION_SEPARATE = "data-permission-separate";
-    public static final String VERSION_KEY_NAME = "acl_version";
+
+    public static final String VERSION_KEY_NAME = ResourceStore.UPGRADE_META_KEY_TAG;
 
     @JsonProperty("acl_version")
     private String aclVersion;
+
+    @JsonProperty("name")
+    private String name = VERSION_KEY_NAME;
 
     @Override
     public String resourceName() {

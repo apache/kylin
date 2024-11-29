@@ -81,6 +81,11 @@ public abstract class ResourceStore implements AutoCloseable {
     public static final String METASTORE_IMAGE_META_KEY_TAG = "_image";
     public static final String METASTORE_IMAGE = mergeKeyWithType(METASTORE_IMAGE_META_KEY_TAG, MetadataType.SYSTEM);
     public static final String METASTORE_UUID_META_KEY_TAG = "UUID";
+    // if KE ever upgraded from 4.1,
+    // there is a record with data-permission-separate in backup core-meta/_global/upgrade dir.
+    public static final String UPGRADE_META_KEY_PREFIX = "/_global/upgrade/";
+    // for data permission separate
+    public static final String UPGRADE_META_KEY_TAG = "acl_version";
     public static final String METASTORE_UUID_TAG = mergeKeyWithType(METASTORE_UUID_META_KEY_TAG, MetadataType.SYSTEM);
     public static final String METASTORE_TRASH_RECORD_KEY = "trash_record";
     public static final String METASTORE_TRASH_RECORD = mergeKeyWithType(METASTORE_TRASH_RECORD_KEY,
