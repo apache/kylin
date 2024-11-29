@@ -116,7 +116,7 @@ public class FileSystemMetadataStore extends MetadataStore {
     protected FileSystem fs;
 
     @Getter
-    protected enum Type {
+    public enum Type {
         DIR, ZIP
     }
 
@@ -511,7 +511,7 @@ public class FileSystemMetadataStore extends MetadataStore {
         dumpToZip(store, resources, compressedFile);
     }
 
-    void dumpToFile(ResourceStore resourceStore, Collection<String> resources)
+    public void dumpToFile(ResourceStore resourceStore, Collection<String> resources)
             throws ExecutionException, InterruptedException {
         dumpKylinConfigToFile(resourceStore.getConfig());
 
@@ -558,7 +558,7 @@ public class FileSystemMetadataStore extends MetadataStore {
      * @throws IOException
      * @throws InterruptedException
      */
-    void dumpToZip(ResourceStore store, Collection<String> resources, Path compressedFile)
+    public void dumpToZip(ResourceStore store, Collection<String> resources, Path compressedFile)
             throws IOException, InterruptedException {
         if (resources != null && !resources.isEmpty()) {
             try (FSDataOutputStream out = fs.create(compressedFile, true);
@@ -640,7 +640,7 @@ public class FileSystemMetadataStore extends MetadataStore {
         return new Path(this.rootPath, resourcePath);
     }
 
-    static TreeSet<Path> getAllFilePath(Path filePath, FileSystem fs) {
+    public static TreeSet<Path> getAllFilePath(Path filePath, FileSystem fs) {
         try {
             TreeSet<Path> fileList = Sets.newTreeSet();
             Arrays.stream(fs.listStatus(filePath)).forEach(status -> getAllFilePath(status.getPath(), fs, fileList));
@@ -704,7 +704,7 @@ public class FileSystemMetadataStore extends MetadataStore {
         }
     }
 
-    void getAndPutAllFileRecursion(FileStatus status, FileSystem fs, MemoryMetaData data, List<Future<?>> futures,
+    public void getAndPutAllFileRecursion(FileStatus status, FileSystem fs, MemoryMetaData data, List<Future<?>> futures,
             BiConsumer<FileStatus, MemoryMetaData> process) {
         try {
             for (FileStatus childStatus : fs.listStatus(status.getPath())) {

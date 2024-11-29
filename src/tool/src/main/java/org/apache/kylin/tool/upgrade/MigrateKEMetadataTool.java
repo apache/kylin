@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.persistence.metadata;
+package org.apache.kylin.tool.upgrade;
 
 import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE_META_KEY_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_META_KEY_TAG;
@@ -71,6 +71,8 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.persistence.VersionedRawResource;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
+import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.resources.CcModelRelationRawResource;
 import org.apache.kylin.common.persistence.resources.ComputeColumnRawResource;
 import org.apache.kylin.common.persistence.resources.DataParserRawResource;
@@ -85,6 +87,12 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnManager;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.tool.util.HashFunction;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -471,6 +479,7 @@ public class MigrateKEMetadataTool {
     }
 
     public void doMigrate(String inputPath, String outputPath) throws Exception {
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         KapConfig kapConf = KapConfig.wrap(config);
         if (inputPath == null) {
@@ -514,7 +523,44 @@ public class MigrateKEMetadataTool {
                 .createMetadataStore(dstConfig);
         MetadataStore.MemoryMetaData memoryMetaData = loadOldMetaData(outputMetadataStore, inputPath, type);
         dstResourceStore.resetData(memoryMetaData);
+        refreshComputeColumns(dstConfig);
         dumpToNewFormat(outputMetadataStore, dstResourceStore, type, outputZipFile);
+    }
+
+    private void refreshComputeColumns(KylinConfig config) {
+        NProjectManager projectManager = NProjectManager.getInstance(config);
+        projectManager.listAllProjects().forEach(project -> {
+            NDataModelManager modelManager = NDataModelManager.getInstance(config, project.getName());
+            ComputedColumnManager ccManager = ComputedColumnManager.getInstance(config, project.getName());
+            Map<String, ComputedColumnDesc> ccMap = new HashMap<>();
+            modelManager.listAllModels().stream().filter(model -> !model.isBroken()).forEach(model -> {
+                model.getComputedColumnDescs().forEach(cc -> {
+                    if (cc.getExpressionMD5() == null) {
+                        try {
+                            ComputedColumnUtil.computeMd5(config, model, cc);
+                        } catch (Exception e) {
+                            log.warn("Refresh md5 for compute column failed!", e);
+                            return;
+                        }
+                    }
+                    String uniqueKey = cc.getTableIdentity() + "_" + cc.getExpressionMD5();
+                    if (ccMap.containsKey(uniqueKey)) {
+                        ComputedColumnDesc existing = ccMap.get(uniqueKey);
+                        if (!existing.getColumnName().equals(cc.getColumnName())) {
+                            log.warn(
+                                    "Different CCs share a same expressionMd5, which means these CCs have the same semantic. "
+                                            + "CCs: {}={}, {}={}",
+                                    ccMap.get(uniqueKey).getColumnName(), ccMap.get(uniqueKey).getInnerExpression(),
+                                    cc.getColumnName(), cc.getInnerExpression());
+                            cc.setExpressionMD5(null);
+                        }
+                    } else {
+                        ccMap.put(uniqueKey, cc);
+                        ccManager.updateMD5Manually(cc, cc.getExpressionMD5());
+                    }
+                });
+            });
+        });
     }
 
     private void dumpToNewFormat(FileSystemMetadataStore fileStore, ResourceStore resourceStore, String type,
@@ -582,9 +628,8 @@ public class MigrateKEMetadataTool {
                     ccUuid = ccUuidMap.get(uniqueKey);
                     if (ccUuid == null) {
                         needCreate = true;
-                        ccUuid = contentJsonMap.containsKey("rec_uuid") && contentJsonMap.get("rec_uuid") != null
-                                ? contentJsonMap.get("rec_uuid")
-                                : RandomUtil.randomUUIDStr();
+                        // generate a random uuid, the rec_uuid maybe not unique.
+                        ccUuid = RandomUtil.randomUUIDStr();
                         ccUuidMap.put(uniqueKey, ccUuid);
                     }
                 }

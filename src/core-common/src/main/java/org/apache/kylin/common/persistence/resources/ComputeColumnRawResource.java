@@ -17,10 +17,7 @@
  */
 package org.apache.kylin.common.persistence.resources;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.kylin.common.persistence.RawResource;
-import org.springframework.util.DigestUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -58,10 +55,7 @@ public class ComputeColumnRawResource extends RawResource {
 
     @JsonProperty("comment")
     private String ccComment;
-    
-    private String expressionMd5;
 
-    public String getExpressionMd5() {
-        return DigestUtils.md5DigestAsHex(getExpression().getBytes(StandardCharsets.UTF_8));
-    }
+    @JsonProperty("expressionMD5")
+    private String expressionMd5;
 }

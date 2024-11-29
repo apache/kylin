@@ -103,6 +103,10 @@ public class ComputedColumnManager extends Manager<ComputedColumnDesc> {
         return super.createAS(copied);
     }
 
+    public void updateMD5Manually(ComputedColumnDesc entity, String md5) {
+        super.update(entity.getUuid(), copyForWrite -> copyForWrite.setExpressionMD5(md5));
+    }
+
     private boolean noNeedToUpdate(ComputedColumnDesc existing, ComputedColumnDesc entity) {
         return Objects.equals(existing.getDatatype(), entity.getDatatype())
                 && Objects.equals(existing.getTableAlias(), entity.getTableAlias())
