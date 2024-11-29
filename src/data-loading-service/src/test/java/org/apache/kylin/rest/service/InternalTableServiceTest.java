@@ -282,7 +282,8 @@ public class InternalTableServiceTest extends AbstractTestCase {
                 partitionCols, dateFormat, tblProperties, InternalTableDesc.StorageType.PARQUET.name());
 
         // check internal table metadata
-        List<InternalTableDescResponse> internalTables = internalTableService.getTableList(PROJECT, false, false, "");
+        List<InternalTableDescResponse> internalTables = internalTableService.getTableList(PROJECT, false, false, "",
+                "");
         Assertions.assertEquals(1, internalTables.size());
         InternalTableDescResponse response = internalTables.get(0);
         Assertions.assertEquals(DATE_COL, response.getTimePartitionCol());
@@ -580,7 +581,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), null, null,
                 new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
 
-        List<InternalTableDescResponse> tables = internalTableService.getTableList(PROJECT, false, false, "");
+        List<InternalTableDescResponse> tables = internalTableService.getTableList(PROJECT, false, false, "", "");
         Assertions.assertEquals(1, tables.size());
         Assertions.assertNull(tables.get(0).getTimePartitionCol());
 
@@ -590,7 +591,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         internalTableService.updateInternalTable(PROJECT, tables.get(0).getTableName(), tables.get(0).getDatabaseName(),
                 new String[] { DATE_COL }, "yyyy-MM-dd", new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
 
-        tables = internalTableService.getTableList(PROJECT, false, false, "");
+        tables = internalTableService.getTableList(PROJECT, false, false, "", "");
         Assertions.assertEquals(1, tables.size());
         Assertions.assertEquals(DATE_COL, tables.get(0).getTimePartitionCol());
 
@@ -782,7 +783,6 @@ public class InternalTableServiceTest extends AbstractTestCase {
         TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
         String[] partitionCols = new String[] { DATE_COL };
         Map<String, String> tblProperties = new HashMap<>();
-        String tableIdentity = table.getDatabase() + "." + table.getName();
         boolean isFuzzy = true;
         boolean needDetails = true;
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
@@ -796,7 +796,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
 
         List<InternalTableDescResponse> tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails,
-                tableIdentity);
+                table.getDatabase(), table.getName());
         Assertions.assertEquals(tables.get(0).getTableName(), table.getName());
         Assertions.assertEquals(DATE_COL, tables.get(0).getTimePartitionCol());
         List<ColumnDesc> tableColumn = tables.get(0).getColumns();
@@ -809,19 +809,17 @@ public class InternalTableServiceTest extends AbstractTestCase {
             Assertions.assertEquals(columns[i].getDatatype(), columninfo.getDatatype());
         }
 
-        tableIdentity = "E.S";
         tables.clear();
-        tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, tableIdentity);
+        tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, "E", "S");
         Assertions.assertEquals(tables.get(0).getTableName(), table.getName());
         Assertions.assertEquals(DATE_COL, tables.get(0).getTimePartitionCol());
         tableColumn = tables.get(0).getColumns();
         Assertions.assertEquals(tableColumn.size(), columns.length);
 
-        tableIdentity = "DEFAULT2.DUMMY";
         KylinException notExistException = null;
         tables.clear();
         try {
-            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, tableIdentity);
+            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, "DEFAULT2", "DUMMY");
         } catch (KylinException e) {
             notExistException = e;
         }
@@ -830,10 +828,9 @@ public class InternalTableServiceTest extends AbstractTestCase {
                 null != notExistException && notExistException.getErrorCode().getCodeString().equals("KE-010007014"));
 
         //Illegal string
-        tableIdentity = "DEFAULT.1";
         notExistException = null;
         try {
-            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, tableIdentity);
+            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, "DEFAULT", "1");
         } catch (KylinException e) {
             notExistException = e;
         }
@@ -850,7 +847,6 @@ public class InternalTableServiceTest extends AbstractTestCase {
         TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
         String[] partitionCols = new String[] { DATE_COL };
         Map<String, String> tblProperties = new HashMap<>();
-        String tableIdentity = table.getDatabase() + "." + table.getName();
         boolean isFuzzy = false;
         boolean needDetails = true;
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
@@ -864,7 +860,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
 
         List<InternalTableDescResponse> tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails,
-                tableIdentity);
+                table.getDatabase(), table.getName());
         Assertions.assertEquals(tables.get(0).getTableName(), table.getName());
         Assertions.assertEquals(DATE_COL, tables.get(0).getTimePartitionCol());
         List<ColumnDesc> tableColumn = tables.get(0).getColumns();
@@ -877,16 +873,46 @@ public class InternalTableServiceTest extends AbstractTestCase {
             Assertions.assertEquals(columns[i].getDatatype(), columninfo.getDatatype());
         }
 
-        tableIdentity = "DEFAULT.T";
         KylinException notExistException = null;
         tables.clear();
         try {
-            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, tableIdentity);
+            tables = internalTableService.getTableList(PROJECT, isFuzzy, needDetails, "DEFAULT", "T");
         } catch (KylinException e) {
             notExistException = e;
         }
         Assertions.assertTrue(tables.isEmpty());
         Assertions.assertTrue(
                 null != notExistException && notExistException.getErrorCode().getCodeString().equals("KE-010007014"));
+    }
+
+    @Test
+    public void testGetInternalTableInfoByFuzzyKey() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
+                "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
+
+        List<InternalTableDesc> tables = internalTableManager.getInternalTableDescInfos("", "", true);
+        Assert.assertEquals(1, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("", "", false);
+        Assert.assertEquals(1, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("D", "", false);
+        Assert.assertEquals(0, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("D", "T", true);
+        Assert.assertEquals(1, tables.size());//DEFAULT.TEST_KYLIN_FACT
+        tables = internalTableManager.getInternalTableDescInfos("D", "T", false);
+        Assert.assertEquals(0, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("", "TEST_KYLIN_FACT", false);
+        Assert.assertEquals(1, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("", "TEST", true);
+        Assert.assertEquals(1, tables.size());
+        tables = internalTableManager.getInternalTableDescInfos("D", "", true);
+        Assert.assertEquals(1, tables.size());
     }
 }

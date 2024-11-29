@@ -94,7 +94,7 @@ public class OpenInternalTableController extends NBasicController {
         if (StringUtils.isBlank(table) && StringUtils.isBlank(database) && isFuzzy) {
             throw new KylinException(EMPTY_PARAMETER, MsgPicker.getMsg().getTableOrDatabaseNameCannotEmpty());
         }
-        return internalTableController.getTableList(projectName, isFuzzy, needDetails, database, table, offset, limit);
+        return internalTableController.getTableList(projectName, needDetails, isFuzzy, database, table, offset, limit);
     }
 
     @ApiOperation(value = "get_table_detail", tags = { "AI" })

@@ -402,23 +402,17 @@ public class InternalTableService extends BasicService {
     }
 
     public List<InternalTableDescResponse> getTableList(String project, boolean isFuzzy, boolean needDetails,
-            String fuzzyKey) {
+            String databaseName, String tableName) {
         InternalTableManager internalTableManager = getManager(InternalTableManager.class, project);
-        List<InternalTableDesc> tableList = internalTableManager.listAllTables();
-        if (StringUtils.isNotBlank(fuzzyKey)) {
-            if (isFuzzy) {
-                String regex = fuzzyKey.replace(".", ".*");
-                tableList = tableList.stream().filter(table -> table.getIdentity().matches("(?i).*" + regex + ".*"))
-                        .collect(Collectors.toList());
-            } else {
-                tableList = tableList.stream()
-                        .filter(table -> StringUtils.equalsIgnoreCase(table.getIdentity(), fuzzyKey))
-                        .collect(Collectors.toList());
-            }
+        List<InternalTableDesc> tableList;
+        if (StringUtils.isNotBlank(databaseName) || StringUtils.isNotBlank(tableName)) {
+            tableList = internalTableManager.getInternalTableDescInfos(databaseName, tableName, isFuzzy);
             if (tableList.isEmpty()) {
                 throw new KylinException(INTERNAL_TABLE_NOT_EXIST,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableNotFound(), fuzzyKey));
+                        String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableNotFound(), tableName));
             }
+        } else {
+            tableList = internalTableManager.listAllTables();
         }
         return tableList.stream().map(table -> InternalTableDescResponse.convertToResponse(table, needDetails))
                 .collect(Collectors.toList());

@@ -168,16 +168,7 @@ public class InternalTableController extends NBasicController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) {
         project = checkProjectName(project);
 
-        String fuzzyKey = "";
-        if (StringUtils.isNotBlank(database) && StringUtils.isNotBlank(table)) {
-            fuzzyKey = StringUtils.trim(database) + "." + StringUtils.trim(table);
-        } else if (StringUtils.isBlank(database)) {
-            fuzzyKey = StringUtils.trim(table);
-        } else if (StringUtils.isBlank(table)) {
-            fuzzyKey = StringUtils.trim(database);
-        }
-
-        val rep = internalTableService.getTableList(project, isFuzzy, needDetails, fuzzyKey);
+        val rep = internalTableService.getTableList(project, isFuzzy, needDetails, database, table);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(rep, offset, limit), "");
     }
 

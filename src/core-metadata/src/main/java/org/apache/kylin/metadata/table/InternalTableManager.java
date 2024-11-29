@@ -19,13 +19,20 @@
 package org.apache.kylin.metadata.table;
 
 import static java.util.stream.Collectors.groupingBy;
+import static org.apache.kylin.common.persistence.RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE;
+import static org.apache.kylin.common.persistence.RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 
@@ -125,4 +132,22 @@ public class InternalTableManager {
         void modify(InternalTableDesc copyForWrite);
     }
 
+    public List<InternalTableDesc> getInternalTableDescInfos(String databaseName, String tableName, boolean isFuzzy) {
+        RawResourceFilter combinedFilter = new RawResourceFilter();
+        if (!StringUtils.isBlank(databaseName)) {
+            if (isFuzzy) {
+                combinedFilter.addConditions("dbName", Collections.singletonList(databaseName), LIKE_CASE_INSENSITIVE);
+            } else {
+                combinedFilter.addConditions("dbName", Collections.singletonList(databaseName), EQUAL_CASE_INSENSITIVE);
+            }
+        }
+        if (!StringUtils.isBlank(tableName)) {
+            if (isFuzzy) {
+                combinedFilter.addConditions("name", Collections.singletonList(tableName), LIKE_CASE_INSENSITIVE);
+            } else {
+                combinedFilter.addConditions("name", Collections.singletonList(tableName), EQUAL_CASE_INSENSITIVE);
+            }
+        }
+        return internalTableCrud.listByFilter(combinedFilter).stream().distinct().collect(Collectors.toList());
+    }
 }
