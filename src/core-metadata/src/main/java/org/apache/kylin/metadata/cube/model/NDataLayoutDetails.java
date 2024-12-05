@@ -50,6 +50,8 @@ import lombok.val;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class NDataLayoutDetails extends RootPersistentEntity implements Serializable {
 
+    public static final String SEPARATOR = "-";
+
     @JsonProperty("project")
     private String project;
 
@@ -102,7 +104,7 @@ public class NDataLayoutDetails extends RootPersistentEntity implements Serializ
 
     @Override
     public String resourceName() {
-        return modelId + "-" + layoutId;
+        return modelId + SEPARATOR + layoutId;
     }
 
     @Override

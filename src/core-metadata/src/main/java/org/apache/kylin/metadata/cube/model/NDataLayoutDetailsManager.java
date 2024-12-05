@@ -31,6 +31,8 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static org.apache.kylin.metadata.cube.model.NDataLayoutDetails.SEPARATOR;
+
 @Slf4j
 public class NDataLayoutDetailsManager {
 
@@ -79,7 +81,7 @@ public class NDataLayoutDetailsManager {
     }
 
     public NDataLayoutDetails getNDataLayoutDetails(String modelId, long layoutId) {
-        return crud.get(modelId + "-" + layoutId);
+        return crud.get(modelId + SEPARATOR + layoutId);
     }
 
     public void save(NDataLayoutDetails fragment) {
@@ -115,7 +117,7 @@ public class NDataLayoutDetailsManager {
 
     public void removeDetails(String modelId, Set<Long> layoutIds) {
         for (long layoutId : layoutIds) {
-            crud.delete(crud.resourcePath(modelId + "_" + layoutId));
+            crud.delete(modelId + SEPARATOR + layoutId);
         }
     }
 

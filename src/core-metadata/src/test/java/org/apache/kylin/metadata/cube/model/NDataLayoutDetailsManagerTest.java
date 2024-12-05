@@ -21,6 +21,8 @@ package org.apache.kylin.metadata.cube.model;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Range;
@@ -57,6 +59,9 @@ public class NDataLayoutDetailsManagerTest {
                 .newArrayList(layoutFragment2.getFragmentRangeSet().asRanges().iterator());
         Assertions.assertEquals(Lists.newArrayList(Range.closedOpen(0L, 50L), Range.closedOpen(100L, 200L),
                 Range.closedOpen(201L, 300L)), ranges2);
+        layoutFragmentMgr.removeDetails(dataflow.getId(),
+                new HashSet<>(Collections.singletonList(layoutEntity.getId())));
+        Assertions.assertNull(layoutFragmentMgr.getNDataLayoutDetails(dataflow.getId(), layoutEntity.getId()));
     }
 
 }
