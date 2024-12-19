@@ -46,6 +46,7 @@ import org.apache.kylin.common.persistence.lock.DeadLockException;
 import org.apache.kylin.common.persistence.lock.LockInterruptException;
 import org.apache.kylin.common.persistence.lock.TransactionLock;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
+import org.apache.kylin.common.persistence.resources.SystemRawResource;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -240,7 +241,8 @@ public class UnitOfWork {
         Set<String> copyForWriteResources = UnitOfWork.get().getCopyForWriteItems();
         val eventList = data.stream().map(x -> {
             String resPath = x.generateKeyWithType();
-            if (x.getContent() != null && !copyForWriteResources.contains(resPath)) {
+            if (x.getContent() != null && !(x instanceof SystemRawResource)
+                    && !copyForWriteResources.contains(resPath)) {
                 throw new IllegalStateException(
                         "Transaction try to modify a resource without copyForWrite: " + x.getMetaKey());
             }

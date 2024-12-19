@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.msg;
 
-import com.alibaba.ttl.TransmittableThreadLocal;
 public class MsgPicker {
     private static final ThreadLocal<Message> msg = new ThreadLocal<>();
     private static final String CHINESE_LANGUAGE_CODE = "cn";

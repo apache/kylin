@@ -1563,7 +1563,8 @@ class KylinConfigBaseTest {
         Assertions.assertEquals(withoutExpected, withoutGluten);
     }
 
-    void testGetServerAddress() {
+    @Test
+    public void testGetServerAddress() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.server.address", "127.0.0.1");
         Assertions.assertEquals("127.0.0.1", config.getServerAddress());

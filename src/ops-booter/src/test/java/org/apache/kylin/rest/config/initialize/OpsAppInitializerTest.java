@@ -40,8 +40,10 @@ import org.apache.kylin.tool.MetadataTool;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -52,6 +54,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
         "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
         "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.common.asyncprofiler.AsyncProfiler" })
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class OpsAppInitializerTest extends NLocalFileMetadataTestCase {
     OpsService opsService;
 
@@ -72,7 +75,7 @@ public class OpsAppInitializerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMetadataBackupInterrupted() throws IOException {
+    public void testMetadataBackupInterruptedA() throws IOException {
         String path = opsService.backupMetadata(null);
         JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());
         OpsService.MetadataBackup.getRunningTask()
@@ -85,7 +88,7 @@ public class OpsAppInitializerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMetadataRestoreInterrupted() throws IOException {
+    public void testMetadataRestoreInterruptedB() throws IOException {
         String path = opsService.backupMetadata(null);
         JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());
         await().atMost(2, TimeUnit.MINUTES).until(() -> {

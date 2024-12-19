@@ -25,6 +25,7 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,11 @@ import org.junit.jupiter.api.Test;
 public class SchemaConverterTest {
 
     SchemaConverter converter = new SchemaConverter();
+
+    @AfterEach
+    public void teardown() {
+        QueryContext.current().getQueryTagInfo().setPushdown(false);
+    }
 
     @Test
     void testCatalogConvert() {
@@ -46,11 +52,7 @@ public class SchemaConverterTest {
 
         getTestConfig().setProperty("kylin.internal-table-enabled", "true");
 
-        InternalTableManager innerTableMgr = InternalTableManager.getInstance(getTestConfig(), "default");
-        NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "default");
-        for (TableDesc tableDesc : tableMgr.listAllTables()) {
-            innerTableMgr.createInternalTable(new InternalTableDesc(tableDesc));
-        }
+        prepareInternalTable();
 
         Assertions.assertEquals(sql, converter.convert(sql, "default", null));
 
@@ -70,5 +72,52 @@ public class SchemaConverterTest {
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
 
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+    }
+
+    @Test
+    void testConvertWithDefaultSchema() {
+        getTestConfig().setProperty("kylin.internal-table-enabled", "true");
+
+        prepareInternalTable();
+
+        QueryContext.current().getQueryTagInfo().setPushdown(true);
+        String sql1 = "select TRANS_ID from test_kylin_fact";
+        String result1 = converter.convert(sql1, "default", "default");
+        String expectedSql1 = "select TRANS_ID "
+                + "from \"INTERNAL_CATALOG\".\"default\".\"DEFAULT\".\"TEST_KYLIN_FACT\"";
+        Assertions.assertEquals(expectedSql1, result1);
+
+        String sql2 = "with t1 as (select TRANS_ID from test_kylin_fact) select * from t1";
+        String result2 = converter.convert(sql2, "default", "default");
+        String expectedSql2 = "with t1 as (select TRANS_ID "
+                + "from \"INTERNAL_CATALOG\".\"default\".\"DEFAULT\".\"TEST_KYLIN_FACT\")" + " select * from t1";
+        Assertions.assertEquals(expectedSql2, result2);
+
+        getTestConfig().setProperty("kylin.source.name-case-sensitive-enabled", "true");
+        String sql3 = "with t1 as (select TRANS_ID from test_kylin_fact) select * from t1";
+        String result3 = converter.convert(sql3, "default", "default");
+        String expectedSql3 = "with t1 as (select TRANS_ID from test_kylin_fact) select * from t1";
+        Assertions.assertEquals(expectedSql3, result3);
+        Assertions.assertTrue(QueryContext.current().getQueryTagInfo().isErrInterrupted());
+        Assertions.assertEquals("Table default.test_kylin_fact is not an internal table.",
+                QueryContext.current().getQueryTagInfo().getInterruptReason());
+
+        getTestConfig().setProperty("kylin.source.name-case-sensitive-enabled", "false");
+        String sql4 = "with t1 as (select TRANS_ID from test_kylin_fact), t2 as (select TRANS_ID from t1) "
+                + "select * from t2";
+        String result4 = converter.convert(sql4, "default", "default");
+        String expectedSql4 = "with t1 as (select TRANS_ID "
+                + "from \"INTERNAL_CATALOG\".\"default\".\"DEFAULT\".\"TEST_KYLIN_FACT\"), "
+                + "t2 as (select TRANS_ID from t1) select * from t2";
+        Assertions.assertEquals(expectedSql4, result4);
+        QueryContext.current().getQueryTagInfo().setPushdown(false);
+    }
+
+    private void prepareInternalTable() {
+        InternalTableManager innerTableMgr = InternalTableManager.getInstance(getTestConfig(), "default");
+        NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "default");
+        for (TableDesc tableDesc : tableMgr.listAllTables()) {
+            innerTableMgr.createInternalTable(new InternalTableDesc(tableDesc));
+        }
     }
 }
