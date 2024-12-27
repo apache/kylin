@@ -106,6 +106,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.plans.logical.Join;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.datasource.storage.StorageStoreFactory;
+import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -139,7 +140,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
     @Override
     @After
     public void tearDown() throws Exception {
-        await().untilAsserted(() -> Assert
+        await().timeout(Duration.ONE_MINUTE).untilAsserted(() -> Assert
                 .assertFalse(JobContextUtil.getJobContext(getTestConfig()).getJobScheduler().hasRunningJob()));
         JobContextUtil.cleanUp();
         super.tearDown();

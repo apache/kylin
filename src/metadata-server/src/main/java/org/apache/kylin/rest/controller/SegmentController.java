@@ -34,7 +34,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.BuildIndexPlannerIndexRequest;
@@ -57,6 +56,7 @@ import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentCheckResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.service.FusionModelService;
+import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.ModelBuildService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
@@ -98,6 +98,8 @@ public class SegmentController extends NBasicController {
     @Autowired
     @Qualifier("modelBuildService")
     private ModelBuildService modelBuildService;
+    @Autowired
+    private JobInfoService jobInfoService;
 
     @ApiOperation(value = "buildIndicesManually", tags = { "DW" }, notes = "Update URL: {model}")
     @PostMapping(value = "/{model:.+}/indices")
@@ -233,11 +235,11 @@ public class SegmentController extends NBasicController {
             }
             modelService.deleteSegmentById(dataflowId, project, idsDeleted, force);
         }
+
         try {
-            ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).checkSuicideJobOfModel(project,
-                    dataflowId);
+            jobInfoService.checkSuicideJobOfModel(project, dataflowId);
         } catch (Exception e) {
-            log.warn("Failed to check if there's a job that need to suicide", e);
+            log.warn("Failed to check suicide job", e);
         }
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");

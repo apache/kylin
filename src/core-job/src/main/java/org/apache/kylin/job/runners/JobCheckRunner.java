@@ -34,6 +34,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.rest.JobMapperFilter;
 import org.apache.kylin.job.scheduler.JdbcJobScheduler;
 import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,10 +100,11 @@ public class JobCheckRunner implements Runnable {
             AbstractJobExecutable jobExecutable = entry.getValue().getFirst();
             long startTime = entry.getValue().getSecond();
             String project = jobExecutable.getProject();
-            if (JobCheckUtil.markSuicideJob((AbstractExecutable) jobExecutable)) {
+            if (markSuicideJobWithTransaction((AbstractExecutable) jobExecutable, project)) {
                 logger.info("suicide job = {} on checker runner", jobId);
                 continue;
             }
+
             if (discardTimeoutJob(jobId, project, startTime)) {
                 logger.info("discardTimeoutJob job = {} on checker runner", jobId);
                 continue;
@@ -114,6 +116,11 @@ public class JobCheckRunner implements Runnable {
         }
         // for error or paused jobs
         markSuicideForErrorOrPausedJobs();
+    }
+
+    private static boolean markSuicideJobWithTransaction(AbstractExecutable jobExecutable, String project) {
+        return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> JobCheckUtil.markSuicideJob(jobExecutable),
+                project);
     }
 
     private void markSuicideForErrorOrPausedJobs() {
@@ -131,11 +138,16 @@ public class JobCheckRunner implements Runnable {
                 logger.warn("Job check thread {} is interrupted.", Thread.currentThread().getName());
                 return;
             }
-            if (JobCheckUtil.markSuicideJob(jobInfo)) {
+            if (markSuicideJobWithTransaction(jobInfo)) {
                 logger.info("suicide job = {} on checker runner", jobInfo.getJobId());
                 continue;
             }
         }
+    }
+
+    private boolean markSuicideJobWithTransaction(JobInfo jobInfo) {
+        return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> JobCheckUtil.markSuicideJob(jobInfo),
+                jobInfo.getProject());
     }
 
     private boolean stopJobIfStorageQuotaLimitReached(JobContext jobContext, String jobId, String project) {

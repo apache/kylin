@@ -63,6 +63,7 @@ import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.job.util.JobInfoUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
@@ -310,7 +311,8 @@ public class JdbcJobScheduler implements JobScheduler {
     private boolean doProduce(JobInfo jobInfo, Set<String> runningRecModels,
             Map<String, Integer> projectRunningIndexPlannerBuildJob) {
         try {
-            if (JobCheckUtil.markSuicideJob(jobInfo)) {
+
+            if (markSuicideJobWithTransaction(jobInfo)) {
                 logger.info("Suicide job = {} on produce", jobInfo.getJobId());
                 return false;
             }
@@ -350,6 +352,11 @@ public class JdbcJobScheduler implements JobScheduler {
             logger.error("Failed to produce job: {}", jobInfo.getJobId(), e);
             return false;
         }
+    }
+
+    private static boolean markSuicideJobWithTransaction(JobInfo jobInfo) {
+        return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> JobCheckUtil.markSuicideJob(jobInfo),
+                jobInfo.getProject());
     }
 
     private List<JobInfo> getProcessingJobInfoWithOrder() {

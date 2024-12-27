@@ -973,4 +973,31 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         ExecutableStepResponse result = jobInfoService.parseToExecutableStep(task, null, new HashMap<>(), jobState);
         Assert.assertSame(PENDING, result.getStatus());
     }
+
+    @Test
+    public void testJobDiscard() {
+        ExecutableManager executableManager = Mockito.mock(ExecutableManager.class);
+        Mockito.when(jobInfoService.getManager(ExecutableManager.class, project)).thenReturn(executableManager);
+        Mockito.doAnswer(invocation -> {
+            // ensure unit of work transaction
+            Assert.assertNotNull(UnitOfWork.get());
+            return null;
+        }).when(executableManager).discardJob(Mockito.any());
+        jobInfoService.discardJobs(project, Lists.newArrayList("job1", "job2"));
+        Mockito.verify(executableManager, Mockito.times(1)).discardJob("job1");
+        Mockito.verify(executableManager, Mockito.times(1)).discardJob("job2");
+    }
+
+    @Test
+    public void testSuicideJobOfModel() {
+        ExecutableManager executableManager = Mockito.mock(ExecutableManager.class);
+        Mockito.when(jobInfoService.getManager(ExecutableManager.class, project)).thenReturn(executableManager);
+        Mockito.doAnswer(invocation -> {
+            // ensure unit of work transaction
+            Assert.assertNotNull(UnitOfWork.get());
+            return null;
+        }).when(executableManager).checkSuicideJobOfModel(Mockito.any(), Mockito.anyString());
+        jobInfoService.checkSuicideJobOfModel(project, "test");
+        Mockito.verify(executableManager, Mockito.times(1)).checkSuicideJobOfModel(project, "test");
+    }
 }

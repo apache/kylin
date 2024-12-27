@@ -99,6 +99,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobUpdateRequest;
 import org.apache.kylin.rest.request.SparkJobUpdateRequest;
@@ -1006,6 +1007,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
         return jobInfoList.stream().map(jobInfo -> jobInfo.getJobId()).collect(Collectors.toList());
     }
 
+    @Transaction(project = 0)
     public void stopBatchJob(String project, TableDesc tableDesc) {
         List<String> fusionModelIds = getFusionModelsByTableDesc(project, tableDesc);
         List<String> jobIdList = getBatchModelJobIdsOfFusionModel(project, fusionModelIds);
@@ -1022,5 +1024,21 @@ public class JobInfoService extends BasicService implements JobSupporter {
             logger.warn("get trackUrl failed", e);
         }
         return trackUrl;
+    }
+
+    public void checkSuicideJobOfModel(String project, String dataflowId) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            ExecutableManager executableManager = getManager(ExecutableManager.class, project);
+            executableManager.checkSuicideJobOfModel(project, dataflowId);
+            return true;
+        }, project);
+    }
+
+    public void discardJobs(String project, List<String> jobIdList) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            ExecutableManager executableManager = getManager(ExecutableManager.class, project);
+            jobIdList.forEach(executableManager::discardJob);
+            return true;
+        }, project);
     }
 }

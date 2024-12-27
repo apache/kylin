@@ -23,9 +23,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +47,6 @@ public class JobMetadataDelegateController extends BaseController {
     public void discardJob(@RequestParam("project") String project, @RequestParam("jobId") String jobId,
             @RequestHeader HttpHeaders headers) throws IOException {
         List<String> jobIdList = Lists.newArrayList(jobId.split(","));
-        jobIdList.stream().forEach(eachJobId -> ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
-                .discardJob(eachJobId));
+        jobInfoService.discardJobs(project, jobIdList);
     }
 }
