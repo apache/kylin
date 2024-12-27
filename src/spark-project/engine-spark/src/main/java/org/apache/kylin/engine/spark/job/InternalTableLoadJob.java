@@ -34,6 +34,7 @@ import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
 import org.apache.kylin.engine.spark.job.exec.InternalTableLoadExec;
 import org.apache.kylin.engine.spark.job.stage.internal.InternalTableLoad;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.table.InternalTableDesc;
@@ -45,6 +46,7 @@ import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.delta.tables.ClickhouseTable;
 import io.delta.tables.DeltaTable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -117,19 +119,18 @@ public class InternalTableLoadJob extends SparkApplication {
         return new InternalTableMetaUpdateInfo(count, finalPartitionValues, partitionDetails);
     }
 
-    private long getInternalTableCount(InternalTableDesc internalTable, SparkSession ss) {
-        if (internalTable.getStorageType() == InternalTableDesc.StorageType.PARQUET) {
-            try {
-                val internalTableDs = ss.read().format(internalTable.getStorageType().getFormat())
-                        .load(internalTable.getLocation());
-                return internalTableDs.count();
-            } catch (Exception e) {
-                logger.warn("Can not get parquet info from internal table path {} caused by:",
-                        internalTable.getLocation(), e);
-                return 0;
-            }
-        } else {
+    @VisibleForTesting
+    public long getInternalTableCount(InternalTableDesc internalTable, SparkSession ss) {
+        switch (internalTable.getStorageType()) {
+        case PARQUET:
+            return ss.read().format(internalTable.getStorageType().getFormat()).load(internalTable.getLocation())
+                    .count();
+        case GLUTEN:
+            return ClickhouseTable.forPath(ss, internalTable.getLocation()).toDF().count();
+        case DELTALAKE:
             return DeltaTable.forPath(ss, internalTable.getLocation()).toDF().count();
+        default:
+            return 0;
         }
     }
 

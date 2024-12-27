@@ -47,6 +47,7 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
+import org.apache.kylin.engine.spark.job.InternalTableLoadJob;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -62,6 +63,7 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.InternalTableDescResponse;
 import org.apache.kylin.rest.response.InternalTableLoadingJobResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
@@ -80,6 +82,9 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import io.delta.tables.ClickhouseTable;
+import lombok.val;
 
 @MetadataInfo
 public class InternalTableServiceTest extends AbstractTestCase {
@@ -913,5 +918,103 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assert.assertEquals(1, tables.size());
         tables = internalTableManager.getInternalTableDescInfos("D", "", true);
         Assert.assertEquals(1, tables.size());
+    }
+
+    @Test
+    void testGetIceBergInternalTableMeta() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
+                "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.ICEBERG.name());
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        Assertions.assertNotNull(internalTable);
+        String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
+        File internalTableFolder = new File(workingDir, INTERNAL_DIR);
+        Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
+        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        SparkSession ss = SparderEnv.getSparkSession();
+
+        long count = internalTableLoadJob.getInternalTableCount(internalTable, ss);
+        Assert.assertEquals(0, count);
+
+        InternalTableLoader internalTableLoader = new InternalTableLoader();
+        val partitionInfos = internalTableLoader.getPartitionInfos(ss, internalTable);
+        Assert.assertEquals(0, partitionInfos.length);
+    }
+
+    @Test
+    void testGetGlutenInternalTableMeta() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
+                "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        Assertions.assertNotNull(internalTable);
+
+        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        SparkSession ss = SparderEnv.getSparkSession();
+
+        // gluten internal table cannot be created directly in the ut env
+        internalTable.setStorageType(InternalTableDesc.StorageType.GLUTEN.name());
+        internalTableManager.saveOrUpdateInternalTable(internalTable);
+
+        ClickhouseTable mockClickhouseTable = mock(ClickhouseTable.class);
+        Dataset mockDataFrame = mock(Dataset.class);
+        when(mockClickhouseTable.toDF()).thenReturn(mockDataFrame);
+        when(mockDataFrame.count()).thenReturn(100L);
+        SparkSession mockSparkSession = mock(SparkSession.class);
+        when(mockClickhouseTable.toDF()).thenReturn(mockDataFrame);
+        try {
+            Mockito.mockStatic(ClickhouseTable.class);
+            when(ClickhouseTable.forPath(mockSparkSession, internalTable.getLocation()))
+                    .thenReturn(mockClickhouseTable);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        long count2 = internalTableLoadJob.getInternalTableCount(internalTable, mockSparkSession);
+        Assert.assertEquals(100, count2);
+
+        InternalTableLoader internalTableLoader = new InternalTableLoader();
+        val partitionInfos2 = internalTableLoader.getPartitionInfos(ss, internalTable);
+        Assert.assertEquals(0, partitionInfos2.length);
+    }
+
+    @Test
+    void testGetDeltaInternalTableMeta() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
+                "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.DELTALAKE.name());
+
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        Assertions.assertNotNull(internalTable);
+        String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
+        File internalTableFolder = new File(workingDir, INTERNAL_DIR);
+        Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
+        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        SparkSession ss = SparderEnv.getSparkSession();
+
+        long count = internalTableLoadJob.getInternalTableCount(internalTable, ss);
+        Assert.assertEquals(0, count);
+
+        InternalTableLoader internalTableLoader = new InternalTableLoader();
+        val partitionInfos = internalTableLoader.getPartitionInfos(ss, internalTable);
+        Assert.assertEquals(0, partitionInfos.length);
     }
 }

@@ -33,6 +33,8 @@ import org.apache.kylin.metadata.table.InternalTableDesc.StorageType
 import org.apache.kylin.metadata.table.InternalTablePartition.DefaultPartitionConditionBuilder
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.delta.DeltaLog
+import org.apache.spark.sql.delta.actions.AddFile
+import org.apache.spark.sql.delta.catalog.ClickHouseTableV2
 import org.apache.spark.sql.delta.implicits.stringLongEncoder
 import org.apache.spark.sql.{Dataset, Row, SparkSession, functions}
 
@@ -160,15 +162,19 @@ class InternalTableLoader extends Logging {
 
   // return Array[(partitionValue, storageSize, fileCount), ...]
   def getPartitionInfos(ss: SparkSession, internalTable: InternalTableDesc): Array[Row] = {
-    val internalTableDeltaLog = DeltaLog.forTable(ss, internalTable.getLocation)
-    val allFiles = internalTableDeltaLog.unsafeVolatileSnapshot.allFiles
+    val addFiles = internalTable.getStorageType match {
+      case StorageType.GLUTEN => new ClickHouseTableV2(ss, new Path(internalTable.getLocation)).snapshot.allFiles
+      case StorageType.DELTALAKE => DeltaLog.forTable(ss, internalTable.getLocation).unsafeVolatileSnapshot.allFiles
+      case _ => null
+    }
+    if (addFiles == null) return Array()
     val partitionCol = internalTable.getTablePartition.getPartitionColumns()(0).toUpperCase(Locale.ROOT)
-    val partitionInfos = allFiles.filter(_.partitionValues.contains(partitionCol))
+    val partitionInfos = addFiles.filter(_.partitionValues.contains(partitionCol))
       .map(addFile => (addFile.partitionValues(partitionCol), addFile.size))
-    val groupedSizeSum = partitionInfos
+    val groupedPartitionInfo = partitionInfos
       .groupBy("_1")
-      .agg(functions.sum("_2").alias("totalSize"), functions.count("_2").alias("rowCount"))
-    groupedSizeSum.collect()
+      .agg(functions.sum("_2").alias("totalSize"), functions.count("_2").alias("fileCount"))
+    groupedPartitionInfo.collect()
   }
 
   @throws[IOException]
