@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.spark.ddl;
+
+import java.util.regex.Pattern;
 
 public class DDLConstant {
     public static final String LOGICAL_VIEW = "logic";
@@ -27,7 +30,10 @@ public class DDLConstant {
     public static final Integer VIEW_RULE_PRIORITY = 1;
     public static final Integer SOURCE_TABLE_RULE_PRIORITY = 2;
 
-    private DDLConstant() {
+    public static final Pattern LOGICAL_VIEW_DDL_CREATE_OR_REPLACE_SYNTAX = Pattern
+            .compile("(create|replace)\\s+logical\\s+view\\s+", Pattern.CASE_INSENSITIVE);
+    public static final String DDL_CREATE_LOGICAL_VIEW = "CREATE LOGICAL VIEW "; // keep the tail space
 
+    private DDLConstant() {
     }
 }

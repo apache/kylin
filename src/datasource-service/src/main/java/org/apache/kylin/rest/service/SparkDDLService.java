@@ -126,7 +126,7 @@ public class SparkDDLService extends BasicService {
     private void saveLogicalView(DDLCheckContext context) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
-            LogicalView logicalView = new LogicalView(context.getLogicalViewName(), context.getSql(),
+            LogicalView logicalView = new LogicalView(context.getLogicalViewName(), context.getLogicalViewPersistSql(),
                     context.getUserName(), context.getProject());
             manager.update(logicalView);
             return null;

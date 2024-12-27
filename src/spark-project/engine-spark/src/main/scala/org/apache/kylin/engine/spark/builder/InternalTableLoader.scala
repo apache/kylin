@@ -113,7 +113,8 @@ class InternalTableLoader extends Logging {
                     startDate: String,
                     endDate: String,
                     incremental: Boolean): Dataset[Row] = {
-    val tableDS = if (this.onlyLoadSchema) ss.table(table.getTableDesc).limit(0) else ss.table(table.getTableDesc)
+    val tableDS = if (onlyLoadSchema) ss.table(table.getTableDesc).limit(0) else ss.table(table.getTableDesc)
+
     if (incremental) {
       val partitionColumn = table.getTablePartition.getPartitionColumns()(0)
       val dateFormat = table.getTablePartition.getDatePartitionFormat

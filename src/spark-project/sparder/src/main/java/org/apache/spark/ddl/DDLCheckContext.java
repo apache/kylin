@@ -23,6 +23,7 @@ import static org.apache.spark.ddl.DDLConstant.HIVE_VIEW;
 import static org.apache.spark.ddl.DDLConstant.REPLACE_LOGICAL_VIEW;
 
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import lombok.Data;
 
@@ -53,6 +54,17 @@ public class DDLCheckContext {
     }
 
     public String getSql() {
+        return sql;
+    }
+
+    public String getLogicalViewPersistSql() {
+        if (isLogicalViewCommand()) {
+            String trimmedSql = sql.trim();
+            Matcher matcher = DDLConstant.LOGICAL_VIEW_DDL_CREATE_OR_REPLACE_SYNTAX.matcher(trimmedSql);
+            if (matcher.find()) {
+                return matcher.replaceFirst(DDLConstant.DDL_CREATE_LOGICAL_VIEW);
+            }
+        }
         return sql;
     }
 

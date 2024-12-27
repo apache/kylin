@@ -72,6 +72,7 @@ public class InternalTableLoadingStep extends NSparkExecutable {
         dumpList.add(tableDesc.getResourcePath());
         dumpList.add(internalTable.getResourcePath());
         dumpList.add(projectInstance.getResourcePath());
+        dumpList.addAll(getLogicalViewMetaDumpList(config));
         return dumpList;
     }
 

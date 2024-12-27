@@ -89,6 +89,7 @@ public class LogicalViewManager {
         LogicalView exist = get(view.getTableName());
         LogicalView copy = copyForWrite(view);
         if (exist != null) {
+            copy.setCreatedSql(view.getCreatedSql());
             copy.setLastModified(exist.getLastModified());
             copy.setMvcc(exist.getMvcc());
         }
