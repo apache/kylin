@@ -148,7 +148,7 @@ public class AsyncQueryJob extends NSparkExecutable {
 
     @Override
     protected String getExtJar() {
-        return getConfig().getKylinExtJarsPath(false);
+        return getConfig().getKylinExtJarsPath(getConfig().uniqueAsyncQueryUseGlutenEnabled());
     }
 
     @Override
@@ -232,5 +232,11 @@ public class AsyncQueryJob extends NSparkExecutable {
         }
         props.put("kylin.internal-table-enabled", KylinConfig.FALSE);
         props.remove("kylin.storage.columnar.spark-conf.spark.sql.catalog.INTERNAL_CATALOG");
+    }
+
+    @Override
+    public boolean needRemoveGlutenParams(KylinConfig config) {
+        // need to remove gulten params, return false
+        return config.buildUseGlutenEnabled();
     }
 }

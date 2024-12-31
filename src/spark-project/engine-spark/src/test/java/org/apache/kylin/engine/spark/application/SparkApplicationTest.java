@@ -24,6 +24,7 @@ import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_PLUGINS;
 import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_SHUFFLE_MANAGER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -268,59 +269,6 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
     }
 
     @Test
-    public void testNotInternalTableLoadJobRemoveGluten() throws Exception {
-        val sparkPrefix = "kylin.engine.spark-conf.";
-        val config = getTestConfig();
-        config.setProperty("kylin.env", "PROD");
-        config.setProperty(sparkPrefix + SPARK_PLUGINS, GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin");
-        config.setProperty(sparkPrefix + "spark.gluten.enable", "true");
-        config.setProperty(sparkPrefix + "spark.master", "yarn");
-        config.setProperty(sparkPrefix + "spark.eventLog.enabled", "false");
-        val application = new SparkApplication() {
-            @Override
-            protected void doExecute() {
-                // do nothing
-            }
-        };
-        application.config = config;
-        assertWithGluten(application);
-
-        application.className = InternalTableLoadJob.class.getName();
-        assertWithGluten(application);
-
-        application.className = SegmentBuildJob.class.getName();
-        assertWithOutGluten(application);
-    }
-
-    private static void assertWithGluten(SparkApplication application) throws Exception {
-        val sparkConf = new SparkConf();
-        sparkConf.set("spark.master", "yarn");
-        sparkConf.set("spark.eventLog.enabled", "false");
-        application.exchangeSparkConf(sparkConf);
-        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
-                "atomicSparkConf"));
-        val actalSparkConf = atomicSparkConf.get();
-        assertEquals(COLUMNAR_SHUFFLE_MANAGER, actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
-        assertEquals("true", actalSparkConf.get("spark.gluten.enable"));
-        assertEquals(GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
-        assertEquals("yarn", actalSparkConf.get("spark.master"));
-        assertEquals("false", actalSparkConf.get("spark.eventLog.enabled"));
-    }
-
-    private static void assertWithOutGluten(SparkApplication application) throws Exception {
-        val sparkConf = new SparkConf();
-        sparkConf.set("spark.master", "yarn");
-        sparkConf.set("spark.eventLog.enabled", "false");
-        application.exchangeSparkConf(sparkConf);
-        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
-                "atomicSparkConf"));
-        val actalSparkConf = atomicSparkConf.get();
-        assertFalse(Arrays.stream(actalSparkConf.getAll()).anyMatch(conf -> conf._1.contains("gluten")));
-        assertEquals("sort", actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
-        assertEquals("org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
-    }
-
-    @Test
     public void testUpdateJobErrorInfo() throws JsonProcessingException {
         val config = getTestConfig();
         val project = "test_project";
@@ -399,5 +347,104 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTestBase {
         json.put("yarn_app_id", appId);
         Mockito.verify(application.getReport(), Mockito.times(1)).updateSparkJobExtraInfo(paramsMap,
                 "/kylin/api/jobs/spark", null, null, json);
+    }
+
+    @Test
+    public void testRemoveGlutenParamsIfNeed() throws Exception {
+        val sparkPrefix = "kylin.engine.spark-conf.";
+        val config = getTestConfig();
+        config.setProperty("kylin.env", "PROD");
+        config.setProperty(sparkPrefix + SPARK_PLUGINS, GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin");
+        config.setProperty(sparkPrefix + "spark.gluten.enable", "true");
+        config.setProperty(sparkPrefix + "spark.master", "yarn");
+        config.setProperty(sparkPrefix + "spark.eventLog.enabled", "false");
+        config.setProperty("kylin.engine.gluten.enabled", "true");
+        val application = new SparkApplication() {
+            @Override
+            protected void doExecute() {
+                // do nothing
+            }
+        };
+        application.className = SegmentBuildJob.class.getName();
+        application.config = config;
+        assertWithGluten(application);
+
+        config.setProperty("kylin.engine.gluten.enabled", "false");
+        assertWithOutGluten(application);
+
+        application.className = InternalTableLoadJob.class.getName();
+        assertWithGluten(application);
+
+        application.className = SegmentBuildJob.class.getName();
+        assertWithOutGluten(application);
+    }
+
+    private static void assertWithGluten(SparkApplication application) throws Exception {
+        val sparkConf = new SparkConf();
+        sparkConf.set("spark.master", "yarn");
+        sparkConf.set("spark.eventLog.enabled", "false");
+        application.exchangeSparkConf(sparkConf);
+        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
+                "atomicSparkConf"));
+        val actalSparkConf = atomicSparkConf.get();
+        assertEquals(COLUMNAR_SHUFFLE_MANAGER, actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
+        assertEquals("true", actalSparkConf.get("spark.gluten.enable"));
+        assertEquals(GLUTEN_PLUGIN + ",org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
+        assertEquals("yarn", actalSparkConf.get("spark.master"));
+        assertEquals("false", actalSparkConf.get("spark.eventLog.enabled"));
+    }
+
+    private static void assertWithOutGluten(SparkApplication application) throws Exception {
+        val sparkConf = new SparkConf();
+        sparkConf.set("spark.master", "yarn");
+        sparkConf.set("spark.eventLog.enabled", "false");
+        application.exchangeSparkConf(sparkConf);
+        val atomicSparkConf = ((AtomicReference<SparkConf>) ReflectionTestUtils.getField(application,
+                "atomicSparkConf"));
+        val actalSparkConf = atomicSparkConf.get();
+        assertFalse(Arrays.stream(actalSparkConf.getAll()).anyMatch(conf -> conf._1.contains("gluten")));
+        assertEquals("sort", actalSparkConf.get(SPARK_SHUFFLE_MANAGER));
+        assertEquals("org.apache.spark.kyuubi.KyuubiPlugin", actalSparkConf.get(SPARK_PLUGINS));
+    }
+
+    @Test
+    public void testDisableCurrentThreadGlutenIfNeed() throws Exception {
+        val config = getTestConfig();
+        config.setProperty("kylin.engine.gluten.enabled", "true");
+        val application = new SparkApplication() {
+            @Override
+            protected void doExecute() {
+                // do nothing
+            }
+        };
+        application.className = SegmentBuildJob.class.getName();
+        application.config = config;
+        val sparkConf = new SparkConf();
+        sparkConf.set("spark.master", "local[111]");
+        assertNullEnableForCurrentThread(application, sparkConf);
+
+        config.setProperty("kylin.engine.gluten.enabled", "false");
+        assertFalseEnableForCurrentThread(application, sparkConf);
+
+        application.className = InternalTableLoadJob.class.getName();
+        assertNullEnableForCurrentThread(application, sparkConf);
+    }
+
+    private void assertNullEnableForCurrentThread(SparkApplication application, SparkConf sparkConf) {
+        try (val sparkSession = new SparkSession.Builder().config(sparkConf).getOrCreate();) {
+            application.ss = sparkSession;
+
+            application.disableCurrentThreadGlutenIfNeed();
+            assertNull(ss.sparkContext().getLocalProperty("gluten.enabledForCurrentThread"));
+        }
+    }
+
+    private void assertFalseEnableForCurrentThread(SparkApplication application, SparkConf sparkConf) {
+        try (val sparkSession = new SparkSession.Builder().config(sparkConf).getOrCreate();) {
+            application.ss = sparkSession;
+
+            application.disableCurrentThreadGlutenIfNeed();
+            assertEquals("false", application.ss.sparkContext().getLocalProperty("gluten.enabledForCurrentThread"));
+        }
     }
 }

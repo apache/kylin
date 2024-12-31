@@ -469,11 +469,13 @@ public class OlapContext {
             if (tableDesc == null) {
                 return policy;
             }
-            if (olapConfig.isInternalTableEnabled() && tableDesc.isHasInternal() && !isAsyncQuery(olapConfig)) {
-                logger.info("Hit internal table {}", factTable);
-                policy = getSQLDigest().isDigestOfRawQuery()//
-                        ? NLookupCandidate.Policy.INTERNAL_TABLE
-                        : NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE;
+            if (olapConfig.isInternalTableEnabled() && tableDesc.isHasInternal()) {
+                if (!isUniqueAsyncQuery(olapConfig) || asyncQueryUseGlutenEnabled(olapConfig)) {
+                    logger.info("Hit internal table {}", factTable);
+                    policy = getSQLDigest().isDigestOfRawQuery()//
+                            ? NLookupCandidate.Policy.INTERNAL_TABLE
+                            : NLookupCandidate.Policy.AGG_THEN_INTERNAL_TABLE;
+                }
             } else if (!olapConfig.isInternalTableEnabled() && !StringUtils.isBlank(tableDesc.getLastSnapshotPath())) {
                 logger.info("Hit the snapshot {}, the path is: {}", factTable, tableDesc.getLastSnapshotPath());
                 policy = getSQLDigest().isDigestOfRawQuery() //
@@ -484,8 +486,12 @@ public class OlapContext {
         return policy;
     }
 
-    public boolean isAsyncQuery(KylinConfig olapConfig) {
+    public boolean isUniqueAsyncQuery(KylinConfig olapConfig) {
         return QueryContext.current().getQueryTagInfo().isAsyncQuery() && olapConfig.isUniqueAsyncQueryYarnQueue();
+    }
+
+    public boolean asyncQueryUseGlutenEnabled(KylinConfig olapConfig) {
+        return isUniqueAsyncQuery(olapConfig) && olapConfig.uniqueAsyncQueryUseGlutenEnabled();
     }
 
     public String incapableMsg() {
@@ -653,10 +659,8 @@ public class OlapContext {
                     maxList[colId] = convertToColumnDataType(rangeInfo.getMax(), dataType);
                 } else {
                     RelDataType sqlType = OlapTable.createSqlType(typeFactory, c.getUpgradedType(), c.isNullable());
-                    minList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMin(), sqlType,
-                            false);
-                    maxList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMax(), sqlType,
-                            false);
+                    minList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMin(), sqlType, false);
+                    maxList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMax(), sqlType, false);
                 }
             }
 

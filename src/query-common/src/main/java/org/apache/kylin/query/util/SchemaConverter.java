@@ -60,7 +60,8 @@ public class SchemaConverter implements IPushDownConverter {
             log.debug("Pushdown tag is not found, skip it.");
             return originSql;
         }
-        if (QueryContext.current().getQueryTagInfo().isAsyncQuery() && config.isUniqueAsyncQueryYarnQueue()) {
+        if (QueryContext.current().getQueryTagInfo().isAsyncQuery() && config.isUniqueAsyncQueryYarnQueue()
+                && !config.uniqueAsyncQueryUseGlutenEnabled()) {
             log.debug("Async query, skip it");
             return originSql;
         }

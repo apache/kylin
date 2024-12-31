@@ -35,20 +35,48 @@ class OlapContextTest {
     }
 
     @Test
-    void isAsyncQuery() {
+    void isUniqueAsyncQuery() {
         OlapContext mock = new OlapContext(1);
         val config = Mockito.mock(KylinConfig.class);
         Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(true);
         QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
-        boolean asyncQuery = mock.isAsyncQuery(config);
+        boolean asyncQuery = mock.isUniqueAsyncQuery(config);
         Assertions.assertTrue(asyncQuery);
 
         Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(false);
-        asyncQuery = mock.isAsyncQuery(config);
+        asyncQuery = mock.isUniqueAsyncQuery(config);
         Assertions.assertFalse(asyncQuery);
 
         QueryContext.current().getQueryTagInfo().setAsyncQuery(false);
-        asyncQuery = mock.isAsyncQuery(config);
+        Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(true);
+        asyncQuery = mock.isUniqueAsyncQuery(config);
+        Assertions.assertFalse(asyncQuery);
+    }
+
+    @Test
+    void asyncQueryUseGlutenEnabled() {
+        OlapContext mock = new OlapContext(1);
+        val config = Mockito.mock(KylinConfig.class);
+        Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(true);
+        Mockito.when(config.uniqueAsyncQueryUseGlutenEnabled()).thenReturn(true);
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+        boolean asyncQuery = mock.asyncQueryUseGlutenEnabled(config);
+        Assertions.assertTrue(asyncQuery);
+
+        Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(false);
+        asyncQuery = mock.asyncQueryUseGlutenEnabled(config);
+        Assertions.assertFalse(asyncQuery);
+
+        Mockito.when(config.uniqueAsyncQueryUseGlutenEnabled()).thenReturn(false);
+        asyncQuery = mock.asyncQueryUseGlutenEnabled(config);
+        Assertions.assertFalse(asyncQuery);
+
+        Mockito.when(config.isUniqueAsyncQueryYarnQueue()).thenReturn(false);
+        asyncQuery = mock.asyncQueryUseGlutenEnabled(config);
+        Assertions.assertFalse(asyncQuery);
+
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(false);
+        asyncQuery = mock.asyncQueryUseGlutenEnabled(config);
         Assertions.assertFalse(asyncQuery);
     }
 }

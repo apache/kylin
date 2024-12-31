@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.spark.job.step
 
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.application.SparkApplication
+import org.apache.kylin.metadata.streaming.ReflectionUtils
+import org.apache.spark.SparkConf
 import org.junit.Assert
 import org.mockito.Mockito
 import org.scalatest.funsuite.AnyFunSuite
@@ -30,5 +33,29 @@ class ResourceWaitStageTest extends AnyFunSuite {
 
     val wfr = new ResourceWaitStage(sparkApplication)
     Assert.assertEquals("ResourceWaitStage", wfr.getStageName)
+  }
+
+  test("test ResourceWaitStage needCheckResource") {
+    val sparkApplication = Mockito.mock(classOf[SparkApplication])
+    val sparkConf = Mockito.mock(classOf[SparkConf])
+    val kylinConfig = Mockito.mock(classOf[KylinConfig])
+
+    val wfr = new ResourceWaitStage(sparkApplication)
+    ReflectionUtils.setField(wfr, "sparkConf", sparkConf)
+    ReflectionUtils.setField(wfr, "config", kylinConfig)
+
+    Mockito.when(sparkApplication.isJobOnCluster(sparkConf)).thenReturn(true)
+    Mockito.when(kylinConfig.getWaitResourceEnabled).thenReturn(true)
+    Assert.assertTrue(wfr.needCheckResource)
+
+    Mockito.when(sparkApplication.isJobOnCluster(sparkConf)).thenReturn(false)
+    Assert.assertFalse(wfr.needCheckResource)
+
+    Mockito.when(sparkApplication.isJobOnCluster(sparkConf)).thenReturn(true)
+    Mockito.when(kylinConfig.getWaitResourceEnabled).thenReturn(false)
+    Assert.assertFalse(wfr.needCheckResource)
+
+    Mockito.when(sparkApplication.isJobOnCluster(sparkConf)).thenReturn(false)
+    Assert.assertFalse(wfr.needCheckResource)
   }
 }

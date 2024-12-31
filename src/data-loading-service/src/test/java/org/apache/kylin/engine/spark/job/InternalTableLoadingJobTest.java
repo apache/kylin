@@ -126,6 +126,7 @@ class InternalTableLoadingJobTest extends AbstractTestCase {
         internalTableLoadingJob.getTasks().forEach(task -> {
             if (task instanceof InternalTableLoadingStep) {
                 Assertions.assertTrue(task.isInternalTableSparkJob());
+                Assertions.assertTrue(((InternalTableLoadingStep) task).needRemoveGlutenParams(config));
             } else {
                 Assertions.assertFalse(task.isInternalTableSparkJob());
             }

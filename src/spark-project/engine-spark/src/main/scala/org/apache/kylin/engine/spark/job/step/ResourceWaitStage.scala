@@ -39,8 +39,12 @@ class ResourceWaitStage(jobContext: SparkApplication) extends StageExec {
     jobStepId + "_00"
   }
 
+  def needCheckResource: Boolean = {
+    jobContext.isJobOnCluster(sparkConf) && config.getWaitResourceEnabled
+  }
+
   override def execute(): Unit = {
-    if (jobContext.isJobOnCluster(sparkConf)) {
+    if (needCheckResource) {
       val sleepSeconds = (Math.random * 60L).toLong
       logInfo(s"Sleep $sleepSeconds seconds to avoid submitting too many spark job at the same time.")
       KylinBuildEnv.get().buildJobInfos.startWait()

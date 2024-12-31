@@ -58,8 +58,15 @@ public class SchemaConverterTest {
 
         QueryContext.current().getQueryTagInfo().setPushdown(true);
 
+        checkAsyncQuery(sql, expectedSql);
+
+        Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+    }
+
+    private void checkAsyncQuery(String sql, String expectedSql) {
         QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
         getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "true");
+        getTestConfig().setProperty("kylin.unique-async-query.gluten.enabled", "false");
         Assertions.assertEquals(sql, converter.convert(sql, "default", null));
 
         QueryContext.current().getQueryTagInfo().setAsyncQuery(false);
@@ -68,9 +75,15 @@ public class SchemaConverterTest {
         getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "false");
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
 
-        QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+        getTestConfig().setProperty("kylin.unique-async-query.gluten.enabled", "true");
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
 
+        QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "false");
+        Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
+
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "true");
+        getTestConfig().setProperty("kylin.unique-async-query.gluten.enabled", "true");
         Assertions.assertEquals(expectedSql, converter.convert(sql, "default", null));
     }
 

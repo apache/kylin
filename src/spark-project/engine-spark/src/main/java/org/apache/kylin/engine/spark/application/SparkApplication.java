@@ -342,10 +342,7 @@ public abstract class SparkApplication implements Application {
                 Unsafe.setProperty("kylin.env", config.getDeployEnv());
             }
 
-            if (className != null && !className.equals(InternalTableLoadJob.class.getName())) {
-                ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
-                logger.info("Disable gluten for normal build");
-            }
+            disableCurrentThreadGlutenIfNeed();
 
             logger.info("Start job");
             infos.startJob();
@@ -369,6 +366,13 @@ public abstract class SparkApplication implements Application {
             destroySparkSession();
             extraDestroy();
             executeFinish();
+        }
+    }
+
+    public void disableCurrentThreadGlutenIfNeed() {
+        if (!config.buildUseGlutenEnabled() && !className.equals(InternalTableLoadJob.class.getName())) {
+            ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
+            logger.info("Disable current thread gluten for Build Job");
         }
     }
 
@@ -649,14 +653,17 @@ public abstract class SparkApplication implements Application {
         }
     }
 
-    @VisibleForTesting
-    void exchangeSparkConf(SparkConf sparkConf) throws Exception {
+    public Map<String, String> removeGlutenParamsIfNeed(Map<String, String> baseSparkConf) {
+        if (!config.buildUseGlutenEnabled() && !className.equals(InternalTableLoadJob.class.getName())) {
+            return ExecutableUtil.removeGultenParams(baseSparkConf);
+        }
+        return baseSparkConf;
+    }
+
+    public void exchangeSparkConf(SparkConf sparkConf) throws Exception {
         if (isJobOnCluster(sparkConf) && !(this instanceof ResourceDetect)) {
             Map<String, String> baseSparkConf = getSparkConfigOverride(config);
-            if (className != null && !className.equals(InternalTableLoadJob.class.getName())) {
-                baseSparkConf = ExecutableUtil.removeGultenParams(baseSparkConf);
-            }
-
+            baseSparkConf = removeGlutenParamsIfNeed(baseSparkConf);
             if (!baseSparkConf.isEmpty()) {
                 baseSparkConf.forEach(sparkConf::set);
                 String baseSparkConfStr = JsonUtil.writeValueAsString(baseSparkConf);

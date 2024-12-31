@@ -34,6 +34,7 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.scheduler.JobFailed;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryHistorySqlParam;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
@@ -94,6 +95,14 @@ public class AsyncQueryApplication extends SparkApplication {
     }
 
     @Override
+    public void disableCurrentThreadGlutenIfNeed() {
+        if (!config.uniqueAsyncQueryUseGlutenEnabled()) {
+            ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
+            logger.info("Disable current thread gluten for Async Query");
+        }
+    }
+
+    @Override
     public void reportSparkJobExtraInfo(SparkSession sparkSession) {
         // do nothing
     }
@@ -116,6 +125,14 @@ public class AsyncQueryApplication extends SparkApplication {
     @Override
     public void updateJobErrorInfo(JobFailed jobFailed) {
         // do nothing
+    }
+
+    @Override
+    public Map<String, String> removeGlutenParamsIfNeed(Map<String, String> baseSparkConf) {
+        if (!config.uniqueAsyncQueryUseGlutenEnabled()) {
+            return ExecutableUtil.removeGultenParams(baseSparkConf);
+        }
+        return baseSparkConf;
     }
 
     private void saveQueryHistory(QueryContext queryContext, QueryParams queryParams) {

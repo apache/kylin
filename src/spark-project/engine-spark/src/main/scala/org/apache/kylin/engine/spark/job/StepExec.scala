@@ -18,13 +18,12 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.io.IOException
-import java.util
-import java.util.Locale
-
 import org.apache.kylin.engine.spark.job.step.StageExec
 import org.apache.spark.internal.Logging
 
+import java.io.IOException
+import java.util
+import java.util.Locale
 import scala.collection.JavaConverters._
 
 class StepExec(stepId: String) extends Logging {
@@ -35,7 +34,7 @@ class StepExec(stepId: String) extends Logging {
   }
 
   def addStage(stage: StageExec): Unit = {
-    val stageId = subStageList.size + 1
+    val stageId = getStageId()
     stage.setStageId(getStepId + "_" + String.format(Locale.ROOT, "%02d", Integer.valueOf(stageId)))
     this.subStageList.add(stage)
   }

@@ -46,7 +46,7 @@ trait StageExec extends Logging {
   }
 
   def onStageStart(): Unit = {
-    if(getJobContext.isSkipFollowingStages(getSegmentId)){
+    if (getJobContext.isSkipFollowingStages(getSegmentId)) {
       return
     }
     updateStageInfo(ExecutableState.RUNNING.toString, null, null)
@@ -100,7 +100,7 @@ trait StageExec extends Logging {
     onStageStart()
     var state: ExecutableState = ExecutableState.SUCCEED
     try {
-      if(getJobContext.isSkipFollowingStages(getSegmentId)){
+      if (getJobContext.isSkipFollowingStages(getSegmentId)) {
         state = ExecutableState.SKIP
         return
       }

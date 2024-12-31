@@ -915,10 +915,10 @@ class KylinConfigBaseTest {
         map.put("decimalOperationsAllowPrecisionLoss", new PropertiesEntity(
                 "kylin.storage.columnar.spark-conf.spark.sql.decimalOperations.allowPrecisionLoss", "true", true));
         map.put("isSparkUIAclEnabled", new PropertiesEntity("kylin.query.engine.spark-ui-acl.enabled", "", false));
-        map.put("isInternalTablePreloadCacheEnabled",
-                new PropertiesEntity("kylin.internal-table.preloaded-cache.enabled", "true", false));
-        map.put("isIndexPreloadCacheEnabled",
-                new PropertiesEntity("kylin.index.preloaded-cache.enabled", "true", false));
+        map.put("getWaitResourceEnabled", new PropertiesEntity("kylin.build.wait-resource.enabled", "", false));
+        map.put("buildUseGlutenEnabled", new PropertiesEntity("kylin.engine.gluten.enabled", "", false));
+        map.put("uniqueAsyncQueryUseGlutenEnabled",
+                new PropertiesEntity("kylin.unique-async-query.gluten.enabled", "", false));
         map.put("getConcurrentRunningThresholdForGlutenCache",
                 new PropertiesEntity("kylin.cache.gluten-cache-concurrent-running-threshold", "20", 20));
     }

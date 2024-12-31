@@ -3739,6 +3739,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metrics.prometheus-enabled", TRUE));
     }
 
+    public boolean getWaitResourceEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.build.wait-resource.enabled", TRUE));
+    }
+
     public boolean getCheckResourceEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.build.resource.check-enabled", FALSE));
     }
@@ -4410,6 +4414,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean queryIndexUseGluten() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.index-use-gulten", TRUE));
+    }
+
+    public boolean buildUseGlutenEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.engine.gluten.enabled", FALSE));
+    }
+
+    public boolean uniqueAsyncQueryUseGlutenEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.unique-async-query.gluten.enabled", FALSE));
     }
 
     public boolean queryUseGlutenEnabled() {

@@ -23,6 +23,7 @@ import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
@@ -257,5 +258,18 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setParam(NBatchConstants.P_DATAFLOW_ID, "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         kylinConfigExt = sparkExecutable.getKylinConfigExt(kylinConfig, "default");
         Assert.assertEquals("123", kylinConfigExt.getOptional("kylin.engine.spark-conf.test", null));
+    }
+
+    @Test
+    public void testNeedRemoveGlutenParams() {
+        KylinConfig kylinConfig = KylinConfig.createKylinConfig(getTestConfig());
+        NSparkExecutable sparkExecutable = new NSparkExecutable();
+
+        Assert.assertFalse(sparkExecutable.needRemoveGlutenParams(kylinConfig));
+
+        kylinConfig.setProperty("kylin.engine.gluten.enabled", KylinConfigBase.TRUE);
+        Assert.assertTrue(sparkExecutable.needRemoveGlutenParams(kylinConfig));
+        kylinConfig.setProperty("kylin.engine.gluten.enabled", KylinConfigBase.FALSE);
+
     }
 }

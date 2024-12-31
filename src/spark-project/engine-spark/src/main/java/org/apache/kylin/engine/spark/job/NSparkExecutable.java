@@ -481,10 +481,15 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         if (UserGroupInformation.isSecurityEnabled()) {
             confMap.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
         }
-        if (!isInternalTableSparkJob()) {
+        if (!needRemoveGlutenParams(config)) {
             return ExecutableUtil.removeGultenParams(confMap);
         }
         return confMap;
+    }
+
+    public boolean needRemoveGlutenParams(KylinConfig config) {
+        // need to remove gulten params, return false
+        return isInternalTableSparkJob() || config.buildUseGlutenEnabled();
     }
 
     private ExecuteResult runLocalMode(String appArgs) {
