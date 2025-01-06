@@ -100,7 +100,8 @@ public enum MetadataType {
     public static final Set<MetadataType> NON_GLOBAL_METADATA_TYPE = Collections.unmodifiableSet(
             Sets.newHashSet(ACL, COMPUTE_COLUMN, DATAFLOW, INDEX_PLAN, JOB_STATS, LAYOUT, LAYOUT_DETAILS, MODEL,
                     SEGMENT, TABLE_EXD, TABLE_INFO, SQL_BLACKLIST, JAR_INFO, DATA_PARSER, FUSION_MODEL, KAFKA_CONFIG,
-                    LOGICAL_VIEW, STREAMING_JOB, QUERY_RECORD, CC_MODEL_RELATION, TABLE_MODEL_RELATION));
+                    LOGICAL_VIEW, STREAMING_JOB, QUERY_RECORD, CC_MODEL_RELATION, TABLE_MODEL_RELATION,
+                    INTERNAL_TABLE));
 
     public static final Set<MetadataType> WITH_PROJECT_PREFIX_METADATA = Collections
             .unmodifiableSet(Sets.newHashSet(TABLE_EXD, TABLE_INFO, KAFKA_CONFIG, JAR_INFO, DATA_PARSER, TMP_REC));

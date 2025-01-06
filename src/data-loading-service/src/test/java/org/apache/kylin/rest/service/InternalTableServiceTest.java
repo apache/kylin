@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -41,6 +42,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -56,6 +58,7 @@ import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.metadata.table.InternalTablePartitionDetail;
@@ -98,6 +101,9 @@ public class InternalTableServiceTest extends AbstractTestCase {
 
     @InjectMocks
     private TableService tableService = mock(TableService.class);
+
+    @Spy
+    private ProjectService projectService = spy(ProjectService.class);
 
     static final String PROJECT = "default";
     static final String TABLE_INDENTITY = "DEFAULT.TEST_KYLIN_FACT";
@@ -1016,5 +1022,44 @@ public class InternalTableServiceTest extends AbstractTestCase {
         InternalTableLoader internalTableLoader = new InternalTableLoader();
         val partitionInfos = internalTableLoader.getPartitionInfos(ss, internalTable);
         Assert.assertEquals(0, partitionInfos.length);
+    }
+
+    @Test
+    void testDropProject() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        // deletePrometheusProjectMetrics need SpringContext to get bean, so we need to disable it
+        config.setProperty("kylin.metrics.prometheus-enabled", "false");
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, TABLE_INDENTITY, new String[] { DATE_COL }, "yyyy-MM-dd",
+                new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        String startDate = "1325347200000"; // 2012-01-01
+        String endDate = "1325865600000"; // 2012-01-07
+        InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
+                table.getDatabase(), true, false, startDate, endDate, null);
+        String jobId = response.getJobs().get(0).getJobId();
+        waitJobToFinished(config, jobId);
+
+        // check internal table data exist
+        String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
+        File internalTableFolder = new File(workingDir, INTERNAL_DIR);
+        Assertions.assertEquals(6, internalTableFolder.list().length);
+
+        // check query
+        SparkSession ss = SparderEnv.getSparkSession();
+        long count = ss.sql(BASE_SQL).count();
+        Assertions.assertTrue(count > 0);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            projectService.dropProject(PROJECT);
+            return true;
+        }, PROJECT);
+        String[] tableIdentifier = TABLE_INDENTITY.split("\\.");
+        // check delete table
+        KylinException kylinException = Assertions.assertThrows(KylinException.class, () -> {
+            internalTableService.getTableDetail(PROJECT, tableIdentifier[0], tableIdentifier[1]);
+        });
+        Assertions.assertEquals(kylinException.getErrorCode(), ServerErrorCode.INTERNAL_TABLE_NOT_EXIST.toErrorCode());
+        Assertions.assertFalse(internalTableFolder.exists());
     }
 }
