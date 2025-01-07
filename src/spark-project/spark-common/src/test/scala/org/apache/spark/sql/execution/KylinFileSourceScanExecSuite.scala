@@ -17,8 +17,11 @@
 
 package org.apache.spark.sql.execution
 
+import java.io.File
 import java.util.concurrent.TimeUnit
 
+import org.apache.commons.lang3.StringUtils
+import org.apache.gluten.extension.columnar.heuristic.HeuristicTransform
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.cache.softaffinity.SoftAffinityConstants
 import org.apache.spark.SparkFunSuite
@@ -31,8 +34,9 @@ import org.apache.spark.sql.common.LocalMetadata
 import org.apache.spark.sql.delta.KylinDeltaLogFileIndex
 import org.apache.spark.sql.delta.actions.AddFile
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
-import org.apache.spark.sql.execution.datasource.{FilePruner, KylinDeltaSourceStrategy, KylinSourceStrategy, LayoutFileSourceStrategy}
-import org.apache.spark.sql.execution.datasources.{CacheFileScanRDD, FileIndex, FileScanRDD, HadoopFsRelation, LogicalRelation, PartitionDirectory}
+import org.apache.spark.sql.execution.datasource._
+import org.apache.spark.sql.execution.datasources._
+import org.apache.spark.sql.execution.gluten.KylinStorageScanExecTransformer
 import org.mockito.{ArgumentMatchers, Mockito}
 
 import com.google.common.cache.CacheBuilder
@@ -56,7 +60,7 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
       .withExtensions { ext =>
         ext.injectPlannerStrategy(_ => KylinSourceStrategy)
         ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
-        ext.injectPlannerStrategy(_ => KylinDeltaSourceStrategy)
+        ext.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
       }
       .getOrCreate()
 
@@ -78,6 +82,47 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
     }
 
     spark.sparkContext.stop()
+  }
+
+  test("[Gluten] Create sharding read RDD with Soft affinity - CacheFileScanRDD") {
+    val chLibPath = System.getProperty("clickhouse.lib.path")
+    if (StringUtils.isEmpty(chLibPath) || !new File(chLibPath).exists) {
+      log.warn("-Dclickhouse.lib.path is not set or path not exists, skip gluten config")
+    } else {
+      SparkSession.cleanupAnyExistingSession()
+      val spark = SparkSession.builder()
+        .master("local[1]")
+        .config(SoftAffinityConstants.PARAMS_KEY_SOFT_AFFINITY_ENABLED, "true")
+        .config("spark.sql.shuffle.partitions", "1")
+        .config("spark.sql.adaptive.enabled", "false")
+        .config("spark.plugins", "org.apache.gluten.GlutenPlugin")
+        .config("spark.shuffle.manager", "org.apache.spark.shuffle.sort.ColumnarShuffleManager")
+        .config("spark.io.compression.codec", "LZ4")
+        .config("spark.gluten.sql.columnar.libpath", chLibPath)
+        .config("spark.gluten.sql.enable.native.validation", "false")
+        .config("spark.memory.offHeap.enabled", "true")
+        .config("spark.memory.offHeap.size", "2G")
+        .config("spark.gluten.sql.columnar.extended.columnar.pre.rules",
+          "org.apache.spark.sql.execution.gluten.ConvertKylinFileSourceToGlutenRule")
+        .withExtensions { ext =>
+          ext.injectPlannerStrategy(_ => KylinSourceStrategy)
+          ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
+          ext.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
+        }
+        .getOrCreate()
+
+      withTempPath { path =>
+        val tempDir = path.getCanonicalPath
+        val df = createSimpleFileDeltaDF(spark, tempDir)
+        val transformed = HeuristicTransform.static()(df.queryExecution.executedPlan)
+        val res = transformed.collect {
+          case p: KylinStorageScanExecTransformer => p
+        }
+        assertResult(1)(res.size)
+      }
+
+      spark.sparkContext.stop()
+    }
   }
 
   test("Create sharding read RDD without Soft affinity - FileScanRDD") {

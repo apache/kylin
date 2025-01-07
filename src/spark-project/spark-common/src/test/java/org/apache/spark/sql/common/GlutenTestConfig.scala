@@ -27,12 +27,22 @@ object GlutenTestConfig extends Logging {
 
   private val GLUTEN_CH_LIB_PATH_KEY = "clickhouse.lib.path"
 
-  def configGluten(conf: SparkConf): Unit = {
+  def enableGluten(): Boolean = {
     val chLibPath = System.getProperty(GLUTEN_CH_LIB_PATH_KEY)
     if (StringUtils.isEmpty(chLibPath) || !new File(chLibPath).exists) {
       log.warn("-Dclickhouse.lib.path is not set or path not exists, skip gluten config")
-      return // skip
+      false // skip
+    } else {
+      true
     }
+  }
+
+  def configGluten(conf: SparkConf): Unit = {
+    if (!enableGluten()) {
+      return
+    }
+
+    val chLibPath = System.getProperty(GLUTEN_CH_LIB_PATH_KEY)
     conf.set("spark.gluten.enabled", "true")
     conf.set("spark.plugins", "org.apache.gluten.GlutenPlugin")
     conf.set("spark.gluten.sql.columnar.libpath", chLibPath)

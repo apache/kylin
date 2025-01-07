@@ -308,7 +308,7 @@ object SparderEnv extends Logging {
   def injectExtensions(sse: SparkSessionExtensions): Unit = {
     sse.injectPlannerStrategy(_ => KylinSourceStrategy)
     sse.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
-    sse.injectPlannerStrategy(_ => KylinDeltaSourceStrategy)
+    sse.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
     sse.injectPostHocResolutionRule(HiveStorageRule)
     sse.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
     if (KapConfig.getInstanceFromEnv.isConstraintPropagationEnabled) {

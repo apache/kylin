@@ -16,6 +16,8 @@
 -- limitations under the License.
 --
 
-select lstg_format_name, sum(price) as GMV, count(lstg_format_name) over(partition by lstg_format_name order by cal_dt, lstg_format_name)
+select lstg_format_name, sum(price) as GMV,
+       count(lstg_format_name) over(partition by lstg_format_name order by cal_dt) cnt
 from test_kylin_fact
 group by cal_dt, lstg_format_name
+order by lstg_format_name, GMV, cnt

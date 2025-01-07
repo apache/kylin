@@ -18,10 +18,12 @@
 
 package org.apache.kylin.gluten;
 
+import org.apache.gluten.execution.FilterExecTransformer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.rec.util.AccelerationUtil;
 import org.apache.kylin.util.SuggestTestBase;
+import org.apache.spark.sql.common.GlutenTestConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,6 +41,15 @@ public class GlutenKEConfigTest extends SuggestTestBase {
         QueryExec queryExec = new QueryExec(PROJECT, KylinConfig.getInstanceFromEnv());
         val resultSet = queryExec.executeQuery(sql);
         Assert.assertTrue(resultSet.getSize() > 0);
+    }
+
+    @Test
+    public void testGlutenIsEnable() throws Exception {
+        if (!GlutenTestConfig.enableGluten()) {
+            return;
+        }
+        val a = ss.range(100).filter("id < 5").queryExecution().executedPlan();
+        Assert.assertTrue(a.find(FilterExecTransformer.class::isInstance).nonEmpty());
     }
 
     private void proposeAndBuildIndex(String[] sqls) throws InterruptedException {

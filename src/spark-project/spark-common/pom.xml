@@ -195,6 +195,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-iceberg</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
             <artifactId>spark-sql-columnar-shims-kyspark</artifactId>
             <version>${gluten.version}</version>
             <scope>${gluten.deps.scope}</scope>

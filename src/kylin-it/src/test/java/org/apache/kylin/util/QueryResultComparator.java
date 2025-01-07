@@ -129,7 +129,7 @@ public class QueryResultComparator {
 
     private static void printRows(String source, List<String> rows) {
         log.info("***********" + source + " start, only show top 100 result**********");
-        rows.stream().limit(100).forEach(log::info);
+        rows.stream().limit(11000).forEach(log::info);
         log.info("***********" + source + " end**********");
     }
 }

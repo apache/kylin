@@ -47,6 +47,7 @@ import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.optimizer.ConvertInnerJoinToSemiJoin;
 import org.apache.spark.sql.common.GlutenTestConfig;
+import org.apache.spark.sql.execution.datasource.KylinDeltaSourceStrategy;
 import org.apache.spark.sql.internal.StaticSQLConf;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
@@ -123,6 +124,7 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
         cleanupAnyExistingSession();
         ss = SparkSession.builder().withExtensions(ext -> {
             ext.injectOptimizerRule(ss -> new ConvertInnerJoinToSemiJoin());
+            ext.injectPlannerStrategy(ss -> new KylinDeltaSourceStrategy());
             return null;
         }).config(sparkConf).getOrCreate();
         SparderEnv.setSparkSession(ss);

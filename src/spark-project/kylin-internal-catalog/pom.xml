@@ -80,6 +80,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-iceberg</artifactId>
+            <version>${gluten.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-catalyst_2.12</artifactId>
         </dependency>

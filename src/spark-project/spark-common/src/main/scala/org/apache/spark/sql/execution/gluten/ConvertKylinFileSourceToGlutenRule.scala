@@ -22,7 +22,7 @@ import org.apache.gluten.execution.{FileSourceScanExecTransformer, GlutenPlan, V
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.utils.PushDownUtil
-import org.apache.spark.sql.execution.{KylinFileSourceScanExec, LayoutFileSourceScanExec, SparkPlan}
+import org.apache.spark.sql.execution.{KylinFileSourceScanExec, KylinStorageScanExec, LayoutFileSourceScanExec, SparkPlan}
 
 class ConvertKylinFileSourceToGlutenRule(val session: SparkSession) extends Rule[SparkPlan] {
 
@@ -72,5 +72,19 @@ class ConvertKylinFileSourceToGlutenRule(val session: SparkSession) extends Rule
       )
       // Transformer validate
       tryReturnGlutenPlan(transformer, l)
+    case v3Scan: KylinStorageScanExec =>
+      // convert to Gluten transformer
+      val transformer = new KylinStorageScanExecTransformer(
+        v3Scan.relation,
+        v3Scan.output,
+        v3Scan.requiredSchema,
+        v3Scan.partitionFilters,
+        v3Scan.optionalBucketSet,
+        v3Scan.optionalNumCoalescedBuckets,
+        PushDownUtil.removeNotSupportPushDownFilters(v3Scan.conf, v3Scan.output, v3Scan.dataFilters),
+        v3Scan.tableIdentifier,
+        v3Scan.disableBucketedScan)
+
+      tryReturnGlutenPlan(transformer, v3Scan)
   }
 }
