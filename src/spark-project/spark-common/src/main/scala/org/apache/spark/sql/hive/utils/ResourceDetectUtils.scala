@@ -44,6 +44,10 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.reflect.runtime.universe
+
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -127,10 +131,23 @@ object ResourceDetectUtils extends Logging {
   def getPartitions(plan: SparkPlan): String = {
     val leafNodePartitionsLengthMap: mutable.Map[String, Int] = mutable.Map()
     var pNum = 0
+    val hiveTableScanExecTransformerClass = try {
+      logInfo("Try to find HiveTableScanExecTransformer class")
+      universe.runtimeMirror(getClass.getClassLoader).staticClass("org.apache.spark.sql.hive.HiveTableScanExecTransformer")
+      Some(classOf[org.apache.spark.sql.hive.HiveTableScanExecTransformer])
+    } catch {
+      case _: Exception =>
+        logInfo("HiveTableScanExecTransformer class not found, skipping.")
+        None
+    }
+
     plan.foreach {
       case node: LeafExecNode =>
         val pn = node match {
           case ree: ReusedExchangeExec if ree.child.isInstanceOf[BroadcastExchangeLike] => 1
+          case glutenScanTransformer if hiveTableScanExecTransformerClass.exists(_.isInstance(glutenScanTransformer)) =>
+            val transformer = glutenScanTransformer.asInstanceOf[org.apache.spark.sql.hive.HiveTableScanExecTransformer]
+            transformer.getPartitions.length
           case _ => val partitionsLength = if (node.supportsColumnar) {
             node.executeColumnar().partitions.length
           } else {

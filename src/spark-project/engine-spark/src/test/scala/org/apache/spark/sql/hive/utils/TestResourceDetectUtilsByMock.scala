@@ -22,8 +22,11 @@ import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.common.SharedSparkSession
 import org.apache.spark.sql.execution.datasources.{FileIndex, HadoopFsRelation, PartitionDirectory}
-import org.apache.spark.sql.execution.{FileSourceScanExec, LayoutFileSourceScanExec}
+import org.apache.spark.sql.execution.{FileSourceScanExec, LayoutFileSourceScanExec, SparkPlan}
+import org.apache.spark.sql.hive.HiveTableScanExecTransformer
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
+import org.mockito.Mockito.when
+import org.mockito.{ArgumentMatchers, Mockito}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -89,6 +92,21 @@ class TestResourceDetectUtilsByMock extends AnyWordSpec with MockFactory with Sh
         (fileIndex.partitionSchema _).expects().returning(StructType(StructField("f1", IntegerType, true) :: Nil)).anyNumberOfTimes()
         (fileIndex.listFiles _).expects(null, dataFilters).returning(Seq(PartitionDirectory(null, Seq(fileStatus)))).anyNumberOfTimes()
         assert(paths == ResourceDetectUtils.getPaths(sparkPlan))
+      }
+    }
+  }
+  "getPartitions" when {
+    "HiveTableScanExecTransformer" should {
+      "get gluten hive exec partition" in {
+        val mockHiveTableScanExecTrans = Mockito.mock(classOf[HiveTableScanExecTransformer])
+        when(mockHiveTableScanExecTrans.getPartitions).thenReturn(Seq.empty)
+        val mockPlan = Mockito.mock(classOf[SparkPlan])
+        when(mockPlan.foreach(ArgumentMatchers.any())).thenAnswer(invocation => {
+          val callback = invocation.getArgument[SparkPlan => Unit](0)
+          callback(mockHiveTableScanExecTrans)
+        })
+        val pNum = ResourceDetectUtils.getPartitions(mockPlan)
+        assert("0".equals(pNum))
       }
     }
   }
