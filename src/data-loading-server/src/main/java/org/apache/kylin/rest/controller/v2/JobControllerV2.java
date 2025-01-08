@@ -31,6 +31,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobFilter;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -109,14 +110,14 @@ public class JobControllerV2 extends BaseController {
         }
 
         JobFilter jobFilter = new JobFilter(statuses,
-                Objects.isNull(jobName) ? Lists.newArrayList() : Lists.newArrayList(jobName), timeFilter, null, key,
-                false, project, sortBy, reverse);
+                Objects.isNull(jobName) ? JobTypeEnum.BUILD_JOB_TYPES : Lists.newArrayList(jobName), timeFilter, null,
+                key, false, project, sortBy, reverse);
         List<ExecutableResponse> executables = jobInfoService.listJobs(jobFilter);
         executables = jobInfoService.addOldParams(executables);
         long count = jobInfoService.countJobs(jobFilter);
         executables.forEach(
                 executableResponse -> executableResponse.setVersion(KylinVersion.getCurrentVersion().toString()));
-        Map<String, Object> result = getDataResponse("jobs", executables, (int)count, pageOffset, pageSize);
+        Map<String, Object> result = getDataResponse("jobs", executables, (int) count, pageOffset, pageSize);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }
 

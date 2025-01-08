@@ -20,22 +20,31 @@ package org.apache.kylin.rest.controller.v2;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.dao.JobInfoDao;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobFilter;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobUpdateRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -207,6 +216,48 @@ public class JobControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
+    }
+
+    @Test
+    public void testGetJobsFilterLogic() throws Exception {
+        initJobInfoServiceSpy();
+
+        mockExecutablePO("1", JobTypeEnum.INDEX_BUILD, 1);
+        mockExecutablePO("2", JobTypeEnum.ROUTINE, 2);
+        mockExecutablePO("3", JobTypeEnum.META, 3);
+        mockExecutablePO("4", JobTypeEnum.ASYNC_QUERY, 4);
+
+        EnvelopeResponse<HashMap<String, Object>> response = jobControllerV2.getJobList(new Integer[0], 1, null,
+                "default", null, 0, 10, "last_modified", null, true);
+
+        Assert.assertNotNull(response);
+        HashMap<String, Object> responseData = response.getData();
+        Assert.assertNotNull(responseData);
+        List<ExecutableResponse> responseDataJobs = (List<ExecutableResponse>) responseData.get("jobs");
+        Assert.assertNotNull(responseDataJobs);
+        Assert.assertEquals(1, responseDataJobs.size());
+        Assert.assertEquals("job1", responseDataJobs.get(0).getId());
+    }
+
+    private void initJobInfoServiceSpy() {
+        jobInfoService = Mockito.spy(new JobInfoService());
+        JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(getTestConfig());
+        ReflectionTestUtils.setField(jobInfoService, "jobInfoDao", jobInfoDao);
+        ReflectionTestUtils.setField(jobInfoService, "aclEvaluate", aclEvaluate);
+        ReflectionTestUtils.setField(jobControllerV2, "jobInfoService", jobInfoService);
+    }
+
+    private void mockExecutablePO(String name, JobTypeEnum jobType, int daysAgo) {
+        ExecutablePO mockJob = new ExecutablePO();
+        mockJob.setType("org.apache.kylin.job.execution.SucceedChainedTestExecutable");
+        mockJob.setJobType(jobType);
+        mockJob.setProject("default");
+        mockJob.setUuid("job" + name);
+        long createTime = LocalDateTime.now().minusDays(daysAgo).atZone(ZoneId.systemDefault()).toInstant()
+                .toEpochMilli();
+        mockJob.setCreateTime(createTime);
+        JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(getTestConfig());
+        jobInfoDao.addJob(mockJob);
     }
 
 }
