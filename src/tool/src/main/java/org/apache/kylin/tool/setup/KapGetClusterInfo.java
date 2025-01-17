@@ -111,44 +111,56 @@ public class KapGetClusterInfo {
         String command = "curl -s -k --negotiate -u : " + url;
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         val patternedLogger = new BufferedLogger(logger);
-        val response = config.getCliCommandExecutor().execute(command, patternedLogger).getCmd();
-        logger.info("yarn metrics response: {}", response);
-        Map<String, Integer> clusterMetricsInfos = null;
-        if (response == null) {
-            throw new IllegalStateException(
-                    "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
-        }
 
-        JsonNode clusterMetrics;
+        JsonNode clusterMetrics = null;
+        // attempt 1
         try {
+            val response = config.getCliCommandExecutor().execute(command, patternedLogger).getCmd();
+            logger.info("yarn metrics response: {}", response);
+            if (response == null) {
+                throw new IllegalStateException(
+                        "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
+            }
             clusterMetrics = new ObjectMapper().readTree(response).path("clusterMetrics");
         } catch (Exception e) {
-            logger.warn("Failed to get clusterMetrics from cluster.", e);
-            try {
-                clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo())
-                        .path("clusterMetrics");
-            } catch (IOException | RuntimeException exception) {
-                // If all previous attempts to access RM's REST API through curl cmd have failed
-                // try to use YARN SDK to obtain yarn cluster information
-                logger.warn("Failed to get clusterMetrics from cluster via SchedulerInfoCmdHelper.", exception);
-                YarnResourceInfoTool yarnClusterMetrics = new YarnResourceInfoTool();
-                if (this.queueName.equals("")) {
-                    clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfo();
-                } else {
-                    clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfoByQueueName(this.queueName);
-                }
-
-                if (clusterMetricsInfos == null || clusterMetricsInfos.isEmpty()) {
-                    logger.error("The queue:{} is invalid, please check kylin.properties", this.queueName);
-                    Unsafe.systemExit(101);
-                    return;
-                }
-
-                clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetricsInfos.get(AVAILABLE_VIRTUAL_CORE));
-                clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetricsInfos.get(AVAILABLE_MEMORY));
-                return;
-            }
+            logger.warn("Attempt 1 failed to get clusterMetrics from cluster via curl command.", e);
         }
+
+        if (clusterMetrics != null) {
+            putClusterMetricsInfo(clusterMetrics);
+            return;
+        }
+        // attempt 2
+        try {
+            clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo()).path("clusterMetrics");
+        } catch (IOException | RuntimeException exception) {
+            logger.warn("Attempt 2 failed to get clusterMetrics from cluster via SchedulerInfoCmdHelper.", exception);
+        }
+
+        if (clusterMetrics != null) {
+            putClusterMetricsInfo(clusterMetrics);
+            return;
+        }
+        // attempt 3, if all attempts failed then throw exception
+        YarnResourceInfoTool yarnClusterMetrics = new YarnResourceInfoTool();
+        Map<String, Integer> clusterMetricsInfos;
+        if (this.queueName.equals("")) {
+            clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfo();
+        } else {
+            clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfoByQueueName(this.queueName);
+        }
+
+        if (clusterMetricsInfos == null || clusterMetricsInfos.isEmpty()) {
+            logger.error("The queue:{} is invalid, please check kylin.properties", this.queueName);
+            Unsafe.systemExit(101);
+            return;
+        }
+
+        clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetricsInfos.get(AVAILABLE_VIRTUAL_CORE));
+        clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetricsInfos.get(AVAILABLE_MEMORY));
+    }
+
+    private void putClusterMetricsInfo(JsonNode clusterMetrics) {
         clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetrics.path(AVAILABLE_VIRTUAL_CORE).intValue());
         clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetrics.path(AVAILABLE_MEMORY).intValue());
     }
