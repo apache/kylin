@@ -2235,6 +2235,26 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.auto-model-view-enabled", FALSE));
     }
 
+    /**
+        * This method was originally written using integers.
+        * To avoid excessive use of magic numbers, we now use descriptive strings.
+        * However, integers are retained to preserve the original behavior.
+     */
+    public String getColOrderForSelectStarInModelView() {
+        String colOrder = getOptional("kylin.query.select-star-col-order-in-model-view", "default")
+                .toLowerCase(Locale.ROOT);
+        switch (colOrder) {
+        case "1":
+        case "order-by-model":
+            return "orderByModel";
+        case "2":
+        case "order-by-table":
+            return "orderByTable";
+        default:
+            return "default";
+        }
+    }
+
     public Map<String, String> getUDFs() {
         Map<String, String> udfMap = Maps.newLinkedHashMap();
         udfMap.put("bitmap_function", "org.apache.kylin.query.udf.KylinBitmapUDF");

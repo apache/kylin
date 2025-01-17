@@ -19,8 +19,10 @@
 package org.apache.kylin.query.engine.view;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -42,6 +44,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.metadata.project.NProjectManager;
 
 public class ModelViewGenerator {
 
@@ -144,7 +147,43 @@ public class ModelViewGenerator {
         ccTblColRefs.removeIf(tblColRef -> !colRefs.contains(tblColRef));
         colRefs.addAll(ccTblColRefs);
 
+        String order = NProjectManager.getProjectConfig(model.getProject()).getColOrderForSelectStarInModelView();
+        if (order.equals("orderByModel")) {
+            return orderByModelColSequence(colRefs);
+        } else if (order.equals("orderByTable")) {
+            return orderByTableColSeq(colRefs, model);
+        }
         return colRefs;
+    }
+
+    private Set<TblColRef> orderByTableColSeq(Set<TblColRef> colRefs, NDataModel model) {
+        Set<TableRef> linkedTblRefs = model.getAllTableRefs();
+        List<TblColRef> allCols = linkedTblRefs.stream().map(tableRef -> {
+            Collection<TblColRef> columns = tableRef.getColumns();
+            return columns.stream().sorted((Comparator.comparingInt(o -> o.getColumnDesc().getZeroBasedIndex())))
+                    .collect(Collectors.toList());
+        }).flatMap(Collection::stream).collect(Collectors.toList());
+        Set<TblColRef> orderedTableRefs = new LinkedHashSet<>();
+        for (TblColRef col : allCols) {
+            if (colRefs.contains(col)) {
+                orderedTableRefs.add(col);
+            }
+        }
+        return orderedTableRefs;
+    }
+
+    private Set<TblColRef> orderByModelColSequence(Set<TblColRef> colRefs) {
+        List<Integer> allExistIds = model.getAllNamedColumns().stream() //
+                .filter(NDataModel.NamedColumn::isExist) //
+                .map(NDataModel.NamedColumn::getId).collect(Collectors.toList());
+        Set<TblColRef> orderedTableRefs = new LinkedHashSet<>();
+        for (Integer id : allExistIds) {
+            TblColRef tblColRef = model.getEffectiveCols().get(id);
+            if (tblColRef != null && colRefs.contains(tblColRef)) {
+                orderedTableRefs.add(tblColRef);
+            }
+        }
+        return orderedTableRefs;
     }
 
     /**

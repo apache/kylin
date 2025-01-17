@@ -182,6 +182,36 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testOrderByModel() throws IOException {
+        overwriteSystemProp("kylin.query.select-star-col-order-in-model-view", "1");
+        val projectName = "SSB_TEST";
+        createProject(projectName);
+        val model = createModel(projectName, "model_single_table");
+        val generated = new ModelViewGenerator(model).generateViewSQL().replace("  ", " ");
+        val expectedSQL = "SELECT \"LINEORDER\".\"LO_ORDERKEY\" AS \"THE_KEY\","
+                + "\"LINEORDER\".\"LO_ORDTOTALPRICE\" AS \"LO_ORDTOTALPRICE\","
+                + "\"LINEORDER\".\"LO_LINENUMBER\" AS \"LO_LINENUMBER\","
+                + "\"LINEORDER\".\"LO_CUSTKEY\" AS \"L O CU ST KEY\" FROM \"SSB\".\"LINEORDER\" AS \"LINEORDER\"";
+        Assert.assertEquals(String.format("%s view sql generated unexpected sql", "model_single_table"),
+                expectedSQL.trim(), generated);
+    }
+
+    @Test
+    public void testOrderByTable() throws IOException {
+        overwriteSystemProp("kylin.query.select-star-col-order-in-model-view", "2");
+        val projectName = "SSB_TEST";
+        createProject(projectName);
+        val model = createModel(projectName, "model_single_table");
+        val generated = new ModelViewGenerator(model).generateViewSQL().replace("  ", " ");
+        val expectedSQL = "SELECT \"LINEORDER\".\"LO_ORDERKEY\" AS \"THE_KEY\","
+                + "\"LINEORDER\".\"LO_LINENUMBER\" AS \"LO_LINENUMBER\","
+                + "\"LINEORDER\".\"LO_CUSTKEY\" AS \"L O CU ST KEY\","
+                + "\"LINEORDER\".\"LO_ORDTOTALPRICE\" AS \"LO_ORDTOTALPRICE\" FROM \"SSB\".\"LINEORDER\" AS \"LINEORDER\"";
+        Assert.assertEquals(String.format("%s view sql generated unexpected sql", "model_single_table"),
+                expectedSQL.trim(), generated);
+    }
+
+    @Test
     public void testDBNameCollision() throws IOException {
         val projMgr = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         projMgr.forceDropProject("SSB");

@@ -1644,4 +1644,20 @@ class EnvironmentUpdateUtils {
         config.setProperty("kylin.metadata.ops-cron-timeout", "4h");
         Assert.assertEquals(4 * 60 * 60 * 1000, config.getRoutineOpsTaskTimeOut());
     }
+
+    @Test
+    @MetadataInfo(onlyProps = true)
+    void testGetColOrderInModelView() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.query.select-star-col-order-in-model-view", "0");
+        Assertions.assertEquals("default", config.getColOrderForSelectStarInModelView());
+        config.setProperty("kylin.query.select-star-col-order-in-model-view", "1");
+        Assertions.assertEquals("orderByModel", config.getColOrderForSelectStarInModelView());
+        config.setProperty("kylin.query.select-star-col-order-in-model-view", "2");
+        Assertions.assertEquals("orderByTable", config.getColOrderForSelectStarInModelView());
+        config.setProperty("kylin.query.select-star-col-order-in-model-view", "order-By-Model");
+        Assertions.assertEquals("orderByModel", config.getColOrderForSelectStarInModelView());
+        config.setProperty("kylin.query.select-star-col-order-in-model-view", "order-By-Table");
+        Assertions.assertEquals("orderByTable", config.getColOrderForSelectStarInModelView());
+    }
 }
