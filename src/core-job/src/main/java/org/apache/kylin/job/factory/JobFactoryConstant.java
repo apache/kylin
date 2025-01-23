@@ -28,6 +28,7 @@ public class JobFactoryConstant {
     public static final String META_JOB_FACTORY = "META_JOB_FACTORY";
     public static final String SOURCE_USAGE_JOB_FACTORY = "SOURCE_USAGE_JOB_FACTORY";
     public static final String AUTO_REFRESH_JOB_FACTORY = "AUTO_REFRESH_JOB_FACTORY";
+    public static final String SPRING_SESSION_CLEAN_EXPIRED_JOB_FACTORY = "SPRING_SESSION_CLEAN_EXPIRED_JOB_FACTORY";
 
     public static final String CUBE_JOB_FACTORY = "CUBE_JOB_FACTORY";
     public static final String MERGE_JOB_FACTORY = "MERGE_JOB_FACTORY";
