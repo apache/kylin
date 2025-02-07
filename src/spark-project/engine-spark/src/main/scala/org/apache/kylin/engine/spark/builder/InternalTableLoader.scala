@@ -33,7 +33,6 @@ import org.apache.kylin.metadata.table.InternalTableDesc.StorageType
 import org.apache.kylin.metadata.table.InternalTablePartition.DefaultPartitionConditionBuilder
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.delta.DeltaLog
-import org.apache.spark.sql.delta.actions.AddFile
 import org.apache.spark.sql.delta.catalog.ClickHouseTableV2
 import org.apache.spark.sql.delta.implicits.stringLongEncoder
 import org.apache.spark.sql.{Dataset, Row, SparkSession, functions}
@@ -62,13 +61,14 @@ class InternalTableLoader extends Logging {
   @throws[IOException]
   def loadInternalTable(ss: SparkSession,
                         table: InternalTableDesc,
-                        isRefresh: String,
-                        startDate: String,
-                        endDate: String,
+                        range: Array[String],
+                        partitions: Array[String],
                         storagePolicy: String,
                         incremental: Boolean): Unit = {
+    val startDate = range(0)
+    val endDate = range(1)
     val location = table.generateInternalTableLocation
-    var sourceData = getSourceData(ss, table, startDate, endDate, incremental)
+    var sourceData = getSourceData(ss, table, startDate, endDate, partitions, incremental)
     val tablePartition = table.getTablePartition
     val bucketColumn = table.getBucketColumn
     val bucketNum = table.getBucketNumber
@@ -114,10 +114,12 @@ class InternalTableLoader extends Logging {
                     table: InternalTableDesc,
                     startDate: String,
                     endDate: String,
+                    partitions: Array[String],
                     incremental: Boolean): Dataset[Row] = {
     val tableDS = if (onlyLoadSchema) ss.table(table.getTableDesc).limit(0) else ss.table(table.getTableDesc)
-
-    if (incremental) {
+    if (null != partitions && partitions.length > 0) {
+      tableDS.filter(tableDS.col(table.getTablePartition.getPartitionColumns()(0)).isin(partitions: _*))
+    } else if (incremental) {
       val partitionColumn = table.getTablePartition.getPartitionColumns()(0)
       val dateFormat = table.getTablePartition.getDatePartitionFormat
       val condition = DefaultPartitionConditionBuilder.buildDateRangeCondition(partitionColumn, dateFormat,

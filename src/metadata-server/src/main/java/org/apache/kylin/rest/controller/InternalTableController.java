@@ -133,7 +133,7 @@ public class InternalTableController extends NBasicController {
         }
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(project, table, database,
                 request.isIncremental(), request.isRefresh(), request.getStartDate(), request.getEndDate(),
-                request.getYarnQueue());
+                request.getPartitions(), request.getYarnQueue());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
 

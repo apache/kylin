@@ -49,8 +49,9 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
-import org.apache.kylin.engine.spark.job.InternalTableLoadJob;
+import org.apache.kylin.engine.spark.job.InternalTableUpdateMetadataStep;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.util.JobContextUtil;
@@ -61,6 +62,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
+import org.apache.kylin.metadata.table.InternalTablePartition;
 import org.apache.kylin.metadata.table.InternalTablePartitionDetail;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.InternalTableDescResponse;
@@ -69,6 +71,7 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
+import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -88,7 +91,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import io.delta.tables.ClickhouseTable;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @MetadataInfo
 public class InternalTableServiceTest extends AbstractTestCase {
 
@@ -102,12 +107,16 @@ public class InternalTableServiceTest extends AbstractTestCase {
     @InjectMocks
     private TableService tableService = mock(TableService.class);
 
+    @InjectMocks
+    private JobInfoDao jobInfoDao = mock(JobInfoDao.class);
+
     @Spy
     private ProjectService projectService = spy(ProjectService.class);
 
     static final String PROJECT = "default";
     static final String TABLE_INDENTITY = "DEFAULT.TEST_KYLIN_FACT";
     static final String DATE_COL = "CAL_DT";
+    static final String PARTITION_COL = "LSTG_FORMAT_NAME";
     static final String INTERNAL_DIR = PROJECT + "/Internal/" + TABLE_INDENTITY.replace(".", "/");
     static final String BASE_SQL = "select * from INTERNAL_CATALOG." + PROJECT + "." + TABLE_INDENTITY;
 
@@ -259,8 +268,8 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assertions.assertThrows(Exception.class, () -> {
             try (MockedConstruction<InternalTableLoader> mocked = Mockito.mockConstruction(InternalTableLoader.class,
                     (mock, context) -> {
-                        doThrow(new Exception()).when(mock).loadInternalTable(any(), any(), anyString(), anyString(),
-                                anyString(), anyString(), anyBoolean());
+                        doThrow(new Exception()).when(mock).loadInternalTable(any(), any(), any(), any(), anyString(),
+                                anyBoolean());
                     })) {
                 InternalTableDesc tmpInternal = new InternalTableDesc();
                 tmpInternal.setStorageType(InternalTableDesc.StorageType.DELTALAKE.name());
@@ -375,7 +384,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
 
         internalTableService.createInternalTable(PROJECT, table, InternalTableDesc.StorageType.PARQUET.name());
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
-                table.getDatabase(), false, false, "", "", null);
+                table.getDatabase(), false, false, "", "", null, null);
         String jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
 
@@ -410,6 +419,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
         TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
         internalTableService.createInternalTable(PROJECT, TABLE_INDENTITY, new String[] { DATE_COL }, "yyyy-MM-dd",
@@ -417,7 +427,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         String startDate = "1325347200000"; // 2012-01-01
         String endDate = "1325865600000"; // 2012-01-07
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
-                table.getDatabase(), true, false, startDate, endDate, null);
+                table.getDatabase(), true, false, startDate, endDate, null, null);
         String jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
 
@@ -434,26 +444,24 @@ public class InternalTableServiceTest extends AbstractTestCase {
         // refresh all loaded table
         endDate = "1325779200000"; // 2012-01-06
         response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, true,
-                startDate, endDate, null);
+                startDate, endDate, null, null);
         Assert.assertFalse(response.getJobs().isEmpty());
         jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
         // check refresh time out of loaded range
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "1316556800000", "", null));// 2011-09-21 ~ ~
+                table.getName(), table.getDatabase(), false, true, "1316556800000", "1420041600000", null, null));// 2011-09-21 ~ ~
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "1326556800000", "", null));// 2012-01-15 ~ ~
+                table.getName(), table.getDatabase(), false, true, "1326556800000", "1420041600000", null, null));// 2012-01-15 ~ ~
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "", "1325865600000", null));// ~ ~ 2012-01-07
+                table.getName(), table.getDatabase(), false, true, startDate, "1326556800000", null, null));// 2012-01-01 ~ 2012-01-15
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, startDate, "1326556800000", null));// 2012-01-01 ~ 2012-01-15
-        Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, startDate, "1293811200000", null));// 2012-01-01 ~ 2011-01-01
+                table.getName(), table.getDatabase(), false, true, startDate, "1333811200000", null, null));// 2012-01-01 ~ 2011-01-01
 
         // refresh some partitions and check agine
         String middleDate = "1325520000000";
         response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, true,
-                startDate, middleDate, null);
+                startDate, middleDate, null, null);
         jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
         Assertions.assertEquals(count, ss.sql(BASE_SQL).count());
@@ -471,9 +479,80 @@ public class InternalTableServiceTest extends AbstractTestCase {
             internalTableService.dropPartitionsOnDeltaTable(PROJECT, TABLE_INDENTITY, toDeletePartitionsNotExist, null);
         });
 
+        // test build with different dateformat
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyyMMdd");
+        internalTableService.truncateInternalTable(PROJECT, TABLE_INDENTITY);
+        internalTableService.updateInternalTable(PROJECT, table.getName(), table.getDatabase(),
+                new String[] { DATE_COL }, "yyyyMMdd", new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableDesc internalTableDesc = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        InternalTablePartition tablePartition = internalTableDesc.getTablePartition();
+        tablePartition.setPartitionValues(Lists.newArrayList("20010101", "20020201"));
+        internalTableDesc.setTablePartition(tablePartition);
+        internalTableManager.saveOrUpdateInternalTable(internalTableDesc);
+        internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, false,
+                "1325347200000", "1325865600000", null, null);
         // check delete table
         internalTableService.dropInternalTable(PROJECT, TABLE_INDENTITY);
         Assertions.assertFalse(internalTableFolder.exists());
+    }
+
+    @Test
+    void testSubmitMultiInternalJobs() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        ExecutableManager executableManager = ExecutableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, TABLE_INDENTITY, new String[] { DATE_COL }, "yyyy-MM-dd",
+                new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        log.info("test submit 2 full building jobs at same time");
+        InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
+                table.getDatabase(), false, false, null, null, null, null);
+        Assert.assertThrows(Exception.class, () -> {
+            internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, false,
+                    null, null, null, null);
+        });
+        String jobId = response.getJobs().get(0).getJobId();
+        String finalJobId1 = jobId;
+        await().atMost(2, TimeUnit.MINUTES).until(() -> {
+            ExecutableState state = executableManager.getJob(finalJobId1).getStatus();
+            return state.isFinalState() || state == ExecutableState.ERROR;
+        });
+        log.info("test submit 2 full building jobs one by one");
+        jobId = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, false,
+                null, null, null, null).getJobs().get(0).getJobId();
+        String finalJobId = jobId;
+        await().atMost(2, TimeUnit.MINUTES).until(() -> {
+            ExecutableState state = executableManager.getJob(finalJobId).getStatus();
+            return state.isFinalState() || state == ExecutableState.ERROR;
+        });
+        log.info("full build job finished");
+
+        // submit 2 incremental jobs with time overlap
+        response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true,
+                false, "694195200000", "694368000000", null, null);// 1992-01-01 ～ 1992-01-03
+        Assert.assertThrows(Exception.class, () -> {
+            internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, false,
+                    "694281600000", "694454400000", null, null);// 1992-01-02 ～ 1992-01-04
+        });
+        jobId = response.getJobs().get(0).getJobId();
+        String finalJobId2 = jobId;
+        await().atMost(2, TimeUnit.MINUTES).until(() -> {
+            ExecutableState state = executableManager.getJob(finalJobId2).getStatus();
+            return state.isFinalState() || state == ExecutableState.ERROR;
+        });
+
+        // submit 2 incremental jobs without time overlap
+        response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true,
+                false, "694195200000", "694368000000", null, null);// 1992-01-01 ～ 1992-01-03
+        internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, false,
+                "694454400000", "694713600000", null, null);// 1992-01-04 ～ 1992-01-07
+        jobId = response.getJobs().get(0).getJobId();
+        String finalJobId3 = jobId;
+        await().atMost(2, TimeUnit.MINUTES).until(() -> {
+            ExecutableState state = executableManager.getJob(finalJobId3).getStatus();
+            return state.isFinalState() || state == ExecutableState.ERROR;
+        });
     }
 
     @Test
@@ -498,6 +577,25 @@ public class InternalTableServiceTest extends AbstractTestCase {
     }
 
     @Test
+    void testRefreshPartitions() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        internalTableService.createInternalTable(PROJECT, TABLE_INDENTITY, new String[] { PARTITION_COL }, null,
+                new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        // refresh non-time col partitions
+        internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, true, "", "",
+                new String[] { "FP-GTC", "ABIN" }, null);
+
+        // refresh time col partitions
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyyMM");
+        internalTableService.updateInternalTable(PROJECT, table.getName(), table.getDatabase(),
+                new String[] { DATE_COL }, "yyyyMM", new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, true, "", "",
+                new String[] { "199201", "199203" }, null);
+    }
+
+    @Test
     void testTruncatePartitionInternalTable() throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
@@ -509,7 +607,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
                 "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
-                table.getDatabase(), false, false, "", "", null);
+                table.getDatabase(), false, false, "", "", null, null);
         String jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
 
@@ -541,7 +639,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
                 "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.DELTALAKE.name());
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
-                table.getDatabase(), false, false, "", "", null);
+                table.getDatabase(), false, false, "", "", null, null);
         String jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
 
@@ -629,18 +727,18 @@ public class InternalTableServiceTest extends AbstractTestCase {
         InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
 
         // load without additional parameters
-        loader.loadInternalTable(ss, internalTable, "true", "0", "0", "default", false);
+        loader.loadInternalTable(ss, internalTable, new String[] { "0", "0" }, null, "default", false);
 
         // load with bucketCol but without bucketNum
         tblProperties.put("bucketCol", DATE_COL);
         internalTable.setTblProperties(tblProperties);
         Assertions.assertThrows(KylinException.class,
-                () -> loader.loadInternalTable(ss, internalTable, "true", "0", "0", "default", false));
+                () -> loader.loadInternalTable(ss, internalTable, new String[] { "0", "0" }, null, "default", false));
 
         // load with bucketCol && bucketNum
         tblProperties.put("bucketNum", "1");
         try {
-            loader.loadInternalTable(ss, internalTable, "true", "0", "0", "default", false);
+            loader.loadInternalTable(ss, internalTable, new String[] { "0", "0" }, null, "default", false);
         } catch (Exception e) {
             Assertions.fail();
         }
@@ -648,14 +746,14 @@ public class InternalTableServiceTest extends AbstractTestCase {
         // load with orderByKey
         tblProperties.put("orderByKey", "TRAND_ID");
         try {
-            loader.loadInternalTable(ss, internalTable, "true", "0", "0", "default", false);
+            loader.loadInternalTable(ss, internalTable, new String[] { "0", "0" }, null, "default", false);
         } catch (Exception e) {
             Assertions.fail();
         }
         // load with orderByKey && primaryKey
         tblProperties.put("primaryKey", "TRAND_ID");
         try {
-            loader.loadInternalTable(ss, internalTable, "true", "0", "0", "default", false);
+            loader.loadInternalTable(ss, internalTable, new String[] { "0", "0" }, null, "default", false);
         } catch (Exception e) {
             Assertions.fail();
         }
@@ -755,7 +853,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         String endDate = "1325865600000"; // 2012-01-07
         TransactionException exception = Assertions.assertThrows(TransactionException.class,
                 () -> internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true,
-                        false, startDate, endDate, null));
+                        false, startDate, endDate, null, null));
         Assertions.assertEquals(String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned()),
                 exception.getCause().getMessage());
     }
@@ -942,10 +1040,10 @@ public class InternalTableServiceTest extends AbstractTestCase {
         String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
         File internalTableFolder = new File(workingDir, INTERNAL_DIR);
         Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
-        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        InternalTableUpdateMetadataStep metaUpdate = new InternalTableUpdateMetadataStep();
         SparkSession ss = SparderEnv.getSparkSession();
 
-        long count = internalTableLoadJob.getInternalTableCount(internalTable, ss);
+        long count = metaUpdate.getInternalTableCount(internalTable, ss);
         Assert.assertEquals(0, count);
 
         InternalTableLoader internalTableLoader = new InternalTableLoader();
@@ -967,7 +1065,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
         Assertions.assertNotNull(internalTable);
 
-        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        InternalTableUpdateMetadataStep metaUpdate = new InternalTableUpdateMetadataStep();
         SparkSession ss = SparderEnv.getSparkSession();
 
         // gluten internal table cannot be created directly in the ut env
@@ -987,7 +1085,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        long count2 = internalTableLoadJob.getInternalTableCount(internalTable, mockSparkSession);
+        long count2 = metaUpdate.getInternalTableCount(internalTable, mockSparkSession);
         Assert.assertEquals(100, count2);
 
         InternalTableLoader internalTableLoader = new InternalTableLoader();
@@ -1013,10 +1111,10 @@ public class InternalTableServiceTest extends AbstractTestCase {
         String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
         File internalTableFolder = new File(workingDir, INTERNAL_DIR);
         Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
-        InternalTableLoadJob internalTableLoadJob = new InternalTableLoadJob();
+        InternalTableUpdateMetadataStep metaUpdate = new InternalTableUpdateMetadataStep();
         SparkSession ss = SparderEnv.getSparkSession();
 
-        long count = internalTableLoadJob.getInternalTableCount(internalTable, ss);
+        long count = metaUpdate.getInternalTableCount(internalTable, ss);
         Assert.assertEquals(0, count);
 
         InternalTableLoader internalTableLoader = new InternalTableLoader();
@@ -1037,7 +1135,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         String startDate = "1325347200000"; // 2012-01-01
         String endDate = "1325865600000"; // 2012-01-07
         InternalTableLoadingJobResponse response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(),
-                table.getDatabase(), true, false, startDate, endDate, null);
+                table.getDatabase(), true, false, startDate, endDate, null, null);
         String jobId = response.getJobs().get(0).getJobId();
         waitJobToFinished(config, jobId);
 

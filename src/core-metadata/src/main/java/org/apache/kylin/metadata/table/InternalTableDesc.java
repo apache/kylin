@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -87,8 +88,15 @@ public class InternalTableDesc extends ATable implements Serializable {
     @JsonProperty("location")
     private String location;
 
+    @JsonProperty("partition_range")
+    private List<String[]> partitionRange;
+
+    @JsonProperty("job_range")
+    private List<String[]> jobRange;
+
     @JsonProperty("table_partition")
     private InternalTablePartition tablePartition;
+
 
     public InternalTableDesc(InternalTableDesc other) {
         this.project = other.project;
@@ -98,6 +106,8 @@ public class InternalTableDesc extends ATable implements Serializable {
         this.location = other.location;
         this.tablePartition = other.tablePartition;
         this.storageSize = other.storageSize;
+        this.jobRange = other.jobRange;
+        this.partitionRange = other.partitionRange;
         setMvcc(other.getMvcc());
     }
 
@@ -107,6 +117,8 @@ public class InternalTableDesc extends ATable implements Serializable {
         this.name = originTable.getName();
         this.columns = originTable.getColumns();
         this.uuid = RandomUtil.randomUUIDStr();
+        this.jobRange = Lists.newArrayList();
+        this.partitionRange = Lists.newArrayList();
         this.lastModified = 0L;
     }
 

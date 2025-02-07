@@ -152,12 +152,15 @@ public enum StepEnum {
     UPDATE_METADATA {
         @Override
         protected AbstractExecutable createInner(DefaultExecutable parent, KylinConfig config) {
-            if (!(parent instanceof DefaultExecutableOnModel)) {
+            if (parent instanceof DefaultExecutableOnModel) {
+                ((DefaultExecutableOnModel) parent).setHandler(
+                        ExecutableHandlerFactory.createExecutableHandler((DefaultExecutableOnModel) parent));
+                return new NSparkUpdateMetadataStep();
+            } else if (parent instanceof DefaultExecutableOnTable) {
+                return new InternalTableUpdateMetadataStep();
+            } else {
                 throw new IllegalArgumentException();
             }
-            ((DefaultExecutableOnModel) parent)
-                    .setHandler(ExecutableHandlerFactory.createExecutableHandler((DefaultExecutableOnModel) parent));
-            return new NSparkUpdateMetadataStep();
         }
     },
 

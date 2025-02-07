@@ -1012,6 +1012,16 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getTimeOutOfRange() {
+        return "当前时间范围超出已加载数据范围，请检查后重试。";
+    }
+
+    @Override
+    public String getTimeRangeOverlap() {
+        return "无法提交构建任务，时间范围与正在构建任务存在重叠，请检查后重试。";
+    }
+
+    @Override
     public String getInternalTableNullPartitionFormat() {
         return "日期分区格式不能为空， 请检查后重试。";
     }

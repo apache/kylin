@@ -18,15 +18,23 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.execution.DefaultExecutableOnTable;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.handler.InternalTableJobHandler.InternalTableJobBuildParam;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
+import org.apache.kylin.metadata.table.InternalTablePartition;
+import org.apache.kylin.util.DataRangeUtils;
 import org.sparkproject.guava.base.Preconditions;
 
 public class InternalTableLoadingJob extends DefaultExecutableOnTable {
@@ -68,6 +76,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
         job.setParam(NBatchConstants.P_DELETE_PARTITION, param.getDeletePartition());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         StepEnum.BUILD_INTERNAL.create(job, config);
+        StepEnum.UPDATE_METADATA.create(job, config);
         if (isPreloadedCacheEnable(internalTable, projectConfig)) {
             StepEnum.LOAD_GLUTEN_CACHE.create(job, config);
         }
@@ -90,5 +99,44 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
         protected InternalTableLoadingJob create(JobBuildParams jobBuildParams) {
             return InternalTableLoadingJob.create((InternalTableJobBuildParam) jobBuildParams);
         }
+    }
+
+    @Override
+    public void cancelJob() {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            // remove job_range
+            InternalTableManager internalTableManager = InternalTableManager.getInstance(getConfig(), getProject());
+            InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(getTableIdentity());
+            if (null == internalTable) {
+                logger.debug("internalTable is null, maybe internalTable is deleted ?");
+                return true;
+            }
+            String tableName = getParam(NBatchConstants.P_TABLE_NAME);
+            String startDate = getParam(NBatchConstants.P_START_DATE);
+            String endDate = getParam(NBatchConstants.P_END_DATE);
+            InternalTablePartition tablePartition = internalTable.getTablePartition();
+            // release current job_range
+            String[] curJobRange = new String[] { "0", "0" };
+            if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())
+                    && StringUtils.isNotEmpty(startDate)) {
+                SimpleDateFormat fmt = new SimpleDateFormat(tablePartition.getDatePartitionFormat(), Locale.ROOT);
+                curJobRange = new String[] { fmt.format(Long.parseLong(startDate)),
+                        fmt.format(Long.parseLong(endDate)) };
+            }
+            // merge latest partition_range
+            logger.info("starting merging delta partitions for internal table {}", tableName);
+            if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
+                List<String[]> partitionRange = DataRangeUtils.mergeTimeRange(tablePartition.getPartitionValues(),
+                        tablePartition.getDatePartitionFormat());
+                internalTable.setPartitionRange(partitionRange);
+            }
+            List<String[]> jobRange = internalTable.getJobRange();
+            String[] finalCurJobRange = curJobRange;
+            jobRange.removeIf(rang -> rang[0].equals(finalCurJobRange[0]) && rang[1].equals(finalCurJobRange[1]));
+            internalTable.setJobRange(jobRange);
+            internalTableManager.saveOrUpdateInternalTable(internalTable);
+            logger.info("release job_range for internal table {} , range {}.", tableName, jobRange);
+            return true;
+        }, getProject());
     }
 }

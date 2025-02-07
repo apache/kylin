@@ -462,6 +462,14 @@ public class Message {
         return "Incremental build is not supported for unPartitioned table.";
     }
 
+    public String getTimeOutOfRange() {
+        return "current time range is out of data range, please check again.";
+    }
+
+    public String getTimeRangeOverlap() {
+        return "Unable to submit task, time range overlaps with the task currently being built, please check again.";
+    }
+
     public String getInternalTableNullPartitionFormat() {
         return "date_partition_format can not be null, please check again.";
     }

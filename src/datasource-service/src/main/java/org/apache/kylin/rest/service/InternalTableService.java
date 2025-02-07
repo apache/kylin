@@ -193,8 +193,8 @@ public class InternalTableService extends BasicService {
                 Option<SparkSession> defaultSession = SparkSession.getDefaultSession();
                 InternalTableLoader internalTableLoader = new InternalTableLoader();
                 internalTableLoader.onlyLoadSchema(true);
-                internalTableLoader.loadInternalTable(defaultSession.get(), internalTable, "true", "", "",
-                        KylinConfig.getInstanceFromEnv().getGlutenStoragePolicy(), false);
+                internalTableLoader.loadInternalTable(defaultSession.get(), internalTable, new String[] { "0", "0" },
+                        null, KylinConfig.getInstanceFromEnv().getGlutenStoragePolicy(), false);
             }
         } catch (Exception e) {
             // delete delta log on hdfs
@@ -345,6 +345,8 @@ public class InternalTableService extends BasicService {
                 tablePartition.setPartitionValues(new ArrayList<>());
                 tablePartition.setPartitionDetails(new ArrayList<>());
             }
+            oldTable.setJobRange(Lists.newArrayList());
+            oldTable.setPartitionRange(Lists.newArrayList());
             oldTable.setStorageSize(finalStorageSize);
             oldTable.setRowCount(0);
             img.saveOrUpdateInternalTable(oldTable);
@@ -391,13 +393,14 @@ public class InternalTableService extends BasicService {
      * @throws Exception
      */
     public InternalTableLoadingJobResponse loadIntoInternalTable(String project, String table, String database,
-            boolean isIncremental, boolean isRefresh, String startDate, String endDate, String yarnQueue) {
+            boolean isIncremental, boolean isRefresh, String startDate, String endDate, String[] partitions,
+            String yarnQueue) {
         aclEvaluate.checkProjectWritePermission(project);
         if (isIncremental) {
             DataRangeUtils.validateRange(startDate, endDate);
         }
         return internalTableLoadingService.loadIntoInternalTable(project, table, database, isIncremental, isRefresh,
-                startDate, endDate, yarnQueue);
+                startDate, endDate, partitions, yarnQueue);
     }
 
     public List<InternalTableDescResponse> getTableList(String project, boolean isFuzzy, boolean needDetails,
