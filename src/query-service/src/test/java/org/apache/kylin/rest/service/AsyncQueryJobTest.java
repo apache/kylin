@@ -244,7 +244,7 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                 rawResourceMap.put(zipEntry.getName(), raw);
             }
         }
-        Assert.assertEquals(118, rawResourceMap.size());
+        Assert.assertEquals(119, rawResourceMap.size());
     }
 
     private void testKylinConfig(FileSystem workingFileSystem, FileStatus metaFileStatus) throws IOException {

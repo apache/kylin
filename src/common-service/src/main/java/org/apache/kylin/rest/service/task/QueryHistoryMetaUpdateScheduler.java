@@ -20,7 +20,10 @@ package org.apache.kylin.rest.service.task;
 
 import static org.apache.kylin.job.factory.JobFactoryConstant.META_JOB_FACTORY;
 import static org.apache.kylin.metadata.favorite.QueryHistoryIdOffset.OffsetType.META;
+import static org.apache.kylin.metadata.query.QueryMetrics.INTERNAL_TABLE;
+import static org.apache.kylin.metadata.query.QueryMetrics.TABLE_SNAPSHOT;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,6 +43,7 @@ import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -56,7 +60,10 @@ import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.QueryHistory;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
+import org.apache.kylin.metadata.table.InternalTableDesc;
+import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.util.SpringContext;
 
@@ -162,15 +169,15 @@ public class QueryHistoryMetaUpdateScheduler {
                     maxId = queryHistory.getId();
                 }
             }
-            // count snapshot hit
-            val hitSnapshotCountMap = collectSnapshotHitCount(queryHistories);
+            // count snapshot && internalTable hit
+            val hitCountMap = collectHitCount(queryHistories);
 
             // update metadata
-            updateMetadata(dfHitCountMap, modelsLastQueryTime, maxId, hitSnapshotCountMap);
+            updateMetadata(dfHitCountMap, modelsLastQueryTime, maxId, hitCountMap);
         }
 
         private void updateMetadata(Map<String, DataflowHitCount> dfHitCountMap, Map<String, Long> modelsLastQueryTime,
-                Long maxId, Map<TableExtDesc, Integer> hitSnapshotCountMap) {
+                Long maxId, Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> hitCountMap) {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 // update model usage
                 incQueryHitCount(dfHitCountMap, project);
@@ -179,7 +186,10 @@ public class QueryHistoryMetaUpdateScheduler {
                 updateLastQueryTime(modelsLastQueryTime, project);
 
                 // update snapshot hit count
-                incQueryHitSnapshotCount(hitSnapshotCountMap, project);
+                incQueryHitSnapshotCount(hitCountMap.getFirst(), project);
+
+                // update internalTable hit count
+                incQueryHitInternalTableCount(hitCountMap.getSecond(), project);
 
                 // update offset in transaction, the retry times must be set as 1.
                 QueryHistoryIdOffsetManager offsetManager = QueryHistoryIdOffsetManager.getInstance(project);
@@ -223,17 +233,37 @@ public class QueryHistoryMetaUpdateScheduler {
             return dfManager.getDataflow(realization.getModelId()) != null && realization.getLayoutId() != null;
         }
 
-        private Map<TableExtDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
+        private Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> collectHitCount(
+                List<QueryHistory> queryHistories) {
             val tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-            val results = Maps.<TableExtDesc, Integer> newHashMap();
+            val internalTableManager = InternalTableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            Map<TableExtDesc, Integer> tableExtDescMap = new HashMap<>();
+            Map<InternalTableDesc, Integer> internalTableDescMap = new HashMap<>();
+
+            Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> results = new Pair<>(tableExtDescMap,
+                    internalTableDescMap);
+
             for (QueryHistory queryHistory : queryHistories) {
                 if (queryHistory.getQueryHistoryInfo() == null) {
                     continue;
                 }
-                val snapshotsInRealization = queryHistory.getQueryHistoryInfo().getQuerySnapshots();
-                for (val snapshots : snapshotsInRealization) {
-                    snapshots.forEach(tableIdentify -> results.merge(tableManager.getOrCreateTableExt(tableIdentify), 1,
-                            Integer::sum));
+                List<QueryMetrics.RealizationMetrics> realizationMetrics = queryHistory.getQueryHistoryInfo()
+                        .getRealizationMetrics();
+                if (CollectionUtils.isEmpty(realizationMetrics)) {
+                    continue;
+                }
+                for (QueryMetrics.RealizationMetrics realizationMetric : realizationMetrics) {
+                    if (CollectionUtils.isEmpty(realizationMetric.getSnapshots())) {
+                        continue;
+                    }
+                    realizationMetric.getSnapshots().forEach(tableIdentify -> {
+                        if (TABLE_SNAPSHOT.equals(realizationMetric.getIndexType())) {
+                            results.getFirst().merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
+                        } else if (INTERNAL_TABLE.equals(realizationMetric.getIndexType())) {
+                            results.getSecond().merge(internalTableManager.getInternalTableDesc(tableIdentify), 1,
+                                    Integer::sum);
+                        }
+                    });
                 }
             }
             return results;
@@ -277,6 +307,20 @@ public class QueryHistoryMetaUpdateScheduler {
                 val tableCopy = tableManager.copyForWrite(entry.getKey());
                 tableCopy.setSnapshotHitCount(tableCopy.getSnapshotHitCount() + entry.getValue());
                 tableManager.saveTableExt(tableCopy);
+            }
+        }
+
+        private void incQueryHitInternalTableCount(Map<InternalTableDesc, Integer> hitInternalTableCountMap,
+                String project) {
+            InternalTableManager internalTableManager = InternalTableManager
+                    .getInstance(KylinConfig.getInstanceFromEnv(), project);
+            for (val entry : hitInternalTableCountMap.entrySet()) {
+                if (internalTableManager.getInternalTableDesc(entry.getKey().getIdentity()) == null) {
+                    continue;
+                }
+                val internalTableCopy = internalTableManager.copyForWrite(entry.getKey());
+                internalTableCopy.setHitCount(internalTableCopy.getHitCount() + entry.getValue());
+                internalTableManager.saveOrUpdateInternalTable(internalTableCopy);
             }
         }
 

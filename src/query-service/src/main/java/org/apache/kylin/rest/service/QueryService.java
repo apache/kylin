@@ -1411,7 +1411,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
 
         if (isPushDown) {
-            response.setNativeRealizations(Lists.newArrayList());
             response.setEngineType(queryContext.getPushdownEngine());
             return response;
         }

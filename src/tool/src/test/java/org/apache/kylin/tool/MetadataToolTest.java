@@ -24,6 +24,7 @@ import static org.apache.kylin.common.persistence.MetadataType.DATAFLOW;
 import static org.apache.kylin.common.persistence.MetadataType.DATA_PARSER;
 import static org.apache.kylin.common.persistence.MetadataType.FUSION_MODEL;
 import static org.apache.kylin.common.persistence.MetadataType.INDEX_PLAN;
+import static org.apache.kylin.common.persistence.MetadataType.INTERNAL_TABLE;
 import static org.apache.kylin.common.persistence.MetadataType.JAR_INFO;
 import static org.apache.kylin.common.persistence.MetadataType.KAFKA_CONFIG;
 import static org.apache.kylin.common.persistence.MetadataType.LAYOUT;
@@ -301,7 +302,8 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
                 PROJECT.name(), TABLE_INFO.name(), MODEL.name(), DATAFLOW.name(), INDEX_PLAN.name(), SEGMENT.name(),
                 LAYOUT.name(), LAYOUT_DETAILS.name(), COMPUTE_COLUMN.name(), CC_MODEL_RELATION.name(),
                 TABLE_MODEL_RELATION.name(), DATA_PARSER.name(), RESOURCE_GROUP.name(), STREAMING_JOB.name(),
-                JAR_INFO.name(), KAFKA_CONFIG.name(), FUSION_MODEL.name(), TABLE_EXD.name(), "kylin.properties");
+                JAR_INFO.name(), KAFKA_CONFIG.name(), FUSION_MODEL.name(), TABLE_EXD.name(), INTERNAL_TABLE.name(),
+                "kylin.properties");
 
         val projectDir = findFile(coreMetaFolder.listFiles(), f -> f.getName().startsWith(MetadataType.PROJECT.name()));
         Assertions.assertThat(projectDir.listFiles()).allMatch(

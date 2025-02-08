@@ -1,0 +1,17 @@
+{
+  "uuid": "95295aaf-c2be-bd6f-f122-5c14a5c68c8d",
+  "last_modified": 1735199861249,
+  "create_time": 1735199572804,
+  "version": "4.0.0.0",
+  "project": "usage_meter_test",
+  "status": "ONLINE",
+  "last_status": null,
+  "cost": 50,
+  "query_hit_count": 3,
+  "last_query_time": 0,
+  "last_data_refresh_time": 0,
+  "layout_query_hit_count": {},
+  "segment_uuids": [
+    "dfbaffe6-5ab4-8e97-a20b-2f82e8d952a5"
+  ]
+}

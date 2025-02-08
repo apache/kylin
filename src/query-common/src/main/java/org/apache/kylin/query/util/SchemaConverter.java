@@ -35,10 +35,13 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
@@ -94,6 +97,8 @@ public class SchemaConverter implements IPushDownConverter {
         positions.sort(((o1, o2) -> o2.getSecond().getFirst() - o1.getSecond().getFirst()));
         String sql = originSql + " ";
         InternalTableManager manager = InternalTableManager.getInstance(config, project);
+        List<NativeQueryRealization> realizations = Lists.newArrayList();
+        List<String> tableIdentities = Lists.newArrayList();
         for (Pair<SqlIdentifier, Pair<Integer, Integer>> pos : positions) {
             SqlIdentifier identifier = pos.getFirst();
             String tableIdentity = identifier.toString();
@@ -109,7 +114,12 @@ public class SchemaConverter implements IPushDownConverter {
             }
             sql = sql.substring(0, pos.getSecond().getFirst()) + table.getDoubleQuoteInternalIdentity()
                     + sql.substring(pos.getSecond().getSecond());
+            tableIdentities.add(tableIdentity);
         }
+        NativeQueryRealization lookupRealization = new NativeQueryRealization(null, null, QueryMetrics.INTERNAL_TABLE,
+                tableIdentities);
+        realizations.add(lookupRealization);
+        QueryContext.current().setQueryRealizations(realizations);
         return sql.trim();
     }
 
