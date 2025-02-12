@@ -48,5 +48,13 @@ public class ClusterConstant implements Serializable {
             this.name = name;
         }
 
+        public static ServerModeEnum of(String name) {
+            for (ServerModeEnum e : values()) {
+                if (e.name.equalsIgnoreCase(name)) {
+                    return e;
+                }
+            }
+            return null;
+        }
     }
 }

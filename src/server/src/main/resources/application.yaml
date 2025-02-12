@@ -89,6 +89,7 @@ spring:
         composite-indicator:
           enabled: false
     zookeeper:
+      enabled: ${kylin.env.zookeeper.enabled}
       connect-string: ${kylin.env.zookeeper-connect-string}
       discovery:
         root: /kylin/${kylin.metadata.url.unique-id}/services

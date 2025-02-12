@@ -144,13 +144,11 @@ function skipCheckOrNot() {
 }
 
 function checkZookeeperRole() {
-    # this is necessary in FI
-    source "${KYLIN_HOME}"/sbin/load-zookeeper-config.sh
-    if [[ $(skipCheckOrNot $KYLIN_SKIP_CHECK_MODE) ]]; then
-        return 0
+
+    KYLIN_ZOOKEEPER_ENABLED=$("$KYLIN_HOME"/bin/get-properties.sh kylin.env.zookeeper.enabled)
+    if [[ $KYLIN_ZOOKEEPER_ENABLED == "true" ]]; then
+        source ${KYLIN_HOME}/sbin/check-2000-zookeeper-role.sh
     fi
-    verboseLog "checking zookeeper role"
-    source "${KYLIN_HOME}"/sbin/check-2000-zookeeper-role.sh
 }
 
 function checkSparkDir() {

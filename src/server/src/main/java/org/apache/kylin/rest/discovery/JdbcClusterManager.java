@@ -15,46 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.rest;
+
+package org.apache.kylin.rest.discovery;
 
 import static org.apache.kylin.common.util.ClusterConstant.ServerModeEnum;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClusterConstant;
+import org.apache.kylin.metadata.system.NodeRegistry;
+import org.apache.kylin.metadata.system.NodeRegistryManager;
 import org.apache.kylin.rest.cluster.ClusterManager;
-import org.apache.kylin.rest.discovery.ConditionalOnNodeRegistryZookeeperEnabled;
-import org.apache.kylin.rest.discovery.KylinServiceDiscoveryCache;
-import org.apache.kylin.rest.discovery.KylinServiceDiscoveryClient;
 import org.apache.kylin.rest.response.ServerInfoResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;
 import org.springframework.stereotype.Component;
 
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@ConditionalOnZookeeperEnabled // if missing, a default impl will be filled by AppConfig.clusterManager()
-@ConditionalOnNodeRegistryZookeeperEnabled
+@ConditionalOnNodeRegistryJdbcEnabled
 @Component
 @Slf4j
-public class ZookeeperClusterManager implements ClusterManager {
-
-    @Autowired
-    private KylinServiceDiscoveryCache serviceCache;
-
-    @Autowired
-    private KylinServiceDiscoveryClient discoveryClient;
-
-    public ZookeeperClusterManager() {
-    }
+public class JdbcClusterManager implements ClusterManager {
 
     @Override
     public String getLocalServer() {
-        return discoveryClient.getLocalServiceServer();
+        NodeRegistryManager manager = NodeRegistryManager.getInstance(KylinConfig.getInstanceFromEnv());
+        NodeRegistry.NodeInstance localInstance = manager.getLocalNodeInstance();
+        return instance2Str(localInstance);
     }
 
     @Override
@@ -77,17 +69,22 @@ public class ZookeeperClusterManager implements ClusterManager {
         return getServerByMode(ServerModeEnum.ALL, ServerModeEnum.JOB, ServerModeEnum.QUERY);
     }
 
-    private List<ServerInfoResponse> getServerByMode(@Nullable ServerModeEnum... serverModeEnum) {
+    private static List<ServerInfoResponse> getServerByMode(
+            @Nullable ClusterConstant.ServerModeEnum... serverModeEnum) {
         List<ServerInfoResponse> servers = new ArrayList<>();
-
-        if (ArrayUtils.isEmpty(serverModeEnum)) {
+        if (serverModeEnum == null || serverModeEnum.length == 0) {
             return servers;
         }
-
-        for (val nodeModeType : serverModeEnum) {
-            servers.addAll(serviceCache.getServerInfoByServerMode(nodeModeType));
+        NodeRegistryManager manager = NodeRegistryManager.getInstance(KylinConfig.getInstanceFromEnv());
+        for (ClusterConstant.ServerModeEnum mode : serverModeEnum) {
+            servers.addAll(manager.getNodeInstances(mode).stream()
+                    .map(instance -> new ServerInfoResponse(instance2Str(instance), instance.getServerMode().getName()))
+                    .collect(Collectors.toList()));
         }
         return servers;
     }
 
+    private static String instance2Str(NodeRegistry.NodeInstance instance) {
+        return String.format(Locale.ROOT, "%s:%s", instance.getHost(), instance.getPort());
+    }
 }

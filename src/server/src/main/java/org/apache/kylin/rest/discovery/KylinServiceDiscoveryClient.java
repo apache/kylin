@@ -40,6 +40,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @ConditionalOnZookeeperEnabled
+@ConditionalOnNodeRegistryZookeeperEnabled
 @Component
 @Slf4j
 public class KylinServiceDiscoveryClient implements KylinServiceDiscovery {

@@ -15,28 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.rest;
 
-import org.apache.kylin.common.util.HostInfoFetcher;
-import org.apache.kylin.rest.discovery.ConditionalOnNodeRegistryZookeeperEnabled;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;
-import org.springframework.stereotype.Component;
+package org.apache.kylin.rest.discovery;
 
-import lombok.extern.slf4j.Slf4j;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@ConditionalOnZookeeperEnabled
-@ConditionalOnNodeRegistryZookeeperEnabled
-@Component
-@Slf4j
-public class ZookeeperHostInfoFetcher implements HostInfoFetcher {
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
-    @Autowired
-    InetUtils inetUtils;
-
-    @Override
-    public String getHostname() {
-        return inetUtils.findFirstNonLoopbackHostInfo().getHostname();
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE })
+@ConditionalOnProperty(name = "kylin.server.node-registry.type", havingValue = "jdbc")
+public @interface ConditionalOnNodeRegistryJdbcEnabled {
 }

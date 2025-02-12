@@ -61,6 +61,7 @@ import org.springframework.stereotype.Component;
 import lombok.val;
 
 @ConditionalOnZookeeperEnabled
+@ConditionalOnNodeRegistryZookeeperEnabled
 @Component
 public class KylinServiceDiscoveryCache implements KylinServiceDiscovery {
     private static final Logger logger = LoggerFactory.getLogger(KylinServiceDiscoveryCache.class);
