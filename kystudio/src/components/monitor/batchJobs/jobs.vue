@@ -85,8 +85,8 @@
                 <common-tip :content="$t('snapshotDisableTips')" v-if="['SNAPSHOT_BUILD', 'SNAPSHOT_REFRESH'].includes(scope.row.job_name) && !scope.row.target_subject_error && !$store.state.project.snapshot_manual_management_enabled">
                   <span class="is-disabled">{{scope.row.target_subject}}</span>
                 </common-tip>
-                <a class="link" v-if="scope.row.job_name === null" @click="gotoInternalTableList(scope.row)">{{scope.row.target_subject}}</a>
-                <a class="link" v-if="scope.row.job_name !== null && !tableJobTypes.includes(scope.row.job_name) && !scope.row.target_subject_error" @click="gotoModelList(scope.row)">{{scope.row.target_subject}}</a>
+                <a class="link" v-if="['INTERNAL_TABLE_BUILD', 'INTERNAL_TABLE_REFRESH'].includes(scope.row.job_name)" @click="gotoInternalTableList(scope.row)">{{scope.row.target_subject}}</a>
+                <a class="link" v-else-if="!tableJobTypes.includes(scope.row.job_name) && !scope.row.target_subject_error" @click="gotoModelList(scope.row)">{{scope.row.target_subject}}</a>
               </p>
             </template>
           </el-table-column>
@@ -443,7 +443,7 @@ export default class JobsList extends Vue {
   jobsList = []
   jobTotal = 0
   allStatus = ['PENDING', 'RUNNING', 'FINISHED', 'ERROR', 'DISCARDED', 'STOPPED']
-  jobTypeFilteArr = ['INDEX_REFRESH', 'INDEX_MERGE', 'INDEX_BUILD', 'INC_BUILD', 'TABLE_SAMPLING', 'SNAPSHOT_BUILD', 'SNAPSHOT_REFRESH', 'SUB_PARTITION_BUILD', 'SUB_PARTITION_REFRESH', 'EXPORT_TO_SECOND_STORAGE', 'SECOND_STORAGE_NODE_CLEAN', 'SECOND_STORAGE_MODEL_CLEAN', 'SECOND_STORAGE_SEGMENT_CLEAN', 'SECOND_STORAGE_INDEX_CLEAN', 'SECOND_STORAGE_REFRESH_SECONDARY_INDEXES', 'LAYOUT_DATA_OPTIMIZE', 'INTERNAL_TABLE_BUILD']
+  jobTypeFilteArr = ['INDEX_REFRESH', 'INDEX_MERGE', 'INDEX_BUILD', 'INC_BUILD', 'TABLE_SAMPLING', 'SNAPSHOT_BUILD', 'SNAPSHOT_REFRESH', 'SUB_PARTITION_BUILD', 'SUB_PARTITION_REFRESH', 'EXPORT_TO_SECOND_STORAGE', 'SECOND_STORAGE_NODE_CLEAN', 'SECOND_STORAGE_MODEL_CLEAN', 'SECOND_STORAGE_SEGMENT_CLEAN', 'SECOND_STORAGE_INDEX_CLEAN', 'SECOND_STORAGE_REFRESH_SECONDARY_INDEXES', 'LAYOUT_DATA_OPTIMIZE', 'INTERNAL_TABLE_BUILD', 'INTERNAL_TABLE_REFRESH']
   tableJobTypes = ['TABLE_SAMPLING', 'SNAPSHOT_BUILD', 'SNAPSHOT_REFRESH', 'SECOND_STORAGE_NODE_CLEAN']
   delSecJobTypes = ['SECOND_STORAGE_NODE_CLEAN', 'SECOND_STORAGE_MODEL_CLEAN', 'SECOND_STORAGE_SEGMENT_CLEAN', 'SECOND_STORAGE_INDEX_CLEAN']
   otherJobTypes = ['SECOND_STORAGE_REFRESH_SECONDARY_INDEXES']

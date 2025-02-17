@@ -1,6 +1,6 @@
 <template>
-  <div><el-form :model="ruleForm" :rules="rules" ref="ruleForm">
-    <el-tabs v-model="activeTab" type="card" class="internal-table-load-data">
+  <div class="internal-table-load-data"><el-form :model="ruleForm" :rules="rules" ref="ruleForm">
+    <el-tabs v-model="activeTab" type="card">
       <el-tab-pane name="append" :disabled="!tableInfo.date_partition_format">
         <span slot="label">{{$t('loadModelAppend')}}</span>
         <div>
@@ -52,8 +52,8 @@
       </el-tab-pane>
       <el-tab-pane name="full">
         <span slot="label">{{$t('loadModelFull')}}</span>
-        <div>
-          <div class="sub-title">{{$t('partitionOptionsTitle')}}</div>
+        <div class="full-load-partition">
+          <div class="sub-title"><span>{{$t('partitionOptionsTitle')}}</span></div>
           <div>
             <el-select v-model="tableInfo.time_partition_col" class='max-width' disabled>
               <el-option
@@ -203,7 +203,20 @@ export default class LoadData extends Vue {
 }
 </script>
 <style lang="less">
-  .internal-table-load-data .el-tabs__content {
-    overflow: visible;
+  .internal-table-load-data {
+    .el-tabs__content {
+      overflow: visible;
+    }
+    .full-load-partition {
+      display: flex;
+      align-items: center;
+
+      .sub-title {
+        padding-right: 8px;
+      }
+    }
+    .dialog-footer {
+      text-align: right;
+    }
   }
 </style>

@@ -77,6 +77,7 @@ export default {
     SUB_PARTITION_BUILD: 'Build Sub-partitions Data',
     SNAPSHOT_BUILD: 'Build Snapshot',
     INTERNAL_TABLE_BUILD: 'Load internal table',
+    INTERNAL_TABLE_REFRESH: 'Refresh internal table',
     LAYOUT_DATA_OPTIMIZE: 'Storage Optimization',
     clearUpIntermediateTable: 'Garbage CleanUp',
     project: 'Project',

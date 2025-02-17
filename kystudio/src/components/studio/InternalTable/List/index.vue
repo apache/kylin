@@ -222,6 +222,16 @@ export default class InternalTableList extends Vue {
         tableInfo.project = this.currentSelectedProject
         tableInfo.time_partition_col = row.time_partition_col
         tableInfo.date_partition_format = row.date_partition_format
+        tableInfo.bucket_column = row.tbl_properties.bucketCol
+        tableInfo.bucket_num = parseInt(row.tbl_properties.bucketNum)
+        const orderByArray = row.tbl_properties.orderByKey ? row.tbl_properties.orderByKey.split(',') : []
+        const primaryKeyArray = row.tbl_properties.primaryKey ? row.tbl_properties.primaryKey.split(',') : []
+        const tableAttributes = (tableInfo && tableInfo.columns) ? tableInfo.columns.map(c => ({ name: c.name, primaryKey: primaryKeyArray.includes(c.name), sortByKey: orderByArray.includes(c.name) })) : []
+        tableInfo.table_attributes = tableAttributes.sort((a, b) => {
+          const indexA = orderByArray.indexOf(a.name)
+          const indexB = orderByArray.indexOf(b.name)
+          return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB)
+        })
         this.currentEditTableInfo = tableInfo
       }
     })
@@ -324,6 +334,7 @@ export default class InternalTableList extends Vue {
         project: this.currentSelectedProject
       }).finally(() => {
         this.somethingLoading = false
+        this._getInternalTables(this.internalTableListPageOffset, this.internalTableListPageLimit)
       })
     })
   }

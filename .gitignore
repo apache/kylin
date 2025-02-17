@@ -94,6 +94,8 @@ build/lib
 build/kybot
 build/tpch-benchmark
 build/spark
+build/gluten
+build/libasyncProfiler*
 
 *.tgz
 *.tar.gz

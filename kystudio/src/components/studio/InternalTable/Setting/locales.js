@@ -1,7 +1,7 @@
 export default {
   en: {
     dialogTitle: 'Internal Table Settings',
-    settingDesc: 'After you set the time partition column, you can load data in incremental or full mode. Non-partitioned tables only support full load. Note that if incremental loading is required, set the partitioned column to be the same as the data source table level partition and to be a date-type column',
+    settingDesc: 'Please note that if incremental loading is required, set the partition column as a date type, or other types that can be converted to dates, and set the correct time partition column format.',
     partitionOptionsTitle: 'Please choose the partition column',
     timePartitionFormatTitle: 'Time column format',
     bucketColumnTitle: 'Please choose the bucket column',
@@ -24,7 +24,7 @@ export default {
   },
   'zh-cn': {
     dialogTitle: '内表设置',
-    settingDesc: '设置时间分区列后可以使用增量或全量方式加载数据，非分区表仅支持全量加载。请注意，如需增量加载，请设置分区列与数据源表一级分区保持一致，且为日期类型列',
+    settingDesc: '请注意，如需增量加载，请设置分区列为日期类型，或可以转为日期的其他类型，并设置正确的时间分区列格式。',
     partitionOptionsTitle: '请选择分区列',
     timePartitionFormatTitle: '时间分区列格式',
     bucketColumnTitle: '设置分桶列',

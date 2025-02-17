@@ -22,7 +22,7 @@
               </el-select>
             </div>
           </el-col>
-          <el-col :span="8" v-show="doesPartionColumnNeedDateFormatter">
+          <el-col :span="8" v-show="ruleForm.partitionColumn">
             <div class="sub-title">{{$t('timePartitionFormatTitle')}}</div>
             <div>
               <el-form-item prop="timePartitionFormat">
@@ -165,12 +165,14 @@ import { timePartitionFormatOptions } from '../const'
       return (this.tableInfo.columns ? this.tableInfo.columns.filter(c => c.name !== this.ruleForm.partitionColumn).map(c => ({ label: c.name, value: c.name })) : [])
     },
     doesPartionColumnNeedDateFormatter () {
-      const column = this.tableInfo.columns && this.tableInfo.columns.find(c => c.name === this.ruleForm.partitionColumn)
-      return column && column.datatype === 'date'
+      // const column = this.tableInfo.columns && this.tableInfo.columns.find(c => c.name === this.ruleForm.partitionColumn)
+      // return column && column.datatype === 'date'
+      return true
     },
     rules () {
       return {
-        timePartitionFormat: { required: this.doesPartionColumnNeedDateFormatter, message: this.$t('validateErrorSelect'), trigger: 'change' },
+        // timePartitionFormat: { required: this.doesPartionColumnNeedDateFormatter, message: this.$t('validateErrorSelect'), trigger: 'change' },
+        timePartitionFormat: { required: false, message: this.$t('validateErrorSelect'), trigger: 'change' },
         bucketCount: [
           { required: !!this.bucketColumn, trigger: 'blur' },
           { type: 'number', message: this.$t('validateErrorNumber'), min: 1, max: 5000, trigger: 'blur' }
@@ -202,7 +204,11 @@ export default class InternalTableSetting extends Vue {
   tableAttributes = this.getTableAttributesFromTableInfo()
 
   getTableAttributesFromTableInfo () {
-    return (this.tableInfo && this.tableInfo.columns) ? this.tableInfo.columns.map(c => ({ name: c.name, primaryKey: false, sortByKey: false })) : []
+    if (this.tableInfo) {
+      if (this.tableInfo.table_attributes) return this.tableInfo.table_attributes
+      if (this.tableInfo.columns) return this.tableInfo.columns.map(c => ({ name: c.name, primaryKey: false, sortByKey: false }))
+    }
+    return []
   }
 
   @Watch('tableInfo')
@@ -211,9 +217,9 @@ export default class InternalTableSetting extends Vue {
       this.tableAttributes = this.getTableAttributesFromTableInfo()
       this.ruleForm.partitionColumn = this.tableInfo.time_partition_col || ''
       this.ruleForm.timePartitionFormat = this.tableInfo.date_partition_format || ''
-      this.ruleForm.bucketColumn = ''
-      this.ruleForm.bucketCount = 1
-      this.ruleForm.selectedTableAttributeKeys = []
+      this.ruleForm.bucketColumn = this.tableInfo.bucket_column || ''
+      this.ruleForm.bucketCount = this.tableInfo.bucket_num || 1
+      this._sortTableAttributes()
       this.selectTableAttributeKeys = false
     }
   }
@@ -225,7 +231,7 @@ export default class InternalTableSetting extends Vue {
       this.ruleForm.bucketColumn = ''
       this.ruleForm.bucketCount = 1
     }
-    this.tableAttributes = this.tableAttributes.filter(a => a.name !== newVal)
+    this.tableAttributes = this.getTableAttributesFromTableInfo().filter(a => a.name !== newVal)
     this._sortTableAttributes()
   }
 
@@ -318,57 +324,58 @@ export default class InternalTableSetting extends Vue {
     .el-dialog {
       width: @dialog-width;
     }
-  }
-  .with-selector {
-    padding-right: @dialog-width;
-  }
-  .el-dialog__body {
-    scrollbar-gutter: stable;
-  }
-  .internal-table-container {
-    margin: 32px 24px 24px;
-  }
-  .split-block {
-    margin-top: 24px;
-  }
-  .sub-title {
-    margin-bottom: 8px;
-  }
-  .table-attribute-selector {
-    position: absolute;
-    bottom: 0;
-    right: -@dialog-width - 12px;
-    width: @dialog-width;
-    box-sizing: border-box;
-    background-color: #fff;
-    padding: 6px;
-    border-radius: 12px;
-    .el-table-draggable-wrapper {
-      max-height: 560px;
-      overflow: overlay;
+
+    .with-selector {
+      padding-right: @dialog-width;
     }
-  }
-  .dialog-footer {
-    margin-bottom: 24px;
-    text-align: right;
-  }
-  .query-inernal-table-tips {
-    position: relative;
-    top: -1px;
-    left: 2px;
-  }
-  .el-table__empty-block {
-    height: 0px;
-  }
-  .el-table {
-    min-height: 148px;
-  }
-  .max-width {
-    width: 100%;
-  }
-  .internal-table-tips {
-    :first-child {
-      max-height: 100% !important;
+    .el-dialog__body {
+      scrollbar-gutter: stable;
+    }
+    .internal-table-container {
+      margin: 32px 24px 24px;
+    }
+    .split-block {
+      margin-top: 24px;
+    }
+    .sub-title {
+      margin-bottom: 8px;
+    }
+    .table-attribute-selector {
+      position: absolute;
+      bottom: 0;
+      right: -@dialog-width - 12px;
+      width: @dialog-width;
+      box-sizing: border-box;
+      background-color: #fff;
+      padding: 6px;
+      border-radius: 12px;
+      .el-table-draggable-wrapper {
+        max-height: 560px;
+        overflow: overlay;
+      }
+    }
+    .dialog-footer {
+      margin-bottom: 24px;
+      text-align: right;
+    }
+    .query-inernal-table-tips {
+      position: relative;
+      top: -1px;
+      left: 2px;
+    }
+    .el-table__empty-block {
+      height: 0px;
+    }
+    .el-table {
+      min-height: 148px;
+    }
+    .max-width {
+      width: 100%;
+    }
+    .internal-table-tips {
+      :first-child {
+        max-height: 100% !important;
+      }
     }
   }
 </style>
