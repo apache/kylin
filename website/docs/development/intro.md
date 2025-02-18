@@ -6,7 +6,7 @@ pagination_label: Guide of Developer
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: null
-pagination_next: development/intro
+pagination_next: development/coding_convention
 keywords:
     - developer
 draft: false

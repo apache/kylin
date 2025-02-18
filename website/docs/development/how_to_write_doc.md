@@ -6,7 +6,7 @@ pagination_label: How to write a document
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: development/how_to_contribute
-pagination_next: development/how_to_debug_kylin_in_ide
+pagination_next: development/how_to_debug_kylin_in_local
 keywords:
     - doc
     - document

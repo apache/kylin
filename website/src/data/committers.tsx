@@ -85,7 +85,7 @@ const COMMITTERS: CommitterItem[] = [
     },
     {
         name: 'Shaofeng Shi (史少锋)',
-        role: 'PMC Chair',
+        role: 'PMC',
         org: 'Kyligence Inc.',
         apacheId: 'shaofengshi',
         githubId: 'shaofengshi',
@@ -117,7 +117,7 @@ const COMMITTERS: CommitterItem[] = [
     },
     {
         name: 'Yang Li (李扬)',
-        role: 'PMC',
+        role: 'PMC Chair',
         org: 'Kyligence Inc.',
         apacheId: 'liyang',
         githubId: 'liyang-gmt8',
@@ -377,6 +377,38 @@ const COMMITTERS: CommitterItem[] = [
         org: 'Youzan',
         apacheId: 'zhengshengjun',
         githubId: 'zhengshengjun',
+        showOnPages: true
+    },
+    {
+        name: 'Lu Cao (曹鲁)',
+        role: 'committer',
+        org: 'Kyligence Inc.',
+        apacheId: 'caolu',
+        githubId: 'lionelcao',
+        showOnPages: true
+    },
+    {
+        name: 'Yinghao Lin (林鹰昊)',
+        role: 'committer',
+        org: 'Kyligence Inc.',
+        apacheId: 'yhcast0',
+        githubId: 'yhcast0',
+        showOnPages: true
+    },
+    {
+        name: 'Pengfei Zhan (占鹏飞)',
+        role: 'committer',
+        org: 'Kyligence Inc.',
+        apacheId: 'pfzhan',
+        githubId: 'pfzhan',
+        showOnPages: true
+    },
+    {
+        name: 'Longfei Jiang (蒋龙飞)',
+        role: 'committer',
+        org: 'Kyligence Inc.',
+        apacheId: 'jlfsdtc',
+        githubId: 'jlfsdtc',
         showOnPages: true
     }
 ]

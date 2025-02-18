@@ -1,11 +1,23 @@
 ---
-sidebar_position: 1
+title: Kylin Security
+language: en
+sidebar_label: Kylin Security
+pagination_label: Kylin Security
+toc_min_heading_level: 2
+toc_max_heading_level: 6
+pagination_prev: development/how_to_understand_kylin_design
+pagination_next: null
+showLastUpdateAuthor: true
+showLastUpdateTime: true
+keywords:
+  - security
+draft: false
 last_update:
   date: 02/13/2025
   author: Jiang Longfei
 ---
 
-# Apache Kylin security
+# Apache Kylin Security
 
 The Apache Software Foundation takes security issues very seriously. 
 Apache Kylin specifically offers security features and is responsive to issues around its features. 

@@ -5,7 +5,7 @@ sidebar_label: 如何贡献 Kylin
 pagination_label: 如何贡献 Kylin
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: development/intro
+pagination_prev: development/coding_convention
 pagination_next: development/how_to_write_doc
 keywords:
   - contribute

@@ -1,5 +1,17 @@
 ---
-sidebar_position: 1
+title: Kylin 安全
+language: en
+sidebar_label: Kylin 安全
+pagination_label: Kylin 安全
+toc_min_heading_level: 2
+toc_max_heading_level: 6
+pagination_prev: development/how_to_understand_kylin_design
+pagination_next: null
+showLastUpdateAuthor: true
+showLastUpdateTime: true
+keywords:
+  - security
+draft: false
 last_update:
   date: 02/13/2025
   author: Jiang Longfei

@@ -5,8 +5,8 @@ sidebar_label: Kylin 5 整体设计
 pagination_label: Kylin 5 整体设计
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: development/how_to_subscribe_mailing_list
+pagination_next: development/security
 showLastUpdateAuthor: true
 showLastUpdateTime: true
 keywords:

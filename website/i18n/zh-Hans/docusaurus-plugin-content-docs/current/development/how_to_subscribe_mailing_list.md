@@ -5,6 +5,8 @@ sidebar_label: 如何订阅/取消订阅邮件列表
 pagination_label: 如何订阅/取消订阅邮件列表
 toc_min_heading_level: 2
 toc_max_heading_level: 6
+pagination_prev: development/how_to_package
+pagination_next: development/how_to_understand_kylin_design
 keywords:
   - mailing list
 draft: false
