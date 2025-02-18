@@ -127,13 +127,19 @@ public class InternalTableLoadingService extends BasicService {
             String end = StringUtils.isEmpty(endDate) ? "0" : fmt.format(Long.parseLong(endDate));
             curJobRange = new String[] { start, end };
         }
+        // non-time partition table can not submit incremental job
+        if (isIncremental && !Objects.isNull(tablePartition)
+                && StringUtils.isEmpty(tablePartition.getDatePartitionFormat())) {
+            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getNonTimeInternalTableIncrementalBuild());
+            throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
+        }
         if (DataRangeUtils.timeOverlap(internalTable.getJobRange(), curJobRange, timeFmt)) {
             String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeRangeOverlap());
             throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
         }
         // check refresh out of data range
         if (isRefresh && !DataRangeUtils.timeInRange(curJobRange, internalTable.getPartitionRange(), timeFmt)) {
-            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned());
+            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeOutOfRange());
             throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
         }
         logger.info(jobType.getCategory());

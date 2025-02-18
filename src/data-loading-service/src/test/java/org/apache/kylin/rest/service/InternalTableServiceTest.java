@@ -450,14 +450,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         waitJobToFinished(config, jobId);
         // check refresh time out of loaded range
         Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "1316556800000", "1420041600000", null, null));// 2011-09-21 ~ ~
-        Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, "1326556800000", "1420041600000", null, null));// 2012-01-15 ~ ~
-        Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, startDate, "1326556800000", null, null));// 2012-01-01 ~ 2012-01-15
-        Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
-                table.getName(), table.getDatabase(), false, true, startDate, "1333811200000", null, null));// 2012-01-01 ~ 2011-01-01
-
+                table.getName(), table.getDatabase(), true, true, startDate, "1333811200000", null, null));// 2012-01-01 ~ 2011-01-01
         // refresh some partitions and check agine
         String middleDate = "1325520000000";
         response = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true, true,
@@ -586,6 +579,10 @@ public class InternalTableServiceTest extends AbstractTestCase {
         // refresh non-time col partitions
         internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, true, "", "",
                 new String[] { "FP-GTC", "ABIN" }, null);
+
+        // check incremental refresh an un-time-partitioned table
+        Assertions.assertThrows(Exception.class, () -> internalTableService.loadIntoInternalTable(PROJECT,
+                table.getName(), table.getDatabase(), true, true, "1293811200000", "1420041600000", null, null));
 
         // refresh time col partitions
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyyMM");

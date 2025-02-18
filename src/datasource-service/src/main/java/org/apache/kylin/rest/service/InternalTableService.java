@@ -399,6 +399,10 @@ public class InternalTableService extends BasicService {
         if (isIncremental) {
             DataRangeUtils.validateRange(startDate, endDate);
         }
+        // treat full refresh as full load processing.
+        if (!isIncremental && isRefresh) {
+            isRefresh = false;
+        }
         return internalTableLoadingService.loadIntoInternalTable(project, table, database, isIncremental, isRefresh,
                 startDate, endDate, partitions, yarnQueue);
     }

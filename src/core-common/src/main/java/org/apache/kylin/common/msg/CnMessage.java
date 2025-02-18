@@ -1008,7 +1008,12 @@ public class CnMessage extends Message {
 
     @Override
     public String getInternalTableUnpartitioned() {
-        return "不支持增量构建为分区内表，请检查后重试。";
+        return "不支持增量构建非分区内表，请检查后重试。";
+    }
+
+    @Override
+    public String getNonTimeInternalTableIncrementalBuild() {
+        return "非时间分区表暂不支持分区增量刷新功能，请指定刷新分区。";
     }
 
     @Override

@@ -462,6 +462,10 @@ public class Message {
         return "Incremental build is not supported for unPartitioned table.";
     }
 
+    public String getNonTimeInternalTableIncrementalBuild() {
+        return "Non-time partition table do not support incremental partition refresh. Please specify partitions to refresh.";
+    }
+
     public String getTimeOutOfRange() {
         return "current time range is out of data range, please check again.";
     }
