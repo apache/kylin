@@ -58,10 +58,6 @@ class KylinDeltaStorage extends StorageStore with SubqueryTransformerHelper {
     val sortColumns = NSparkCubingUtil.getColumns(dims)
     var replaceCondition: String = null
 
-    doExecuteWithRetry(retryTimes) {
-      createKylinTableIfNeeded(layout, outputPath, dataFrame)
-    }
-
     if (layout.getModel.isIncrementBuildOnExpertMode) {
       val partitionCol = layout.getModel.getPartitionDesc.getPartitionDateColumnRef
       val partitionColIndex = layout.getDimensionPos(partitionCol)
@@ -167,22 +163,6 @@ class KylinDeltaStorage extends StorageStore with SubqueryTransformerHelper {
           .where(condition)
           .executeZOrderBy(zOrderByColumns.asScala: _*)
       }
-    }
-  }
-
-  private def createKylinTableIfNeeded(
-                                        layout: LayoutEntity,
-                                        outputPath: Path,
-                                        df: DataFrame): Unit = {
-    if (!DeltaTable.isDeltaTable(df.sparkSession, outputPath.toString)) {
-      // To avoid the impact of residual data, delete the table before
-      // creating it to ensure that the table directory is clean.
-      HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration, outputPath)
-      DeltaTable.create(df.sparkSession)
-        .location(outputPath.toString)
-        .addColumns(df.schema)
-        .execute()
-      logInfo(s"Create Kylin Table $outputPath for Layout ${layout.toString} .")
     }
   }
 

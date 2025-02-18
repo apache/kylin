@@ -1074,7 +1074,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
         NDataLayoutDetails nDataLayoutDetails1 = NDataLayoutDetailsManager.getInstance(config, project)
                 .getNDataLayoutDetails(df.getUuid(), 20001L);
         Assert.assertEquals(1, nDataLayoutDetails1.getNumOfFiles());
-        Assert.assertEquals(1, nDataLayoutDetails1.getTableVersion());
+        Assert.assertEquals(0, nDataLayoutDetails1.getTableVersion());
     }
 
     @Test
@@ -1119,7 +1119,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals(StorageStoreFactory.create(df.getModel().getStorageType())
                 .getStoragePath(df.getIndexPlan().getLayoutEntity(20001L)), nDataLayoutDetails1.getLocation());
         Assert.assertEquals(1, nDataLayoutDetails1.getNumOfFiles());
-        Assert.assertEquals(1, nDataLayoutDetails1.getTableVersion());
+        Assert.assertEquals(0, nDataLayoutDetails1.getTableVersion());
     }
 
     @Test
