@@ -4458,4 +4458,38 @@ public abstract class KylinConfigBase implements Serializable {
         return TimeUtil.timeStringAs(getOptional("kylin.query.v3.delta-log-cache-expire-threshold", "43200s"),
                 TimeUnit.SECONDS);
     }
+
+    public boolean isSourceJdbcWhiteListEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.jdbc.white-list.enabled", FALSE));
+    }
+
+    public Set<String> getSourceJdbcWhiteListSchemes() {
+        String config = StringUtils.deleteWhitespace(getOptional("kylin.source.jdbc.white-list.schemes", ""));
+        if (StringUtils.isBlank(config)) {
+            return Collections.emptySet();
+        }
+        return Sets.newHashSet(config.split(","));
+    }
+
+    public String getSourceJdbcWhiteListValidatorClassByScheme(String scheme) {
+        Set<String> whiteListSchemes = getSourceJdbcWhiteListSchemes();
+        if (!whiteListSchemes.contains(scheme)) {
+            return null;
+        }
+        return getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.validator-class", scheme),
+                "org.apache.kylin.rest.source.CommonJdbcSourceConnectionValidator");
+    }
+
+    public Set<String> getSourceJdbcWhiteListUrlParamKeysByScheme(String scheme) {
+        Set<String> whiteListSchemes = getSourceJdbcWhiteListSchemes();
+        if (!whiteListSchemes.contains(scheme)) {
+            return Collections.emptySet();
+        }
+        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
+                "kylin.source.jdbc.white-list.%s.url-param-keys", scheme), ""));
+        if (StringUtils.isBlank(config)) {
+            return Collections.emptySet();
+        }
+        return Sets.newHashSet(config.split(","));
+    }
 }

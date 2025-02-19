@@ -80,7 +80,6 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.SourceUsageUpdateNotifier;
 import org.apache.kylin.common.util.EncryptUtil;
-import org.apache.kylin.common.util.JdbcUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
@@ -135,6 +134,7 @@ import org.apache.kylin.rest.security.AclPermissionEnum;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.sdk.datasource.framework.utils.JdbcUtils;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.tool.garbage.MetadataCleaner;
 import org.slf4j.Logger;
@@ -445,6 +445,13 @@ public class ProjectService extends BasicService {
             if (Objects.isNull(maxConcurrentJobs) || maxConcurrentJobs < 0)
                 throw new KylinException(INVALID_PARAMETER,
                         MsgPicker.getMsg().getIllegalNegative(KYLIN_JOB_MAX_CONCURRENT_JOBS));
+        }
+        if (overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)) {
+            String url = overrideKylinProps.get(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY);
+            if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                    && !JdbcUtils.validateUrlByWhiteList(url)) {
+                throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
+            }
         }
         encryptJdbcPassInOverrideKylinProps(overrideKylinProps);
         projectManager.updateProject(project, copyForWrite -> copyForWrite.getOverrideKylinProps()

@@ -17,14 +17,19 @@
  */
 package org.apache.kylin.sdk.datasource.framework;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_JDBC_SOURCE_CONFIG;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.sdk.datasource.adaptor.AdaptorConfig;
 import org.apache.kylin.sdk.datasource.adaptor.DefaultAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor;
+import org.apache.kylin.sdk.datasource.framework.utils.JdbcUtils;
 
 public class SourceConnectorFactory {
     private SourceConnectorFactory() {
@@ -36,6 +41,11 @@ public class SourceConnectorFactory {
         String jdbcUser = config.getJdbcUser();
         String jdbcPass = config.getJdbcPass();
         String adaptorClazz = config.getJdbcAdaptorClass();
+
+        if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                && !JdbcUtils.validateUrlByWhiteList(jdbcUrl)) {
+            throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
+        }
 
         Map<String, String> options = new HashMap<>();
         if (config instanceof KylinConfigExt) {
