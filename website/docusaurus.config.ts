@@ -167,6 +167,16 @@ const config = {
     ],
   ],
 
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        httpEquiv: 'Content-Security-Policy',
+        content: "img-src 'self' data: https://github.com https://*.apache.org/ https://avatars.githubusercontent.com;",
+      },
+    },
+  ],
+
   scripts: [
     {
       src: 'https://buttons.github.io/buttons.js',
