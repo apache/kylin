@@ -19,6 +19,16 @@
 package org.apache.kylin.common;
 
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,8 +43,6 @@ import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -61,7 +69,7 @@ public class KylinConfigTest {
     public void testDuplicateConfig() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String v = config.getJobControllerLock();
-        Assert.assertEquals("org.apache.kylin.job.lock.MockJobLock", v);
+        assertEquals("org.apache.kylin.job.lock.MockJobLock", v);
     }
 
     @Test
@@ -70,26 +78,26 @@ public class KylinConfigTest {
         final String oldk = "kylin.test.bcc.old-key";
         final String newk = "kylin.test.bcc.new-key";
 
-        Assert.assertNull(config.getOptional(oldk));
-        Assert.assertNotNull(config.getOptional(newk));
+        assertNull(config.getOptional(oldk));
+        assertNotNull(config.getOptional(newk));
 
         Map<String, String> override = Maps.newHashMap();
         override.put(oldk, "1");
         KylinConfigExt ext = KylinConfigExt.createInstance(config, override);
-        Assert.assertNull(ext.getOptional(oldk));
-        Assert.assertEquals(ext.getOptional(newk), "1");
-        Assert.assertNotEquals(config.getOptional(newk), "1");
+        assertNull(ext.getOptional(oldk));
+        assertEquals("1", ext.getOptional(newk));
+        assertNotEquals("1", config.getOptional(newk));
 
         config.setProperty(oldk, "2");
-        Assert.assertEquals(config.getOptional(newk), "2");
+        assertEquals("2", config.getOptional(newk));
     }
 
     @Test
     public void testBackwardCompatibility_KAP_KYLIN() {
         Properties config = KylinConfig.getInstanceFromEnv().getAllProperties();
-        Assert.assertEquals(config.get("kylin.storage.columnar.spark-conf.spark.driver.memory"), "1234m");
-        Assert.assertEquals(config.get("kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead"), "4321m");
-        Assert.assertEquals(config.get("kylin.storage.monitor-spark-period-seconds"), "5678");
+        assertEquals("1234m", config.get("kylin.storage.columnar.spark-conf.spark.driver.memory"));
+        assertEquals("4321m", config.get("kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead"));
+        assertEquals("5678", config.get("kylin.storage.monitor-spark-period-seconds"));
     }
 
     @Test
@@ -97,9 +105,9 @@ public class KylinConfigTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = Maps.newHashMap();
         KylinConfig configExt = KylinConfigExt.createInstance(config, override);
-        Assert.assertSame(config.properties, configExt.properties);
+        assertSame(config.properties, configExt.properties);
         config.setProperty("1234", "1234");
-        Assert.assertEquals("1234", configExt.getOptional("1234"));
+        assertEquals("1234", configExt.getOptional("1234"));
     }
 
     @Test
@@ -107,10 +115,10 @@ public class KylinConfigTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         config.setMetadataUrl("testMetaPrefix@hdfs");
-        Assert.assertEquals("testMetaPrefix", config.getMetadataUrlPrefix());
+        assertEquals("testMetaPrefix", config.getMetadataUrlPrefix());
 
         config.setMetadataUrl("/kylin/temp");
-        Assert.assertEquals("/kylin/temp", config.getMetadataUrlPrefix());
+        assertEquals("/kylin/temp", config.getMetadataUrlPrefix());
     }
 
     @Test
@@ -122,7 +130,7 @@ public class KylinConfigTest {
         KylinConfig sysConfig = KylinConfig.getInstanceFromEnv();
         sysConfig.setMetadataUrl(metadata1);
 
-        Assert.assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
+        assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
 
         // test thread-local override
         KylinConfig threadConfig = KylinConfig.createKylinConfig(new Properties());
@@ -130,7 +138,7 @@ public class KylinConfigTest {
 
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(threadConfig)) {
 
-            Assert.assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
+            assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
 
             // other threads still use system KylinConfig
             final String[] holder = new String[1];
@@ -142,7 +150,7 @@ public class KylinConfigTest {
             });
             child.start();
             child.join();
-            Assert.assertEquals(metadata1, holder[0]);
+            assertEquals(metadata1, holder[0]);
         }
     }
 
@@ -153,7 +161,7 @@ public class KylinConfigTest {
         String overrideSparkJobJarPath = oldSparkJobJarPath + "_override";
         conf.overrideSparkJobJarPath(overrideSparkJobJarPath);
         String newSparkJobJarPath = System.getProperty("kylin.engine.spark.job-jar");
-        Assert.assertEquals(newSparkJobJarPath, overrideSparkJobJarPath);
+        assertEquals(newSparkJobJarPath, overrideSparkJobJarPath);
 
         if (StringUtils.isBlank(oldSparkJobJarPath)) {
             // remove property, otherwise KylinConfigBase.getOptional(java.lang.String, java.lang.String)
@@ -168,7 +176,7 @@ public class KylinConfigTest {
     public void testGetKylinJobJarPath() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         String kylinJobJarPath = conf.getKylinJobJarPath();
-        Assert.assertEquals(kylinJobJarPath, "");
+        assertEquals("", kylinJobJarPath);
     }
 
     @Test
@@ -176,29 +184,29 @@ public class KylinConfigTest {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         {
             kylinConfig.setProperty("ph_1", "${prop_a}/${prop1}");
-            Assert.assertEquals("${prop_a}/${prop1}", kylinConfig.getOptional("ph_1"));
+            assertEquals("${prop_a}/${prop1}", kylinConfig.getOptional("ph_1"));
 
             kylinConfig.setProperty("prop_a", "prop_A");
             kylinConfig.setProperty("prop1", "prop_1");
-            Assert.assertEquals("prop_A/prop_1", kylinConfig.getOptional("ph_1"));
+            assertEquals("prop_A/prop_1", kylinConfig.getOptional("ph_1"));
         }
 
         {
             kylinConfig.setProperty("ph_2", "${prop2}/${prop_b}");
-            Assert.assertEquals("${prop2}/${prop_b}", kylinConfig.getOptional("ph_2"));
+            assertEquals("${prop2}/${prop_b}", kylinConfig.getOptional("ph_2"));
 
             kylinConfig.setProperty("prop_b", "prop_B");
             kylinConfig.setProperty("prop2", "${prop_b}");
-            Assert.assertEquals("prop_B/prop_B", kylinConfig.getOptional("ph_2"));
+            assertEquals("prop_B/prop_B", kylinConfig.getOptional("ph_2"));
         }
 
         {
             kylinConfig.setProperty("ph_3", "${prop3}/${prop_c}/xxx/${prop2}/${prop_xxx}");
-            Assert.assertEquals("${prop3}/${prop_c}/xxx/prop_B/${prop_xxx}", kylinConfig.getOptional("ph_3"));
+            assertEquals("${prop3}/${prop_c}/xxx/prop_B/${prop_xxx}", kylinConfig.getOptional("ph_3"));
 
             kylinConfig.setProperty("prop_c", "${prop_C}");
             kylinConfig.setProperty("prop3", "prop_3");
-            Assert.assertEquals("prop_3/${prop_C}/xxx/prop_B/${prop_xxx}", kylinConfig.getOptional("ph_3"));
+            assertEquals("prop_3/${prop_C}/xxx/prop_B/${prop_xxx}", kylinConfig.getOptional("ph_3"));
         }
 
         {
@@ -206,20 +214,20 @@ public class KylinConfigTest {
             override.put("ph_4", "${prop4}/${prop_d}:${prop3}/${prop_c}");
             KylinConfigExt kylinConfigExt = KylinConfigExt.createInstance(kylinConfig, override);
 
-            Assert.assertEquals("${prop4}/${prop_d}:prop_3/${prop_C}", kylinConfigExt.getOptional("ph_4"));
+            assertEquals("${prop4}/${prop_d}:prop_3/${prop_C}", kylinConfigExt.getOptional("ph_4"));
 
             kylinConfigExt.getExtendedOverrides().put("prop_d", "prop_D");
             kylinConfigExt.getExtendedOverrides().put("prop4", "${prop_d}");
-            Assert.assertEquals("prop_D/prop_D:prop_3/${prop_C}", kylinConfigExt.getOptional("ph_4"));
+            assertEquals("prop_D/prop_D:prop_3/${prop_C}", kylinConfigExt.getOptional("ph_4"));
         }
 
         {
             kylinConfig.setProperty("ph_5", "${prop5}");
-            Assert.assertEquals("${prop5}", kylinConfig.getOptional("ph_5"));
+            assertEquals("${prop5}", kylinConfig.getOptional("ph_5"));
 
             kylinConfig.setProperty("prop_d", "${ph_5}");
             kylinConfig.setProperty("prop5", "${prop_d}");
-            Assertions.assertThrows(IllegalStateException.class, () -> {
+            assertThrows(IllegalStateException.class, () -> {
                 kylinConfig.getOptional("ph_5");
             });
         }
@@ -250,49 +258,49 @@ public class KylinConfigTest {
         KylinConfig config = Mockito.spy(KylinConfig.class);
 
         mockMode(config, ClusterConstant.ALL, null);
-        Assert.assertArrayEquals(new boolean[] { true, true, false, true, false, false, false, false },
+        assertArrayEquals(new boolean[] { true, true, false, true, false, false, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.JOB, null);
-        Assert.assertArrayEquals(new boolean[] { false, true, true, false, false, false, false, false },
+        assertArrayEquals(new boolean[] { false, true, true, false, false, false, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.QUERY, null);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.ALL, ClusterConstant.DATA_LOADING);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.JOB, ClusterConstant.DATA_LOADING);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.QUERY, ClusterConstant.DATA_LOADING);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, true, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.ALL, ClusterConstant.COMMON);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.JOB, ClusterConstant.COMMON);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.QUERY, ClusterConstant.COMMON);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, true, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.ALL, ClusterConstant.SMART);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.JOB, ClusterConstant.SMART);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.QUERY, ClusterConstant.SMART);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
+        assertArrayEquals(new boolean[] { false, false, false, false, false, false, false, true },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.ALL, ClusterConstant.QUERY);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.JOB, ClusterConstant.QUERY);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
                 getServerModeStatus(config));
         mockMode(config, ClusterConstant.QUERY, ClusterConstant.QUERY);
-        Assert.assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
+        assertArrayEquals(new boolean[] { false, false, false, true, true, false, false, false },
                 getServerModeStatus(config));
     }
 
@@ -321,47 +329,47 @@ public class KylinConfigTest {
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("common", file);
-            Assert.assertEquals(ClusterConstant.COMMON, kylinConfig.getMicroServiceMode());
-            Assert.assertEquals(ClusterConstant.COMMON, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.COMMON, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.COMMON, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("data-loading", file);
-            Assert.assertEquals(ClusterConstant.DATA_LOADING, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.DATA_LOADING, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("query", file);
-            Assert.assertEquals(ClusterConstant.QUERY, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.QUERY, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("smart", file);
-            Assert.assertEquals(ClusterConstant.SMART, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.SMART, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("ops", file);
-            Assert.assertEquals(ClusterConstant.OPS, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.OPS, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("resource", file);
-            Assert.assertEquals(ClusterConstant.RESOURCE, kylinConfig.getMicroServiceMode());
+            assertEquals(ClusterConstant.RESOURCE, kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             createYamlFile("illegal", file);
-            Assert.assertNull(kylinConfig.getMicroServiceMode());
+            assertNull(kylinConfig.getMicroServiceMode());
             kylinConfig.properties.clear();
 
             kylinConfig.setProperty("kylin.micro.service", "true");
             Mockito.when(cl.getResource(fileName)).thenReturn(null);
-            Assert.assertNull(kylinConfig.getMicroServiceMode());
+            assertNull(kylinConfig.getMicroServiceMode());
 
-            Assert.assertTrue(file.delete());
+            assertTrue(file.delete());
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         } finally {
             Thread.currentThread().setContextClassLoader(threadClassLoader);
         }
@@ -375,5 +383,33 @@ public class KylinConfigTest {
         fs.write(context);
         fs.flush();
         fs.close();
+    }
+
+    @Test
+    void isIndexPreloadCacheEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isIndexPreloadCacheEnabled());
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.plugins", "GlutenPlugin");
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.TRUE);
+        assertTrue(config.isIndexPreloadCacheEnabled());
+
+        config.setProperty("kylin.index.preloaded-cache.enabled", KylinConfig.FALSE);
+        assertFalse(config.isIndexPreloadCacheEnabled());
+    }
+
+    @Test
+    void isInternalTablePreloadCacheEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isInternalTablePreloadCacheEnabled());
+
+        config.setProperty("kylin.internal-table-enabled", KylinConfig.TRUE);
+        assertFalse(config.isInternalTablePreloadCacheEnabled());
+
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.plugins", "GlutenPlugin");
+        config.setProperty("kylin.storage.columnar.spark-conf.spark.gluten.enabled", KylinConfig.TRUE);
+        assertTrue(config.isInternalTablePreloadCacheEnabled());
+
+        config.setProperty("kylin.internal-table.preloaded-cache.enabled", KylinConfig.FALSE);
+        assertFalse(config.isInternalTablePreloadCacheEnabled());
     }
 }

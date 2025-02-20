@@ -18,8 +18,9 @@
 
 package org.apache.kylin.common.msg;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 public class MsgPicker {
-    private static ThreadLocal<Message> msg = new ThreadLocal<Message>();
+    private static TransmittableThreadLocal<Message> msg = new TransmittableThreadLocal<>();
 
     public static void setMsg(String lang) {
         //if ("cn".equals(lang))

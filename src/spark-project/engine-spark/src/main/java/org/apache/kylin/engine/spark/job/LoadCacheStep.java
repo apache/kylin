@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_ERROR;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_EXECUTE_ERROR;
 import static org.apache.kylin.common.msg.Message.LOAD_GLUTEN_CACHE_ROUTE_RESPONSE_EMPTY;
@@ -26,6 +27,12 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -36,14 +43,13 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.tool.restclient.RestClient;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class LoadCacheStep extends AbstractExecutable {
-    private static final String CACHE_API = "/jobs/gluten_cache";
+    private static final String CACHE_API = "/kylin/api/jobs/gluten_cache";
 
     protected LoadCacheStep() {
         this.setName(ExecutableConstants.LOAD_GLUTEN_CACHE);
@@ -58,14 +64,24 @@ public abstract class LoadCacheStep extends AbstractExecutable {
         if (config.isUTEnv()) {
             return;
         }
-        val host = AddressUtil.getLocalHostExactAddress();
-        val port = Integer.parseInt(config.getServerPort());
-        val client = new RestClient(host, port, null, null);
+        val localInstance = AddressUtil.getLocalInstance();
+        val requestApi = String.format(Locale.ROOT, "http://%s%s", localInstance, CACHE_API);
+
         val request = Maps.<String, Object> newHashMap();
         request.put("project", project);
         request.put("cache_commands", cacheCommand);
         byte[] requestEntity = JsonUtil.writeValueAsBytes(request);
-        val httpResponse = client.forwardPost(requestEntity, CACHE_API);
+
+        val timeout = config.getGlutenCacheRequestTimeout();
+        val defaultRequestConfig = RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(timeout).setStaleConnectionCheckEnabled(true).build();
+        val httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
+
+        val httpPost = new HttpPost(requestApi);
+        httpPost.addHeader(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_JSON);
+        httpPost.setEntity(new ByteArrayEntity(requestEntity, ContentType.APPLICATION_JSON));
+
+        val httpResponse = httpClient.execute(httpPost);
         byte[] content = EntityUtils.toByteArray(httpResponse.getEntity());
         if (content != null) {
             val response = JsonUtil.readValue(content, EnvelopeResponse.class);

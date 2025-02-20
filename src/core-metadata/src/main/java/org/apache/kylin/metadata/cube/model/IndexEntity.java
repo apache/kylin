@@ -282,7 +282,7 @@ public class IndexEntity implements Serializable {
     }
 
     public static boolean isAggIndex(long id) {
-        return !isTableIndex(id);
+        return id >= 0 && !isTableIndex(id);
     }
 
     public void removeLayouts(List<LayoutEntity> deprecatedLayouts, Predicate<LayoutEntity> isSkip, boolean deleteAuto,

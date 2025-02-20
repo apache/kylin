@@ -39,6 +39,7 @@ import org.apache.kylin.job.handler.InternalTableJobHandler;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.job.service.InternalTableLoadingService;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -67,6 +68,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.val;
 
 @MetadataInfo
+@OverwriteProp.OverwriteProps(value = {
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.gluten.enabled", value = "true"),
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.plugins", value = "GlutenPlugin"),
+        @OverwriteProp(key = "kylin.internal-table-enabled", value = "true") })
 class InternalTableLoadCacheStepTest extends AbstractTestCase {
     static final String PROJECT = "default";
     static final String TABLE_INDENTITY = "DEFAULT.TEST_KYLIN_FACT";

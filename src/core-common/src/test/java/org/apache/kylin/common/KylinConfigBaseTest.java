@@ -943,9 +943,9 @@ class KylinConfigBaseTest {
                 "kylin.storage.columnar.spark-conf.spark.sql.decimalOperations.allowPrecisionLoss", "true", true));
         map.put("isSparkUIAclEnabled", new PropertiesEntity("kylin.query.engine.spark-ui-acl.enabled", "", false));
         map.put("isInternalTablePreloadCacheEnabled",
-                new PropertiesEntity("kylin.internal-table.preloaded-cache.enabled", "true", true));
+                new PropertiesEntity("kylin.internal-table.preloaded-cache.enabled", "true", false));
         map.put("isIndexPreloadCacheEnabled",
-                new PropertiesEntity("kylin.index.preloaded-cache.enabled", "true", true));
+                new PropertiesEntity("kylin.index.preloaded-cache.enabled", "true", false));
         map.put("getConcurrentRunningThresholdForGlutenCache",
                 new PropertiesEntity("kylin.cache.gluten-cache-concurrent-running-threshold", "20", 20));
     }

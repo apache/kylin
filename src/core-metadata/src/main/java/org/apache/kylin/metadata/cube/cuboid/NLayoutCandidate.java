@@ -40,9 +40,6 @@ import lombok.Setter;
 @Setter
 public class NLayoutCandidate implements IRealizationCandidate {
 
-    public static final NLayoutCandidate EMPTY = new NLayoutCandidate(new LayoutEntity(), Double.MAX_VALUE,
-            new CapabilityResult());
-
     private LayoutEntity layoutEntity;
     private NDataLayoutDetails dataLayoutDetails;
     private long layoutId;

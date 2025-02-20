@@ -78,7 +78,6 @@ public class DataflowCapabilityChecker {
             result.setCandidate(dataflow.isStreaming(), chosenCandidate);
             result.setCost(chosenCandidate.getCost());
         } else {
-            result.setCandidate(dataflow.isStreaming(), NLayoutCandidate.ofEmptyCandidate());
             result.setCapable(false);
         }
         return result;

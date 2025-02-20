@@ -35,6 +35,7 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -52,6 +53,9 @@ import org.sparkproject.guava.collect.Sets;
 import lombok.val;
 
 @MetadataInfo
+@OverwriteProp.OverwriteProps(value = {
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.gluten.enabled", value = "true"),
+        @OverwriteProp(key = "kylin.storage.columnar.spark-conf.spark.plugins", value = "GlutenPlugin") })
 class ModelIndexLoadCacheStepTest {
     static final String PROJECT = "default";
     static final String PROJECT_V3 = "storage_v3_test";

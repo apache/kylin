@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.IndexMatcher;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -84,6 +85,14 @@ public class CapabilityResult {
 
     public double getCost(boolean isStreaming) {
         return isStreaming ? selectedStreamCandidate.getCost() : selectedCandidate.getCost();
+    }
+
+    public IRealizationCandidate getSelectedCandidate() {
+        return selectedCandidate == null ? NLayoutCandidate.ofEmptyCandidate() : selectedCandidate;
+    }
+
+    public IRealizationCandidate getSelectedStreamCandidate() {
+        return selectedStreamCandidate == null ? NLayoutCandidate.ofEmptyCandidate() : selectedStreamCandidate;
     }
 
     public void setCandidate(boolean isStreaming, CapabilityResult result) {

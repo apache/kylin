@@ -22,6 +22,7 @@ import java.util.Map;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
@@ -60,6 +61,6 @@ public class KylinTableChooserRuleTest extends NLocalWithSparkSessionTest {
         KylinTableChooserRule rule = new KylinTableChooserRule();
         CapabilityResult result = rule.check(dataflow, olapContext, olapContext.getSQLDigest());
         Assert.assertNotNull(result);
-        Assert.assertNull(result.getSelectedCandidate());
+        Assert.assertTrue(((NLayoutCandidate) result.getSelectedCandidate()).isEmpty());
     }
 }

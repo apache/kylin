@@ -359,6 +359,25 @@ object KylinSession extends Logging {
           s"$yarnAMJavaOptions $amKerberosConf")
       }
 
+      var extraJars = Paths.get(KylinConfig.getInstanceFromEnv.getKylinJobJarPath).getFileName.toString
+      if (KylinConfig.getInstanceFromEnv.queryUseGlutenEnabled) {
+        if (sparkConf.get(SPARK_MASTER).startsWith("yarn")) {
+          val distFiles = sparkConf.get(SPARK_YARN_DIST_FILE)
+          if (distFiles.isEmpty) {
+            sparkConf.set(SPARK_YARN_DIST_FILE,
+              sparkConf.get(SPARK_EXECUTOR_JAR_PATH))
+          } else {
+            sparkConf.set(SPARK_YARN_DIST_FILE,
+              sparkConf.get(SPARK_EXECUTOR_JAR_PATH) + "," + distFiles)
+          }
+          extraJars = "gluten.jar" + File.pathSeparator + extraJars
+        } else {
+          extraJars = sparkConf.get(SPARK_EXECUTOR_JAR_PATH) +
+            File.pathSeparator + extraJars
+        }
+      }
+      sparkConf.set("spark.executor.extraClassPath", extraJars)
+
       if (KylinConfig.getInstanceFromEnv.getQueryMemoryLimitDuringCollect > 0L) {
         sparkConf.set("spark.sql.driver.maxMemoryUsageDuringCollect", KylinConfig.getInstanceFromEnv.getQueryMemoryLimitDuringCollect + "m")
       }

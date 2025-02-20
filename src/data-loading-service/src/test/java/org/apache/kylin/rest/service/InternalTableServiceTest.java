@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,12 +36,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
@@ -69,6 +73,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -128,9 +133,8 @@ public class InternalTableServiceTest extends AbstractTestCase {
         internalTableService.checkParameters(partitionCols, table, datePartitionFormat);
 
         // partitionCols are case insensitive
-        partitionCols = new String[] { "TRANS_ID", "order_id" };
-        datePartitionFormat = "yyyy-MM-dd";
-        internalTableService.checkParameters(partitionCols, table, datePartitionFormat);
+        partitionCols = new String[] { "trans_id", "order_id" };
+        internalTableService.checkParameters(partitionCols, table, null);
 
         // when datePartitionFormat is null, non-date cols can be used as partitionCol
         internalTableService.checkParameters(partitionCols, table, "");
@@ -138,6 +142,14 @@ public class InternalTableServiceTest extends AbstractTestCase {
         // test partitionCols include date, but datePartitionFormat is null
         Assertions.assertThrows(KylinException.class,
                 () -> internalTableService.checkParameters(new String[] { "CAL_DT" }, table, ""));
+
+        // test datePartitionFormat is not null, but partitionCols is null
+        Assertions.assertThrows(KylinException.class,
+                () -> internalTableService.checkParameters(null, table, "yyyy-MM-dd"));
+
+        // test datePartitionFormat is not null, but partitionCols don't contains data type col
+        Assertions.assertThrows(KylinException.class, () -> internalTableService
+                .checkParameters(new String[] { "TRANS_ID", "order_id" }, table, "yyyy-MM-dd"));
 
         // test invalid partitionCols
         Assertions.assertThrows(KylinException.class, () -> internalTableService
@@ -279,13 +291,13 @@ public class InternalTableServiceTest extends AbstractTestCase {
 
         // test set partitionCols to null
         internalTableService.updateInternalTable(PROJECT, internalTable.getName(), internalTable.getDatabase(), null,
-                dateFormat, tblProperties, InternalTableDesc.StorageType.PARQUET.name());
+                "", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
         internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
         Assertions.assertNull(internalTable.getPartitionColumns());
 
         // test set partitionCols to empty
         internalTableService.updateInternalTable(PROJECT, internalTable.getName(), internalTable.getDatabase(),
-                new String[] {}, dateFormat, tblProperties, InternalTableDesc.StorageType.PARQUET.name());
+                new String[] {}, "", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
         internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
         Assertions.assertNull(internalTable.getPartitionColumns());
 
@@ -439,8 +451,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
         // remove partitions not exist in table
         String[] toDeletePartitionsNotExist = new String[] { "2013-01-03", "2013-01-04" };
         Assert.assertThrows(KylinException.class, () -> {
-            internalTableService.dropPartitionsOnDeltaTable(PROJECT, TABLE_INDENTITY, toDeletePartitionsNotExist,
-                    null);
+            internalTableService.dropPartitionsOnDeltaTable(PROJECT, TABLE_INDENTITY, toDeletePartitionsNotExist, null);
         });
 
         // check delete table
@@ -631,5 +642,134 @@ public class InternalTableServiceTest extends AbstractTestCase {
         } catch (Exception e) {
             Assertions.fail();
         }
+    }
+
+    @Test
+    void testCreateExistInternalTableErrorCode() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), partitionCols,
+                "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        Assertions.assertNotNull(internalTable);
+
+        String workingDir = config.getHdfsWorkingDirectory().replace("file://", "");
+        File internalTableFolder = new File(workingDir, INTERNAL_DIR);
+        Assertions.assertTrue(internalTableFolder.exists() && internalTableFolder.isDirectory());
+
+        // test create duplicated internal table to trigger error
+        TransactionException exception = Assertions.assertThrows(TransactionException.class,
+                () -> internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(),
+                        partitionCols, "yyyy-MM-dd", tblProperties, InternalTableDesc.StorageType.PARQUET.name()));
+
+        Assertions.assertEquals("KE-010007011(Internal Table Operation Failed) \n"
+                + "org.apache.kylin.common.exception.KylinException: KE-010007011(Internal Table Operation Failed):Table is already an internal table",
+                exception.getCause().toString());
+        if (!internalTableFolder.delete()) {
+            Assertions.fail();
+        }
+
+        internalTableService.dropInternalTable(PROJECT, TABLE_INDENTITY);
+    }
+
+    @Test
+    void testUpdateNonEmptyInternalTableErrorCode() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        internalTableService.createInternalTable(PROJECT, table.getName(), table.getDatabase(), new String[] {}, null,
+                new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        Assertions.assertNull(internalTable.getTablePartition());
+        Assertions.assertTrue(internalTable.getTblProperties().isEmpty());
+
+        String[] partitionCols = new String[] { DATE_COL };
+        Map<String, String> tblProperties = new HashMap<>();
+        tblProperties.put("orderByKeys", "LO_ORDERKEY");
+        tblProperties.put("primaryKey", "LO_ORDERKEY2");
+        String dateFormat = "yyyy-MM-dd";
+
+        String db = internalTable.getDatabase();
+        String tableName = internalTable.getName();
+
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            InternalTableManager manager = InternalTableManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
+            manager.updateInternalTable(TABLE_INDENTITY, copyForWrite -> copyForWrite.setRowCount(1L));
+            return null;
+        }, PROJECT);
+
+        TransactionException exception = Assertions.assertThrows(TransactionException.class,
+                () -> internalTableService.updateInternalTable(PROJECT, tableName, db, partitionCols, dateFormat,
+                        tblProperties, InternalTableDesc.StorageType.PARQUET.name()));
+
+        Assertions.assertEquals("KE-010007011(Internal Table Operation Failed) \n"
+                + "org.apache.kylin.common.exception.KylinException: KE-010007011(Internal Table Operation Failed):Non-empty internal table can not be updated",
+                exception.getCause().toString());
+    }
+
+    @Test
+    void testCreateInternalPathFailedErrorCode() throws Exception {
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        FileSystem mockFileSystem = Mockito.mock(FileSystem.class);
+        try (MockedStatic<HadoopUtil> mockedHadoopUtil = Mockito.mockStatic(HadoopUtil.class)) {
+            mockedHadoopUtil.when(HadoopUtil::getWorkingFileSystem).thenReturn(mockFileSystem);
+            Mockito.doThrow(new IOException("Simulated IO error")).when(mockFileSystem).mkdirs(Mockito.any(Path.class));
+            KylinException exception = Assertions.assertThrows(KylinException.class, () -> {
+                String path = "mocked/path/to/internal_table";
+                internalTableService.createInternalTablePath(path);
+            });
+            Assertions.assertEquals("KE-010007011(Internal Table Operation Failed) \n"
+                    + "org.apache.kylin.common.exception.KylinException: KE-010007011(Internal Table Operation Failed):Failed to create internal table location",
+                    exception.toString());
+        }
+    }
+
+    @Test
+    void testLoadUnPartitionedTableErrorCode() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        internalTableService.createInternalTable(PROJECT, table, InternalTableDesc.StorageType.PARQUET.name());
+        String startDate = "1325347200000"; // 2012-01-01
+        String endDate = "1325865600000"; // 2012-01-07
+        TransactionException exception = Assertions.assertThrows(TransactionException.class,
+                () -> internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), true,
+                        false, startDate, endDate, null));
+        Assertions.assertEquals("KE-010007011(Internal Table Operation Failed) \n"
+                + "org.apache.kylin.common.exception.KylinException: KE-010007011(Internal Table Operation Failed):Incremental build is not supported for unPartitioned table",
+                exception.getCause().toString());
+    }
+
+    @Test
+    void testInvalidInternalParamUnMatch() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        KylinException exception = Assertions.assertThrows(KylinException.class,
+                () -> internalTableService.checkParameters(null, table, "yyyy-MM-dd"));
+        Assertions.assertEquals("KE-010007013(Internal Table Parameter Invalid) \n"
+                + "org.apache.kylin.common.exception.KylinException: KE-010007013(Internal Table Parameter Invalid):Can’t find the partition column. Please check and try again.",
+                exception.toString());
+    }
+
+    @Test
+    void testInternalDataFormatUnMatch() throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        TableDesc table = tManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyy-MM-dd");
+        KylinException exception = Assertions.assertThrows(KylinException.class,
+                () -> internalTableService.checkParameters(new String[] { "TRANS_ID", "CAL_DT" }, table, "yyyy-MM"));
+        Assertions.assertEquals("KE-010007013(Internal Table Parameter Invalid) \n"
+                + "org.apache.kylin.common.exception.KylinException: KE-010007013(Internal Table Parameter Invalid):Date partition format \"yyyy-MM\" is not correct.",
+                exception.toString());
     }
 }

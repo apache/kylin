@@ -34,7 +34,6 @@ import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import lombok.val;
@@ -42,13 +41,6 @@ import lombok.val;
 public class NQueryPartialMatchIndexTest extends NLocalWithSparkSessionTest {
 
     private final String dfName = "cce7b90d-c1ac-49ef-abc3-f8971eb91544";
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        this.createTestMetadata("src/test/resources/ut_meta/partial_match_index");
-    }
 
     @Override
     protected String[] getOverlay() {

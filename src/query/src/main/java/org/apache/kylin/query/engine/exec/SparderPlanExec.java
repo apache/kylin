@@ -140,11 +140,8 @@ public class SparderPlanExec implements QueryPlanExec {
 
     private boolean isAggImperfectMatch(OlapContext ctx) {
         NLayoutCandidate candidate = ctx.getStorageContext().getBatchCandidate();
-        if (candidate.isEmpty()) {
-            return false;
-        }
         long layoutId = candidate.getLayoutEntity().getId();
-        return IndexEntity.isAggIndex(layoutId) && !ctx.isExactlyAggregate()
+        return layoutId < 0 || IndexEntity.isAggIndex(layoutId) && !ctx.isExactlyAggregate()
                 || IndexEntity.isTableIndex(layoutId) && ctx.isHasAgg();
     }
 }

@@ -21,7 +21,6 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.rest.service.RouteService.CACHE_GLUTEN_API;
 import static org.apache.kylin.rest.service.RouteService.CACHE_GLUTEN_ASYNC_API;
-import static org.awaitility.Awaitility.await;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -134,6 +133,7 @@ public class RouteServiceTest {
         PowerMockito.when(ResourceGroupManager.getInstance(ArgumentMatchers.any())).thenReturn(rgManager);
         PowerMockito.when(KylinConfig.getInstanceFromEnv()).thenReturn(kylinConfig);
         Mockito.when(kylinConfig.getKylinMultiTenantRouteTaskTimeOut()).thenReturn(30 * 60 * 1000L);
+        Mockito.when(kylinConfig.getGlutenCacheRequestTimeout()).thenReturn(24 * 60 * 60 * 1000);
 
         val resourceGroupJson = "{\"create_time\":1669704879469,\"instances\":[{\"instance\":\"10.1.2.185:7878\",\"resource_group_id\":\"27dc039e-2778-49c0-80d0-8e4e025d25ba\"},{\"instance\":\"10.1.2.184:7878\",\"resource_group_id\":\"cebdfbca-25bc-49b6-8ee4-71946219b4bb\"}],"
                 + "\"mapping_info\":[{\"project\":\"184\",\"resource_group_id\":\"cebdfbca-25bc-49b6-8ee4-71946219b4bb\",\"request_type\":\"BUILD\"},{\"project\":\"184\",\"resource_group_id\":\"cebdfbca-25bc-49b6-8ee4-71946219b4bb\",\"request_type\":\"QUERY\"},{\"project\":\"185\",\"resource_group_id\":\"27dc039e-2778-49c0-80d0-8e4e025d25ba\",\"request_type\":\"BUILD\"},{\"project\":\"185\",\"resource_group_id\":\"27dc039e-2778-49c0-80d0-8e4e025d25ba\",\"request_type\":\"QUERY\"}],\"resource_groups\":[{\"id\":\"c444879a-b3b0-4946-aed1-018cbc946c4a\"},{\"id\":\"27dc039e-2778-49c0-80d0-8e4e025d25ba\"},{\"id\":\"cebdfbca-25bc-49b6-8ee4-71946219b4bb\"}],\"uuid\":\"d5c316ed-b977-6efb-aea3-1735feb75d02\",\"last_modified\":1669952899667,\"version\":\"4.0.0.0\",\"resource_group_enabled\":true}\n";
@@ -191,7 +191,9 @@ public class RouteServiceTest {
             val startTime = i % 2 == 0 ? dateTime.plusSeconds(-2) : dateTime.plusSeconds(second2);
             asyncFutures.put(futureTask, startTime.getMillis());
         }
-        routeService.cancelTimeoutAsyncTask(kylinConfig, asyncFutures, dateTime.getMillis(), "test");
+        val kylinMultiTenantRouteTaskTimeOut = KylinConfig.getInstanceFromEnv().getKylinMultiTenantRouteTaskTimeOut();
+        routeService.cancelTimeoutAsyncTask(kylinMultiTenantRouteTaskTimeOut, asyncFutures, dateTime.getMillis(),
+                "test");
         asyncFutures.keySet().forEach(future -> Assert.assertTrue(future.isDone()));
     }
 
@@ -298,19 +300,6 @@ public class RouteServiceTest {
 
         project = routeService.getProjectByModelNameUseInFilter("test_model");
         Assert.assertEquals("default", project);
-    }
-
-    @Test
-    public void waitCacheRouteTaskDone() throws InterruptedException {
-        Map<Future<?>, Long> asyncFutures = Maps.newConcurrentMap();
-        for (int i = 0; i < 5; i++) {
-            val futureTask = new FutureTask<String>(() -> await().pollDelay(2, TimeUnit.SECONDS).until(() -> true),
-                    "test");
-            executors.submit(futureTask);
-            asyncFutures.put(futureTask, System.currentTimeMillis());
-        }
-        routeService.waitCacheRouteTaskDone(asyncFutures);
-        asyncFutures.keySet().forEach(future -> Assert.assertTrue(future.isDone()));
     }
 
     @Test
