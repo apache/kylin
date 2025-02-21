@@ -32,5 +32,9 @@ class BuildDict(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: B
     buildParam.setDict(dict)
   }
 
+  if (buildParam.isSkipBuildDict) {
+    onStageSkipped()
+  }
+
   override def getStageName: String = "BuildDict"
 }
