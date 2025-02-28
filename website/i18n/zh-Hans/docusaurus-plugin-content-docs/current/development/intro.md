@@ -1,12 +1,12 @@
 ---
 title: 开发者指南
 language: zh-Hans
-sidebar_label: Guide of Developer
-pagination_label: Guide of Developer
+sidebar_label: 开发者指南
+pagination_label: 开发者指南
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: null
-pagination_next: development/intro
+pagination_next: development/coding_convention
 keywords:
   - developer
 draft: false

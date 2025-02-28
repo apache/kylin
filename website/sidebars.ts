@@ -833,6 +833,10 @@ const sidebars = {
                 {
                     type: 'doc',
                     id: 'development/how_to_understand_kylin_design'
+                },
+                {
+                    type: 'doc',
+                    id: 'development/security'
                 }
 
             ],
