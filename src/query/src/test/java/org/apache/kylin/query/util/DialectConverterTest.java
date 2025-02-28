@@ -20,14 +20,13 @@ package org.apache.kylin.query.util;
 
 import java.util.List;
 
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class DialectConverterTest extends NLocalFileMetadataTestCase {
 

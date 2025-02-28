@@ -19,6 +19,8 @@ package org.apache.kylin.common.persistence;
 
 import java.io.IOException;
 
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -28,7 +30,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,9 +55,15 @@ public class AuditLog {
 
     private String unitId;
 
+    private String modelUuid;
+
     private String operator;
 
     private String instance;
+
+    private String project;
+
+    private boolean diffFlag;
 
     public static class ByteSourceSerializer extends JsonSerializer<ByteSource> {
 

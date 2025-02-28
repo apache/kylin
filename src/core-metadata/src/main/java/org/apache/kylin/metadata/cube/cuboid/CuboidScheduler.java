@@ -25,10 +25,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

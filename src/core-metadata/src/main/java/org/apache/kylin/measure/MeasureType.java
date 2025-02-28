@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -32,22 +33,21 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 /**
  * MeasureType captures how a kind of aggregation is defined, how it is calculated
  * during cube build, and how it is involved in query and storage scan.
  *
  * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
-abstract public class MeasureType<T> implements java.io.Serializable {
+public abstract class MeasureType<T> implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     /* ============================================================================
      * Define
      * ---------------------------------------------------------------------------- */
 
-    /** Validates a user defined FunctionDesc has expected parameter etc. Throw IllegalArgumentException if anything wrong. */
+    /** Validates a user defined FunctionDesc has expected parameter etc.
+     * Throw IllegalArgumentException if anything wrong. */
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
         return;
     }
@@ -59,7 +59,8 @@ abstract public class MeasureType<T> implements java.io.Serializable {
         return false;
     }
 
-    /** Return true if this MeasureType only aggregate values in base cuboid, and output initial value in child cuboid. */
+    /** Return true if this MeasureType only aggregate values in base cuboid,
+     * and output initial value in child cuboid. */
     public boolean onlyAggrInBaseCuboid() {
         return false;
     }
@@ -69,10 +70,10 @@ abstract public class MeasureType<T> implements java.io.Serializable {
      * ---------------------------------------------------------------------------- */
 
     /** Return a MeasureIngester which knows how to init aggregation object from raw records. */
-    abstract public MeasureIngester<T> newIngester();
+    public abstract MeasureIngester<T> newIngester();
 
     /** Return a MeasureAggregator which does aggregation. */
-    abstract public MeasureAggregator<T> newAggregator();
+    public abstract MeasureAggregator<T> newAggregator();
 
     /** Some special measures need dictionary to encode column values for optimal storage. TopN is an example. */
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
@@ -92,7 +93,7 @@ abstract public class MeasureType<T> implements java.io.Serializable {
      * the <code>unmatchedDimensions</code> and <code>unmatchedAggregations</code>.
      *
      * Each measure type on the cube is then called on this method to check if any of the unmatched
-     * can be fulfilled. If a measure type cannot fulfill any of the unmatched, it simply return null.
+     * can be fulfilled. If a measure type cannot fulfill any of the unmatched, it simply returns null.
      * Or otherwise, <code>unmatchedDimensions</code> and <code>unmatchedAggregations</code> must
      * be modified to drop the satisfied dimension or measure, and a CapabilityInfluence object
      * must be returned to mark the contribution of this measure type.
@@ -106,8 +107,8 @@ abstract public class MeasureType<T> implements java.io.Serializable {
      * Query Rewrite
      * ---------------------------------------------------------------------------- */
 
-    /** Whether or not Calcite rel-tree needs rewrite to do last around of aggregation */
-    abstract public boolean needRewrite();
+    /** Whether Calcite rel-tree needs rewrite to do last around of aggregation */
+    public abstract boolean needRewrite();
 
     /** Does the rewrite involves an extra field to hold the pre-calculated */
     public boolean needRewriteField() {

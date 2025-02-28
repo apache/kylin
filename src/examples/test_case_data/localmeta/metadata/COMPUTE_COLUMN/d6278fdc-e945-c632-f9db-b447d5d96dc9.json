@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.123TABLE",
+  "tableAlias" : "123TABLE",
+  "columnName" : "CC_CHINESE_AND_SPECIAL_CHAR",
+  "expression" : "\"123TABLE\".\"中文列\" + \"123TABLE\".\"DAY\" + \"123TABLE\".\"DAY#\" + 1",
+  "innerExpression" : "`123TABLE`.`中文列` + `123TABLE`.`DAY` + `123TABLE`.`DAY#` + 1",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "uuid" : "d6278fdc-e945-c632-f9db-b447d5d96dc9",
+  "project" : "special_character_in_column"
+}

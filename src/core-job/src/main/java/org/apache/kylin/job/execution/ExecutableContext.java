@@ -36,9 +36,6 @@ public class ExecutableContext {
 
     @Getter
     @Setter
-    private long epochId;
-    @Getter
-    @Setter
     private volatile boolean reachQuotaLimit = false;
     @Getter
     @Setter
@@ -50,12 +47,11 @@ public class ExecutableContext {
     private final KylinConfig kylinConfig;
 
     public ExecutableContext(ConcurrentMap<String, Executable> runningJobs, ConcurrentMap<String, Long> runningJobInfos,
-            KylinConfig kylinConfig, long epochId) {
+            KylinConfig kylinConfig) {
         this.runningJobThreads = Maps.newConcurrentMap();
         this.runningJobs = runningJobs;
         this.runningJobInfos = runningJobInfos;
         this.kylinConfig = kylinConfig;
-        this.epochId = epochId;
     }
 
     public KylinConfig getConfig() {

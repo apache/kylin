@@ -49,7 +49,6 @@ import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -264,7 +263,7 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
             tableDesc.setTableType(tableMeta.tableType);
         }
         //set table type = spark
-        tableDesc.setSourceType(ISourceAware.ID_SPARK);
+        tableDesc.setSourceType(tableMeta.sourceType);
         tableDesc.setTransactional(tableMeta.isTransactional);
         tableDesc.setRangePartition(tableMeta.isRangePartition);
         tableDesc.setTableComment(tableMeta.tableComment);

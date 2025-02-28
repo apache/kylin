@@ -65,15 +65,15 @@ public abstract class DimensionEncoding implements Externalizable {
     }
 
     /** return the fixed length of encoded bytes */
-    abstract public int getLengthOfEncoding();
+    public abstract int getLengthOfEncoding();
 
     /** encode given value to bytes, note the NULL convention */
-    abstract public void encode(String value, byte[] output, int outputOffset);
+    public abstract void encode(String value, byte[] output, int outputOffset);
 
     /** decode given bytes to value string, note the NULL convention */
-    abstract public String decode(byte[] bytes, int offset, int len);
+    public abstract String decode(byte[] bytes, int offset, int len);
 
     /** return a DataTypeSerializer that does the same encoding/decoding on ByteBuffer */
-    abstract public DataTypeSerializer<Object> asDataTypeSerializer();
+    public abstract DataTypeSerializer<Object> asDataTypeSerializer();
 
 }

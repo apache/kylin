@@ -18,12 +18,13 @@
 
 package org.apache.kylin.rest.service.params;
 
+import java.util.List;
+
+import org.apache.kylin.metadata.cube.model.IndexEntity;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.kylin.metadata.cube.model.IndexEntity;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor

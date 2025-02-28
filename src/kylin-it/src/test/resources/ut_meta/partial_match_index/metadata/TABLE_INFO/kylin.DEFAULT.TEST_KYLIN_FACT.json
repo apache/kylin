@@ -1,0 +1,96 @@
+{
+  "uuid" : "dd88e17f-ad4d-442f-afa3-9dc02ec5770f",
+  "last_modified" : 0,
+  "create_time" : 1604303702447,
+  "version" : "4.0.0.0",
+  "name" : "TEST_KYLIN_FACT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "CAL_DT",
+    "datatype" : "date",
+    "data_gen" : "FK,order",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "varchar(4096)",
+    "data_gen" : "FP-GTC|FP-non GTC|ABIN|Auction|Others",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "data_gen" : "FK,null,nullstr=0",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "integer",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint",
+    "data_gen" : "FK,pk=EDW.TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "SELLER_ID",
+    "datatype" : "integer",
+    "data_gen" : "RAND||10000000|10001000",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "PRICE",
+    "datatype" : "decimal(19,4)",
+    "data_gen" : "RAND|.##|-100|1000",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "ITEM_COUNT",
+    "datatype" : "integer",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "datatype" : "varchar(4096)",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "IS_EFFECTUAL",
+    "datatype" : "boolean",
+    "data_gen" : "true|false|TRUE|FALSE|True|False",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "1",
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "kylin"
+}

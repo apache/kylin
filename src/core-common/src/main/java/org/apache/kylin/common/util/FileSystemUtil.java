@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,8 +30,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.constant.ObsConfig;
 
 public class FileSystemUtil {
-    public final static String S3_FILE_SYSTEM_CLASS = "S3AFileSystem";
-    public final static String OSS_FILE_SYSTEM_CLASS = "AliyunOSSFileSystem";
+    public static final String S3_FILE_SYSTEM_CLASS = "S3AFileSystem";
+    public static final String OSS_FILE_SYSTEM_CLASS = "AliyunOSSFileSystem";
 
     public static FileStatus[] listStatus(FileSystem fs, Path path) throws IOException {
         FileStatus[] statuses = fs.listStatus(path);
@@ -51,17 +52,17 @@ public class FileSystemUtil {
         Map<String, String> conf = new HashMap<>();
         ObsConfig obsConfig = ObsConfig.getByType(type).orElse(ObsConfig.S3);
         if (StringUtils.isNotEmpty(role)) {
-            conf.put(String.format(obsConfig.getRoleArnKey(), bucket), role);
-            conf.put(String.format(obsConfig.getCredentialProviderKey(), bucket),
+            conf.put(String.format(Locale.ROOT, obsConfig.getRoleArnKey(), bucket), role);
+            conf.put(String.format(Locale.ROOT, obsConfig.getCredentialProviderKey(), bucket),
                     obsConfig.getCredentialProviderValue());
-            conf.put(String.format(obsConfig.getAssumedRoleCredentialProviderKey(), bucket),
+            conf.put(String.format(Locale.ROOT, obsConfig.getAssumedRoleCredentialProviderKey(), bucket),
                     obsConfig.getAssumedRoleCredentialProviderValue());
         }
         if (StringUtils.isNotEmpty(endpoint)) {
-            conf.put(String.format(obsConfig.getEndpointKey(), bucket), endpoint);
+            conf.put(String.format(Locale.ROOT, obsConfig.getEndpointKey(), bucket), endpoint);
         }
         if (StringUtils.isNotEmpty(region)) {
-            conf.put(String.format(obsConfig.getRegionKey(), bucket), region);
+            conf.put(String.format(Locale.ROOT, obsConfig.getRegionKey(), bucket), region);
         }
         return conf;
     }

@@ -18,8 +18,8 @@
 
 package org.apache.kylin.metadata.cube.model;
 
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;

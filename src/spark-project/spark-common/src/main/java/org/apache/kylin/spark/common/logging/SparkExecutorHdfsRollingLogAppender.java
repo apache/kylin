@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
@@ -41,8 +42,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.SparkEnv;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.Getter;
 import lombok.Setter;

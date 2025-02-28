@@ -23,22 +23,22 @@ import org.apache.kylin.common.exception.KylinException;
 
 public interface DDLCheck extends Comparable<DDLCheck> {
 
-  default String[] description(String project, String pageType) {
-    return new String[] {"", ""};
-  }
+    default String[] description(String project, String pageType) {
+        return new String[] { "", "" };
+    }
 
-  void check(DDLCheckContext context);
+    void check(DDLCheckContext context);
 
-  default void throwException(String msg) {
-    throw new KylinException(DDL_CHECK_ERROR, msg);
-  }
+    default void throwException(String msg) {
+        throw new KylinException(DDL_CHECK_ERROR, msg);
+    }
 
-  default int priority() {
-    return Integer.MAX_VALUE;
-  }
+    default int priority() {
+        return Integer.MAX_VALUE;
+    }
 
-  @Override
-  default int compareTo(DDLCheck other) {
-    return this.priority() - other.priority();
-  }
+    @Override
+    default int compareTo(DDLCheck other) {
+        return this.priority() - other.priority();
+    }
 }

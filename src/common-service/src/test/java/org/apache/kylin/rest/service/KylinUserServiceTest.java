@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.Assert;
@@ -36,11 +40,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

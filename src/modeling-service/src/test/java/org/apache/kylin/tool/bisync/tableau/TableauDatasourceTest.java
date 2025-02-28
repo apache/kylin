@@ -26,6 +26,9 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.base.Charsets;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.io.CharStreams;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.tool.bisync.SyncModelBuilder;
@@ -34,10 +37,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.base.Charsets;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.io.CharStreams;
 
 import lombok.val;
 

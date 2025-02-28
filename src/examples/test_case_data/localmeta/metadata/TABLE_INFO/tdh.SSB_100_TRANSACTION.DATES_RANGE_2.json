@@ -1,0 +1,113 @@
+{
+  "uuid" : "3f1cb61e-551b-d904-374b-acfea4ba5139",
+  "last_modified" : 0,
+  "create_time" : 1637665280920,
+  "version" : "4.0.0.0",
+  "name" : "DATES_RANGE_2",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "D_DATEKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_datekey"
+  }, {
+    "id" : "2",
+    "name" : "D_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "d_date"
+  }, {
+    "id" : "3",
+    "name" : "D_DAYOFWEEK",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "d_dayofweek"
+  }, {
+    "id" : "4",
+    "name" : "D_MONTH",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "d_month"
+  }, {
+    "id" : "5",
+    "name" : "D_YEARMONTHNUM",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_yearmonthnum"
+  }, {
+    "id" : "6",
+    "name" : "D_YEARMONTH",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "d_yearmonth"
+  }, {
+    "id" : "7",
+    "name" : "D_DAYNUMINWEEK",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_daynuminweek"
+  }, {
+    "id" : "8",
+    "name" : "D_DAYNUMINMONTH",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_daynuminmonth"
+  }, {
+    "id" : "9",
+    "name" : "D_DAYNUMINYEAR",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_daynuminyear"
+  }, {
+    "id" : "10",
+    "name" : "D_MONTHNUMINYEAR",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_monthnuminyear"
+  }, {
+    "id" : "11",
+    "name" : "D_WEEKNUMINYEAR",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_weeknuminyear"
+  }, {
+    "id" : "12",
+    "name" : "D_SELLINGSEASON",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "d_sellingseason"
+  }, {
+    "id" : "13",
+    "name" : "D_LASTDAYINWEEKFL",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_lastdayinweekfl"
+  }, {
+    "id" : "14",
+    "name" : "D_LASTDAYINMONTHFL",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_lastdayinmonthfl"
+  }, {
+    "id" : "15",
+    "name" : "D_HOLIDAYFL",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_holidayfl"
+  }, {
+    "id" : "16",
+    "name" : "D_WEEKDAYFL",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_weekdayfl"
+  }, {
+    "id" : "17",
+    "name" : "D_YEAR",
+    "datatype" : "integer",
+    "case_sensitive_name" : "d_year",
+    "is_partitioned" : true
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : "D_YEAR",
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB_100_TRANSACTION",
+  "transactional" : false,
+  "project" : "tdh"
+}

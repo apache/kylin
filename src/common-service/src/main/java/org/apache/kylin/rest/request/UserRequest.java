@@ -28,13 +28,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.insensitive.UserInsensitiveRequest;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.apache.kylin.metadata.user.ManagedUser;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Data;
 

@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.constant.Constant;
@@ -37,20 +39,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SecondStorageUtil.class, UserGroupInformation.class })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
+@PrepareForTest({UserGroupInformation.class})
 public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
     private ModelQueryService modelQueryService = Mockito.spy(new ModelQueryService());
@@ -79,8 +81,6 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
         List<ModelAttributeEnum> modelAttributeSet1 = Lists.newArrayList(ModelAttributeEnum.BATCH);
         ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
                 true, null, modelAttributeSet1, null, null, true, false);
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable")).toReturn(Boolean.TRUE);
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isModelEnable")).toReturn(Boolean.FALSE);
 
         List<ModelTriple> filteredModels1 = modelQueryService.filterModels(models, modelQueryParams);
         Assert.assertEquals(1, filteredModels1.size());
@@ -98,8 +98,6 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
                 ModelAttributeEnum.HYBRID);
         ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "streaming_test", null, null, "", 0,
                 10, "", true, null, modelAttributeSet1, null, null, true, false);
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable")).toReturn(Boolean.TRUE);
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isModelEnable")).toReturn(Boolean.FALSE);
 
         List<ModelTriple> filteredModels1 = modelQueryService.filterModels(models, modelQueryParams);
         Assert.assertEquals(2, filteredModels1.size());
@@ -109,35 +107,10 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testFilterModelWithSecondStorage() {
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable")).toReturn(Boolean.TRUE);
-        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isModelEnable")).toReturn(Boolean.TRUE);
-
-        val mt1 = new ModelTriple(new NDataflow(), new NDataModelResponse());
-        mt1.getDataModel().setModelType(NDataModel.ModelType.BATCH);
-
-        List models = Arrays.asList(mt1);
-
-        List<ModelAttributeEnum> modelAttributeSet1 = Lists.newArrayList(ModelAttributeEnum.BATCH,
-                ModelAttributeEnum.SECOND_STORAGE);
-        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
-                true, null, modelAttributeSet1, null, null, true, false);
-        List<ModelTriple> filteredModels1 = modelQueryService.filterModels(models, modelQueryParams);
-        Assert.assertEquals(1, filteredModels1.size());
-
-        List<ModelAttributeEnum> modelAttributeSet2 = Lists.newArrayList(ModelAttributeEnum.SECOND_STORAGE);
-        ModelQueryParams modelQueryParams2 = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
-                true, null, modelAttributeSet2, null, null, true, false);
-        List<ModelTriple> filteredModels2 = modelQueryService.filterModels(models, modelQueryParams2);
-        Assert.assertEquals(1, filteredModels2.size());
-    }
-
-    @Test
     public void testFilterModelAttribute() {
-        Set<ModelAttributeEnum> modelAttributeSet1 = Sets.newHashSet(ModelAttributeEnum.BATCH,
-                ModelAttributeEnum.SECOND_STORAGE);
+        Set<ModelAttributeEnum> modelAttributeSet1 = Sets.newHashSet(ModelAttributeEnum.BATCH);
         val mt1 = new ModelTriple(new NDataflow(), new NDataModelResponse());
         mt1.getDataModel().setModelType(NDataModel.ModelType.UNKNOWN);
-        Assert.assertFalse(modelQueryService.filterModelAttribute(mt1, modelAttributeSet1, false));
+        Assert.assertFalse(modelQueryService.filterModelAttribute(mt1, modelAttributeSet1));
     }
 }

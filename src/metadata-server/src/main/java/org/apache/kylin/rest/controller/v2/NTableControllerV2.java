@@ -69,10 +69,9 @@ public class NTableControllerV2 extends NBasicController {
                     MsgPicker.getMsg().getStreamingOperationNotSupport());
         }
         int returnTableSize = calculateTableSize(offset, limit);
-        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(project, withExt, table, database,
-                isFuzzy, Collections.singletonList(sourceType), returnTableSize);
+        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(project, withExt, table,
+                database, isFuzzy, Collections.singletonList(sourceType), returnTableSize);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                DataResult.getCustom(tableDescWithActualSize, offset, limit).getValue(),
-                "");
+                DataResult.getCustom(tableDescWithActualSize, offset, limit).getValue(), "");
     }
 }

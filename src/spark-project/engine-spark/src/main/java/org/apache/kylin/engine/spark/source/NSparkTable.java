@@ -30,8 +30,8 @@ public class NSparkTable implements IReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkTable.class);
 
-    final private String database;
-    final private String tableName;
+    private final String database;
+    private final String tableName;
 
     public NSparkTable(TableDesc tableDesc) {
         this.database = tableDesc.getDatabase();

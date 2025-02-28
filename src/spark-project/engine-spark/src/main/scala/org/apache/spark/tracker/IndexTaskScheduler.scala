@@ -17,11 +17,11 @@
  */
 package org.apache.spark.tracker
 
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
-
 import org.apache.kylin.engine.spark.job.BuildLayoutWithUpdate
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
+
+import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 
 class IndexTaskScheduler(tc: IndexTaskContext) extends Logging {
 

@@ -1,0 +1,185 @@
+{
+  "uuid" : "d366805d-75ec-4c33-b4a9-766652d1e58c",
+  "last_modified" : 1644402305254,
+  "create_time" : 1634120562591,
+  "version" : "4.0.0.0",
+  "name" : "PNL_RISK_RESULTS_VD",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ASSET_ID1",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "ASSET_ID2",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "ASSET_TYPE1",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "ASSET_TYPE2",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "BUCKET_LABEL",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "BUSINESS_DATE",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "CALCULATION_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "DATA_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "INSTRUMENT_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "MEASURE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "MEASURE_TYPE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "POSITION_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "REPORTING_CCY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "REPORTING_VALUE",
+    "datatype" : "decimal(38,18)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "RISK_FACTOR_CLASS1",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "RISK_FACTOR_CLASS2",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "STATUS_FLAG",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "RUN_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "DATASET_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "FX_FAMILY_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "RISK_FACTOR_VALUE_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "POSITION_DATA_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "26",
+    "name" : "PNL_TREE_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "Coriander_PnL_Reporting/table_snapshot/CRS.PNL_RISK_RESULTS_VD/b3f84db2-459b-45dc-bf6f-7067db7747e9",
+  "last_snapshot_size" : 929281750,
+  "snapshot_last_modified" : 1644585325902,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 21507356,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "CRS",
+  "project" : "original_project_cc_linebreak"
+}

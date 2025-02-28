@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -33,9 +35,6 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class CorrMeasureType extends MeasureType {
 

@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.rest.service;
 
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.schema.AffectedModelContext;
 
 public interface TableModelSupporter {
@@ -32,11 +32,4 @@ public interface TableModelSupporter {
     NDataModel onGetModelByAlias(String modelAlias, String project);
 
     NDataModel onGetModelById(String modelId, String project);
-
-    void onSyncPartition(String model, String project);
-
-    void onPurgeModel(String modelId, String project);
-
-    void onCheckLoadingRange(String project, String tableName);
-
 }

@@ -31,9 +31,13 @@ import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.ui.SparkUI;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component("sparderUIUtil")
 public class SparderUIUtil {
 
@@ -99,4 +103,9 @@ public class SparderUIUtil {
         }
     }
 
+    @Scheduled(cron = "${kylin.query.engine.periodicGC.crontab:-}")
+    public void periodicGC() {
+        log.info("periodicGC start, crontab is {}", KylinConfig.getInstanceFromEnv().getQueryEnginePeriodicGCCrontab());
+        System.gc();
+    }
 }

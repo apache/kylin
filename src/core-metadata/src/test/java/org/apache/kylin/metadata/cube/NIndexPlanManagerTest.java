@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -37,12 +37,11 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -212,10 +211,11 @@ public class NIndexPlanManagerTest {
         val config = KylinConfig.getInstanceFromEnv();
         val indexPlanManager = NIndexPlanManager.getInstance(config, project);
         val indexPlan = indexPlanManager.getIndexPlan(indexPlanId);
+        Assert.assertNotNull(indexPlan);
 
         val indexPlan2 = indexPlanManager.getIndexPlanByModelAlias("AUTO_MODEL_TEST_ACCOUNT_1");
-        Assert.assertNotNull(indexPlan2);
-        Assert.assertEquals(indexPlan.getId(), indexPlan2.getId());
+        // broken index plan has no project, so it will be ignored
+        Assert.assertNull(indexPlan2);
     }
 
     @Test
@@ -241,8 +241,7 @@ public class NIndexPlanManagerTest {
         });
 
         val plan = manager.getIndexPlan(modelId);
-        Assert.assertEquals(
-                "[1, 1030002, 1140001, 1010001, 1080002, 1070002, 1090001, 1100001, 1020001, 1040001, 1150001, 1130001]",
+        Assert.assertEquals("[1, 1030002, 1010001, 1080002, 1070002, 1090001, 1100001, 1020001, 1040001]",
                 plan.getAllLayouts().stream().map(LayoutEntity::getId).collect(Collectors.toList()).toString());
     }
 

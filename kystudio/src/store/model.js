@@ -1,6 +1,6 @@
 import api from './../service/api'
 import * as types from './types'
-import { transToGmtTime } from 'util/business'
+import { transToGmtTime } from '../util'
 export default {
   state: {
     modelsList: [],
@@ -313,6 +313,15 @@ export default {
     [types.DELETE_BATCH_INDEX] ({ commit }, params) {
       return api.model.deleteBatchIndex(params)
     },
+    [types.GET_MODEL_RECOMMENDATIONS] ({ commit }, paras) {
+      return api.model.getModelRecommendations(paras)
+    },
+    [types.ADOPT_MODEL_RECOMMENDATIONS] ({ commit }, paras) {
+      return api.model.adoptModelRecommendations(paras)
+    },
+    [types.CLEAR_MODEL_RECOMMENDATIONS] ({ commit }, paras) {
+      return api.model.clearModelRecommendations(paras)
+    },
     [types.GET_AGG_INDEX_CONTENTLIST] ({ commit }, paras) {
       return api.model.getAggIndexContentList(paras)
     },
@@ -388,6 +397,24 @@ export default {
     [types.UPDATE_MODEL_OWNER] ({ commit }, params) {
       return api.model.updateModelOwner(params)
     },
+    [types.GET_ALL_RECOMMENDATIONS] (_, params) {
+      return api.model.getRecommendations(params)
+    },
+    [types.RECOMMENDATION_COUNT_REFRESH] (_, params) {
+      return api.model.recommendationCountRefresh(params)
+    },
+    [types.DELETE_RECOMMENDATIONS] (_, params) {
+      return api.model.deleteRecommendations(params)
+    },
+    [types.ACCESS_RECOMMENDATIONS] (_, params) {
+      return api.model.acceptRecommendations(params)
+    },
+    [types.GET_RECOMMEND_DETAILS] (_, params) {
+      return api.model.getRecommendDetails(params)
+    },
+    [types.VALIDATE_RECOMMEND] (_, params) {
+      return api.model.validateRecommend(params)
+    },
     [types.FETCH_HIT_MODELS_LIST] (_, params) {
       return api.model.fetchHitModelsList(params)
     },
@@ -405,6 +432,18 @@ export default {
     },
     [types.VALIDATE_EXPORT_TDS] (_, params) {
       return api.model.validateExportTds(params)
+    },
+    [types.UPDATE_STORAGE_TYPE]: function ({ commit }, para) {
+      return api.model.updateModelStorageType(para)
+    },
+    [types.SAVE_OPTIMIZE_LAYOUT_DATA]: function ({ commit }, para) {
+      return api.model.saveOptimizeLayoutData(para)
+    },
+    [types.GET_INDEX_DETAIL]: function ({ commit }, para) {
+      return api.model.getIndexDetail(para)
+    },
+    [types.DOWNLOAD_OPTIMIZE_LAYOUT_TEMPLATE]: function ({ commit }) {
+      return api.model.downloadOptimizeLayoutTemplate()
     }
   },
   getters: {

@@ -26,10 +26,9 @@ import java.util.function.BiPredicate;
 
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.var;
 
@@ -98,7 +97,8 @@ public class AccelerateRuleUtil {
         return InternalBlackOutRule.getSingletonInstance().filterCannotAccelerate(queryHistory);
     }
 
-    public boolean matchCustomerRule(QueryHistory queryHistory, String project, Map<String, Set<String>> submitterToGroups) {
+    public boolean matchCustomerRule(QueryHistory queryHistory, String project,
+            Map<String, Set<String>> submitterToGroups) {
         var submitterRule = FavoriteRuleManager.getInstance(project)
                 .getOrDefaultByName(FavoriteRule.SUBMITTER_RULE_NAME);
         boolean submitterMatch = matchRule(queryHistory, submitterRule,
@@ -114,8 +114,7 @@ public class AccelerateRuleUtil {
                                 .computeIfAbsent(queryHistory1.getQuerySubmitter(), key -> new HashSet<>())
                                 .contains(((FavoriteRule.Condition) cond).getRightThreshold())));
 
-        var durationRule = FavoriteRuleManager.getInstance(project)
-                .getOrDefaultByName(FavoriteRule.DURATION_RULE_NAME);
+        var durationRule = FavoriteRuleManager.getInstance(project).getOrDefaultByName(FavoriteRule.DURATION_RULE_NAME);
 
         boolean durationMatch = matchRule(queryHistory, durationRule,
                 (queryHistory1, conditions) -> conditions.stream().anyMatch(cond -> (queryHistory1

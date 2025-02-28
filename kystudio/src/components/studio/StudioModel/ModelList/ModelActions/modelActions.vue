@@ -96,6 +96,16 @@
               </common-tip>
             </el-dropdown-item>
             <el-dropdown-item
+              v-if="modelActions.includes('storageSetting')"
+              command="storageSetting"
+              :class="{'disabled-action': disableStorageSetting(this.currentModel)}">
+              <common-tip
+                :content="$t('disableModelStorageSettingTip')"
+                :disabled="!disableStorageSetting(this.currentModel)">
+                <span>{{$t('storageSetting')}}</span>
+              </common-tip>
+            </el-dropdown-item>
+            <el-dropdown-item
               command="rename"
               divided
               v-if="currentModel.status !== 'BROKEN' && modelActions.includes('exportMDX')">
@@ -212,7 +222,8 @@
         <el-button type="primary" size="medium" @click="handlerExportTDS">{{$t('kylinLang.query.export')}}</el-button>
       </div>
     </el-dialog>
-
+    <!-- 存储设置 -->
+    <SettingStorageModal />
   </div>
 </template>
 
@@ -224,6 +235,7 @@ import { handleSuccessAsync, objectClone } from 'util'
 import { apiUrl } from '../../../../../config'
 import { handleError, kylinConfirm, kylinMessage, handleSuccess } from 'util/business'
 import locales from './locales'
+import SettingStorageModal from '../../SettingStorageModal'
 
 @Component({
   props: {
@@ -254,6 +266,9 @@ import locales from './locales'
       default: false
     }
   },
+  components: {
+    SettingStorageModal
+  },
   computed: {
     ...mapGetters([
       'datasourceActions',
@@ -262,6 +277,9 @@ import locales from './locales'
       'currentSelectedProject'
     ])
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   methods: {
     ...mapActions({
       fetchSegments: 'FETCH_SEGMENTS',
@@ -295,6 +313,9 @@ import locales from './locales'
     }),
     ...mapActions('ModelsExportModal', {
       callModelsExportModal: 'CALL_MODAL'
+    }),
+    ...mapActions('SettingStorageModal', {
+      callSettingStorageModal: 'CALL_MODAL'
     })
   },
   locales
@@ -329,6 +350,15 @@ export default class ModelActions extends Vue {
     {value: 'TABLEAU_ODBC_TDS', text: 'connectODBC'},
     {value: 'TABLEAU_CONNECTOR_TDS', text: 'connectTableau'}
   ]
+
+  // 禁用存储设置
+  disableStorageSetting (modelDesc) {
+    // 模型数据不为空
+    const modelHasData = modelDesc.has_segments
+    // 或者模型状态为 broken
+    const modelIsBroken = modelDesc.status === 'BROKEN'
+    return modelHasData || modelIsBroken
+  }
 
   // 处理每行的构建按钮的 disable 状态
   disableLineBuildBtn (row) {
@@ -502,6 +532,9 @@ export default class ModelActions extends Vue {
       case 'purge':
         flag = modelDesc.model_type !== 'HYBRID'
         break
+      case 'storageSetting':
+        flag = !this.disableStorageSetting(modelDesc)
+        break
       default:
         flag = true
         break
@@ -594,6 +627,12 @@ export default class ModelActions extends Vue {
       } else {
         this.showExportTDSDialog = true
         this.currentExportTDSModel = modelDesc
+      }
+    } else if (command === 'storageSetting') {
+      const { isSubmit } = await this.callSettingStorageModal(modelDesc)
+      if (isSubmit) {
+        // 刷新模型当前页面
+        this.$emit('loadModelsList')
       }
     }
   }
@@ -736,6 +775,10 @@ export default class ModelActions extends Vue {
   &:hover {
     background: none;
     color: #bbbbbb;
+  }
+  &:active {
+    color: @text-disabled-color !important;
+    cursor: not-allowed;
   }
 }
 .export_tds_dialog {

@@ -27,13 +27,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import org.apache.hadoop.util.ZKUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ZookeeperAclBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 import org.junit.jupiter.api.Test;
@@ -67,7 +66,8 @@ class ZookeeperAclBuilderTest {
             fail("Couldn't read Auth based on 'kylin.env.zookeeper.zk-auth' in kylin.properties");
         }
 
-        Builder builder = zookeeperAclBuilder.setZKAclBuilder(CuratorFrameworkFactory.builder());
+        CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
+                .setZKAclBuilder(CuratorFrameworkFactory.builder());
         assertNotNull(builder);
         assertEquals(zkAcls, builder.getAclProvider().getDefaultAcl());
         assertNotNull(builder.getAuthInfos());
@@ -82,7 +82,8 @@ class ZookeeperAclBuilderTest {
         assertNotNull(zookeeperAclBuilder);
         assertFalse(zookeeperAclBuilder.isNeedAcl());
 
-        Builder builder = zookeeperAclBuilder.setZKAclBuilder(CuratorFrameworkFactory.builder());
+        CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
+                .setZKAclBuilder(CuratorFrameworkFactory.builder());
         assertNotNull(builder);
         assertEquals(ZooDefs.Ids.OPEN_ACL_UNSAFE, builder.getAclProvider().getDefaultAcl());
         assertNull(builder.getAuthInfos());
@@ -106,7 +107,7 @@ class ZookeeperAclBuilderTest {
             fail("Couldn't read ACLs based on 'kylin.env.zookeeper.zk-acl' in kylin.properties");
         }
 
-        List<ZKUtil.ZKAuthInfo> zkAuthInfo = Lists.newArrayList();
+        List<ZKUtil.ZKAuthInfo> zkAuthInfo;
         try {
             zkAuthInfo = ZookeeperAclBuilder.getZKAuths();
             assertFalse(zkAuthInfo.isEmpty());
@@ -114,9 +115,8 @@ class ZookeeperAclBuilderTest {
             fail("Couldn't read Auth based on 'kylin.env.zookeeper.zk-auth' in kylin.properties");
         }
 
-        org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
-                .setZKAclBuilder(
-                        org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.builder());
+        CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
+                .setZKAclBuilder(CuratorFrameworkFactory.builder());
         assertNotNull(builder);
         assertEquals(zkAcls, builder.getAclProvider().getDefaultAcl());
         assertNotNull(builder.getAuthInfos());
@@ -131,9 +131,8 @@ class ZookeeperAclBuilderTest {
         assertNotNull(zookeeperAclBuilder);
         assertFalse(zookeeperAclBuilder.isNeedAcl());
 
-        org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
-                .setZKAclBuilder(
-                        org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.builder());
+        CuratorFrameworkFactory.Builder builder = zookeeperAclBuilder
+                .setZKAclBuilder(CuratorFrameworkFactory.builder());
         assertNotNull(builder);
         assertEquals(ZooDefs.Ids.OPEN_ACL_UNSAFE, builder.getAclProvider().getDefaultAcl());
         assertNull(builder.getAuthInfos());

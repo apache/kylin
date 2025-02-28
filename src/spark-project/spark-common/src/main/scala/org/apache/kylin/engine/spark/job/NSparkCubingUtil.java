@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.job;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -53,6 +53,9 @@ public class NSparkCubingUtil {
     }
 
     public static Set<Long> str2Longs(String str) {
+        if(StringUtils.isBlank(str)){
+            return Collections.emptySet();
+        }
         Set<Long> r = new LinkedHashSet<>();
         for (String id : str.split(",")) {
             r.add(Long.parseLong(id));
@@ -130,38 +133,6 @@ public class NSparkCubingUtil {
         return ret;
     }
 
-    public static String getStoragePath(NDataSegment nDataSegment, Long layoutId, Long bucketId) {
-        String hdfsWorkingDir = KapConfig.wrap(nDataSegment.getConfig()).getMetadataWorkingDirectory();
-        return hdfsWorkingDir + getStoragePathWithoutPrefix(nDataSegment.getProject(),
-                nDataSegment.getDataflow().getId(), nDataSegment.getId(), layoutId, bucketId);
-    }
-
-    public static String getStoragePath(NDataSegment nDataSegment, Long layoutId) {
-        return getStoragePath(nDataSegment, layoutId, null);
-    }
-
-    public static String getStoragePath(NDataSegment nDataSegment) {
-        return getStoragePath(nDataSegment, null, null);
-    }
-
-    public static String getStoragePathWithoutPrefix(String project, String dataflowId, String segmentId,
-            Long layoutId) {
-        return getStoragePathWithoutPrefix(project, dataflowId, segmentId, layoutId, null);
-    }
-
-    public static String getStoragePathWithoutPrefix(String project, String dataflowId, String segmentId, Long layoutId,
-            Long bucketId) {
-        final String parquet = "/parquet/";
-        if (layoutId == null) {
-            return project + parquet + dataflowId + "/" + segmentId;
-        }
-        if (bucketId == null) {
-            return project + parquet + dataflowId + "/" + segmentId + "/" + layoutId;
-        } else {
-            return project + parquet + dataflowId + "/" + segmentId + "/" + layoutId + "/" + bucketId;
-        }
-    }
-
     private static final Pattern DOT_PATTERN = Pattern.compile("\\b([\\w]+)\\.([\\w]+)\\b");
 
     /**
@@ -223,7 +194,7 @@ public class NSparkCubingUtil {
             if (!addBackTick) {
                 target = target.replace(BACK_TICK, "");
             }
-            convertResult = convertResult.replace(m.group(), target);
+            convertResult = StringUtils.replaceOnce(convertResult, m.group(), target);
         }
         return convertResult;
     }

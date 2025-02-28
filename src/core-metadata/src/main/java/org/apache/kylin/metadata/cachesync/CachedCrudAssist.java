@@ -18,21 +18,22 @@
 
 package org.apache.kylin.metadata.cachesync;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
+import org.apache.kylin.common.persistence.TransparentResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.ThreadUtil;
@@ -40,7 +41,7 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CustomKeyEquivalenceCacheBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.exception.ModelBrokenException;
 import org.apache.kylin.util.BrokenEntityProxy;
 
 import lombok.AccessLevel;
@@ -53,8 +54,8 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
 
     private final ResourceStore store;
     private final Class<T> entityType;
-    private final String resRootPath;
-    private final String resPathSuffix;
+    private final MetadataType type;
+    private final String project;
     private final Serializer<T> serializer;
     @Getter(AccessLevel.PROTECTED)
     private final Cache<String, T> cache;
@@ -63,24 +64,18 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
 
     private boolean checkCopyOnWrite;
 
-    public CachedCrudAssist(ResourceStore store, String resourceRootPath, Class<T> entityType) {
-        this(store, resourceRootPath, MetadataConstants.FILE_SURFIX, entityType);
-    }
-
-    public CachedCrudAssist(ResourceStore store, String resourceRootPath, String resourcePathSuffix,
-            Class<T> entityType) {
+    public CachedCrudAssist(ResourceStore store, MetadataType type, String project, Class<T> entityType) {
         this.store = store;
         this.entityType = entityType;
-        this.resRootPath = resourceRootPath;
-        this.resPathSuffix = resourcePathSuffix;
+        this.type = type;
+        this.project = project;
         this.serializer = new JsonSerializer<>(entityType);
-        this.cache = CustomKeyEquivalenceCacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
+        this.cache = CustomKeyEquivalenceCacheBuilder.newBuilder(type).build();
         this.checker = new CacheReloadChecker<>(store, this);
 
         this.checkCopyOnWrite = store.getConfig().isCheckCopyOnWrite();
 
-        Preconditions.checkArgument(resourceRootPath.equals("") || resRootPath.startsWith("/"));
-        Preconditions.checkArgument(!resRootPath.endsWith("/"));
+        Preconditions.checkArgument(type != MetadataType.ALL);
     }
 
     public Serializer<T> getSerializer() {
@@ -91,44 +86,52 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
         this.checkCopyOnWrite = check;
     }
 
-    // If this is a new entity or the reload entity is broken, return a copy of this entity.
-    // If the reload entity is null, just return null.
-    // Otherwise return a copy of the reload entity.
+    // Lock specific entity and return the latest copy
     public T copyForWrite(T entity) {
         if (entity == null) {
             return null;
         }
-        String resourcePath = resourcePath(entity.resourceName());
-        return MemoryLockUtils.doWithLock(entity, resourcePath, false, store, () -> {
+        if (UnitOfWork.isAlreadyInTransaction()) {
+            UnitOfWork.get().getCopyForWriteItems().add(resourcePath(entity.resourceName()));
+        }
+        T reloadedEntity = get(entity.resourceName(), true);
+        if (reloadedEntity == null) {
             if (entity.getMvcc() == -1) {
                 return copyIfCachedAndShared(entity);
-            }
-            T reloadedEntity = get(entity.resourceName());
-            if (reloadedEntity == null) {
-                return null;
-            } else if (reloadedEntity.isBroken()) {
-                return copyIfCachedAndShared(entity);
             } else {
-                return copyIfCachedAndShared(reloadedEntity);
+                return null;
             }
-        });
+        } else if (reloadedEntity.isBroken()) {
+            return copyIfCachedAndShared(entity);
+        } else {
+            return copyIfCachedAndShared(reloadedEntity);
+        }
     }
 
     // Used by managers which doesn't have cache.
     public static <T extends RootPersistentEntity> T copyForWrite(T entity, Serializer<T> serializer,
             @Nullable BiConsumer<T, String> initEntity, ResourceStore store) {
-        String resourcePath = entity.getResourcePath();
-        return MemoryLockUtils.doWithLock(entity, resourcePath, false, store, () -> {
-            T reloadedEntity = store.getResource(entity.getResourcePath(), serializer);
-            if (reloadedEntity == null || reloadedEntity.isBroken()) {
+        if (entity == null) {
+            return null;
+        }
+        if (UnitOfWork.isAlreadyInTransaction()) {
+            UnitOfWork.get().getCopyForWriteItems().add(entity.getResourcePath());
+        }
+        T reloadedEntity = store.getResource(entity.getResourcePath(), serializer, true);
+        if (reloadedEntity == null) {
+            if (entity.getMvcc() == -1) {
                 return JsonUtil.copyForWrite(entity, serializer, initEntity);
             } else {
-                if (initEntity != null) {
-                    initEntity.accept(reloadedEntity, reloadedEntity.resourceName());
-                }
-                return JsonUtil.copyForWrite(reloadedEntity, serializer, initEntity);
+                return null;
             }
-        });
+        } else if (reloadedEntity.isBroken()) {
+            return JsonUtil.copyForWrite(entity, serializer, initEntity);
+        } else {
+            if (initEntity != null) {
+                initEntity.accept(reloadedEntity, reloadedEntity.resourceName());
+            }
+            return JsonUtil.copyForWrite(reloadedEntity, serializer, initEntity);
+        }
     }
     
     public T copyIfCachedAndShared(T entity) {
@@ -142,27 +145,33 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
     public String resourcePath(String resourceName) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(resourceName),
                 "The resource name \"{}\" cannot contain white character", resourceName);
-        return resRootPath + "/" + resourceName + resPathSuffix;
+        return MetadataType.mergeKeyWithType(resourceName, type);
     }
 
     private String resourceName(String resourcePath) {
-        Preconditions.checkArgument(resourcePath.startsWith(resRootPath));
-        Preconditions.checkArgument(resourcePath.endsWith(resPathSuffix));
-        return resourcePath.substring(resRootPath.length() + 1, resourcePath.length() - resPathSuffix.length());
+        Preconditions.checkArgument(resourcePath.startsWith(type.name()));
+        return MetadataType.splitKeyWithType(resourcePath).getSecond();
     }
 
     public void reloadAll() {
-        log.trace("Reloading {} from {}", entityType.getSimpleName(), store.getReadableResourcePath(resRootPath));
+        log.trace("Reloading {} from {}", entityType.getSimpleName(), store.getReadableResourcePath(type.name()));
 
         cache.invalidateAll();
 
-        List<String> paths = store.collectResourceRecursively(resRootPath, resPathSuffix);
+        RawResourceFilter filter;
+        if (StringUtils.isEmpty(project)) {
+            filter = new RawResourceFilter();
+        } else {
+            filter = RawResourceFilter.equalFilter("project", project);
+        }
+
+        List<String> paths = store.collectResourceRecursively(type, filter);
         for (String path : paths) {
             reloadQuietlyAt(path);
         }
 
         log.trace("Loaded {} {}(s) out of {} resource from {}", cache.size(), entityType.getSimpleName(), paths.size(),
-                store.getReadableResourcePath(resRootPath));
+                store.getReadableResourcePath(type.name()));
     }
 
     private T reload(String resourceName) {
@@ -209,13 +218,30 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
     }
 
     public T get(String resourceName) {
-        val raw = store.getResource(resourcePath(resourceName));
-        if (raw == null) {
+        return get(resourceName, false);
+    }
+
+    private T get(String resourceName, boolean needLock) {
+        String resourcePath = resourcePath(resourceName);
+        if (store instanceof TransparentResourceStore && needLock) {
+            // Read from metadataStore directly, no need to update cache
+            T entity = store.getResource(resourcePath, serializer, true);
+            if (entity != null) {
+                try {
+                    entity = initEntityAfterReload(entity, resourceName);
+                } catch (ModelBrokenException ignore) {
+                    entity = initBrokenEntity(entity, resourceName);
+                }
+            }
+            return entity;
+        }
+        val raw = store.getResource(resourcePath, needLock);
+        if (raw == null || (project != null && raw.getProject() != null && !project.equals(raw.getProject()))) {
             cache.invalidate(resourceName);
             return null;
         }
         if (checker.needReload(resourceName)) {
-            reloadAt(resourcePath(resourceName));
+            reloadAt(resourcePath);
         }
         return cache.getIfPresent(resourceName);
     }
@@ -242,6 +268,10 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
         Preconditions.checkArgument(entity != null);
         Preconditions.checkArgument(entity.getUuid() != null);
         Preconditions.checkArgument(entityType.isInstance(entity));
+
+        if (project != null) {
+            entity.setProject(project);
+        }
 
         String resName = entity.resourceName();
         Preconditions.checkArgument(resName != null && resName.length() > 0);
@@ -278,26 +308,19 @@ public abstract class CachedCrudAssist<T extends RootPersistentEntity> {
     }
 
     public List<T> listAll() {
-        List<T> all = store.collectResourceRecursively(resRootPath, resPathSuffix).stream()
-                .map(path -> get(resourceName(path))).filter(Objects::nonNull)
-                .collect(Collectors.toCollection(Lists::<T> newArrayList));
         if (UnitOfWork.isAlreadyInTransaction() && log.isTraceEnabled()) {
             log.trace("list all,\n{}", ThreadUtil.getKylinStackTrace());
         }
-        return all;
+        return listByFilter(new RawResourceFilter());
     }
 
-    public List<T> listPartial(Predicate<String> predicate) {
-        return store.collectResourceRecursively(resRootPath, resPathSuffix).stream() //
-                .filter(path -> predicate.test(path) || checkPathSuffix(path)) //
-                .map(path -> get(resourceName(path))) //
-                .filter(Objects::nonNull) //
-                .collect(Collectors.toList());
-    }
-
-    private boolean checkPathSuffix(String path) {
-        val pathPair = StringUtils.split(path, "/");
-        return pathPair.length > 0 && pathPair[pathPair.length - 1].length() == 36;
+    public List<T> listByFilter(RawResourceFilter filter) {
+        if (!StringUtils.isEmpty(project)) {
+            filter.addConditions("project", Collections.singletonList(project),
+                    RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE);
+        }
+        return store.collectResourceRecursively(type, filter).stream().map(path -> get(resourceName(path)))
+                .filter(Objects::nonNull).collect(Collectors.toCollection(Lists::<T> newArrayList));
     }
 
     protected List<T> listAllValidCache() {

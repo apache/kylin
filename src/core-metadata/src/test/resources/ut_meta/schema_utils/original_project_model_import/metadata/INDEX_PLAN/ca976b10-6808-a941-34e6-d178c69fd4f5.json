@@ -1,0 +1,22 @@
+{
+  "uuid" : "ca976b10-6808-a941-34e6-d178c69fd4f5",
+  "last_modified" : 1651585481576,
+  "create_time" : 1651585228345,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : null,
+  "indexes" : [ ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 10000,
+  "next_table_index_id" : 20000010000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 0,
+  "approved_removal_recs" : 0,
+  "project" : "original_project_model_import"
+}

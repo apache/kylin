@@ -76,6 +76,31 @@ public class NTableMetadataManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testGetTableNamesByFuzzyKey() {
+        // get all tables
+        List<String> result = mgrDefault.getTableNamesByFuzzyKey(".");
+        Assert.assertEquals(21, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey("");
+        Assert.assertEquals(21, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey(" ");
+        Assert.assertEquals(0, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey("B.");
+        Assert.assertEquals(6, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey(".CUS");
+        Assert.assertEquals(1, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey("B.L");
+        Assert.assertEquals(1, result.size());
+
+        result = mgrDefault.getTableNamesByFuzzyKey("U");
+        Assert.assertEquals(14, result.size());
+    }
+
+    @Test
     public void testGetInstance() {
         Assert.assertNotNull(mgrDefault);
         Assert.assertNotNull(mgrDefault.listAllTables());
@@ -127,15 +152,6 @@ public class NTableMetadataManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(t5);
         Assert.assertEquals(100, t5.getTotalRows());
 
-    }
-
-    @Test
-    public void testGetIncrementalLoadTables() {
-        TableDesc tableDesc = mgrDefault.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
-        tableDesc.setIncrementLoading(true);
-        List<TableDesc> tables = mgrDefault.getAllIncrementalLoadTables();
-        Assert.assertEquals(1, tables.size());
-        Assert.assertTrue(tables.get(0).isIncrementLoading());
     }
 
 }

@@ -23,7 +23,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
+import java.util.TimeZone;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlNode;
@@ -43,7 +45,7 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
     private static final Logger logger = LoggerFactory.getLogger(DateNumberFilterTransformer.class);
 
     private static final ThreadLocal<SimpleDateFormat> THREAD_LOCAL = ThreadLocal
-            .withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+            .withInitial(() -> new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT)));
 
     @Override
     public String transform(String originSql, String project, String defaultSchema) {
@@ -173,7 +175,7 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
                 }
             }
             if (!targets.isEmpty()) {
-                timeFilterFound(call, String.format("(%s)", String.join(delimiter, targets)));
+                timeFilterFound(call, String.format(Locale.ROOT, "(%s)", String.join(delimiter, targets)));
             }
         }
 
@@ -219,15 +221,15 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
                 TimeExpression timeExpression) {
             String target = null;
             if (timeExpression.isYear(leftTime)) {
-                target = String.format("cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
+                target = String.format(Locale.ROOT, "cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
                         yearToDate(leftTime.getValueAs(Integer.class), false),
                         yearToDate(rightTime.getValueAs(Integer.class), true));
             } else if (timeExpression.isMonthYear(leftTime)) {
-                target = String.format("cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
+                target = String.format(Locale.ROOT, "cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
                         monthToDate(leftTime.getValueAs(Integer.class), false),
                         monthToDate(rightTime.getValueAs(Integer.class), true));
             } else if (timeExpression.isDayMonthYear(leftTime)) {
-                target = String.format("cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
+                target = String.format(Locale.ROOT, "cast(%s as date) %s %s and %s", timeExpression.colNameString(), op,
                         dayMonthYearToDate(leftTime.toString()), dayMonthYearToDate(rightTime.toString()));
             }
             return target;
@@ -238,26 +240,26 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
             switch (op) {
             case "=":
                 if (timeExpression.isYear(time)) {
-                    target = String.format("cast(%s as date) BETWEEN %s", timeExpression.colNameString(),
+                    target = String.format(Locale.ROOT, "cast(%s as date) BETWEEN %s", timeExpression.colNameString(),
                             yearToRange(time.getValueAs(Integer.class)));
                 } else if (timeExpression.isMonthYear(time)) {
-                    target = String.format("cast(%s as date) BETWEEN %s", timeExpression.colNameString(),
+                    target = String.format(Locale.ROOT, "cast(%s as date) BETWEEN %s", timeExpression.colNameString(),
                             monthYearToRange(time.getValueAs(Integer.class)));
                 } else if (timeExpression.isDayMonthYear(time)) {
-                    target = String.format("cast(%s as date) = %s", timeExpression.colNameString(),
+                    target = String.format(Locale.ROOT, "cast(%s as date) = %s", timeExpression.colNameString(),
                             dayMonthYearToDate(time.toString()));
                 }
                 break;
             case "!=":
             case "<>":
                 if (timeExpression.isYear(time)) {
-                    target = String.format("cast(%s as date) NOT BETWEEN %s", timeExpression.colNameString(),
-                            yearToRange(time.getValueAs(Integer.class)));
+                    target = String.format(Locale.ROOT, "cast(%s as date) NOT BETWEEN %s",
+                            timeExpression.colNameString(), yearToRange(time.getValueAs(Integer.class)));
                 } else if (timeExpression.isMonthYear(time)) {
-                    target = String.format("cast(%s as date) NOT BETWEEN %s", timeExpression.colNameString(),
-                            monthYearToRange(time.getValueAs(Integer.class)));
+                    target = String.format(Locale.ROOT, "cast(%s as date) NOT BETWEEN %s",
+                            timeExpression.colNameString(), monthYearToRange(time.getValueAs(Integer.class)));
                 } else if (timeExpression.isDayMonthYear(time)) {
-                    target = String.format("cast(%s as date) <> %s", timeExpression.colNameString(),
+                    target = String.format(Locale.ROOT, "cast(%s as date) <> %s", timeExpression.colNameString(),
                             dayMonthYearToDate(time.toString()));
                 }
                 break;
@@ -266,13 +268,13 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
             case ">=":
             case "<=":
                 if (timeExpression.isYear(time)) {
-                    target = String.format("cast(%s as date) %s %s", timeExpression.colNameString(), op,
+                    target = String.format(Locale.ROOT, "cast(%s as date) %s %s", timeExpression.colNameString(), op,
                             yearToDate(time.getValueAs(Integer.class), op.equals(">") || op.equals("<=")));
                 } else if (timeExpression.isMonthYear(time)) {
-                    target = String.format("cast(%s as date) %s %s", timeExpression.colNameString(), op,
+                    target = String.format(Locale.ROOT, "cast(%s as date) %s %s", timeExpression.colNameString(), op,
                             monthToDate(time.getValueAs(Integer.class), op.equals(">") || op.equals("<=")));
                 } else if (timeExpression.isDayMonthYear(time)) {
-                    target = String.format("cast(%s as date) %s %s", timeExpression.colNameString(), op,
+                    target = String.format(Locale.ROOT, "cast(%s as date) %s %s", timeExpression.colNameString(), op,
                             dayMonthYearToDate(time.toString()));
                 }
                 break;
@@ -291,7 +293,8 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
         }
 
         String yearToDate(int year, boolean end) {
-            return end ? String.format("'%d-12-31'", year) : String.format("'%d-01-01'", year);
+            return end ? String.format(Locale.ROOT, "'%d-12-31'", year)
+                    : String.format(Locale.ROOT, "'%d-01-01'", year);
 
         }
 
@@ -299,18 +302,18 @@ public class DateNumberFilterTransformer implements IQueryTransformer {
             int month = monthYear % 100;
             int year = (monthYear - month) / 100;
 
-            Calendar cal = Calendar.getInstance();
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault());
             cal.clear();
             cal.set(Calendar.YEAR, year);
             cal.set(Calendar.MONTH, month - 1);
             int day = end ? cal.getActualMaximum(Calendar.DAY_OF_MONTH) : 1;
             cal.set(Calendar.DAY_OF_MONTH, day);
             SimpleDateFormat sdf = THREAD_LOCAL.get();
-            return String.format("'%s'", sdf.format(cal.getTime()));
+            return String.format(Locale.ROOT, "'%s'", sdf.format(cal.getTime()));
         }
 
         String dayMonthYearToDate(String dayMonthYear) {
-            return String.format("'%s-%s-%s'", dayMonthYear.substring(0, 4), dayMonthYear.substring(4, 6),
+            return String.format(Locale.ROOT, "'%s-%s-%s'", dayMonthYear.substring(0, 4), dayMonthYear.substring(4, 6),
                     dayMonthYear.substring(6));
         }
 

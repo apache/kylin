@@ -16,18 +16,20 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import static org.apache.kylin.engine.spark.filter.QueryFiltersCollector.SERVER_HOST;
+import static org.apache.kylin.engine.spark.filter.QueryFiltersCollector.currentQueryFilters;
 import static org.apache.kylin.engine.spark.filter.QueryFiltersCollector.getProjectFiltersFile;
 import static org.awaitility.Awaitility.await;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
@@ -85,8 +87,11 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
         SparderEnv.setSparkSession(ss);
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
+        JobContextUtil.cleanUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("kylin.bloom.collect-filter.enabled", "true");
         overwriteSystemProp("kylin.bloom.build.enabled", "true");
@@ -96,12 +101,17 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
         QueryFiltersCollector.initScheduler();
         dfMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
 
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/bloomfilter" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
         QueryFiltersCollector.destoryScheduler();
         cleanupTestMetadata();
@@ -126,8 +136,7 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
 
         overwriteSystemProp("kylin.bloom.build.column-ids", "0#1");
         indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
-                Sets.newHashSet(
-                        dataflow.getIndexPlan().getLayoutEntity(20000000001L)), true);
+                Sets.newHashSet(dataflow.getIndexPlan().getLayoutEntity(20000000001L)), true);
         // In our PR UT environment, building job may not be executed when there has cache,
         // so we will ignore it if job is skipped
         if (ParquetBloomFilter.isLoaded()) {
@@ -140,10 +149,15 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
         String sql1 = "select * from SSB.P_LINEORDER where LO_CUSTKEY in (13,8) and LO_SHIPPRIOTITY = 0 ";
         query.add(Pair.newPair("bloomfilter", sql1));
         ExecAndComp.execAndCompare(query, getProject(), ExecAndComp.CompareLevel.NONE, "inner");
+
         // wait until `QueryFiltersCollector` record filter info
-        await().atMost(120, TimeUnit.SECONDS).until(() -> {
+        int collectInterval = KylinConfig.getInstanceFromEnv().getQueryFilterCollectInterval();
+        await().timeout(collectInterval + 1, TimeUnit.SECONDS).pollDelay(collectInterval, TimeUnit.SECONDS)
+                .untilAsserted(() -> Assert.assertTrue(true));
+        await().atMost(10L * collectInterval, TimeUnit.SECONDS).until(() -> {
             try {
-                if (!fs.exists(projectFilterPath)) {
+                if (!fs.exists(projectFilterPath)
+                        || currentQueryFilters.containsKey(StringUtils.upperCase(getProject()))) {
                     return false;
                 }
             } catch (Exception e) {
@@ -151,10 +165,10 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
             }
             return true;
         });
-        Map<String, Map<String, Integer>> history = JsonUtil.readValue(
-                HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
-        Assert.assertTrue(history.get(dfID).keySet().contains("8"));
-        Assert.assertTrue(history.get(dfID).keySet().contains("9"));
+        Map<String, Map<String, Integer>> history = JsonUtil
+                .readValue(HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
+        Assert.assertTrue(history.get(dfID).containsKey("8"));
+        Assert.assertTrue(history.get(dfID).containsKey("9"));
         Integer hitNum = history.get(dfID).get("8");
         Assert.assertTrue(fs.exists(projectFilterPath));
         String sql2 = "select * from SSB.P_LINEORDER where LO_CUSTKEY in (13,8)";
@@ -163,8 +177,8 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
 
         await().atMost(120, TimeUnit.SECONDS).until(() -> {
             try {
-                Map<String, Map<String, Integer>> newHistory = JsonUtil.readValue(
-                        HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
+                Map<String, Map<String, Integer>> newHistory = JsonUtil
+                        .readValue(HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
                 Integer newHitNum = newHistory.get(dfID).get("8");
                 if (newHitNum <= hitNum) {
                     return false;
@@ -195,15 +209,18 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
 
     private void testBloomFilterSkipCollector() {
         String queryId1 = "query-id1";
-        BloomFilterSkipCollector.addQueryMetrics(queryId1, 3,
-                2, 20, 100, 1);
-        BloomFilterSkipCollector.addQueryMetrics(queryId1, 1,
-                1, 10, 100, 1);
-        Assert.assertEquals(4L, BloomFilterSkipCollector.queryTotalBloomBlocks.getIfPresent(queryId1).get());
-        Assert.assertEquals(3L, BloomFilterSkipCollector.querySkipBloomBlocks.getIfPresent(queryId1).get());
-        Assert.assertEquals(30L, BloomFilterSkipCollector.querySkipBloomRows.getIfPresent(queryId1).get());
-        Assert.assertEquals(200L, BloomFilterSkipCollector.queryFooterReadTime.getIfPresent(queryId1).get());
-        Assert.assertEquals(2L, BloomFilterSkipCollector.queryFooterReadNumber.getIfPresent(queryId1).get());
+        BloomFilterSkipCollector.addQueryMetrics(queryId1, 3, 2, 20, 100, 1);
+        BloomFilterSkipCollector.addQueryMetrics(queryId1, 1, 1, 10, 100, 1);
+        Assert.assertEquals(4L,
+                Objects.requireNonNull(BloomFilterSkipCollector.queryTotalBloomBlocks.getIfPresent(queryId1)).get());
+        Assert.assertEquals(3L,
+                Objects.requireNonNull(BloomFilterSkipCollector.querySkipBloomBlocks.getIfPresent(queryId1)).get());
+        Assert.assertEquals(30L,
+                Objects.requireNonNull(BloomFilterSkipCollector.querySkipBloomRows.getIfPresent(queryId1)).get());
+        Assert.assertEquals(200L,
+                Objects.requireNonNull(BloomFilterSkipCollector.queryFooterReadTime.getIfPresent(queryId1)).get());
+        Assert.assertEquals(2L,
+                Objects.requireNonNull(BloomFilterSkipCollector.queryFooterReadNumber.getIfPresent(queryId1)).get());
         BloomFilterSkipCollector.logAndCleanStatus(queryId1);
         BloomFilterSkipCollector.logAndCleanStatus("query-id2");
         Assert.assertNull(BloomFilterSkipCollector.queryTotalBloomBlocks.getIfPresent(queryId1));

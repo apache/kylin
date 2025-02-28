@@ -24,22 +24,11 @@ public class Constants {
         throw new IllegalStateException("Utility class");
     }
 
-    public static final String KE_COMMIT = "ke.commit";
     public static final String KE_VERSION = "ke.version";
     public static final String KE_METASTORE = "ke.metastore";
     public static final String KE_DATES = "ke.dates";
     public static final String KE_LICENSE = "ke.license";
-    public static final String KE_LICENSE_LEVEL = "ke.license.level";
-    public static final String KE_LICENSE_CATEGORY = "ke.license.category";
-    public static final String KE_LICENSE_STATEMENT = "ke.license.statement";
-    public static final String KE_LICENSE_ISEVALUATION = "ke.license.isEvaluation";
-    public static final String KE_LICENSE_ISTEST = "ke.license.isTest";
-    public static final String KE_LICENSE_ISENTERPRISE = "ke.license.isEnterprise";
-    public static final String KE_LICENSE_SERVICEEND = "ke.license.serviceEnd";
     public static final String KE_LICENSE_NODES = "ke.license.nodes";
-    public static final String KE_LICENSE_ISCLOUD = "ke.license.isCloud";
-    public static final String KE_LICENSE_INFO = "ke.license.info";
-    public static final String KE_LICENSE_VERSION = "ke.license.version";
     public static final String KE_LICENSE_VOLUME = "ke.license.volume";
     public static final String HIDDEN_VALUE = "*****";
     public static final String KYLIN_SOURCE_JDBC_PASS_KEY = "kylin.source.jdbc.pass";
@@ -59,6 +48,14 @@ public class Constants {
     public static final String SNAPSHOT_JOB = "snapshot_job";
     public static final String MARK = "_mark";
     public static final String BACKSLASH = "/";
+    public static final String START = "*";
+    public static final String ASYNC = "ASYNC";
 
     public static final String METADATA_FILE = "metadata.zip";
+
+    public static final String CORE_META_DIR = "core_meta";
+
+    public static final String CACHE_MODEL_COMMAND = "CACHE FILES %s SELECT * FROM '%s' CACHEPROPERTIES (recursive=true)";
+    public static final String CACHE_TABLE_COMMAND = "CACHE DATA %s SELECT %s FROM '%s' %s";
+    public static final String FILTER_COMMAND = "AFTER %s AS OF '%s'";
 }

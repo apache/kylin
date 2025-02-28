@@ -1,0 +1,125 @@
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+server:
+  port: 7070
+  tomcat:
+    basedir: "${KYLIN_HOME}"
+    max-http-form-post-size: 10485760
+    accesslog:
+      enabled: true
+      pattern: '%h %l %u %{User-Agent}i %t "%r" %s %b %D'
+  compression:
+    enabled: true
+    min-response-size: 51200
+    mime-types: "text/html,text/xml,text/javascript,application/javascript,application/json,text/css,text/plain,application/vnd.apache.kylin-v2+json;charset=UTF-8,application/vnd.apache.kylin-v4+json;charset=UTF-8"
+  servlet:
+    context-path: "/kylin"
+    encoding:
+      charset: UTF-8
+  max-http-header-size: 32KB
+
+management:
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      base-path: "/api"
+      exposure:
+        include: prometheus,health
+
+  health:
+    defaults:
+      enabled: false
+    metaStore:
+      enabled: true
+    sparkSqlContext:
+      enabled: true
+    fileSystem:
+      enabled: true
+    sparkContext:
+      enabled: true
+    diskspace:
+      enabled: true
+    refresh:
+      enabled: true
+
+springfox:
+  documentation:
+    enabled: ${kylin.swagger.enabled}
+
+spring:
+  http:
+    multipart:
+      max-file-size: "5MB"
+      max-request-size: "5MB"
+  application:
+    name: smart
+  resources:
+    chain:
+      gzipped: true
+    cache-period: 86400
+  main:
+    # userGroupService accessService
+    allow-circular-references: true
+    # userService override
+    allow-bean-definition-overriding: true
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  web:
+    resources:
+      chain:
+        compressed: true
+      cache:
+        period: 86400
+      static-locations: "file://${KYLIN_HOME}/server/public"
+  session:
+    store-type: JDBC
+    jdbc:
+      table-name: ${kylin.metadata.url.identifier}_session_v2
+  config:
+    import: optional:file://${KYLIN_HOME}/conf/config.yaml
+
+saas:
+  nacos:
+    discovery:
+      group: ${TENANT_ID:default}
+      server-addr: ${NACOS_DISCOVERY_SERVER_ADDR:localhost:8848}
+      public-group: ${DISCOVERY_PUBLIC_GROUP:default}
+      application:
+        name: ${spring.application.name}
+    config:
+      server-addr: ${NACOS_CONFIG_SERVER_ADDR:localhost:8848}
+
+logging:
+  level:
+    root: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: sandbox
+    import: optional:${KYLIN_CONF}/kylin.properties
+  web:
+    resources:
+      static-locations: "file://${KYLIN_HOME}/kystudio/dist"

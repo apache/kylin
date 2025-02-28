@@ -11,12 +11,14 @@ import datasource from './datasource'
 import system from './system'
 import monitor from './monitor'
 import capacity from './capacity'
+import internalTable from './internalTable'
 import * as actionTypes from './types'
 import dashboard from './dashboard'
 
 export default new Vuex.Store({
   modules: {
     model: model,
+    internalTable: internalTable,
     project: project,
     config: config,
     kafka: kafka,

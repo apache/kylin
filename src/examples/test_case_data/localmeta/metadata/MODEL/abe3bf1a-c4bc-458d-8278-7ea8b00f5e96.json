@@ -1,0 +1,1029 @@
+{
+  "uuid" : "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96",
+  "alias" : "all_fixed_length",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "owner" : "ADMIN",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_ORDER",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_ORDER.ORDER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ]
+    }
+  }, {
+    "table" : "EDW.TEST_SELLER_TYPE_DIM",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SLR_SEGMENT_CD" ]
+    }
+  }, {
+    "table" : "EDW.TEST_CAL_DT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_CAL_DT.CAL_DT" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.CAL_DT" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID", "TEST_CATEGORY_GROUPINGS.SITE_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.LEAF_CATEG_ID", "TEST_KYLIN_FACT.LSTG_SITE_ID" ]
+    }
+  }, {
+    "table" : "EDW.TEST_SITES",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_SITES.SITE_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_COUNTRY",
+    "alias" : "BUYER_COUNTRY",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "BUYER_COUNTRY.COUNTRY" ],
+      "foreign_key" : [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_COUNTRY",
+    "alias" : "SELLER_COUNTRY",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "SELLER_COUNTRY.COUNTRY" ],
+      "foreign_key" : [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_ACCOUNT",
+    "alias" : "SELLER_ACCOUNT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "SELLER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SELLER_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_ACCOUNT",
+    "alias" : "BUYER_ACCOUNT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "BUYER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "TEST_ORDER.BUYER_ID" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "SITE_NAME",
+    "column" : "TEST_SITES.SITE_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "META_CATEG_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "CATEG_LVL2_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "CATEG_LVL3_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT",
+    "status" : "TOMB"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "TEST_DATE_ENC",
+    "column" : "TEST_ORDER.TEST_DATE_ENC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "TEST_TIME_ENC",
+    "column" : "TEST_ORDER.TEST_TIME_ENC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "BUYER_ID",
+    "column" : "TEST_ORDER.BUYER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "SELLER_BUYER_LEVEL",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "SELLER_SELLER_LEVEL",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "SELLER_COUNTRY",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_COUNTRY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "SELLER_COUNTRY_NAME",
+    "column" : "SELLER_COUNTRY.NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "BUYER_BUYER_LEVEL",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "BUYER_SELLER_LEVEL",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "BUYER_COUNTRY",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "BUYER_COUNTRY_NAME",
+    "column" : "BUYER_COUNTRY.NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "WEEK_END_DATE",
+    "column" : "TEST_CAL_DT.WEEK_END_DATE"
+  }, {
+    "id" : 28,
+    "name" : "AGE_FOR_RTL_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_QTR_ID"
+  }, {
+    "id" : 29,
+    "name" : "RTL_YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_YEAR_BEG_DT"
+  }, {
+    "id" : 30,
+    "name" : "DAY_OF_WEEK",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK"
+  }, {
+    "id" : 31,
+    "name" : "RTL_MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_MONTH_BEG_DT"
+  }, {
+    "id" : 32,
+    "name" : "DAY_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_QTR_ID"
+  }, {
+    "id" : 33,
+    "name" : "ORDER_ID",
+    "column" : "TEST_ORDER.ORDER_ID"
+  }, {
+    "id" : 34,
+    "name" : "SITES_UPD_DATE",
+    "column" : "TEST_SITES.SITES_UPD_DATE"
+  }, {
+    "id" : 35,
+    "name" : "CATEG_LVL4_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL4_NAME"
+  }, {
+    "id" : 36,
+    "name" : "DAY_IN_QTR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_QTR_COUNT"
+  }, {
+    "id" : 37,
+    "name" : "CRE_DATE",
+    "column" : "TEST_SITES.CRE_DATE"
+  }, {
+    "id" : 38,
+    "name" : "QTR_END_DT",
+    "column" : "TEST_CAL_DT.QTR_END_DT"
+  }, {
+    "id" : 39,
+    "name" : "YEAR_ID",
+    "column" : "TEST_CAL_DT.YEAR_ID"
+  }, {
+    "id" : 40,
+    "name" : "AGE_FOR_RTL_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_WEEK_ID"
+  }, {
+    "id" : 41,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT"
+  }, {
+    "id" : 42,
+    "name" : "LONGITUDE",
+    "column" : "BUYER_COUNTRY.LONGITUDE"
+  }, {
+    "id" : 43,
+    "name" : "CATEG_LVL6_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL6_ID"
+  }, {
+    "id" : 44,
+    "name" : "PRD_IND",
+    "column" : "TEST_CAL_DT.PRD_IND"
+  }, {
+    "id" : 45,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+  }, {
+    "id" : 46,
+    "name" : "YEAR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.YEAR_OF_CAL_ID"
+  }, {
+    "id" : 47,
+    "name" : "SAP_CATEGORY_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.SAP_CATEGORY_ID"
+  }, {
+    "id" : 48,
+    "name" : "COUNTRY",
+    "column" : "BUYER_COUNTRY.COUNTRY"
+  }, {
+    "id" : 49,
+    "name" : "SITE_DOMAIN_CODE",
+    "column" : "TEST_SITES.SITE_DOMAIN_CODE"
+  }, {
+    "id" : 50,
+    "name" : "BSNS_VRTCL_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.BSNS_VRTCL_NAME"
+  }, {
+    "id" : 51,
+    "name" : "CATEG_BUSN_UNIT",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_BUSN_UNIT"
+  }, {
+    "id" : 52,
+    "name" : "AGE_FOR_RTL_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_MONTH_ID"
+  }, {
+    "id" : 53,
+    "name" : "CAL_DATE",
+    "column" : "TEST_CAL_DT.CAL_DATE"
+  }, {
+    "id" : 54,
+    "name" : "CATEG_LVL3_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_ID"
+  }, {
+    "id" : 55,
+    "name" : "AGE_FOR_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_MONTH_ID"
+  }, {
+    "id" : 56,
+    "name" : "CAL_DT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_NAME"
+  }, {
+    "id" : 57,
+    "name" : "CAL_DT_MNS_1YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1YEAR_DT"
+  }, {
+    "id" : 58,
+    "name" : "MONTH_END_DT",
+    "column" : "TEST_CAL_DT.MONTH_END_DT"
+  }, {
+    "id" : 59,
+    "name" : "SELLER_GROUP_DESC",
+    "column" : "TEST_SELLER_TYPE_DIM.SELLER_GROUP_DESC"
+  }, {
+    "id" : 60,
+    "name" : "CAL_DT_DESC",
+    "column" : "TEST_CAL_DT.CAL_DT_DESC"
+  }, {
+    "id" : 61,
+    "name" : "EOA_EMAIL_CSTMZBL_SITE_YN_ID",
+    "column" : "TEST_SITES.EOA_EMAIL_CSTMZBL_SITE_YN_ID"
+  }, {
+    "id" : 62,
+    "name" : "AGE_FOR_DT_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_DT_ID"
+  }, {
+    "id" : 63,
+    "name" : "ACCOUNT_ID",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_ID"
+  }, {
+    "id" : 64,
+    "name" : "WTD_YN_ID",
+    "column" : "TEST_CAL_DT.WTD_YN_ID"
+  }, {
+    "id" : 65,
+    "name" : "MONTH_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_CAL_ID"
+  }, {
+    "id" : 66,
+    "name" : "RTL_QTR_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_QTR_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 67,
+    "name" : "AGE_FOR_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_QTR_ID"
+  }, {
+    "id" : 68,
+    "name" : "DAY_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_YEAR_ID"
+  }, {
+    "id" : 69,
+    "name" : "YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.YEAR_BEG_DT"
+  }, {
+    "id" : 70,
+    "name" : "SELLER_GROUP_CD",
+    "column" : "TEST_SELLER_TYPE_DIM.SELLER_GROUP_CD"
+  }, {
+    "id" : 71,
+    "name" : "YEAR_IND",
+    "column" : "TEST_CAL_DT.YEAR_IND"
+  }, {
+    "id" : 72,
+    "name" : "LATITUDE",
+    "column" : "SELLER_COUNTRY.LATITUDE"
+  }, {
+    "id" : 73,
+    "name" : "ACCOUNT_CONTACT",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_CONTACT"
+  }, {
+    "id" : 74,
+    "name" : "LONGITUDE",
+    "column" : "SELLER_COUNTRY.LONGITUDE"
+  }, {
+    "id" : 75,
+    "name" : "WEEK_IND",
+    "column" : "TEST_CAL_DT.WEEK_IND"
+  }, {
+    "id" : 76,
+    "name" : "CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2QTR_YN_ID"
+  }, {
+    "id" : 77,
+    "name" : "RETAIL_WEEK",
+    "column" : "TEST_CAL_DT.RETAIL_WEEK"
+  }, {
+    "id" : 78,
+    "name" : "QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.QTR_BEG_DT"
+  }, {
+    "id" : 79,
+    "name" : "CAL_DT_CRE_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_DATE"
+  }, {
+    "id" : 80,
+    "name" : "CAL_DT_MNS_2QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2QTR_DT"
+  }, {
+    "id" : 81,
+    "name" : "MOVE_TO",
+    "column" : "TEST_CATEGORY_GROUPINGS.MOVE_TO"
+  }, {
+    "id" : 82,
+    "name" : "CAL_DT_UPD_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_USER"
+  }, {
+    "id" : 83,
+    "name" : "SITE_CNTRY_ID",
+    "column" : "TEST_SITES.SITE_CNTRY_ID"
+  }, {
+    "id" : 84,
+    "name" : "USER_DEFINED_FIELD1",
+    "column" : "TEST_CATEGORY_GROUPINGS.USER_DEFINED_FIELD1"
+  }, {
+    "id" : 85,
+    "name" : "CAL_DT_SHORT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_SHORT_NAME"
+  }, {
+    "id" : 86,
+    "name" : "YTM_YN_ID",
+    "column" : "TEST_CAL_DT.YTM_YN_ID"
+  }, {
+    "id" : 87,
+    "name" : "PRD_DESC",
+    "column" : "TEST_CAL_DT.PRD_DESC"
+  }, {
+    "id" : 88,
+    "name" : "CAL_DT_MNS_1MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1MONTH_DT"
+  }, {
+    "id" : 89,
+    "name" : "CAL_DT_MNS_1QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1QTR_DT"
+  }, {
+    "id" : 90,
+    "name" : "DFAULT_LSTG_CURNCY",
+    "column" : "TEST_SITES.DFAULT_LSTG_CURNCY"
+  }, {
+    "id" : 91,
+    "name" : "CATEG_FLAGS",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_FLAGS"
+  }, {
+    "id" : 92,
+    "name" : "CATEG_LVL5_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL5_ID"
+  }, {
+    "id" : 93,
+    "name" : "GCS_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.GCS_ID"
+  }, {
+    "id" : 94,
+    "name" : "CATEG_LVL5_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL5_NAME"
+  }, {
+    "id" : 95,
+    "name" : "GROUPINGS_CRE_DATE",
+    "column" : "TEST_CATEGORY_GROUPINGS.GROUPINGS_CRE_DATE"
+  }, {
+    "id" : 96,
+    "name" : "CAL_DT_UPD_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_DATE"
+  }, {
+    "id" : 97,
+    "name" : "YEAR_END_DT",
+    "column" : "TEST_CAL_DT.YEAR_END_DT"
+  }, {
+    "id" : 98,
+    "name" : "CRE_USER",
+    "column" : "TEST_SITES.CRE_USER"
+  }, {
+    "id" : 99,
+    "name" : "GLBL_RPRT_SLR_SGMNT_CD",
+    "column" : "TEST_SELLER_TYPE_DIM.GLBL_RPRT_SLR_SGMNT_CD"
+  }, {
+    "id" : 100,
+    "name" : "COUNTRY",
+    "column" : "SELLER_COUNTRY.COUNTRY"
+  }, {
+    "id" : 101,
+    "name" : "USER_DEFINED_FIELD3",
+    "column" : "TEST_CATEGORY_GROUPINGS.USER_DEFINED_FIELD3"
+  }, {
+    "id" : 102,
+    "name" : "SEASON_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.SEASON_OF_YEAR_ID"
+  }, {
+    "id" : 103,
+    "name" : "USER_DEFINED_FIELD5",
+    "column" : "TEST_CATEGORY_GROUPINGS.USER_DEFINED_FIELD5"
+  }, {
+    "id" : 104,
+    "name" : "GROUPINGS_CRE_USER",
+    "column" : "TEST_CATEGORY_GROUPINGS.GROUPINGS_CRE_USER"
+  }, {
+    "id" : 105,
+    "name" : "CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1WEEK_YN_IND"
+  }, {
+    "id" : 106,
+    "name" : "SRC_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.SRC_ID"
+  }, {
+    "id" : 107,
+    "name" : "DIM_UPD_DATE",
+    "column" : "TEST_SELLER_TYPE_DIM.DIM_UPD_DATE"
+  }, {
+    "id" : 108,
+    "name" : "MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.MONTH_BEG_DT"
+  }, {
+    "id" : 109,
+    "name" : "CATEG_BUSN_MGR",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_BUSN_MGR"
+  }, {
+    "id" : 110,
+    "name" : "YTW_YN_ID",
+    "column" : "TEST_CAL_DT.YTW_YN_ID"
+  }, {
+    "id" : 111,
+    "name" : "CATEG_LVL2_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_ID"
+  }, {
+    "id" : 112,
+    "name" : "WEEK_IN_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_IN_YEAR_ID"
+  }, {
+    "id" : 113,
+    "name" : "PRD_FLAG",
+    "column" : "TEST_CAL_DT.PRD_FLAG"
+  }, {
+    "id" : 114,
+    "name" : "CAL_DT_MNS_2WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2WEEK_DT"
+  }, {
+    "id" : 115,
+    "name" : "CAL_DT_MNS_2MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2MONTH_DT"
+  }, {
+    "id" : 116,
+    "name" : "QTR_ID",
+    "column" : "TEST_CAL_DT.QTR_ID"
+  }, {
+    "id" : 117,
+    "name" : "AGE_FOR_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_YEAR_ID"
+  }, {
+    "id" : 118,
+    "name" : "WEEK_BEG_DATE",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DATE"
+  }, {
+    "id" : 119,
+    "name" : "CAL_DT_MNS_1WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1WEEK_DT"
+  }, {
+    "id" : 120,
+    "name" : "RETAIL_WK_END_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_WK_END_DATE"
+  }, {
+    "id" : 121,
+    "name" : "VCS_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.VCS_ID"
+  }, {
+    "id" : 122,
+    "name" : "AGE_FOR_CS_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_CS_WEEK_ID"
+  }, {
+    "id" : 123,
+    "name" : "WEEK_NUM_DESC",
+    "column" : "TEST_CAL_DT.WEEK_NUM_DESC"
+  }, {
+    "id" : 124,
+    "name" : "REGN_CATEG",
+    "column" : "TEST_CATEGORY_GROUPINGS.REGN_CATEG"
+  }, {
+    "id" : 125,
+    "name" : "RETAIL_YEAR",
+    "column" : "TEST_CAL_DT.RETAIL_YEAR"
+  }, {
+    "id" : 126,
+    "name" : "SELLER_TYPE_DESC",
+    "column" : "TEST_SELLER_TYPE_DIM.SELLER_TYPE_DESC"
+  }, {
+    "id" : 127,
+    "name" : "RTL_QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_QTR_BEG_DT"
+  }, {
+    "id" : 128,
+    "name" : "DOMAIN_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.DOMAIN_ID"
+  }, {
+    "id" : 129,
+    "name" : "SELLER_TYPE_CD",
+    "column" : "TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD"
+  }, {
+    "id" : 130,
+    "name" : "ACCOUNT_CONTACT",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_CONTACT"
+  }, {
+    "id" : 131,
+    "name" : "DIM_UPD_USER",
+    "column" : "TEST_SELLER_TYPE_DIM.DIM_UPD_USER"
+  }, {
+    "id" : 132,
+    "name" : "CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2MONTH_YN_ID"
+  }, {
+    "id" : 133,
+    "name" : "AGE_FOR_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_YEAR_ID"
+  }, {
+    "id" : 134,
+    "name" : "CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1YEAR_YN_ID"
+  }, {
+    "id" : 135,
+    "name" : "LEAF_CATEG_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_NAME"
+  }, {
+    "id" : 136,
+    "name" : "CATEG_LVL7_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL7_ID"
+  }, {
+    "id" : 137,
+    "name" : "META_CATEG_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.META_CATEG_ID"
+  }, {
+    "id" : 138,
+    "name" : "DAY_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_CAL_ID"
+  }, {
+    "id" : 139,
+    "name" : "TEST_EXTENDED_COLUMN",
+    "column" : "TEST_ORDER.TEST_EXTENDED_COLUMN"
+  }, {
+    "id" : 140,
+    "name" : "RTL_MONTH_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_MONTH_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 141,
+    "name" : "PRD_ID",
+    "column" : "TEST_CAL_DT.PRD_ID"
+  }, {
+    "id" : 142,
+    "name" : "CAL_DT_CRE_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_USER"
+  }, {
+    "id" : 143,
+    "name" : "WEEK_ID",
+    "column" : "TEST_CAL_DT.WEEK_ID"
+  }, {
+    "id" : 144,
+    "name" : "MONTH_ID",
+    "column" : "TEST_CAL_DT.MONTH_ID"
+  }, {
+    "id" : 145,
+    "name" : "DIM_CRE_DATE",
+    "column" : "TEST_SELLER_TYPE_DIM.DIM_CRE_DATE"
+  }, {
+    "id" : 146,
+    "name" : "CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1MONTH_YN_ID"
+  }, {
+    "id" : 147,
+    "name" : "DAY_OF_WEEK_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK_ID"
+  }, {
+    "id" : 148,
+    "name" : "SEASON_BEG_DT",
+    "column" : "TEST_CAL_DT.SEASON_BEG_DT"
+  }, {
+    "id" : 149,
+    "name" : "CATEG_LVL7_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL7_NAME"
+  }, {
+    "id" : 150,
+    "name" : "UPD_USER",
+    "column" : "TEST_CATEGORY_GROUPINGS.UPD_USER"
+  }, {
+    "id" : 151,
+    "name" : "LATITUDE",
+    "column" : "BUYER_COUNTRY.LATITUDE"
+  }, {
+    "id" : 152,
+    "name" : "DAY_OF_MONTH_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_MONTH_ID"
+  }, {
+    "id" : 153,
+    "name" : "CATEG_LVL4_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL4_ID"
+  }, {
+    "id" : 154,
+    "name" : "CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2WEEK_YN_IND"
+  }, {
+    "id" : 155,
+    "name" : "YTQ_YN_ID",
+    "column" : "TEST_CAL_DT.YTQ_YN_ID"
+  }, {
+    "id" : 156,
+    "name" : "WEEK_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_YEAR_ID"
+  }, {
+    "id" : 157,
+    "name" : "DAY_IN_MONTH_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_MONTH_COUNT"
+  }, {
+    "id" : 158,
+    "name" : "QTR_DESC",
+    "column" : "TEST_CAL_DT.QTR_DESC"
+  }, {
+    "id" : 159,
+    "name" : "YTD_YN_ID",
+    "column" : "TEST_CAL_DT.YTD_YN_ID"
+  }, {
+    "id" : 160,
+    "name" : "SITE_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.SITE_ID"
+  }, {
+    "id" : 161,
+    "name" : "MONTH_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_YEAR_ID"
+  }, {
+    "id" : 162,
+    "name" : "CS_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.CS_WEEK_BEG_DT"
+  }, {
+    "id" : 163,
+    "name" : "MONTH_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_QTR_ID"
+  }, {
+    "id" : 164,
+    "name" : "CATEG_LVL6_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL6_NAME"
+  }, {
+    "id" : 165,
+    "name" : "QTR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_CAL_ID"
+  }, {
+    "id" : 166,
+    "name" : "CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2YEAR_YN_ID"
+  }, {
+    "id" : 167,
+    "name" : "ADULT_CATEG_YN",
+    "column" : "TEST_CATEGORY_GROUPINGS.ADULT_CATEG_YN"
+  }, {
+    "id" : 168,
+    "name" : "MTD_YN_ID",
+    "column" : "TEST_CAL_DT.MTD_YN_ID"
+  }, {
+    "id" : 169,
+    "name" : "RETAIL_START_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_START_DATE"
+  }, {
+    "id" : 170,
+    "name" : "DAY_IN_WEEK_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_WEEK_COUNT"
+  }, {
+    "id" : 171,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID"
+  }, {
+    "id" : 172,
+    "name" : "QTR_IND",
+    "column" : "TEST_CAL_DT.QTR_IND"
+  }, {
+    "id" : 173,
+    "name" : "CAL_DT",
+    "column" : "TEST_CAL_DT.CAL_DT"
+  }, {
+    "id" : 174,
+    "name" : "QTR_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_YEAR_ID"
+  }, {
+    "id" : 175,
+    "name" : "UPD_DATE",
+    "column" : "TEST_CATEGORY_GROUPINGS.UPD_DATE"
+  }, {
+    "id" : 176,
+    "name" : "ACCOUNT_ID",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_ID"
+  }, {
+    "id" : 177,
+    "name" : "CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1QTR_YN_ID"
+  }, {
+    "id" : 178,
+    "name" : "AGE_FOR_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_WEEK_ID"
+  }, {
+    "id" : 179,
+    "name" : "DIM_CRE_USER",
+    "column" : "TEST_SELLER_TYPE_DIM.DIM_CRE_USER"
+  }, {
+    "id" : 180,
+    "name" : "CAL_DT_MNS_2YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2YEAR_DT"
+  }, {
+    "id" : 181,
+    "name" : "RTL_WEEK_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_WEEK_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 182,
+    "name" : "SITE_ID",
+    "column" : "TEST_SITES.SITE_ID"
+  }, {
+    "id" : 183,
+    "name" : "DAY_IN_YEAR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_YEAR_COUNT"
+  }, {
+    "id" : 184,
+    "name" : "WEEK_BEG_END_DESC_MD",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MD"
+  }, {
+    "id" : 185,
+    "name" : "QTD_YN_ID",
+    "column" : "TEST_CAL_DT.QTD_YN_ID"
+  }, {
+    "id" : 186,
+    "name" : "SITES_UPD_USER",
+    "column" : "TEST_SITES.SITES_UPD_USER"
+  }, {
+    "id" : 187,
+    "name" : "WEEK_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_CAL_ID"
+  }, {
+    "id" : 188,
+    "name" : "WEEK_BEG_END_DESC_MDY",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MDY"
+  }, {
+    "id" : 189,
+    "name" : "WEEK_END_DT",
+    "column" : "TEST_CAL_DT.WEEK_END_DT"
+  }, {
+    "id" : 190,
+    "name" : "RTL_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_WEEK_BEG_DT"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "TRANS_CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "GMV_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100002,
+    "name" : "GMV_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100003,
+    "name" : "GMV_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100004,
+    "name" : "ITEM_COUNT_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100005,
+    "name" : "ITEM_COUNT_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100006,
+    "name" : "ITEM_COUNT_MIN",
+    "tomb" : true,
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100007,
+    "name" : "SELLER_HLL",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 100008,
+    "name" : "COUNT_DISTINCT",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 100009,
+    "name" : "TOP_SELLER",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      }, {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "topn(10000, 4)",
+      "configuration" : {
+        "topn.encoding.TEST_KYLIN_FACT.SELLER_ID" : "int:4"
+      }
+    }
+  }, {
+    "id" : 100010,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100011,
+    "name" : "GVM_PERCENTILE",
+    "function" : {
+      "expression" : "PERCENTILE",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "percentile(10000)"
+    }
+  } ],
+  "column_correlations" : [ {
+    "name" : "CATEGORY_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME" ]
+  }, {
+    "name" : "DATE_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CAL_DT.WEEK_BEG_DT", "TEST_KYLIN_FACT.CAL_DT" ]
+  }, {
+    "name" : "SITE_JOINT",
+    "correlation_type" : "joint",
+    "columns" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID", "TEST_SITES.SITE_NAME" ]
+  } ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : {
+    "partition_date_column" : "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND"
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "default"
+}

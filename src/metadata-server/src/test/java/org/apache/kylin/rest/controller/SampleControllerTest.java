@@ -25,14 +25,15 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.job.service.TableSampleService;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.PartitionKeyRequest;
-import org.apache.kylin.rest.request.RefreshSegmentsRequest;
 import org.apache.kylin.rest.request.SamplingRequest;
 import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.service.ModelBuildService;
+import org.apache.kylin.rest.service.TableSampleService;
 import org.apache.kylin.rest.service.TableService;
 import org.junit.After;
 import org.junit.Assert;
@@ -55,8 +56,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 
 public class SampleControllerTest extends NLocalFileMetadataTestCase {
@@ -115,25 +114,6 @@ public class SampleControllerTest extends NLocalFileMetadataTestCase {
         tableLoadRequest.setTables(tables);
         tableLoadRequest.setDatabases(dbs);
         return tableLoadRequest;
-    }
-
-    @Test
-    public void testRefreshSegments() throws Exception {
-        Mockito.doNothing().when(modelBuildService).refreshSegments("default", "TEST_KYLIN_FACT", "0", "100", "0",
-                "100");
-        RefreshSegmentsRequest refreshSegmentsRequest = new RefreshSegmentsRequest();
-        refreshSegmentsRequest.setProject("default");
-        refreshSegmentsRequest.setRefreshStart("0");
-        refreshSegmentsRequest.setRefreshEnd("100");
-        refreshSegmentsRequest.setAffectedStart("0");
-        refreshSegmentsRequest.setAffectedEnd("100");
-        refreshSegmentsRequest.setTable("TEST_KYLIN_FACT");
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/data_range") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(refreshSegmentsRequest)) //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(sampleController).refreshSegments(Mockito.any(RefreshSegmentsRequest.class));
     }
 
     @Test

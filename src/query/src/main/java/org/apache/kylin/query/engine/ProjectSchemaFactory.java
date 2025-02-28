@@ -39,7 +39,7 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.engine.view.ViewSchema;
-import org.apache.kylin.query.schema.KapOLAPSchema;
+import org.apache.kylin.query.schema.OlapSchema;
 import org.apache.kylin.rest.constant.Constant;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +66,7 @@ class ProjectSchemaFactory {
         Set<String> groups = Objects.nonNull(aclInfo) ? aclInfo.getGroups() : null;
         schemasMap = QueryExtension.getFactory().getSchemaMapExtension().getAuthorizedTablesAndColumns(kylinConfig,
                 projectName, aclDisabledOrIsAdmin(aclInfo), user, groups);
-        removeStreamingTables(schemasMap, kylinConfig.streamingEnabled());
+        removeStreamingTables(schemasMap, kylinConfig.isStreamingEnabled());
         modelsMap = NDataflowManager.getInstance(kylinConfig, projectName).getModelsGroupbyTable();
 
         // "database" in TableDesc correspond to our schema
@@ -109,10 +109,9 @@ class ProjectSchemaFactory {
     }
 
     private void addProjectSchemas(CalciteSchema parentSchema) {
-
+        addUDFs(parentSchema);
         for (String schemaName : schemasMap.keySet()) {
-            CalciteSchema added = parentSchema.add(schemaName, createSchema(schemaName));
-            addUDFs(added);
+            parentSchema.add(schemaName, createSchema(schemaName));
         }
     }
 
@@ -147,11 +146,11 @@ class ProjectSchemaFactory {
     }
 
     private Schema createSchema(String schemaName) {
-        return new KapOLAPSchema(projectName, schemaName, schemasMap.get(schemaName), modelsMap);
+        return new OlapSchema(kylinConfig, projectName, schemaName, schemasMap.get(schemaName), modelsMap);
     }
 
     private void addUDFs(CalciteSchema calciteSchema) {
-        for (Map.Entry<String, Function> entry : UDFRegistry.allUdfMap.entries()) {
+        for (Map.Entry<String, Function> entry : UdfRegistry.allUdfMap.entries()) {
             calciteSchema.plus().add(entry.getKey().toUpperCase(Locale.ROOT), entry.getValue());
         }
     }

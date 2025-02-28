@@ -23,19 +23,17 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset.OffsetType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 public class QueryHistoryIdOffsetManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(QueryHistoryIdOffsetManager.class);
-    public static List<OffsetType> ALL_OFFSET_TYPE = Arrays.asList(OffsetType.META, OffsetType.ACCELERATE);
+    public static List<QueryHistoryIdOffset.OffsetType> ALL_OFFSET_TYPE = Arrays
+            .asList(QueryHistoryIdOffset.OffsetType.META, QueryHistoryIdOffset.OffsetType.ACCELERATE);
 
     private final QueryHistoryIdOffsetStore jdbcIdOffsetStore;
     private final String project;
 
+    @SuppressWarnings("unused")
     private QueryHistoryIdOffsetManager(String project) throws Exception {
         this.project = project;
         this.jdbcIdOffsetStore = new QueryHistoryIdOffsetStore(KylinConfig.getInstanceFromEnv());
@@ -68,7 +66,7 @@ public class QueryHistoryIdOffsetManager {
             idOffset.setCreateTime(System.currentTimeMillis());
             idOffset.setUpdateTime(idOffset.getCreateTime());
             jdbcIdOffsetStore.save(idOffset);
-        } else if (idOffset.getOffset() != offset.getOffset()){
+        } else if (idOffset.getOffset() != offset.getOffset()) {
             idOffset.setUpdateTime(System.currentTimeMillis());
             jdbcIdOffsetStore.updateWithoutCheckMvcc(idOffset);
         }
@@ -76,17 +74,17 @@ public class QueryHistoryIdOffsetManager {
 
     public QueryHistoryIdOffset copyForWrite(QueryHistoryIdOffset idOffset) {
         // No need to copy, just return the origin object
-        // This will be rewrite after metadata is refactored
+        // This will be rewritten after metadata is refactored
         return idOffset;
     }
-    
+
     public void updateOffset(QueryHistoryIdOffset.OffsetType type, QueryHistoryIdOffsetUpdater updater) {
         QueryHistoryIdOffset cached = get(type);
         QueryHistoryIdOffset copy = copyForWrite(cached);
         updater.modify(copy);
         saveOrUpdate(copy);
     }
-    
+
     public interface QueryHistoryIdOffsetUpdater {
         void modify(QueryHistoryIdOffset offset);
     }

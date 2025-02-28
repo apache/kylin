@@ -31,6 +31,8 @@ import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -38,9 +40,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -104,8 +103,9 @@ public class MetadataExtension implements BeforeEachCallback, BeforeAllCallback,
             SystemPropertiesCache.setProperty("KYLIN_HOME", kylinHomePath);
             val jobJar = org.apache.kylin.common.util.FileUtils.findFile(
                     new File(kylinHomePath, "../../../assembly/target/").getAbsolutePath(), "kylin-assembly(.?)\\.jar");
-            getTestConfig().setProperty("kylin.engine.spark.job-jar", jobJar == null ? "" : jobJar.getAbsolutePath());
-            getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
+            KylinConfig testConfig = getTestConfig();
+            testConfig.setProperty("kylin.engine.spark.job-jar", jobJar == null ? "" : jobJar.getAbsolutePath());
+            testConfig.setProperty("kylin.query.security.acl-tcr-enabled", "false");
             return tempMetadataDirectory;
         }
 

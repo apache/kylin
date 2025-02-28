@@ -20,13 +20,13 @@ package org.apache.kylin.rest.response;
 import java.util.Set;
 
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.constant.SnapshotStatus;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.kylin.metadata.model.TableExtDesc;
 
 @Getter
 @Setter
@@ -71,8 +71,8 @@ public class SnapshotInfoResponse implements Comparable<SnapshotInfoResponse> {
     public SnapshotInfoResponse() {
     }
 
-    public SnapshotInfoResponse(TableDesc tableDesc, TableExtDesc tableExtDesc, long totalRows, int factTableCount, int lookupTableCount,
-                                SnapshotStatus status, Set<String> columns) {
+    public SnapshotInfoResponse(TableDesc tableDesc, TableExtDesc tableExtDesc, long totalRows, int factTableCount,
+            int lookupTableCount, SnapshotStatus status, Set<String> columns) {
 
         this.table = tableDesc.getName();
         this.database = tableDesc.getDatabase();

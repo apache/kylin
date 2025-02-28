@@ -22,15 +22,14 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class NBuildSourceInfo {
     protected static final Logger logger = LoggerFactory.getLogger(NBuildSourceInfo.class);

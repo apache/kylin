@@ -73,6 +73,7 @@
             </span>
           </el-table-column>
           <el-table-column
+          v-if="!isStorageV3"
           label="Shard"
           align="center"
           width="70">
@@ -155,6 +156,11 @@ export default class TableIndexView extends Vue {
   indexDatas = []
   isLoading = false
   indexUpdateEnabled = true
+
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
+  }
 
   handleEditOrDelIndex (index) {
     return !(!this.indexUpdateEnabled && (this.model.model_type === 'STREAMING' || ['HYBRID', 'STREAMING'].includes(index.index_range)))

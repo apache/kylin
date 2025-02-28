@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -35,51 +36,56 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 public class LogicalViewTest extends NLocalWithSparkSessionTest {
 
-  private NDataflowManager dfMgr = null;
+    private NDataflowManager dfMgr = null;
 
-  @Before
-  public void setup() throws Exception {
-    // kylin.source.ddl.logical-view.enabled=true
-    overwriteSystemProp("kylin.source.ddl.logical-view.enabled", "true");
-    this.createTestMetadata("src/test/resources/ut_meta/logical_view");
-    dfMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
+    @Override
+    @Before
+    public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
+        // kylin.source.ddl.logical-view.enabled=true
+        super.setUp();
+        overwriteSystemProp("kylin.source.ddl.logical-view.enabled", "true");
+        this.createTestMetadata("src/test/resources/ut_meta/logical_view");
+        dfMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
 
-    JobContextUtil.cleanUp();
-    JobContextUtil.getJobContext(getTestConfig());
-  }
+        JobContextUtil.getJobContext(getTestConfig());
+    }
 
-  @After
-  public void after() throws Exception {
-    JobContextUtil.cleanUp();
-    cleanupTestMetadata();
-  }
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/logical_view" };
+    }
 
-  @Override
-  public String getProject() {
-    return "logical_view";
-  }
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        JobContextUtil.cleanUp();
+        cleanupTestMetadata();
+    }
 
-  @Test
-  public void testLogicalView() throws Exception {
-    String dfID = "451e127a-b684-1474-744b-c9afc14378af";
-    NDataflow dataflow = dfMgr.getDataflow(dfID);
-    LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(20000000001L);
-    Assert.assertNotNull(layout);
-    populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
-    indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
-        Sets.newHashSet(
-            dataflow.getIndexPlan().getLayoutEntity(20000000001L),
-            dataflow.getIndexPlan().getLayoutEntity(1L)), true);
+    @Override
+    public String getProject() {
+        return "logical_view";
+    }
 
-    List<Pair<String, String>> query = new ArrayList<>();
-    String sql1 = "select t1.C_CUSTKEY from KYLIN_LOGICAL_VIEW.LOGICAL_VIEW_TABLE t1"
-        + " INNER JOIN SSB.CUSTOMER t2 on t1.C_CUSTKEY = t2.C_CUSTKEY ";
-    query.add(Pair.newPair("logical_view", sql1));
-    ExecAndComp.execAndCompare(
-        query, getProject(), ExecAndComp.CompareLevel.SAME, "inner");
-  }
+    @Test
+    public void testLogicalView() throws Exception {
+        String dfID = "451e127a-b684-1474-744b-c9afc14378af";
+        NDataflow dataflow = dfMgr.getDataflow(dfID);
+        LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(20000000001L);
+        Assert.assertNotNull(layout);
+        populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
+        indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
+                Sets.newHashSet(dataflow.getIndexPlan().getLayoutEntity(20000000001L),
+                        dataflow.getIndexPlan().getLayoutEntity(1L)),
+                true);
+
+        List<Pair<String, String>> query = new ArrayList<>();
+        String sql1 = "select t1.C_CUSTKEY from KYLIN_LOGICAL_VIEW.LOGICAL_VIEW_TABLE t1"
+                + " INNER JOIN SSB.CUSTOMER t2 on t1.C_CUSTKEY = t2.C_CUSTKEY ";
+        query.add(Pair.newPair("logical_view", sql1));
+        ExecAndComp.execAndCompare(query, getProject(), ExecAndComp.CompareLevel.SAME, "inner");
+    }
 }

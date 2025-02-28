@@ -26,6 +26,8 @@ import java.util.NavigableSet;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 
 /**
  * After upgrade a metadata store to current version,

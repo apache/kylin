@@ -1,0 +1,96 @@
+{
+  "uuid" : "53abfc64-e4f3-b284-8c65-aac59c9c54c5",
+  "last_modified" : 1658777620931,
+  "create_time" : 1658777619811,
+  "version" : "4.0.0.0",
+  "alias" : "MULTI_PART_SEG_TEST_MODEL",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.MULTI_PART_SEG_TEST",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "MULTI_PART_SEG_TEST.DATE",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "DATE",
+    "column" : "MULTI_PART_SEG_TEST.DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "ID",
+    "column" : "MULTI_PART_SEG_TEST.ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "USER",
+    "column" : "MULTI_PART_SEG_TEST.USER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "REGION",
+    "column" : "MULTI_PART_SEG_TEST.REGION",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "MULTI_PART_SEG_TEST" : {
+        "x" : 642.888895670573,
+        "y" : 215.33333672417535,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : {
+    "columns" : [ "MULTI_PART_SEG_TEST.REGION" ],
+    "partitions" : [ {
+      "id" : 0,
+      "values" : [ "Shanghai" ]
+    } ],
+    "max_partition_id" : 0
+  },
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "multi_level_partition"
+}

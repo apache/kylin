@@ -1,0 +1,307 @@
+{
+  "uuid" : "44587432-95e9-48c7-8a24-23a9ea8b73xx",
+  "last_modified" : 1509549988629,
+  "version" : "2.3.0.20500",
+  "name" : "X_XXXXXXXX_XX_XX",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "EFFMONTH",
+    "datatype" : "varchar(5)"
+  }, {
+    "id" : "2",
+    "name" : "EFFPER",
+    "datatype" : "varchar(10)"
+  }, {
+    "id" : "3",
+    "name" : "EFFYEAR",
+    "datatype" : "decimal(20,0)"
+  }, {
+    "id" : "4",
+    "name" : "MEMBER_MONTHS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "5",
+    "name" : "TOT_MED_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "6",
+    "name" : "TOT_IP_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "7",
+    "name" : "IP_ADMITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "8",
+    "name" : "IP_HOS_ADMITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "9",
+    "name" : "IP_HOS_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "10",
+    "name" : "TOT_ED_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "11",
+    "name" : "ED_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "12",
+    "name" : "PCP_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "13",
+    "name" : "SPECIALTY_CONSULT_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "14",
+    "name" : "TOT_LAB_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "15",
+    "name" : "TOT_RAD_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "16",
+    "name" : "TOT_RX_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "17",
+    "name" : "TOT_RX_LINES",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "18",
+    "name" : "TOT_OUT_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "19",
+    "name" : "TOT_PROF_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "20",
+    "name" : "TOT_OTHER_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "21",
+    "name" : "MARA_CONCURRENT_RISK",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "22",
+    "name" : "MARA_PROSPECTIVE_RISK",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "23",
+    "name" : "MARA_MEDICARE_RISK_SCORE",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "24",
+    "name" : "DIABETES",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "25",
+    "name" : "VASCULAR_DISEASE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "26",
+    "name" : "COPD",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "27",
+    "name" : "CHF",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "28",
+    "name" : "AMI",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "29",
+    "name" : "STROKE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "30",
+    "name" : "CHRONIC_CONDITIONS_CNT",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "31",
+    "name" : "CLAIM_COUNT",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "32",
+    "name" : "PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "33",
+    "name" : "NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "34",
+    "name" : "PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "35",
+    "name" : "NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "36",
+    "name" : "PAR_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "37",
+    "name" : "NON_PAR_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "38",
+    "name" : "PAR_NON_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "39",
+    "name" : "NON_PAR_NON_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "40",
+    "name" : "PCP_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "41",
+    "name" : "PCP_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "42",
+    "name" : "PCP_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "43",
+    "name" : "PCP_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "44",
+    "name" : "SPEC_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "45",
+    "name" : "SPEC_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "46",
+    "name" : "SPEC_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "47",
+    "name" : "SPEC_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "48",
+    "name" : "OP_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "49",
+    "name" : "OP_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "50",
+    "name" : "OP_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "51",
+    "name" : "OP_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "52",
+    "name" : "PAYER",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "53",
+    "name" : "XXXXXX_XX",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "54",
+    "name" : "LOB",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "55",
+    "name" : "DOB",
+    "datatype" : "date"
+  }, {
+    "id" : "56",
+    "name" : "HICN",
+    "datatype" : "varchar(60)"
+  }, {
+    "id" : "57",
+    "name" : "SUBSCRIBER_ID",
+    "datatype" : "varchar(45)"
+  }, {
+    "id" : "58",
+    "name" : "FIRST_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "59",
+    "name" : "LAST_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "60",
+    "name" : "MEMBER_NAME",
+    "datatype" : "varchar(200)"
+  }, {
+    "id" : "61",
+    "name" : "GENDER",
+    "datatype" : "varchar(10)"
+  }, {
+    "id" : "62",
+    "name" : "ADDRESS1",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "63",
+    "name" : "ADDRESS2",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "64",
+    "name" : "CITY",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "65",
+    "name" : "STATE",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "66",
+    "name" : "ZIP",
+    "datatype" : "varchar(45)"
+  }, {
+    "id" : "67",
+    "name" : "PHONE",
+    "datatype" : "varchar(40)"
+  }, {
+    "id" : "68",
+    "name" : "NPI",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "69",
+    "name" : "FULL_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "70",
+    "name" : "EMP_STATUS",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "71",
+    "name" : "DEFAULT_TIN",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "72",
+    "name" : "DEFAULT_PRACTICE",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "73",
+    "name" : "CLASSIFICATION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "74",
+    "name" : "SPECIALIZATION",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "XXXXXXXXX_XXXXXXXXX",
+  "project" : "newten"
+}

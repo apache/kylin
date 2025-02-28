@@ -27,11 +27,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.engine.spark.job.InternalTableLoadingJob;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import org.apache.kylin.engine.spark.job.NTableSamplingJob;
-import org.apache.kylin.job.SecondStorageCleanJobUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -40,12 +40,14 @@ import org.apache.kylin.job.execution.ChainedStageExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.table.InternalTableDesc;
+import org.apache.kylin.metadata.table.InternalTableManager;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -132,7 +134,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
         int completedStepCount = 0;
 
         for (ExecutableStepResponse step : this.getSteps()) {
-            if (step.getStatus().equals(JobStatusEnum.FINISHED)) {
+            if (step.getStatus() == JobStatusEnum.FINISHED) {
                 completedStepCount++;
             }
         }
@@ -198,8 +200,24 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
                 executableResponse.setTargetSubject("The snapshot is deleted");
                 executableResponse.setTargetSubjectError(true);
             }
-        } else if (SecondStorageCleanJobUtil.isProjectCleanJob(abstractExecutable)) {
-            executableResponse.setTargetSubject(abstractExecutable.getProject());
+        } else if (abstractExecutable instanceof InternalTableLoadingJob) {
+            InternalTableLoadingJob internalTableJob = (InternalTableLoadingJob) abstractExecutable;
+            if ("false".equals(internalTableJob.getParam("incrementalBuild"))
+                    || "true".equals(internalTableJob.getParam("deletePartition"))) {
+                executableResponse.setDataRangeEnd(Long.MAX_VALUE);
+            } else {
+                executableResponse.setDataRangeStart(Long.parseLong(internalTableJob.getParam("startTime")));
+                executableResponse.setDataRangeEnd(Long.parseLong(internalTableJob.getParam("endTime")));
+            }
+            executableResponse.setTargetSubject(internalTableJob.getParam(NBatchConstants.P_TABLE_NAME));
+            InternalTableDesc internalTableDesc = InternalTableManager
+                    .getInstance(KylinConfig.getInstanceFromEnv(), abstractExecutable.getProject())
+                    .getInternalTableDesc(executableResponse.getTargetSubject());
+            if (internalTableDesc == null || internalTableDesc.getLocation() == null) {
+                executableResponse
+                        .setTargetSubject(executableResponse.getTargetSubject() + "not exist or has been deleted");
+                executableResponse.setTargetSubjectError(true);
+            }
         } else {
             val dataflow = NDataflowManager
                     .getInstance(KylinConfig.getInstanceFromEnv(), abstractExecutable.getProject())
@@ -221,18 +239,18 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
 
     /**
      * Single Segment situation:
-     *
+     * <p>
      * CurrentProgress = numberOfCompletedSteps / totalNumberOfSteps, accurate to the single digit percentage.
-     *
+     * <p>
      * Among them, the progress of the "BUILD_LAYER"
      * step = numberOfCompletedIndexes / totalNumberOfIndexesToBeConstructed,
      * the progress of other steps will not be refined
      * ----------------------------------------------------------------------------------------------------------
      * multi segment situation:
-     *
+     * <p>
      * CurrentProgress =
-     *   [numberOfPublicStepsCompleted + (numberOfSegmentStepsCompleted / numberOfSegments)] / totalNumberOfSteps
-     *
+     * [numberOfPublicStepsCompleted + (numberOfSegmentStepsCompleted / numberOfSegments)] / totalNumberOfSteps
+     * <p>
      * Another: "BUILD_LAYER" are not refined
      */
     public static float calculateStepRatio(AbstractExecutable abstractExecutable, ExecutablePO executablePO) {
@@ -242,7 +260,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
         for (AbstractExecutable task : tasks) {
             if (task instanceof ChainedStageExecutable) {
                 final ChainedStageExecutable stageExecutable = (ChainedStageExecutable) task;
-                Map<String, List<StageBase>> stageMap = Optional.ofNullable(stageExecutable.getStagesMap())
+                Map<String, List<StageExecutable>> stageMap = Optional.ofNullable(stageExecutable.getStagesMap())
                         .orElse(Maps.newHashMap());
                 var taskMapStageCount = Optional.of(stageMap.values()).orElse(Lists.newArrayList()).stream().findFirst()
                         .orElse(Lists.newArrayList()).size();
@@ -269,11 +287,12 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
     }
 
     /** calculate stage count from segment */
-    public static double calculateSuccessStageInTaskMap(AbstractExecutable task, Map<String, List<StageBase>> stageMap,
+    public static double calculateSuccessStageInTaskMap(AbstractExecutable task,
+            Map<String, List<StageExecutable>> stageMap,
             ExecutablePO executablePO) {
         var successStages = 0D;
         boolean calculateIndexExecRadio = stageMap.size() == 1;
-        for (Map.Entry<String, List<StageBase>> entry : stageMap.entrySet()) {
+        for (Map.Entry<String, List<StageExecutable>> entry : stageMap.entrySet()) {
             double count = calculateSuccessStage(task, entry.getKey(), entry.getValue(), calculateIndexExecRadio,
                     executablePO);
             successStages += count;
@@ -281,10 +300,11 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
         return successStages / stageMap.size();
     }
 
-    public static double calculateSuccessStage(AbstractExecutable task, String segmentId, List<StageBase> stageBases,
+    public static double calculateSuccessStage(AbstractExecutable task, String segmentId,
+            List<StageExecutable> stageExecutables,
             boolean calculateIndexExecRadio, ExecutablePO executablePO) {
         var successStages = 0D;
-        for (StageBase stage : stageBases) {
+        for (StageExecutable stage : stageExecutables) {
             if (ExecutableState.SUCCEED == stage.getStatusInMem(segmentId)
                     || ExecutableState.SKIP == stage.getStatusInMem(segmentId)
                     || ExecutableState.WARNING == stage.getStatusInMem(segmentId)) {

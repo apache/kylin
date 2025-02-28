@@ -44,7 +44,7 @@ public class DateDimEnc extends AbstractDateDimEnc implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new DateDimEnc(args);
         }
-    };
+    }
 
     private static class DateDimValueCodec implements IValueCodec {
 

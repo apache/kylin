@@ -24,13 +24,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -145,7 +145,7 @@ public class QueryDetectResponse {
             this.modelId = realization.getModelId();
             this.modelAlias = realization.getModelAlias();
             this.layoutId = realization.getLayoutId();
-            this.indexType = realization.getIndexType();
+            this.indexType = realization.getType();
             this.partialMatchModel = realization.isPartialMatchModel();
             this.valid = realization.isValid();
             this.isTableIndex = IndexEntity.isTableIndex(realization.getLayoutId());

@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.table.ATable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -91,7 +92,7 @@ public class ColumnDesc implements Serializable {
 
     @Getter
     @Setter
-    private TableDesc table;
+    private ATable table;
     @Getter
     private int zeroBasedIndex = -1;
 
@@ -162,6 +163,10 @@ public class ColumnDesc implements Serializable {
         return BACK_TICK + table.getName() + BACK_TICK + "." + BACK_TICK + getName() + BACK_TICK;
     }
 
+    public String getBackTickName() {
+        return BACK_TICK + getName() + BACK_TICK;
+    }
+
     @JsonSetter("name")
     public void setName(String name) {
         this.name = name;
@@ -214,7 +219,7 @@ public class ColumnDesc implements Serializable {
         isPartitioned = partitioned;
     }
 
-    public void init(TableDesc table) {
+    public void init(ATable table) {
         this.table = table;
 
         if (id != null)
@@ -229,7 +234,7 @@ public class ColumnDesc implements Serializable {
     }
 
     // for test mainly
-    public static ColumnDesc mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
+    public static ColumnDesc mockup(ATable table, int oneBasedColumnIndex, String name, String datatype) {
         ColumnDesc desc = new ColumnDesc();
         desc.setId(String.valueOf(oneBasedColumnIndex));
         desc.setName(name);
@@ -290,7 +295,6 @@ public class ColumnDesc implements Serializable {
                 + "id='" + id //
                 + "', name='" + name //
                 + "', datatype='" + datatype //
-                + "', comment='" + comment //
                 + "'}";
     }
 

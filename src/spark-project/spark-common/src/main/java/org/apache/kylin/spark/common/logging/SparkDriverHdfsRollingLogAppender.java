@@ -66,7 +66,7 @@ public class SparkDriverHdfsRollingLogAppender extends AbstractHdfsLogAppender {
     }
 
     @PluginFactory
-    public synchronized static SparkDriverHdfsRollingLogAppender createAppender(@PluginAttribute("name") String name,
+    public static synchronized SparkDriverHdfsRollingLogAppender createAppender(@PluginAttribute("name") String name,
             @PluginAttribute("kerberosEnabled") boolean kerberosEnabled,
             @PluginAttribute("kerberosPrincipal") String kerberosPrincipal,
             @PluginAttribute("kerberosKeytab") String kerberosKeytab,

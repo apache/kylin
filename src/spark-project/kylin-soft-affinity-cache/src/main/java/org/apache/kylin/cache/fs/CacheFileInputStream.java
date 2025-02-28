@@ -140,8 +140,8 @@ public class CacheFileInputStream extends FSInputStream implements ByteBufferRea
         if (buf == null)
             throw new IOException(String.format(Locale.ROOT, READ_FILE_LOG, this.file.toString()));
         if (b == null || off < 0 || len < 0 || b.length - off < len) {
-            throw new IllegalArgumentException(
-                    String.format(Locale.ROOT, "Reading file %s error,  invalid arguments: off %s len %s ", this.file.toString(), off, len));
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
+                    "Reading file %s error,  invalid arguments: off %s len %s ", this.file.toString(), off, len));
         }
         int got = mInputStream.read(b, off, len);
         if (got == 0)
@@ -173,8 +173,8 @@ public class CacheFileInputStream extends FSInputStream implements ByteBufferRea
         if (pos < 0)
             throw new EOFException("Reading file " + this.file.toString() + " error, position is negative");
         if (b == null || off < 0 || len < 0 || b.length - off < len) {
-            throw new IllegalArgumentException(
-                    String.format(Locale.ROOT, "Reading file %s error,  invalid arguments: off %s len %s ", this.file.toString(), off, len));
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
+                    "Reading file %s error,  invalid arguments: off %s len %s ", this.file.toString(), off, len));
         }
         long oldPos = mInputStream.getPos();
         mInputStream.seek(pos);

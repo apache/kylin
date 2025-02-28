@@ -31,6 +31,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.After;
@@ -39,8 +40,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class CalciteParserTest extends NLocalFileMetadataTestCase {
 
@@ -58,7 +57,7 @@ public class CalciteParserTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNoTableNameExists() throws SqlParseException {
+    public void testNoTableNameExists() {
         String expr1 = "a + b";
         assertEquals("x.a + x.b", CalciteParser.insertAliasInExpr(expr1, "x"));
 
@@ -70,7 +69,7 @@ public class CalciteParserTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTableNameExists1() throws SqlParseException {
+    public void testTableNameExists1() {
         String expr1 = "a + x.b";
 
         exception.expect(IllegalArgumentException.class);
@@ -79,7 +78,7 @@ public class CalciteParserTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTableNameExists2() throws SqlParseException {
+    public void testTableNameExists2() {
         String expr1 = "a + year(x.b)";
 
         exception.expect(IllegalArgumentException.class);
@@ -88,7 +87,7 @@ public class CalciteParserTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTableNameExists3() throws SqlParseException {
+    public void testTableNameExists3() {
         String expr1 = "a + hiveudf(x.b)";
 
         exception.expect(IllegalArgumentException.class);

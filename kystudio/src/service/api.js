@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueResource from 'vue-resource'
 import projectApi from './project'
 import modelApi from './model'
+import internalTableApi from './internalTable'
 import configApi from './config'
 import kafkaApi from './kafka'
 import userApi from './user'
@@ -20,5 +21,6 @@ export default {
   system: systemApi,
   datasource: datasourceApi,
   monitor: monitorApi,
-  dashboard: dashboardApi
+  dashboard: dashboardApi,
+  internalTable: internalTableApi
 }

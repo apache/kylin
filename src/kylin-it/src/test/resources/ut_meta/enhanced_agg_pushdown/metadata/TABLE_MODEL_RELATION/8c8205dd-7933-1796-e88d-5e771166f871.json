@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
+  "model_uuid" : "1e74b613-6134-a986-810b-ac5b4f663af3",
+  "project" : "test_agg_pushdown",
+  "uuid" : "8c8205dd-7933-1796-e88d-5e771166f871"
+}

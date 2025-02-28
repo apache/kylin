@@ -18,6 +18,11 @@
 
 package org.apache.kylin.common.persistence;
 
+import static org.apache.kylin.common.persistence.MetadataType.ALL;
+import static org.apache.kylin.common.persistence.MetadataType.ALL_TYPE_STR;
+import static org.apache.kylin.common.persistence.MetadataType.NON_GLOBAL_METADATA_TYPE;
+import static org.apache.kylin.common.persistence.MetadataType.mergeKeyWithType;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -29,33 +34,33 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.AuditLogStore;
-import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -69,45 +74,25 @@ import lombok.val;
 public abstract class ResourceStore implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceStore.class);
-
-    public static final String GLOBAL_PROJECT = "/_global";
-    public static final String USER_ROOT = GLOBAL_PROJECT + "/user";
-    public static final String USER_GROUP_ROOT = GLOBAL_PROJECT + "/user_group";
-    public static final String ACL_ROOT = GLOBAL_PROJECT + "/acl";
-    public static final String PROJECT_ROOT = GLOBAL_PROJECT + "/project";
-    public static final String ACL_GLOBAL_ROOT = GLOBAL_PROJECT + "/sys_acl/user";
-    public static final String UPGRADE = GLOBAL_PROJECT + "/upgrade";
-    public static final String VIEW_ROOT = GLOBAL_PROJECT + "/logical_view";
-
-    public static final String DATA_MODEL_DESC_RESOURCE_ROOT = "/model_desc";
-    public static final String FUSION_MODEL_RESOURCE_ROOT = "/fusion_model";
-    public static final String INDEX_PLAN_RESOURCE_ROOT = "/index_plan";
+    public static final String GLOBAL_PROJECT = "_global";
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
-    public static final String TEMP_STATMENT_RESOURCE_ROOT = "/temp_statement";
-    public static final String TABLE_RESOURCE_ROOT = "/table";
-    public static final String EXTERNAL_FILTER_RESOURCE_ROOT = "/ext_filter";
-    public static final String EXECUTE_RESOURCE_ROOT = "/execute";
-    public static final String STREAMING_RESOURCE_ROOT = "/streaming";
-    public static final String KAFKA_RESOURCE_ROOT = "/kafka";
-    public static final String DATAFLOW_RESOURCE_ROOT = "/dataflow";
-    public static final String DATA_LOADING_RANGE_RESOURCE_ROOT = "/loading_range";
-    public static final String QUERY_FILTER_RULE_RESOURCE_ROOT = "/rule";
-    public static final String JOB_STATISTICS = "/job_stats";
-    public static final String EXECUTABLE_JOB = "/execute";
-    public static final String HISTORY_SOURCE_USAGE = GLOBAL_PROJECT + "/history_source_usage";
-    public static final String RESOURCE_GROUP = GLOBAL_PROJECT + "/resource_group";
-    public static final String DATA_PARSER_RESOURCE_ROOT = "/parser";
-    public static final String JAR_RESOURCE_ROOT = "/jar";
+    public static final String METASTORE_IMAGE_META_KEY_TAG = "_image";
+    public static final String METASTORE_IMAGE = mergeKeyWithType(METASTORE_IMAGE_META_KEY_TAG, MetadataType.SYSTEM);
+    public static final String METASTORE_UUID_META_KEY_TAG = "UUID";
+    // if KE ever upgraded from 4.1,
+    // there is a record with data-permission-separate in backup core-meta/_global/upgrade dir.
+    public static final String UPGRADE_META_KEY_PREFIX = "/_global/upgrade/";
+    // for data permission separate
+    public static final String UPGRADE_META_KEY_TAG = "acl_version";
+    public static final String METASTORE_UUID_TAG = mergeKeyWithType(METASTORE_UUID_META_KEY_TAG, MetadataType.SYSTEM);
+    public static final String METASTORE_TRASH_RECORD_KEY = "trash_record";
+    public static final String METASTORE_TRASH_RECORD = mergeKeyWithType(METASTORE_TRASH_RECORD_KEY,
+            MetadataType.SYSTEM);
+    public static final String REC_FILE = "rec";
+    public static final String COMPRESSED_FILE = "metadata.zip";
 
-    public static final String METASTORE_IMAGE = "/_image";
-    public static final String METASTORE_UUID_TAG = "/UUID";
-    public static final String METASTORE_TRASH_RECORD = GLOBAL_PROJECT + "/trash_record";
-    public static final String QUERY_HISTORY_TIME_OFFSET = "/query_history_time_offset";
-    public static final String QUERY_HISTORY_ID_OFFSET = "/query_history_id_offset";
-    public static final String ASYNC_TASK = "/async_task";
-    public static final String COMPRESSED_FILE = "/metadata.zip";
-
-    public static final String VERSION_FILE = "/VERSION";
+    public static final String VERSION_FILE_META_KEY_TAG = "VERSION";
+    public static final String VERSION_FILE = mergeKeyWithType(VERSION_FILE_META_KEY_TAG, MetadataType.SYSTEM);
 
     private static final String KYLIN_PROPS = "kylin.properties";
 
@@ -183,22 +168,36 @@ public abstract class ResourceStore implements AutoCloseable {
     }
 
     /**
-     * List resources and sub-folders under a given folder, return null if given path is not a folder
+     * List resources and sub-folders under a given folder.
+     * Path must be one of MetadataType, return null if it is not.
      */
-    public final NavigableSet<String> listResources(String folderPath) {
-        String path = norm(folderPath);
-        return listResourcesImpl(path, false);
+    public final NavigableSet<String> listResources(String path) {
+        return listResources(path, new RawResourceFilter());
     }
 
-    public final NavigableSet<String> listResourcesRecursively(String folderPath) {
-        String path = norm(folderPath);
-        return listResourcesImpl(path, true);
+    public final NavigableSet<String> listResources(String path, RawResourceFilter filter) {
+        return listResourcesImpl(path, filter, false);
     }
 
-    /**
-     * return null if given path is not a folder or not exists
-     */
-    protected abstract NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive);
+    public final NavigableSet<String> listResourcesRecursively(String type) {
+        return listResourcesRecursively(type, new RawResourceFilter());
+    }
+
+    public final NavigableSet<String> listResourcesRecursivelyByProject(String project) {
+        NavigableSet<String> resources = new TreeSet<>();
+        RawResourceFilter filter = RawResourceFilter.equalFilter("project", project);
+        NON_GLOBAL_METADATA_TYPE.forEach(type -> resources.addAll(listResourcesRecursively(type.name(), filter)));
+        resources.addAll(listResourcesRecursively(MetadataType.PROJECT.name(),
+                RawResourceFilter.equalFilter("metaKey", project)));
+        return resources;
+    }
+
+    public final NavigableSet<String> listResourcesRecursively(String folderPath, RawResourceFilter filter) {
+        return listResourcesImpl(folderPath, filter, true);
+    }
+
+    protected abstract NavigableSet<String> listResourcesImpl(String folderPath, RawResourceFilter filter,
+            boolean recursive);
 
     protected void init(MetadataStore metadataStore) throws Exception {
         this.metadataStore = metadataStore;
@@ -214,22 +213,23 @@ public abstract class ResourceStore implements AutoCloseable {
      * Return true if a resource exists, return false in case of folder or non-exist
      */
     public final boolean exists(String resPath) {
-        return existsImpl(norm(resPath));
+        return existsImpl(resPath);
     }
 
     protected abstract boolean existsImpl(String resPath);
+
+    public abstract int batchLock(MetadataType type, RawResourceFilter filter);
 
     /**
      * Read a resource, return null in case of not found or is a folder.
      */
     public final <T extends RootPersistentEntity> T getResource(String resPath, Serializer<T> serializer) {
-        return MemoryLockUtils.doWithLock(null, resPath, true, this,
-                () -> getResourceWithoutLock(resPath, serializer));
+        return getResource(resPath, serializer, false);
     }
 
-    public final <T extends RootPersistentEntity> T getResourceWithoutLock(String resPath, Serializer<T> serializer) {
-        resPath = norm(resPath);
-        RawResource res = getResourceImpl(resPath);
+    public final <T extends RootPersistentEntity> T getResource(String resPath, Serializer<T> serializer,
+            boolean needLock) {
+        RawResource res = getResourceImpl(resPath, needLock);
         if (res == null)
             return null;
 
@@ -237,23 +237,25 @@ public abstract class ResourceStore implements AutoCloseable {
     }
 
     private <T extends RootPersistentEntity> T getResourceFromRawResource(RawResource res, Serializer<T> serializer) {
-        try (InputStream is = res.getByteSource().openStream(); DataInputStream din = new DataInputStream(is)) {
+        try (InputStream is = ByteSource.wrap(res.getContent()).openStream();
+                DataInputStream din = new DataInputStream(is)) {
             T r = serializer.deserialize(din);
-            r.setLastModified(res.getTimestamp());
+            r.setLastModified(res.getTs());
             r.setMvcc(res.getMvcc());
+            r.setResourceName(res.getMetaKey());
             return r;
         } catch (IOException e) {
-            logger.warn("error when deserializing resource: " + res.getResPath(), e);
+            logger.warn("error when deserializing resource: " + res.getMetaKey(), e);
             return null;
         }
     }
 
     public final RawResource getResource(String resPath) {
-        return MemoryLockUtils.doWithLock(resPath, true, this, () -> getResourceImpl(norm(resPath)));
+        return getResource(resPath, false);
     }
 
-    public final List<RawResource> getAllResources(String folderPath) {
-        return getAllResourcesImpl(folderPath, Long.MIN_VALUE, Long.MAX_VALUE);
+    public final RawResource getResource(String resPath, boolean needLock) {
+        return getResourceImpl(resPath, needLock);
     }
 
     /**
@@ -268,7 +270,7 @@ public abstract class ResourceStore implements AutoCloseable {
      */
     public final <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, long timeStart,
             long timeEndExclusive, Serializer<T> serializer) {
-        final List<RawResource> allResources = getAllResources(folderPath);
+        final List<RawResource> allResources = getMatchedResourcesWithoutContent(folderPath, new RawResourceFilter());
         if (allResources == null || allResources.isEmpty()) {
             return Collections.emptyList();
         }
@@ -286,20 +288,18 @@ public abstract class ResourceStore implements AutoCloseable {
     /**
      * return empty list if given path is not a folder or not exists
      */
-    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) {
-        NavigableSet<String> resources = listResources(folderPath);
+    @VisibleForTesting
+    public List<RawResource> getMatchedResourcesWithoutContent(String folderPath, RawResourceFilter filter) {
+        NavigableSet<String> resources = listResources(folderPath, filter);
         if (resources == null)
             return Collections.emptyList();
 
         List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
 
         for (String res : resources) {
-            RawResource resource = getResourceImpl(res);
-            if (resource != null) {// can be null if is a sub-folder
-                long ts = resource.getTimestamp();
-                if (timeStart <= ts && ts < timeEndExclusive) {
-                    result.add(resource);
-                }
+            RawResource nullAbleResource = getResourceImpl(res, false);
+            if (nullAbleResource != null) {
+                result.add(nullAbleResource);
             }
         }
         return result;
@@ -308,14 +308,13 @@ public abstract class ResourceStore implements AutoCloseable {
     /**
      * returns null if not exists
      */
-    protected abstract RawResource getResourceImpl(String resPath);
+    protected abstract RawResource getResourceImpl(String resPath, boolean needLock);
 
     /**
      * check & set, overwrite a resource
      */
     public final <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj,
             Serializer<T> serializer) {
-        resPath = norm(resPath);
 
         long oldMvcc = obj.getMvcc();
         obj.setMvcc(oldMvcc + 1);
@@ -333,7 +332,7 @@ public abstract class ResourceStore implements AutoCloseable {
         ByteSource byteSource = ByteSource.wrap(buf.toByteArray());
 
         val x = checkAndPutResource(resPath, byteSource, oldMvcc);
-        obj.setLastModified(x.getTimestamp());
+        obj.setLastModified(x.getTs());
     }
 
     /**
@@ -358,28 +357,16 @@ public abstract class ResourceStore implements AutoCloseable {
      * get a readable string of a resource path
      */
     public final String getReadableResourcePath(String resPath) {
-        return getReadableResourcePathImpl(norm(resPath));
+        return getReadableResourcePathImpl(resPath);
     }
 
     protected abstract String getReadableResourcePathImpl(String resPath);
 
-    private String norm(String resPath) {
-        resPath = resPath.trim();
-        while (resPath.startsWith("//"))
-            resPath = resPath.substring(1);
-        while (resPath.endsWith("/"))
-            resPath = resPath.substring(0, resPath.length() - 1);
-        if (!resPath.startsWith("/"))
-            resPath = "/" + resPath;
-
-        if (resPath.contains("//")) {
-            throw new IllegalArgumentException(
-                    String.format(Locale.ROOT, "input resPath contains consequent slash: %s", resPath));
-        }
-        return resPath;
+    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
+        putResourceWithoutCheck(resPath, bs, timeStamp, newMvcc, false);
     }
 
-    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc) {
+    public void putResourceWithoutCheck(String resPath, ByteSource bs, long timeStamp, long newMvcc, boolean force) {
         throw new NotImplementedException("Only implemented in InMemoryResourceStore");
     }
 
@@ -399,29 +386,12 @@ public abstract class ResourceStore implements AutoCloseable {
 
     public abstract void reload() throws IOException;
 
-    public interface Visitor {
-        void visit(String path);
-    }
-
-    private void scanRecursively(String path, Visitor visitor) {
-        NavigableSet<String> children = listResources(path);
-        if (children != null) {
-            for (String child : children)
-                scanRecursively(child, visitor);
-            return;
+    public List<String> collectResourceRecursively(MetadataType type, RawResourceFilter filter) {
+        if (filter.getConditions().isEmpty()) {
+            return new ArrayList<>(listResourcesRecursively(type.name()));
         }
-
-        if (exists(path))
-            visitor.visit(path);
-    }
-
-    public List<String> collectResourceRecursively(String root, final String suffix) {
-        final ArrayList<String> collector = Lists.newArrayList();
-        scanRecursively(root, path -> {
-            if (path.endsWith(suffix))
-                collector.add(path);
-        });
-        return collector;
+        List<RawResource> matchedResources = getMatchedResourcesWithoutContent(type.name(), filter);
+        return matchedResources.stream().map(RawResource::generateKeyWithType).collect(Collectors.toList());
     }
 
     public void close() {
@@ -439,17 +409,17 @@ public abstract class ResourceStore implements AutoCloseable {
                 throw new IllegalStateException("No resource found at -- " + entry.getKey());
             }
             try {
-                File f = Paths.get(metaDir.getAbsolutePath(), res.getResPath()).toFile();
+                File f = Paths.get(metaDir.getAbsolutePath(), res.generateKeyWithType()).toFile();
                 f.getParentFile().mkdirs();
                 try (FileOutputStream out = new FileOutputStream(f);
                         InputStream input = res.getByteSource().openStream()) {
                     IOUtils.copy(input, out);
-                    if (!f.setLastModified(res.getTimestamp())) {
+                    if (!f.setLastModified(res.getTs())) {
                         logger.info("{} modified time change failed", f);
                     }
                 }
             } catch (IOException e) {
-                throw new IllegalStateException("dump " + res.getResPath() + " failed", e);
+                throw new IllegalStateException("dump " + res.generateKeyWithType() + " failed", e);
             }
         }
 
@@ -464,7 +434,7 @@ public abstract class ResourceStore implements AutoCloseable {
         ResourceStore from = ResourceStore.getKylinMetaStore(kylinConfig);
 
         if (dumpList == null) {
-            dumpList = from.listResourcesRecursively("/");
+            dumpList = from.listResourcesRecursively(ALL.name());
         }
 
         for (String path : dumpList) {
@@ -472,17 +442,17 @@ public abstract class ResourceStore implements AutoCloseable {
             if (res == null)
                 throw new IllegalStateException("No resource found at -- " + path);
             try {
-                File f = Paths.get(metaDir.getAbsolutePath(), res.getResPath()).toFile();
+                File f = Paths.get(metaDir.getAbsolutePath(), res.generateFilePath()).toFile();
                 f.getParentFile().mkdirs();
                 try (FileOutputStream out = new FileOutputStream(f);
                         InputStream in = res.getByteSource().openStream()) {
                     IOUtils.copy(in, out);
-                    if (!f.setLastModified(res.getTimestamp())) {
+                    if (!f.setLastModified(res.getTs())) {
                         logger.info("{} modified time change failed", f);
                     }
                 }
             } catch (IOException e) {
-                throw new IllegalStateException("dump " + res.getResPath() + " failed", e);
+                throw new IllegalStateException("dump " + res.getMetaKey() + " failed", e);
             }
         }
 
@@ -529,9 +499,11 @@ public abstract class ResourceStore implements AutoCloseable {
         val resource = getResource(resPath);
         if (resource != null) {
             //res is a file
-            destRS.putResourceWithoutCheck(resPath, resource.getByteSource(), resource.getTimestamp(),
-                    resource.getMvcc());
+            destRS.putResourceWithoutCheck(resPath, resource.getByteSource(), resource.getTs(), resource.getMvcc());
         } else {
+            if (!ALL_TYPE_STR.contains(resPath)) {
+                return;
+            }
             NavigableSet<String> resources = listResourcesRecursively(resPath);
             if (resources == null || resources.isEmpty()) {
                 return;
@@ -542,7 +514,7 @@ public abstract class ResourceStore implements AutoCloseable {
                     logger.warn("The resource {} doesn't exists,there may be transaction problems here", res);
                     continue;
                 }
-                destRS.putResourceWithoutCheck(res, rawResource.getByteSource(), rawResource.getTimestamp(),
+                destRS.putResourceWithoutCheck(res, rawResource.getByteSource(), rawResource.getTs(),
                         rawResource.getMvcc());
             }
         }
@@ -552,14 +524,9 @@ public abstract class ResourceStore implements AutoCloseable {
         return getMetadataStore().getAuditLogStore();
     }
 
-    public EpochStore getEpochStore() {
-        return getMetadataStore().getEpochStore();
-    }
-
     public void createMetaStoreUuidIfNotExist() {
         if (!exists(METASTORE_UUID_TAG)) {
-            MemoryLockUtils.doWithLock(null, METASTORE_UUID_TAG, false, this, () -> null);
-            checkAndPutResource(METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+            checkAndPutResource(METASTORE_UUID_TAG, new StringEntity("UUID", RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
         }
     }

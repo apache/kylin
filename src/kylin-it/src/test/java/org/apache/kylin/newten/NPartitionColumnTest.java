@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.ArrayList;
@@ -37,18 +36,26 @@ import lombok.val;
 @RunWith(TimeZoneTestRunner.class)
 public class NPartitionColumnTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/partition_col");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/partition_col" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test

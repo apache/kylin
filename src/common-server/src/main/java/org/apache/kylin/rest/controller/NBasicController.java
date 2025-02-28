@@ -27,7 +27,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_DOWNLOAD_
 import static org.apache.kylin.common.exception.ServerErrorCode.INCORRECT_PROJECT_MODE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_DATA_BINDER_AUTO_GROW_COLLECTION_LIMIT;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
-import static org.apache.kylin.common.exception.ServerErrorCode.LOW_LEVEL_LICENSE;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
@@ -74,16 +73,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
-import org.apache.kylin.common.exception.FeignErrorResponse;
-import org.apache.kylin.common.exception.FeignRpcException;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
-import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
@@ -263,16 +259,6 @@ public class NBasicController {
         getLogger().error("", ex);
         KylinException cause = (KylinException) ex;
         return new ErrorResponse(req.getRequestURL().toString(), cause);
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(FeignRpcException.class)
-    @ResponseBody
-    FeignErrorResponse handleFeignRpcException(HttpServletRequest req, Throwable ex) {
-        getLogger().error("", ex);
-        FeignRpcException cause = (FeignRpcException) ex;
-        String msg = "Exception happened when using feign rpc: " + req.getRequestURL().toString();
-        return new FeignErrorResponse(msg, cause.getExceptionSerialized());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -600,7 +586,7 @@ public class NBasicController {
     }
 
     public void checkStreamingEnabled() {
-        if (!KylinConfig.getInstanceFromEnv().streamingEnabled()) {
+        if (!KylinConfig.getInstanceFromEnv().isStreamingEnabled()) {
             throw new KylinException(ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingDisabled());
         }
@@ -656,7 +642,7 @@ public class NBasicController {
         for (String status : statuses) {
             if (!streamingJobsStatus.contains(status)) {
                 throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "statuses",
-                        org.apache.commons.lang.StringUtils.join(streamingJobsStatus, ", "));
+                        StringUtils.join(streamingJobsStatus, ", "));
             }
         }
     }
@@ -670,7 +656,7 @@ public class NBasicController {
         for (String status : statuses) {
             if (!streamingJobTypeStatus.contains(status)) {
                 throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "job_types",
-                        org.apache.commons.lang.StringUtils.join(streamingJobTypeStatus, ", "));
+                        StringUtils.join(streamingJobTypeStatus, ", "));
             }
         }
     }
@@ -708,16 +694,6 @@ public class NBasicController {
             logger.error("Failed to encode host, will use the original host name");
         }
         return host;
-    }
-
-    public void checkKylinInfo(boolean enableSecondStorage) {
-        if (enableSecondStorage) {
-            boolean checkKylinInfo = KylinInfoExtension.getFactory().checkKylinInfo();
-            if (!checkKylinInfo) {
-                Message msg = MsgPicker.getMsg();
-                throw new KylinException(LOW_LEVEL_LICENSE, msg.getLowLevelLicenseMessage());
-            }
-        }
     }
 
     @InitBinder

@@ -21,14 +21,13 @@ package org.apache.spark.sql.execution.datasources
 import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.spark.Partition
 import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.ExecutorCacheTaskLocation
 import org.apache.spark.sql.connector.read.InputPartition
 
 /**
  * A collection of file blocks that should be read as a single task
  * (possibly from multiple partitioned directories).
  */
-case class CacheFilePartition(index: Int, files: Array[CachePartitionedFile])
+case class CacheFilePartition(index: Int, files: Array[CachePartitionedFile], nativeFilePartition: FilePartition)
   extends Partition with InputPartition {
   override def preferredLocations(): Array[String] = {
     files.head.locations
@@ -60,6 +59,6 @@ object CacheFilePartition extends Logging {
     }
     CacheFilePartition(filePartition.index, filePartition.files.map(p => {
       CachePartitionedFile(p.partitionValues, p.filePath, p.start, p.length, locations)
-    }))
+    }), filePartition)
   }
 }

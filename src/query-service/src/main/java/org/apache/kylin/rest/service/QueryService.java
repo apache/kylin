@@ -20,6 +20,8 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.QueryTrace.GET_ACL_INFO;
 import static org.apache.kylin.common.QueryTrace.SPARK_JOB_EXECUTION;
+import static org.apache.kylin.common.debug.BackdoorToggles.CONNECTION_CREATING_TIME;
+import static org.apache.kylin.common.debug.BackdoorToggles.STATEMENT_TO_REQUEST_TIME;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_EXCEEDED_CONCURRENT_LIMIT;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_QUERY_REJECTED;
@@ -33,8 +35,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeSystem.JOB_NODE_QU
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
 import static org.springframework.security.acls.domain.BasePermission.ADMINISTRATION;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -47,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -57,13 +58,14 @@ import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.exception.BigQueryException;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.exception.NewQueryRefuseException;
@@ -72,14 +74,9 @@ import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.constants.AclConstants;
@@ -94,7 +91,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.SetMultimap;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -108,11 +105,11 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryHistorySqlParam;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
+import org.apache.kylin.metadata.query.QueryRecord;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.query.util.QueryHistoryUtil;
 import org.apache.kylin.metadata.querymeta.ColumnMeta;
@@ -134,7 +131,6 @@ import org.apache.kylin.query.engine.data.TableSchema;
 import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.EscapeDialect;
 import org.apache.kylin.query.util.PrepareSQLUtils;
 import org.apache.kylin.query.util.QueryLimiter;
@@ -146,12 +142,12 @@ import org.apache.kylin.query.util.RawSqlParser;
 import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.query.util.TokenMgrError;
 import org.apache.kylin.query.util.WhiteSpaceParser;
-import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.config.AppConfig;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.QueryDetectRequest;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.response.BigQueryResponse;
 import org.apache.kylin.rest.response.QueryDetectResponse;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.response.SQLResponseTrace;
@@ -174,15 +170,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.val;
 
 /**
@@ -191,7 +183,6 @@ import lombok.val;
 @Component("queryService")
 public class QueryService extends BasicService implements CacheSignatureQuerySupporter {
 
-    public static final String QUERY_STORE_PATH_PREFIX = "/query/";
     private static final String JDBC_METADATA_SCHEMA = "metadata";
     private static final Logger logger = LoggerFactory.getLogger(LogConstant.QUERY_CATEGORY);
     final SlowQueryDetector slowQueryDetector = new SlowQueryDetector();
@@ -206,9 +197,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     private AccessService accessService;
 
     @Autowired
-    private ClusterManager clusterManager;
-
-    @Autowired
     private AppConfig appConfig;
 
     @Autowired
@@ -220,53 +208,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     public QueryService() {
         slowQueryDetector.start();
         queryRoutingEngine = new QueryRoutingEngine();
-    }
-
-    private static String getQueryKeyById(String project, String creator) {
-        return "/" + project + QUERY_STORE_PATH_PREFIX + creator + MetadataConstants.FILE_SURFIX;
-    }
-
-    public ForceToTieredStorage getForcedToTieredStorage(String project, ForceToTieredStorage api) {
-        switch (api) {
-        case CH_FAIL_TO_DFS:
-        case CH_FAIL_TO_PUSH_DOWN:
-        case CH_FAIL_TO_RETURN:
-            return api;
-        case CH_FAIL_TAIL:
-            break;
-        default:
-            // Do nothing
-        }
-
-        try {
-            //project level config
-            api = NProjectManager.getProjectConfig(project).getProjectForcedToTieredStorage();
-            switch (api) {
-            case CH_FAIL_TO_DFS:
-            case CH_FAIL_TO_PUSH_DOWN:
-            case CH_FAIL_TO_RETURN:
-                return api;
-            default:
-                // Do nothing
-            }
-        } catch (Exception e) {
-            // no define or invalid do nothing
-        }
-
-        try {
-            //system
-            api = KylinConfig.getInstanceFromEnv().getSystemForcedToTieredStorage();
-            switch (api) {
-            case CH_FAIL_TO_DFS:
-            case CH_FAIL_TO_PUSH_DOWN:
-            case CH_FAIL_TO_RETURN:
-                return api;
-            default:
-                return ForceToTieredStorage.CH_FAIL_TO_DFS;
-            }
-        } catch (Exception e) {
-            return ForceToTieredStorage.CH_FAIL_TO_DFS;
-        }
     }
 
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
@@ -291,19 +232,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             }
             queryParams.setAclInfo(getExecuteAclInfo(queryParams.getProject(), queryParams.getExecuteAs()));
             queryParams.setACLDisabledOrAdmin(isACLDisabledOrAdmin(queryParams.getProject(), queryParams.getAclInfo()));
-            int forcedToTieredStorage;
-            ForceToTieredStorage enumForcedToTieredStorage;
-            try {
-                forcedToTieredStorage = sqlRequest.getForcedToTieredStorage();
-                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(),
-                        ForceToTieredStorage.values()[forcedToTieredStorage]);
-            } catch (NullPointerException e) {
-                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(),
-                        ForceToTieredStorage.CH_FAIL_TAIL);
-            }
-            logger.debug("forcedToTieredStorage={}", enumForcedToTieredStorage);
-            queryParams.setForcedToTieredStorage(enumForcedToTieredStorage);
-            QueryContext.current().setForcedToTieredStorage(enumForcedToTieredStorage);
             QueryContext.current().setForceTableIndex(queryParams.isForcedToIndex());
 
             if (QueryContext.current().getQueryTagInfo().isAsyncQuery()
@@ -359,59 +287,44 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
     }
 
-    public void saveQuery(final String creator, final String project, final Query query) throws IOException {
+    public void saveQuery(final String creator, final String project, final Query query) {
         aclEvaluate.checkProjectQueryPermission(project);
         UnitOfWork.doInTransactionWithRetry(() -> {
             Message msg = MsgPicker.getMsg();
-            val record = getSavedQueries(creator, project, true);
-            assert record != null;
-            List<Query> currentQueries = record.getQueries();
-            if (currentQueries.stream().map(Query::getName).collect(Collectors.toSet()).contains(query.getName()))
-                throw new KylinException(SAVE_QUERY_FAILED,
-                        String.format(Locale.ROOT, msg.getDuplicateQueryName(), query.getName()));
-            currentQueries.add(query);
-            getStore().checkAndPutResource(getQueryKeyById(project, creator), record, QueryRecordSerializer.getInstance());
+            Manager<QueryRecord> manager = Manager.getInstance(KylinConfig.getInstanceFromEnv(), project,
+                    QueryRecord.class);
+            manager.upsert(QueryRecord.generateResourceName(project, creator), copyForWrite -> {
+                List<Query> currentQueries = copyForWrite.getQueries();
+                if (currentQueries.stream().map(Query::getName).collect(Collectors.toSet()).contains(query.getName()))
+                    throw new KylinException(SAVE_QUERY_FAILED,
+                            String.format(Locale.ROOT, msg.getDuplicateQueryName(), query.getName()));
+                currentQueries.add(query);
+            }, () -> new QueryRecord(project, creator));
             return null;
         }, project);
     }
 
-    public void removeSavedQuery(final String creator, final String project, final String id) throws IOException {
+    public void removeSavedQuery(final String creator, final String project, final String id) {
         aclEvaluate.checkProjectQueryPermission(project);
         UnitOfWork.doInTransactionWithRetry(() -> {
-            val record = getSavedQueries(creator, project, true);
-            assert record != null;
-            record.setQueries(record.getQueries().stream().filter(q -> !q.getId().equals(id)).collect(Collectors.toList()));
-            getStore().checkAndPutResource(getQueryKeyById(project, creator), record, QueryRecordSerializer.getInstance());
+            Manager<QueryRecord> manager = Manager.getInstance(KylinConfig.getInstanceFromEnv(), project,
+                    QueryRecord.class);
+            manager.update(QueryRecord.generateResourceName(project, creator),
+                    copyForWrite -> copyForWrite.setQueries(copyForWrite.getQueries().stream()
+                            .filter(q -> !q.getId().equals(id)).collect(Collectors.toList())));
             return null;
         }, project);
     }
 
-    public QueryRecord getSavedQueries(final String creator, final String project) throws IOException {
-        return getSavedQueries(creator, project, false);
-    }
-
-    private QueryRecord getSavedQueries(final String creator, final String project, boolean withWriteLock)
-            throws IOException {
+    public QueryRecord getSavedQueries(final String creator, final String project) {
         aclEvaluate.checkProjectQueryPermission(project);
         if (null == creator) {
             return null;
         }
-        String resPath = getQueryKeyById(project, creator);
-        ResourceStore resourceStore = getStore();
-        QueryRecord record;
-        if (withWriteLock) {
-            record = MemoryLockUtils.doWithLock(null, resPath, false, resourceStore,
-                    () -> resourceStore.getResource(resPath, QueryRecordSerializer.getInstance()));
-        } else {
-            record = getStore().getResource(resPath, QueryRecordSerializer.getInstance());
-        }
-        if (record == null) {
-            return new QueryRecord();
-        }
-        val resource = getStore().getResource(getQueryKeyById(project, creator));
-        val copy = JsonUtil.deepCopy(record, QueryRecord.class);
-        copy.setMvcc(resource.getMvcc());
-        return copy;
+        Manager<QueryRecord> manager = Manager.getInstance(KylinConfig.getInstanceFromEnv(), project,
+                QueryRecord.class);
+        return manager.get(QueryRecord.generateResourceName(project, creator))
+                .orElse(new QueryRecord(project, creator));
     }
 
     public String logQuery(final SQLRequest request, final SQLResponse response) {
@@ -445,10 +358,10 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             snapShotFilters = Lists.newArrayList();
         } else {
             snapShots = response.getNativeRealizations().stream()
-                    .flatMap(nativeQueryRealization -> nativeQueryRealization.getSnapshots().stream()).distinct()
+                    .flatMap(nativeQueryRealization -> nativeQueryRealization.getLookupTables().stream()).distinct()
                     .collect(Collectors.toList());
             snapShotFilters = ContextUtil
-                    .listContexts().stream().flatMap(ctx -> ctx.filterColumns.stream()
+                    .listContexts().stream().flatMap(ctx -> ctx.getFilterColumns().stream()
                             .filter(col -> snapShots.contains(col.getTable())).map(TblColRef::getCanonicalName))
                     .collect(Collectors.toList());
         }
@@ -464,6 +377,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         ParquetPageFilterCollector.logParquetPages(QueryContext.current().getQueryId());
 
         QueryContext.current().record("end");
+        QueryContext.current().setResponseStartTime(System.currentTimeMillis());
 
         LogReport report = new LogReport().put(LogReport.QUERY_ID, QueryContext.current().getQueryId())
                 .put(LogReport.SQL, sql).put(LogReport.USER, user)
@@ -507,6 +421,23 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return log;
     }
 
+    public BigQueryResponse ifBigQuery(SQLRequest sqlRequest) {
+        SQLResponse sqlResponse = queryWithCache(sqlRequest);
+        BigQueryResponse bigQueryResponse = new BigQueryResponse();
+        String isBigQuery = sqlResponse.isBigQuery() ? "bigQuery" : "nonBigQuery";
+        if (sqlRequest.isForcedToPushDown() || sqlResponse.isException() || sqlResponse.isQueryPushDown()) {
+            isBigQuery = "others";
+        }
+        if (sqlResponse.isException()) {
+            bigQueryResponse.setException(true);
+            bigQueryResponse.setExceptionMessage(sqlResponse.getExceptionMessage());
+        }
+        bigQueryResponse.setCache(sqlResponse.isStorageCacheUsed());
+        bigQueryResponse.setIfBigQuery(isBigQuery);
+        bigQueryResponse.setScanRows(sqlResponse.getTotalScanRows());
+        return bigQueryResponse;
+    }
+
     public SQLResponse queryWithCache(SQLRequest sqlRequest) {
         aclEvaluate.checkProjectQueryPermission(sqlRequest.getProject());
         checkIfExecuteUserValid(sqlRequest);
@@ -514,6 +445,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         queryContext.setProject(sqlRequest.getProject());
         queryContext.setLimit(sqlRequest.getLimit());
         queryContext.setOffset(sqlRequest.getOffset());
+        queryContext.setIfBigQuery(sqlRequest.isIfBigQuery());
         if (StringUtils.isNotEmpty(sqlRequest.getQueryId())) {
             // validate queryId with UUID.fromString
             queryContext.setQueryId(UUID.fromString(sqlRequest.getQueryId()).toString());
@@ -541,7 +473,13 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             return response;
         } finally {
             QueryLimiter.release();
+            String queryId = QueryContext.current().getQueryId();
+            String queryExecutionId = QueryContext.current().getExecutionID();
+            long responseStartTime = QueryContext.current().getResponseStartTime();
             QueryContext.current().close();
+            QueryContext.current().setQueryId(queryId);
+            QueryContext.current().setExecutionID(queryExecutionId);
+            QueryContext.current().setResponseStartTime(responseStartTime);
         }
     }
 
@@ -576,7 +514,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         val isDataPermissionDefaultEnabled = KylinConfig.getInstanceFromEnv().isDataPermissionDefaultEnabled();
         if (isDataPermissionDefaultEnabled) {
             try {
-                Set<String> extPermissions = accessService.getUserNormalExtPermissionsByUserInProject(sqlRequest.getProject(), executeUser);
+                Set<String> extPermissions = accessService
+                        .getUserNormalExtPermissionsByUserInProject(sqlRequest.getProject(), executeUser);
                 if (!extPermissions.contains(AclConstants.DATA_QUERY)) {
                     throw new KylinException(ACCESS_DENIED, "Access is denied.");
                 }
@@ -610,8 +549,14 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
         checkSqlRequest(sqlRequest);
 
-        if (sqlRequest.getBackdoorToggles() != null)
+        if (sqlRequest.getBackdoorToggles() != null) {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
+            QueryTrace queryTrace = QueryContext.currentTrace();
+            Optional.ofNullable(BackdoorToggles.getConnectionCreatingTime())
+                    .ifPresent(duration -> queryTrace.appendSpanFromRequest(CONNECTION_CREATING_TIME, duration));
+            Optional.ofNullable(BackdoorToggles.getStatementToRequestTime())
+                    .ifPresent(duration -> queryTrace.appendSpanFromRequest(STATEMENT_TO_REQUEST_TIME, duration));
+        }
 
         QueryContext queryContext = QueryContext.current();
         QueryMetricsContext.start(queryContext.getQueryId(), getDefaultServer());
@@ -630,7 +575,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             RawSql rawSql = new RawSqlParser(sqlRequest.getSql()).parse();
             rawSql.autoAppendLimit(kylinConfig, sqlRequest.getLimit(), sqlRequest.getOffset());
 
-            WhiteSpaceParser whiteSpaceParser = new WhiteSpaceParser(EscapeDialect.DEFAULT, rawSql.getStatementString().trim());
+            WhiteSpaceParser whiteSpaceParser = new WhiteSpaceParser(EscapeDialect.DEFAULT,
+                    rawSql.getStatementString().trim());
 
             sqlRequest.setNormalizedSql(whiteSpaceParser.parse());
 
@@ -638,18 +584,17 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlRequest.setSql(rawSql.getStatementString());
             // Set user sql for log & record purpose
             queryContext.setUserSQL(rawSql.getFullTextString());
+            // Set first hint string for later use
+            queryContext.setFirstHintStr(rawSql.getFirstHintString());
 
             // Apply model priority if provided
-            applyModelPriority(queryContext, rawSql.getFullTextString());
+            applyModelPriority(queryContext, rawSql);
 
             // Apply sql black list check if matching
             applyQuerySqlBlacklist(project, rawSql.getStatementString());
 
-            // convert CREATE ... to WITH ...
-            sqlResponse = QueryUtils.handleTempStatement(sqlRequest, kylinConfig);
-
             // search cache
-            if (sqlResponse == null && kylinConfig.isQueryCacheEnabled() && !sqlRequest.isForcedToPushDown()
+            if (kylinConfig.isQueryCacheEnabled() && !sqlRequest.isForcedToPushDown()
                     && !queryContext.getQueryTagInfo().isAsyncQuery()) {
                 sqlResponse = searchCache(sqlRequest, kylinConfig);
             }
@@ -659,6 +604,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 try (QueryRequestLimits ignored = new QueryRequestLimits(project)) {
                     sqlResponse = queryAndUpdateCache(sqlRequest, kylinConfig);
                 }
+            }
+            if (sqlRequest.isIfBigQuery()) {
+                return sqlResponse;
             }
 
             QueryUtils.updateQueryContextSQLMetrics(rawSql.getStatementString());
@@ -673,6 +621,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 sqlResponse.setDuration(0);
             } else {
                 sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+                sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
             }
             logQuery(sqlRequest, sqlResponse);
 
@@ -686,7 +635,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             val fusionManager = FusionModelManager.getInstance(KylinConfig.getInstanceFromEnv(),
                     sqlRequest.getProject());
             if (CollectionUtils.isNotEmpty(sqlResponse.getNativeRealizations())) {
-                sqlResponse.getNativeRealizations().stream()
+                sqlResponse.getNativeRealizations()
                         .forEach(realization -> realization.setModelId(fusionManager.getModelId(realization)));
             }
             //check query result row count
@@ -812,17 +761,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         queryContext.getMetrics().setScanBytes(sqlResponse.getScanBytes());
         queryContext.getMetrics().setScanRows(sqlResponse.getScanRows());
         queryContext.getMetrics().setResultRowCount(sqlResponse.getResultRowCount());
-
-        List<QueryContext.NativeQueryRealization> nativeQueryRealizationList = Lists.newArrayList();
-        if (sqlResponse.getNativeRealizations() != null) {
-            for (NativeQueryRealization nqReal : sqlResponse.getNativeRealizations()) {
-                nativeQueryRealizationList.add(new QueryContext.NativeQueryRealization(nqReal.getModelId(),
-                        nqReal.getModelAlias(), nqReal.getLayoutId(), nqReal.getIndexType(),
-                        nqReal.isPartialMatchModel(), nqReal.isValid(), nqReal.isLayoutExist(),
-                        nqReal.isStreamingLayout(), nqReal.getSnapshots()));
-            }
-        }
-        queryContext.setNativeQueryRealizationList(nativeQueryRealizationList);
+        queryContext.setQueryRealizations(sqlResponse.getNativeRealizations());
     }
 
     private String getDefaultServer() {
@@ -840,9 +779,10 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             } else {
                 throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getnotSupportedSql());
             }
-            if (checkCondition(queryCacheEnabled, "query cache is disabled")) {
+            if (checkCondition(queryCacheEnabled, "query cache is disabled") && !sqlRequest.isIfBigQuery()) {
                 // set duration for caching condition checking
                 sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+                sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
                 queryCacheManager.cacheSuccessQuery(sqlRequest, sqlResponse);
             }
         } catch (Throwable e) { // calcite may throw AssertError
@@ -860,13 +800,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             queryContext.getMetrics().setQueryMsg(errMsg);
             queryContext.getQueryTagInfo().setPushdown(false);
 
-            if (e.getCause() != null && NewQueryRefuseException.causedByRefuse(e)) {
-                queryContext.getQueryTagInfo().setRefused(true);
-            }
-
-            if (e.getCause() != null && KylinTimeoutException.causedByTimeout(e)) {
-                queryContext.getQueryTagInfo().setTimeout(true);
-            }
+            applyExceptionResponse(sqlResponse, e, queryContext);
 
             if (UserStopQueryException.causedByUserStop(e)) {
                 sqlResponse.setStopByUser(true);
@@ -879,11 +813,27 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlResponse.setTimeout(queryContext.getQueryTagInfo().isTimeout());
             setAppMaterURL(sqlResponse);
             sqlResponse.setDuration(QueryContext.currentMetrics().duration());
+            sqlResponse.setCpuTime(QueryContext.currentMetrics().getCpuTime());
             if (queryCacheEnabled && e.getCause() != null) {
                 putIntoExceptionCache(sqlRequest, sqlResponse, e);
             }
         }
         return sqlResponse;
+    }
+
+    private static void applyExceptionResponse(SQLResponse sqlResponse, Throwable e, QueryContext queryContext) {
+        if (e.getCause() != null) {
+            if (NewQueryRefuseException.causedByRefuse(e)) {
+                queryContext.getQueryTagInfo().setRefused(true);
+            } else if (BigQueryException.causedByRefuse(e)) {
+                sqlResponse.setException(false);
+                sqlResponse.setExceptionMessage("");
+                sqlResponse.setScanRows(queryContext.getMetrics().getScanRows());
+                sqlResponse.setBigQuery(queryContext.isBigQuery());
+            } else if (KylinTimeoutException.causedByTimeout(e)) {
+                queryContext.getQueryTagInfo().setTimeout(true);
+            }
+        }
     }
 
     @VisibleForTesting
@@ -1011,10 +961,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         // is project admin
         return aclInfo != null && aclInfo.isHasAdminPermission();
-    }
-
-    public void clearThreadLocalContexts() {
-        OLAPContext.clearThreadLocalContexts();
     }
 
     public QueryExec newQueryExec(String project) {
@@ -1216,6 +1162,24 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         Map<TableMetaIdentify, TableMetaWithType> tableMap = constructTableMeta(schemaMetaData, targetModelTables);
         Map<ColumnMetaIdentify, ColumnMetaWithType> columnMap = constructTblColMeta(schemaMetaData, project,
                 targetModelColumns);
+        columnMap.forEach((identify, columnMetaWithType) -> {
+            TableMetaIdentify tableMetaIdentify = new TableMetaIdentify(identify.getTableSchema(),
+                    identify.getTableName());
+            val tableType = tableMap.get(tableMetaIdentify).getTABLE_TYPE();
+            if (tableType.equals("VIEW")) {
+                // Converts the model's column alias to a true column name
+                val modelManager = NDataModelManager.getInstance(getConfig(), project);
+                val model = modelManager.getDataModelDescByAlias(tableMetaIdentify.tableName);
+                // Set table name comment of this model view
+                if (StringUtils.isNotBlank(model.getDescription())) {
+                    tableMap.get(tableMetaIdentify).setREMARKS(model.getDescription());
+                }
+                int colIdInMode = model.getColumnByColumnNameInModel(columnMetaWithType.getCOLUMN_NAME()).getId();
+                String fullyQualifiedName = model.getColRef(colIdInMode).getColumnWithTableAndSchema();
+                columnMetaWithType.setFULLY_QUALIFIED_COLUMN_NAME(fullyQualifiedName);
+            }
+        });
+
         addColsToTblMeta(tableMap, columnMap);
 
         for (NDataModel model : models) {
@@ -1234,11 +1198,11 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         if (targetModelName != null) {
             NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
             targetModelColumns = NProjectManager.getProjectConfig(project).exposeAllModelRelatedColumns()
-                    ? models.stream()
+                    ? models.stream().filter(m -> m.getAlias().equals(targetModelName))
                             .flatMap(m -> m.getEffectiveCols().values().stream()
                                     .map(TblColRef::getColumnWithTableAndSchema))
                             .collect(Collectors.toList())
-                    : models.stream().map(model -> {
+                    : models.stream().filter(m -> m.getAlias().equals(targetModelName)).map(model -> {
                         Set<Integer> relatedColIds = indexPlanManager.getIndexPlan(model.getId()).getRelatedColIds();
                         return relatedColIds.stream().map(id -> model.getColRef(id).getColumnWithTableAndSchema())
                                 .collect(Collectors.toList());
@@ -1249,7 +1213,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     private List<String> getTargetModelTables(String targetModelName, List<NDataModel> models) {
         return targetModelName == null ? null
-                : models.stream().flatMap(m -> m.getAllTableRefs().stream().map(TableRef::getTableIdentity))
+                : models.stream().filter(m -> m.getAlias().equals(targetModelName))
+                        .flatMap(m -> m.getAllTableRefs().stream().map(TableRef::getTableIdentity))
                         .collect(Collectors.toList());
     }
 
@@ -1434,15 +1399,18 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         QueryContext queryContext = QueryContext.current();
 
         response.wrapResultOfQueryContext(queryContext);
-        response.setNativeRealizations(OLAPContext.getNativeRealizations());
+        response.setNativeRealizations(queryContext.getQueryRealizations());
         response.updateDataFetchTime(queryContext);
+        if (queryContext.isExplainSql()) {
+            response.setQueryPlan(queryContext.getQueryPlan());
+            response.setExplain(queryContext.isExplainSql());
+        }
 
         if (!queryContext.getQueryTagInfo().isVacant()) {
             setAppMaterURL(response);
         }
 
         if (isPushDown) {
-            response.setNativeRealizations(Lists.newArrayList());
             response.setEngineType(queryContext.getPushdownEngine());
             return response;
         }
@@ -1480,60 +1448,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 logger.error("Get app master for sql failed", th);
             }
         }
-    }
-
-    protected int getInt(String content) {
-        try {
-            return Integer.parseInt(content);
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    protected short getShort(String content) {
-        try {
-            return Short.parseShort(content);
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    private static ResourceStore getStore() {
-        return ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-    }
-
-    private static class QueryRecordSerializer implements Serializer<QueryRecord> {
-
-        private static final QueryRecordSerializer serializer = new QueryRecordSerializer();
-
-        QueryRecordSerializer() {
-
-        }
-
-        public static QueryRecordSerializer getInstance() {
-            return serializer;
-        }
-
-        @Override
-        public void serialize(QueryRecord record, DataOutputStream out) throws IOException {
-            JsonUtil.writeValueIndent(out, record);
-        }
-
-        @Override
-        public QueryRecord deserialize(DataInputStream in) throws IOException {
-            return JsonUtil.readValue(in, QueryRecord.class);
-        }
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @SuppressWarnings("serial")
-    public static class QueryRecord extends RootPersistentEntity {
-
-        @JsonProperty
-        private List<Query> queries = Lists.newArrayList();
     }
 
     public static class LogReport {
@@ -1589,13 +1503,13 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 .put(SHUFFLE_PARTITIONS, "Shuffle partitions: ").put(ACCEPT_PARTIAL, "Accept Partial: ")
                 .put(PARTIAL_RESULT, "Is Partial Result: ").put(HIT_EXCEPTION_CACHE, "Hit Exception Cache: ")
                 .put(STORAGE_CACHE_USED, "Storage Cache Used: ").put(STORAGE_CACHE_TYPE, "Storage Cache Type: ")
-                .put(DATA_FETCH_TIME, "Data Fetch Time: ")
-                .put(PUSH_DOWN, "Is Query Push-Down: ").put(IS_PREPARE, "Is Prepare: ").put(TIMEOUT, "Is Timeout: ")
-                .put(TRACE_URL, "Trace URL: ").put(TIMELINE_SCHEMA, "Time Line Schema: ").put(TIMELINE, "Time Line: ")
-                .put(ERROR_MSG, "Message: ").put(USER_TAG, "User Defined Tag: ")
-                .put(PUSH_DOWN_FORCED, "Is forced to Push-Down: ").put(USER_AGENT, "User Agent: ")
-                .put(BACK_DOOR_TOGGLES, "Back door toggles: ").put(SCAN_SEGMENT_COUNT, "Scan Segment Count: ")
-                .put(SCAN_FILE_COUNT, "Scan File Count: ").put(REFUSE, "Is Refused: ").build();
+                .put(DATA_FETCH_TIME, "Data Fetch Time: ").put(PUSH_DOWN, "Is Query Push-Down: ")
+                .put(IS_PREPARE, "Is Prepare: ").put(TIMEOUT, "Is Timeout: ").put(TRACE_URL, "Trace URL: ")
+                .put(TIMELINE_SCHEMA, "Time Line Schema: ").put(TIMELINE, "Time Line: ").put(ERROR_MSG, "Message: ")
+                .put(USER_TAG, "User Defined Tag: ").put(PUSH_DOWN_FORCED, "Is forced to Push-Down: ")
+                .put(USER_AGENT, "User Agent: ").put(BACK_DOOR_TOGGLES, "Back door toggles: ")
+                .put(SCAN_SEGMENT_COUNT, "Scan Segment Count: ").put(SCAN_FILE_COUNT, "Scan File Count: ")
+                .put(REFUSE, "Is Refused: ").build();
 
         private Map<String, Object> logs = new HashMap<>(100);
 
@@ -1619,7 +1533,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
 
         public String oldStyleLog() {
-            String newLine = System.getProperty("line.separator");
+            String newLine = System.lineSeparator();
             String delimiter = "==========================[QUERY]===============================";
 
             return newLine + delimiter + newLine //
@@ -1711,8 +1625,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return Joiner.on(";").join(Joiner.on("_").join(aclNames), Joiner.on("_").join(aclTimes));
     }
 
-    private void applyModelPriority(QueryContext queryContext, String sql) {
-        queryContext.setModelPriorities(QueryModelPriorities.getModelPrioritiesFromComment(sql));
+    private void applyModelPriority(QueryContext queryContext, RawSql rawSql) {
+        queryContext.setModelPriorities(QueryModelPriorities
+                .getModelPrioritiesFromHintStrOrComment(rawSql.getFirstHintString(), rawSql.getFullTextString()));
     }
 
     public List<TableMetaWithType> getMetadataAddType(String project, String modelAlias) {

@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;

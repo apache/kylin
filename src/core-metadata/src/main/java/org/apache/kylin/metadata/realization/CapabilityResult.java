@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.IndexMatcher;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -52,7 +53,7 @@ public class CapabilityResult {
      */
     private IRealizationCandidate selectedCandidate;
 
-    private IRealizationCandidate selectedStreamingCandidate;
+    private IRealizationCandidate selectedStreamCandidate;
 
     private int layoutUnmatchedColsSize;
 
@@ -83,12 +84,20 @@ public class CapabilityResult {
     public List<CapabilityInfluence> influences = Lists.newArrayListWithCapacity(1);
 
     public double getCost(boolean isStreaming) {
-        return isStreaming ? selectedStreamingCandidate.getCost() : selectedCandidate.getCost();
+        return isStreaming ? selectedStreamCandidate.getCost() : selectedCandidate.getCost();
+    }
+
+    public IRealizationCandidate getSelectedCandidate() {
+        return selectedCandidate == null ? NLayoutCandidate.ofEmptyCandidate() : selectedCandidate;
+    }
+
+    public IRealizationCandidate getSelectedStreamCandidate() {
+        return selectedStreamCandidate == null ? NLayoutCandidate.ofEmptyCandidate() : selectedStreamCandidate;
     }
 
     public void setCandidate(boolean isStreaming, CapabilityResult result) {
         if (isStreaming) {
-            setSelectedStreamingCandidate(result.getSelectedStreamingCandidate());
+            setSelectedStreamCandidate(result.getSelectedStreamCandidate());
         } else {
             setSelectedCandidate(result.getSelectedCandidate());
         }
@@ -96,7 +105,7 @@ public class CapabilityResult {
 
     public void setCandidate(boolean isStreaming, IRealizationCandidate candidate) {
         if (isStreaming) {
-            setSelectedStreamingCandidate(candidate);
+            setSelectedStreamCandidate(candidate);
         } else {
             setSelectedCandidate(candidate);
         }

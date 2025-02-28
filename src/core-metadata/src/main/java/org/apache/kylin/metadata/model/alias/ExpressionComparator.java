@@ -30,18 +30,21 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExpressionComparator {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpressionComparator.class);
+
+    private static final Set<String> SPECIAL_FUNCTIONS = ImmutableSet.of("CURRENT_DATE", "CURRENT_TIMESTAMP",
+            "CURRENT_TIME", "PI");
 
     private ExpressionComparator() {
     }
@@ -175,6 +178,10 @@ public class ExpressionComparator {
             if (queryNode instanceof SqlIdentifier) {
                 SqlIdentifier thisNode = (SqlIdentifier) queryNode;
                 SqlIdentifier thatNode = (SqlIdentifier) exprNode;
+                if (thisNode.names.size() == 1 && !thisNode.isComponentQuoted(0)
+                        && SPECIAL_FUNCTIONS.contains(thisNode.toString())) {
+                    return false;
+                }
                 return isSqlIdentifierEqual(thisNode, thatNode);
             }
 
@@ -200,21 +207,7 @@ public class ExpressionComparator {
 
         protected boolean isSqlDataTypeSpecEqual(SqlDataTypeSpec querySqlDataTypeSpec,
                 SqlDataTypeSpec exprSqlDataTypeSpec) {
-            if (querySqlDataTypeSpec.getTypeName() == null
-                    || CollectionUtils.isEmpty(querySqlDataTypeSpec.getTypeName().names))
-                return false;
-            if (querySqlDataTypeSpec.getTypeName().names.size() != exprSqlDataTypeSpec.getTypeName().names.size())
-                return false;
-
-            for (int i = 0; i < querySqlDataTypeSpec.getTypeName().names.size(); i++) {
-                String queryName = querySqlDataTypeSpec.getTypeName().names.get(i);
-                if (!exprSqlDataTypeSpec.getTypeName().names.contains(queryName)) {
-                    return false;
-                }
-            }
-
-            return querySqlDataTypeSpec.getScale() == exprSqlDataTypeSpec.getScale()
-                    && querySqlDataTypeSpec.getPrecision() == exprSqlDataTypeSpec.getPrecision();
+            return querySqlDataTypeSpec.equalsDeep(exprSqlDataTypeSpec, Litmus.IGNORE);
         }
 
         // maintain a very limited set of COMMUTATIVE_OPERATORS

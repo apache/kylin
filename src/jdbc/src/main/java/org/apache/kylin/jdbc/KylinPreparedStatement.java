@@ -44,7 +44,8 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
 
     private String queryId;
 
-    protected KylinPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    protected KylinPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature,
+            int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         super(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
         entry(logger);
         if (this.handle.signature == null) {

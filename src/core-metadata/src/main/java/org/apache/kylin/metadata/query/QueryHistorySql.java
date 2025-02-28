@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.query;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -58,7 +59,8 @@ public class QueryHistorySql {
         sb.append("-- [PARAMETER BINDING]");
         sb.append(LINE_SEPARATOR);
         for (QueryHistorySqlParam p : params) {
-            sb.append(String.format("-- Binding parameter [%s] as [%s] - [%s]", p.getPos(), p.getDataType(), p.getValue()));
+            sb.append(String.format(Locale.ROOT, "-- Binding parameter [%s] as [%s] - [%s]", p.getPos(),
+                    p.getDataType(), p.getValue()));
             sb.append(LINE_SEPARATOR);
         }
         sb.append("-- [PARAMETER BINDING END]");

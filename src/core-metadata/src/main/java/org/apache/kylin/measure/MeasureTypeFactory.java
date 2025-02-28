@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigCannotInitException;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.bitmap.intersect.IntersectMeasureType;
@@ -41,9 +43,6 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**
  * Factory for MeasureType.
@@ -71,7 +70,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
  * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
 // TODO remove this over complicated factory
-abstract public class MeasureTypeFactory<T> {
+public abstract class MeasureTypeFactory<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(MeasureTypeFactory.class);
 
@@ -81,23 +80,25 @@ abstract public class MeasureTypeFactory<T> {
      * @param funcName should always match this factory's claim <code>getAggrFunctionName()</code>
      * @param dataType should always match this factory's claim <code>getAggrDataTypeName()</code>
      */
-    abstract public MeasureType<T> createMeasureType(String funcName, DataType dataType);
+    public abstract MeasureType<T> createMeasureType(String funcName, DataType dataType);
 
     /** Return the aggregation function this factory supports, like "COUNT_DISTINCT" */
-    abstract public String getAggrFunctionName();
+    public abstract String getAggrFunctionName();
 
     /** Return the aggregation data type name this factory supports, like "hllc" */
-    abstract public String getAggrDataTypeName();
+    public abstract String getAggrDataTypeName();
 
     /** Return the Serializer for aggregation data object. Note a Serializer implementation must be thread-safe! */
-    abstract public Class<? extends DataTypeSerializer<T>> getAggrDataTypeSerializer();
+    public abstract Class<? extends DataTypeSerializer<T>> getAggrDataTypeSerializer();
 
     // ============================================================================
 
-    final private static Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
-    final private static Map<String, Class<?>> udafMap = Maps.newHashMap(); // a map from UDAF to Calcite aggregation function implementation class
-    final private static Map<String, MeasureTypeFactory> udafFactories = Maps.newHashMap(); // a map from UDAF to its owner factory
-    final private static List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
+    private static final Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
+    // a map from UDAF to Calcite aggregation function implementation class
+    private static final Map<String, Class<?>> udafMap = Maps.newHashMap();
+    // a map from UDAF to its owner factory
+    private static final Map<String, MeasureTypeFactory> udafFactories = Maps.newHashMap();
+    private static final List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
 
     static {
         init();
@@ -215,7 +216,8 @@ abstract public class MeasureTypeFactory<T> {
         if (factory == null)
             factory = defaultFactory;
 
-        // a special case where in early stage of sql parsing, the data type is unknown; only needRewrite() is required at that stage
+        // a special case where in early stage of sql parsing, the data type is unknown;
+        // only needRewrite() is required at that stage
         if (dataType == null) {
             return new NeedRewriteOnlyMeasureType(funcName, factory);
         }

@@ -29,6 +29,7 @@ import org.apache.http.HttpStatus;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.streaming.request.StreamingJobUpdateRequest;
 import org.apache.kylin.streaming.rest.RestSupport;
 import org.awaitility.Awaitility;
@@ -40,7 +41,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;

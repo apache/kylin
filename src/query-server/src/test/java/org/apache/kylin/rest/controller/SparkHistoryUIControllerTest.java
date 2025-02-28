@@ -18,6 +18,9 @@
 
 package org.apache.kylin.rest.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.util.SparkHistoryUIUtil;
 import org.junit.Before;
@@ -30,9 +33,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class SparkHistoryUIControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;

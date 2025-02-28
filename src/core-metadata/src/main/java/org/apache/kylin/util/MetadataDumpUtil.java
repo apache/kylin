@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -44,7 +45,7 @@ public class MetadataDumpUtil {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String metaDumpUrl = info.getDistMetaUrl();
 
-        if (org.apache.commons.lang.StringUtils.isEmpty(metaDumpUrl)) {
+        if (StringUtils.isEmpty(metaDumpUrl)) {
             throw new RuntimeException("Missing metaUrl");
         }
 

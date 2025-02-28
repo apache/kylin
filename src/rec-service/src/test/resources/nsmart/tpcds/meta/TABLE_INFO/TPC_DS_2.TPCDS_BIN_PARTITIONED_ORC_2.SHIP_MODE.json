@@ -1,0 +1,35 @@
+{
+  "uuid" : "1443f6e4-73c5-4c8c-b176-bf681853750b",
+  "last_modified" : 1497607294861,
+  "version" : "2.0.0",
+  "name" : "SHIP_MODE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SM_SHIP_MODE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "SM_SHIP_MODE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "SM_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "SM_CODE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "SM_CARRIER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "SM_CONTRACT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

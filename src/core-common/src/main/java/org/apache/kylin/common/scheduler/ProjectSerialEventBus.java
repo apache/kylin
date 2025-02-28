@@ -18,11 +18,6 @@
 
 package org.apache.kylin.common.scheduler;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kylin.common.Singletons;
-
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,6 +25,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import org.apache.kylin.common.Singletons;
+
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProjectSerialEventBus {
@@ -55,9 +56,11 @@ public class ProjectSerialEventBus {
     private final EventBusFactory eventBus = EventBusFactory.getInstance();
     private final Queue<SchedulerEventNotifier> eventsQueue = new LinkedList<>();
     private final Set<RunningProject> runningProjects = new HashSet<>();
-    private final Consumer<SchedulerEventNotifier> finishProjectCallback = event -> finishProjectAndDispatch(event.getProject());
+    private final Consumer<SchedulerEventNotifier> finishProjectCallback //
+            = event -> finishProjectAndDispatch(event.getProject());
 
-    private ProjectSerialEventBus() {}
+    private ProjectSerialEventBus() {
+    }
 
     public synchronized void postAsync(SchedulerEventNotifier event) {
         log.info("Post event {} on ProjectSerialEventBus", event);

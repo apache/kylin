@@ -1,9 +1,8 @@
 import api from './../service/api'
 import * as types from './types'
-import { cacheSessionStorage, cacheLocalStorage } from 'util/index'
+import { cacheSessionStorage, cacheLocalStorage } from '../util/index'
 import { getAvailableOptions } from '../util/specParser'
-import { fromObjToArr } from '../util'
-import { handleError } from '../util/business'
+import { fromObjToArr, handleError } from '../util'
 
 export default {
   state: {
@@ -37,6 +36,9 @@ export default {
     [types.SAVE_DEFAULT_CONFIG_LIST]: function (state, { list }) {
       state.defaultConfigList = list
     },
+    [types.UPDATE_PROJECT_SEMI_AUTOMATIC_STATUS]: function (state, result) {
+      state.isSemiAutomatic = result
+    },
     [types.SET_PROJECT]: function (state, project) {
       cacheSessionStorage('preProjectName', state.selected_project) // 储存上一次选中的project
       cacheSessionStorage('projectName', project)
@@ -53,11 +55,13 @@ export default {
           if (p.name === selectedProject) {
             hasMatch = true
             state.selected_project = p.name // 之前没这句，在其他tab 切换了project，顶部会不变
+            state.isSemiAutomatic = p.override_kylin_properties && p.override_kylin_properties['kylin.metadata.semi-automatic-mode'] === 'true' // 获取当前project 是否含有半自动的标志,且项目是专家模式
             state.projectDefaultDB = p.default_database
           }
         })
         if (!hasMatch) {
           state.selected_project = state.allProject[0].name
+          state.isSemiAutomatic = state.allProject[0].override_kylin_properties && state.allProject[0].override_kylin_properties['kylin.metadata.semi-automatic-mode'] === 'true'
           cacheSessionStorage('projectName', state.selected_project)
           cacheLocalStorage('projectName', state.selected_project)
           state.projectDefaultDB = state.allProject[0].default_database
@@ -232,6 +236,7 @@ export default {
         commit(types.CACHE_PROJECT_DEFAULT_DB, {projectDefaultDB: response.data.data.default_database})
         commit(types.CACHE_PROJECT_PUSHDOWN_CONFIG, {projectPushdownConfig: response.data.data.push_down_enabled})
         commit(types.CACHE_PROJECT_EXCLUDE_CONFIG, {projectExcludeTableConfig: response.data.data.table_exclusion_enabled})
+        commit(types.UPDATE_PROJECT_SEMI_AUTOMATIC_STATUS, response.data.data.semi_automatic_mode)
         commit(types.UPDATE_SCD2_ENABLE, response.data.data.scd2_enabled || false)
         commit(types.UPDATE_SNAPSHOT_MANUAL_ENABLE, response.data.data.snapshot_manual_management_enabled || false)
         commit(types.UPDATE_MULTI_PARTITION_ENABLE, response.data.data.multi_partition_enabled || false)
@@ -266,6 +271,9 @@ export default {
     [types.RESET_PROJECT_CONFIG]: function ({ commit }, para) {
       return api.project.resetConfig(para)
     },
+    [types.UPDATE_INTERNAL_TABLE_ENABLED]: function ({ commit }, para) {
+      return api.project.updateInternalTableEnabled(para)
+    },
     [types.UPDATE_DEFAULT_DB_SETTINGS]: function ({ commit }, para) {
       return api.project.updateDefaultDBSettings(para)
     },
@@ -292,6 +300,9 @@ export default {
     },
     [types.UPDATE_INDEX_OPTIMIZATION]: function ({ commit }, para) {
       return api.project.updateIndexOptimization(para)
+    },
+    [types.GET_FAVORITE_RULES]: function (_, para) {
+      return api.project.getFavoriteRules(para)
     },
     [types.UPDATE_FAVORITE_RULES]: function (_, para) {
       return api.project.updateFavoriteRules(para)
@@ -343,6 +354,9 @@ export default {
     currentSelectedProject: (state) => {
       return state.selected_project
     },
+    currentSelectedProjectInternalTableEnabled: (state) => {
+      return (state.projectConfig && state.projectConfig.projectDefaultDB && state.projectConfig.projectDefaultDB.override_kylin_properties['kylin.internal-table-enabled'] === 'true') || false
+    },
     currentProjectData: (state, getters, rootState) => {
       const _filterable = state.allProject.filter(p => {
         return p.name === state.selected_project
@@ -351,6 +365,11 @@ export default {
         return _filterable[0]
       }
       return {override_kylin_properties: {}}
+    },
+    isAutoProject: (state, getters) => {
+      if (getters.currentProjectData) {
+        return false
+      }
     },
     selectedProjectDatasource: (state, getters, rootState) => {
       let datasourceKey = null

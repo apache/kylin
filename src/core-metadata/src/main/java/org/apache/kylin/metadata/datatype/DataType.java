@@ -113,11 +113,12 @@ public class DataType implements Serializable {
         registerComplex("array\\<.*\\>");
     }
 
-    public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
-    public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
-    public static final Set<String> DATETIME_FAMILY = new HashSet<String>();
-    public static final Set<String> STRING_FAMILY = new HashSet<String>();
-    private static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<String, String>();
+    public static final Set<String> INTEGER_FAMILY = new HashSet<>();
+    public static final Set<String> NUMBER_FAMILY = new HashSet<>();
+    public static final Set<String> DATETIME_FAMILY = new HashSet<>();
+    public static final Set<String> STRING_FAMILY = new HashSet<>();
+    public static final Set<String> BOOLEAN_FAMILY = new HashSet<>();
+    private static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<>();
     static {
         INTEGER_FAMILY.add(TINY_INT);
         INTEGER_FAMILY.add(SMALL_INT);
@@ -140,6 +141,8 @@ public class DataType implements Serializable {
 
         STRING_FAMILY.add(VARCHAR);
         STRING_FAMILY.add(CHAR);
+
+        BOOLEAN_FAMILY.add(BOOLEAN);
 
         LEGACY_TYPE_MAP.put(BYTE, TINY_INT);
         LEGACY_TYPE_MAP.put(INT, INTEGER);
@@ -236,7 +239,7 @@ public class DataType implements Serializable {
         if (precision == -1) {
             // FIXME 256 for unknown string precision
 
-            // why 256(255) as default? 
+            // why 256(255) as default?
             // to save memory at frontend, e.g. tableau will
             // allocate memory according to this
             if (name.equals(CHAR)) {
@@ -266,6 +269,19 @@ public class DataType implements Serializable {
             return bigDecimal1.compareTo(bigDecimal2);
         }
         return value1.compareTo(value2);
+    }
+
+    public Object parseValue(String value) {
+        if (isDateTimeFamily()) {
+            return DateFormat.stringToMillis(value);
+        } else if (isIntegerFamily()) {
+            return Long.parseLong(value);
+        } else if (isNumberFamily()) {
+            return new BigDecimal(value);
+        } else if (isBoolean()) {
+            return Boolean.parseBoolean(value);
+        }
+        return value;
     }
 
     private String replaceLegacy(String str) {

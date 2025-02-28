@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_AUTO__1657777841745_1",
+  "expression" : "CUSTOMER.C_CUSTKEY_TEST * LINEORDER.LO_ORDERKEY",
+  "innerExpression" : "`CUSTOMER`.`C_CUSTKEY_TEST` * `LINEORDER`.`LO_ORDERKEY`",
+  "datatype" : "BIGINT",
+  "comment" : "Auto generated for CORR measure",
+  "rec_uuid" : null,
+  "uuid" : "18b00aed-6353-62cb-3f7a-ce2b568b6e2b",
+  "project" : "ssb"
+}

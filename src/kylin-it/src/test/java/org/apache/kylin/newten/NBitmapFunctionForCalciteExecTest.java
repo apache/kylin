@@ -44,15 +44,18 @@ public class NBitmapFunctionForCalciteExecTest extends NLocalWithSparkSessionTes
     @Mock
     private QueryRoutingEngine queryRoutingEngine = Mockito.spy(QueryRoutingEngine.class);
 
+    @Override
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         populateSSWithCSVData(getTestConfig(), getProject(), ss);
         Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", "true");
     }
 
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
         cleanupTestMetadata();
         FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
         Unsafe.clearProperty("kylin.query.engine.run-constant-query-locally");

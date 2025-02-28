@@ -29,17 +29,16 @@ import java.util.stream.Collectors;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeProducer;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +48,12 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class RefreshJobUtil extends ExecutableUtil {
+
+    static {
+        registerImplementation(JobTypeEnum.INDEX_REFRESH, new RefreshJobUtil());
+        registerImplementation(JobTypeEnum.SUB_PARTITION_REFRESH, new RefreshJobUtil());
+    }
+
     @Override
     public void computeLayout(JobParam jobParam) {
         NDataflow df = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject())
@@ -95,7 +100,7 @@ public class RefreshJobUtil extends ExecutableUtil {
     @Override
     public void computePartitions(JobParam jobParam) {
         NDataflowManager dfm = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject());
-        val df = dfm.getDataflow(jobParam.getModel()).copy();
+        val df = dfm.getDataflow(jobParam.getModel());
         val segment = df.getSegment(jobParam.getSegment());
         if (JobTypeEnum.INDEX_REFRESH == jobParam.getJobTypeEnum()) {
             jobParam.setTargetPartitions(segment.getMultiPartitions().stream().map(SegmentPartition::getPartitionId)

@@ -33,6 +33,7 @@ import org.apache.kylin.common.metrics.MetricsObject;
 import org.apache.kylin.common.metrics.MetricsObjectType;
 import org.apache.kylin.common.metrics.gauges.QueryRatioGauge;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,8 +48,6 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
-
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
 
@@ -68,7 +67,8 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         Map<String, String> tags = new HashMap();
         tags.put("host", "localhost:8080-test_project");
         MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
-        Assert.assertEquals("query_total_times,project,test_project,{host=localhost:8080-test_project}", metricsObject.toString());
+        Assert.assertEquals("query_total_times,project,test_project,{host=localhost:8080-test_project}",
+                metricsObject.toString());
         Assert.assertFalse(metricsObject.isInitStatus());
         metricsObject = new MetricsObject(fieldName, category, entity, null);
         Assert.assertEquals("query_total_times,project,test_project,", metricsObject.toString());
@@ -83,83 +83,98 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         tags.put("host", "localhost:8080-test_01");
         MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
         try {
-            Object firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(), metricsObject, null);
-            Object lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(), metricsObject, null);
-            Object maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(), metricsObject, null);
-            Object minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(), metricsObject, null);
-            Object countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(), metricsObject, null);
+            Object firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(),
+                    metricsObject, null);
+            Object lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(),
+                    metricsObject, null);
+            Object maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(),
+                    metricsObject, null);
+            Object minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(),
+                    metricsObject, null);
+            Object countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(),
+                    metricsObject, null);
             Object defaultInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql("", metricsObject, null);
             Assert.assertEquals("select first(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     firstInfluxQuerySql);
             Assert.assertEquals("select last(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     lastInfluxQuerySql);
             Assert.assertEquals("select max(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     maxInfluxQuerySql);
             Assert.assertEquals("select min(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     minInfluxQuerySql);
             Assert.assertEquals("select count(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     countInfluxQuerySql);
             Assert.assertEquals("select query_total_times "
                     + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' order by time desc limit 1;",
                     defaultInfluxQuerySql);
-            firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(), metricsObject, " and 1=1 ");
-            lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(), metricsObject, " and 1=1 ");
-            maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(), metricsObject, " and 1=1 ");
-            minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(), metricsObject, " and 1=1 ");
-            countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(), metricsObject, " and 1=1 ");
+            firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(), metricsObject,
+                    " and 1=1 ");
+            lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(), metricsObject,
+                    " and 1=1 ");
+            maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(), metricsObject,
+                    " and 1=1 ");
+            minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(), metricsObject,
+                    " and 1=1 ");
+            countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(), metricsObject,
+                    " and 1=1 ");
             defaultInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql("", metricsObject, " and 1=1 ");
             Assert.assertEquals("select first(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     firstInfluxQuerySql);
             Assert.assertEquals("select last(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     lastInfluxQuerySql);
             Assert.assertEquals("select max(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     maxInfluxQuerySql);
             Assert.assertEquals("select min(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     minInfluxQuerySql);
             Assert.assertEquals("select count(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     countInfluxQuerySql);
             Assert.assertEquals("select query_total_times "
-                            + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and host='localhost:8080-test_01' and 1=1  order by time desc limit 1;",
                     defaultInfluxQuerySql);
 
             metricsObject = new MetricsObject(fieldName, category, entity, new HashedMap());
-            firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(), metricsObject, " and 1=1 ");
-            lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(), metricsObject, " and 1=1 ");
-            maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(), metricsObject, " and 1=1 ");
-            minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(), metricsObject, " and 1=1 ");
-            countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(), metricsObject, " and 1=1 ");
+            firstInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.FIRST.getVal(), metricsObject,
+                    " and 1=1 ");
+            lastInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.LAST.getVal(), metricsObject,
+                    " and 1=1 ");
+            maxInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MAX.getVal(), metricsObject,
+                    " and 1=1 ");
+            minInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.MIN.getVal(), metricsObject,
+                    " and 1=1 ");
+            countInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql(MetricsObjectType.COUNT.getVal(), metricsObject,
+                    " and 1=1 ");
             defaultInfluxQuerySql = MetricsGroup.getValFromInfluxQuerySql("", metricsObject, " and 1=1 ");
             Assert.assertEquals("select first(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     firstInfluxQuerySql);
             Assert.assertEquals("select last(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     lastInfluxQuerySql);
             Assert.assertEquals("select max(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     maxInfluxQuerySql);
             Assert.assertEquals("select min(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     minInfluxQuerySql);
             Assert.assertEquals("select count(query_total_times) as query_total_times  "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     countInfluxQuerySql);
             Assert.assertEquals("select query_total_times "
-                            + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
+                    + "from system_metric where category='project' and entity='test_01' and 1=1  order by time desc limit 1;",
                     defaultInfluxQuerySql);
 
         } catch (Exception e) {
-            logger.error("MetricInfluxQueryTest failed metricsObject:{}", metricsObject.toString(), e);
+            logger.error("MetricInfluxQueryTest failed metricsObject:{}", metricsObject, e);
             Assert.assertTrue(metricsObject.isInitStatus());
         }
     }
@@ -211,7 +226,8 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         tags.put("host", "localhost:8080-test_04");
         boolean result = MetricsGroup.counterInc(MetricsName.QUERY, MetricsCategory.HOST, entity, tags);
         Assert.assertTrue(result);
-        Counter counter = MetricsGroup.counters.get("query_total_times:category=host,entity=test_04,host=localhost:8080-test_04");
+        Counter counter = MetricsGroup.counters
+                .get("query_total_times:category=host,entity=test_04,host=localhost:8080-test_04");
         Assert.assertEquals(10000000000L, counter.getCount());
         result = MetricsGroup.counterInc(null, MetricsCategory.HOST, entity, tags, 3);
         Assert.assertFalse(result);
@@ -241,7 +257,8 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         Assert.assertFalse(result);
         result = MetricsGroup.histogramUpdate(MetricsName.QUERY, MetricsCategory.HOST, entity, tags, 20);
         Assert.assertTrue(result);
-        histogram = MetricsGroup.histograms.get("query_total_times:category=host,entity=test_05,host=localhost:8080-test_05");
+        histogram = MetricsGroup.histograms
+                .get("query_total_times:category=host,entity=test_05,host=localhost:8080-test_05");
         Assert.assertEquals(20, histogram.getSnapshot().getValues()[0]);
     }
 
@@ -397,7 +414,8 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         Counter denominator = MetricsGroup.getCounter(MetricsName.QUERY, MetricsCategory.PROJECT, projectName, tags);
         result = MetricsGroup.newCounter(MetricsName.QUERY_LT_1S, MetricsCategory.PROJECT, projectName, tags);
         Assert.assertTrue(result);
-        Counter numerator = MetricsGroup.getCounter(MetricsName.QUERY_LT_1S, MetricsCategory.PROJECT, projectName, tags);
+        Counter numerator = MetricsGroup.getCounter(MetricsName.QUERY_LT_1S, MetricsCategory.PROJECT, projectName,
+                tags);
         result = MetricsGroup.newGauge(MetricsName.QUERY_LT_1S_RATIO, MetricsCategory.PROJECT, projectName, tags,
                 new QueryRatioGauge(numerator, denominator));
         Assert.assertTrue(result);
@@ -537,5 +555,4 @@ public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
         }
         MetricsGroup.gauges.removeAll(MetricsGroup.gauges);
     }
-
 }

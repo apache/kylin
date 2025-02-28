@@ -1,0 +1,693 @@
+{
+  "uuid" : "73e06974-e642-6b91-e7a0-5cd7f02ec4f2",
+  "last_modified" : 1642563921681,
+  "create_time" : 1642496734176,
+  "version" : "4.0.0.0",
+  "alias" : "test_cube_01_sum_expr_with_count_distinct_expr",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000
+  }, {
+    "name" : "TRANS_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "TRANS_ID",
+    "comment" : null,
+    "id" : 100001
+  }, {
+    "name" : "TRANS_ID_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "TRANS_ID",
+    "comment" : null,
+    "id" : 100002
+  }, {
+    "name" : "TRANS_ID_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "TRANS_ID",
+    "comment" : null,
+    "id" : 100003
+  }, {
+    "name" : "TRANS_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "TRANS_ID",
+    "comment" : null,
+    "id" : 100004
+  }, {
+    "name" : "ORDER_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ORDER_ID",
+    "comment" : null,
+    "id" : 100005
+  }, {
+    "name" : "ORDER_ID_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ORDER_ID",
+    "comment" : null,
+    "id" : 100006
+  }, {
+    "name" : "ORDER_ID_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ORDER_ID",
+    "comment" : null,
+    "id" : 100007
+  }, {
+    "name" : "ORDER_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ORDER_ID",
+    "comment" : null,
+    "id" : 100008
+  }, {
+    "name" : "CAL_DT_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CAL_DT"
+      } ],
+      "returntype" : "date"
+    },
+    "column" : "CAL_DT",
+    "comment" : null,
+    "id" : 100009
+  }, {
+    "name" : "CAL_DT_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CAL_DT"
+      } ],
+      "returntype" : "date"
+    },
+    "column" : "CAL_DT",
+    "comment" : null,
+    "id" : 100010
+  }, {
+    "name" : "CAL_DT_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CAL_DT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "CAL_DT",
+    "comment" : null,
+    "id" : 100011
+  }, {
+    "name" : "LSTG_FORMAT_NAME_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : "LSTG_FORMAT_NAME",
+    "comment" : null,
+    "id" : 100012
+  }, {
+    "name" : "LSTG_FORMAT_NAME_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : "LSTG_FORMAT_NAME",
+    "comment" : null,
+    "id" : 100013
+  }, {
+    "name" : "LSTG_FORMAT_NAME_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LSTG_FORMAT_NAME",
+    "comment" : null,
+    "id" : 100014
+  }, {
+    "name" : "LEAF_CATEG_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LEAF_CATEG_ID",
+    "comment" : null,
+    "id" : 100015
+  }, {
+    "name" : "LEAF_CATEG_ID_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LEAF_CATEG_ID",
+    "comment" : null,
+    "id" : 100016
+  }, {
+    "name" : "LEAF_CATEG_ID_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LEAF_CATEG_ID",
+    "comment" : null,
+    "id" : 100017
+  }, {
+    "name" : "LEAF_CATEG_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LEAF_CATEG_ID",
+    "comment" : null,
+    "id" : 100018
+  }, {
+    "name" : "LSTG_SITE_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LSTG_SITE_ID",
+    "comment" : null,
+    "id" : 100019
+  }, {
+    "name" : "LSTG_SITE_ID_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "LSTG_SITE_ID",
+    "comment" : null,
+    "id" : 100020
+  }, {
+    "name" : "LSTG_SITE_ID_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "LSTG_SITE_ID",
+    "comment" : null,
+    "id" : 100021
+  }, {
+    "name" : "LSTG_SITE_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "LSTG_SITE_ID",
+    "comment" : null,
+    "id" : 100022
+  }, {
+    "name" : "SLR_SEGMENT_CD",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "SLR_SEGMENT_CD",
+    "comment" : null,
+    "id" : 100023
+  }, {
+    "name" : "SLR_SEGMENT_CD_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+      } ],
+      "returntype" : "smallint"
+    },
+    "column" : "SLR_SEGMENT_CD",
+    "comment" : null,
+    "id" : 100024
+  }, {
+    "name" : "SLR_SEGMENT_CD_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+      } ],
+      "returntype" : "smallint"
+    },
+    "column" : "SLR_SEGMENT_CD",
+    "comment" : null,
+    "id" : 100025
+  }, {
+    "name" : "SLR_SEGMENT_CD_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "SLR_SEGMENT_CD",
+    "comment" : null,
+    "id" : 100026
+  }, {
+    "name" : "SELLER_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "SELLER_ID",
+    "comment" : null,
+    "id" : 100027
+  }, {
+    "name" : "SELLER_ID_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "SELLER_ID",
+    "comment" : null,
+    "id" : 100028
+  }, {
+    "name" : "SELLER_ID_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "SELLER_ID",
+    "comment" : null,
+    "id" : 100029
+  }, {
+    "name" : "SELLER_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "SELLER_ID",
+    "comment" : null,
+    "id" : 100030
+  }, {
+    "name" : "PRICE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(29,4)"
+    },
+    "column" : "PRICE",
+    "comment" : null,
+    "id" : 100031
+  }, {
+    "name" : "PRICE_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    },
+    "column" : "PRICE",
+    "comment" : null,
+    "id" : 100032
+  }, {
+    "name" : "PRICE_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    },
+    "column" : "PRICE",
+    "comment" : null,
+    "id" : 100033
+  }, {
+    "name" : "PRICE_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "PRICE",
+    "comment" : null,
+    "id" : 100034
+  }, {
+    "name" : "ITEM_COUNT",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ITEM_COUNT",
+    "comment" : null,
+    "id" : 100035
+  }, {
+    "name" : "ITEM_COUNT_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "ITEM_COUNT",
+    "comment" : null,
+    "id" : 100036
+  }, {
+    "name" : "ITEM_COUNT_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : "ITEM_COUNT",
+    "comment" : null,
+    "id" : 100037
+  }, {
+    "name" : "ITEM_COUNT_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "ITEM_COUNT",
+    "comment" : null,
+    "id" : 100038
+  }, {
+    "name" : "TEST_COUNT_DISTINCT_BITMAP_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : "TEST_COUNT_DISTINCT_BITMAP",
+    "comment" : null,
+    "id" : 100039
+  }, {
+    "name" : "TEST_COUNT_DISTINCT_BITMAP_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : "TEST_COUNT_DISTINCT_BITMAP",
+    "comment" : null,
+    "id" : 100040
+  }, {
+    "name" : "TEST_COUNT_DISTINCT_BITMAP_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "TEST_COUNT_DISTINCT_BITMAP",
+    "comment" : null,
+    "id" : 100041
+  }, {
+    "name" : "IS_EFFECTUAL_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+      } ],
+      "returntype" : "boolean"
+    },
+    "column" : "IS_EFFECTUAL",
+    "comment" : null,
+    "id" : 100042
+  }, {
+    "name" : "IS_EFFECTUAL_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+      } ],
+      "returntype" : "boolean"
+    },
+    "column" : "IS_EFFECTUAL",
+    "comment" : null,
+    "id" : 100043
+  }, {
+    "name" : "IS_EFFECTUAL_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : "IS_EFFECTUAL",
+    "comment" : null,
+    "id" : 100044
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 560.5555555555555,
+        "y" : 174.00000678168402,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "sum_expr_with_count_distinct"
+}

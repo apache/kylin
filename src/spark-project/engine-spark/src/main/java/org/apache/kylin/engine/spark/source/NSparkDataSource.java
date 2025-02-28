@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.source;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -27,7 +28,6 @@ import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
 
 public class NSparkDataSource implements ISource {
     // for reflection

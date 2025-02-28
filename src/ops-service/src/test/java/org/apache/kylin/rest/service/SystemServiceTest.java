@@ -28,7 +28,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -53,9 +56,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.cache.Cache;
-import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 
 import lombok.val;
 
@@ -247,6 +247,19 @@ public class SystemServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testRecoverQueryMetadata() {
+        overwriteSystemProp("kylin.server.mode", "query");
+        overwriteSystemProp("kylin.server.store-type", "hdfs");
+        try {
+            systemService.reloadMetadata();
+        } catch (Exception e) {
+            fail("reload should be successful but not");
+        }
+        val systemStore = ResourceStore.getKylinMetaStore(getTestConfig());
+        Assert.assertFalse(systemStore.listResources("ALL").isEmpty());
+    }
+
+    @Test
     public void testGetReadOnlyConfig() {
         final String project = "default", modelName = "nmodel_basic";
         NProjectManager projectManager = NProjectManager.getInstance(getTestConfig());
@@ -255,8 +268,7 @@ public class SystemServiceTest extends NLocalFileMetadataTestCase {
             overrideKylinProps.put("kylin.engine.spark-conf.spark.sql.shuffle.partitions", "10");
         });
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), project);
-        NDataModel model = NDataModelManager.getInstance(getTestConfig(), project)
-                .getDataModelDescByAlias(modelName);
+        NDataModel model = NDataModelManager.getInstance(getTestConfig(), project).getDataModelDescByAlias(modelName);
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(model.getId());
         indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
             LinkedHashMap<String, String> overrideProps = indexPlan.getOverrideProps();

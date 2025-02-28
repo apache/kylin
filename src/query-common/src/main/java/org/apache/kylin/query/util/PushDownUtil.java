@@ -35,7 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
@@ -83,7 +82,6 @@ import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.apache.kylin.source.adhocquery.PushdownResult;
-import org.codehaus.commons.compiler.CompileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,11 +89,8 @@ public class PushDownUtil {
 
     private static final Logger logger = LoggerFactory.getLogger("query");
 
-    // sql hint "/*+ MODEL_PRIORITY({cube_name}) */"
-    private static final Pattern SQL_HINT_PATTERN = Pattern
-            .compile("/\\*\\s*\\+\\s*(?i)MODEL_PRIORITY\\s*\\([\\s\\S]*\\)\\s*\\*/");
     public static final String DEFAULT_SCHEMA = "DEFAULT";
-    private static final String CC_SPLITTER = "'##CC_PUSH_DOWN_TOKEN##'";
+    public static final String CC_SPLITTER = "'##CC_PUSH_DOWN_TOKEN##'";
     private static final String UNDER_LINE = "_";
     private static final ExecutorService asyncExecutor = Executors.newCachedThreadPool();
     private static final Map<String, IPushDownConverter> PUSH_DOWN_CONVERTER_MAP = Maps.newConcurrentMap();
@@ -156,6 +151,8 @@ public class PushDownUtil {
             // on no authorized cols found, return empty result
             return PushdownResult.emptyResult();
         }
+        QueryInterruptChecker.checkThreadInterrupted("Interrupted sql push down at the stage of QueryRoutingEngine",
+                "Current step: try push down select query");
         QueryContext.current().record("massage");
 
         QueryContext.currentTrace().startSpan(QueryTrace.PREPARE_AND_SUBMIT_JOB);
@@ -170,9 +167,7 @@ public class PushDownUtil {
     }
 
     private static void checkPushDownIncapable(QueryParams queryParams) {
-        SQLException sqlException = queryParams.getSqlException();
-        if (queryParams.isForcedToPushDown() || (sqlException != null
-                && sqlException.getMessage().contains(QueryContext.ROUTE_USE_FORCEDTOTIEREDSTORAGE))) {
+        if (queryParams.isForcedToPushDown()) {
             throw new KylinException(QueryErrorCode.INVALID_PARAMETER_PUSH_DOWN,
                     MsgPicker.getMsg().getDisablePushDownPrompt());
         }
@@ -204,7 +199,7 @@ public class PushDownUtil {
 
         String sql = queryParams.getSql();
         sql = QueryUtil.trimRightSemiColon(sql);
-        sql = SQL_HINT_PATTERN.matcher(sql).replaceAll("");
+        sql = removeSqlHints(sql, queryParams.getKylinConfig());
 
         List<IPushDownConverter> pushDownConverters = fetchConverters(queryParams.getKylinConfig());
         if (logger.isDebugEnabled()) {
@@ -218,6 +213,18 @@ public class PushDownUtil {
             sql = converter.convert(sql, queryParams.getProject(), queryParams.getDefaultSchema());
         }
         sql = replaceEscapedQuote(sql);
+        return sql.trim();
+    }
+
+    static String removeSqlHints(String sql, KylinConfig kylinConfig) {
+        if (kylinConfig.isPushdownSqlHintsErasingEnabled()) {
+            try {
+                RawSql rawSql = new RawSqlParser(sql).parse();
+                return rawSql.getStatementStringWithoutHints();
+            } catch (ParseException e) {
+                logger.error("Error on remove push-down sql hints", e);
+            }
+        }
         return sql;
     }
 
@@ -315,7 +322,7 @@ public class PushDownUtil {
             ccSql = new EscapeTransformer().transform(ccSql);
             ccSql = RestoreFromComputedColumn.convertWithGivenModels(ccSql, project, DEFAULT_SCHEMA, modelMap);
         } catch (Exception e) {
-            logger.warn("Failed to massage SQL expression [{}] with input model {}", ccSql, model.getUuid(), e);
+            logger.warn("Failed to massage SQL expression [{}] with input model {}", ccSql, model.getUuid());
         }
         return ccSql;
     }
@@ -515,8 +522,7 @@ public class PushDownUtil {
         //query pushdown may create tables, and the tables are not in the model, so will throw SqlValidatorException.
         if (rootCause instanceof KylinTimeoutException || rootCause instanceof AccessDeniedException) {
             return false;
-        } else if (rootCause instanceof RoutingIndicatorException || rootCause instanceof CalciteNotSupportException
-                || rootCause instanceof CompileException) {
+        } else if (rootCause instanceof RoutingIndicatorException || rootCause instanceof CalciteNotSupportException) {
             return true;
         }
 

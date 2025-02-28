@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 
 import lombok.val;
 
@@ -39,7 +39,7 @@ public class CandidateTestUtils {
     static Candidate mockCandidate(String modelId, String modelName, int realizationCost, double candidateCost,
             int unmatchedColSize) {
         IRealization realization = mockRealization(modelId, modelName, realizationCost);
-        OLAPContext olapContext = mockOlapContext();
+        OlapContext olapContext = mockOlapContext();
         val candidate = new Candidate(realization, olapContext, Maps.newHashMap());
         val cap = new CapabilityResult();
         cap.setSelectedCandidate(() -> candidateCost);
@@ -51,7 +51,7 @@ public class CandidateTestUtils {
 
     static Candidate mockCandidate(String modelId, String modelName, double candidateCost, boolean partialResult) {
         IRealization realization = mockRealization(modelId, modelName, 1);
-        OLAPContext olapContext = mockOlapContext();
+        OlapContext olapContext = mockOlapContext();
         val candidate = new Candidate(realization, olapContext, Maps.newHashMap());
         val cap = new CapabilityResult();
         cap.setSelectedCandidate(() -> candidateCost);
@@ -62,8 +62,8 @@ public class CandidateTestUtils {
         return candidate;
     }
 
-    static OLAPContext mockOlapContext() {
-        return new OLAPContext(-1);
+    static OlapContext mockOlapContext() {
+        return new OlapContext(-1);
     }
 
     static IRealization mockRealization(String modelId, String modelName, int cost) {

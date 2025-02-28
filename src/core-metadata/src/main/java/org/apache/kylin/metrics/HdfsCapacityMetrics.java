@@ -25,21 +25,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +59,7 @@ public class HdfsCapacityMetrics {
     private final boolean quotaStorageEnabled;
     private final boolean hdfsMetricsPeriodicCalculationEnabled;
     // For all places that need to query WorkingDir capacity for retrieval, initialize to avoid NPE
+    private final long calculationInterval;
     private volatile Map<String, Long> workingDirCapacity = Collections.emptyMap();
 
     // Utility classes should not have public constructors
@@ -69,8 +70,9 @@ public class HdfsCapacityMetrics {
         scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("HdfsMetricsChecker"));
         hdfsMetricsPeriodicCalculationEnabled = config.isHdfsMetricsPeriodicCalculationEnabled();
         quotaStorageEnabled = config.isStorageQuotaEnabled();
+        calculationInterval = config.getHdfsMetricsPeriodicCalculationInterval();
         if (hdfsMetricsPeriodicCalculationEnabled && quotaStorageEnabled) {
-            registerHdfsMetrics(config.getHdfsMetricsPeriodicCalculationInterval());
+            registerHdfsMetrics(calculationInterval);
         }
     }
 
@@ -94,7 +96,8 @@ public class HdfsCapacityMetrics {
         // 1. Call a scheduled thread to maintain the data in memory
         //    - Read data from HDFS and load it into memory, only the leader node writes to HDFS, other nodes read only
         // 2. When the data in memory reaches the time of the update interval, it is stored on HDFS
-        // 3. Junk cleanup: theoretically the file will not be very large, do not need to consider cleaning up for the time
+        // 3. Junk cleanup: theoretically the file will not be very large,
+        // do not need to consider cleaning up for the time
         // being, cleaning will affect the recalculation of the directory involved
         log.info("Quota storage and HDFS metrics periodic calculation are enabled, path: {}", hdfsCapacityMetricsPath);
         scheduledThreadPoolExecutor.scheduleAtFixedRate(this::handleNodeHdfsMetrics, 0,
@@ -102,13 +105,38 @@ public class HdfsCapacityMetrics {
     }
 
     public void handleNodeHdfsMetrics() {
-        // Check whether the current KE node is the leader node, which requires repeated and continuous monitoring
-        // because the leader node may change. Update first and then overwrite, only leader nodes need to be overwritten,
-        // other nodes are read only
-        if (EpochStore.isLeaderNode()) {
-            writeHdfsMetrics();
-        } else {
+        Lock lock = null;
+        boolean updated = false;
+        if (needReCalculateMetrics()) {
+            try {
+                String LOCK_KEY = "calculate_hdfs_metrics_key";
+                lock = config.getDistributedLockFactory().getLockForCurrentThread(LOCK_KEY);
+                lock.lock();
+                if (needReCalculateMetrics()) {
+                    writeHdfsMetrics();
+                    updated = true;
+                }
+            } finally {
+                if (lock != null) {
+                    lock.unlock();
+                }
+            }
+        }
+        if (!updated) {
             workingDirCapacity = readHdfsMetrics();
+        }
+    }
+    
+    private boolean needReCalculateMetrics() {
+        try {
+            if (!workingFs.exists(hdfsCapacityMetricsPath)) {
+                return true;
+            }
+            FileStatus status = workingFs.getFileStatus(hdfsCapacityMetricsPath);
+            return System.currentTimeMillis() - status.getModificationTime() > calculationInterval * 0.8;
+        } catch (IOException e) {
+            log.error("Check hdfs capacity failed.", e);
+            return false;
         }
     }
 
@@ -119,7 +147,8 @@ public class HdfsCapacityMetrics {
         HashMap<String, Long> prepareForWorkingDirCapacity = Maps.newHashMapWithExpectedSize(allProjects.size());
         try {
             for (String project : allProjects) {
-                // Should not initialize projectTotalStorageSize outside the loop, otherwise it may affect the next calculation
+                // Should not initialize projectTotalStorageSize outside the loop,
+                // otherwise it may affect the next calculation
                 // if a project calculation throws an exception.
                 long projectTotalStorageSize = 0L;
                 Path projectPath = new Path(config.getWorkingDirectoryWithConfiguredFs(project));

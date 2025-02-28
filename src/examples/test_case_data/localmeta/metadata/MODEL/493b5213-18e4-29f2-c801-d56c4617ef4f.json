@@ -1,0 +1,151 @@
+{
+  "uuid" : "493b5213-18e4-29f2-c801-d56c4617ef4f",
+  "last_modified" : 1709200391405,
+  "create_time" : 1709200391290,
+  "version" : "4.0.0.0",
+  "alias" : "PreModel",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.LINEORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : {
+    "check_options" : 0,
+    "fault_threshold" : 0,
+    "fault_actions" : 0
+  },
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_ORDERKEY",
+    "column" : "LINEORDER.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LO_PARTKEY",
+    "column" : "LINEORDER.LO_PARTKEY"
+  }, {
+    "id" : 2,
+    "name" : "LO_DISCOUNT",
+    "column" : "LINEORDER.LO_DISCOUNT"
+  }, {
+    "id" : 3,
+    "name" : "LO_SUPPLYCOST",
+    "column" : "LINEORDER.LO_SUPPLYCOST"
+  }, {
+    "id" : 4,
+    "name" : "LO_COMMITDATE",
+    "column" : "LINEORDER.LO_COMMITDATE"
+  }, {
+    "id" : 5,
+    "name" : "LO_EXTENDEDPRICE",
+    "column" : "LINEORDER.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 6,
+    "name" : "LO_TAX",
+    "column" : "LINEORDER.LO_TAX"
+  }, {
+    "id" : 7,
+    "name" : "LO_SUPPKEY",
+    "column" : "LINEORDER.LO_SUPPKEY"
+  }, {
+    "id" : 8,
+    "name" : "LO_ORDTOTALPRICE",
+    "column" : "LINEORDER.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 9,
+    "name" : "LO_REVENUE",
+    "column" : "LINEORDER.LO_REVENUE"
+  }, {
+    "id" : 10,
+    "name" : "LO_ORDERDATE",
+    "column" : "LINEORDER.LO_ORDERDATE"
+  }, {
+    "id" : 11,
+    "name" : "LO_ORDERPRIOTITY",
+    "column" : "LINEORDER.LO_ORDERPRIOTITY"
+  }, {
+    "id" : 12,
+    "name" : "LO_SHIPPRIOTITY",
+    "column" : "LINEORDER.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 13,
+    "name" : "LO_QUANTITY",
+    "column" : "LINEORDER.LO_QUANTITY"
+  }, {
+    "id" : 14,
+    "name" : "LO_SHIPMODE",
+    "column" : "LINEORDER.LO_SHIPMODE"
+  }, {
+    "id" : 15,
+    "name" : "LO_LINENUMBER",
+    "column" : "LINEORDER.LO_LINENUMBER"
+  }, {
+    "id" : 16,
+    "name" : "LO_CUSTKEY",
+    "column" : "LINEORDER.LO_CUSTKEY"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LO_SHIPMODE",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "LINEORDER.LO_SHIPMODE"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "LINEORDER" : {
+        "x" : 564.6666124131945,
+        "y" : 249.16666666666669,
+        "width" : 220.0,
+        "height" : 548.8888888888888
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "TestBuildV2Dict"
+}

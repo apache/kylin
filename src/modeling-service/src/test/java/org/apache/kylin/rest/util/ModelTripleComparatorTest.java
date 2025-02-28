@@ -34,12 +34,12 @@ public class ModelTripleComparatorTest extends NLocalFileMetadataTestCase {
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         createTestMetadata();
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
@@ -69,6 +69,11 @@ public class ModelTripleComparatorTest extends NLocalFileMetadataTestCase {
         val comparator2 = new ModelTripleComparator("calcObject", true, 3);
         modelTripleOfNullDataflow1.setCalcObject("t1");
         Assert.assertEquals(-1, comparator2.compare(modelTripleOfNullDataflow1, modelTripleOfNullDataflow2));
+
+        dataModel1.setRecommendationsCount(1);
+        dataModel2.setRecommendationsCount(2);
+        val comparator3 = new ModelTripleComparator("recommendationsCount", false, 2);
+        Assert.assertEquals(1, comparator3.compare(modelTripleOfNullDataflow1, modelTripleOfNullDataflow2));
     }
 
     @Test

@@ -22,10 +22,11 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 

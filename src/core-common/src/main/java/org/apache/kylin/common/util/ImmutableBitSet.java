@@ -39,8 +39,8 @@ public class ImmutableBitSet implements Iterable<Integer>, Serializable {
 
     // ============================================================================
 
-    final private BitSet set;
-    final private int[] arr;
+    private final BitSet set;
+    private final int[] arr;
 
     public ImmutableBitSet(int index) {
         this(newBitSet(index));

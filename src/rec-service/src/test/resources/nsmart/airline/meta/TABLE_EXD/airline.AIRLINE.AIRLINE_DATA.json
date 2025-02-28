@@ -1,0 +1,23 @@
+{
+  "uuid" : "f90642f7-1838-4198-8868-8a62d4bc1752",
+  "last_modified" : 1493261929118,
+  "version" : "2.0.0",
+  "table_name" : "AIRLINE.AIRLINE_DATA",
+  "last_build_job_id" : null,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : null,
+  "total_rows" : null,
+  "data_source_properties" : {
+    "owner" : "kylin",
+    "skip_header_line_count" : "1",
+    "total_file_size" : "203042074",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://sandbox.hortonworks.com:8020/data/airline",
+    "partition_column" : "",
+    "total_file_number" : "1",
+    "last_access_time" : "0"
+  },
+  "project" : "airline"
+}

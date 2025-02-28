@@ -18,7 +18,9 @@
 
 package org.apache.kylin.rest.controller;
 
-import lombok.val;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.mockito.Mockito.when;
+
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.rest.request.SnapshotSourceTableStatsRequest;
@@ -37,8 +39,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
-import static org.mockito.Mockito.when;
+import lombok.val;
 
 @MetadataInfo
 class SnapshotSourceTableStatsControllerTest {
@@ -78,11 +79,11 @@ class SnapshotSourceTableStatsControllerTest {
     void sourceTableStats() throws Exception {
         val request = mockSnapshotSourceTableStatsRequest();
         val response = Mockito.mock(SnapshotSourceTableStatsResponse.class);
-        when(snapshotSourceTableStatsService.checkSourceTableStats(request.getProject(),
-                request.getDatabase(), request.getTable(), request.getSnapshotPartitionCol())).thenReturn(response);
+        when(snapshotSourceTableStatsService.checkSourceTableStats(request.getProject(), request.getDatabase(),
+                request.getTable(), request.getSnapshotPartitionCol())).thenReturn(response);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/snapshots/source_table_stats")
-                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(snapshotSourceTableStatsController).sourceTableStats(Mockito.any());
     }
@@ -92,8 +93,8 @@ class SnapshotSourceTableStatsControllerTest {
         val request = mockSnapshotSourceTableStatsRequest();
         when(snapshotSourceTableStatsService.saveSnapshotViewMapping(request.getProject())).thenReturn(true);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/snapshots/view_mapping")
-                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(snapshotSourceTableStatsController).saveSnapshotViewMapping(Mockito.any());
     }

@@ -18,10 +18,14 @@
 
 package org.apache.spark.sql.udf
 
-import org.apache.spark.sql.FunctionEntity
+import java.sql.{Date, Timestamp}
+
 import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
 import org.apache.spark.sql.catalyst.expressions.{CeilDateTime, FloorDateTime}
-import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
+import org.apache.spark.sql.common.{GlutenTestUtil, SharedSparkSession, SparderBaseFunSuite}
+import org.apache.spark.sql.execution.ProjectExec
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{FunctionEntity, Row}
 import org.scalatest.BeforeAndAfterAll
 
 class CeilFloorTest extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll {
@@ -114,8 +118,49 @@ class CeilFloorTest extends SparderBaseFunSuite with SharedSparkSession with Bef
     query("select floor(-3.12)", "[-4]")
   }
 
-  def query(sql: String, expected: String): Unit = {
-    val result = spark.sql(sql).collect().map(row => row.toString()).mkString
+  test("test temp dataset") {
+    val schema = StructType(List(
+      StructField("row_id", LongType),
+      StructField("date_col", DateType),
+      StructField("timestamp_col", TimestampType)
+    ))
+    val rdd = sc.parallelize(Seq(
+      Row(1L, Date.valueOf("2024-01-01"), Timestamp.valueOf("2024-01-01 01:01:01.001")),
+      Row(2L, Date.valueOf("2024-02-29"), Timestamp.valueOf("2024-02-29 02:00:00.000")),
+      Row(3L, Date.valueOf("2024-03-31"), Timestamp.valueOf("2024-03-31 00:00:00.000")),
+      Row(4L, Date.valueOf("2024-04-01"), Timestamp.valueOf("2024-04-01 00:00:00.001")),
+      Row(5L, Date.valueOf("2024-04-30"), Timestamp.valueOf("2024-04-30 01:01:01.001"))
+    ))
+    spark.sqlContext.createDataFrame(rdd, schema).createTempView("temp_data")
+    query("select floor_datetime(date_col, 'year') from temp_data where row_id = 1", "[2024-01-01 00:00:00.0]", true)
+    query("select ceil_datetime(date_col, 'year') from temp_data where row_id = 1", "[2024-01-01 00:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'year') from temp_data where row_id = 1", "[2025-01-01 00:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'quarter') from temp_data where row_id = 4", "[2024-04-01 00:00:00.0]", true)
+    query("select ceil_datetime(date_col, 'quarter') from temp_data where row_id = 4", "[2024-04-01 00:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'quarter') from temp_data where row_id = 4", "[2024-07-01 00:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'month') from temp_data where row_id = 5", "[2024-04-01 00:00:00.0]", true)
+    query("select ceil_datetime(date_col, 'month') from temp_data where row_id = 5", "[2024-05-01 00:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'month') from temp_data where row_id = 5", "[2024-05-01 00:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'week') from temp_data where row_id = 5", "[2024-04-29 00:00:00.0]", true)
+    query("select ceil_datetime(date_col, 'week') from temp_data where row_id = 5", "[2024-05-06 00:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'week') from temp_data where row_id = 5", "[2024-05-06 00:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'day') from temp_data where row_id = 3", "[2024-03-31 00:00:00.0]", true)
+    query("select ceil_datetime(date_col, 'day') from temp_data where row_id = 3", "[2024-03-31 00:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'day') from temp_data where row_id = 3", "[2024-03-31 00:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'hour') from temp_data where row_id = 5", "[2024-04-30 01:00:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'hour') from temp_data where row_id = 5", "[2024-04-30 02:00:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'minute') from temp_data where row_id = 5", "[2024-04-30 01:01:00.0]", true)
+    query("select ceil_datetime(timestamp_col, 'minute') from temp_data where row_id = 5", "[2024-04-30 01:02:00.0]", true)
+    query("select floor_datetime(timestamp_col, 'second') from temp_data where row_id = 5", "[2024-04-30 01:01:01.0]", true)
+    query("select ceil_datetime(timestamp_col, 'second') from temp_data where row_id = 5", "[2024-04-30 01:01:02.0]", true)
+  }
+
+  def query(sql: String, expected: String, fallBackCheck: Boolean = false): Unit = {
+    val df = spark.sql(sql)
+    if (fallBackCheck && GlutenTestUtil.glutenEnabled(spark)) {
+      assert(!GlutenTestUtil.hasFallbackOnStep(df.queryExecution.executedPlan, classOf[ProjectExec]))
+    }
+    val result = df.collect().map(row => row.toString()).mkString
     if (!result.equals(expected)) {
       print(sql)
       print(result)

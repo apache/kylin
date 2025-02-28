@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.scheduler;
 
+import static org.apache.kylin.job.execution.ExecutableThread.JOB_THREAD_NAME_PATTERN;
+
 import java.util.Locale;
 
 import org.apache.kylin.job.JobContext;
@@ -56,7 +58,7 @@ public class JobExecutor implements AutoCloseable {
     private void setThreadName() {
         String project = jobExecutable.getProject();
         String jobFlag = jobExecutable.getJobId().split("-")[0];
-        Thread.currentThread().setName(String.format(Locale.ROOT, "JobExecutor(project:%s,job:%s)", project, jobFlag));
+        Thread.currentThread().setName(String.format(Locale.ROOT, JOB_THREAD_NAME_PATTERN, project, jobFlag));
     }
 
     private void setbackThreadName() {

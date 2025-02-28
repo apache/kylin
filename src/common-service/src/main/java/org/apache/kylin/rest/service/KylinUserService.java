@@ -30,26 +30,34 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.util.CreateAdminUserUtils;
+import org.apache.kylin.rest.util.InitUserGroupUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.CollectionUtils;
 
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +72,22 @@ public class KylinUserService implements UserService {
     @Autowired
     @Qualifier("userAclService")
     protected UserAclService userAclService;
+
+    @Autowired
+    Environment env;
+
+    @PostConstruct
+    private void initDefaultUserAndGroups() {
+        InitUserGroupUtils.initUserGroups(env);
+        try {
+            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+                CreateAdminUserUtils.createAllAdmins(this, env, userAclService);
+                return null;
+            }, UnitOfWork.GLOBAL_UNIT);
+        } catch (Exception e) {
+            throw new KylinRuntimeException(e);
+        }
+    }
 
     @Override
     @Transaction

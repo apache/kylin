@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StreamingTestConstant;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -53,9 +56,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;
@@ -93,7 +93,8 @@ public class StreamingDFMergeJobTest extends StreamingTestCase {
         // cleanup all segments first
         var update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegsWithArray(df.getSegments().toArray(new NDataSegment[0]));
-        dfMgr.updateDataflow(update);
+        UnitOfWork.doInTransactionWithRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), PROJECT).updateDataflow(update), PROJECT);
 
         df = dfMgr.getDataflow(df.getId());
         Assert.assertEquals(0, df.getSegments().size());

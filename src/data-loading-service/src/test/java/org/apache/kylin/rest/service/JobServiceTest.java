@@ -21,7 +21,6 @@ package org.apache.kylin.rest.service;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -34,16 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -54,44 +51,40 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.job.InternalTableLoadingJob;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.job.dao.NExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
 import org.apache.kylin.job.execution.ChainedStageExecutable;
-import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.FiveSecondSucceedTestExecutable;
-import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
-import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.execution.StageExecutable;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.metadata.table.InternalTableDesc;
+import org.apache.kylin.metadata.table.InternalTableManager;
+import org.apache.kylin.profiler.ProfilerStatus;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
-import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -112,7 +105,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import lombok.val;
 import lombok.var;
 
-@Ignore
 public class JobServiceTest extends NLocalFileMetadataTestCase {
 
     String project = "default";
@@ -129,9 +121,6 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private final ModelService modelService = Mockito.spy(ModelService.class);
-
-    @Mock
-    private final NExecutableDao executableDao = mock(NExecutableDao.class);
 
     @Mock
     private final TableExtService tableExtService = Mockito.spy(TableExtService.class);
@@ -155,7 +144,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Before
-    public void setup() {
+    public void setUp() {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         overwriteSystemProp("kylin.engine.async-profiler-enabled", "true");
         createTestMetadata();
@@ -182,19 +171,17 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         provider.addIncludeFilter(new AssignableTypeFilter(AbstractExecutable.class));
 
         Set<BeanDefinition> components_kylin = provider.findCandidateComponents("org.apache.kylin");
-        Set<BeanDefinition> components_kap = provider.findCandidateComponents("io.kyligence.kap");
         Set<BeanDefinition> components = Sets.newHashSet(components_kylin);
-        components.addAll(components_kap);
         for (BeanDefinition component : components) {
             final String beanClassName = component.getBeanClassName();
             Class<? extends AbstractExecutable> clazz = ClassUtil.forName(beanClassName, AbstractExecutable.class);
             // no construction method to create a random number ID
             Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor(Object.class);
             AbstractExecutable result = constructor.newInstance(new Object());
-            if (org.apache.commons.lang3.StringUtils.equals(result.getId(), null)) {
+            if (StringUtils.equals(result.getId(), null)) {
                 Assert.assertNull(result.getId());
             } else {
-                Assert.assertTrue(org.apache.commons.lang3.StringUtils.endsWith(result.getId(), "null"));
+                Assert.assertTrue(StringUtils.endsWith(result.getId(), "null"));
             }
         }
     }
@@ -238,6 +225,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig(), project);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
+        executable.setJobType(JobTypeEnum.INC_BUILD);
         executable.setProject(project);
         addSegment(executable);
         FiveSecondSucceedTestExecutable task = new FiveSecondSucceedTestExecutable();
@@ -246,10 +234,13 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         executable.addTask(task);
         manager.addJob(executable);
         manager.updateJobOutput(executable.getId(), ExecutableState.PAUSED, null, null, null);
+        manager.updateJobOutput(task.getId(), ExecutableState.READY, null, null, null);
+        manager.updateJobOutput(task.getId(), ExecutableState.PENDING, null, null, null);
         manager.updateJobOutput(task.getId(), ExecutableState.RUNNING, null, null, null);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED, null, null, null);
 
-        ExecutableResponse response = ExecutableResponse.create(executable, ExecutableManager.toPO(executable, project));
+        ExecutableResponse response = ExecutableResponse.create(manager.getJob(executable.getJobId()),
+                manager.getExecutablePO(executable.getJobId()));
         Assert.assertEquals(0.99F, response.getStepRatio(), 0.001);
     }
 
@@ -263,7 +254,8 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         params.put(NBatchConstants.P_SELECTED_PARTITION_VALUE, "[\"1\",\"2\",\"3\"]");
         params.put(NBatchConstants.P_SELECTED_PARTITION_COL, "testCol");
         snapshotJob.setParams(params);
-        ExecutableResponse response = ExecutableResponse.create(snapshotJob, ExecutableManager.toPO(snapshotJob, project));
+        ExecutableResponse response = ExecutableResponse.create(snapshotJob,
+                ExecutableManager.toPO(snapshotJob, project));
 
         params.put(NBatchConstants.P_INCREMENTAL_BUILD, "false");
         params.put(NBatchConstants.P_SELECTED_PARTITION_COL, "testCol");
@@ -306,6 +298,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig(), project);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
+        executable.setJobType(JobTypeEnum.INC_BUILD);
         executable.setProject(project);
         addSegment(executable);
         FiveSecondSucceedTestExecutable task = new FiveSecondSucceedTestExecutable();
@@ -314,10 +307,13 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         executable.addTask(task);
         manager.addJob(executable);
         manager.updateJobOutput(executable.getId(), ExecutableState.PAUSED, null, null, null);
+        manager.updateJobOutput(task.getId(), ExecutableState.READY, null, null, null);
+        manager.updateJobOutput(task.getId(), ExecutableState.PENDING, null, null, null);
         manager.updateJobOutput(task.getId(), ExecutableState.RUNNING, null, null, null);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED, null, null, null);
 
-        var ratio = ExecutableResponse.calculateStepRatio(executable, ExecutableManager.toPO(executable, project));
+        var ratio = ExecutableResponse.calculateStepRatio(manager.getJob(executable.getJobId()),
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.99F == ratio);
     }
 
@@ -328,6 +324,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig(), project);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
+        executable.setJobType(JobTypeEnum.INC_BUILD);
         executable.setId(RandomUtil.randomUUIDStr());
         executable.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
 
@@ -337,12 +334,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -354,7 +351,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         var buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         var successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                ExecutableManager.toPO(executable, project));
         assertTrue(3 == successLogicStep);
 
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.ERROR, null, "test output", true);
@@ -364,7 +361,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                ExecutableManager.toPO(executable, project));
         assertTrue(0 == successLogicStep);
 
         Map<String, String> info = Maps.newHashMap();
@@ -373,7 +370,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(0.1 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "8");
@@ -381,7 +378,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(0.8 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "10");
@@ -389,7 +386,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(1 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "12");
@@ -397,21 +394,21 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(1 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(1 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.SUCCEED, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getId()));
         assertTrue(2 == successLogicStep);
     }
 
@@ -423,6 +420,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig(), project);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
+        executable.setJobType(JobTypeEnum.INC_BUILD);
         executable.setId(RandomUtil.randomUUIDStr());
         executable.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
 
@@ -432,12 +430,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -449,7 +447,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         var buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         var successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1.5 == successLogicStep);
 
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.ERROR, null, "test output", true);
@@ -459,7 +457,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         Map<String, String> info = Maps.newHashMap();
@@ -468,7 +466,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "10");
@@ -476,7 +474,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "10");
@@ -484,7 +482,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.5 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "12");
@@ -492,21 +490,21 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.5 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.5 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.SUCCEED, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap();
         successLogicStep = ExecutableResponse.calculateSuccessStageInTaskMap(sparkExecutable, buildSteps,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
     }
 
@@ -517,6 +515,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig(), project);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
+        executable.setJobType(JobTypeEnum.INC_BUILD);
         executable.setId(RandomUtil.randomUUIDStr());
         executable.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
 
@@ -526,12 +525,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         sparkExecutable.setId(RandomUtil.randomUUIDStr());
         executable.addTask(sparkExecutable);
 
-        NStageForBuild build1 = new NStageForBuild();
-        NStageForBuild build2 = new NStageForBuild();
-        NStageForBuild build3 = new NStageForBuild();
-        final StageBase logicStep1 = (StageBase) sparkExecutable.addStage(build1);
-        final StageBase logicStep2 = (StageBase) sparkExecutable.addStage(build2);
-        final StageBase logicStep3 = (StageBase) sparkExecutable.addStage(build3);
+        StageExecutable build1 = new StageExecutable();
+        StageExecutable build2 = new StageExecutable();
+        StageExecutable build3 = new StageExecutable();
+        final StageExecutable logicStep1 = (StageExecutable) sparkExecutable.addStage(build1);
+        final StageExecutable logicStep2 = (StageExecutable) sparkExecutable.addStage(build2);
+        final StageExecutable logicStep3 = (StageExecutable) sparkExecutable.addStage(build3);
         sparkExecutable.setStageMap();
 
         manager.addJob(executable);
@@ -543,7 +542,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         var buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         var successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(3 == successLogicStep);
 
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.ERROR, null, "test output", true);
@@ -553,7 +552,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         Map<String, String> info = Maps.newHashMap();
@@ -562,10 +561,10 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.1 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "8");
@@ -573,10 +572,10 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0.8 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "10");
@@ -584,10 +583,10 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(0 == successLogicStep);
 
         info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, "12");
@@ -595,30 +594,30 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(1 == successLogicStep);
 
         manager.updateStageStatus(logicStep2.getId(), segmentId, ExecutableState.SUCCEED, null, "test output");
         buildSteps = ((ChainedStageExecutable) ((ChainedExecutable) manager.getJob(executable.getId())).getTasks()
                 .get(0)).getStagesMap().get(segmentId);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, true,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(2 == successLogicStep);
         successLogicStep = ExecutableResponse.calculateSuccessStage(sparkExecutable, segmentId, buildSteps, false,
-                ExecutableManager.toPO(sparkExecutable, project));
+                manager.getExecutablePO(executable.getJobId()));
         assertTrue(2 == successLogicStep);
     }
 
@@ -675,76 +674,6 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(executableManager.getAllJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(jobs);
     }
 
-    private List<ExecutablePO> mockDetailJobs(boolean random) throws Exception {
-        List<ExecutablePO> jobs = new ArrayList<>();
-        for (int i = 1; i < 4; i++) {
-            jobs.add(mockExecutablePO(random, i + ""));
-        }
-        return jobs;
-    }
-
-    private ExecutablePO mockExecutablePO(boolean random, String name) {
-        ExecutablePO mockJob = new ExecutablePO();
-        mockJob.setType("org.apache.kylin.job.execution.SucceedChainedTestExecutable");
-        mockJob.setProject(getProject());
-        mockJob.setName("sparkjob" + name);
-        mockJob.setTargetModel("model" + name);
-        val jobOutput = mockJob.getOutput();
-        if ("1".equals(name))
-            jobOutput.setStatus(ExecutableState.SUCCEED.name());
-
-        val startTime = getCreateTime(name);
-        mockJob.setCreateTime(startTime);
-        jobOutput.setCreateTime(startTime);
-        jobOutput.setStartTime(startTime);
-        var lastEndTime = startTime;
-        List<ExecutablePO> tasks = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            val childExecutable = new ExecutablePO();
-            childExecutable.setUuid(mockJob.getId() + "_0" + i);
-            childExecutable.setType("org.apache.kylin.job.execution.SucceedSubTaskTestExecutable");
-            childExecutable.setProject(getProject());
-            val jobChildOutput = childExecutable.getOutput();
-            mockOutputTime(random, lastEndTime, jobChildOutput, i);
-            lastEndTime = jobChildOutput.getEndTime();
-            tasks.add(childExecutable);
-        }
-        mockJob.setTasks(tasks);
-
-        jobOutput.setEndTime(lastEndTime);
-        Mockito.when(executableDao.getJobByUuid(eq(mockJob.getId()))).thenReturn(mockJob);
-        return mockJob;
-    }
-
-    private long getCreateTime(String name) {
-        switch (name) {
-            case "1":
-                return 1560324101000L;
-            case "2":
-                return 1560324102000L;
-            case "3":
-                return 1560324103000L;
-            default:
-                return 0L;
-        }
-    }
-
-    private void mockOutputTime(boolean random, long baseTime, ExecutableOutputPO output, int index) {
-        long createTime = baseTime + (index + 1) * 2000L;
-        long startTime = createTime + (index + 1) * 2000L;
-        long endTime = startTime + (index + 1) * 2000L;
-        if (random) {
-            val randomObj = new Random();
-            Supplier<Long> randomSupplier = () -> (long) randomObj.nextInt(100);
-            endTime += randomSupplier.get();
-        }
-
-        output.setStartTime(startTime);
-        output.setCreateTime(createTime);
-        output.setEndTime(endTime);
-
-    }
-
     @Test
     public void testGetJobStats() throws ParseException {
         JobStatisticsResponse jobStats = jobService.getJobStats("default", Long.MIN_VALUE, Long.MAX_VALUE);
@@ -771,90 +700,6 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
         jobDurationPerMb = jobService.getJobDurationPerByte("default", startTime, endTime, "model");
         Assert.assertEquals(0, jobDurationPerMb.size());
-    }
-
-    @Test
-    public void jobActionValidate() throws IOException {
-        val manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
-        val job = new DefaultExecutable();
-        job.setProject(getProject());
-        job.setJobType(JobTypeEnum.INDEX_BUILD);
-        manager.addJob(job);
-        jobService.jobActionValidateToTest(job.getId(), getProject(), JobActionEnum.PAUSE.name());
-
-        val job1 = new DefaultExecutable();
-        job1.setProject(getProject());
-        job1.setJobType(JobTypeEnum.INDEX_BUILD);
-        job1.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
-        manager.addJob(job1);
-        jobService.jobActionValidateToTest(job1.getId(), getProject(), JobActionEnum.PAUSE.name());
-
-        val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-        val project = "default";
-//        MockSecondStorage.mock("default", new ArrayList<>(), this);
-        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            indexPlanManager.updateIndexPlan(model, indexPlan -> {
-                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
-            });
-            return null;
-        }, project);
-//        SecondStorageUtil.initModelMetaData(project, model);
-//        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
-//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
-
-        val job3 = new DefaultExecutable();
-        job3.setProject(getProject());
-        job3.setJobType(JobTypeEnum.INDEX_BUILD);
-        job3.setTargetSubject(model);
-        manager.addJob(job3);
-        jobService.jobActionValidateToTest(job3.getId(), getProject(), JobActionEnum.PAUSE.name());
-
-        val job4 = new DefaultExecutable();
-        job4.setProject(getProject());
-        job4.setJobType(JobTypeEnum.INDEX_BUILD);
-        job4.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
-        job4.setTargetSubject(model);
-        manager.addJob(job4);
-        jobService.jobActionValidateToTest(job4.getId(), getProject(), JobActionEnum.PAUSE.name());
-    }
-
-    //@Test
-    public void testGetSegmentsInGetJobList() throws IOException {
-        val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-        val modelMock = RandomUtil.randomUUIDStr();
-        val project = "default";
-//        MockSecondStorage.mock("default", new ArrayList<>(), this);
-        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            indexPlanManager.updateIndexPlan(model, indexPlan -> {
-                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
-            });
-            return null;
-        }, project);
-//        SecondStorageUtil.initModelMetaData(project, model);
-//        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
-//        Assert.assertTrue(SecondStorageUtil.isModelEnableWithoutCheckKylinInfo(project, model));
-
-        val manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
-        val job = new DefaultExecutable();
-        job.setProject(getProject());
-        job.setJobType(JobTypeEnum.INDEX_BUILD);
-        job.setTargetSubject(modelMock);
-        manager.addJob(job);
-        val segments = jobService.getSegments(job);
-        Assert.assertTrue(CollectionUtils.isEmpty(segments));
-
-        val job1 = new DefaultExecutable();
-        job1.setProject(getProject());
-        job1.setJobType(JobTypeEnum.INDEX_BUILD);
-        job1.setTargetSubject(model);
-        manager.addJob(job1);
-        val segment = Mockito.mock(NDataSegmentResponse.class);
-        Mockito.doReturn(Lists.newArrayList(segment)).when(modelService).getSegmentsResponseByJob(model, getProject(),
-                job1);
-        val segments1 = jobService.getSegments(job1);
-        Assert.assertEquals(1, segments1.size());
     }
 
     @Test
@@ -1144,5 +989,42 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Path path = new Path(file);
         manager.updateJobOutputToHDFS(file, executableOutputPO);
         Assert.assertSame(FsAction.ALL, fs.getFileStatus(path.getParent()).getPermission().getOtherAction());
+    }
+
+    @Test
+    public void testInternalTableLoadingJobResponse() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        NTableMetadataManager manager = NTableMetadataManager.getInstance(conf, "default");
+        InternalTableManager internalManager = InternalTableManager.getInstance(conf, "default");
+        InternalTableLoadingJob job = new InternalTableLoadingJob();
+        job.setProject("default");
+        job.setParam("startTime", "10001");
+        job.setParam("endTime", "10002");
+
+        ExecutableResponse response = ExecutableResponse.create(job, null);
+        Assert.assertEquals(10001L, response.getDataRangeStart());
+        Assert.assertEquals(10002L, response.getDataRangeEnd());
+
+        job.setParam("incrementalBuild", "false");
+        response = ExecutableResponse.create(job, null);
+        Assert.assertEquals(Long.MAX_VALUE, response.getDataRangeEnd());
+
+        job.setParam("incrementalBuild", "true");
+        job.setParam("deletePartition", "true");
+        response = ExecutableResponse.create(job, null);
+        Assert.assertEquals(Long.MAX_VALUE, response.getDataRangeEnd());
+
+        TableDesc originTable = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        internalManager.createInternalTable(new InternalTableDesc(originTable));
+
+        job.setParam(NBatchConstants.P_TABLE_NAME, originTable.getIdentity());
+        response = ExecutableResponse.create(job, null);
+        Assert.assertTrue(response.isTargetSubjectError());
+
+        internalManager.updateInternalTable(originTable.getIdentity(),
+                copyForWrite -> copyForWrite.setLocation(copyForWrite.generateInternalTableLocation()));
+        response = ExecutableResponse.create(job, null);
+        Assert.assertFalse(response.isTargetSubjectError());
+        Assert.assertEquals(originTable.getIdentity(), response.getTargetSubject());
     }
 }

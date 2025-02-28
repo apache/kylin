@@ -40,10 +40,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.springframework.security.acls.domain.DefaultPermissionFactory;
 import org.springframework.security.acls.model.Permission;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  * @author xduo

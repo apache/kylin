@@ -18,15 +18,15 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_ITEM_ID_EMPTY;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_PROJECT_EMPTY;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_REGEX_AND_SQL_EMPTY;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_REGEX_EMPTY;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_REGEX_EXISTS;
 import static org.apache.kylin.common.exception.ServerErrorCode.BLACKLIST_SQL_EXISTS;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.query.blacklist.SQLBlacklist;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.rest.request.SQLBlacklistItemRequest;
@@ -51,8 +52,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -132,12 +131,14 @@ public class QuerySQLBlacklistController extends NBasicController {
         SQLBlacklistItem sqlBlacklistItemOfRegex = querySQLBlacklistService.getItemByRegex(project,
                 sqlBlacklistItemRequest);
         if (null != sqlBlacklistItemOfRegex) {
-            throw new KylinException(BLACKLIST_REGEX_EMPTY, String.format(Locale.ROOT, msg.getSqlBlacklistItemRegexExists(), sqlBlacklistItemOfRegex.getId()));
+            throw new KylinException(BLACKLIST_REGEX_EMPTY,
+                    String.format(Locale.ROOT, msg.getSqlBlacklistItemRegexExists(), sqlBlacklistItemOfRegex.getId()));
         }
         SQLBlacklistItem sqlBlacklistItemOfSql = querySQLBlacklistService.getItemBySql(project,
                 sqlBlacklistItemRequest);
         if (null != sqlBlacklistItemOfSql) {
-            throw new KylinException(BLACKLIST_SQL_EXISTS, String.format(Locale.ROOT, msg.getSqlBlacklistItemSqlExists(), sqlBlacklistItemOfSql.getId()));
+            throw new KylinException(BLACKLIST_SQL_EXISTS,
+                    String.format(Locale.ROOT, msg.getSqlBlacklistItemSqlExists(), sqlBlacklistItemOfSql.getId()));
         }
 
         SQLBlacklist sqlBlacklist = querySQLBlacklistService.addSqlBlacklistItem(project, sqlBlacklistItemRequest);
@@ -166,11 +167,13 @@ public class QuerySQLBlacklistController extends NBasicController {
         SQLBlacklistItem conflictRegexItem = querySQLBlacklistService.checkConflictRegex(project,
                 sqlBlacklistItemRequest);
         if (null != conflictRegexItem) {
-            throw new KylinException(BLACKLIST_REGEX_EMPTY, String.format(Locale.ROOT, msg.getSqlBlacklistItemRegexExists(), conflictRegexItem.getId()));
+            throw new KylinException(BLACKLIST_REGEX_EMPTY,
+                    String.format(Locale.ROOT, msg.getSqlBlacklistItemRegexExists(), conflictRegexItem.getId()));
         }
         SQLBlacklistItem conflictSqlItem = querySQLBlacklistService.checkConflictSql(project, sqlBlacklistItemRequest);
         if (null != conflictSqlItem) {
-            throw new KylinException(BLACKLIST_SQL_EXISTS, String.format(Locale.ROOT, msg.getSqlBlacklistItemSqlExists(), conflictSqlItem.getId()));
+            throw new KylinException(BLACKLIST_SQL_EXISTS,
+                    String.format(Locale.ROOT, msg.getSqlBlacklistItemSqlExists(), conflictSqlItem.getId()));
         }
         SQLBlacklist sqlBlacklist = querySQLBlacklistService.updateSqlBlacklistItem(project, sqlBlacklistItemRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, sqlBlacklist, "");

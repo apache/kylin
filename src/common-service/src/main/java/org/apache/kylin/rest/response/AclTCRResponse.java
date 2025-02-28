@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.NoArgsConstructor;
 import org.apache.kylin.metadata.acl.DependentColumn;
 import org.apache.kylin.metadata.acl.SensitiveDataMask;
 
@@ -32,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 public class AclTCRResponse {

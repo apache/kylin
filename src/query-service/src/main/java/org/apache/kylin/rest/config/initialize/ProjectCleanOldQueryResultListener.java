@@ -21,11 +21,10 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.event.ProjectCleanOldQueryResultEvent;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.rest.service.AsyncQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 
 @Component
 public class ProjectCleanOldQueryResultListener {

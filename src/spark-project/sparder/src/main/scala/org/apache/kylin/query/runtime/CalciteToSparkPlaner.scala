@@ -17,146 +17,190 @@
  */
 package org.apache.kylin.query.runtime
 
-import java.util
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.utils.LogEx
+import org.apache.kylin.metadata.model.NDataModel.DataStorageType
 import org.apache.kylin.query.relnode._
+import org.apache.kylin.query.runtime.FilePruningMode.PruningMode
 import org.apache.kylin.query.runtime.plan._
+import org.apache.kylin.query.runtime.planV3.DeltaLakeTableScanPlan
+import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.{DataFrame, SparderEnv, SparkInternalAgent}
+
+import java.util
 
 class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with LogEx {
-  private val stack = new util.Stack[LogicalPlan]()
-  private val setOpStack = new util.Stack[Int]()
+  private val stack = new util.ArrayDeque[LogicalPlan]()
+  private val setOpStack = new util.ArrayDeque[Int]()
   private var unionLayer = 0
+  private var storageType = DataStorageType.V1
+  private lazy val filePruningMode = computeFilePruningMode
 
   // clear cache before any op
   cleanCache()
 
   override def visit(node: RelNode, ordinal: Int, parent: RelNode): Unit = {
-    if (node.isInstanceOf[KapUnionRel]) {
+    if (node.isInstanceOf[OlapUnionRel]) {
       unionLayer = unionLayer + 1
     }
-    if (node.isInstanceOf[KapUnionRel] || node.isInstanceOf[KapMinusRel]) {
-      setOpStack.push(stack.size())
+    if (node.isInstanceOf[OlapUnionRel] || node.isInstanceOf[OlapMinusRel]) {
+      setOpStack.offerLast(stack.size())
     }
     // skip non runtime joins children
     // cases to skip children visit
-    // 1. current node is a KapJoinRel and is not a runtime join
-    // 2. current node is a KapNonEquiJoinRel and is not a runtime join
-    if (!(node.isInstanceOf[KapJoinRel] && !node.asInstanceOf[KapJoinRel].isRuntimeJoin) &&
-      !(node.isInstanceOf[KapNonEquiJoinRel] && !node.asInstanceOf[KapNonEquiJoinRel].isRuntimeJoin)) {
+    // 1. current node is a OlapJoinRel and is not a runtime join
+    // 2. current node is a OlapNonEquiJoinRel and is not a runtime join
+    if (!(node.isInstanceOf[OlapJoinRel] && !node.asInstanceOf[OlapJoinRel].isRuntimeJoin) &&
+      !(node.isInstanceOf[OlapNonEquiJoinRel] && !node.asInstanceOf[OlapNonEquiJoinRel].isRuntimeJoin)) {
       node.childrenAccept(this)
     }
-    stack.push(node match {
-      case rel: KapTableScan => convertTableScan(rel)
-      case rel: KapFilterRel =>
+    stack.offerLast(node match {
+      case rel: OlapTableScan => convertTableScan(rel)
+      case rel: OlapFilterRel =>
         logTime("filter") {
-          FilterPlan.filter(stack.pop(), rel, dataContext)
+          FilterPlan.filter(stack.pollLast(), rel, dataContext)
         }
-      case rel: KapProjectRel =>
+      case rel: OlapProjectRel =>
         logTime("project") {
-          ProjectPlan.select(stack.pop(), rel, dataContext)
+          ProjectPlan.select(stack.pollLast(), rel, dataContext)
         }
-      case rel: KapLimitRel =>
+      case rel: OlapLimitRel =>
         logTime("limit") {
-          LimitPlan.limit(stack.pop(), rel, dataContext)
+          LimitPlan.limit(stack.pollLast(), rel, dataContext)
         }
-      case rel: KapSortRel =>
+      case rel: OlapSortRel =>
         logTime("sort") {
-          SortPlan.sort(stack.pop(), rel, dataContext)
+          SortPlan.sort(stack.pollLast(), rel, dataContext)
         }
-      case rel: KapWindowRel =>
+      case rel: OlapWindowRel =>
         logTime("window") {
-          WindowPlan.window(stack.pop(), rel, dataContext)
+          WindowPlan.window(stack.pollLast(), rel, dataContext)
         }
-      case rel: KapAggregateRel =>
+      case rel: OlapAggregateRel =>
         logTime("agg") {
-          AggregatePlan.agg(stack.pop(), rel)
+          AggregatePlan.agg(stack.pollLast(), rel)
         }
-      case rel: KapJoinRel => convertJoinRel(rel)
-      case rel: KapNonEquiJoinRel => convertNonEquiJoinRel(rel)
-      case rel: KapUnionRel =>
-        val size = setOpStack.pop()
-        var unionBlocks = Range(0, stack.size() - size).map(a => stack.pop())
+      case rel: OlapJoinRel => convertJoinRel(rel)
+      case rel: OlapNonEquiJoinRel => convertNonEquiJoinRel(rel)
+      case rel: OlapUnionRel =>
+        val size = setOpStack.pollLast()
+        var unionBlocks = Range(0, stack.size() - size).map(_ => stack.pollLast())
         if (KylinConfig.getInstanceFromEnv.isCollectUnionInOrder) {
           unionBlocks = unionBlocks.reverse
         }
         logTime("union") {
           plan.UnionPlan.union(unionBlocks, rel, dataContext)
         }
-      case rel: KapMinusRel =>
-        val size = setOpStack.pop()
+      case rel: OlapMinusRel =>
+        val size = setOpStack.pollLast()
         logTime("minus") {
-          plan.MinusPlan.minus(Range(0, stack.size() - size).map(a => stack.pop()).reverse, rel, dataContext)
+          plan.MinusPlan.minus(Range(0, stack.size() - size).map(_ => stack.pollLast()).reverse, rel, dataContext)
         }
-      case rel: KapValuesRel =>
+      case rel: OlapValuesRel =>
         logTime("values") {
           ValuesPlan.values(rel)
         }
-      case rel: KapModelViewRel =>
+      case rel: OlapModelViewRel =>
         logTime("modelview") {
-          stack.pop()
+          stack.pollLast()
         }
     })
-    if (node.isInstanceOf[KapUnionRel]) {
+    if (node.isInstanceOf[OlapUnionRel]) {
       unionLayer = unionLayer - 1
     }
   }
 
-  private def convertTableScan(rel: KapTableScan): LogicalPlan = {
-    rel.getContext.genExecFunc(rel, rel.getTableName) match {
+  private def convertTableScan(rel: OlapTableScan): LogicalPlan = {
+    val execFunc = rel.getContext.genExecFunc(rel)
+
+    val tablePlan = logTime(getLogMessage(execFunc)) {
+      createTablePlan(rel, execFunc)
+    }
+
+    tablePlan
+  }
+
+  private def convertJoinRel(rel: OlapJoinRel): LogicalPlan = {
+    if (!rel.isRuntimeJoin) {
+      val execFunc = rel.getContext.genExecFunc(rel)
+
+      val logicalPlan = logTime(getLogMessage(execFunc)) {
+        if (execFunc == "executeMetadataQuery") {
+          TableScanPlan.createMetadataTable(rel)
+        } else if (execFunc == "executeSimpleAggregationQuery") {
+          TableScanPlan.createSingleRow()
+        } else {
+          createTablePlan(rel, execFunc)
+        }
+      }
+
+      logicalPlan
+    } else {
+      performRuntimeJoin(rel)
+    }
+  }
+
+  private def getStorageType(modelStorageType: DataStorageType) = {
+    if (modelStorageType.isDeltaStorage) {
+      storageType = DataStorageType.DELTA
+    }
+    storageType
+  }
+
+
+  private def createTablePlan(rel: OlapRel, execFunc: String): LogicalPlan = {
+    execFunc match {
       case "executeLookupTableQuery" =>
-        logTime("createLookupTable") {
+        val config = rel.getContext.getOlapSchema.getConfig
+        if (config.isInternalTableEnabled) {
+          TableScanPlan.createInternalTable(rel)
+        } else {
           TableScanPlan.createLookupTable(rel)
         }
-      case "executeOLAPQuery" =>
-        logTime("createOLAPTable") {
-          TableScanPlan.createOLAPTable(rel)
-        }
+      case "executeOlapQuery" =>
+        val storageType = getStorageType(rel.getContext.getRealization.getModel.getStorageType)
+        if (storageType == DataStorageType.DELTA) {
+          DeltaLakeTableScanPlan.createOlapTable(rel, filePruningMode)
+        } else TableScanPlan.createOlapTable(rel)
       case "executeSimpleAggregationQuery" =>
-        logTime("createSingleRow") {
-          TableScanPlan.createSingleRow()
-        }
+        TableScanPlan.createSingleRow()
       case "executeMetadataQuery" =>
-        logTime("createMetadataTable") {
-          TableScanPlan.createMetadataTable(rel)
-        }
+        TableScanPlan.createMetadataTable(rel)
+      case _ =>
+        // Handle unknown execFunc, or add a default case if needed
+        throw new UnsupportedOperationException(s"Unsupported execFunc: $execFunc")
     }
   }
 
-  private def convertJoinRel(rel: KapJoinRel): LogicalPlan = {
-    if (!rel.isRuntimeJoin) {
-      rel.getContext.genExecFunc(rel, "") match {
-        case "executeMetadataQuery" =>
-          logTime("createMetadataTable") {
-            TableScanPlan.createMetadataTable(rel)
-          }
-        case _ =>
-          logTime("join with table scan") {
-            TableScanPlan.createOLAPTable(rel)
-          }
-      }
-    } else {
-      val right = stack.pop()
-      val left = stack.pop()
-      logTime("join") {
-        plan.JoinPlan.join(Seq.apply(left, right), rel)
-      }
+  private def performRuntimeJoin(rel: OlapJoinRel): LogicalPlan = {
+    val right = stack.pollLast()
+    val left = stack.pollLast()
+    logTime("join") {
+      plan.JoinPlan.join(Seq(left, right), rel)
     }
   }
 
-  private def convertNonEquiJoinRel(rel: KapNonEquiJoinRel): LogicalPlan = {
+  private def getLogMessage(execFunc: String): String = {
+    execFunc match {
+      case "executeLookupTableQuery" => "createLookupTable"
+      case "executeOlapQuery" => "createOlapTable"
+      case "executeSimpleAggregationQuery" => "createSingleRow"
+      case "executeMetadataQuery" => "createMetadataTable"
+      case _ => "unknownOperation"
+    }
+  }
+
+
+  private def convertNonEquiJoinRel(rel: OlapNonEquiJoinRel): LogicalPlan = {
     if (!rel.isRuntimeJoin) {
       logTime("join with table scan") {
-        TableScanPlan.createOLAPTable(rel)
+        TableScanPlan.createOlapTable(rel)
       }
     } else {
-      val right = stack.pop()
-      val left = stack.pop()
+      val right = stack.pollLast()
+      val left = stack.pollLast()
       logTime("non-equi join") {
         plan.JoinPlan.nonEquiJoin(Seq.apply(left, right), rel, dataContext)
       }
@@ -167,8 +211,39 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
     TableScanPlan.cachePlan.get().clear()
   }
 
-  def getResult(): DataFrame = {
-    val logicalPlan = stack.pop()
-    SparkInternalAgent.getDataFrame(SparderEnv.getSparkSession, logicalPlan)
+  def getResult(): LogicalPlan = {
+    stack.pollLast()
+  }
+
+  private def computeFilePruningMode(): PruningMode = {
+    import scala.collection.JavaConverters._
+
+    val config = KylinConfig.getInstanceFromEnv
+    val v3FileNumLimit = config.getV3FilePruningNumLimit
+    val v3FileSizeLimit = config.getV3FilePruningSizeLimit
+
+    val contextOption = ContextUtil.listContexts.asScala
+      .filter(_.getStorageContext.getCandidate.getDataLayoutDetails != null)
+      .filter {
+        case ctx: OlapContext =>
+          val fragment = ctx.getStorageContext.getCandidate.getDataLayoutDetails
+          val fileNum = fragment.getNumOfFiles
+          val totalSize = fragment.getSizeInBytes
+          fileNum >= v3FileNumLimit || totalSize > v3FileSizeLimit
+      }
+      .headOption
+
+    contextOption match {
+      case Some(context) =>
+        log.info("Auto set file pruning mode Cluster, kylin.query.v3.file-pruning-file-num-limit {}," +
+          " kylin.query.v3.file-pruning-file-size-limit {}.", v3FileNumLimit, v3FileSizeLimit)
+        FilePruningMode.CLUSTER
+
+      case None =>
+        SparderEnv.getSparkSession.sparkContext.setLocalProperty("spark.databricks.delta.stats.skipping", "false")
+        log.info("Auto set file pruning mode Local, kylin.query.v3.file-pruning-file-num-limit {}," +
+          " kylin.query.v3.file-pruning-file-size-limit {}.", v3FileNumLimit, v3FileSizeLimit)
+        FilePruningMode.LOCAL
+    }
   }
 }

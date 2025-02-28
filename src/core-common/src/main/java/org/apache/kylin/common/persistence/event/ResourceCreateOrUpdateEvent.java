@@ -23,15 +23,25 @@ import org.apache.kylin.common.persistence.RawResource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResourceCreateOrUpdateEvent extends ResourceRelatedEvent {
-    @Getter
+
+    @Setter
+    private String resPath;
+
     private RawResource createdOrUpdated;
 
-    @Override
-    public String getResPath() {
-        return createdOrUpdated.getResPath();
+    /**
+     * Only when mvcc>0 (ie: update), will be used to apply content's diff
+     * @return audit content
+     */
+    public byte[] getMetaContent() {
+        return createdOrUpdated.getMvcc() > 0 && createdOrUpdated.getContentDiff() != null
+                ? createdOrUpdated.getContentDiff()
+                : createdOrUpdated.getContent();
     }
 }

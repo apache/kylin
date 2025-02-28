@@ -1,0 +1,56 @@
+{
+  "uuid" : "0fa76e9e-f794-473f-b3c6-65d45e687bb0",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "STREAMING_TABLE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "minute_start",
+    "datatype" : "timestamp",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "hour_start",
+    "datatype" : "timestamp",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "day_start",
+    "datatype" : "date",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "itm",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "site",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "gmv",
+    "datatype" : "decimal(19,6)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "item_count",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 1,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

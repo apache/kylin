@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,10 +58,13 @@ public class SnapshotCleanerTest extends NLocalFileMetadataTestCase {
                 .collect(Collectors.toSet());
 
         String stalePath = "default/table_snapshot/mock";
-        tables.forEach(tableDesc -> {
-            tableDesc.setLastSnapshotPath(stalePath);
-            tableMetadataManager.updateTableDesc(tableDesc);
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            tables.forEach(tableDesc -> {
+                tableDesc.setLastSnapshotPath(stalePath);
+                NTableMetadataManager.getInstance(getTestConfig(), DEFAULT_PROJECT).updateTableDesc(tableDesc);
+            });
+            return true;
+        }, DEFAULT_PROJECT);
         tableName = tables.iterator().next().getIdentity();
 
         Assert.assertTrue(tables.size() > 0);

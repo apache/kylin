@@ -18,8 +18,8 @@
 
 package org.apache.kylin.rest.controller.open;
 
-import static org.apache.kylin.rest.security.AclEntityType.PROJECT_INSTANCE;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.rest.security.AclEntityType.PROJECT_INSTANCE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,23 +27,24 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.AccessRequest;
+import org.apache.kylin.rest.request.BatchProjectPermissionRequest;
+import org.apache.kylin.rest.request.ProjectPermissionRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.response.ProjectPermissionResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.request.BatchProjectPermissionRequest;
-import org.apache.kylin.rest.request.ProjectPermissionRequest;
 import org.apache.kylin.rest.service.AclTCRService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.UserService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,8 +67,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class OpenAccessControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;

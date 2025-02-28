@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.util.JobDriverUIUtil;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -47,12 +48,17 @@ public class JobDriverUIControllerTest extends NLocalFileMetadataTestCase {
     private JobDriverUIController jobDriverUIController = Mockito.spy(new JobDriverUIController());
 
     @Before
-    public void setup() {
+    public void setUp() {
         createTestMetadata();
         MockitoAnnotations.initMocks(this);
 
         mockMvc = MockMvcBuilders.standaloneSetup(jobDriverUIController).defaultRequest(MockMvcRequestBuilders.get("/"))
                 .build();
+    }
+    
+    @After
+    public void tearDown() {
+        cleanupTestMetadata();
     }
 
     @Test

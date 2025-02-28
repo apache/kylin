@@ -33,17 +33,11 @@ import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import scala.collection.JavaConversions;
 
 public class CalciteDynamicTest extends NLocalWithSparkSessionTest {
-
-    @Before
-    public void setup() throws Exception {
-        super.init();
-    }
 
     @After
     public void after() throws Exception {

@@ -1,0 +1,53 @@
+{
+  "uuid" : "712d1ae6-560a-48ac-9aec-ec29735ab43d",
+  "last_modified" : 1483516236719,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_ACCOUNT",
+  "last_build_job_id" : "0f54ab2a-bc87-4ea8-833e-5904e00a606b",
+  "columns_stats" : [ {
+    "max_value" : "10009999",
+    "min_value" : "10000000",
+    "max_length_value" : "10000000",
+    "min_length_value" : "10000000",
+    "null_count" : 0,
+    "cardinality" : 10420
+  }, {
+    "max_value" : "5",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "5",
+    "min_value" : "0",
+    "max_length_value" : "4",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "US",
+    "min_value" : "CN",
+    "max_length_value" : "FR",
+    "min_length_value" : "FR",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "N/A",
+    "min_value" : "N/A",
+    "max_length_value" : "N/A",
+    "min_length_value" : "N/A",
+    "null_count" : 0,
+    "cardinality" : 1
+  } ],
+  "sample_rows" : [ [ "10000000", "10000002", "10000004", "10000006", "10000008", "10000010", "10000012", "10000014", "10000016", "10000018" ], [ "1", "0", "2", "2", "5", "1", "3", "5", "4", "0" ], [ "4", "1", "3", "3", "3", "1", "1", "3", "5", "5" ], [ "FR", "IT", "JP", "JP", "US", "IT", "CN", "CN", "JP", "CN" ], [ "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "10000",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

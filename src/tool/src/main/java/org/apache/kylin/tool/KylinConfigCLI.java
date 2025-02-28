@@ -26,7 +26,6 @@ import org.apache.kylin.common.BackwardCompatibilityConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.Unsafe;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;

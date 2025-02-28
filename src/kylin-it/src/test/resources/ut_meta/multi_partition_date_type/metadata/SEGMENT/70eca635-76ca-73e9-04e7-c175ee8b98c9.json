@@ -1,0 +1,158 @@
+{
+  "name" : "20211229000000_20211230000000",
+  "create_time_utc" : 1641809162031,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1640757600000,
+    "date_range_end" : 1640844000000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "22" : {
+      "min" : "10130",
+      "max" : "10993"
+    },
+    "23" : {
+      "min" : "10130",
+      "max" : "10993"
+    },
+    "24" : {
+      "min" : "1640707329035",
+      "max" : "1640793629017"
+    },
+    "10" : {
+      "min" : "10130",
+      "max" : "10993"
+    },
+    "11" : {
+      "min" : "1640707329035",
+      "max" : "1640793629017"
+    },
+    "12" : {
+      "min" : "103.0",
+      "max" : "111.0"
+    },
+    "13" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-29"
+    },
+    "14" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "15" : {
+      "min" : "21",
+      "max" : "21"
+    },
+    "16" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-30"
+    },
+    "17" : {
+      "min" : "10010130",
+      "max" : "10010993"
+    },
+    "18" : {
+      "min" : "2021-12-29 00:02:19.0",
+      "max" : "2021-12-30 00:00:39.0"
+    },
+    "19" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "0" : {
+      "min" : "103.0",
+      "max" : "111.0"
+    },
+    "1" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-29"
+    },
+    "2" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "3" : {
+      "min" : "21",
+      "max" : "21"
+    },
+    "4" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-30"
+    },
+    "5" : {
+      "min" : "10010130",
+      "max" : "10010993"
+    },
+    "6" : {
+      "min" : "2021-12-29 00:02:19.0",
+      "max" : "2021-12-30 00:00:39.0"
+    },
+    "7" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "8" : {
+      "min" : "19.00",
+      "max" : "19.00"
+    },
+    "9" : {
+      "min" : "'abc_4_10130'",
+      "max" : "'abc_4_10993'"
+    },
+    "20" : {
+      "min" : "19.00",
+      "max" : "19.00"
+    },
+    "21" : {
+      "min" : "'abc_4_10130'",
+      "max" : "'abc_4_10993'"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1641810115789,
+  "source_count" : 864,
+  "source_bytes_size" : 4001250,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_FACT_24_2W.STRING_8" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.INT_1" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_13" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.INT_15" : 864,
+    "TEST_DB.TEST_FACT_24_2W.ID" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.DATE_7" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.TIMESTAMP_10" : 18144,
+    "TEST_DB.TEST_FACT_24_2W.DOUBLE_4" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.STRING_NUM_16" : 864,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_12" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DECIMAL_23" : 1728,
+    "TEST_DB.TEST_FACT_24_2W.DATE_6" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.INT_0" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_3" : 6912,
+    "TEST_DB.TEST_FACT_24_2W.DECIMAL_19" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DATE_21" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.DOUBLE_5" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.STRING_NUM_17" : 864,
+    "TEST_DB.TEST_FACT_24_2W.STRING_9" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DECIMAL_22" : 1728,
+    "TEST_DB.TEST_FACT_24_2W.DECIMAL_18" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.TIMESTAMP_11" : 18144,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DATE_20" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_2" : 6912,
+    "TEST_DB.TEST_FACT_24_2W.INT_14" : 864
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "70eca635-76ca-73e9-04e7-c175ee8b98c9",
+  "model_uuid" : "00a91916-d31e-ed40-b1ba-4a86765072f6",
+  "project" : "multi_partition_date_type"
+}

@@ -18,28 +18,19 @@
 
 package org.apache.kylin.job.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
-import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.Configuration;
@@ -49,7 +40,6 @@ import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.AddressUtil;
@@ -68,6 +58,7 @@ import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import lombok.SneakyThrows;
@@ -80,29 +71,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobContextUtil {
 
-    private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
+    private static volatile JobInfoMapper jobInfoMapper;
 
-    private static final String CREATE_JOB_INFO_TABLE = "create.job.info.table";
+    private static volatile JobLockMapper jobLockMapper;
 
-    private static final String CREATE_JOB_LOCK_TABLE = "create.job.lock.table";
+    private static volatile JobInfoDao jobInfoDao;
 
-    private static JobInfoMapper jobInfoMapper;
+    private static volatile JobContext jobContext;
 
-    private static JobLockMapper jobLockMapper;
+    private static volatile SqlSessionTemplate sqlSessionTemplate;
 
-    private static JobInfoDao jobInfoDao;
+    private static volatile DataSourceTransactionManager transactionManager;
 
-    private static JobContext jobContext;
+    private static final JobTableInterceptor jobTableInterceptor = new JobTableInterceptor();
 
-    private static SqlSessionTemplate sqlSessionTemplate;
+    private static final JobMybatisConfig jobMybatisConfig = new JobMybatisConfig();
 
-    private static DataSourceTransactionManager transactionManager;
-
-    private static JobTableInterceptor jobTableInterceptor = new JobTableInterceptor();
-
-    private static JobMybatisConfig jobMybatisConfig = new JobMybatisConfig();
-
-    synchronized private static JobInfoDao getJobInfoDaoForTestOrTool(KylinConfig config) {
+    private static synchronized JobInfoDao getJobInfoDaoForTestOrTool(KylinConfig config) {
         initMappers(config);
         if (null == jobInfoDao) {
             jobInfoDao = new JobInfoDao();
@@ -112,11 +97,13 @@ public class JobContextUtil {
         return jobInfoDao;
     }
 
-    synchronized private static JobContext getJobContextForTestOrTool(KylinConfig config) {
+    private static synchronized JobContext getJobContextForTestOrTool(KylinConfig config) {
         initMappers(config);
         if (config.isUTEnv()) {
             config.setProperty("kylin.job.master-poll-interval-second", "1");
             config.setProperty("kylin.job.scheduler.poll-interval-second", "1");
+            config.setProperty("kylin.job.slave-lock-renew-sec", "5");
+            config.setProperty("kylin.job.slave-lock-renew-ratio", "0.4");
         }
         if (null == jobContext) {
             jobContext = new JobContext();
@@ -129,47 +116,34 @@ public class JobContextUtil {
         return jobContext;
     }
 
-    synchronized private static void initMappers(KylinConfig config) {
+    private static synchronized void initMappers(KylinConfig config) {
         if (null != jobInfoMapper && null != jobLockMapper) {
             return;
         }
-        boolean isUTEnv = config.isUTEnv();
-
         StorageURL url = config.getMetadataUrl();
         Properties props = JdbcUtil.datasourceParameters(url);
-        DataSource dataSource = null;
         try {
-            dataSource = JdbcDataSource.getDataSource(props);
-            if (!isUTEnv) {
-                // setup job table names
-                jobMybatisConfig.setDataSource(dataSource);
-                jobMybatisConfig.setupJobTables();
-                jobTableInterceptor.setJobMybatisConfig(jobMybatisConfig);
-            }
+            DataSource dataSource = JdbcDataSource.getDataSource(props);
             transactionManager = JdbcDataSource.getTransactionManager(dataSource);
             SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(dataSource);
-            addPluginForSqlSessionManager(sqlSessionFactory);
+            addPluginForSqlSessionManager(dataSource, sqlSessionFactory);
             sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
             jobInfoMapper = sqlSessionTemplate.getMapper(JobInfoMapper.class);
             jobLockMapper = sqlSessionTemplate.getMapper(JobLockMapper.class);
-            if (isUTEnv) {
-                createTableIfNotExist((BasicDataSource) dataSource, "job_info");
-                createTableIfNotExist((BasicDataSource) dataSource, "job_lock");
-                jobInfoMapper.deleteAllJob();
-                jobLockMapper.deleteAllJobLock();
-            }
         } catch (Exception e) {
             throw new RuntimeException("initialize mybatis mappers failed", e);
         }
     }
 
-    private static void addPluginForSqlSessionManager(SqlSessionFactory sqlSessionFactory) {
+    private static void addPluginForSqlSessionManager(DataSource dataSource, SqlSessionFactory sqlSessionFactory)
+            throws Exception {
+        jobMybatisConfig.setDataSource(dataSource);
+        jobMybatisConfig.setupJobTables();
+        jobTableInterceptor.setJobMybatisConfig(jobMybatisConfig);
         List<Interceptor> interceptors = sqlSessionFactory.getConfiguration().getInterceptors();
-
         if (!interceptors.contains(jobTableInterceptor)) {
             sqlSessionFactory.getConfiguration().addInterceptor(jobTableInterceptor);
         }
-
     }
 
     public static SqlSessionFactory getSqlSessionFactory(DataSource dataSource) throws SQLException, IOException {
@@ -197,39 +171,6 @@ public class JobContextUtil {
         }
     }
 
-    private static void createTableIfNotExist(BasicDataSource dataSource, String tableName)
-            throws IOException, SQLException {
-        if (JdbcUtil.isTableExists(dataSource.getConnection(), tableName)) {
-            log.info("{} already existed in database", tableName);
-            return;
-        }
-
-        String createTableStmtProp = "";
-        if ("job_info".equals(tableName)) {
-            createTableStmtProp = CREATE_JOB_INFO_TABLE;
-        } else {
-            createTableStmtProp = CREATE_JOB_LOCK_TABLE;
-        }
-
-        Properties properties = JdbcUtil.getProperties(dataSource);
-        String createTableStmt = String.format(Locale.ROOT, properties.getProperty(createTableStmtProp), tableName);
-        try (Connection connection = dataSource.getConnection()) {
-            ScriptRunner sr = new ScriptRunner(connection);
-            sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
-            log.debug("start to create table({})", tableName);
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(createTableStmt.getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            log.debug("create table finished");
-        }
-
-        if (!JdbcUtil.isTableExists(dataSource.getConnection(), tableName)) {
-            log.debug("failed to create table({})", tableName);
-            throw new IllegalStateException(String.format(Locale.ROOT, "create table(%s) failed", tableName));
-        } else {
-            log.debug("table({}) already exists.", tableName);
-        }
-    }
-
     public static JobInfoDao getJobInfoDao(KylinConfig config) {
         if (config.isUTEnv() || isNoSpringContext()) {
             return getJobInfoDaoForTestOrTool(config);
@@ -246,14 +187,16 @@ public class JobContextUtil {
         }
     }
 
-    public static DataSourceTransactionManager getTransactionManager(KylinConfig config) {
+    private static DataSourceTransactionManager getTransactionManager(KylinConfig config) throws Exception {
         if (config.isUTEnv() || isNoSpringContext()) {
             synchronized (JobContextUtil.class) {
                 initMappers(config);
                 return transactionManager;
             }
         } else {
-            return SpringContext.getBean(DataSourceTransactionManager.class);
+            val url = config.getMetadataUrl();
+            val props = JdbcUtil.datasourceParameters(url);
+            return JdbcDataSource.getTransactionManager(props);
         }
     }
 
@@ -262,21 +205,43 @@ public class JobContextUtil {
     }
 
     // for test only
-    synchronized public static void cleanUp() {
-        try {
-            if (null != jobContext) {
+    public static synchronized void cleanUp() {
+        stopScheduler();
+        dropUTJobTable();
+        jobInfoMapper = null;
+        jobLockMapper = null;
+        jobInfoDao = null;
+        jobContext = null;
+        sqlSessionTemplate = null;
+        transactionManager = null;
+    }
+
+    public static void stopScheduler() {
+        if (null != jobContext) {
+            try {
                 jobContext.destroy();
+                jobContext = null;
+            } catch (Exception e) {
+                log.error("JobContextUtil clean up failed.");
+                throw new RuntimeException("JobContextUtil clean up failed.", e);
             }
-            jobInfoMapper = null;
-            jobLockMapper = null;
-            jobInfoDao = null;
-            jobContext = null;
-            sqlSessionTemplate = null;
-            transactionManager = null;
-        } catch (Exception e) {
-            log.error("JobContextUtil clean up failed.");
-            throw new RuntimeException("JobContextUtil clean up failed.", e);
         }
+    }
+
+    private static void dropUTJobTable() {
+        try {
+            if (null != transactionManager) {
+                JdbcTemplate jdbcTemplate = new JdbcTemplate(transactionManager.getDataSource());
+                jdbcTemplate.execute("SHUTDOWN;");
+            }
+        } catch (Exception e) {
+            log.error("Drop UT job table failed.", e);
+        }
+    }
+
+    // for test only
+    public static boolean hasStarted() {
+        return jobContext != null;
     }
 
     public static Map<String, List<String>> splitJobIdsByScheduleInstance(List<String> ids) {
@@ -307,7 +272,7 @@ public class JobContextUtil {
             log.info("Discarding jobs {} on node {}", entry.getValue(), entry.getKey());
             if (local.equals(entry.getKey())) {
                 val executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-                entry.getValue().stream().forEach(jobId -> executableManager.discardJob(jobId));
+                entry.getValue().forEach(executableManager::discardJob);
                 continue;
             }
             Map<String, String> form = Maps.newHashMap();
@@ -319,7 +284,7 @@ public class JobContextUtil {
     }
 
     public static <T> T withTxAndRetry(JdbcUtil.Callback<T> consumer) {
-        return withTxAndRetry(consumer, 3);
+        return withTxAndRetry(consumer, KylinConfig.getInstanceFromEnv().getMaxTransactionRetry());
     }
 
     @SneakyThrows

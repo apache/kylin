@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.fileseg.FileSegments.ModelFileSegments;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -70,9 +71,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.apache.kylin.fileseg.FileSegments.ModelFileSegments;
 import io.swagger.annotations.ApiOperation;
-
 import lombok.val;
 
 @RestController

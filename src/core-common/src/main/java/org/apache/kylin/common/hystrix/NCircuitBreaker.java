@@ -28,10 +28,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class NCircuitBreaker {
 
@@ -39,7 +38,7 @@ public class NCircuitBreaker {
 
     private static final AtomicBoolean breakerStarted = new AtomicBoolean(false);
 
-    private volatile static NBreakerConfig breakerConfig = null;
+    private static volatile NBreakerConfig breakerConfig = null;
 
     private NCircuitBreaker() {
     }

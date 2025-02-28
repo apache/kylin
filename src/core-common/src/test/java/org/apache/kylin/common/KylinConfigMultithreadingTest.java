@@ -20,8 +20,6 @@ package org.apache.kylin.common;
 
 import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,30 +33,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @MetadataInfo
 public class KylinConfigMultithreadingTest {
 
     @Test
     public void test9PropertiesHotLoadWithMultithreading() throws InterruptedException, ExecutionException {
-        final Callable<String> callable1 = new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                reloadFromSiteProperties();
-                return "ok";
-            }
+        final Callable<String> callable1 = () -> {
+            reloadFromSiteProperties();
+            return "ok";
         };
-        final Callable<String> callable2 = new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                readKylinConfig();
-                return "ok";
-            }
+        final Callable<String> callable2 = () -> {
+            readKylinConfig();
+            return "ok";
         };
         concurrentTest(10, 30, Lists.newArrayList(callable1, callable2));
     }
@@ -96,7 +87,7 @@ public class KylinConfigMultithreadingTest {
 
         // The thread pool must be closed at this time, processing task results
         for (Future<T> r : results) {
-            assertEquals("ok", String.valueOf(r.get()));
+            Assertions.assertEquals("ok", String.valueOf(r.get()));
         }
     }
 
@@ -110,11 +101,11 @@ public class KylinConfigMultithreadingTest {
     }
 
     void comparePropertiesKeys(Properties expected, Properties actual) {
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertEquals(expected.size(), actual.size());
         final Set<String> expectedKeys = expected.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
         final Set<String> actualKeys = actual.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
-        assertTrue(expectedKeys.containsAll(actualKeys));
-        assertTrue(actualKeys.containsAll(expectedKeys));
+        Assertions.assertTrue(expectedKeys.containsAll(actualKeys));
+        Assertions.assertTrue(actualKeys.containsAll(expectedKeys));
     }
 
     @Test
@@ -138,10 +129,10 @@ public class KylinConfigMultithreadingTest {
     }
 
     void comparePropertiesValues(Properties expected, Properties actual) {
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertEquals(expected.size(), actual.size());
         final Set<String> expectedKeys = expected.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
         for (String key : expectedKeys) {
-            assertEquals(expected.get(key), actual.get(key));
+            Assertions.assertEquals(expected.get(key), actual.get(key));
         }
     }
 
@@ -151,7 +142,7 @@ public class KylinConfigMultithreadingTest {
         final Properties properties = kylinConfig.exportToProperties();
         final String metadataUrlPrefixFromProperties = kylinConfig.getMetadataUrlPrefixFromProperties(properties);
         final String metadataUrlPrefix = kylinConfig.getMetadataUrlPrefix();
-        assertEquals(metadataUrlPrefix, metadataUrlPrefixFromProperties);
+        Assertions.assertEquals(metadataUrlPrefix, metadataUrlPrefixFromProperties);
     }
 
     @Test
@@ -161,9 +152,9 @@ public class KylinConfigMultithreadingTest {
         final StorageURL metadataUrlFromProperties = kylinConfig.getMetadataUrlFromProperties(properties);
         final StorageURL metadataUrl = kylinConfig.getMetadataUrl();
 
-        assertEquals(metadataUrl.getScheme(), metadataUrlFromProperties.getScheme());
-        assertEquals(metadataUrl.getIdentifier(), metadataUrlFromProperties.getIdentifier());
-        assertEquals(metadataUrl.toString(), metadataUrlFromProperties.toString());
+        Assertions.assertEquals(metadataUrl.getScheme(), metadataUrlFromProperties.getScheme());
+        Assertions.assertEquals(metadataUrl.getIdentifier(), metadataUrlFromProperties.getIdentifier());
+        Assertions.assertEquals(metadataUrl.toString(), metadataUrlFromProperties.toString());
         final Map<String, String> allParameters = metadataUrl.getAllParameters();
         final Map<String, String> allParametersFromProperties = metadataUrlFromProperties.getAllParameters();
         compareMapKeys(allParameters, allParametersFromProperties);
@@ -171,18 +162,18 @@ public class KylinConfigMultithreadingTest {
     }
 
     void compareMapKeys(Map<String, String> expected, Map<String, String> actual) {
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertEquals(expected.size(), actual.size());
         final Set<String> expectedKeys = expected.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
         final Set<String> actualKeys = actual.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
-        assertTrue(expectedKeys.containsAll(actualKeys));
-        assertTrue(actualKeys.containsAll(expectedKeys));
+        Assertions.assertTrue(expectedKeys.containsAll(actualKeys));
+        Assertions.assertTrue(actualKeys.containsAll(expectedKeys));
     }
 
     void compareMapValues(Map<String, String> expected, Map<String, String> actual) {
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertEquals(expected.size(), actual.size());
         final Set<String> expectedKeys = expected.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
         for (String key : expectedKeys) {
-            assertEquals(expected.get(key), actual.get(key));
+            Assertions.assertEquals(expected.get(key), actual.get(key));
         }
     }
 
@@ -192,7 +183,7 @@ public class KylinConfigMultithreadingTest {
         final Properties properties = kylinConfig.exportToProperties();
         final String metadataUrlUniqueIdFromProperties = kylinConfig.getMetadataUrlUniqueIdFromProperties(properties);
         final String metadataUrlUniqueId = kylinConfig.getMetadataUrlUniqueId();
-        assertEquals(metadataUrlUniqueId, metadataUrlUniqueIdFromProperties);
+        Assertions.assertEquals(metadataUrlUniqueId, metadataUrlUniqueIdFromProperties);
     }
 
     @Test
@@ -201,7 +192,7 @@ public class KylinConfigMultithreadingTest {
         final Properties properties = kylinConfig.exportToProperties();
         final String channelFromProperties = kylinConfig.getChannelFromProperties(properties);
         final String channel = kylinConfig.getChannel();
-        assertEquals(channel, channelFromProperties);
+        Assertions.assertEquals(channel, channelFromProperties);
     }
 
     @Test
@@ -210,8 +201,8 @@ public class KylinConfigMultithreadingTest {
         final Properties properties = kylinConfig.exportToProperties();
         final String portFromProperties = kylinConfig.getOptionalFromProperties("server.port", "7071", properties);
         final String port = kylinConfig.getOptional("server.port", "7071");
-        assertEquals(port, portFromProperties);
-        assertEquals("7070", portFromProperties);
+        Assertions.assertEquals(port, portFromProperties);
+        Assertions.assertEquals("7070", portFromProperties);
     }
 
     @Test
@@ -220,6 +211,6 @@ public class KylinConfigMultithreadingTest {
         final Properties properties = kylinConfig.exportToProperties();
         final String hdfsWorkingDirectoryFromProperties = kylinConfig.getHdfsWorkingDirectoryFromProperties(properties);
         final String hdfsWorkingDirectory = kylinConfig.getHdfsWorkingDirectory();
-        assertEquals(hdfsWorkingDirectory, hdfsWorkingDirectoryFromProperties);
+        Assertions.assertEquals(hdfsWorkingDirectory, hdfsWorkingDirectoryFromProperties);
     }
 }

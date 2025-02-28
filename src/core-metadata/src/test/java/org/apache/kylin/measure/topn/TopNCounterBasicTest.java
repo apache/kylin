@@ -24,10 +24,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class TopNCounterBasicTest {
 

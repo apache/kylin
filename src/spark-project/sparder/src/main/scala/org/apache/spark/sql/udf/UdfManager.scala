@@ -18,13 +18,13 @@
 
 package org.apache.spark.sql.udf
 
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-
 import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{FunctionEntity, KapFunctions, SparkSession}
+
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class UdfManager(sparkSession: SparkSession) extends Logging {
   private var udfCache: Cache[String, String] = _

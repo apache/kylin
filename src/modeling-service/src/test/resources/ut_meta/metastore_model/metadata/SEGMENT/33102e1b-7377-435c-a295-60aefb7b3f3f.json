@@ -1,0 +1,73 @@
+{
+  "name" : "20120101000000_20120201000000",
+  "create_time_utc" : 1710229737809,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1325347200000,
+    "date_range_end" : 1328025600000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "1" : {
+      "min" : "2012-01-01",
+      "max" : "2012-01-31"
+    },
+    "3" : {
+      "min" : "0",
+      "max" : "100"
+    },
+    "4" : {
+      "min" : "ADMIN",
+      "max" : "MODELER"
+    },
+    "5" : {
+      "min" : "-99",
+      "max" : "16"
+    },
+    "6" : {
+      "min" : "10000000",
+      "max" : "10000993"
+    },
+    "8" : {
+      "min" : "41",
+      "max" : "9894"
+    },
+    "9" : {
+      "min" : "ABIN",
+      "max" : "Others"
+    },
+    "10" : {
+      "min" : "65",
+      "max" : "175750"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1710230716322,
+  "source_count" : 459,
+  "source_bytes_size" : 798083,
+  "column_source_bytes" : {
+    "DEFAULT.KYLIN_SALES.LSTG_SITE_ID" : 474,
+    "DEFAULT.KYLIN_SALES.SLR_SEGMENT_CD" : 928,
+    "DEFAULT.KYLIN_SALES.PART_DT" : 4590,
+    "DEFAULT.KYLIN_SALES.OPS_USER_ID" : 2875,
+    "DEFAULT.KYLIN_SALES.TRANS_ID" : 1781,
+    "DEFAULT.KYLIN_SALES.LEAF_CATEG_ID" : 2252,
+    "DEFAULT.KYLIN_SALES.SELLER_ID" : 3672,
+    "DEFAULT.KYLIN_SALES.LSTG_FORMAT_NAME" : 3011
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "33102e1b-7377-435c-a295-60aefb7b3f3f",
+  "model_uuid" : "f26dec69-99f5-6bb8-5af5-05809812efce",
+  "project" : "original_project"
+}

@@ -1,0 +1,46 @@
+{
+  "uuid" : "79e02b2b-3ed6-43b3-93ac-f99d38f11999",
+  "last_modified" : 1483516307461,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_COUNTRY",
+  "last_build_job_id" : "ed099275-8ba4-4a4f-b379-e45e74f44314",
+  "columns_stats" : [ {
+    "max_value" : "ZW",
+    "min_value" : "AD",
+    "max_length_value" : "AD",
+    "min_length_value" : "AD",
+    "null_count" : 0,
+    "cardinality" : 239
+  }, {
+    "max_value" : "77.553604",
+    "min_value" : "-75.250973",
+    "max_length_value" : "-11.202692",
+    "min_length_value" : "45.1",
+    "null_count" : 0,
+    "cardinality" : 246
+  }, {
+    "max_value" : "179.414413",
+    "min_value" : "-177.156097",
+    "max_length_value" : "-170.132217",
+    "min_length_value" : "15.2",
+    "null_count" : 0,
+    "cardinality" : 255
+  }, {
+    "max_value" : "Zimbabwe",
+    "min_value" : "Afghanistan",
+    "max_length_value" : "South Georgia and the South Sandwich Islands",
+    "min_length_value" : "Cuba",
+    "null_count" : 0,
+    "cardinality" : 249
+  } ],
+  "sample_rows" : [ [ "AD", "AF", "AI", "AM", "AO", "AR", "AT", "AW", "BA", "BD" ], [ "42.546245", "33.93911", "18.220554", "40.069099", "-11.202692", "-38.416097", "47.516231", "12.52111", "43.915886", "23.684994" ], [ "1.601554", "67.709953", "-63.068615", "45.038189", "17.873887", "-63.616672", "14.550072", "-69.968338", "17.679076", "90.356331" ], [ "Andorra", "Afghanistan", "Anguilla", "Armenia", "Angola", "Argentina", "Austria", "Aruba", "Bosnia and Herzegovina", "Bangladesh" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "244",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

@@ -24,9 +24,11 @@ import java.util.concurrent.RejectedExecutionException;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StreamingTestConstant;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.engine.spark.job.BuildLayoutWithUpdate;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -50,8 +52,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;
@@ -80,12 +80,13 @@ public class StreamingDFBuildJobTest extends StreamingTestCase {
         val source = createSparkKafkaSource(config);
         source.enableMemoryStream(false);
         source.post(StreamingTestConstant.KAP_SSB_STREAMING_JSON_FILE());
-        val mgr = NDataflowManager.getInstance(config, PROJECT);
+        NDataflowManager mgr = NDataflowManager.getInstance(config, PROJECT);
         var df = mgr.getDataflow(DATAFLOW_ID);
 
         val update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        mgr.updateDataflow(update);
+        UnitOfWork.doInTransactionWithRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), PROJECT).updateDataflow(update), PROJECT);
         df = mgr.getDataflow(df.getId());
 
         val layoutEntitys = StreamingUtils.getToBuildLayouts(df);
@@ -101,19 +102,26 @@ public class StreamingDFBuildJobTest extends StreamingTestCase {
         val batchDF = tuple3._1();
         val streamFlatTable = tuple3._3();
 
-        val seg1 = mgr.appendSegmentForStreaming(df, new SegmentRange.KafkaOffsetPartitionedSegmentRange(0L, 10L,
-                createKafkaPartitionsOffset(3, 100L), createKafkaPartitionsOffset(3, 200L)));
-        seg1.setStatus(SegmentStatusEnum.READY);
-        val update2 = new NDataflowUpdate(df.getUuid());
-        update2.setToUpdateSegs(seg1);
-        List<NDataLayout> layouts = Lists.newArrayList();
-        val dfCopy = df;
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
-        indexManager.getIndexPlan(DATAFLOW_ID).getAllLayouts().forEach(layout -> {
-            layouts.add(NDataLayout.newDataLayout(dfCopy, seg1.getId(), layout.getId()));
-        });
-        update2.setToAddOrUpdateLayouts(layouts.toArray(new NDataLayout[0]));
-        mgr.updateDataflow(update2);
+        NDataSegment seg1 = UnitOfWork.doInTransactionWithRetry(() -> {
+            val manager = NDataflowManager.getInstance(getTestConfig(), PROJECT);
+            var dataflow = manager.getDataflow(DATAFLOW_ID);
+            val segment = manager.appendSegmentForStreaming(dataflow,
+                    new SegmentRange.KafkaOffsetPartitionedSegmentRange(0L, 10L, createKafkaPartitionsOffset(3, 100L),
+                            createKafkaPartitionsOffset(3, 200L)));
+            segment.setStatus(SegmentStatusEnum.READY);
+            val update2 = new NDataflowUpdate(dataflow.getUuid());
+            update2.setToUpdateSegs(segment);
+            List<NDataLayout> layouts = Lists.newArrayList();
+            val dfCopy = dataflow;
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
+            indexManager.getIndexPlan(DATAFLOW_ID).getAllLayouts().forEach(layout -> {
+                layouts.add(NDataLayout.newDataLayout(dfCopy, segment.getId(), layout.getId()));
+            });
+            update2.setToAddOrUpdateLayouts(layouts.toArray(new NDataLayout[0]));
+            manager.updateDataflow(update2);
+            return segment;
+        }, PROJECT);
+
         streamFlatTable.seg_$eq(seg1);
         val encodedStreamDataset = streamFlatTable.encodeStreamingDataset(seg1, model, batchDF);
         val batchBuildJob = new BuildJobEntry(ss, PROJECT, DATAFLOW_ID, 100L, seg1, encodedStreamDataset,
@@ -133,9 +141,7 @@ public class StreamingDFBuildJobTest extends StreamingTestCase {
             Assert.assertTrue(newDataflow.getSegment(seg1.getId()).getStorageFileCount() > oldFileCount);
             Assert.assertTrue(newDataflow.getSegment(seg1.getId()).getStorageBytesSize() > oldByteSize);
 
-            dfMgr.updateDataflow(batchBuildJob.dataflowId(), updater -> {
-                updater.setStatus(RealizationStatusEnum.OFFLINE);
-            });
+            dfMgr.updateDataflow(batchBuildJob.dataflowId(), cp -> cp.setStatus(RealizationStatusEnum.OFFLINE));
             Mockito.when(builder.createRestSupport()).thenReturn(new RestSupport(config) {
                 public RestResponse execute(HttpRequestBase httpReqBase, Object param) {
                     dfMgr.updateDataflow(batchBuildJob.dataflowId(), updater -> {
@@ -158,14 +164,12 @@ public class StreamingDFBuildJobTest extends StreamingTestCase {
         val source = createSparkKafkaSource(config);
         source.enableMemoryStream(false);
         source.post(StreamingTestConstant.KAP_SSB_STREAMING_JSON_FILE());
-        val mgr = NDataflowManager.getInstance(config, PROJECT);
         val dataflowId = "e78a89dd-847f-4574-8afa-8768b4228b73";
-        var df = mgr.getDataflow(dataflowId);
         val builder = new StreamingDFBuildJob(PROJECT);
         builder.setParam(NBatchConstants.P_DATAFLOW_ID, dataflowId);
-        val seg = builder.getSegment("c380dd2a-43b8-4268-b73d-2a5f76236632");
+        val seg = builder.getSegment("e8765ae7-906e-62e3-7361-c83de865cd68");
         Assert.assertNotNull(seg);
-        Assert.assertEquals("c380dd2a-43b8-4268-b73d-2a5f76236632", seg.getId());
+        Assert.assertEquals("e8765ae7-906e-62e3-7361-c83de865cd68", seg.getId());
     }
 
     @Test

@@ -45,8 +45,10 @@ public class NFlattableJoinWithoutLookupTest extends NLocalWithSparkSessionTest 
 
     private NDataflowManager dfMgr = null;
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.flat-table-join-without-lookup", "true");
         overwriteSystemProp("kylin.engine.persist-flattable-enabled", "false");
         this.createTestMetadata("src/test/resources/ut_meta/flattable_without_join_lookup");
@@ -56,11 +58,17 @@ public class NFlattableJoinWithoutLookupTest extends NLocalWithSparkSessionTest 
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/flattable_without_join_lookup" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
         FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
-        JobContextUtil.cleanUp();
     }
 
     @Override
@@ -104,7 +112,7 @@ public class NFlattableJoinWithoutLookupTest extends NLocalWithSparkSessionTest 
         }
         long start = SegmentRange.dateToLong("2009-01-01 00:00:00");
         long end = SegmentRange.dateToLong("2015-01-01 00:00:00");
-        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end),
+                Sets.newLinkedHashSet(layouts), true);
     }
 }

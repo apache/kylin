@@ -17,11 +17,12 @@
  */
 package org.apache.kylin.common.persistence;
 
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,7 +34,7 @@ public class SnapshotRawResource {
 
     @JsonProperty("byte_source")
     @JsonSerialize(using = RawResource.ByteSourceSerializer.class)
-    @JsonDeserialize(using = RawResource.BytesourceDeserializer.class)
+    @JsonDeserialize(using = RawResource.ByteSourceDeserializer.class)
     private ByteSource byteSource;
 
     @JsonProperty("timestamp")
@@ -43,7 +44,7 @@ public class SnapshotRawResource {
 
     public SnapshotRawResource(RawResource rawResource) {
         this.byteSource = rawResource.getByteSource();
-        this.timestamp = rawResource.getTimestamp();
+        this.timestamp = rawResource.getTs();
         this.mvcc = rawResource.getMvcc();
     }
 }

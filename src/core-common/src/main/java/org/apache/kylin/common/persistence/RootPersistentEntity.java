@@ -19,7 +19,6 @@
 package org.apache.kylin.common.persistence;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.KylinVersion;
@@ -30,6 +29,7 @@ import org.springframework.beans.BeanUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -88,6 +88,12 @@ public abstract class RootPersistentEntity implements AclEntity, Serializable {
     @Getter
     @Setter
     private List<RootPersistentEntity> dependencies;
+
+    @Getter
+    @Setter
+    @JsonProperty("project")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    protected String project;
 
     public List<RootPersistentEntity> calcDependencies() {
         return Lists.newArrayList();
@@ -151,7 +157,7 @@ public abstract class RootPersistentEntity implements AclEntity, Serializable {
         }
         this.mvcc = mvcc;
     }
-    
+
     public <T extends RootPersistentEntity> void copyPropertiesTo(T copy) {
         BeanUtils.copyProperties(this, copy, "cachedAndShared");
     }
@@ -163,6 +169,14 @@ public abstract class RootPersistentEntity implements AclEntity, Serializable {
      */
     public String resourceName() {
         return uuid;
+    }
+
+    public void setResourceName(String resourceName) {
+        // Ignore by default.
+    }
+
+    public MetadataType resourceType() {
+        throw new IllegalStateException("Please override this method in " + this.getClass());
     }
 
     @Override
@@ -195,15 +209,7 @@ public abstract class RootPersistentEntity implements AclEntity, Serializable {
     }
 
     public String getResourcePath() {
-        return "";
-    }
-
-    public List<String> getLockPaths() {
-        return getLockPaths(getResourcePath());
-    }
-
-    public List<String> getLockPaths(String resourcePath) {
-        return Collections.singletonList(resourcePath);
+        return MetadataType.mergeKeyWithType(resourceName(), resourceType());
     }
 
     @Override

@@ -18,6 +18,7 @@
 package org.apache.kylin.rest.cluster;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.rest.response.ServerInfoResponse;
@@ -37,7 +38,7 @@ public interface ClusterManager {
 
     default ServerInfoResponse getServerById(String serverId) {
         throw new KylinRuntimeException(
-                String.format("Method `getServerById` is not supported in class <%s>", this.getClass()));
+                String.format(Locale.ROOT, "Method `getServerById` is not supported in class <%s>", this.getClass()));
     }
 
     static ClusterManager getInstance() {

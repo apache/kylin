@@ -18,13 +18,19 @@
 
 package org.apache.spark.sql
 
+import java.io._
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
+import java.util.UUID
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.util.{AddressUtil, HadoopUtil, Unsafe}
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater
-import org.apache.kylin.query.plugin.asyncprofiler.QueryAsyncProfilerSparkPlugin
 import org.apache.kylin.query.plugin.diagnose.DiagnoseSparkPlugin
+import org.apache.kylin.query.plugin.profiler.QueryAsyncProfilerSparkPlugin
 import org.apache.kylin.query.util.ExtractFactory
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{ContainerInitializeListener, SparkListener, SparkListenerApplicationEnd}
@@ -36,10 +42,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.springframework.expression.common.TemplateParserContext
 import org.springframework.expression.spel.standard.SpelExpressionParser
 
-import java.io._
-import java.net.URI
-import java.nio.file.Paths
-import java.util.UUID
 import scala.collection.JavaConverters._
 
 class KylinSession(
@@ -113,7 +115,10 @@ class KylinSession(
 object KylinSession extends Logging {
   val NORMAL_FAIR_SCHEDULER_FILE_NAME: String = "/fairscheduler.xml"
   val QUERY_LIMIT_FAIR_SCHEDULER_FILE_NAME: String = "/query-limit-fair-scheduler.xml"
+  val SPARK_MASTER = "spark.master"
   val SPARK_PLUGINS_KEY = "spark.plugins"
+  val SPARK_YARN_DIST_FILE = "spark.yarn.dist.files"
+  val SPARK_EXECUTOR_JAR_PATH = "spark.gluten.sql.executor.jar.path"
 
   implicit class KylinBuilder(builder: Builder) {
     var queryCluster: Boolean = true
@@ -241,13 +246,13 @@ object KylinSession extends Logging {
         sparkConf.set("hive.metastore.sasl.enabled", "true")
       }
 
-      kapConfig.getSparkConf.asScala.foreach{
+      kapConfig.getSparkConf.asScala.foreach {
         case (k, v) =>
           sparkConf.set(k, v)
       }
 
       // the length of the `podNamePrefix` needs to be less than or equal to 47
-      sparkConf.get("spark.master") match {
+      sparkConf.get(SPARK_MASTER) match {
         case v if v.startsWith("k8s") =>
           val appName = sparkConf.get("spark.app.name", System.getenv("HOSTNAME"))
           val podNamePrefix = generateExecutorPodNamePrefixForK8s(appName)
@@ -290,7 +295,7 @@ object KylinSession extends Logging {
       }
 
       if (!"true".equalsIgnoreCase(System.getProperty("spark.local"))) {
-        if (sparkConf.get("spark.master").startsWith("yarn")) {
+        if (sparkConf.get(SPARK_MASTER).startsWith("yarn")) {
           // TODO Less elegant implementation.
           val applicationJar = KylinConfig.getInstanceFromEnv.getKylinJobJarPath
           val yarnDistJarsConf = "spark.yarn.dist.jars"
@@ -300,21 +305,37 @@ object KylinSession extends Logging {
             applicationJar
           }
           sparkConf.set(yarnDistJarsConf, distJars)
-          sparkConf.set("spark.yarn.dist.files", kapConfig.sparderFiles())
+          sparkConf.set(SPARK_YARN_DIST_FILE, kapConfig.sparderFiles())
         } else {
           sparkConf.set("spark.jars", kapConfig.sparderJars)
           sparkConf.set("spark.files", kapConfig.sparderFiles())
         }
 
         // spark on k8s with client mode, set the spark.driver.host = local ip
-        if (sparkConf.get("spark.master").startsWith("k8s") && "client".equals(sparkConf.get("spark.submit.deployMode", "client"))) {
-          if (!sparkConf.contains("spark.driver.host")) {
-            sparkConf.set("spark.driver.host", AddressUtil.getLocalHostExactAddress)
-          }
+        if (sparkConf.get(SPARK_MASTER).startsWith("k8s")
+          && "client".equals(sparkConf.get("spark.submit.deployMode", "client"))
+          && !sparkConf.contains("spark.driver.host")) {
+          sparkConf.set("spark.driver.host", AddressUtil.getLocalHostExactAddress)
         }
 
-        val fileName = KylinConfig.getInstanceFromEnv.getKylinJobJarPath
-        sparkConf.set("spark.executor.extraClassPath", Paths.get(fileName).getFileName.toString)
+        var extraJars = Paths.get(KylinConfig.getInstanceFromEnv.getKylinJobJarPath).getFileName.toString
+        if (KylinConfig.getInstanceFromEnv.queryUseGlutenEnabled) {
+          if (sparkConf.get(SPARK_MASTER).startsWith("yarn")) {
+            val distFiles = sparkConf.get(SPARK_YARN_DIST_FILE)
+            if (distFiles.isEmpty) {
+              sparkConf.set(SPARK_YARN_DIST_FILE,
+                sparkConf.get(SPARK_EXECUTOR_JAR_PATH))
+            } else {
+              sparkConf.set(SPARK_YARN_DIST_FILE,
+                sparkConf.get(SPARK_EXECUTOR_JAR_PATH) + "," + distFiles)
+            }
+            extraJars = "gluten.jar" + File.pathSeparator + extraJars
+          } else {
+            extraJars = sparkConf.get(SPARK_EXECUTOR_JAR_PATH) +
+              File.pathSeparator + extraJars
+          }
+        }
+        sparkConf.set("spark.executor.extraClassPath", extraJars)
 
         val krb5conf = " -Djava.security.krb5.conf=./__spark_conf__/__hadoop_conf__/krb5.conf"
         val executorExtraJavaOptions =
@@ -337,6 +358,25 @@ object KylinSession extends Logging {
         sparkConf.set("spark.yarn.am.extraJavaOptions",
           s"$yarnAMJavaOptions $amKerberosConf")
       }
+
+      var extraJars = Paths.get(KylinConfig.getInstanceFromEnv.getKylinJobJarPath).getFileName.toString
+      if (KylinConfig.getInstanceFromEnv.queryUseGlutenEnabled) {
+        if (sparkConf.get(SPARK_MASTER).startsWith("yarn")) {
+          val distFiles = sparkConf.get(SPARK_YARN_DIST_FILE)
+          if (distFiles.isEmpty) {
+            sparkConf.set(SPARK_YARN_DIST_FILE,
+              sparkConf.get(SPARK_EXECUTOR_JAR_PATH))
+          } else {
+            sparkConf.set(SPARK_YARN_DIST_FILE,
+              sparkConf.get(SPARK_EXECUTOR_JAR_PATH) + "," + distFiles)
+          }
+          extraJars = "gluten.jar" + File.pathSeparator + extraJars
+        } else {
+          extraJars = sparkConf.get(SPARK_EXECUTOR_JAR_PATH) +
+            File.pathSeparator + extraJars
+        }
+      }
+      sparkConf.set("spark.executor.extraClassPath", extraJars)
 
       if (KylinConfig.getInstanceFromEnv.getQueryMemoryLimitDuringCollect > 0L) {
         sparkConf.set("spark.sql.driver.maxMemoryUsageDuringCollect", KylinConfig.getInstanceFromEnv.getQueryMemoryLimitDuringCollect + "m")
@@ -367,6 +407,7 @@ object KylinSession extends Logging {
         }
       }
 
+      sparkConf.set("spark.cleaner.periodicGC.enabled", KylinConfig.getInstanceFromEnv.sparkPeriodicGCEnabled())
       sparkConf
     }
 
@@ -463,9 +504,11 @@ object KylinSession extends Logging {
     params.put("vipTaskPoolMinShare", Math.pow(sparkSlots, 2).toInt + 1)
 
     val confTemplateFile = new File(fairSchedulerConfPath + ".template")
-    val fileReader = new BufferedReader(new FileReader(confTemplateFile))
+    val fileReader = new BufferedReader(
+      new InputStreamReader(Files.newInputStream(confTemplateFile.toPath), StandardCharsets.UTF_8))
     val confFile = new File(fairSchedulerConfPath)
-    val fileWriter = new BufferedWriter(new FileWriter(confFile))
+    val fileWriter = new BufferedWriter(
+      new OutputStreamWriter(Files.newOutputStream(confFile.toPath), StandardCharsets.UTF_8))
     var templateLine: String = null
     var processedLine: String = null
     val parser = new SpelExpressionParser()

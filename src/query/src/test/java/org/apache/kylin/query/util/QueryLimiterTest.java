@@ -25,8 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.kylin.query.exception.BusyQueryException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.query.exception.BusyQueryException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

@@ -21,10 +21,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class DefaultConfigurer implements SqlConverter.IConfigurer {
 

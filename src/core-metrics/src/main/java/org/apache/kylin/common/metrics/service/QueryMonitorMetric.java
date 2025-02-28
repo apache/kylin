@@ -19,9 +19,10 @@ package org.apache.kylin.common.metrics.service;
 
 import java.util.Map;
 
+import org.apache.kylin.shaded.influxdb.org.influxdb.annotation.Column;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.kylin.shaded.influxdb.org.influxdb.annotation.Column;
 import lombok.Getter;
 import lombok.Setter;
 

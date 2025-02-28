@@ -51,6 +51,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -69,7 +70,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryDAO;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
@@ -216,7 +216,6 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
                 NDataModelResponse model = (NDataModelResponse) modelService
                         .updateResponseAcl(new NDataModelResponse(nDataModel), project);
                 realization.setModelAlias(model.getFusionModelAlias());
-                realization.setAclParams(model.getAclParams());
                 realization.setLayoutExist(
                         isLayoutExist(indexPlanManager, realization.getModelId(), realization.getLayoutId()));
 
@@ -336,8 +335,8 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
     public long getQueryCountToAccelerate(String project) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(project));
         aclEvaluate.checkProjectReadPermission(project);
-        QueryHistoryIdOffset queryHistoryIdOffset = QueryHistoryIdOffsetManager
-                .getInstance(project).get(QueryHistoryIdOffset.OffsetType.ACCELERATE);
+        QueryHistoryIdOffset queryHistoryIdOffset = QueryHistoryIdOffsetManager.getInstance(project)
+                .get(QueryHistoryIdOffset.OffsetType.ACCELERATE);
         long idOffset = queryHistoryIdOffset.getOffset();
         QueryHistoryDAO queryHistoryDao = getQueryHistoryDao();
         return queryHistoryDao.getQueryHistoryCountBeyondOffset(idOffset, project);

@@ -1,0 +1,91 @@
+{
+  "uuid" : "7f409829-b162-4849-b349-402fa12483c4",
+  "last_modified" : 1497607294823,
+  "version" : "2.0.0",
+  "name" : "STORE_RETURNS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SR_RETURN_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "SR_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "SR_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "SR_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "SR_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "SR_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "SR_STORE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "SR_REASON_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "SR_TICKET_NUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "SR_RETURN_QUANTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "SR_RETURN_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "12",
+    "name" : "SR_RETURN_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "13",
+    "name" : "SR_RETURN_AMT_INC_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "14",
+    "name" : "SR_FEE",
+    "datatype" : "double"
+  }, {
+    "id" : "15",
+    "name" : "SR_RETURN_SHIP_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "16",
+    "name" : "SR_REFUNDED_CASH",
+    "datatype" : "double"
+  }, {
+    "id" : "17",
+    "name" : "SR_REVERSED_CHARGE",
+    "datatype" : "double"
+  }, {
+    "id" : "18",
+    "name" : "SR_STORE_CREDIT",
+    "datatype" : "double"
+  }, {
+    "id" : "19",
+    "name" : "SR_NET_LOSS",
+    "datatype" : "double"
+  }, {
+    "id" : "20",
+    "name" : "SR_RETURNED_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

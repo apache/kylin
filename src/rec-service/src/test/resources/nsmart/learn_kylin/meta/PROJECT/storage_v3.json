@@ -1,0 +1,12 @@
+{
+  "uuid": "aa9a035d-bda5-480a-8ed0-2165dc258429",
+  "last_modified": 1513414143831,
+  "version": "3.0.0.0",
+  "owner": null,
+  "status": null,
+  "create_time_utc": 0,
+  "last_update_time": null,
+  "description": null,
+  "ext_filters": [],
+  "override_kylin_properties": {}
+}

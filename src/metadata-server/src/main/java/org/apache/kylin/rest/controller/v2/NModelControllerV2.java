@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -38,9 +40,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.swagger.annotations.ApiOperation;
 

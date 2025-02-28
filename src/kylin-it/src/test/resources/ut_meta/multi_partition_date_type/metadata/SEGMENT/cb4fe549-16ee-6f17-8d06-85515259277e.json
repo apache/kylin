@@ -1,0 +1,158 @@
+{
+  "name" : "20220107000000_20220108000000",
+  "create_time_utc" : 1641809258459,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1641535200000,
+    "date_range_end" : 1641621600000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "22" : {
+      "min" : "2354",
+      "max" : "3217"
+    },
+    "23" : {
+      "min" : "2354",
+      "max" : "3217"
+    },
+    "24" : {
+      "min" : "1641484928829",
+      "max" : "1641571228780"
+    },
+    "10" : {
+      "min" : "2354",
+      "max" : "3217"
+    },
+    "11" : {
+      "min" : "1641484928829",
+      "max" : "1641571228780"
+    },
+    "12" : {
+      "min" : "25.0",
+      "max" : "34.0"
+    },
+    "13" : {
+      "min" : "2022-01-07",
+      "max" : "2022-01-07"
+    },
+    "14" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "15" : {
+      "min" : "13",
+      "max" : "14"
+    },
+    "16" : {
+      "min" : "2022-01-07",
+      "max" : "2022-01-08"
+    },
+    "17" : {
+      "min" : "10002354",
+      "max" : "10003217"
+    },
+    "18" : {
+      "min" : "2022-01-07 00:02:18.0",
+      "max" : "2022-01-08 00:00:38.0"
+    },
+    "19" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "0" : {
+      "min" : "25.0",
+      "max" : "34.0"
+    },
+    "1" : {
+      "min" : "2022-01-07",
+      "max" : "2022-01-07"
+    },
+    "2" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "3" : {
+      "min" : "13",
+      "max" : "14"
+    },
+    "4" : {
+      "min" : "2022-01-07",
+      "max" : "2022-01-08"
+    },
+    "5" : {
+      "min" : "10002354",
+      "max" : "10003217"
+    },
+    "6" : {
+      "min" : "2022-01-07 00:02:18.0",
+      "max" : "2022-01-08 00:00:38.0"
+    },
+    "7" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "8" : {
+      "min" : "11.00",
+      "max" : "12.00"
+    },
+    "9" : {
+      "min" : "'abc_4_2354'",
+      "max" : "'abc_4_3217'"
+    },
+    "20" : {
+      "min" : "11.00",
+      "max" : "12.00"
+    },
+    "21" : {
+      "min" : "'abc_4_2354'",
+      "max" : "'abc_4_3217'"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1641810442875,
+  "source_count" : 864,
+  "source_bytes_size" : 4001250,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_FACT_24_2W.STRING_8" : 10368,
+    "TEST_DB.TEST_FACT_24_2W.INT_1" : 3456,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_13" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.INT_15" : 864,
+    "TEST_DB.TEST_FACT_24_2W.ID" : 3456,
+    "TEST_DB.TEST_FACT_24_2W.DATE_7" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.TIMESTAMP_10" : 18144,
+    "TEST_DB.TEST_FACT_24_2W.DOUBLE_4" : 3456,
+    "TEST_DB.TEST_FACT_24_2W.STRING_NUM_16" : 864,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_12" : 11232,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DECIMAL_23" : 1728,
+    "TEST_DB.TEST_FACT_24_2W.DATE_6" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.INT_0" : 3456,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_3" : 6912,
+    "TEST_DB.TEST_FACT_24_2W.DECIMAL_19" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DATE_21" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.DOUBLE_5" : 3456,
+    "TEST_DB.TEST_FACT_24_2W.STRING_NUM_17" : 864,
+    "TEST_DB.TEST_FACT_24_2W.STRING_9" : 10368,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DECIMAL_22" : 1728,
+    "TEST_DB.TEST_FACT_24_2W.DECIMAL_18" : 4320,
+    "TEST_DB.TEST_FACT_24_2W.TIMESTAMP_11" : 18144,
+    "TEST_DB.TEST_FACT_24_2W.STRING_DATE_20" : 8640,
+    "TEST_DB.TEST_FACT_24_2W.BIGINT_2" : 6912,
+    "TEST_DB.TEST_FACT_24_2W.INT_14" : 864
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "cb4fe549-16ee-6f17-8d06-85515259277e",
+  "model_uuid" : "00a91916-d31e-ed40-b1ba-4a86765072f6",
+  "project" : "multi_partition_date_type"
+}

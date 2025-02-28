@@ -1,0 +1,13 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1522545284831,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 820454400000
+  },
+  "uuid" : "gf5e0663-feba-4ed2-b71c-21958122bbff",
+  "model_uuid" : "8c670664-8d05-466a-802f-83c023b56c77",
+  "project" : "cache"
+}

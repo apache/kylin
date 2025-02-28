@@ -20,7 +20,6 @@ package org.apache.kylin.query.util;
 
 import java.sql.SQLException;
 
-import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
@@ -53,7 +52,6 @@ public class QueryParams {
     boolean isACLDisabledOrAdmin;
     int limit;
     int offset;
-    ForceToTieredStorage forcedToTieredStorage;
     SQLException sqlException;
     QueryContext.AclInfo aclInfo;
     @JsonIgnore

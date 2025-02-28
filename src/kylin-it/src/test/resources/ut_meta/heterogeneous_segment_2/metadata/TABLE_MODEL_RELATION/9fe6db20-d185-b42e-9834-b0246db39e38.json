@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.KYLIN_ACCOUNT",
+  "model_uuid" : "8ef6ad65-3f87-5ccd-7e27-814cd828e380",
+  "project" : "heterogeneous_segment_with_snapshot_large_than_input_bytes",
+  "uuid" : "9fe6db20-d185-b42e-9834-b0246db39e38"
+}

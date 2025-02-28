@@ -20,13 +20,12 @@ package org.apache.kylin.rest.security;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.acls.model.Permission;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class UserAclManagerTest extends NLocalFileMetadataTestCase {
 
@@ -120,7 +119,6 @@ public class UserAclManagerTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals(userAclManager.get("user1").hashCode(), userAclManager.get("user1").hashCode());
         Assert.assertNotEquals(userAclManager.get("user1").hashCode(), userAclManager.get("user2").hashCode());
-
 
     }
 

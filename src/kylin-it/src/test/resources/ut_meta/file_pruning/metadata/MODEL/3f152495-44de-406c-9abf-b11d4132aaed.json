@@ -1,0 +1,167 @@
+{
+  "uuid" : "3f152495-44de-406c-9abf-b11d4132aaed",
+  "last_modified" : 1625106930531,
+  "create_time" : 1625105616289,
+  "version" : "4.0.0.0",
+  "alias" : "file_pruning_model",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_ORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_KYLIN_FACT",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_KYLIN_FACT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ],
+      "foreign_key" : [ "TEST_ORDER.ORDER_ID" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_ORDER.TEST_TIME_ENC",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 2,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 3,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+  }, {
+    "id" : 4,
+    "name" : "ORDER_ID_TEST_KYLIN_FACT",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "ORDER_ID_TEST_ORDER",
+    "column" : "TEST_ORDER.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "BUYER_ID",
+    "column" : "TEST_ORDER.BUYER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "TEST_DATE_ENC",
+    "column" : "TEST_ORDER.TEST_DATE_ENC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "TEST_TIME_ENC",
+    "column" : "TEST_ORDER.TEST_TIME_ENC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "TEST_EXTENDED_COLUMN",
+    "column" : "TEST_ORDER.TEST_EXTENDED_COLUMN",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 350.22223578559027,
+        "y" : 225.61111450195312,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "TEST_ORDER" : {
+        "x" : 739.1111246744792,
+        "y" : 242.2777811686198,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "file_pruning"
+}

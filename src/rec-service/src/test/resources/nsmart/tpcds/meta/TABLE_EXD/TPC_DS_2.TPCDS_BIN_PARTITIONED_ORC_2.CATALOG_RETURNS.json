@@ -1,0 +1,212 @@
+{
+  "uuid" : "4f989d51-896a-413a-abdc-c07fc3e1cce1",
+  "last_modified" : 1497607990331,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CATALOG_RETURNS",
+  "last_build_job_id" : "ddf52132-6738-4de6-b144-1c8208c5f1de",
+  "columns_stats" : [ {
+    "max_value" : "86399",
+    "min_value" : "2",
+    "max_length_value" : "21489",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 76548
+  }, {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "12932",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 25931
+  }, {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "129642",
+    "min_length_value" : "8",
+    "null_count" : 5667,
+    "cardinality" : 103008
+  }, {
+    "max_value" : "1920758",
+    "min_value" : "5",
+    "max_length_value" : "1548837",
+    "min_length_value" : "5",
+    "null_count" : 5606,
+    "cardinality" : 178897
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "5934",
+    "min_length_value" : "1",
+    "null_count" : 5643,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "2",
+    "max_length_value" : "17553",
+    "min_length_value" : "3",
+    "null_count" : 5652,
+    "cardinality" : 65540
+  }, {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "130460",
+    "min_length_value" : "1",
+    "null_count" : 5666,
+    "cardinality" : 124044
+  }, {
+    "max_value" : "1920792",
+    "min_value" : "2",
+    "max_length_value" : "1529522",
+    "min_length_value" : "2",
+    "null_count" : 5709,
+    "cardinality" : 264109
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "3792",
+    "min_length_value" : "5",
+    "null_count" : 5741,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "68614",
+    "min_length_value" : "3",
+    "null_count" : 5719,
+    "cardinality" : 69057
+  }, {
+    "max_value" : "8",
+    "min_value" : "1",
+    "max_length_value" : "2",
+    "min_length_value" : "2",
+    "null_count" : 5668,
+    "cardinality" : 8
+  }, {
+    "max_value" : "9828",
+    "min_value" : "1",
+    "max_length_value" : "8967",
+    "min_length_value" : "4",
+    "null_count" : 5697,
+    "cardinality" : 6382
+  }, {
+    "max_value" : "20",
+    "min_value" : "1",
+    "max_length_value" : "15",
+    "min_length_value" : "9",
+    "null_count" : 5698,
+    "cardinality" : 20
+  }, {
+    "max_value" : "5",
+    "min_value" : "1",
+    "max_length_value" : "4",
+    "min_length_value" : "4",
+    "null_count" : 5830,
+    "cardinality" : 5
+  }, {
+    "max_value" : "36",
+    "min_value" : "1",
+    "max_length_value" : "18",
+    "min_length_value" : "4",
+    "null_count" : 5699,
+    "cardinality" : 37
+  }, {
+    "max_value" : "320000",
+    "min_value" : "2",
+    "max_length_value" : "318212",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 190136
+  }, {
+    "max_value" : "100",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "8",
+    "null_count" : 5692,
+    "cardinality" : 100
+  }, {
+    "max_value" : "24445.4",
+    "min_value" : "0.0",
+    "max_length_value" : "11612.25",
+    "min_length_value" : "0.0",
+    "null_count" : 5725,
+    "cardinality" : 128619
+  }, {
+    "max_value" : "2062.43",
+    "min_value" : "0.0",
+    "max_length_value" : "1184.79",
+    "min_length_value" : "1.5",
+    "null_count" : 5728,
+    "cardinality" : 35278
+  }, {
+    "max_value" : "25708.08",
+    "min_value" : "0.0",
+    "max_length_value" : "12741.74",
+    "min_length_value" : "0.9",
+    "null_count" : 5701,
+    "cardinality" : 159232
+  }, {
+    "max_value" : "100.0",
+    "min_value" : "0.5",
+    "max_length_value" : "55.24",
+    "min_length_value" : "2.7",
+    "null_count" : 5732,
+    "cardinality" : 9648
+  }, {
+    "max_value" : "13077.7",
+    "min_value" : "0.0",
+    "max_length_value" : "10172.76",
+    "min_length_value" : "0.0",
+    "null_count" : 5618,
+    "cardinality" : 95778
+  }, {
+    "max_value" : "22110.68",
+    "min_value" : "0.0",
+    "max_length_value" : "10174.37",
+    "min_length_value" : "0.0",
+    "null_count" : 5646,
+    "cardinality" : 115454
+  }, {
+    "max_value" : "17158.23",
+    "min_value" : "0.0",
+    "max_length_value" : "10449.53",
+    "min_length_value" : "0.0",
+    "null_count" : 5709,
+    "cardinality" : 82805
+  }, {
+    "max_value" : "18404.95",
+    "min_value" : "0.0",
+    "max_length_value" : "11226.42",
+    "min_length_value" : "0.0",
+    "null_count" : 5729,
+    "cardinality" : 80111
+  }, {
+    "max_value" : "13213.89",
+    "min_value" : "1.01",
+    "max_length_value" : "10097.81",
+    "min_length_value" : "2.4",
+    "null_count" : 5797,
+    "cardinality" : 141622
+  }, {
+    "max_value" : "2452917",
+    "min_value" : "2450821",
+    "max_length_value" : "2452895",
+    "min_length_value" : "2452895",
+    "null_count" : 0,
+    "cardinality" : 2137
+  } ],
+  "sample_rows" : [ [ "37499", "33436", "45673", "64844", "76911", "68135", "26226", "19517", "30871", "49570" ], [ "12117", "16309", "7809", "2487", "18918", "11209", "11421", "17425", "7278", "5797" ], [ "90423", "49518", "137011", "1174", "127326", "79270", "5897", "22255", "7295", "98849" ], [ "1059368", "1892494", "317789", "52189", "98261", "1266291", "82486", "219487", "1865593", "1371182" ], [ "5921", "7020", "3623", "2448", "", "6510", "1545", "3400", "4405", "153" ], [ "11633", "33381", "36677", "55003", "14471", "70291", "41536", "", "29690", "41112" ], [ "80158", "19455", "23744", "33059", "8791", "105069", "1093", "142444", "27395", "82176" ], [ "850304", "1821231", "1435360", "1230714", "612269", "1641730", "194446", "418752", "1141821", "1048846" ], [ "5089", "2116", "2806", "996", "5453", "6", "6614", "1654", "1039", "1603" ], [ "38147", "28804", "71122", "44244", "5401", "65418", "36279", "31202", "32377", "4561" ], [ "7", "7", "8", "8", "5", "2", "1", "5", "5", "5" ], [ "7875", "7820", "7883", "7802", "7818", "7790", "7778", "7962", "7778", "7840" ], [ "11", "18", "6", "7", "4", "15", "4", "12", "4", "4" ], [ "3", "4", "2", "4", "4", "4", "", "1", "1", "2" ], [ "17", "35", "21", "3", "35", "23", "7", "25", "6", "8" ], [ "318451", "315569", "306191", "315801", "309037", "306057", "307812", "315981", "300210", "314556" ], [ "1", "54", "18", "47", "1", "68", "13", "46", "36", "45" ], [ "0.0", "276.3", "454.9", "242.88", "277.2", "1070.64", "155.68", "3441.68", "1518.12", "1340.1" ], [ "37.48", "134.31", "60.26", "19.4", "0.0", "1.31", "39.87", "22.83", "27.21", "0.0" ], [ "502.94", "85.15", "264.93", "934.93", "1357.01", "1403.48", "782.42", "2110.59", "906.3", "19.58" ], [ "22.6", "0.89", "49.46", "86.56", "99.3", "49.38", "11.14", "95.66", "83.66", "85.41" ], [ "1914.56", "226.6", "138.15", "93.8", "232.18", "1326.0", "11.36", "4.3", "123.03", "251.58" ], [ "1882.74", "230.45", "0.62", "1692.41", "266.84", "171.26", "3978.2", "3383.97", "126.7", "71.88" ], [ "18.03", "0.0", "", "", "", "", "", "", "", "" ], [ "493.47", "384.1", "836.68", "4.36", "2183.28", "0.14", "3.38", "73.94", "2.31", "0.53" ], [ "282.01", "1068.21", "693.93", "2356.15", "96.27", "245.59", "124.41", "57.21", "1355.13", "28.51" ], [ "2451000", "2451000", "2451000", "2451000", "2451000", "2451000", "2451000", "2451000", "2451000", "2451000" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "288491",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "0",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/catalog_returns",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "CR_RETURNED_DATE_SK",
+    "owner" : "root",
+    "total_file_number" : "0"
+  },
+  "project" : "TPC_DS_2"
+}

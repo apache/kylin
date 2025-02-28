@@ -23,7 +23,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class EventListenerRegistry {

@@ -26,8 +26,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-
 import org.apache.kylin.common.util.Unsafe;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

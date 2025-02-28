@@ -25,21 +25,23 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLIN
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringHelper;
-import org.apache.kylin.job.service.TableSampleService;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
 import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.PartitionKeyRequest;
-import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.request.TableDescRequest;
@@ -50,10 +52,12 @@ import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
 import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.TableExtService;
+import org.apache.kylin.rest.service.TableSampleService;
 import org.apache.kylin.rest.service.TableService;
 import org.junit.After;
 import org.junit.Assert;
@@ -76,11 +80,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
-
 
 public class NTableControllerTest extends NLocalFileMetadataTestCase {
 
@@ -239,37 +240,6 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSetPartitionKey() throws Exception {
-        final PartitionKeyRequest partitionKeyRequest = mockFactTableRequest();
-        Mockito.doNothing().when(tableService).setPartitionKey(partitionKeyRequest.getProject(),
-                partitionKeyRequest.getTable(), partitionKeyRequest.getColumn(),
-                partitionKeyRequest.getPartitionColumnFormat());
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/partition_key") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(partitionKeyRequest)) //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).setPartitionKey(Mockito.any(PartitionKeyRequest.class));
-    }
-
-    @Test
-    public void testSetNoPartitionKey() throws Exception {
-        final PartitionKeyRequest partitionKeyRequest = mockFactTableRequest();
-        partitionKeyRequest.setColumn("");
-        Mockito.doNothing().when(tableService).setPartitionKey(partitionKeyRequest.getProject(),
-                partitionKeyRequest.getTable(), partitionKeyRequest.getColumn(),
-                partitionKeyRequest.getPartitionColumnFormat());
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/partition_key") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(partitionKeyRequest)) //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).setPartitionKey(Mockito.any(PartitionKeyRequest.class));
-    }
-
-    @Test
     public void testSetTop() throws Exception {
         final TopTableRequest topTableRequest = mockTopTableRequest();
         Mockito.doNothing().when(tableService).setTop(topTableRequest.getTable(), topTableRequest.getProject(),
@@ -298,8 +268,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                 .thenReturn(loadTableResponse);
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getDatabases(), "default", true))
                 .thenReturn(loadTableResponse);
-        Mockito.when(tableExtService.loadTablesWithShortCircuit(tableLoadRequest))
-                .thenReturn(loadTableResponse);
+        Mockito.when(tableExtService.loadTablesWithShortCircuit(tableLoadRequest)).thenReturn(loadTableResponse);
     }
 
     @Test
@@ -498,15 +467,15 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetAutoMergeConfig() throws Exception {
-        Mockito.doReturn(null).when(tableService).getAutoMergeConfigByTable("default", "DEFAULT.TEST_KYLIN_FACT");
+        Mockito.doReturn(null).when(tableService).getAutoMergeConfigByModel("default", "model_uuid");
         mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/auto_merge_config") //
                 .contentType(MediaType.APPLICATION_JSON) //
                 .param("project", "default") //
-                .param("model", "") //
-                .param("table", "DEFAULT.TEST_KYLIN_FACT") //
+                .param("model", "model_uuid") //
+                .param("table", "") //
                 .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).getAutoMergeConfig("", "DEFAULT.TEST_KYLIN_FACT", "default");
+        Mockito.verify(nTableController).getAutoMergeConfig("model_uuid", "", "default");
     }
 
     @Test
@@ -523,35 +492,6 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(nTableController).getAutoMergeConfig("", "", "default");
         final JsonNode jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
         Assert.assertTrue(StringUtils.contains(jsonNode.get("exception").textValue(), errorMsg));
-    }
-
-    @Test
-    public void testGetRefreshDateRange() throws Exception {
-        Mockito.doNothing().when(tableService).checkRefreshDataRangeReadiness("default", "DEFAULT.TEST_KYLIN_FACT", "0",
-                "100");
-        Mockito.doReturn(null).when(modelService).getRefreshAffectedSegmentsResponse("default",
-                "DEFAULT.TEST_KYLIN_FACT", "0", "100");
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/affected_data_range") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", "default") //
-                .param("start", "0") //
-                .param("table", "DEFAULT.TEST_KYLIN_FACT") //
-                .param("end", "100") //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).getRefreshAffectedDateRange("default", "DEFAULT.TEST_KYLIN_FACT", "0", "100");
-    }
-
-    @Test
-    public void testGetPushdownMode() throws Exception {
-        Mockito.doReturn(true).when(tableService).getPushDownMode("default", "DEFAULT.TEST_KYLIN_FACT");
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pushdown_mode") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", "default") //
-                .param("table", "DEFAULT.TEST_KYLIN_FACT") //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).getPushdownMode("default", "DEFAULT.TEST_KYLIN_FACT");
     }
 
     @Test
@@ -589,28 +529,13 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testUpdateAutoMergeConfig() throws Exception {
         AutoMergeRequest autoMergeRequest = mockAutoMergeRequest();
-        Mockito.doNothing().when(tableService).setAutoMergeConfigByTable("default", autoMergeRequest);
+        Mockito.doNothing().when(tableService).setAutoMergeConfigByModel("default", autoMergeRequest);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/auto_merge_config") //
                 .contentType(MediaType.APPLICATION_JSON) //
                 .content(JsonUtil.writeValueAsString(autoMergeRequest)) //
                 .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nTableController).updateAutoMergeConfig(Mockito.any(AutoMergeRequest.class));
-    }
-
-    @Test
-    public void testUpdatePushdownMode() throws Exception {
-        PushDownModeRequest config = new PushDownModeRequest();
-        config.setProject("default");
-        config.setPushdownRangeLimited(true);
-        config.setTable("DEFAULT.TEST_KYLIN_FACT");
-        Mockito.doNothing().when(tableService).setPushDownMode("default", "DEFAULT.TEST_KYLIN_FACT", true);
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/pushdown_mode") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(config)) //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).setPushdownMode(Mockito.any(PushDownModeRequest.class));
     }
 
     @Test
@@ -724,6 +649,22 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nTableController).reloadHiveTablename("", false);
+    }
+
+    @Test
+    public void testRefreshCatalogCache() throws Exception {
+        List<String> tables = Lists.newArrayList();
+        tables.add("DEFAULT.TEST_KYLIN_FACT");
+        HashMap request = new HashMap();
+        request.put("tables", tables);
+        TableRefreshAll tableRefreshAll = new TableRefreshAll();
+        tableRefreshAll.setCode(KylinException.CODE_SUCCESS);
+        Mockito.doReturn(tableRefreshAll).when(tableService).refreshAllCatalogCache(Mockito.any());
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/catalog_cache")
+                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                        .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test

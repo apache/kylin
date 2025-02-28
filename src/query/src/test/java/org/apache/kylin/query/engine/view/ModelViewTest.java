@@ -27,10 +27,13 @@ import java.util.LinkedHashMap;
 
 import org.apache.calcite.schema.impl.ViewTable;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -38,16 +41,18 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.engine.NDataModelWrapper;
 import org.apache.kylin.query.engine.QueryExec;
+import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -56,9 +61,11 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         overwriteSystemProp("kylin.query.auto-model-view-enabled", "TRUE");
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
         this.createTestMetadata();
         // Use default Factory for Open Core
         QueryExtension.setFactory(new QueryExtension.Factory());
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @After
@@ -75,13 +82,14 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
                     new LinkedHashMap<>());
         }
         // copy tables from project default
-        val ssbMgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        val defaultMgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         val tableMgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        for (TableDesc tableDesc : ssbMgr.listAllTables()) {
+        for (TableDesc tableDesc : defaultMgr.listAllTables()) {
             if (tableDesc.getDatabase().equalsIgnoreCase("SSB")) {
                 if (tableMgr.getTableDesc(tableDesc.getName()) == null) {
                     val clone = new TableDesc(tableDesc);
                     clone.setMvcc(-1);
+                    clone.setProject(project);
                     tableMgr.saveSourceTable(clone);
                 }
             }
@@ -98,7 +106,7 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
 
     private NDataModel createModel(String project, String modelAlias) throws IOException {
         val mgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        val serializer = mgr.getDataModelSerializer();
+        val serializer = new JsonSerializer<>(NDataModelWrapper.class);
         val contents = StringUtils
                 .join(Files.readAllLines(new File("src/test/resources/ut_meta/view/" + modelAlias + ".json").toPath(),
                         Charset.defaultCharset()), "\n");
@@ -123,10 +131,12 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
         val model = createModel(project, modelAlias);
 
         // assert generated sql
-        val expectedSQL = StringUtils
-                .join(Files.readAllLines(new File("src/test/resources/ut_meta/view/" + modelAlias + ".sql").toPath(),
-                        Charset.defaultCharset()), "")
-                .replace("  ", " "); // remove extra spaces
+        String sqlStatement = FileUtils.readFileToString(
+                new File("src/test/resources/ut_meta/view/" + modelAlias + ".sql"), Charset.defaultCharset()).trim();
+        int semicolonIndex = sqlStatement.lastIndexOf(";");
+        String sql = semicolonIndex == sqlStatement.length() - 1 ? sqlStatement.substring(0, semicolonIndex)
+                : sqlStatement;
+        val expectedSQL = QueryUtil.removeCommentInSql(sql);
         val generated = new ModelViewGenerator(model).generateViewSQL().replace("  ", " "); // remove extra spaces
         Assert.assertEquals(String.format("%s view sql generated unexpected sql", modelAlias), expectedSQL.trim(),
                 generated);
@@ -172,7 +182,39 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testOrderByModel() throws IOException {
+        overwriteSystemProp("kylin.query.select-star-col-order-in-model-view", "1");
+        val projectName = "SSB_TEST";
+        createProject(projectName);
+        val model = createModel(projectName, "model_single_table");
+        val generated = new ModelViewGenerator(model).generateViewSQL().replace("  ", " ");
+        val expectedSQL = "SELECT \"LINEORDER\".\"LO_ORDERKEY\" AS \"THE_KEY\","
+                + "\"LINEORDER\".\"LO_ORDTOTALPRICE\" AS \"LO_ORDTOTALPRICE\","
+                + "\"LINEORDER\".\"LO_LINENUMBER\" AS \"LO_LINENUMBER\","
+                + "\"LINEORDER\".\"LO_CUSTKEY\" AS \"L O CU ST KEY\" FROM \"SSB\".\"LINEORDER\" AS \"LINEORDER\"";
+        Assert.assertEquals(String.format("%s view sql generated unexpected sql", "model_single_table"),
+                expectedSQL.trim(), generated);
+    }
+
+    @Test
+    public void testOrderByTable() throws IOException {
+        overwriteSystemProp("kylin.query.select-star-col-order-in-model-view", "2");
+        val projectName = "SSB_TEST";
+        createProject(projectName);
+        val model = createModel(projectName, "model_single_table");
+        val generated = new ModelViewGenerator(model).generateViewSQL().replace("  ", " ");
+        val expectedSQL = "SELECT \"LINEORDER\".\"LO_ORDERKEY\" AS \"THE_KEY\","
+                + "\"LINEORDER\".\"LO_LINENUMBER\" AS \"LO_LINENUMBER\","
+                + "\"LINEORDER\".\"LO_CUSTKEY\" AS \"L O CU ST KEY\","
+                + "\"LINEORDER\".\"LO_ORDTOTALPRICE\" AS \"LO_ORDTOTALPRICE\" FROM \"SSB\".\"LINEORDER\" AS \"LINEORDER\"";
+        Assert.assertEquals(String.format("%s view sql generated unexpected sql", "model_single_table"),
+                expectedSQL.trim(), generated);
+    }
+
+    @Test
     public void testDBNameCollision() throws IOException {
+        val projMgr = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        projMgr.forceDropProject("SSB");
         // same db, different table name
         val views = Lists.newArrayList("model_single_table", "model_joins", "model_cc");
         val projectName = "SSB";
@@ -203,6 +245,6 @@ public class ModelViewTest extends NLocalFileMetadataTestCase {
 
         val relNode = new QueryExec(projectName, KylinConfig.getInstanceFromEnv())
                 .parseAndOptimize(String.format("select sum(PRICE) from %s.%s", projectName, modelName));
-        Assert.assertEquals("DECIMAL(35, 6)", relNode.getRowType().getFieldList().get(0).getType().toString());
+        Assert.assertEquals("DECIMAL(38, 6)", relNode.getRowType().getFieldList().get(0).getType().toString());
     }
 }

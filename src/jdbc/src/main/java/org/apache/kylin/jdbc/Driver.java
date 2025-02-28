@@ -28,9 +28,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -55,8 +57,8 @@ import org.slf4j.LoggerFactory;
  * Supported Statements:
  * </p>
  * <ul>
- * <li>{@link KylinStatementImpl}</li>
- * <li>{@link KylinPrepareStatementImpl}</li>
+ * <li>{@link KylinStatement}</li>
+ * <li>{@link KylinPreparedStatement}</li>
  * </ul>
  *
  * <p>
@@ -94,18 +96,18 @@ public class Driver extends UnregisteredDriver {
         try {
             DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
-            throw new RuntimeException("Error occurred while registering JDBC driver "
-                    + Driver.class.getName() + ": " + e);
+            throw new RuntimeException(
+                    "Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e);
         }
         exit(logger);
     }
 
     private static InputStream preprocessPropertiesFile(String myFile) throws IOException {
-        try (Scanner in = new Scanner(new FileReader(myFile))){
+        try (Scanner in = new Scanner(new FileReader(myFile))) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            while(in.hasNext()) {
-                out.write(in.nextLine().replace("\\", "\\\\").getBytes());
-                out.write("\n".getBytes());
+            while (in.hasNext()) {
+                out.write(in.nextLine().replace("\\", "\\\\").getBytes(Charset.defaultCharset()));
+                out.write("\n".getBytes(Charset.defaultCharset()));
             }
             return new ByteArrayInputStream(out.toByteArray());
         }
@@ -139,7 +141,7 @@ public class Driver extends UnregisteredDriver {
         if (props == null) {
             newProps = new Properties();
         } else {
-            newProps = (Properties)props.clone();
+            newProps = (Properties) props.clone();
         }
 
         String prefixParams = url.split("//")[0].substring(this.getConnectStringPrefix().length());
@@ -166,9 +168,9 @@ public class Driver extends UnregisteredDriver {
             String key = urlDecoder(splitted[0]);
             String val = "";
             if (splitted.length > 2) {
-                IllegalArgumentException e = new IllegalArgumentException(
-                        String.format("The paramter in connection string '%s' is in wrong format."
-                                + " Please correct it and retry.", propPair));
+                IllegalArgumentException e = new IllegalArgumentException(String.format(Locale.ROOT,
+                        "The paramter in connection string '%s' is in wrong format." + " Please correct it and retry.",
+                        propPair));
                 logger.error(e.getMessage());
                 throw e;
             }
@@ -190,7 +192,8 @@ public class Driver extends UnregisteredDriver {
 
     @Override
     protected DriverVersion createDriverVersion() {
-        return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
+        return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver",
+                "unknown version", "Kylin", "unknown version");
     }
 
     @Override

@@ -1,0 +1,15 @@
+{
+  "uuid" : "c4437350-fa42-48b4-b1e4-060ae92ab527",
+  "last_modified" : 1522545367929,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "owner" : "test_owner",
+  "mp_values" : null,
+  "create_time_utc" : 1509791792901,
+  "status" : "ONLINE",
+  "query_hit_count" : 3,
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "project" : "enormous_cuboids_test",
+  "segment_uuids" : [ ]
+}

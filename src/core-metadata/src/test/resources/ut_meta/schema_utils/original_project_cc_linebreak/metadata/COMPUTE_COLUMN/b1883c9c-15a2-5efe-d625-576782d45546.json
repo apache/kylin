@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "CRS.PNL_RISK_RESULTS_VD",
+  "tableAlias" : "PNL_RISK_RESULTS_VD",
+  "columnName" : "MEASURE_FLAG",
+  "expression" : "(CASE WHEN PNL_RISK_RESULTS_VD.MEASURE = fx_family_enriched.attribute_id AND fx_family_enriched.gcrs_product_code = fx_family_enriched.producthierarchy_gcrs_codeid \nTHEN 1 ELSE 0 END)",
+  "innerExpression" : "(CASE WHEN `PNL_RISK_RESULTS_VD`.`MEASURE` = `FX_FAMILY_ENRICHED`.`ATTRIBUTE_ID` AND `FX_FAMILY_ENRICHED`.`GCRS_PRODUCT_CODE` = `FX_FAMILY_ENRICHED`.`PRODUCTHIERARCHY_GCRS_CODEID`\nTHEN 1 ELSE 0 END)",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "b1883c9c-15a2-5efe-d625-576782d45546",
+  "project" : "original_project_cc_linebreak"
+}

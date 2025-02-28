@@ -18,8 +18,6 @@
 
 package org.apache.spark.scheduler
 
-import java.util.concurrent.TimeUnit
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.executor.ExecutorMetrics
 import org.apache.spark.resource.ResourceProfile
@@ -32,6 +30,7 @@ import org.apache.spark.{ExecutorAllocationClient, Success, TaskResultLost, Task
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{doAnswer, mock, when}
 
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 
 class ExecutorListenerTest extends SparderBaseFunSuite with SharedSparkSession {

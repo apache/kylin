@@ -19,8 +19,6 @@ package org.apache.kylin.cube.gridtable;
 
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +28,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public abstract class GridTableMapping {
     protected List<DataType> gtDataTypes;
@@ -140,13 +137,10 @@ public abstract class GridTableMapping {
         //metrics are represented in ImmutableBitSet, which loses order information
         //sort the aggrFuns to align with metrics natural order
         List<FunctionDesc> metricList = Lists.newArrayList(metrics);
-        Collections.sort(metricList, new Comparator<FunctionDesc>() {
-            @Override
-            public int compare(FunctionDesc o1, FunctionDesc o2) {
-                int a = GridTableMapping.this.getIndexOf(o1);
-                int b = GridTableMapping.this.getIndexOf(o2);
-                return a - b;
-            }
+        metricList.sort((o1, o2) -> {
+            int a = GridTableMapping.this.getIndexOf(o1);
+            int b = GridTableMapping.this.getIndexOf(o2);
+            return a - b;
         });
 
         String[] result = new String[metricList.size()];

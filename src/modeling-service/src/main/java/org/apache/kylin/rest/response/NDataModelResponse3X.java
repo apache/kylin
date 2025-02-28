@@ -21,13 +21,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;

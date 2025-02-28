@@ -18,13 +18,15 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.List;
+
+import org.apache.kylin.common.util.Pair;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.kylin.common.util.Pair;
-
-import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -56,7 +58,8 @@ public class TableDescRequest {
     @JsonProperty(value = "with_excluded", defaultValue = "true")
     private boolean withExcluded;
 
-    public TableDescRequest(String project, boolean withExt, String table, String database, boolean isFuzzy, List<Integer> sourceType) {
+    public TableDescRequest(String project, boolean withExt, String table, String database, boolean isFuzzy,
+            List<Integer> sourceType) {
         this.project = project;
         this.withExt = withExt;
         this.table = table;
@@ -65,7 +68,8 @@ public class TableDescRequest {
         this.sourceType = sourceType;
     }
 
-    public TableDescRequest(String project, String table, Integer offset, Integer limit, boolean withExcluded, List<Integer> sourceType) {
+    public TableDescRequest(String project, String table, Integer offset, Integer limit, boolean withExcluded,
+            List<Integer> sourceType) {
         this.project = project;
         this.table = table;
         this.offset = offset;
@@ -75,7 +79,7 @@ public class TableDescRequest {
     }
 
     public TableDescRequest(String project, String table, String database, boolean withExt, boolean isFuzzy,
-                            Pair<Integer, Integer> offsetAndLimit, List<Integer> sourceType) {
+            Pair<Integer, Integer> offsetAndLimit, List<Integer> sourceType) {
         this.project = project;
         this.table = table;
         this.database = database;

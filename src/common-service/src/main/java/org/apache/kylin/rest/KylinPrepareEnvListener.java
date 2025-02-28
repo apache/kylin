@@ -76,16 +76,6 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
         // enable CC check
         Unsafe.setProperty("needCheckCC", "true");
         val config = KylinConfig.getInstanceFromEnv();
-        if (config.isCalciteInClauseEnabled()) {
-            Unsafe.setProperty("calcite.keep-in-clause", KylinConfigBase.TRUE);
-        } else {
-            Unsafe.setProperty("calcite.keep-in-clause", KylinConfigBase.FALSE);
-        }
-        if (config.isCalciteConvertMultipleColumnsIntoOrEnabled()) {
-            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", KylinConfigBase.TRUE);
-        } else {
-            Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", KylinConfigBase.FALSE);
-        }
         if (config.isCalciteCompatibleWithMsSqlPlusEnabled()) {
             Unsafe.setProperty("calcite.compatible-with-mssql-plus", KylinConfigBase.TRUE);
         } else {
@@ -99,10 +89,6 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
         DelegationTokenManager delegationTokenManager = new DelegationTokenManager();
         delegationTokenManager.start();
         env.addActiveProfile(config.getSecurityProfile());
-
-        if (config.isMetadataKeyCaseInSensitiveEnabled()) {
-            env.addActiveProfile("case-insensitive-service");
-        }
 
         // add extra hive class paths.
         val extraClassPath = config.getHiveMetastoreExtraClassPath();

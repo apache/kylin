@@ -39,6 +39,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.jar.JarInfoManager;
 import org.apache.kylin.metadata.jar.JarTypeEnum;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.streaming.DataParserInfo;
 import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
@@ -199,14 +200,17 @@ public class KafkaServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testInitDefaultParser() {
-        DataParserManager manager = DataParserManager.getInstance(getTestConfig(), PROJECT);
-        val defaultParser = manager.getDataParserInfo(DEFAULT_PARSER_NAME);
-        val crud = (CachedCrudAssist<DataParserInfo>) ReflectionTestUtils.getField(manager, "crud");
-        Assert.assertNotNull(crud);
-        crud.delete(defaultParser);
-        Assert.assertNull(manager.getDataParserInfo(DEFAULT_PARSER_NAME));
-        kafkaService.initDefaultParser(PROJECT);
-        Assert.assertNotNull(manager.getDataParserInfo(DEFAULT_PARSER_NAME));
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            DataParserManager manager = DataParserManager.getInstance(getTestConfig(), PROJECT);
+            val defaultParser = manager.getDataParserInfo(DEFAULT_PARSER_NAME);
+            val crud = (CachedCrudAssist<DataParserInfo>) ReflectionTestUtils.getField(manager, "crud");
+            Assert.assertNotNull(crud);
+            crud.delete(defaultParser);
+            Assert.assertNull(manager.getDataParserInfo(DEFAULT_PARSER_NAME));
+            kafkaService.initDefaultParser(PROJECT);
+            Assert.assertNotNull(manager.getDataParserInfo(DEFAULT_PARSER_NAME));
+            return null;
+        }, "streaming_test");
     }
 
 }

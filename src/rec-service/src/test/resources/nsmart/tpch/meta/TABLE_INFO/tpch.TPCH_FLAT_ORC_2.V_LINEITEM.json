@@ -1,0 +1,99 @@
+{
+  "uuid" : "ed22178b-87dc-4b35-b229-e3f9552094d1",
+  "last_modified" : 1480841307857,
+  "version" : "1.6.1",
+  "name" : "V_LINEITEM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "L_ORDERKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "L_PARTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "L_SUPPKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "L_LINENUMBER",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "L_QUANTITY",
+    "datatype" : "double"
+  }, {
+    "id" : "6",
+    "name" : "L_EXTENDEDPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "L_DISCOUNT",
+    "datatype" : "double"
+  }, {
+    "id" : "8",
+    "name" : "L_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "9",
+    "name" : "L_RETURNFLAG",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "L_LINESTATUS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "L_SHIPDATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "L_COMMITDATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "L_RECEIPTDATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "L_SHIPINSTRUCT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "L_SHIPMODE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "L_COMMENT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "L_SHIPYEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "18",
+    "name" : "L_RECEIPTDELAYED",
+    "datatype" : "integer"
+  }, {
+    "id" : "19",
+    "name" : "L_SHIPDELAYED",
+    "datatype" : "integer"
+  }, {
+    "id" : "20",
+    "name" : "L_SALEPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "21",
+    "name" : "L_TAXPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "22",
+    "name" : "L_SUPPLYCOST",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "VIRTUAL_VIEW",
+  "database" : "TPCH_FLAT_ORC_2",
+  "project" : "tpch"
+}

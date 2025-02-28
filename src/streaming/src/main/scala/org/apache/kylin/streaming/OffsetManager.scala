@@ -23,7 +23,6 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.{Offset, StreamExecution, StreamingQueryWrapper}
-import org.apache.spark.sql.kafka010.{JsonUtils, KafkaSourceOffset}
 
 import java.util
 import scala.collection.JavaConverters._

@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.metadata.cube.storage.ProjectStorageInfoCollector;
 import org.apache.kylin.metadata.cube.storage.StorageInfoEnum;
@@ -28,8 +29,6 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;

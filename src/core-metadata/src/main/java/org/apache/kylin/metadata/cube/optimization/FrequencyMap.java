@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.val;
 
 @Data
 @AllArgsConstructor
@@ -69,34 +68,28 @@ public class FrequencyMap implements Serializable {
         return this;
     }
 
-    public void rotate(long endTime, String project) {
-        long frequencyInitialDate = getDateInMillis(endTime) - getDateBeforeFrequencyTimeWindow(project);
-
-        while (dateFrequency.size() != 0) {
-            if (frequencyInitialDate <= dateFrequency.firstKey())
-                break;
-            dateFrequency.pollFirstEntry();
-        }
+    @JsonIgnore
+    public long getFrequency(String project) {
+        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(project);
+        Integer timeWindow = FavoriteRule.getTimeWindowLength(ruleManager.getValue(FavoriteRule.FREQUENCY_TIME_WINDOW));
+        return getFrequency(timeWindow);
     }
 
     @JsonIgnore
-    public int getFrequency(String project) {
-        long frequencyInitialCollectDate = getDateBeforeFrequencyTimeWindow(project);
+    public int getFrequency(Integer timeWindowDays) {
+        long frequencyInitialCollectDate = getDateBeforeFrequencyTimeWindow(timeWindowDays);
         return dateFrequency.subMap(frequencyInitialCollectDate, Long.MAX_VALUE).values().stream().reduce(Integer::sum)
                 .orElse(0);
     }
 
     @JsonIgnore
-    public boolean isLowFrequency(String project) {
-        int frequency = getFrequency(project);
-        val prjMgr = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        return frequency < prjMgr.getProject(project).getConfig().getLowFrequencyThreshold();
+    public boolean isLowFrequency(Integer timeWindow, Integer lowFrequencyThreshold) {
+        int frequency = getFrequency(timeWindow);
+        return frequency < lowFrequencyThreshold;
     }
 
-    private long getDateBeforeFrequencyTimeWindow(String project) {
-        val prjMgr = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        int days = prjMgr.getProject(project).getConfig().getFrequencyTimeWindowInDays();
-        return TimeUtil.minusDays(getDateInMillis(System.currentTimeMillis()), days);
+    private long getDateBeforeFrequencyTimeWindow(Integer timeWindowDays) {
+        return TimeUtil.minusDays(getDateInMillis(System.currentTimeMillis()), timeWindowDays);
     }
 
     private long getDateInMillis(final long queryTime) {

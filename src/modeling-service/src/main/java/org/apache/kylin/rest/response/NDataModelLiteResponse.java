@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.springframework.beans.BeanUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -65,6 +66,18 @@ public class NDataModelLiteResponse extends NDataModelResponse {
     @JsonProperty("batch_segments")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<NDataSegmentResponse> batchSegments = new ArrayList<>();
+
+    public NDataModelLiteResponse(NDataModelResponse response, NDataModel dataModel) {
+        super(dataModel);
+        if (dataModel.isFusionModel()) {
+            FusionModelResponse fusionModelResponse = (FusionModelResponse) response;
+            this.setBatchId(fusionModelResponse.getBatchId());
+            this.setBatchPartitionDesc(fusionModelResponse.getBatchPartitionDesc());
+            this.setStreamingIndexes(fusionModelResponse.getStreamingIndexes());
+            this.setBatchSegmentHoles(fusionModelResponse.getBatchSegmentHoles());
+        }
+        BeanUtils.copyProperties(response, this);
+    }
 
     @JsonProperty("simplified_tables")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -115,15 +128,8 @@ public class NDataModelLiteResponse extends NDataModelResponse {
         return Collections.emptyList();
     }
 
-    public NDataModelLiteResponse(NDataModelResponse response, NDataModel dataModel) {
-        super(dataModel);
-        if (dataModel.isFusionModel()) {
-            FusionModelResponse fusionModelResponse = (FusionModelResponse) response;
-            this.setBatchId(fusionModelResponse.getBatchId());
-            this.setBatchPartitionDesc(fusionModelResponse.getBatchPartitionDesc());
-            this.setStreamingIndexes(fusionModelResponse.getStreamingIndexes());
-            this.setBatchSegmentHoles(fusionModelResponse.getBatchSegmentHoles());
-        }
-        BeanUtils.copyProperties(response, this);
+    @JsonIgnore
+    public List<NDataSegmentResponse> getRealSegments() {
+        return super.getSegments();
     }
 }

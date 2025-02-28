@@ -34,16 +34,15 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class QueryUtil {
 
@@ -83,8 +82,8 @@ public class QueryUtil {
         if (StringUtils.isBlank(str)) {
             return str;
         }
-        String transformed = ESCAPE_TRANSFORMER.transform(str);
-        transformed = StringHelper.backtickToDoubleQuote(transformed);
+        String transformed = StringHelper.backtickToDoubleQuote(str);
+        transformed = ESCAPE_TRANSFORMER.transform(transformed);
         return transformed;
     }
 
@@ -231,8 +230,7 @@ public class QueryUtil {
     }
 
     public static String appendLimitOffset(String project, String sql, int limit, int offset) {
-        sql = sql.trim();
-        sql = sql.replace("\r", StringUtils.SPACE).replace("\n", System.getProperty("line.separator"));
+        sql = sql.replace("\r", StringUtils.SPACE).replace("\n", System.lineSeparator());
         sql = trimRightSemiColon(sql);
 
         //Split keywords and variables from sql by punctuation and whitespace character
@@ -266,7 +264,7 @@ public class QueryUtil {
             sql += ("\nOFFSET " + offset);
         }
 
-        return sql;
+        return sql.trim();
     }
 
     public static boolean isBigQueryPushDownCapable(KylinConfig kylinConfig) {

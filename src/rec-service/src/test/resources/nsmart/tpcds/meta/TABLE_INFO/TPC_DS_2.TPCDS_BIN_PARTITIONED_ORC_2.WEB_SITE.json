@@ -1,0 +1,115 @@
+{
+  "uuid" : "42c167b8-bd1a-4935-9934-269c802a0e9d",
+  "last_modified" : 1497607295158,
+  "version" : "2.0.0",
+  "name" : "WEB_SITE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "WEB_SITE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "WEB_SITE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "WEB_REC_START_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "WEB_REC_END_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "WEB_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "WEB_OPEN_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "WEB_CLOSE_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "WEB_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "WEB_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "WEB_MKT_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "WEB_MKT_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "WEB_MKT_DESC",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "WEB_MARKET_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "WEB_COMPANY_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "15",
+    "name" : "WEB_COMPANY_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "WEB_STREET_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "WEB_STREET_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "WEB_STREET_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "WEB_SUITE_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "20",
+    "name" : "WEB_CITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "21",
+    "name" : "WEB_COUNTY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "22",
+    "name" : "WEB_STATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "23",
+    "name" : "WEB_ZIP",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "24",
+    "name" : "WEB_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "25",
+    "name" : "WEB_GMT_OFFSET",
+    "datatype" : "double"
+  }, {
+    "id" : "26",
+    "name" : "WEB_TAX_PERCENTAGE",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

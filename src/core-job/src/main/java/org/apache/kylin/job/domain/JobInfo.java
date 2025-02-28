@@ -18,9 +18,7 @@
 
 package org.apache.kylin.job.domain;
 
-import java.util.Date;
-
-public class JobInfo {
+public class JobInfo implements Comparable<JobInfo> {
     private Long id;
 
     private String jobId;
@@ -35,9 +33,9 @@ public class JobInfo {
 
     private String modelId;
 
-    private Date createTime;
+    private long createTime;
 
-    private Date updateTime;
+    private long updateTime;
 
     private Long jobDurationMillis;
 
@@ -106,19 +104,19 @@ public class JobInfo {
         this.modelId = modelId;
     }
 
-    public Date getCreateTime() {
+    public long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
+    public long getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(long updateTime) {
         this.updateTime = updateTime;
     }
 
@@ -160,5 +158,27 @@ public class JobInfo {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    @Override
+    public boolean equals(Object jobInfo) {
+        if (null == jobInfo || !(jobInfo instanceof JobInfo)) {
+            return false;
+        }
+        return this.getJobId().equals(((JobInfo) jobInfo).getJobId());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getJobId().hashCode();
+    }
+
+    @Override
+    public int compareTo(JobInfo jobInfo) {
+        int priorityCompare = Integer.compare(this.getPriority(), jobInfo.getPriority());
+        if (priorityCompare != 0) {
+            return priorityCompare;
+        }
+        return Long.compare(this.getCreateTime(), jobInfo.getCreateTime());
     }
 }

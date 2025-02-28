@@ -1,0 +1,659 @@
+{
+  "uuid" : "42711a5f-85fb-4d84-a6b7-40493af849da",
+  "last_modified" : 1644575970464,
+  "create_time" : 1634122791968,
+  "version" : "4.0.0.0",
+  "alias" : "COR_KYL_MOD_PNL_RISK_RESULTS_04Feb22",
+  "owner" : "deepinderpal.singh@ubs.com",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "CRS.PNL_RISK_RESULTS_VD",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "FINANCE.FX_FAMILY_ENRICHED",
+    "kind" : "LOOKUP",
+    "alias" : "FX_FAMILY_ENRICHED",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "FX_FAMILY_ENRICHED.FX_FAMILY_KEY" ],
+      "foreign_key" : [ "PNL_RISK_RESULTS_VD.FX_FAMILY_KEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "CRS.POSITION_DATA_VD",
+    "kind" : "LOOKUP",
+    "alias" : "POSITION_DATA_VD",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "POSITION_DATA_VD.POSITION_DATA_KEY" ],
+      "foreign_key" : [ "PNL_RISK_RESULTS_VD.POSITION_DATA_KEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "REFDATA.REFDATA_BOOK_HIERARCHY",
+    "kind" : "LOOKUP",
+    "alias" : "REFDATA_BOOK_HIERARCHY",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "REFDATA_BOOK_HIERARCHY.BOOK_BOOKID" ],
+      "foreign_key" : [ "POSITION_DATA_VD.TRADING_BOOK_ID" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "PNL_RISK_RESULTS_VD.BUSINESS_DATE",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.MEGDP_DESTINATION_CONTEXT_TAGS"
+  }, {
+    "id" : 1,
+    "name" : "FX_FAMILY_KEY_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.FX_FAMILY_KEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "DATA_CONTEXT_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.DATA_CONTEXT"
+  }, {
+    "id" : 3,
+    "name" : "DATASET_NAME",
+    "column" : "PNL_RISK_RESULTS_VD.DATASET_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "RUN_CONTEXT_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.RUN_CONTEXT"
+  }, {
+    "id" : 5,
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.MEGDP_PLATFORM_REC_TIMESTAMP"
+  }, {
+    "id" : 6,
+    "name" : "POSITION_KEY_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.POSITION_KEY"
+  }, {
+    "id" : 7,
+    "name" : "POSITION_DATA_KEY_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.POSITION_DATA_KEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "REPORTING_VALUE",
+    "column" : "PNL_RISK_RESULTS_VD.REPORTING_VALUE"
+  }, {
+    "id" : 9,
+    "name" : "REPORTING_CCY",
+    "column" : "PNL_RISK_RESULTS_VD.REPORTING_CCY"
+  }, {
+    "id" : 10,
+    "name" : "MEASURE_TYPE",
+    "column" : "PNL_RISK_RESULTS_VD.MEASURE_TYPE"
+  }, {
+    "id" : 11,
+    "name" : "MEASURE",
+    "column" : "PNL_RISK_RESULTS_VD.MEASURE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "STATUS_FLAG",
+    "column" : "PNL_RISK_RESULTS_VD.STATUS_FLAG"
+  }, {
+    "id" : 13,
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.MEGDP_SOURCE_CONTEXT_TAGS"
+  }, {
+    "id" : 14,
+    "name" : "BUSINESS_DATE_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.BUSINESS_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "INSTRUMENT_KEY_PNL_RISK_RESULTS_VD",
+    "column" : "PNL_RISK_RESULTS_VD.INSTRUMENT_KEY"
+  }, {
+    "id" : 16,
+    "name" : "PNL_TREE_KEY",
+    "column" : "PNL_RISK_RESULTS_VD.PNL_TREE_KEY"
+  }, {
+    "id" : 17,
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.MEGDP_DESTINATION_CONTEXT_TAGS"
+  }, {
+    "id" : 18,
+    "name" : "BUSINESS_DATE_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.BUSINESS_DATE"
+  }, {
+    "id" : 19,
+    "name" : "DATA_CONTEXT_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.DATA_CONTEXT"
+  }, {
+    "id" : 20,
+    "name" : "FX_FAMILY_KEY",
+    "column" : "FX_FAMILY_ENRICHED.FX_FAMILY_KEY"
+  }, {
+    "id" : 21,
+    "name" : "MEGDP_TENANT_TAGS_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.MEGDP_TENANT_TAGS"
+  }, {
+    "id" : 22,
+    "name" : "RUN_CONTEXT_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.RUN_CONTEXT"
+  }, {
+    "id" : 23,
+    "name" : "ATTRIBUTE_ID",
+    "column" : "FX_FAMILY_ENRICHED.ATTRIBUTE_ID"
+  }, {
+    "id" : 24,
+    "name" : "PRODUCTHIERARCHY_GCRS_CODEID",
+    "column" : "FX_FAMILY_ENRICHED.PRODUCTHIERARCHY_GCRS_CODEID"
+  }, {
+    "id" : 25,
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.MEGDP_PLATFORM_REC_TIMESTAMP"
+  }, {
+    "id" : 26,
+    "name" : "PRODUCT_PRODUCTID",
+    "column" : "FX_FAMILY_ENRICHED.PRODUCT_PRODUCTID"
+  }, {
+    "id" : 27,
+    "name" : "GCRS_PRODUCT_CODE",
+    "column" : "FX_FAMILY_ENRICHED.GCRS_PRODUCT_CODE"
+  }, {
+    "id" : 28,
+    "name" : "INSTRUMENT_KEY_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.INSTRUMENT_KEY"
+  }, {
+    "id" : 29,
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS_FX_FAMILY_ENRICHED",
+    "column" : "FX_FAMILY_ENRICHED.MEGDP_SOURCE_CONTEXT_TAGS"
+  }, {
+    "id" : 30,
+    "name" : "NET_POSITION",
+    "column" : "POSITION_DATA_VD.NET_POSITION"
+  }, {
+    "id" : 31,
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.MEGDP_SOURCE_CONTEXT_TAGS"
+  }, {
+    "id" : 32,
+    "name" : "SOURCE_SYSTEM",
+    "column" : "POSITION_DATA_VD.SOURCE_SYSTEM"
+  }, {
+    "id" : 33,
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.MEGDP_DESTINATION_CONTEXT_TAGS"
+  }, {
+    "id" : 34,
+    "name" : "UPDATE_TIME",
+    "column" : "POSITION_DATA_VD.UPDATE_TIME"
+  }, {
+    "id" : 35,
+    "name" : "NOTIONAL",
+    "column" : "POSITION_DATA_VD.NOTIONAL"
+  }, {
+    "id" : 36,
+    "name" : "POSITION_DATA_KEY",
+    "column" : "POSITION_DATA_VD.POSITION_DATA_KEY"
+  }, {
+    "id" : 37,
+    "name" : "MEGDP_TENANT_TAGS_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.MEGDP_TENANT_TAGS"
+  }, {
+    "id" : 38,
+    "name" : "COUNTERPARTY_CCONSOL",
+    "column" : "POSITION_DATA_VD.COUNTERPARTY_CCONSOL"
+  }, {
+    "id" : 39,
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.MEGDP_PLATFORM_REC_TIMESTAMP"
+  }, {
+    "id" : 40,
+    "name" : "NOTIONAL_CCY",
+    "column" : "POSITION_DATA_VD.NOTIONAL_CCY"
+  }, {
+    "id" : 41,
+    "name" : "COLLATERAL_TYPE",
+    "column" : "POSITION_DATA_VD.COLLATERAL_TYPE"
+  }, {
+    "id" : 42,
+    "name" : "POSITION_ID",
+    "column" : "POSITION_DATA_VD.POSITION_ID"
+  }, {
+    "id" : 43,
+    "name" : "INSTRUMENT_KEY_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.INSTRUMENT_KEY"
+  }, {
+    "id" : 44,
+    "name" : "SOURCE_SYSTEM_ID",
+    "column" : "POSITION_DATA_VD.SOURCE_SYSTEM_ID"
+  }, {
+    "id" : 45,
+    "name" : "POSITION_GROUP",
+    "column" : "POSITION_DATA_VD.POSITION_GROUP"
+  }, {
+    "id" : 46,
+    "name" : "BUSINESS_DATE_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.BUSINESS_DATE"
+  }, {
+    "id" : 47,
+    "name" : "POSITION_KEY_EXTERNAL",
+    "column" : "POSITION_DATA_VD.POSITION_KEY_EXTERNAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 48,
+    "name" : "COMPONENT_TYPE",
+    "column" : "POSITION_DATA_VD.COMPONENT_TYPE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 49,
+    "name" : "TRADING_BOOK_ID",
+    "column" : "POSITION_DATA_VD.TRADING_BOOK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 50,
+    "name" : "POSITION_KEY_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.POSITION_KEY"
+  }, {
+    "id" : 51,
+    "name" : "PNL_START_POSITION",
+    "column" : "POSITION_DATA_VD.PNL_START_POSITION"
+  }, {
+    "id" : 52,
+    "name" : "RUN_VERSION",
+    "column" : "POSITION_DATA_VD.RUN_VERSION"
+  }, {
+    "id" : 53,
+    "name" : "DATA_CONTEXT_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.DATA_CONTEXT"
+  }, {
+    "id" : 54,
+    "name" : "RUN_CONTEXT_POSITION_DATA_VD",
+    "column" : "POSITION_DATA_VD.RUN_CONTEXT"
+  }, {
+    "id" : 55,
+    "name" : "JOB_ID",
+    "column" : "POSITION_DATA_VD.JOB_ID"
+  }, {
+    "id" : 56,
+    "name" : "SUBDESK_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.SUBDESK_ID"
+  }, {
+    "id" : 57,
+    "name" : "BOOK_BOOKTYPE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_BOOKTYPE"
+  }, {
+    "id" : 58,
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS_REFDATA_BOOK_HIERARCHY",
+    "column" : "REFDATA_BOOK_HIERARCHY.MEGDP_DESTINATION_CONTEXT_TAGS"
+  }, {
+    "id" : 59,
+    "name" : "COSTCENTRE_FXSELLDOWN",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_FXSELLDOWN"
+  }, {
+    "id" : 60,
+    "name" : "FUNCTION_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.FUNCTION_ID"
+  }, {
+    "id" : 61,
+    "name" : "BUSINESSGROUP_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSGROUP_VALIDFROMDATE"
+  }, {
+    "id" : 62,
+    "name" : "BUSINESSGROUP_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSGROUP_NAME"
+  }, {
+    "id" : 63,
+    "name" : "FUNCTION_LEGACYBUSINESSAREA",
+    "column" : "REFDATA_BOOK_HIERARCHY.FUNCTION_LEGACYBUSINESSAREA"
+  }, {
+    "id" : 64,
+    "name" : "COSTCENTRE_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_ID"
+  }, {
+    "id" : 65,
+    "name" : "DESK_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.DESK_ID"
+  }, {
+    "id" : 66,
+    "name" : "BOOK_PRICECUTREGION",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_PRICECUTREGION"
+  }, {
+    "id" : 67,
+    "name" : "BOOK_FRTB_REGULATORYCAPITALFLAG",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_FRTB_REGULATORYCAPITALFLAG"
+  }, {
+    "id" : 68,
+    "name" : "COSTCENTER_SUPERVISORID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTER_SUPERVISORID"
+  }, {
+    "id" : 69,
+    "name" : "SEGMENT_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.SEGMENT_VALIDFROMDATE"
+  }, {
+    "id" : 70,
+    "name" : "COSTCENTRE_UBSLEGALENTITYID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_UBSLEGALENTITYID"
+  }, {
+    "id" : 71,
+    "name" : "SECTOR_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.SECTOR_NAME"
+  }, {
+    "id" : 72,
+    "name" : "DESK_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.DESK_VALIDFROMDATE"
+  }, {
+    "id" : 73,
+    "name" : "BOOK_REGULATORYCAPITALFLAG",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_REGULATORYCAPITALFLAG"
+  }, {
+    "id" : 74,
+    "name" : "SECTOR_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.SECTOR_VALIDFROMDATE"
+  }, {
+    "id" : 75,
+    "name" : "BOOK_ACCOUNTINGTREATMENT",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_ACCOUNTINGTREATMENT"
+  }, {
+    "id" : 76,
+    "name" : "BOOK_RELEVENTTORISK",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_RELEVENTTORISK"
+  }, {
+    "id" : 77,
+    "name" : "COSTCENTRE_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_VALIDFROMDATE"
+  }, {
+    "id" : 78,
+    "name" : "COSTCENTRE_UBSLEGALENTITYNAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_UBSLEGALENTITYNAME"
+  }, {
+    "id" : 79,
+    "name" : "FUNCTION_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.FUNCTION_VALIDFROMDATE"
+  }, {
+    "id" : 80,
+    "name" : "BOOK_BOOKNAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_BOOKNAME"
+  }, {
+    "id" : 81,
+    "name" : "BOOK_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_VALIDFROMDATE"
+  }, {
+    "id" : 82,
+    "name" : "EVENT_LASTUPDATEDTIME",
+    "column" : "REFDATA_BOOK_HIERARCHY.EVENT_LASTUPDATEDTIME"
+  }, {
+    "id" : 83,
+    "name" : "SUBDESK_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.SUBDESK_NAME"
+  }, {
+    "id" : 84,
+    "name" : "MEGDP_TENANT_TAGS_REFDATA_BOOK_HIERARCHY",
+    "column" : "REFDATA_BOOK_HIERARCHY.MEGDP_TENANT_TAGS"
+  }, {
+    "id" : 85,
+    "name" : "FRTBDESK_FRTB_DESK_CODE",
+    "column" : "REFDATA_BOOK_HIERARCHY.FRTBDESK_FRTB_DESK_CODE"
+  }, {
+    "id" : 86,
+    "name" : "BOOK_BOOKSTATUS",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_BOOKSTATUS"
+  }, {
+    "id" : 87,
+    "name" : "BOOK_BOOKOWNERSHIPREGION",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_BOOKOWNERSHIPREGION"
+  }, {
+    "id" : 88,
+    "name" : "SEGMENT_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.SEGMENT_ID"
+  }, {
+    "id" : 89,
+    "name" : "BUSINESSUNIT_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSUNIT_ID"
+  }, {
+    "id" : 90,
+    "name" : "BUSINESSGROUP_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSGROUP_ID"
+  }, {
+    "id" : 91,
+    "name" : "BUSINESSAREA_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSAREA_ID"
+  }, {
+    "id" : 92,
+    "name" : "BUSINESSAREA_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSAREA_VALIDFROMDATE"
+  }, {
+    "id" : 93,
+    "name" : "BOOK_FRTB_SPECIFICRISKTREATMENT",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_FRTB_SPECIFICRISKTREATMENT"
+  }, {
+    "id" : 94,
+    "name" : "BOOK_SUBFAMILY",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_SUBFAMILY"
+  }, {
+    "id" : 95,
+    "name" : "FRTBDESK_FRTB_DESK_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.FRTBDESK_FRTB_DESK_NAME"
+  }, {
+    "id" : 96,
+    "name" : "BUSINESSUNIT_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSUNIT_NAME"
+  }, {
+    "id" : 97,
+    "name" : "BOOK_BOOKID",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_BOOKID"
+  }, {
+    "id" : 98,
+    "name" : "BOOK_VALUATIONSYSTEMNAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_VALUATIONSYSTEMNAME"
+  }, {
+    "id" : 99,
+    "name" : "BOOK_RELEVENTTOFINANCE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_RELEVENTTOFINANCE"
+  }, {
+    "id" : 100,
+    "name" : "COSTCENTRE_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_NAME"
+  }, {
+    "id" : 101,
+    "name" : "FUNCTION_ALTERNATEID",
+    "column" : "REFDATA_BOOK_HIERARCHY.FUNCTION_ALTERNATEID"
+  }, {
+    "id" : 102,
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP_REFDATA_BOOK_HIERARCHY",
+    "column" : "REFDATA_BOOK_HIERARCHY.MEGDP_PLATFORM_REC_TIMESTAMP"
+  }, {
+    "id" : 103,
+    "name" : "COSTCENTRE_ALTERNATECENTREID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTRE_ALTERNATECENTREID"
+  }, {
+    "id" : 104,
+    "name" : "BUSINESSUNIT_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSUNIT_VALIDFROMDATE"
+  }, {
+    "id" : 105,
+    "name" : "FUNCTION_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.FUNCTION_NAME"
+  }, {
+    "id" : 106,
+    "name" : "DESK_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.DESK_NAME"
+  }, {
+    "id" : 107,
+    "name" : "SEGMENT_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.SEGMENT_NAME"
+  }, {
+    "id" : 108,
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS_REFDATA_BOOK_HIERARCHY",
+    "column" : "REFDATA_BOOK_HIERARCHY.MEGDP_SOURCE_CONTEXT_TAGS"
+  }, {
+    "id" : 109,
+    "name" : "BOOK_SOURCESYSTEM",
+    "column" : "REFDATA_BOOK_HIERARCHY.BOOK_SOURCESYSTEM"
+  }, {
+    "id" : 110,
+    "name" : "COSTCENTER_PRODUCTCONTROLCONTACTID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTER_PRODUCTCONTROLCONTACTID"
+  }, {
+    "id" : 111,
+    "name" : "SECTOR_ID",
+    "column" : "REFDATA_BOOK_HIERARCHY.SECTOR_ID"
+  }, {
+    "id" : 112,
+    "name" : "SUBDESK_VALIDFROMDATE",
+    "column" : "REFDATA_BOOK_HIERARCHY.SUBDESK_VALIDFROMDATE"
+  }, {
+    "id" : 113,
+    "name" : "BUSINESSAREA_NAME",
+    "column" : "REFDATA_BOOK_HIERARCHY.BUSINESSAREA_NAME"
+  }, {
+    "id" : 114,
+    "name" : "COSTCENTER_SECONDARYOWNERID",
+    "column" : "REFDATA_BOOK_HIERARCHY.COSTCENTER_SECONDARYOWNERID"
+  }, {
+    "id" : 115,
+    "name" : "MEASURE_FLAG",
+    "column" : "PNL_RISK_RESULTS_VD.MEASURE_FLAG",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 116,
+    "name" : "ASSET_ID1",
+    "column" : "PNL_RISK_RESULTS_VD.ASSET_ID1"
+  }, {
+    "id" : 117,
+    "name" : "ASSET_ID2",
+    "column" : "PNL_RISK_RESULTS_VD.ASSET_ID2"
+  }, {
+    "id" : 118,
+    "name" : "COST_CENTRE_SAP_ID",
+    "column" : "POSITION_DATA_VD.COST_CENTRE_SAP_ID"
+  }, {
+    "id" : 119,
+    "name" : "CALCULATION_CONTEXT",
+    "column" : "PNL_RISK_RESULTS_VD.CALCULATION_CONTEXT"
+  }, {
+    "id" : 120,
+    "name" : "RISK_FACTOR_VALUE_KEY",
+    "column" : "PNL_RISK_RESULTS_VD.RISK_FACTOR_VALUE_KEY"
+  }, {
+    "id" : 121,
+    "name" : "ASSET_TYPE1",
+    "column" : "PNL_RISK_RESULTS_VD.ASSET_TYPE1"
+  }, {
+    "id" : 122,
+    "name" : "ASSET_TYPE2",
+    "column" : "PNL_RISK_RESULTS_VD.ASSET_TYPE2"
+  }, {
+    "id" : 123,
+    "name" : "ORIGINAL_NOTIONAL",
+    "column" : "POSITION_DATA_VD.ORIGINAL_NOTIONAL"
+  }, {
+    "id" : 124,
+    "name" : "RISK_FACTOR_CLASS2",
+    "column" : "PNL_RISK_RESULTS_VD.RISK_FACTOR_CLASS2"
+  }, {
+    "id" : 125,
+    "name" : "RISK_FACTOR_CLASS1",
+    "column" : "PNL_RISK_RESULTS_VD.RISK_FACTOR_CLASS1"
+  }, {
+    "id" : 126,
+    "name" : "PRODUCT_ID",
+    "column" : "POSITION_DATA_VD.PRODUCT_ID"
+  }, {
+    "id" : 127,
+    "name" : "BUCKET_LABEL",
+    "column" : "PNL_RISK_RESULTS_VD.BUCKET_LABEL"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000
+  }, {
+    "name" : "REPORTING_VALUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "PNL_RISK_RESULTS_VD.REPORTING_VALUE"
+      } ],
+      "returntype" : "decimal(38,18)"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100001
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "PNL_RISK_RESULTS_VD" : {
+        "x" : 689.0,
+        "y" : 10.0,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "FX_FAMILY_ENRICHED" : {
+        "x" : 554.0,
+        "y" : 260.0,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "POSITION_DATA_VD" : {
+        "x" : 824.0,
+        "y" : 260.0,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "REFDATA_BOOK_HIERARCHY" : {
+        "x" : 824.0,
+        "y" : 510.0,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "computed_column_uuids" : [ "b1883c9c-15a2-5efe-d625-576782d45546" ],
+  "project" : "original_project_cc_linebreak"
+}

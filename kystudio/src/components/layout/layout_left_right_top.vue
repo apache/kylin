@@ -187,7 +187,8 @@ let MessageBox = ElementUI.MessageBox
       'availableMenus',
       'isOnlyQueryNode',
       'dashboardActions',
-      'isTestingSecurityProfile'
+      'isTestingSecurityProfile',
+      'currentSelectedProjectInternalTableEnabled'
     ]),
     canAddProject () {
       // 模型编辑页面的时候，新增项目的按钮不可点
@@ -332,7 +333,11 @@ export default class LayoutLeftRightTop extends Vue {
   showMenuByRole (menuName) {
     switch (menuName) {
       case 'snapshot':
-        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.project.snapshot_manual_management_enabled
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.project.snapshot_manual_management_enabled && !this.currentSelectedProjectInternalTableEnabled
+      case 'internalTable':
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.currentSelectedProjectInternalTableEnabled
+      case 'streamingjob':
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.system.streamingEnabled === 'true'
       case 'ddl':
         return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.system.ddlEnabled === 'true'
       case 'logicalView':

@@ -30,7 +30,7 @@ public class SharedFileProgressReporter implements ProgressReporter {
 
     public void start() {
         // do nothing
-    };
+    }
 
     public void destroy() {
         // do nothing

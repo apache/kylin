@@ -23,11 +23,10 @@ import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DimensionEncodingFactory {
 
@@ -47,7 +46,8 @@ public abstract class DimensionEncodingFactory {
     }
 
     /**
-     * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs.
+     * Create a DimensionEncoding instance, with inputs corresponding
+     * to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs.
      */
     public static DimensionEncoding create(String encodingName, String[] args, int version) {
         if (factoryMap == null)
@@ -86,10 +86,10 @@ public abstract class DimensionEncodingFactory {
 
         // note dictionary is a special case
         return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) //
-            || Iterables.any(factoryMap.keySet(), input -> input != null && input.getFirst().equals(encodingName));
+                || Iterables.any(factoryMap.keySet(), input -> input != null && input.getFirst().equals(encodingName));
     }
 
-    private synchronized static void initFactoryMap() {
+    private static synchronized void initFactoryMap() {
         if (factoryMap == null) {
             Map<Pair<String, Integer>, DimensionEncodingFactory> map = Maps.newConcurrentMap();
 
@@ -141,10 +141,11 @@ public abstract class DimensionEncodingFactory {
     /**
      * Return the supported encoding name, corresponds to RowKeyColDesc.encodingName
      */
-    abstract public String getSupportedEncodingName();
+    public abstract String getSupportedEncodingName();
 
     /**
-     * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs
+     * Create a DimensionEncoding instance, with inputs corresponding
+     * to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs
      */
-    abstract public DimensionEncoding createDimensionEncoding(String encodingName, String[] args);
+    public abstract DimensionEncoding createDimensionEncoding(String encodingName, String[] args);
 }

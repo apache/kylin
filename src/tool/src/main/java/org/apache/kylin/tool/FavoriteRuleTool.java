@@ -20,14 +20,13 @@ package org.apache.kylin.tool;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -75,8 +74,8 @@ public class FavoriteRuleTool extends CancelableTask {
         Path path = new Path(dir + "/" + FAVORITE_RULE_DIR + "/" + project + ZIP_SUFFIX);
         FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
         List<FavoriteRule> rules = Lists.newArrayList();
-        try(ZipInputStream zis = new ZipInputStream(fs.open(path));
-            BufferedReader br = new BufferedReader(new InputStreamReader(zis))) {
+        try (ZipInputStream zis = new ZipInputStream(fs.open(path));
+                BufferedReader br = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8))) {
             while (zis.getNextEntry() != null) {
                 String value = br.readLine();
                 FavoriteRule rule = JsonUtil.readValue(value, FavoriteRule.class);
@@ -107,7 +106,7 @@ public class FavoriteRuleTool extends CancelableTask {
     public void extractProject(File dir, String project) throws IOException {
         File projectFile = new File(dir, project);
         FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
-        try (OutputStream os = new FileOutputStream(projectFile);
+        try (OutputStream os = Files.newOutputStream(projectFile.toPath());
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os, Charset.defaultCharset()))) {
             for (FavoriteRule line : manager.getAll()) {
                 try {
@@ -129,8 +128,8 @@ public class FavoriteRuleTool extends CancelableTask {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         String filePathStr = StringUtils.appendIfMissing(dir, "/") + project + ZIP_SUFFIX;
         try (FSDataOutputStream fos = fs.create(new Path(filePathStr));
-                        ZipOutputStream zos = new ZipOutputStream(fos);
-                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(zos, Charset.defaultCharset()))) {
+                ZipOutputStream zos = new ZipOutputStream(fos);
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(zos, Charset.defaultCharset()))) {
             for (FavoriteRule line : manager.getAll()) {
                 zos.putNextEntry(new ZipEntry(line.getId() + ".json"));
                 bw.write(JsonUtil.writeValueAsString(line));
@@ -144,9 +143,12 @@ public class FavoriteRuleTool extends CancelableTask {
         FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
         List<FavoriteRule> ruleList = manager.getAll();
         for (FavoriteRule rule : ruleList) {
-            try (FileWriter fw = new FileWriter(extractDir + rule.getId() + ".json")) {
+            String fileName = extractDir + rule.getId() + ".json";
+            try (BufferedWriter bf = new BufferedWriter(new OutputStreamWriter(
+                    Files.newOutputStream(new File(fileName).toPath()), StandardCharsets.UTF_8))) {
                 String value = JsonUtil.writeValueAsString(rule);
-                fw.write(value);
+                bf.write(value);
+                bf.flush();
             }
         }
     }
@@ -176,6 +178,7 @@ public class FavoriteRuleTool extends CancelableTask {
             return;
         }
         File[] projectDirs = restoreDir.listFiles();
+        assert projectDirs != null;
         for (File projectDir : projectDirs) {
             String project = projectDir.getName();
             restoreProjectFromLocal(dir, project, afterTruncate);
@@ -191,8 +194,10 @@ public class FavoriteRuleTool extends CancelableTask {
         File[] jsonFiles = restoreProjectDir.listFiles();
         FavoriteRuleManager manager = FavoriteRuleManager.getInstance(project);
         List<FavoriteRule> rules = Lists.newArrayList();
+        assert jsonFiles != null;
         for (File jsonFile : jsonFiles) {
-            try (BufferedReader br = new BufferedReader(new FileReader(jsonFile))) {
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(Files.newInputStream(jsonFile.toPath()), StandardCharsets.UTF_8))) {
                 String value = br.readLine();
                 FavoriteRule rule = JsonUtil.readValue(value, FavoriteRule.class);
                 rules.add(rule);

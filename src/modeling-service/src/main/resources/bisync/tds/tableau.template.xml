@@ -16,7 +16,7 @@
   ~ limitations under the License.
   -->
 
-<datasource formatted-name='federated.0e6gjbn18cj0a41an9pi309itkyi' inline='true' source-platform='win' version='10.0' xmlns:user='http://www.tableausoftware.com/xml/user'>
+<datasource formatted-name='federated.0e6gjbn18cj0a41an9pi309itkyi' inline='true' source-platform='win' version='10.0'>
     <connection class='federated'>
         <named-connections>
             <named-connection caption='' name='genericodbc.11du78x0szfyb51b703es1ocv315'>

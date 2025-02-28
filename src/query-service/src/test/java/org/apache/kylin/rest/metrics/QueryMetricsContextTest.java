@@ -18,17 +18,19 @@
 
 package org.apache.kylin.rest.metrics;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -40,7 +42,7 @@ import org.apache.kylin.metadata.query.QueryMetricsContext;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.exception.UserStopQueryException;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.junit.After;
@@ -50,10 +52,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 
@@ -98,7 +96,7 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
         cleanupTestMetadata();
         QueryContext.reset();
         QueryMetricsContext.reset();
-        OLAPContext.clearThreadLocalContexts();
+        ContextUtil.clearThreadLocalContexts();
     }
 
     @Test
@@ -305,12 +303,11 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
         queryContext.getMetrics().setCorrectedSql(massageSql(queryContext));
         queryContext.getQueryTagInfo().setPushdown(false);
 
-        QueryContext.NativeQueryRealization aggIndex = new QueryContext.NativeQueryRealization("mocked_model_id",
-                "mocked_model", 1L, QueryMetricsContext.AGG_INDEX, false, false, false, false, Lists.newArrayList());
-        QueryContext.NativeQueryRealization tableIndex = new QueryContext.NativeQueryRealization("mocked_model_id",
-                "mocked_model", IndexEntity.TABLE_INDEX_START_ID + 2, QueryMetricsContext.TABLE_INDEX, false, false,
-                false, false, Lists.newArrayList());
-        queryContext.setNativeQueryRealizationList(Lists.newArrayList(aggIndex, tableIndex));
+        NativeQueryRealization aggIndex = new NativeQueryRealization("mocked_model_id", "mocked_model", 1L,
+                QueryMetricsContext.AGG_INDEX, false, false, false);
+        NativeQueryRealization tableIndex = new NativeQueryRealization("mocked_model_id", "mocked_model",
+                IndexEntity.TABLE_INDEX_START_ID + 2, QueryMetricsContext.TABLE_INDEX, false, false, false);
+        queryContext.setQueryRealizations(Lists.newArrayList(aggIndex, tableIndex));
 
         final QueryMetricsContext metricsContext = QueryMetricsContext.collect(queryContext);
 
@@ -413,8 +410,9 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
         ccDesc.setTableAlias("TEST_KYLIN_FACT");
         ccDesc.setTableIdentity("DEFAULT.TEST_KYLIN_FACT");
         ccDesc.setColumnName("DEAL_AMOUNT");
-        ccDesc.setDatatype("decimal(30,4)");
+        ccDesc.setDatatype("DECIMAL(30,4)");
         ccDesc.setExpression("TEST_KYLIN_FACT.PRICE * TEST_KYLIN_FACT.ITEM_COUNT");
+        ccDesc.setInnerExpression("`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`");
 
         val basicModel = NDataModelManager.getInstance(getTestConfig(), "default")
                 .getDataModelDescByAlias("nmodel_basic");
@@ -463,22 +461,6 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testUpdateSecondStorageStatus() {
-
-        final QueryContext queryContext = Mockito.mock(QueryContext.class);
-        Mockito.when(queryContext.getSecondStorageUsageMap()).thenReturn(Collections.emptyMap());
-        List<QueryMetrics.RealizationMetrics> realizationMetrics = new ArrayList<>();
-        val metric = new QueryMetrics.RealizationMetrics();
-        realizationMetrics.add(metric);
-        metric.setLayoutId("200001");
-        QueryMetricsContext.updateSecondStorageStatus(queryContext, realizationMetrics);
-        Assert.assertFalse(metric.isSecondStorage());
-        metric.setLayoutId(null);
-        QueryMetricsContext.updateSecondStorageStatus(queryContext, realizationMetrics);
-        Assert.assertFalse(metric.isSecondStorage());
-    }
-
-    @Test
     public void testCollectWhenLayoutIsNull() {
 
         String sql = "select * from test_kylin_fact";
@@ -496,9 +478,9 @@ public class QueryMetricsContextTest extends NLocalFileMetadataTestCase {
         queryContext.setPushdownEngine("HIVE");
         queryContext.getQueryTagInfo().setHitExceptionCache(true);
 
-        QueryContext.NativeQueryRealization aggIndex = new QueryContext.NativeQueryRealization("mocked_model_id",
-                "mocked_model", null, null, false, false, false, false, Lists.newArrayList());
-        queryContext.setNativeQueryRealizationList(Lists.newArrayList(aggIndex));
+        NativeQueryRealization aggIndex = new NativeQueryRealization("mocked_model_id", "mocked_model", -1, null, false,
+                false, false);
+        queryContext.setQueryRealizations(Lists.newArrayList(aggIndex));
 
         final QueryMetricsContext metricsContext = QueryMetricsContext.collect(queryContext);
         Assert.assertEquals(startTime, metricsContext.getQueryTime());

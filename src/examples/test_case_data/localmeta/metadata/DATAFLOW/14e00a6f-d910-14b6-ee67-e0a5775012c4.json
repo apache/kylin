@@ -1,0 +1,13 @@
+{
+  "uuid" : "14e00a6f-d910-14b6-ee67-e0a5775012c4",
+  "last_modified" : 0,
+  "create_time" : 1631934810439,
+  "version" : "4.0.0.0",
+  "status" : "OFFLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "streaming_test",
+  "segment_uuids" : [ ]
+}

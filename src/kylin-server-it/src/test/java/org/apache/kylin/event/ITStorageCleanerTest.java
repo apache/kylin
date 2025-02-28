@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -45,8 +46,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -80,8 +79,8 @@ public class ITStorageCleanerTest extends NLocalWithSparkSessionTest {
 
     @After
     public void tearDown() throws Exception {
-        this.cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        this.cleanupTestMetadata();
     }
 
     @Test

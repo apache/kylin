@@ -26,10 +26,9 @@ import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +49,7 @@ public class KylinTableCCCleanupCLI extends ExecutableApplication {
 
     public static void main(String[] args) {
         int exit = 0;
-        MaintainModeTool maintainModeTool = new MaintainModeTool("cleanup table cc");
-        maintainModeTool.init();
         try {
-            maintainModeTool.markEpochs();
-            if (EpochManager.getInstance().isMaintenanceMode()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
-            }
             new KylinTableCCCleanupCLI().execute(args);
         } catch (Throwable e) {
             exit = 1;

@@ -28,21 +28,21 @@ import java.util.Locale;
 
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.common.util.DBUtils;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 
 /**
  * Hive Query Result Enumerator
  */
 public class HiveEnumerator implements Enumerator<Object[]> {
 
-    private final OLAPContext olapContext;
+    private final OlapContext olapContext;
     private final Object[] current;
     private ResultSet rs;
     private Connection conn;
 
-    public HiveEnumerator(OLAPContext olapContext) {
+    public HiveEnumerator(OlapContext olapContext) {
         this.olapContext = olapContext;
-        this.current = new Object[olapContext.returnTupleInfo.size()];
+        this.current = new Object[olapContext.getReturnTupleInfo().size()];
     }
 
     @Override
@@ -59,10 +59,10 @@ public class HiveEnumerator implements Enumerator<Object[]> {
     }
 
     private ResultSet executeQuery() {
-        String url = olapContext.olapSchema.getStarSchemaUrl();
-        String user = olapContext.olapSchema.getStarSchemaUser();
-        String pwd = olapContext.olapSchema.getStarSchemaPassword();
-        String sql = olapContext.sql;
+        String url = olapContext.getOlapSchema().getStarSchemaUrl();
+        String user = olapContext.getOlapSchema().getStarSchemaUser();
+        String pwd = olapContext.getOlapSchema().getStarSchemaPassword();
+        String sql = olapContext.getSql();
         Statement stmt = null;
         try {
             conn = DriverManager.getConnection(url, user, pwd);
@@ -80,7 +80,7 @@ public class HiveEnumerator implements Enumerator<Object[]> {
         try {
             boolean hasNext = rs.next();
             if (hasNext) {
-                List<String> allFields = olapContext.returnTupleInfo.getAllFields();
+                List<String> allFields = olapContext.getReturnTupleInfo().getAllFields();
                 for (int i = 0; i < allFields.size(); i++) {
                     Object value = rs.getObject(allFields.get(i).toLowerCase(Locale.ROOT));
                     current[i] = value;

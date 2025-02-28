@@ -9,7 +9,7 @@
       </i>
     </div>
     <div class="block-body" :class="{'no-footer': !isEditing}">
-      <slot></slot>
+      <slot :handleSubmit="handleSubmit"></slot>
     </div>
     <div class="block-foot ksd-btn-group-minwidth" v-if="isEditing">
       <el-button size="small" v-if="isReset" :loading="isResetLoading" @click="handleCancel">{{cancelText}}</el-button><el-button

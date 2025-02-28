@@ -27,9 +27,7 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ViewRequest;
 import org.apache.kylin.rest.service.SparkDDLService;
 import org.apache.kylin.rest.util.SpringContext;
-
 import org.apache.spark.sql.LogicalViewLoader;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,66 +53,65 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(JUnit4.class)
-@PrepareForTest({UserGroupInformation.class, LogicalViewLoader.class, SpringContext.class })
-@PowerMockIgnore({ "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
-        "com.sun.security.*" })
+@PrepareForTest({ UserGroupInformation.class, LogicalViewLoader.class, SpringContext.class })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class SparkDDLControllerTest extends NLocalFileMetadataTestCase {
-  private MockMvc mockMvc;
+    private MockMvc mockMvc;
 
-  @Mock
-  private SparkDDLService sparkDDLService;
+    @Mock
+    private SparkDDLService sparkDDLService;
 
-  @InjectMocks
-  private SparkDDLController ddlController = Mockito.spy(new SparkDDLController());
+    @InjectMocks
+    private SparkDDLController ddlController = Mockito.spy(new SparkDDLController());
 
-  private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+    private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
 
-  @Before
-  public void setup() throws Exception {
-    PowerMockito.mockStatic(UserGroupInformation.class);
-    UserGroupInformation userGroupInformation = Mockito.mock(UserGroupInformation.class);
-    PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(userGroupInformation);
-    PowerMockito.mockStatic(LogicalViewLoader.class);
-    MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.standaloneSetup(ddlController)
-        .defaultRequest(MockMvcRequestBuilders.get("/")).build();
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-    overwriteSystemProp("HADOOP_USER_NAME", "root");
-    createTestMetadata();
-  }
+    @Before
+    public void setup() throws Exception {
+        PowerMockito.mockStatic(UserGroupInformation.class);
+        UserGroupInformation userGroupInformation = Mockito.mock(UserGroupInformation.class);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(userGroupInformation);
+        PowerMockito.mockStatic(LogicalViewLoader.class);
+        MockitoAnnotations.initMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(ddlController).defaultRequest(MockMvcRequestBuilders.get("/"))
+                .build();
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        overwriteSystemProp("HADOOP_USER_NAME", "root");
+        createTestMetadata();
+    }
 
-  @After
-  public void tearDown() {
-    cleanupTestMetadata();
-  }
+    @After
+    public void tearDown() {
+        cleanupTestMetadata();
+    }
 
-  @Test
-  public void testDDL() throws Exception {
-    ViewRequest request = new ViewRequest();
-    request.setDdlProject("ssb");
+    @Test
+    public void testDDL() throws Exception {
+        ViewRequest request = new ViewRequest();
+        request.setDdlProject("ssb");
 
-    mockMvc.perform(MockMvcRequestBuilders.post("/api/spark_source/ddl")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(JsonUtil.writeValueAsString(request))
-        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-        .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/spark_source/ddl").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-    mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/sync")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-        .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/sync").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-    mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/view_list?project=ssb")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-        .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
-  }
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/view_list?project=ssb")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+    }
 
-  @Test
-  public void testDescription() throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/description?project=ssb&page_type=hive")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-        .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
-  }
+    @Test
+    public void testDescription() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/spark_source/ddl/description?project=ssb&page_type=hive")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+    }
 }

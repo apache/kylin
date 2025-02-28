@@ -21,12 +21,9 @@ package org.apache.kylin.common.persistence.transaction;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -34,12 +31,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.persistence.AuditLog;
+import org.apache.kylin.common.persistence.RawResourceTool;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.junit.JdbcInfo;
 import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -47,7 +45,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.InvalidTimeoutException;
 import org.springframework.transaction.TransactionUsageException;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,48 +52,26 @@ import lombok.extern.slf4j.Slf4j;
 @MetadataInfo(onlyProps = true)
 @JdbcMetadataInfo
 @SuppressWarnings("unchecked")
+@OverwriteProp(key = "kylin.metadata.url", value = "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=")
 public class AuditReplayWorkerTest {
-
-    private static final String LOCAL_INSTANCE = "127.0.0.1";
-    private final Charset charset = Charset.defaultCharset();
 
     @Test
     void testStartSchedule() throws IOException {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
+        workerStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
 
         val auditLogStore = workerStore.getAuditLogStore();
         val replayWorker = (AuditLogReplayWorker) ReflectionTestUtils.getField(auditLogStore, "replayWorker");
         Assertions.assertNotNull(replayWorker);
+
+        // Roll back offset to 0, because there is no audit log, the current id is still 2 and will not be updated to 0
         replayWorker.startSchedule(2, true);
         Assertions.assertEquals(2, auditLogStore.getLogOffset());
 
         replayWorker.startSchedule(3, false);
         Assertions.assertEquals(3, auditLogStore.getLogOffset());
-        auditLogStore.close();
-    }
-
-    @Test
-    void testRestoreSmallId(JdbcInfo info) throws IOException {
-        val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
-
-        val auditLogStore = workerStore.getAuditLogStore();
-        val jdbcTemplate = info.getJdbcTemplate();
-
-        val url = getTestConfig().getMetadataUrl();
-        String unitId = RandomUtil.randomUUIDStr();
-        val auditLogTableName = url.getIdentifier() + "_audit_log";
-        String sql = "insert into %s (id, meta_key,meta_content,meta_ts,meta_mvcc,unit_id,operator,instance) values (?, ?, ?, ?, ?, ?, ?, ?)";
-        jdbcTemplate.batchUpdate(String.format(Locale.ROOT, sql, auditLogTableName),
-                Arrays.asList(
-                        new Object[] { 900, "/_global/p1/abc", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { 4, "/_global/p1/abc2", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE }));
-
-        auditLogStore.restore(3);
-        Assertions.assertEquals(900, auditLogStore.getLogOffset());
+        replayWorker.close(true);
         auditLogStore.close();
     }
 
@@ -112,6 +87,7 @@ public class AuditReplayWorkerTest {
 
         replayWorker.updateOffset(99);
         Assertions.assertEquals(101, auditLogStore.getLogOffset());
+        replayWorker.close(true);
         auditLogStore.close();
     }
 
@@ -132,6 +108,7 @@ public class AuditReplayWorkerTest {
         val hasCatchFalse = (Boolean) ReflectionTestUtils.invokeMethod(replayWorker, "hasCatch", 102L);
         Assertions.assertNotNull(hasCatchFalse);
         Assertions.assertFalse(hasCatchFalse);
+        replayWorker.close(true);
         auditLogStore.close();
     }
 
@@ -149,6 +126,7 @@ public class AuditReplayWorkerTest {
         isStopped.set(true);
         ReflectionTestUtils.invokeMethod(replayWorker, "catchupInternal", 1);
         Assertions.assertEquals(101, auditLogStore.getLogOffset());
+        replayWorker.close(true);
         auditLogStore.close();
     }
 
@@ -172,6 +150,7 @@ public class AuditReplayWorkerTest {
         } catch (TransactionUsageException e) {
             Assertions.assertEquals("xxxx", e.getMessage());
         }
+        replayWorker.close(true);
         auditLogStore.close();
     }
 
@@ -304,8 +283,10 @@ public class AuditReplayWorkerTest {
         Assertions.assertNotNull(delayIdQueue);
 
         ReflectionTestUtils.invokeMethod(replayWorker, "recordStepAbsentIdList", stepWin,
-                Collections.singletonList(new AuditLog(101L, "adaasd",
-                        ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)), 1L, 1L, null, null, null)));
+                Collections.singletonList(
+                        new AuditLog(101L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                                1L, 1L, null, null, null, null,
+                                null, false)));
         Assertions.assertTrue(delayIdQueue.isEmpty());
         replayWorker.close(true);
     }
@@ -321,12 +302,15 @@ public class AuditReplayWorkerTest {
         Assertions.assertNotNull(timeout);
 
         val auditLogs = Arrays.asList(
-                new AuditLog(101L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis() - timeout * 2, 1L, null, null, null),
-                new AuditLog(102L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis() - timeout * 2, 1L, null, null, null),
-                new AuditLog(103L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis() - timeout * 2, 1L, null, null, null));
+                new AuditLog(101L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis() - timeout * 2, 1L, null, null,
+                        null, null, null, false),
+                new AuditLog(102L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis() - timeout * 2, 1L, null, null,
+                        null, null, null, false),
+                new AuditLog(103L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis() - timeout * 2, 1L, null, null,
+                        null, null, null, false));
 
         ReflectionTestUtils.invokeMethod(replayWorker, "recordStepAbsentIdList", stepWin, auditLogs);
 
@@ -345,12 +329,15 @@ public class AuditReplayWorkerTest {
         Assertions.assertNotNull(timeout);
 
         val auditLogs = Arrays.asList(
-                new AuditLog(101L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis(), 1L, null, null, null),
-                new AuditLog(102L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis(), 1L, null, null, null),
-                new AuditLog(103L, "adaasd", ByteSource.wrap("test content".getBytes(StandardCharsets.UTF_8)),
-                        System.currentTimeMillis(), 1L, null, null, null));
+                new AuditLog(101L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis(), 1L, null, null, null, null,
+                        null, false),
+                new AuditLog(102L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis(), 1L, null, null, null, null,
+                        null, false),
+                new AuditLog(103L, "adaasd", RawResourceTool.createByteSource("adaasd"),
+                        System.currentTimeMillis(), 1L, null, null, null, null,
+                        null, false));
 
         ReflectionTestUtils.invokeMethod(replayWorker, "recordStepAbsentIdList", stepWin, auditLogs);
 
@@ -383,7 +370,8 @@ public class AuditReplayWorkerTest {
 
     private AuditLogReplayWorker getAuditLogReplayWorker() {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
+        workerStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
         val auditLogStore = workerStore.getAuditLogStore();
         val replayWorker = (AuditLogReplayWorker) ReflectionTestUtils.getField(auditLogStore, "replayWorker");
         Assertions.assertNotNull(replayWorker);

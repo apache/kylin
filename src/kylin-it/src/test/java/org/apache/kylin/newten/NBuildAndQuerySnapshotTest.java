@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
@@ -69,8 +70,8 @@ public class NBuildAndQuerySnapshotTest extends NLocalWithSparkSessionTest {
 
     @After
     public void cleanup() throws Exception {
-        super.cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        super.cleanupTestMetadata();
     }
 
     @Test
@@ -100,15 +101,20 @@ public class NBuildAndQuerySnapshotTest extends NLocalWithSparkSessionTest {
         Set<Long> tobeRemovedLayouts = cube.getAllLayouts().stream().filter(layout -> layout.getId() != 10001L)
                 .map(LayoutEntity::getId).collect(Collectors.toSet());
 
-        ipMgr.updateIndexPlan(dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getIndexPlan().getUuid(),
-                copyForWrite -> {
-                    copyForWrite.removeLayouts(tobeRemovedLayouts, true, true);
-                });
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateIndexPlan(
+                    dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getIndexPlan().getUuid(),
+                    copyForWrite -> copyForWrite.removeLayouts(tobeRemovedLayouts, true, true));
+            return null;
+        }, getProject());
 
         NDataflow df = dsMgr.getDataflow(dfName);
         NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dsMgr.updateDataflow(update);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
     }
 
     private void buildCube(String dfName, long start, long end) throws Exception {
@@ -123,12 +129,16 @@ public class NBuildAndQuerySnapshotTest extends NLocalWithSparkSessionTest {
         String tableName = "EDW.TEST_SELLER_TYPE_DIM";
         String partitionCol = "SELLER_TYPE_CD";
         Set<String> partitions = ImmutableSet.of("5", "16");
-        NTableMetadataManager tableManager = NTableMetadataManager.getInstance(config, getProject());
-        TableDesc table = tableManager.getTableDesc(tableName);
-        table.setSelectedSnapshotPartitionCol(partitionCol);
-        table.setPartitionColumn(partitionCol);
-        tableManager.updateTableDesc(table);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NTableMetadataManager tableManager = NTableMetadataManager.getInstance(config, getProject());
+            TableDesc table = tableManager.getTableDesc(tableName);
+            table.setSelectedSnapshotPartitionCol(partitionCol);
+            table.setPartitionColumn(partitionCol);
+            tableManager.updateTableDesc(table);
+            return null;
+        }, getProject());
 
+        NTableMetadataManager tableManager = NTableMetadataManager.getInstance(config, getProject());
         ExecutableManager execMgr = ExecutableManager.getInstance(config, getProject());
         NSparkSnapshotJob job = NSparkSnapshotJob.create(tableManager.getTableDesc(tableName), "ADMIN",
                 JobTypeEnum.SNAPSHOT_BUILD, RandomUtil.randomUUIDStr(), partitionCol, "false", null);

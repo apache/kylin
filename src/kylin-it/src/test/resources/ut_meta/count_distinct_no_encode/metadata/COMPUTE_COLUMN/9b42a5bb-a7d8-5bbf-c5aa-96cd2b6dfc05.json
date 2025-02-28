@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_COUNT_DISTINCT",
+  "tableAlias" : "TEST_COUNT_DISTINCT",
+  "columnName" : "BIGINT_ID",
+  "expression" : "cast (test_count_distinct.string_id as bigint)",
+  "innerExpression" : "cast (test_count_distinct.string_id as bigint)",
+  "datatype" : "bigint",
+  "comment" : null,
+  "uuid" : "9b42a5bb-a7d8-5bbf-c5aa-96cd2b6dfc05",
+  "project" : "count_distinct_no_encode"
+}

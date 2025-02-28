@@ -1,5 +1,5 @@
 {
-  "@class" : "io.kyligence.kap.event.model.RefreshSegmentEvent",
+  "@class" : "org.apache.kylin.event.model.RefreshSegmentEvent",
   "uuid" : "af0ad5e6-d312-41a4-9638-ec6f548821da",
   "last_modified" : 0,
   "create_time" : 1585806635613,

@@ -94,6 +94,8 @@ build/lib
 build/kybot
 build/tpch-benchmark
 build/spark
+build/gluten
+build/libasyncProfiler*
 
 *.tgz
 *.tar.gz
@@ -130,6 +132,7 @@ tmp_war
 #exclusion
 !pathfinder*.jar
 VERSION
+SPARK_VERSION
 
 #hadoop files
 *.crc

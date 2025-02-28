@@ -54,8 +54,8 @@ public class PartitionRowIteratorTest extends StreamingTestCase {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private final static String DEFAULT_CLASSNAME = "org.apache.kylin.parser.TimedJsonStreamParser";
-    private final static AbstractDataParser<ByteBuffer> dataParser;
+    private static final String DEFAULT_CLASSNAME = "org.apache.kylin.parser.TimedJsonStreamParser";
+    private static final AbstractDataParser<ByteBuffer> dataParser;
 
     static {
         try {

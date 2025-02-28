@@ -18,11 +18,29 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.persistence.MetadataType.ACL;
+import static org.apache.kylin.common.persistence.MetadataType.COMPUTE_COLUMN;
+import static org.apache.kylin.common.persistence.MetadataType.DATAFLOW;
+import static org.apache.kylin.common.persistence.MetadataType.FUSION_MODEL;
+import static org.apache.kylin.common.persistence.MetadataType.INDEX_PLAN;
+import static org.apache.kylin.common.persistence.MetadataType.LAYOUT;
+import static org.apache.kylin.common.persistence.MetadataType.MODEL;
+import static org.apache.kylin.common.persistence.MetadataType.NON_GLOBAL_METADATA_TYPE;
+import static org.apache.kylin.common.persistence.MetadataType.OBJECT_ACL;
+import static org.apache.kylin.common.persistence.MetadataType.PROJECT;
+import static org.apache.kylin.common.persistence.MetadataType.RESOURCE_GROUP;
+import static org.apache.kylin.common.persistence.MetadataType.SEGMENT;
+import static org.apache.kylin.common.persistence.MetadataType.SQL_BLACKLIST;
+import static org.apache.kylin.common.persistence.MetadataType.TABLE_EXD;
+import static org.apache.kylin.common.persistence.MetadataType.TABLE_INFO;
+import static org.apache.kylin.common.persistence.MetadataType.USER_GLOBAL_ACL;
+import static org.apache.kylin.common.persistence.MetadataType.USER_GROUP;
 import static org.apache.kylin.query.util.AsyncQueryUtil.ASYNC_QUERY_JOB_ID_PRE;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -33,18 +51,21 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.extension.KylinInfoExtension;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.job.DefaultSparkBuildJobHandler;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.util.DumpInfo;
@@ -61,16 +82,9 @@ import lombok.val;
 public class AsyncQueryJob extends NSparkExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncQueryJob.class);
-    private static final String GLOBAL = "/_global";
-    private static final String DATAFLOW = "/dataflow";
-    private static final String DATAFLOW_DETAIL = "/dataflow_details";
-    private static final String INDEX_PLAN = "/index_plan";
-    private static final String MODEL = "/model_desc";
-    private static final String TABLE = "/table";
-    private static final String TABLE_EXD = "/table_exd";
-    private static final String ACL = "/acl";
-    private static final String[] META_DUMP_LIST = new String[] { DATAFLOW, DATAFLOW_DETAIL, INDEX_PLAN, MODEL, TABLE,
-            TABLE_EXD, ACL };
+    private static final MetadataType[] META_DUMP_LIST = new MetadataType[] { DATAFLOW, LAYOUT, INDEX_PLAN, MODEL,
+            TABLE_INFO, TABLE_EXD, USER_GLOBAL_ACL, ACL, OBJECT_ACL, PROJECT, COMPUTE_COLUMN, SEGMENT, USER_GROUP,
+            SQL_BLACKLIST, FUSION_MODEL, RESOURCE_GROUP };
 
     public AsyncQueryJob() {
         super();
@@ -124,7 +138,7 @@ public class AsyncQueryJob extends NSparkExecutable {
         if (UserGroupInformation.isSecurityEnabled()) {
             overrides.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
         }
-        return overrides;
+        return ExecutableUtil.removeGultenParams(overrides);
     }
 
     @Override
@@ -134,7 +148,7 @@ public class AsyncQueryJob extends NSparkExecutable {
 
     @Override
     protected String getExtJar() {
-        return getConfig().getKylinExtJarsPath();
+        return getConfig().getKylinExtJarsPath(getConfig().uniqueAsyncQueryUseGlutenEnabled());
     }
 
     @Override
@@ -185,10 +199,18 @@ public class AsyncQueryJob extends NSparkExecutable {
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(config);
-        Set<String> metadataDumpSet = new HashSet<>(resourceStore.listResourcesRecursively(GLOBAL));
-        for (String mata : META_DUMP_LIST) {
-            if (resourceStore.listResourcesRecursively("/" + getProject() + mata) != null) {
-                metadataDumpSet.addAll(resourceStore.listResourcesRecursively("/" + getProject() + mata));
+        Set<String> metadataDumpSet = new HashSet<>();
+        for (MetadataType mata : META_DUMP_LIST) {
+            NavigableSet<String> metadata;
+            if (NON_GLOBAL_METADATA_TYPE.contains(mata)) {
+                metadata = resourceStore.listResourcesRecursively(mata.name(),
+                        RawResourceFilter.equalFilter("project", getProject()));
+            } else {
+                metadata = resourceStore.listResourcesRecursively(mata.name());
+            }
+
+            if (metadata != null) {
+                metadataDumpSet.addAll(metadata);
             }
         }
         return metadataDumpSet;
@@ -207,7 +229,14 @@ public class AsyncQueryJob extends NSparkExecutable {
         super.modifyDump(props);
         if (!KylinInfoExtension.getFactory().checkKylinInfo()) {
             props.setProperty("kylin.streaming.enabled", KylinConfig.FALSE);
-            props.remove("kylin.second-storage.class");
         }
+        props.put("kylin.internal-table-enabled", KylinConfig.FALSE);
+        props.remove("kylin.storage.columnar.spark-conf.spark.sql.catalog.INTERNAL_CATALOG");
+    }
+
+    @Override
+    public boolean needRemoveGlutenParams(KylinConfig config) {
+        // need to remove gulten params, return false
+        return config.buildUseGlutenEnabled();
     }
 }

@@ -20,7 +20,7 @@ package org.apache.kylin.query.engine;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.calcite.plan.RelOptRule;
@@ -42,13 +42,13 @@ public class SumCastDoublePlannerTest extends CalciteRuleTestBase {
     static final DiffRepository diff = DiffRepository.lookup(SumCastDoublePlannerTest.class);
 
     @Before
-    public void setup() {
+    public void setUp() {
         createTestMetadata();
         KylinConfig.getInstanceFromEnv().setProperty("kylin.query.optimized-sum-cast-double-rule-enabled", "true");
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
@@ -59,7 +59,7 @@ public class SumCastDoublePlannerTest extends CalciteRuleTestBase {
 
     protected void checkSQL(String project, String sql, String prefix, StringOutput StrOut,
             Collection<RelOptRule>... ruleSets) {
-        Collection<RelOptRule> rules = new HashSet<>();
+        Collection<RelOptRule> rules = new LinkedHashSet<>();
         for (Collection<RelOptRule> ruleSet : ruleSets) {
             rules.addAll(ruleSet);
         }

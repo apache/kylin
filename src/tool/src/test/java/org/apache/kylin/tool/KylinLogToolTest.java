@@ -45,6 +45,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
 
@@ -571,7 +572,7 @@ public class KylinLogToolTest extends NLocalFileMetadataTestCase {
         log = "traceId: 4b8324bb-6467-d0b6-8087-9c71c28cc443 2023-05-31T13:51:57,945 INFO  [test2] [http-nio-17971-exec-5] handler.AbstractJobHandler : Job JobParam(jobId=d0f45b72-db2f-407b-9d6f-7cfe6f6624e8, "
                 + "targetSegments=[edbd2366-f8b3-0f29-39c1-dcf03895a295], targetLayouts=[], owner=ADMIN, model=4b0a4399-0903-18ec-5d7f-52eb6c96df31, project=test2, jobTypeEnum=IN"
                 + "C_BUILD, ignoredSnapshotTables=null, targetPartitions=[], targetBuckets=[], priority=3, yarnQueue=null, tag=null, condition={}, "
-                + "processLayouts=[LayoutEntity{id=160001}, LayoutEntity{id=170001}], deleteLayouts=null, secondStorageDeleteLayoutIds=null) creates job NSparkCubingJob{id=d0f45b72-db2f-407b-9d6f-7cfe6f6624e8, name=INC_BUILD, state=READY}";
+                + "processLayouts=[LayoutEntity{id=160001}, LayoutEntity{id=170001}], deleteLayouts=null) creates job NSparkCubingJob{id=d0f45b72-db2f-407b-9d6f-7cfe6f6624e8, name=INC_BUILD, state=READY}";
         matcher = pattern.matcher(log);
         Assert.assertTrue(matcher.find());
         Assert.assertEquals("2023-05-31T13:51:57", KylinLogTool.getJobTimeString(matcher));
@@ -684,5 +685,25 @@ public class KylinLogToolTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(new File(logDir, "instance_3").exists());
         Assert.assertTrue(new File(logDir, "instance_4").exists());
         Assert.assertEquals(2, new File(logDir, "instance_4").listFiles().length);
+    }
+    
+    @Test
+    public void testGetFirstLogTime() throws IOException {
+        File mainDir = new File(temporaryFolder.getRoot(), testName.getMethodName());
+        FileUtils.forceMkdir(mainDir);
+
+        String log1 = "traceId: eba55ae6-0936-9d42-25d2-adf00a55f06d 2023-10-25T18:16:44,803 INFO  [expansion_rate] "
+                + "[Transaction-Thread-467] handler.AbstractJobHandler : Job JobParam";
+        String log2 = "2023-10-25T18:17:35,792 INFO  [JobWorker(project:expansion_rate,jobid:d9694dc4)] "
+                + "execution.AbstractExecutable : Execute in CHAIN mode.";
+        File logFile1 = new File(mainDir, "log1.log");
+        File logFile2 = new File(mainDir, "log2.log");
+        FileUtils.writeStringToFile(logFile1, log1);
+        FileUtils.writeStringToFile(logFile2, log2);
+
+        KylinLogTool.ExtractLogByRangeTool tool = (KylinLogTool.ExtractLogByRangeTool) ReflectionTestUtils
+                .getField(KylinLogTool.class, "DEFAULT_EXTRACT_LOG_BY_RANGE");
+        Assert.assertEquals("2023-10-25T18:16:44", tool.getFirstTimeByLogFile(logFile1));
+        Assert.assertEquals("2023-10-25T18:17:35", tool.getFirstTimeByLogFile(logFile2));
     }
 }

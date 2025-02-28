@@ -19,16 +19,18 @@
 package org.apache.kylin.common.exception;
 
 import static org.apache.kylin.common.exception.QueryErrorCode.REFUSE_NEW_QUERY;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-public class NewQueryRefuseException extends KylinException{
+public class NewQueryRefuseException extends KylinException {
 
     public NewQueryRefuseException(String message) {
         super(REFUSE_NEW_QUERY, message);
     }
 
     public static boolean causedByRefuse(Throwable e) {
-        return e instanceof NewQueryRefuseException || ExceptionUtils.getRootCause(e) instanceof NewQueryRefuseException;
+        return e instanceof NewQueryRefuseException
+                || ExceptionUtils.getRootCause(e) instanceof NewQueryRefuseException;
     }
 
 }

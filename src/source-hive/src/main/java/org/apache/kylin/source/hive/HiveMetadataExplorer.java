@@ -29,16 +29,15 @@ import java.util.stream.IntStream;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
     public static final Logger logger = LoggerFactory.getLogger(HiveMetadataExplorer.class);

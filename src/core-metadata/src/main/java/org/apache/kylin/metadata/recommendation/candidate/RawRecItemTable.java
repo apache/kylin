@@ -25,17 +25,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
-import org.apache.commons.lang.SerializationException;
+import org.apache.commons.lang3.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
 import org.mybatis.dynamic.sql.SqlColumn;
 import org.mybatis.dynamic.sql.SqlTable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class RawRecItemTable extends SqlTable {
 

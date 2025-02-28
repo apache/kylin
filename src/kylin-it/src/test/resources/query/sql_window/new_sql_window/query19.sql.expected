@@ -1,4 +1,0 @@
-select
-lag(price,1) OVER (order by price)  lm_active
-from test_kylin_fact
-limit 20

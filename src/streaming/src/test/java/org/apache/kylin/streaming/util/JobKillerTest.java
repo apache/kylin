@@ -20,21 +20,21 @@ package org.apache.kylin.streaming.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Logger;
 import org.apache.kylin.common.util.ShellException;
-import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
 public class JobKillerTest extends StreamingTestCase {
-    private static String PROJECT = "streaming_test";
+    private static final String PROJECT = "streaming_test";
 
     @Before
     public void setUp() throws Exception {
@@ -61,9 +61,9 @@ public class JobKillerTest extends StreamingTestCase {
             }
         });
         val clusterManager = JobKiller.createClusterManager();
-        Assert.assertTrue(clusterManager != null);
+        Assert.assertNotNull(clusterManager);
         val mock = ReflectionUtils.getField(JobKiller.class, "mock");
-        Assert.assertTrue(mock != null);
+        Assert.assertNotNull(mock);
         val isYarnEnv = (Boolean) ReflectionUtils.getField(JobKiller.class, "isYarnEnv");
         Assert.assertFalse(isYarnEnv);
         ReflectionUtils.setField(JobKiller.class, "mock", null);
@@ -72,7 +72,7 @@ public class JobKillerTest extends StreamingTestCase {
     @Test
     public void testCreateClusterManager() {
         val clusterManager = JobKiller.createClusterManager();
-        Assert.assertTrue(!(clusterManager instanceof MockClusterManager));
+        Assert.assertFalse(clusterManager instanceof MockClusterManager);
     }
 
     @Test
@@ -251,6 +251,6 @@ public class JobKillerTest extends StreamingTestCase {
         val log = new JobKiller.StringLogger();
         Assert.assertTrue(log.getContents().isEmpty());
         log.log("test");
-        Assert.assertTrue(!log.getContents().isEmpty());
+        Assert.assertFalse(log.getContents().isEmpty());
     }
 }

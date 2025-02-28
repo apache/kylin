@@ -18,25 +18,21 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.engine.spark.utils.ComputedColumnEvalUtil;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
 import org.apache.kylin.metadata.query.QueryTimesResponse;
-import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
@@ -44,7 +40,6 @@ import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.FusionModelResponse;
 import org.apache.kylin.rest.response.NDataModelLiteResponse;
 import org.apache.kylin.rest.response.NDataModelResponse;
-import org.apache.kylin.rest.response.RelatedModelResponse;
 import org.apache.kylin.rest.service.params.ModelQueryParams;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
@@ -60,8 +55,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -104,8 +97,8 @@ public class ModelServiceQueryTest extends SourceTestCase {
     }
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         overwriteSystemProp("kylin.model.multi-partition-enabled", "true");
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
@@ -163,6 +156,28 @@ public class ModelServiceQueryTest extends SourceTestCase {
         Assert.assertEquals(11, modelList.getTotalSize());
         Assert.assertEquals(8, modelList.getValue().size());
 
+        ModelQueryParams requestSortByRecCountReverse = new ModelQueryParams(null, null, true, project, "ADMIN",
+                Lists.newArrayList(), "", 0, 8, "recommendations_count", true, null,
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, false);
+        val modelListSortByRecCountReverse = modelService.getModels(requestSortByRecCountReverse);
+        Assert.assertEquals("fusion_model", modelListSortByRecCountReverse.getValue().get(0).getAlias());
+
+        ModelQueryParams requestSortByRecCount = new ModelQueryParams(null, null, true, project, "ADMIN",
+                Lists.newArrayList(), "", 0, 8, "recommendations_count", false, null,
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, false);
+        val modelListSortByRecCount = modelService.getModels(requestSortByRecCount);
+        Assert.assertEquals("fusion_model", modelListSortByRecCount.getValue().get(0).getAlias());
+
+        // test model list is empty
+        ModelQueryParams requestSortByRecCount2 = new ModelQueryParams(null, "not_exist", true, project, "ADMIN",
+                Lists.newArrayList(), "", 0, 8, "recommendations_count", true, null,
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, false);
+        val modelListSortByRecCount2 = modelService.getModels(requestSortByRecCount2);
+        Assert.assertEquals(0, modelListSortByRecCount2.getTotalSize());
+
         ModelQueryParams liteRequest = new ModelQueryParams(null, null, true, project, "ADMIN", Lists.newArrayList(),
                 "", 0, 8, "last_modify", true, null,
                 Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
@@ -219,11 +234,20 @@ public class ModelServiceQueryTest extends SourceTestCase {
         Assert.assertEquals(5, modelList5.getValue().size());
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         ModelQueryParams request6 = new ModelQueryParams(null, null, true, project, "ADMIN", Lists.newArrayList(), "",
-                1, 6, "", true, null, Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING,
-                        ModelAttributeEnum.HYBRID, ModelAttributeEnum.SECOND_STORAGE),
-                null, null, false, false);
+                1, 6, "", true, null,
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, false, false);
         val modelList6 = modelService.getModels(request6);
         Assert.assertEquals(5, modelList6.getValue().size());
+
+        // test model list and sortBy is empty when kylin.metadata.semi-automatic-mode=true
+        ModelQueryParams requestSortByEmpty = new ModelQueryParams(null, "not_exist", true, project, "ADMIN",
+                Lists.newArrayList(), "", 0, 8, null, false, null,
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, false);
+        val modelListSortByEmpty = modelService.getModels(requestSortByEmpty);
+        Assert.assertEquals(0, modelListSortByEmpty.getTotalSize());
+
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "false");
 
         // used for getModels without sortBy field
@@ -276,9 +300,8 @@ public class ModelServiceQueryTest extends SourceTestCase {
         String modelName2 = "model_streaming";
         ModelQueryParams liteRequest = new ModelQueryParams("4965c827-fbb4-4ea1-a744-3f341a3b030d", modelName2, true,
                 project, "ADMIN", Lists.newArrayList(), "", 0, 10, "last_modify", true, null,
-                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID,
-                        ModelAttributeEnum.SECOND_STORAGE),
-                null, null, true, true);
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, true);
 
         DataResult<List<NDataModel>> modelResult2 = modelService.getModels(liteRequest);
         List<NDataModel> models2 = modelResult2.getValue();
@@ -290,9 +313,8 @@ public class ModelServiceQueryTest extends SourceTestCase {
 
         ModelQueryParams request = new ModelQueryParams("4965c827-fbb4-4ea1-a744-3f341a3b030d", modelName2, true,
                 project, "ADMIN", Lists.newArrayList(), "", 0, 10, "last_modify", true, null,
-                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID,
-                        ModelAttributeEnum.SECOND_STORAGE),
-                null, null, true, false);
+                Arrays.asList(ModelAttributeEnum.BATCH, ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID), null,
+                null, true, false);
         DataResult<List<NDataModel>> modelResult3 = modelService.getModels(request);
         List<NDataModel> models3 = modelResult3.getValue();
         FusionModelResponse model3 = (FusionModelResponse) models3.get(0);
@@ -300,21 +322,5 @@ public class ModelServiceQueryTest extends SourceTestCase {
         Assert.assertEquals(12010, model3.getOldParams().getInputRecordCnt());
         Assert.assertEquals(1505415, model3.getOldParams().getInputRecordSizeBytes());
         Assert.assertEquals(396, model3.getOldParams().getSizeKB());
-    }
-
-    @Test
-    public void testGetRelatedModels() {
-        List<RelatedModelResponse> models = modelService.getRelateModels("default", "EDW.TEST_CAL_DT", "");
-        Assert.assertEquals(0, models.size());
-        List<RelatedModelResponse> models2 = modelService.getRelateModels("default", "DEFAULT.TEST_KYLIN_FACT",
-                "nmodel_basic_inner");
-        Assert.assertEquals(1, models2.size());
-        doReturn(new ArrayList<>()).when(modelService).addOldParams(anyString(), any());
-
-        ModelQueryParams request = new ModelQueryParams("741ca86a-1f13-46da-a59f-95fb68615e3a", null, true, "default",
-                "ADMIN", Lists.newArrayList(), "DEFAULT.TEST_KYLIN_FACT", 0, 8, "last_modify", true, null, null, null,
-                null, true, false);
-        val models3 = modelService.getModels(request);
-        Assert.assertEquals(1, models3.getTotalSize());
     }
 }

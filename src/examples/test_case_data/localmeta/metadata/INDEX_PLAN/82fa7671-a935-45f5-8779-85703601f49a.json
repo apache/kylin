@@ -1,0 +1,41 @@
+{
+  "uuid" : "82fa7671-a935-45f5-8779-85703601f49a",
+  "last_modified" : 1509531215483,
+  "version" : "2.3.0.20500",
+  "description" : "refer to ut_inner_join_cube_partial in pre-newten, it's a converted version",
+  "rule_based_index" : {
+    "dimensions" : [ 9, 13, 2, 8, 5, 6, 7, 3, 4, 16, 15, 14, 17, 22, 23, 24, 25, 18, 19, 20, 21 ],
+    "measures" : [ 100000, 100001, 100002, 100003, 100004, 100005, 100007, 100008, 100009, 100010, 100011 ],
+    "aggregation_groups" : [ {
+      "includes" : [ 2, 8, 3, 4, 16, 5, 6, 7 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ [ 5, 6, 7, 8 ] ],
+        "mandatory_dims" : [ ],
+        "joint_dims" : [ [ 3, 4, 16 ] ],
+        "dim_cap" : 3
+      }
+    }, {
+      "includes" : [ 2, 8, 3, 4, 16, 5, 6, 7, 9, 18, 19, 20, 21, 13, 14, 15, 17, 22, 23, 24, 25 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 2 ],
+        "joint_dims" : [ [ 5, 6, 7, 8 ], [ 3, 4, 16 ], [ 9, 18, 19, 20, 21 ], [ 13, 14, 15, 17, 22, 23, 24, 25 ] ],
+        "dim_cap" : 3
+      }
+    } ],
+    "layout_id_mapping" : [ 1, 10001, 20001, 30001, 40001, 50001, 60001, 70001, 80001, 90001, 100001, 110001, 120001, 130001, 140001, 150001, 160001, 170001, 180001, 190001, 200001, 210001, 220001, 230001, 240001, 250001, 260001, 270001, 280001, 290001, 300001 ],
+    "index_start_id" : 310000,
+    "storage_type" : 20
+  },
+  "next_aggregation_index_id" : 31000,
+  "next_table_index_id" : 20000000000,
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : null,
+  "status_need_notify" : [ ],
+  "engine_type" : 0,
+  "project" : "default"
+}

@@ -36,6 +36,9 @@ import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.handler.AbstractJobHandler;
 import org.apache.kylin.job.handler.AddIndexHandler;
 import org.apache.kylin.job.handler.AddSegmentHandler;
+import org.apache.kylin.job.handler.IndexPlanOptimizeJobHandler;
+import org.apache.kylin.job.handler.InternalTableJobHandler;
+import org.apache.kylin.job.handler.LayoutDataOptimizeJobHandler;
 import org.apache.kylin.job.handler.MergeSegmentHandler;
 import org.apache.kylin.job.handler.RefreshSegmentHandler;
 import org.apache.kylin.job.handler.SnapshotJobHandler;
@@ -73,7 +76,7 @@ public class JobManager {
     }
 
     public String addJob(JobParam jobParam, AbstractJobHandler handler) {
-        try(SetLogCategory ignored = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
             if (!config.isJobNode() && !config.isUTEnv() && !config.isMetadataNode()) {
                 throw new KylinException(JOB_CREATE_ABANDON);
             }
@@ -147,32 +150,41 @@ public class JobManager {
     private AbstractJobHandler createJobHandler(JobParam jobParam) {
         AbstractJobHandler handler;
         switch (jobParam.getJobTypeEnum()) {
-            case INC_BUILD:
-                handler = new AddSegmentHandler();
-                break;
-            case INDEX_MERGE:
-                handler = new MergeSegmentHandler();
-                break;
-            case INDEX_BUILD:
-            case SUB_PARTITION_BUILD:
-                handler = new AddIndexHandler();
-                break;
-            case INDEX_REFRESH:
-            case SUB_PARTITION_REFRESH:
-                handler = new RefreshSegmentHandler();
-                break;
-            case TABLE_SAMPLING:
-                handler = new TableSamplingJobHandler();
-                break;
-            case SNAPSHOT_BUILD:
-            case SNAPSHOT_REFRESH:
-                handler = new SnapshotJobHandler();
-                break;
-            case EXPORT_TO_SECOND_STORAGE:
-                throw new UnsupportedOperationException();
-            default:
-                log.error("jobParam doesn't have matched job: {}", jobParam.getJobTypeEnum());
-                return null;
+        case INC_BUILD:
+            handler = new AddSegmentHandler();
+            break;
+        case INDEX_MERGE:
+            handler = new MergeSegmentHandler();
+            break;
+        case INDEX_BUILD:
+        case SUB_PARTITION_BUILD:
+            handler = new AddIndexHandler();
+            break;
+        case INDEX_REFRESH:
+        case SUB_PARTITION_REFRESH:
+            handler = new RefreshSegmentHandler();
+            break;
+        case TABLE_SAMPLING:
+            handler = new TableSamplingJobHandler();
+            break;
+        case SNAPSHOT_BUILD:
+        case SNAPSHOT_REFRESH:
+            handler = new SnapshotJobHandler();
+            break;
+        case INDEX_PLAN_OPT:
+            handler = new IndexPlanOptimizeJobHandler();
+            break;
+        case LAYOUT_DATA_OPTIMIZE:
+            handler = new LayoutDataOptimizeJobHandler();
+            break;
+        case INTERNAL_TABLE_REFRESH:
+        case INTERNAL_TABLE_BUILD:
+        case INTERNAL_TABLE_DELETE_PARTITION:
+            handler = new InternalTableJobHandler();
+            break;
+        default:
+            log.error("jobParam doesn't have matched job: {}", jobParam.getJobTypeEnum());
+            return null;
         }
         return handler;
     }

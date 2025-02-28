@@ -46,6 +46,12 @@ java.lang.Object#notifyAll()
 @defaultMessage Use StringBuilder; it is more efficient
 java.lang.StringBuffer
 
+@defaultMessage Use java.util.Deque; it is more efficient
+java.util.Stack
+
+@defaultMessage Use org.apache.commons.lang3.**; it is not allowed
+org.apache.commons.lang.**
+
 @defaultMessage Please do not try to stop the world
 java.lang.System#gc()
 

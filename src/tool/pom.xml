@@ -27,7 +27,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -35,6 +35,10 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metadata</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-query</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -79,6 +83,11 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.12</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- mysql -->

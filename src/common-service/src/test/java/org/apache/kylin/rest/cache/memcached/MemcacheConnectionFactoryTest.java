@@ -18,6 +18,15 @@
 
 package org.apache.kylin.rest.cache.memcached;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
@@ -30,14 +39,6 @@ import net.spy.memcached.ops.LinkedOperationQueueFactory;
 import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.protocol.binary.BinaryOperationFactory;
 import net.spy.memcached.transcoders.SerializingTranscoder;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
 
@@ -62,13 +63,13 @@ public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
 
         MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
 
-        ConnectionFactory connectionFactory = builder
-                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+        ConnectionFactory connectionFactory = builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                 .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
                 .setOpQueueMaxBlockTime(500).setOpTimeout(500)
-                .setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE).setOpQueueFactory(opQueueFactory).build();
+                .setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE).setOpQueueFactory(opQueueFactory)
+                .build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
 
@@ -107,14 +108,11 @@ public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
 
         MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
 
-        ConnectionFactory connectionFactory = builder
-                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+        ConnectionFactory connectionFactory = builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
-                .setListenerExecutorService(executorService)
-                .setOpFact(operationFactory)
-                .setEnableMetrics(MetricType.OFF)
-                .setMetricCollector(new NoopMetricCollector())
+                .setListenerExecutorService(executorService).setOpFact(operationFactory)
+                .setEnableMetrics(MetricType.OFF).setMetricCollector(new NoopMetricCollector())
                 .setOpQueueFactory(opQueueFactory).build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);

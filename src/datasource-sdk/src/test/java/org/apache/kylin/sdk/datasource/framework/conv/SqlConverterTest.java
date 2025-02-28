@@ -22,11 +22,11 @@ import java.util.Locale;
 
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.sdk.datasource.adaptor.SQLDWAdaptor;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SqlConverterTest extends NLocalFileMetadataTestCase {
-    private final static String TEST_TARGET = "testing";
+    private static final String TEST_TARGET = "testing";
 
     @Before
     public void setUp() {
@@ -174,8 +174,8 @@ public class SqlConverterTest extends NLocalFileMetadataTestCase {
                 converter.convertSql("select cast(ID as INT) from \"DEFAULT\".FACT"));
         Assert.assertEquals("SELECT 1\nFROM \"A\"\nWHERE 1 BETWEEN 0 AND 2",
                 converter.convertSql("select 1 from a where 1 BETWEEN 0 and 2"));
-        Assert.assertEquals("SELECT \"CURRENT_DATE\", TEST_CURR_TIME()",
-                converter.convertSql("select CURRENT_DATE, CURRENT_TIME"));
+        Assert.assertEquals("SELECT CURRENT_DATE, CURRENT_TIMESTAMP",
+                converter.convertSql("select CURRENT_DATE, CURRENT_TIMESTAMP"));
         Assert.assertEquals(
                 "SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql(
@@ -193,7 +193,7 @@ public class SqlConverterTest extends NLocalFileMetadataTestCase {
                 converter.convertSql("select cast(PRICE as DECIMAL(19,4)) from \"DEFAULT\".FACT"));
         Assert.assertEquals("SELECT CAST(\"PRICE\" AS DECIMAL(19))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DECIMAL(19)) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(\"BYTE\" AS BIT(8))\nFROM \"DEFAULT\".\"FACT\"",
+        Assert.assertEquals("SELECT CAST(\"BYTE\" AS \"BYTE\")\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(BYTE as BYTE) from \"DEFAULT\".FACT"));
         Assert.assertEquals("SELECT CAST(\"BYTE\" AS VARCHAR(1024))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(BYTE as VARCHAR(1024)) from \"DEFAULT\".FACT"));
@@ -201,13 +201,14 @@ public class SqlConverterTest extends NLocalFileMetadataTestCase {
         // cannot find mapping
         Assert.assertEquals("SELECT \"CURRENT_DATE_1\", \"CURRENT_TIME_1\"",
                 converter.convertSql("select CURRENT_DATE_1, CURRENT_TIME_1"));
-        Assert.assertEquals("SELECT \"CURRENT_DATE_1\", TEST_CURR_TIME(), \"CURRENT_DATE\"",
-                converter.convertSql("select CURRENT_DATE_1, CURRENT_TIME, CURRENT_DATE"));
-        Assert.assertEquals("SELECT CAST(\"BYTE\" AS VAR(1024))\nFROM \"DEFAULT\".\"FACT\"",
+        // no current_time in oracle
+        Assert.assertEquals("SELECT \"CURRENT_DATE_1\", CURRENT_TIMESTAMP, CURRENT_DATE",
+                converter.convertSql("select CURRENT_DATE_1, CURRENT_TIMESTAMP, CURRENT_DATE"));
+        Assert.assertEquals("select cast(BYTE as VAR(1024)) from \"DEFAULT\".FACT",
                 converter.convertSql("select cast(BYTE as VAR(1024)) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(\"PRICE\" AS DDD)\nFROM \"DEFAULT\".\"FACT\"",
+        Assert.assertEquals("SELECT CAST(\"PRICE\" AS \"DDD\")\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DDD) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE\" AS DDD)\nFROM \"DEFAULT\".\"FACT\"",
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE\" AS \"DDD\")\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select A(), B(A), cast(PRICE as DDD) from \"DEFAULT\".\"FACT\""));
         Assert.assertEquals("SELECT ONLY_DEFAULT(1)", converter.convertSql("SELECT ONLY_DEFAULT(1)"));
 
@@ -220,7 +221,7 @@ public class SqlConverterTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testConvertSqlWithStrictLimitOffset() throws SQLException, SqlParseException {
+    public void testConvertSqlWithStrictLimitOffset() throws SQLException {
         DataSourceDefProvider provider = DataSourceDefProvider.getInstance();
         ConvMaster master = new ConvMaster(provider.getDefault(), provider.getById(TEST_TARGET));
         SqlConverter converter = new SqlConverter(new SqlConverter.IConfigurer() {
@@ -307,9 +308,9 @@ public class SqlConverterTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals("SELECT SUM(\"A\"), COUNT(\"A\") AS \"AB\"\nFROM \"DEFAULT\".\"CUBE\"",
                 converter.convertSql("select sum(A), count(`A`) as AB from DEFAULT.`CUBE`"));
-        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS DDD)\nFROM \"DEFAULT\".\"CUBE\"",
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS \"DDD\")\nFROM \"DEFAULT\".\"CUBE\"",
                 converter.convertSql("select A(), B(`A`), cast(`PRICE@@` as `DDD`) from DEFAULT.`CUBE`"));
-        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS DDD)\nFROM \"DEFAULT\".\"CUBE\"",
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS \"DDD\")\nFROM \"DEFAULT\".\"CUBE\"",
                 converter.convertSql("select A(), B(\"A\"), cast(\"PRICE@@\" as \"DDD\") from \"DEFAULT\".\"CUBE\""));
         Assert.assertEquals(
                 "SELECT \"kylin_sales\".\"price_@@\", \"kylin_sales\".\"count\"\nFROM \"cube\".\"kylin_sales\"\nWHERE \"kylin_sales\".\"price_@@\" > 1 AND \"kylin_sales\".\"count\" < 50",

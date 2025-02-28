@@ -1,0 +1,67 @@
+{
+  "uuid" : "012e9cd4-11da-4bd0-b0b4-de7633828653",
+  "last_modified" : 1497607295100,
+  "version" : "2.0.0",
+  "name" : "WEB_PAGE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "WP_WEB_PAGE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "WP_WEB_PAGE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "WP_REC_START_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "WP_REC_END_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "WP_CREATION_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "WP_ACCESS_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "WP_AUTOGEN_FLAG",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "WP_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "WP_URL",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "WP_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "WP_CHAR_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "12",
+    "name" : "WP_LINK_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "13",
+    "name" : "WP_IMAGE_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "14",
+    "name" : "WP_MAX_AD_COUNT",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

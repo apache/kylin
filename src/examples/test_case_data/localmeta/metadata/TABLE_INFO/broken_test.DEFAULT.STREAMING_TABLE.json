@@ -1,0 +1,45 @@
+{
+  "uuid" : "25e4fd2f-4866-4097-a580-d963a7804a8d",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "name" : "STREAMING_TABLE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "MINUTE_START",
+    "datatype" : "timestamp",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "HOUR_START",
+    "datatype" : "timestamp",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "DAY_START",
+    "datatype" : "date",
+    "index" : "T"
+  }, {
+    "id" : "4",
+    "name" : "ITM",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "SITE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "GMV",
+    "datatype" : "decimal(19,6)"
+  }, {
+    "id" : "7",
+    "name" : "ITEM_COUNT",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 1,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "increment_loading" : false,
+  "database" : "DEFAULT",
+  "project" : "broken_test"
+}

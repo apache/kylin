@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
@@ -38,9 +41,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
 
-import java.io.IOException;
-import java.util.List;
-
 @Ignore("for test spark job on yarn")
 public class NSparkCubingJobOnYarnTest extends NLocalFileMetadataTestCase {
 
@@ -54,8 +54,8 @@ public class NSparkCubingJobOnYarnTest extends NLocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test

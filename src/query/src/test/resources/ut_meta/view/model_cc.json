@@ -50,7 +50,8 @@
     {
       "id": 0,
       "name": "LO_ORDERKEY",
-      "column": "LINEORDER.LO_ORDERKEY"
+      "column": "LINEORDER.LO_ORDERKEY",
+      "status": "DIMENSION"
     },
     {
       "id": 1,
@@ -224,6 +225,22 @@
       "column": "CC2",
       "comment": null,
       "id": 100001
+    },
+    {
+      "name": "max_quantity",
+      "function": {
+        "expression": "MAX",
+        "parameters": [
+          {
+            "type": "column",
+            "value": "LINEORDER.LO_QUANTITY"
+          }
+        ],
+        "returntype": "bigint"
+      },
+      "column": "LO_QUANTITY",
+      "comment": null,
+      "id": 100002
     }
   ],
   "recommendations_count": 0,

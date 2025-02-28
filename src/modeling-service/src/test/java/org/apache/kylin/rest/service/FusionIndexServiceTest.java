@@ -95,7 +95,7 @@ public class FusionIndexServiceTest extends SourceTestCase {
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setup() {
+    public void setUp() {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         createTestMetadata();
         ReflectionTestUtils.setField(fusionIndexService, "indexPlanService", indexPlanService);
@@ -111,8 +111,8 @@ public class FusionIndexServiceTest extends SourceTestCase {
 
     @After
     public void tearDown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     private UpdateRuleBasedCuboidRequest createUpdateRuleRequest(String project, String modelId,

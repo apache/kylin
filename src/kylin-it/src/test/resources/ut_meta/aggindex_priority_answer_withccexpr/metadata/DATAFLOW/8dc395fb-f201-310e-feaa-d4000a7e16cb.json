@@ -1,0 +1,13 @@
+{
+  "uuid" : "8dc395fb-f201-310e-feaa-d4000a7e16cb",
+  "last_modified" : 1678518305320,
+  "create_time" : 1678511175972,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 5,
+  "last_query_time" : 1678517094673,
+  "project" : "aggindex_priority_answer_withccexpr",
+  "segment_uuids" : [ ]
+}

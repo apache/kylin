@@ -23,8 +23,8 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.kylin.job.service.JobResourceService;
-import org.apache.kylin.job.service.JobResourceService.JobResource;
+import org.apache.kylin.rest.service.JobResourceService;
+import org.apache.kylin.rest.service.JobResourceService.JobResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;

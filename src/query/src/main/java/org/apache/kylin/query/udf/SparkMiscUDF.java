@@ -27,7 +27,25 @@ public class SparkMiscUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
+    public Object EXPLODE(@Parameter(name = "t1") Long[] exp1) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Boolean ISNULL(@Parameter(name = "exp") Object exp) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
     public String MD5(@Parameter(name = "str1") String exp) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Object NVL(@Parameter(name = "left") Object left, @Parameter(name = "right") Object right)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Object NVL2(@Parameter(name = "exp") Object exp, @Parameter(name = "left") Object left,
+            @Parameter(name = "right") Object right) throws CalciteNotSupportException {
         throw new CalciteNotSupportException();
     }
 

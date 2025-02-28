@@ -20,20 +20,18 @@ package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.kylin.job.common.SegmentUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.model.SegmentSecondStorageStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
+import org.apache.kylin.metadata.model.Segments;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-import io.kyligence.kap.secondstorage.response.SecondStorageNode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -46,6 +44,9 @@ public class NDataSegmentResponse extends NDataSegment {
 
     private static final String FILE_COUNT = "file_count";
 
+    @JsonProperty("id")
+    private String id; // only used by frontend
+
     @JsonProperty("bytes_size")
     private long bytesSize;
 
@@ -57,9 +58,6 @@ public class NDataSegmentResponse extends NDataSegment {
 
     @JsonProperty("status_to_display")
     private SegmentStatusEnumToDisplay statusToDisplay;
-
-    @JsonProperty("status_second_storage_to_display")
-    private SegmentSecondStorageStatusEnum statusSecondStorageToDisplay;
 
     @JsonProperty("index_count")
     private long indexCount;
@@ -82,13 +80,6 @@ public class NDataSegmentResponse extends NDataSegment {
     @JsonProperty("row_count")
     private long rowCount;
 
-    @JsonProperty("second_storage_nodes")
-    private Map<String, List<SecondStorageNode>> secondStorageNodes;
-
-    // byte
-    @JsonProperty("second_storage_size")
-    private long secondStorageSize;
-
     private long createTime;
 
     private long startTime;
@@ -110,12 +101,14 @@ public class NDataSegmentResponse extends NDataSegment {
         super(false);
     }
 
-    public NDataSegmentResponse(NDataflow dataflow, NDataSegment segment) {
-        this(dataflow, segment, null);
+    public NDataSegmentResponse(NDataflow dataflow, Segments<NDataSegment> segments, NDataSegment segment) {
+        this(dataflow, segments, segment, null);
     }
 
-    public NDataSegmentResponse(NDataflow dataflow, NDataSegment segment, List<AbstractExecutable> executables) {
+    public NDataSegmentResponse(NDataflow dataflow, Segments<NDataSegment> segments, NDataSegment segment,
+            List<AbstractExecutable> executables) {
         super(segment);
+        id = segment.getUuid();
         createTime = getCreateTimeUTC();
         startTime = Long.parseLong(getSegRange().getStart().toString());
         endTime = Long.parseLong(getSegRange().getEnd().toString());
@@ -145,7 +138,7 @@ public class NDataSegmentResponse extends NDataSegment {
         setBytesSize(segment.getStorageBytesSize());
         getAdditionalInfo().put(SEGMENT_PATH, dataflow.getSegmentHdfsPath(segment.getId()));
         getAdditionalInfo().put(FILE_COUNT, segment.getStorageFileCount() + "");
-        setStatusToDisplay(SegmentUtil.getSegmentStatusToDisplay(dataflow.getSegments(), segment, executables));
+        setStatusToDisplay(SegmentUtil.getSegmentStatusToDisplay(segments, segment, executables, null));
         setSourceBytesSize(segment.getSourceBytesSize());
         setLastBuildTime(segment.getLastBuildTime());
         setMaxBucketId(segment.getMaxBucketId());

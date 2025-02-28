@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ErrorMsg extends AbstractErrorContent {
 
     private static final Map<String, String> EN_MAP;
-//    private static final Map<String, String> CN_MAP;
+    //    private static final Map<String, String> CN_MAP;
     private static final ThreadLocal<Map<String, String>> FRONT_MAP = new ThreadLocal<>();
 
     static {

@@ -1,0 +1,44 @@
+{
+  "uuid" : "3e2d6e85-23ac-4121-7830-1fa75ef0c2c7",
+  "last_modified" : 0,
+  "create_time" : 1666944274026,
+  "version" : "4.0.0.0",
+  "name" : "TEST_AGG_PUSH_DOWN",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COMPANY_CODE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "company_code"
+  }, {
+    "id" : "2",
+    "name" : "TYPE_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "type_name"
+  }, {
+    "id" : "3",
+    "name" : "CREATED_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "created_date"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "newten"
+}

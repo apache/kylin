@@ -21,6 +21,7 @@ package org.apache.kylin.rest.config.initialize;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -75,7 +76,7 @@ public class ModelBrokenListener {
             val config = KylinConfig.getInstanceFromEnv();
             val modelManager = NDataModelManager.getInstance(config, project);
 
-            val model = getBrokenModel(project, NDataModel.concatResourcePath(modelId, project));
+            val model = getBrokenModel(project, MetadataType.mergeKeyWithType(modelId, MetadataType.MODEL));
 
             val dataflowManager = NDataflowManager.getInstance(config, project);
             val indexPlanManager = NIndexPlanManager.getInstance(config, project);
@@ -146,8 +147,6 @@ public class ModelBrokenListener {
                 if (model.getManagementType() == ManagementType.MODEL_BASED && model.getPartitionDesc() == null) {
                     dataflowManager.fillDfManually(dataflow,
                             Lists.newArrayList(SegmentRange.TimePartitionedSegmentRange.createInfinite()));
-                } else if (model.getManagementType() == ManagementType.TABLE_ORIENTED) {
-                    dataflowManager.fillDf(dataflow);
                 }
                 final JobParam jobParam = new JobParam(model.getId(), "ADMIN");
                 jobParam.setProject(project);

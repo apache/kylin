@@ -18,14 +18,15 @@
 
 package org.apache.kylin.helper;
 
+import static org.apache.kylin.common.constant.Constants.CORE_META_DIR;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.FILE_ALREADY_EXISTS;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.MODEL_DUPLICATE_UUID_FAILED;
+import static org.apache.kylin.common.persistence.ResourceStore.GLOBAL_PROJECT;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.FileSystems;
-import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,11 +37,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.sql.DataSource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -51,10 +49,10 @@ import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.persistence.ImageDesc;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.AuditLogStore;
-import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
-import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -66,11 +64,9 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.CancelableTask;
 import org.apache.kylin.tool.HDFSMetadataTool;
 import org.apache.kylin.tool.constant.StringConstant;
-import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +74,7 @@ import lombok.val;
 import lombok.var;
 
 /*
-* this class is only for removing dependency of kylin-tool module, and should be refactor later
+* this class is only for removing dependency of kylin-tool module, and should be refactored later
 */
 public class MetadataToolHelper extends CancelableTask {
 
@@ -119,10 +115,10 @@ public class MetadataToolHelper extends CancelableTask {
         new MetadataToolHelper().backup(kylinConfig, project, backupPath, true, false);
     }
 
-    public Pair<String, String> backup(KylinConfig kylinConfig, String project, String path, String folder, boolean compress,
-                                       boolean excludeTableExd) throws Exception {
+    public Pair<String, String> backup(KylinConfig kylinConfig, String project, String path, String folder,
+            boolean compress, boolean excludeTableExd) throws Exception {
         Pair<String, String> pair = getBackupPath(path, folder);
-        String coreMetadataBackupPath = StringUtils.appendIfMissing(pair.getFirst(), "/") + "core_meta";
+        String coreMetadataBackupPath = StringUtils.appendIfMissing(pair.getFirst(), "/") + CORE_META_DIR;
         backup(kylinConfig, project, coreMetadataBackupPath, compress, excludeTableExd);
         return pair;
     }
@@ -169,7 +165,8 @@ public class MetadataToolHelper extends CancelableTask {
             throws Exception {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         boolean isUTEnv = kylinConfig.isUTEnv();
-        //FIXME should replace printf with Logger while Logger MUST print this message to console, because test depends on it
+        //FIXME should replace printf with Logger while Logger MUST print this message to console,
+        // because test depends on it
         System.out.printf(Locale.ROOT, "The metadata backup path is %s.%n", backupPath);
         val backupMetadataUrl = getMetadataUrl(backupPath, compress, kylinConfig);
         val backupConfig = KylinConfig.createKylinConfig(kylinConfig);
@@ -178,43 +175,36 @@ public class MetadataToolHelper extends CancelableTask {
         logger.info("The backup metadataUrl is {} and backup path is {}", backupMetadataUrl, backupPath);
         try (val backupResourceStore = ResourceStore.getKylinMetaStore(backupConfig)) {
             val backupMetadataStore = backupResourceStore.getMetadataStore();
-            if (StringUtils.isBlank(project)) {
-                logger.info("start to copy all projects from ResourceStore.");
-                long finalOffset = getOffset(isUTEnv, resourceStore);
-                backupResourceStore.putResourceWithoutCheck(ResourceStore.METASTORE_IMAGE,
-                        ByteSource.wrap(JsonUtil.writeValueAsBytes(new ImageDesc(finalOffset))),
-                        System.currentTimeMillis(), -1);
-                var projectFolders = resourceStore.listResources("/");
-                if (projectFolders == null) {
-                    return;
-                }
-                UnitOfWork.doInTransactionWithRetry(() -> {
-                    backupProjects(projectFolders, resourceStore, backupResourceStore, excludeTableExd);
-                    return null;
-                }, UnitOfWork.GLOBAL_UNIT);
+            val projectMsg = StringUtils.isBlank(project) ? "all projects" : "project " + project;
 
+            logger.info("start to copy {} from ResourceStore.", projectMsg);
+            long finalOffset = getOffset(isUTEnv, resourceStore);
+            backupResourceStore.putResourceWithoutCheck(ResourceStore.METASTORE_IMAGE,
+                    ByteSource.wrap(JsonUtil.writeValueAsBytes(new ImageDesc(finalOffset))), System.currentTimeMillis(),
+                    -1);
+            NavigableSet<String> backupItems;
+            if (StringUtils.isBlank(project)) {
+                backupItems = resourceStore.listResourcesRecursively(MetadataType.ALL.name());
+            } else {
+                backupItems = resourceStore.listResourcesRecursivelyByProject(project);
+            }
+            if (backupItems == null || backupItems.isEmpty()) {
+                return;
+            }
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                backupMetadata(backupItems, resourceStore, backupResourceStore, excludeTableExd);
+                return null;
+            }, UnitOfWork.GLOBAL_UNIT);
+
+            if (!StringUtils.isBlank(project)) {
                 val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
                 if (uuid != null) {
-                    backupResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),
-                            uuid.getTimestamp(), -1);
+                    backupResourceStore.putResourceWithoutCheck(ResourceStore.METASTORE_UUID_TAG, uuid.getByteSource(),
+                            uuid.getTs(), -1);
                 }
-                logger.info("start to backup all projects");
-
-            } else {
-                logger.info("start to copy project {} from ResourceStore.", project);
-                UnitOfWork.doInTransactionWithRetry(
-                        UnitOfWorkParams.builder().readonly(true).unitName(project).processor(() -> {
-                            copyResourceStore("/" + project, resourceStore, backupResourceStore, true, excludeTableExd);
-                            val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
-                            backupResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),
-                                    uuid.getTimestamp(), -1);
-                            return null;
-                        }).build());
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException("metadata task is interrupt");
-                }
-                logger.info("start to backup project {}", project);
             }
+            logger.info("start to backup {}", projectMsg);
+
             backupResourceStore.deleteResource(ResourceStore.METASTORE_TRASH_RECORD);
             backupMetadataStore.dump(backupResourceStore);
             logger.info("backup successfully at {}", backupPath);
@@ -235,15 +225,13 @@ public class MetadataToolHelper extends CancelableTask {
         }
     }
 
-    private void backupProjects(NavigableSet<String> projectFolders, ResourceStore resourceStore,
+    private void backupMetadata(NavigableSet<String> items, ResourceStore resourceStore,
             ResourceStore backupResourceStore, boolean excludeTableExd) throws InterruptedException {
-        for (String projectPath : projectFolders) {
-            if (projectPath.equals(ResourceStore.METASTORE_UUID_TAG)
-                    || projectPath.equals(ResourceStore.METASTORE_IMAGE)) {
+        for (String item : items) {
+            if (excludeTableExd && item.startsWith(MetadataType.TABLE_EXD.name())) {
                 continue;
             }
-            // The "_global" directory is already included in the full backup
-            copyResourceStore(projectPath, resourceStore, backupResourceStore, false, excludeTableExd);
+            resourceStore.copy(item, backupResourceStore);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException("metadata task is interrupt");
             }
@@ -251,27 +239,6 @@ public class MetadataToolHelper extends CancelableTask {
                 logger.info("core metadata backup was canceled.");
                 return;
             }
-        }
-    }
-
-    private void copyResourceStore(String projectPath, ResourceStore srcResourceStore, ResourceStore destResourceStore,
-            boolean isProjectLevel, boolean excludeTableExd) {
-        if (excludeTableExd) {
-            String tableExdPath = projectPath + ResourceStore.TABLE_EXD_RESOURCE_ROOT;
-            var projectItems = srcResourceStore.listResources(projectPath);
-            for (String item : projectItems) {
-                if (item.equals(tableExdPath)) {
-                    continue;
-                }
-                srcResourceStore.copy(item, destResourceStore);
-            }
-        } else {
-            srcResourceStore.copy(projectPath, destResourceStore);
-        }
-        if (isProjectLevel) {
-            // The project-level backup needs to contain "/_global/project/*.json"
-            val projectName = Paths.get(projectPath).getFileName().toString();
-            srcResourceStore.copy(ProjectInstance.concatResourcePath(projectName), destResourceStore);
         }
     }
 
@@ -302,7 +269,8 @@ public class MetadataToolHelper extends CancelableTask {
         }
     }
 
-    public void restore(KylinConfig kylinConfig, String project, String path, boolean delete, boolean backup) throws Exception {
+    public void restore(KylinConfig kylinConfig, String project, String path, boolean delete, boolean backup)
+            throws Exception {
         logger.info("Restore metadata with delete : {}", delete);
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         val restoreMetadataUrl = getMetadataUrl(path, false, kylinConfig);
@@ -332,57 +300,22 @@ public class MetadataToolHelper extends CancelableTask {
         checkDuplicateUuidModel(currentResourceStore, restoreResourceStore, project, delete);
         if (StringUtils.isBlank(project)) {
             logger.info("start to restore all projects");
-            var srcProjectFolders = restoreResourceStore.listResources("/");
-            var destProjectFolders = currentResourceStore.listResources("/");
-            srcProjectFolders = srcProjectFolders == null ? Sets.newTreeSet() : srcProjectFolders;
-            destProjectFolders = destProjectFolders == null ? Sets.newTreeSet() : destProjectFolders;
-            val projectFolders = Sets.union(srcProjectFolders, destProjectFolders);
-
-            for (String projectPath : projectFolders) {
-                if (projectPath.equals(ResourceStore.METASTORE_UUID_TAG)
-                        || projectPath.equals(ResourceStore.METASTORE_IMAGE)) {
-                    continue;
-                }
-                val projectName = Paths.get(projectPath).getName(0).toString();
-                val destResources = currentResourceStore.listResourcesRecursively(projectPath);
-                val srcResources = restoreResourceStore.listResourcesRecursively(projectPath);
-                UnitOfWorkParams<Object> params = UnitOfWorkParams.builder().unitName(projectName).maxRetry(1)
-                        .useProjectLock(true).processor(() -> doRestore(currentResourceStore, restoreResourceStore,
-                                destResources, srcResources, delete))
-                        .build();
-                UnitOfWork.doInTransactionWithRetry(params);
-            }
+            val destResources = currentResourceStore.listResourcesRecursively(MetadataType.ALL.name());
+            val srcResources = restoreResourceStore.listResourcesRecursively(MetadataType.ALL.name());
+            srcResources.remove(METASTORE_IMAGE);
+            UnitOfWorkParams<Object> params = UnitOfWorkParams.builder().unitName(GLOBAL_PROJECT).maxRetry(1)
+                    .useProjectLock(true)
+                    .processor(() -> doRestore(restoreResourceStore, destResources, srcResources, delete)).build();
+            UnitOfWork.doInTransactionWithRetry(params);
 
         } else {
             logger.info("start to restore project {}", project);
-            val destGlobalProjectResources = currentResourceStore.listResourcesRecursively(ResourceStore.PROJECT_ROOT);
+            val destResources = currentResourceStore.listResourcesRecursivelyByProject(project);
+            val srcResources = restoreResourceStore.listResourcesRecursivelyByProject(project);
 
-            Set<String> globalDestResources = null;
-            if (Objects.nonNull(destGlobalProjectResources)) {
-                globalDestResources = destGlobalProjectResources.stream().filter(x -> Paths.get(x).getFileName()
-                        .toString().equals(String.format(Locale.ROOT, "%s.json", project))).collect(Collectors.toSet());
-            }
-
-            val globalSrcResources = restoreResourceStore
-                    .listResourcesRecursively(ResourceStore.PROJECT_ROOT).stream().filter(x -> Paths.get(x)
-                            .getFileName().toString().equals(String.format(Locale.ROOT, "%s.json", project)))
-                    .collect(Collectors.toSet());
-
-            Set<String> finalGlobalDestResources = globalDestResources;
-
-            UnitOfWorkParams<Object> params = UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT).maxRetry(1)
-                    .useProjectLock(true).processor(() -> doRestore(currentResourceStore, restoreResourceStore,
-                            finalGlobalDestResources, globalSrcResources, delete))
-                    .build();
-            UnitOfWork.doInTransactionWithRetry(params);
-
-            val projectPath = FileSystems.getDefault().getSeparator() + project;
-            val destResources = currentResourceStore.listResourcesRecursively(projectPath);
-            val srcResources = restoreResourceStore.listResourcesRecursively(projectPath);
-
-            params = UnitOfWorkParams.builder().unitName(project).maxRetry(1).useProjectLock(true).processor(
-                    () -> doRestore(currentResourceStore, restoreResourceStore, destResources, srcResources, delete))
-                    .build();
+            UnitOfWorkParams<Object> params = UnitOfWorkParams.builder().unitName(project).maxRetry(1)
+                    .useProjectLock(true)
+                    .processor(() -> doRestore(restoreResourceStore, destResources, srcResources, delete)).build();
             UnitOfWork.doInTransactionWithRetry(params);
         }
 
@@ -403,7 +336,7 @@ public class MetadataToolHelper extends CancelableTask {
             String errorMsg = duplicateUuidModelByProject.entrySet().stream()
                     .map(m -> "[" + m.getKey() + "]:" + String.join(",", m.getValue()))
                     .collect(Collectors.joining(";"));
-            String info = String.format(
+            String info = String.format(Locale.ROOT,
                     "[UNEXPECTED_THINGS_HAPPENED] There will be models with the same name after recovery, please rename these models first:[project]:models: %s ",
                     errorMsg);
             logger.error(info);
@@ -430,19 +363,15 @@ public class MetadataToolHelper extends CancelableTask {
 
     private Map<String, List<String>> getDuplicateUuidModelByAllProject(ResourceStore currentResourceStore,
             ResourceStore restoreResourceStore) {
-        var destProjectFolders = currentResourceStore.listResources("/");
-        var srcProjectFolders = restoreResourceStore.listResources("/");
+        var destProjectFolders = currentResourceStore.listResources(MetadataType.PROJECT.name());
+        var srcProjectFolders = restoreResourceStore.listResources(MetadataType.PROJECT.name());
         destProjectFolders = destProjectFolders == null ? Sets.newTreeSet() : destProjectFolders;
         srcProjectFolders = srcProjectFolders == null ? Sets.newTreeSet() : srcProjectFolders;
         val projectFolders = Sets.union(srcProjectFolders, destProjectFolders);
 
         Map<String, List<String>> duplicateUuidModelByProject = Maps.newHashMap();
         for (String projectPath : projectFolders) {
-            if (projectPath.equals(ResourceStore.METASTORE_UUID_TAG)
-                    || projectPath.equals(ResourceStore.METASTORE_IMAGE)) {
-                continue;
-            }
-            val projectName = Paths.get(projectPath).getName(0).toString();
+            val projectName = MetadataType.splitKeyWithType(projectPath).getSecond();
             List<String> duplicateUuidModel = getDuplicateUuidModel(currentResourceStore, restoreResourceStore,
                     projectName);
             if (!duplicateUuidModel.isEmpty()) {
@@ -454,9 +383,9 @@ public class MetadataToolHelper extends CancelableTask {
 
     private List<String> getDuplicateUuidModel(ResourceStore currentResourceStore, ResourceStore restoreResourceStore,
             String projectName) {
-        String modelDescRootPath = File.separator + projectName + ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT;
-        Set<String> destModelResource = currentResourceStore.listResources(modelDescRootPath);
-        Set<String> srcModelResource = restoreResourceStore.listResources(modelDescRootPath);
+        RawResourceFilter filter = RawResourceFilter.equalFilter("project", projectName);
+        Set<String> destModelResource = currentResourceStore.listResources(MetadataType.MODEL.name(), filter);
+        Set<String> srcModelResource = restoreResourceStore.listResources(MetadataType.MODEL.name(), filter);
         destModelResource = destModelResource == null ? Collections.emptySet() : destModelResource;
         srcModelResource = srcModelResource == null ? Collections.emptySet() : srcModelResource;
 
@@ -500,118 +429,42 @@ public class MetadataToolHelper extends CancelableTask {
         return models;
     }
 
-    private int doRestore(ResourceStore currentResourceStore, ResourceStore restoreResourceStore,
-            Set<String> destResources, Set<String> srcResources, boolean delete) throws IOException {
-        val threadViewRS = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
+    private int doRestore(ResourceStore restoreResourceStore, Set<String> destResources, Set<String> srcResources,
+            boolean delete) throws IOException {
+        val transparentRS = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
 
-        //check destResources and srcResources are null,because  Sets.difference(srcResources, destResources) will report NullPointerException
+        // check destResources and srcResources are null,
+        // because Sets.difference(srcResources, destResources) will report NullPointerException
         destResources = destResources == null ? Collections.emptySet() : destResources;
         srcResources = srcResources == null ? Collections.emptySet() : srcResources;
 
         logger.info("Start insert metadata resource...");
         val insertRes = Sets.difference(srcResources, destResources);
         for (val res : insertRes) {
+            transparentRS.getResource(res, true); // return null, just to lock it.
             val metadataRaw = restoreResourceStore.getResource(res);
-            threadViewRS.checkAndPutResource(res, metadataRaw.getByteSource(), -1L);
+            UnitOfWork.get().getCopyForWriteItems().add(res);
+            transparentRS.checkAndPutResource(res, metadataRaw.getByteSource(), -1L);
         }
 
         logger.info("Start update metadata resource...");
         val updateRes = Sets.intersection(destResources, srcResources);
         for (val res : updateRes) {
-            val raw = currentResourceStore.getResource(res);
+            val raw = transparentRS.getResource(res, true);
             val metadataRaw = restoreResourceStore.getResource(res);
-            threadViewRS.checkAndPutResource(res, metadataRaw.getByteSource(), raw.getMvcc());
+            UnitOfWork.get().getCopyForWriteItems().add(res);
+            transparentRS.checkAndPutResource(res, metadataRaw.getByteSource(), raw.getMvcc());
         }
         if (delete) {
             logger.info("Start delete metadata resource...");
             val deleteRes = Sets.difference(destResources, srcResources);
             for (val res : deleteRes) {
-                threadViewRS.deleteResource(res);
+                UnitOfWork.get().getCopyForWriteItems().add(res);
+                transparentRS.deleteResource(res);
             }
         }
 
         return 0;
-    }
-
-    public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate, int retryTimes) {
-        try {
-            StorageCleaner storageCleaner = new StorageCleaner(storageCleanup, projects, requestFSRate, retryTimes);
-            System.out.println("Start to cleanup HDFS");
-            storageCleaner.execute();
-            System.out.println("cleanup HDFS finished");
-        } catch (Exception e) {
-            logger.error("cleanup HDFS failed", e);
-            System.out.println(StringConstant.ANSI_RED
-                    + "cleanup HDFS failed. Detailed Message is at ${KYLIN_HOME}/logs/shell.stderr"
-                    + StringConstant.ANSI_RESET);
-        }
-    }
-
-    public DataSource getDataSource(KylinConfig kylinConfig) throws Exception {
-        val url = kylinConfig.getMetadataUrl();
-        val props = JdbcUtil.datasourceParameters(url);
-        return JdbcDataSource.getDataSource(props);
-    }
-
-    public void fetch(KylinConfig kylinConfig, String path, String folder, String target, boolean excludeTableExd)
-            throws Exception {
-        ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-        if (StringUtils.isBlank(path)) {
-            path = KylinConfigBase.getKylinHome() + File.separator + "meta_fetch";
-        }
-        if (StringUtils.isEmpty(folder)) {
-            folder = LocalDateTime.now(Clock.systemDefaultZone()).format(DATE_TIME_FORMATTER) + "_fetch";
-        }
-        if (target == null) {
-            System.out.println("target file must be set with fetch mode");
-        } else {
-            val fetchPath = StringUtils.appendIfMissing(path, "/") + folder;
-            // currently do not support compress with fetch
-            val fetchMetadataUrl = getMetadataUrl(fetchPath, false, kylinConfig);
-            val fetchConfig = KylinConfig.createKylinConfig(kylinConfig);
-            fetchConfig.setMetadataUrl(fetchMetadataUrl);
-            abortIfAlreadyExists(fetchPath);
-            logger.info("The fetch metadataUrl is {} and backup path is {}", fetchMetadataUrl, fetchPath);
-
-            try (val fetchResourceStore = ResourceStore.getKylinMetaStore(fetchConfig)) {
-
-                val fetchMetadataStore = fetchResourceStore.getMetadataStore();
-
-                String targetPath = target.startsWith("/") ? target.substring(1) : target;
-
-                logger.info("start to copy target file {} from ResourceStore.", target);
-                UnitOfWork.doInTransactionWithRetry(
-                        UnitOfWorkParams.builder().readonly(true).unitName(target).processor(() -> {
-                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true,
-                                    excludeTableExd);
-                            // uuid
-                            val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
-                            fetchResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),
-                                    uuid.getTimestamp(), -1);
-                            return null;
-                        }).build());
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException("metadata task is interrupt");
-                }
-                logger.info("start to fetch target file {}", target);
-
-                // fetchResourceStore is read-only, currently we don't do any write operation on it.
-                // fetchResourceStore.deleteResource(ResourceStore.METASTORE_TRASH_RECORD);
-                fetchMetadataStore.dump(fetchResourceStore);
-                logger.info("fetch successfully at {}", fetchPath);
-            }
-        }
-    }
-
-    public NavigableSet<String> list(KylinConfig kylinConfig, String target) throws Exception {
-        ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-        var res = resourceStore.listResources(target);
-        if (res == null) {
-            System.out.printf("%s is not exist%n", target);
-        } else {
-            System.out.println("" + res);
-        }
-        return res;
     }
 
 }

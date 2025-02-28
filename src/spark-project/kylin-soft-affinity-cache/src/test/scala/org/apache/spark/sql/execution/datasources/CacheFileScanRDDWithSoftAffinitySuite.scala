@@ -22,13 +22,17 @@ import org.apache.kylin.cache.softaffinity.SoftAffinityConstants
 import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.kylin.softaffinity.scheduler.SoftAffinityListener
 import org.apache.spark.SparkConf
-import org.apache.spark.scheduler.{SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.scheduler.cluster.ExecutorInfo
+import org.apache.spark.scheduler.{SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.PredicateHelper
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types.StructType
+
+import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
 class CacheFileScanRDDWithSoftAffinitySuite extends QueryTest
   with SharedSparkSession with PredicateHelper {
@@ -237,5 +241,34 @@ class CacheFileScanRDDWithSoftAffinitySuite extends QueryTest
 
     // all executors were removed, return the original hosts list
     generateFileScanRDD5()
+  }
+
+  @tailrec
+  private def evalSourceSize[U: ClassTag](prev: RDD[U]): Option[Long] = {
+    logInfo(s"evalSourceSize input rdd class -> ${prev.getClass.getName}")
+    prev match {
+      case f: FileScanRDD => Some(f.filePartitions.map(_.files.map(_.length).sum).sum)
+      case r if r.dependencies.isEmpty => None
+      case o => evalSourceSize(o.firstParent)
+    }
+  }
+
+  test("Get the correct file size") {
+    val filePartition = FilePartition(0, Seq(
+      PartitionedFile(InternalRow.empty, "fakePath0", 0, 100, Array("host-1", "host-2")),
+      PartitionedFile(InternalRow.empty, "fakePath1", 0, 200, Array("host-5", "host-6"))
+    ).toArray)
+    val cachePartition = CacheFilePartition.convertFilePartitionToCache(filePartition)
+
+    val fakeRDD = new CacheFileScanRDD(
+      spark,
+      (_: PartitionedFile) => Iterator.empty,
+      Seq(cachePartition),
+      new StructType().add("a", "double").add("b", "int"),
+      Nil
+    )
+    val expectedFileSize = Some(filePartition.files.map(_.length).sum).sum
+    val fileSize = evalSourceSize(fakeRDD).getOrElse(-1L)
+    assert(expectedFileSize == fileSize)
   }
 }

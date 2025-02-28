@@ -68,14 +68,6 @@ function printRestoreResult() {
     fi
 }
 
-function printEnterMaintainModeResult() {
-    echo -e "${YELLOW}Enter Maintain Mode succeed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
-}
-
-function printExitMaintainModeResult() {
-    echo -e "${YELLOW}Exit Maintain Mode succeed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
-}
-
 function check_path_empty() {
   # this function is to check whether the path is an empty str.
     if [ -z "$1" ]; then
@@ -91,46 +83,20 @@ function check_path_empty_dir() {
     fi
 }
 
-function turn_on_maintain_mode() {
-  ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MaintainModeTool -on -reason 'metastore tool' -hidden-output true
-  local ret=$?
-  if [[ $ret != 0 ]]; then
-      echo -e "${YELLOW}Enter Maintain Mode failed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
-      exit $ret
-  fi
-}
-
-function turn_off_maintain_mode() {
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MaintainModeTool -off -hidden-output true
-    local ret=$?
-    if [[ $ret != 0 ]]; then
-        echo -e "${YELLOW}Exit Maintain Mode failed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
-        exit $ret
-    fi
-}
-
 function restore_all() {
         local path=`cd $1 && pwd -P`
         check_path_empty ${path}
         check_path_empty_dir ${path}
-        turn_on_maintain_mode
-        printEnterMaintainModeResult
         ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool -restore -dir ${path} ${2}
         printRestoreResult $?
-        turn_off_maintain_mode
-        printExitMaintainModeResult
 }
 
 function restore_project() {
         local path=`cd $1 && pwd -P`
         check_path_empty ${path}
         check_path_empty_dir ${path}
-        turn_on_maintain_mode
-        printEnterMaintainModeResult
         ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool -restore -dir ${path} -project ${2} ${3}
         printRestoreResult $?
-        turn_off_maintain_mode
-        printExitMaintainModeResult
 }
 
 

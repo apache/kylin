@@ -44,7 +44,7 @@ public class AclTCRListener implements EventListenerRegistry.ResourceEventListen
         if (Objects.isNull(rawResource)) {
             return;
         }
-        getProjectName(rawResource.getResPath()).ifPresent(project -> clearCache(config, project));
+        getProjectName(rawResource.getMetaKey()).ifPresent(project -> clearCache(config, project));
     }
 
     @Override

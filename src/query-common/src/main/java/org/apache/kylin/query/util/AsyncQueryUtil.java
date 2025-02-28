@@ -27,20 +27,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 public class AsyncQueryUtil {
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SuccessFileContent {
+        private String code;
+    }
+
     public static final String ASYNC_QUERY_JOB_ID_PRE = "ASYNC-QUERY-";
     private static final Logger logger = LoggerFactory.getLogger(AsyncQueryUtil.class);
 
@@ -74,7 +88,7 @@ public class AsyncQueryUtil {
         FileSystem fileSystem = getFileSystem();
         Path asyncQueryResultDir = getAsyncQueryResultDir(project, queryId);
         if (fileSystem.exists(asyncQueryResultDir)) {
-            try (FSDataOutputStream os = getFileSystem().create(new Path(asyncQueryResultDir, getMetaDataFileName())); //
+            try (FSDataOutputStream os = getFileSystem().create(new Path(asyncQueryResultDir, getMetaDataFileName()));
                     OutputStreamWriter osw = new OutputStreamWriter(os, Charset.defaultCharset())) {
                 String metaString = StringUtils.join(columnNames, ",") + "\n" + StringUtils.join(dataTypes, ",");
                 osw.write(metaString);
@@ -122,6 +136,35 @@ public class AsyncQueryUtil {
         try (FSDataOutputStream os = fileSystem.create(new Path(asyncQueryResultDir, getSuccessFlagFileName()))) {
             os.hflush();
         }
+    }
+
+    public static void createSuccessFlagWithContent(String project, String queryId, SuccessFileContent content)
+            throws IOException {
+        FileSystem fileSystem = getFileSystem();
+        Path asyncQueryResultDir = getAsyncQueryResultDir(project, queryId);
+        try (FSDataOutputStream os = fileSystem.create(new Path(asyncQueryResultDir, getSuccessFlagFileName()))) {
+            if (content != null) {
+                os.writeUTF(JsonUtil.writeValueAsString(content));
+            }
+            os.hflush();
+        }
+    }
+
+    public static SuccessFileContent getSuccessFileContent(String project, String queryId) throws IOException {
+        FileSystem fileSystem = getFileSystem();
+        Path asyncQueryResultDir = getAsyncQueryResultDir(project, queryId);
+        Path successFilePath = new Path(asyncQueryResultDir, getSuccessFlagFileName());
+        FileStatus successFileStatus = fileSystem.getFileStatus(successFilePath);
+        if (successFileStatus.getLen() == 0) {
+            return null;
+        }
+        try (FSDataInputStream in = fileSystem.open(successFilePath)) {
+            String content = in.readUTF();
+            if (StringUtils.isNotBlank(content)) {
+                return JsonUtil.readValue(content, SuccessFileContent.class);
+            }
+        }
+        return null;
     }
 
     public static Path getAsyncQueryResultDir(String project, String queryId) {

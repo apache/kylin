@@ -21,13 +21,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class ColumnRowTypeMockUtil {
     public static ColumnRowType mock(String tableName, String tableAlias,

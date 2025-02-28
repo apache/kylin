@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -44,12 +46,24 @@ import org.apache.spark.sql.SparkSession;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
 
-import org.apache.kylin.guava30.shaded.common.cache.Cache;
-
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class StreamingTestCase extends NLocalFileMetadataTestCase {
     protected static String MODEL_ALIAS = "stream_merge1";
+
+    @Override
+    public void createTestMetadata(String... overlay) {
+        super.createTestMetadata(overlay);
+        JobContextUtil.getJobInfoDao(getTestConfig());
+    }
+
+    @Override
+    public void cleanupTestMetadata() {
+        JobContextUtil.cleanUp();
+        super.cleanupTestMetadata();
+    }
 
     public NDataflow createSegments(NDataflowManager mgr, NDataflow df, int number) {
         return createSegments(mgr, df, number, null, null);
@@ -179,6 +193,7 @@ public class StreamingTestCase extends NLocalFileMetadataTestCase {
                     assertMeet.set(true);
                     break;
                 } catch (Exception e) {
+                    log.error("testWithRetry failed", e);
                     continue;
                 }
             }

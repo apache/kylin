@@ -1,0 +1,74 @@
+{
+  "uuid" : "60a873cd-78ca-4740-a3d9-a34719846e4e",
+  "last_modified" : 1483156049796,
+  "version" : "1.6.1",
+  "table_name" : "SSB.CUSTOMER",
+  "last_build_job_id" : "55a43fca-6f19-4226-9058-cfd6b6241230",
+  "columns_stats" : [ {
+    "max_value" : "30000",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 29083
+  }, {
+    "max_value" : "Customer#000030000",
+    "min_value" : "Customer#000000001",
+    "max_length_value" : "Customer#000000001",
+    "min_length_value" : "Customer#000000001",
+    "null_count" : 0,
+    "cardinality" : 32492
+  }, {
+    "max_value" : "zzyQcZpC50YD",
+    "min_value" : "  3SUEwTaEs35Z",
+    "max_length_value" : "EhnzmgkqQw7UXhF0PVdg gLf",
+    "min_length_value" : "tI8 wu",
+    "null_count" : 0,
+    "cardinality" : 31072
+  }, {
+    "max_value" : "VIETNAM  100",
+    "min_value" : "ALGERIA  000",
+    "max_length_value" : "MOROCCO  099",
+    "min_length_value" : "MOROCCO  099",
+    "null_count" : 0,
+    "cardinality" : 2456
+  }, {
+    "max_value" : "VIETNAM",
+    "min_value" : "ALGERIA",
+    "max_length_value" : "UNITED KINGDOM",
+    "min_length_value" : "PERU",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "MIDDLE EAST",
+    "min_value" : "AFRICA",
+    "max_length_value" : "MIDDLE EAST",
+    "min_length_value" : "ASIA",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "34-999-756-5751",
+    "min_value" : "10-100-549-5448",
+    "max_length_value" : "25-741-298-7683",
+    "min_length_value" : "25-741-298-7683",
+    "null_count" : 0,
+    "cardinality" : 29495
+  }, {
+    "max_value" : "MACHINERY",
+    "min_value" : "AUTOMOBILE",
+    "max_length_value" : "AUTOMOBILE",
+    "min_length_value" : "BUILDING",
+    "null_count" : 0,
+    "cardinality" : 5
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "Customer#000000001", "Customer#000000003", "Customer#000000005", "Customer#000000007", "Customer#000000009", "Customer#000000011", "Customer#000000013", "Customer#000000015", "Customer#000000017", "Customer#000000019" ], [ "j5JsirBM9P", "fkRGN8n", "hwBtxkoBF qSW4KrI", "8OkMVLQ1dK6Mbu6WG9", "vgIql8H6zoyuLMFN", "cG48rYjF3Aw7xs", "Ez3ax0D5HnUbeU", "3y4KK4CcfNwNCTP0u0p1Rk6", "Js JrVHNAyCYMANzPGzvonS", "yO0XPkiuSWk0vN Ffc" ], [ "MOROCCO  099", "ARGENTINA069", "CANADA   073", "CHINA    010", "INDIA    026", "UNITED KI040", "CANADA   074", "UNITED KI065", "BRAZIL   097", "CHINA    033" ], [ "MOROCCO", "ARGENTINA", "CANADA", "CHINA", "INDIA", "UNITED KINGDOM", "CANADA", "UNITED KINGDOM", "BRAZIL", "CHINA" ], [ "AFRICA", "AMERICA", "AMERICA", "ASIA", "ASIA", "EUROPE", "AMERICA", "EUROPE", "AMERICA", "ASIA" ], [ "25-741-298-7683", "11-748-336-1281", "13-942-636-1142", "28-982-975-1478", "18-906-367-7410", "33-151-343-7914", "13-547-597-8453", "33-542-760-7818", "12-682-348-1554", "28-526-505-9573" ], [ "BUILDING", "AUTOMOBILE", "HOUSEHOLD", "AUTOMOBILE", "FURNITURE", "BUILDING", "BUILDING", "HOUSEHOLD", "AUTOMOBILE", "HOUSEHOLD" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "30000",
+  "data_source_properties" : { },
+  "project" : "ssb"
+}

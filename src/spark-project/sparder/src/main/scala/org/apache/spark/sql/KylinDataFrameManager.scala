@@ -18,19 +18,17 @@
 
 package org.apache.spark.sql
 
-import java.sql.Timestamp
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.model.FusionModelManager
+import org.apache.kylin.query.runtime.FilePruningMode.PruningMode
 import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan}
-import org.apache.spark.sql.datasource.storage.StorageStoreFactory
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
 
+import java.sql.Timestamp
 import scala.collection.mutable.{HashMap => MutableHashMap}
 
-import io.kyligence.kap.secondstorage.SecondStorage
 
 class KylinDataFrameManager(sparkSession: SparkSession) {
   private var extraOptions = new MutableHashMap[String, String]()
@@ -73,6 +71,10 @@ class KylinDataFrameManager(sparkSession: SparkSession) {
     option("bucketingEnabled", bucketingEnabled)
   }
 
+  def filePruningMode(mode: PruningMode): KylinDataFrameManager = {
+    option("filePruningMode", mode.toString)
+  }
+
   def cuboidTable(dataflow: NDataflow, layout: LayoutEntity, pruningInfo: String): LogicalPlan = {
     format("parquet")
     option("project", dataflow.getProject)
@@ -85,27 +87,22 @@ class KylinDataFrameManager(sparkSession: SparkSession) {
       val batchModelId = fusionModel.getBatchModel.getUuid
       val batchDataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, dataflow.getProject).getDataflow(batchModelId)
       val end = batchDataflow.getDateRangeEnd
-
       val partition = dataflow.getModel.getPartitionDesc.getPartitionDateColumnRef
       val id = layout.getOrderedDimensions.inverse().get(partition)
-      var plan = read(dataflow, layout, pruningInfo)
+      var plan = read(dataflow, layout)
       if (id != null && end != Long.MinValue) {
         val filterPlan = Filter(col(id.toString).geq(new Timestamp(end)).expr, plan)
         plan = SparkOperation.project(filterPlan.output.map(c => col(c.name)), filterPlan)
       }
       return plan
     }
-    read(dataflow, layout, pruningInfo)
+    read(dataflow, layout)
   }
 
-  def read(dataflow: NDataflow, layout: LayoutEntity, pruningInfo: String): LogicalPlan = {
-    val df = SecondStorage.trySecondStorage(sparkSession, dataflow, layout, pruningInfo)
-    if (df.isEmpty) {
-      StorageStoreFactory.create(dataflow.getModel.getStorageType)
-        .read(dataflow, layout, sparkSession, extraOptions.toMap)
-    } else {
-      df.get.queryExecution.analyzed
-    }
+  def read(dataflow: NDataflow, layout: LayoutEntity): LogicalPlan = {
+    import org.apache.spark.sql.datasource.storage.StorageStoreFactory
+    StorageStoreFactory.create(dataflow.getModel.getStorageType)
+      .read(dataflow, layout, sparkSession, extraOptions.toMap)
   }
 
   /**

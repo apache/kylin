@@ -1,0 +1,147 @@
+{
+  "uuid" : "b05034a8-c037-416b-aa26-9e6b4a41ee40",
+  "last_modified" : 1622018774561,
+  "create_time" : 1622018770823,
+  "version" : "4.0.0.0",
+  "alias" : "streaming_test",
+  "owner" : "ADMIN",
+  "model_type" : "HYBRID",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.P_LINEORDER_STREAMING",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "P_LINEORDER_STREAMING.LO_PARTITIONCOLUMN",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_ORDERKEY",
+    "column" : "P_LINEORDER_STREAMING.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LO_EXTENDEDPRICE",
+    "column" : "P_LINEORDER_STREAMING.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 2,
+    "name" : "LO_ORDTOTALPRICE",
+    "column" : "P_LINEORDER_STREAMING.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 3,
+    "name" : "LO_DISCOUNT",
+    "column" : "P_LINEORDER_STREAMING.LO_DISCOUNT"
+  }, {
+    "id" : 4,
+    "name" : "LO_REVENUE",
+    "column" : "P_LINEORDER_STREAMING.LO_REVENUE"
+  }, {
+    "id" : 5,
+    "name" : "LO_SUPPLYCOST",
+    "column" : "P_LINEORDER_STREAMING.LO_SUPPLYCOST"
+  }, {
+    "id" : 6,
+    "name" : "LO_TAX",
+    "column" : "P_LINEORDER_STREAMING.LO_TAX"
+  }, {
+    "id" : 7,
+    "name" : "LO_COMMITDATE",
+    "column" : "P_LINEORDER_STREAMING.LO_COMMITDATE"
+  }, {
+    "id" : 8,
+    "name" : "LO_SHIPMODE",
+    "column" : "P_LINEORDER_STREAMING.LO_SHIPMODE"
+  }, {
+    "id" : 9,
+    "name" : "V_REVENUE",
+    "column" : "P_LINEORDER_STREAMING.V_REVENUE"
+  }, {
+    "id" : 10,
+    "name" : "LO_PARTITIONCOLUMN",
+    "column" : "P_LINEORDER_STREAMING.LO_PARTITIONCOLUMN",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "LO_LINENUMBER",
+    "column" : "P_LINEORDER_STREAMING.LO_LINENUMBER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "LO_CUSTKEY",
+    "column" : "P_LINEORDER_STREAMING.LO_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "LO_PARTKEY",
+    "column" : "P_LINEORDER_STREAMING.LO_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "LO_SUPPKEY",
+    "column" : "P_LINEORDER_STREAMING.LO_SUPPKEY"
+  }, {
+    "id" : 15,
+    "name" : "LO_ORDERDATE",
+    "column" : "P_LINEORDER_STREAMING.LO_ORDERDATE"
+  }, {
+    "id" : 16,
+    "name" : "LO_ORDERPRIOTITY",
+    "column" : "P_LINEORDER_STREAMING.LO_ORDERPRIOTITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "LO_SHIPPRIOTITY",
+    "column" : "P_LINEORDER_STREAMING.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 18,
+    "name" : "LO_QUANTITY",
+    "column" : "P_LINEORDER_STREAMING.LO_QUANTITY"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "P_LINEORDER_STREAMING" : {
+        "x" : 439.8888821072049,
+        "y" : 112.77777777777779,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : "b05034a8-c037-416b-aa26-9e6b4a41ee40",
+  "computed_column_uuids" : [ ],
+  "project" : "streaming_test"
+}

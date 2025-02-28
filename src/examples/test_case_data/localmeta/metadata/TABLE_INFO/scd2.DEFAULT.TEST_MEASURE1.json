@@ -1,0 +1,121 @@
+{
+  "uuid" : "e7a974e0-a47a-41ce-ac9b-846492aab465",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_MEASURE1",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ID1",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "ID2",
+    "datatype" : "bigint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "ID3",
+    "datatype" : "bigint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "ID4",
+    "datatype" : "integer",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "price1",
+    "datatype" : "float",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "price2",
+    "datatype" : "double",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "price3",
+    "datatype" : "decimal(19,6)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "price5",
+    "datatype" : "smallint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "price6",
+    "datatype" : "tinyint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "price7",
+    "datatype" : "smallint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "name1",
+    "datatype" : "varchar(4096)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "name2",
+    "datatype" : "varchar(254)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "name3",
+    "datatype" : "char(255)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "name4",
+    "datatype" : "tinyint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "time1",
+    "datatype" : "date",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "time2",
+    "datatype" : "timestamp",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "flag",
+    "datatype" : "boolean",
+    "index" : "T",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "1",
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

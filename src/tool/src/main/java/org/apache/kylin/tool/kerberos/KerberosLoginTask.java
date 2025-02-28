@@ -28,10 +28,9 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  * Process kerberos long-running scenario.
@@ -121,7 +120,8 @@ public class KerberosLoginTask {
                     + kapConfig.getKerberosKeytabPath() + ".");
             if (kapConfig.getKerberosPlatform().equals("Standard")) {
                 loginStandardKerberos();
-            } else if (kapConfig.getKerberosPlatform().equals(KapConfig.FI_PLATFORM) || kapConfig.getKerberosPlatform().equals(KapConfig.TDH_PLATFORM)) {
+            } else if (kapConfig.getKerberosPlatform().equals(KapConfig.FI_PLATFORM)
+                    || kapConfig.getKerberosPlatform().equals(KapConfig.TDH_PLATFORM)) {
                 loginNonStandardKerberos();
             }
         } catch (Exception e) {

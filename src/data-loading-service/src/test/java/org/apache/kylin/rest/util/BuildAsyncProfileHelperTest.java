@@ -28,7 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.profiler.ProfilerStatus;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -52,15 +52,16 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-
     @Test
     public void testGetProfileStatus() {
-        Assert.assertEquals(BuildAsyncProfileHelper.NOT_EXIST, BuildAsyncProfileHelper.getProfileStatus(project, jobStepId));
+        Assert.assertEquals(BuildAsyncProfileHelper.NOT_EXIST,
+                BuildAsyncProfileHelper.getProfileStatus(project, jobStepId));
     }
 
     @Test
     public void testStartProfileError() throws IOException {
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
 
         Assert.assertThrows("profiler is started already", KylinException.class,
@@ -70,7 +71,8 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testStartProfile() throws IOException {
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs("", actionPath);
         String errorMsg = "";
         try {
@@ -85,7 +87,8 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
     @Test
     public void testDumpError() throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.engine.async-profiler-result-timeout", "1s");
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.IDLE(), actionPath);
         Assert.assertThrows("profiler is not start yet", KylinException.class,
                 () -> BuildAsyncProfileHelper.dump(project, jobStepId, dumpParams));
@@ -95,7 +98,8 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
     @Test
     public void testDumpTimeoutNegative() throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.engine.async-profiler-result-timeout", "-1s");
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
         Assert.assertThrows("collect dump timeout,please retry later", KylinException.class,
                 () -> BuildAsyncProfileHelper.dump(project, jobStepId, dumpParams));
@@ -105,7 +109,8 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
     @Test
     public void testDumpTwice() throws IOException {
         overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "3s");
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.DUMPED(), actionPath);
         Assert.assertThrows("collect dump timeout,please retry later", KylinException.class,
                 () -> BuildAsyncProfileHelper.dump(project, jobStepId, dumpParams));
@@ -115,7 +120,8 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
     @Test
     public void testDumpTimeout() throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.engine.async-profiler-result-timeout", "1s");
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
         Assert.assertThrows("collect dump timeout,please retry later", KylinException.class,
                 () -> BuildAsyncProfileHelper.dump(project, jobStepId, dumpParams));
@@ -125,8 +131,10 @@ public class BuildAsyncProfileHelperTest extends NLocalFileMetadataTestCase {
     @Test
     public void testDump() throws IOException {
         overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "3s");
-        Path actionPath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
-        Path dumpFilePath = new Path(KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/dump.tar.gz");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path dumpFilePath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/dump.tar.gz");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
 
         Thread t1 = new Thread(() -> {

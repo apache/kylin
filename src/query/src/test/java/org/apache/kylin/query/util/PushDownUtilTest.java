@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
@@ -38,18 +39,25 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @MetadataInfo
-class PushDownUtilTest {
+class PushDownUtilTest extends AbstractTestCase {
+
+    @BeforeAll
+    public static void setUpForClass() {
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
+    }
 
     private static void setAdminAuthentication() {
         TestingAuthenticationToken auth = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
@@ -139,7 +147,7 @@ class PushDownUtilTest {
     void testMassagePushDownSqlWithDoubleQuote() {
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         String sql = "select '''',trans_id from test_kylin_fact where LSTG_FORMAT_NAME like '%''%' group by trans_id limit 2;";
-        QueryParams queryParams = new QueryParams("", sql, "default", false);
+        QueryParams queryParams = new QueryParams("default", sql, "default", false);
         queryParams.setKylinConfig(config);
         String massagedSql = PushDownUtil.massagePushDownSql(queryParams);
         String expectedSql = "select '\\'', `TRANS_ID` from `TEST_KYLIN_FACT` where `LSTG_FORMAT_NAME` like '%\\'%' group by `TRANS_ID` limit 2";
@@ -339,6 +347,22 @@ class PushDownUtilTest {
                     + " AND (TIMESTAMPADD(day, 1, current_date) = '2012-01-01' and cc1 = 'china')";
             NDataModel updatedModel = modelManager.getDataModelDesc(model.getUuid());
             Assertions.assertEquals(expected, PushDownUtil.generateFlatTableSql(updatedModel, false));
+        }
+    }
+
+    @Test
+    public void testRemoveSqlHints() {
+        {
+            overwriteSystemProp("kylin.query.pushdown.sql-hints-erasing.enabled", "true");
+            String sql = "select /*+ AABB, MODEL_PRIORITY(m1,m2), ACCEPT_CACHE_TIME(123123), DEF */ col1, col2 from tb";
+            String ret = PushDownUtil.removeSqlHints(sql, KylinConfig.getInstanceFromEnv());
+            Assertions.assertEquals("select col1, col2 from tb", ret);
+        }
+        {
+            overwriteSystemProp("kylin.query.pushdown.sql-hints-erasing.enabled", "false");
+            String sql = "select /*+ AABB, MODEL_PRIORITY(m1,m2), ACCEPT_CACHE_TIME(123123), DEF */ col1, col2 from tb";
+            String ret = PushDownUtil.removeSqlHints(sql, KylinConfig.getInstanceFromEnv());
+            Assertions.assertEquals(sql, ret);
         }
     }
 

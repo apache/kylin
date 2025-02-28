@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MockQuerySmartSupporter implements QuerySmartSupporter {
     @Override
-    public void onMatchQueryHistory(String project, List<QueryHistory> queries, boolean manual) {
+    public void onMatchQueryHistory(String project, List<QueryHistory> queries) {
         //do nothing
     }
 }

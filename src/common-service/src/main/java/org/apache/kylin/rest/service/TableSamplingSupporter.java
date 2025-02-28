@@ -22,6 +22,5 @@ import java.util.List;
 import java.util.Set;
 
 public interface TableSamplingSupporter {
-    List<String> sampling(Set<String> tables, String project, int rows, int priority, String yarnQueue,
-                          Object tag);
+    List<String> sampling(Set<String> tables, String project, int rows, int priority, String yarnQueue, Object tag);
 }

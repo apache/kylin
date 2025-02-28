@@ -17,9 +17,9 @@
  */
 package org.apache.kylin.rest.broadcaster;
 
-import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
-
 import java.io.IOException;
+
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 
 public interface BroadcastEventHandler {
 

@@ -22,38 +22,31 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLING_RANGE_INVALID;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.job.service.DTableService;
-import org.apache.kylin.job.service.TableSampleService;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.aspect.WaitForSyncBeforeRPC;
-import org.apache.kylin.rest.request.RefreshSegmentsRequest;
 import org.apache.kylin.rest.request.SamplingRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.service.DTableService;
 import org.apache.kylin.rest.service.ModelBuildSupporter;
+import org.apache.kylin.rest.service.TableSampleService;
 import org.apache.kylin.rest.service.TableService;
-import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -79,23 +72,6 @@ public class SampleController extends NBasicController {
 
     @Autowired
     private TableSampleService tableSampleService;
-
-    @ApiOperation(value = "refreshSegments", tags = {
-            "AI" }, notes = "Update Body: refresh_start, refresh_end, affected_start, affected_end")
-    @PutMapping(value = "/data_range")
-    @ResponseBody
-    public EnvelopeResponse<String> refreshSegments(@RequestBody RefreshSegmentsRequest request) throws IOException {
-        checkProjectName(request.getProject());
-        checkRequiredArg(TABLE, request.getTable());
-        checkRequiredArg("refresh start", request.getRefreshStart());
-        checkRequiredArg("refresh end", request.getRefreshEnd());
-        checkRequiredArg("affected start", request.getAffectedStart());
-        checkRequiredArg("affected end", request.getAffectedEnd());
-        DataRangeUtils.validateRange(request.getRefreshStart(), request.getRefreshEnd());
-        modelBuildService.refreshSegments(request.getProject(), request.getTable(), request.getRefreshStart(),
-                request.getRefreshEnd(), request.getAffectedStart(), request.getAffectedEnd());
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
-    }
 
     @ApiOperation(value = "partitionColumnFormat", tags = { "AI" })
     @GetMapping(value = "/partition_column_format")
@@ -124,9 +100,10 @@ public class SampleController extends NBasicController {
         checkSamplingTable(request.getQualifiedTableName());
         validatePriority(request.getPriority());
 
-        tableSampleService.sampling(Sets.newHashSet(request.getQualifiedTableName()), request.getProject(),
-                request.getRows(), request.getPriority(), request.getYarnQueue(), request.getTag());
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+        List<String> sampleJobs = tableSampleService.sampling(Sets.newHashSet(request.getQualifiedTableName()),
+                request.getProject(), request.getRows(), request.getPriority(), request.getYarnQueue(),
+                request.getTag());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, sampleJobs.stream().findFirst().orElse(null), "");
     }
 
     @ApiOperation(value = "hasSamplingJob", tags = { "AI" }, notes = "Update Param: qualified_table_name")
@@ -138,16 +115,6 @@ public class SampleController extends NBasicController {
         checkSamplingTable(qualifiedTableName);
         boolean hasSamplingJob = tableSampleService.hasSamplingJob(project, qualifiedTableName);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasSamplingJob, "");
-    }
-
-    @PostMapping(value = "/feign/sampling")
-    @ResponseBody
-    @WaitForSyncBeforeRPC
-    public List<String> sampling(@RequestBody Set<String> tables, @RequestParam("project") String project,
-            @RequestParam("rows") int rows, @RequestParam("priority") int priority,
-            @RequestParam(value = "yarnQueue", required = false, defaultValue = "") String yarnQueue,
-            @RequestParam(value = "tag", required = false) Object tag) {
-        return tableSampleService.sampling(tables, project, rows, priority, yarnQueue, tag);
     }
 
     public static void checkSamplingRows(int rows) {

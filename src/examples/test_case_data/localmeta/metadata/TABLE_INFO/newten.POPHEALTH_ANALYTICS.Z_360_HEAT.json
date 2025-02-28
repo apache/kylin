@@ -1,0 +1,167 @@
+{
+  "uuid" : "cb7e90a5-4247-40ad-8a27-6e60766b9ead",
+  "last_modified" : 1509676187542,
+  "version" : "2.3.0.20500",
+  "name" : "Z_360_HEAT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "PAYER",
+    "datatype" : "varchar(128)"
+  }, {
+    "id" : "2",
+    "name" : "PAYER_LOB",
+    "datatype" : "varchar(71)"
+  }, {
+    "id" : "3",
+    "name" : "MEMBER_ID",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "4",
+    "name" : "MRN",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "5",
+    "name" : "MEMBER_NAME",
+    "datatype" : "varchar(202)"
+  }, {
+    "id" : "6",
+    "name" : "MEMBER_DOB",
+    "datatype" : "date"
+  }, {
+    "id" : "7",
+    "name" : "MEMBER_PHONE",
+    "datatype" : "varchar(42)"
+  }, {
+    "id" : "8",
+    "name" : "MEMBER_ZIP",
+    "datatype" : "varchar(45)"
+  }, {
+    "id" : "9",
+    "name" : "MEMBER_LOB",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "10",
+    "name" : "ATTRIBUTED",
+    "datatype" : "varchar(3)"
+  }, {
+    "id" : "11",
+    "name" : "HCC_RAF_SCORE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "12",
+    "name" : "TOTAL_RAF_SCORE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "13",
+    "name" : "PERCENT_RECAP",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "14",
+    "name" : "SCORE_INCREASE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "15",
+    "name" : "MBR_HAS_AT_LEAST_1_HCC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "16",
+    "name" : "MBR_HAS_HCC_FOR_DIABETES",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "17",
+    "name" : "MBR_HCC_FOR_DIABETES_CMPLICTNS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "18",
+    "name" : "SUSPECT_HCC_COUNT",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "19",
+    "name" : "PCP_NPI",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "20",
+    "name" : "PCP_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "21",
+    "name" : "PCP_PRACTICE",
+    "datatype" : "varchar(128)"
+  }, {
+    "id" : "22",
+    "name" : "EMR",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "23",
+    "name" : "PCP_AFFILIATION",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "24",
+    "name" : "SOURCE",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "25",
+    "name" : "GAP_YEAR",
+    "datatype" : "varchar(6)"
+  }, {
+    "id" : "26",
+    "name" : "GAP_TYPE",
+    "datatype" : "varchar(14)"
+  }, {
+    "id" : "27",
+    "name" : "GAP_NAME",
+    "datatype" : "varchar(4000)"
+  }, {
+    "id" : "28",
+    "name" : "HCC_NAME",
+    "datatype" : "varchar(24)"
+  }, {
+    "id" : "29",
+    "name" : "V22_HCC_DESCRIPT",
+    "datatype" : "varchar(200)"
+  }, {
+    "id" : "30",
+    "name" : "INCREMENTAL_RAF",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "31",
+    "name" : "GAP_PRIORITY",
+    "datatype" : "varchar(6)"
+  }, {
+    "id" : "32",
+    "name" : "GAP_CLOSED",
+    "datatype" : "varchar(260)"
+  }, {
+    "id" : "33",
+    "name" : "SUSPECT_CATEGORY",
+    "datatype" : "varchar(13)"
+  }, {
+    "id" : "34",
+    "name" : "REASONING",
+    "datatype" : "varchar(2270)"
+  }, {
+    "id" : "35",
+    "name" : "LIKELIHOOD",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "36",
+    "name" : "SUSPECT_HCC_PRESENT",
+    "datatype" : "char(3)"
+  }, {
+    "id" : "37",
+    "name" : "QUAL_GAP_PRESENT",
+    "datatype" : "char(3)"
+  }, {
+    "id" : "38",
+    "name" : "LAST_APPT_DATE",
+    "datatype" : "date"
+  }, {
+    "id" : "39",
+    "name" : "LAST_CAREGIVER_NAME",
+    "datatype" : "varchar(100)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

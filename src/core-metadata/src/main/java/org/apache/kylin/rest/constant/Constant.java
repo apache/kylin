@@ -26,22 +26,22 @@ import org.apache.kylin.common.annotation.ThirdPartyDependencies;
  */
 public class Constant {
 
-    public final static String FakeSchemaName = "defaultSchema";
-    public final static String FakeCatalogName = "defaultCatalog";
+    public static final String FakeSchemaName = "defaultSchema";
+    public static final String FakeCatalogName = "defaultCatalog";
 
-    public final static String IDENTITY_USER = "user";
-    public final static String ADMIN = "ADMIN";
+    public static final String IDENTITY_USER = "user";
+    public static final String ADMIN = "ADMIN";
 
     @ThirdPartyDependencies({
             @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
                     "StaticUserService" }) })
-    public final static String ROLE_ADMIN = "ROLE_ADMIN";
-    public final static String ROLE_MODELER = "ROLE_MODELER";
-    public final static String ROLE_ANALYST = "ROLE_ANALYST";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_MODELER = "ROLE_MODELER";
+    public static final String ROLE_ANALYST = "ROLE_ANALYST";
 
-    public final static String GROUP_ALL_USERS = "ALL_USERS";
+    public static final String GROUP_ALL_USERS = "ALL_USERS";
 
-    public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
+    public static final String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
 
     public static final String ACCESS_CAN_PROJECT_ADMIN = "hasRole('ROLE_ADMIN') " //
             + " or hasPermission(#project, 'ADMINISTRATION')";

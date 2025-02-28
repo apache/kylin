@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,13 +56,11 @@ public class SampleProjectToolTest extends NLocalFileMetadataTestCase {
         val junitFolder = temporaryFolder.getRoot();
         val junitCoreMetaFolder = new File(junitFolder.getAbsolutePath() + "/core_meta");
         junitCoreMetaFolder.mkdir();
-        MetadataToolTestFixture.fixtureRestoreTest(getTestConfig(), junitCoreMetaFolder, "/");
-        val destResourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        destResourceStore.getMetadataStore().list("/").forEach(path -> {
-            if (path.contains(project)) {
-                destResourceStore.deleteResource(path);
-            }
-        });
+        MetadataToolTestFixture.fixtureRestoreTest(getTestConfig(), junitCoreMetaFolder, MetadataType.ALL.name());
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NProjectManager.getInstance(getTestConfig()).forceDropProject(project);
+            return true;
+        }, project);
         boolean success = true;
         try {
             SampleProjectTool tool = new SampleProjectTool();
@@ -78,7 +78,7 @@ public class SampleProjectToolTest extends NLocalFileMetadataTestCase {
     public void testImportProjectFail() throws IOException {
         val project = "broken_test";
         val junitFolder = temporaryFolder.getRoot();
-        MetadataToolTestFixture.fixtureRestoreTest(getTestConfig(), junitFolder, "/");
+        MetadataToolTestFixture.fixtureRestoreTest(getTestConfig(), junitFolder, MetadataType.ALL.name());
         boolean success = true;
         try {
             SampleProjectTool tool = new SampleProjectTool();

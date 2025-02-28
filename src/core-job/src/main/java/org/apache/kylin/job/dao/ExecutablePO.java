@@ -29,9 +29,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -41,8 +42,6 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +58,10 @@ public class ExecutablePO extends RootPersistentEntity {
     public static final int HIGHEST_PRIORITY = 0;
     public static final int DEFAULT_PRIORITY = 3;
     public static final int LOWEST_PRIORITY = 4;
+
+    private static final String V4_0_TYPE_PREFIX = "io.kyligence.kap.engine.spark.job";
+    private static final String V5_0_TYPE_PREFIX = "org.apache.kylin.engine.spark.job";
+
     @JsonProperty("name")
     private String name;
 
@@ -123,16 +126,6 @@ public class ExecutablePO extends RootPersistentEntity {
         priority = isPriorityValid(p) ? p : DEFAULT_PRIORITY;
     }
 
-    @Override
-    public String getResourcePath() {
-        return concatResourcePath(getUuid(), project);
-    }
-
-    public static String concatResourcePath(String name, String project) {
-        return new StringBuilder().append("/").append(project).append(ResourceStore.EXECUTABLE_JOB).append("/")
-                .append(name).toString();
-    }
-
     public static boolean isPriorityValid(int priority) {
         return priority >= HIGHEST_PRIORITY && priority <= LOWEST_PRIORITY;
     }
@@ -150,20 +143,8 @@ public class ExecutablePO extends RootPersistentEntity {
         }
     }
 
-    private long getTaskDuration() {
-        ExecutableOutputPO jobOutput = getOutput();
-        if (jobOutput.getDuration() != 0) {
-            var taskDuration = jobOutput.getDuration();
-            if (ExecutableState.RUNNING == ExecutableState.valueOf(jobOutput.getStatus())) {
-                taskDuration = (taskDuration + System.currentTimeMillis() - jobOutput.getLastRunningStartTime());
-            }
-            return taskDuration;
-        }
-        if (jobOutput.getStartTime() == 0) {
-            return 0;
-        }
-        return (jobOutput.getEndTime() == 0 ? System.currentTimeMillis() - jobOutput.getStartTime()
-                : jobOutput.getEndTime() - jobOutput.getStartTime());
+    public String getType() {
+        return backwardConvertType(type);
     }
 
     public String getTargetModelId() {
@@ -188,6 +169,29 @@ public class ExecutablePO extends RootPersistentEntity {
             }
         }
         return jobDuration;
+    }
+
+    private long getTaskDuration() {
+        ExecutableOutputPO jobOutput = getOutput();
+        if (jobOutput.getDuration() != 0) {
+            var taskDuration = jobOutput.getDuration();
+            if (ExecutableState.RUNNING == ExecutableState.valueOf(jobOutput.getStatus())) {
+                taskDuration = (taskDuration + System.currentTimeMillis() - jobOutput.getLastRunningStartTime());
+            }
+            return taskDuration;
+        }
+        if (jobOutput.getStartTime() == 0) {
+            return 0;
+        }
+        return (jobOutput.getEndTime() == 0 ? System.currentTimeMillis() - jobOutput.getStartTime()
+                : jobOutput.getEndTime() - jobOutput.getStartTime());
+    }
+
+    private String backwardConvertType(String oldType) {
+        if (oldType != null && oldType.startsWith(V4_0_TYPE_PREFIX)) {
+            return oldType.replace(V4_0_TYPE_PREFIX, V5_0_TYPE_PREFIX);
+        }
+        return oldType;
     }
 
 }

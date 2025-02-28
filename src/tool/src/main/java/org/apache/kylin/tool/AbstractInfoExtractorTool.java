@@ -43,7 +43,6 @@ import static org.apache.kylin.tool.constant.DiagSubTaskEnum.SPARK_LOGS;
 import static org.apache.kylin.tool.constant.DiagSubTaskEnum.SPARK_STREAMING_LOGS;
 import static org.apache.kylin.tool.constant.DiagSubTaskEnum.SYSTEM_METRICS;
 import static org.apache.kylin.tool.constant.DiagSubTaskEnum.SYSTEM_USAGE;
-import static org.apache.kylin.tool.constant.DiagSubTaskEnum.TIERED_STORAGE_LOGS;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,6 +98,7 @@ import org.apache.kylin.rest.util.SpringContext;
 import org.apache.kylin.tool.constant.DiagSubTaskEnum;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.apache.kylin.tool.constant.StageEnum;
+import org.apache.kylin.tool.obf.IpObfuscator;
 import org.apache.kylin.tool.obf.KylinConfObfuscator;
 import org.apache.kylin.tool.obf.MappingRecorder;
 import org.apache.kylin.tool.obf.ObfLevel;
@@ -312,6 +312,21 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
             kylinConfObfuscator.obfuscate(new File(rootDir, SensitiveConfigKeysConstant.CONF_DIR),
                     file -> (file.isFile() && file.getName().startsWith(SensitiveConfigKeysConstant.KYLIN_PROPERTIES)));
         }
+
+        obfIpDiag(rootDir, obfLevel);
+    }
+
+    private void obfIpDiag(File rootDir, ObfLevel obfLevel) throws IOException {
+        if (!(obfLevel == ObfLevel.OBF && kylinConfig.isDiagIpObfEnabled())) {
+            return;
+        }
+        logger.info("diag start obf ip");
+        try (MappingRecorder recorder = new MappingRecorder(null)) {
+            ResultRecorder resultRecorder = new ResultRecorder();
+            IpObfuscator ipObfuscator = new IpObfuscator(obfLevel, recorder, resultRecorder);
+            ipObfuscator.obfuscate(rootDir, null);
+        }
+        logger.info("diag end obf ip");
     }
 
     private boolean isDiag() {
@@ -319,6 +334,7 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
                 || this instanceof StreamingJobDiagInfoTool || this instanceof QueryDiagInfoTool
                 || this instanceof DiagK8sTool;
     }
+
     private boolean isDiagFromWeb(OptionsHelper optionsHelper) {
         return isDiag() && optionsHelper.hasOption(OPTION_DIAGID);
     }
@@ -345,8 +361,9 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
 
     protected void exportSparkLog(File exportDir, long startTime, long endTime, File recordTime, String queryId) {
         QueryHistory query = new QueryDiagInfoTool().getQueryByQueryId(queryId);
-        String hostName = query == null ? null : AddressUtil.getServerInfo(
-                query.getQueryHistoryInfo().getHostName(), query.getQueryHistoryInfo().getPort());
+        String hostName = query == null ? null
+                : AddressUtil.getServerInfo(query.getQueryHistoryInfo().getHostName(),
+                        query.getQueryHistoryInfo().getPort());
 
         // job spark log
         Future sparkLogTask = executorService.submit(() -> {
@@ -600,7 +617,7 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
 
         scheduleTimeoutTask(recTask, REC_CANDIDATE);
     }
-    
+
     protected void exportJobInfo(String project, String jobId, File recordTime) {
         exportJobInfo(project, jobId, -1, -1, recordTime);
     }
@@ -630,7 +647,7 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
 
         scheduleTimeoutTask(jobTask, JOB_INFO);
     }
-    
+
     protected void exportFavoriteRule(String project, File recordTime) {
         val favoriteRuleTask = executorService.submit(() -> {
             recordTaskStartTime(FAVORITE_RULE);
@@ -692,16 +709,6 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
         });
 
         scheduleTimeoutTask(queryHistoryOffsetTask, QUERY_HISTORY_OFFSET);
-    }
-
-    protected void exportTieredStorage(String project, File exportDir, long startTime, long endTime, File recordTime) {
-        Future kgLogTask = executorService.submit(() -> {
-            recordTaskStartTime(TIERED_STORAGE_LOGS);
-            new ClickhouseDiagTool(project).dumpClickHouseServerLog(exportDir, startTime, endTime);
-            recordTaskExecutorTimeToFile(TIERED_STORAGE_LOGS, recordTime);
-        });
-
-        scheduleTimeoutTask(kgLogTask, TIERED_STORAGE_LOGS);
     }
 
     protected void exportKgLogs(File exportDir, long startTime, long endTime, File recordTime) {
@@ -778,8 +785,9 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
 
         scheduleTimeoutTask(confTask, SYSTEM_USAGE);
     }
-    
-    protected void exportLogFromLoki(File exportDir, Long startTime, Long endTime, List<String> instances, File recordTime) {
+
+    protected void exportLogFromLoki(File exportDir, Long startTime, Long endTime, List<String> instances,
+            File recordTime) {
         Future<?> logTask = executorService.submit(() -> {
             recordTaskStartTime(LOG);
             KylinLogTool.extractKylinLogFromLoki(exportDir, startTime, endTime, instances);
@@ -809,7 +817,8 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
         scheduleTimeoutTask(confTask, CONF);
     }
 
-    protected void exportConf(File exportDir, final File recordTime, final boolean includeConf, final boolean includeBin) {
+    protected void exportConf(File exportDir, final File recordTime, final boolean includeConf,
+            final boolean includeBin) {
         // export conf
         if (includeConf) {
             Future confTask = executorService.submit(() -> {
@@ -918,7 +927,7 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
     }
 
     public void exportJobSparkLog(File exportDir, final File recordTime, String project, String jobId,
-                                   ExecutablePO job) {
+            ExecutablePO job) {
         // job spark log
         Future sparkLogTask = executorService.submit(() -> {
             recordTaskStartTime(SPARK_LOGS);

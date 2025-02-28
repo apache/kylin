@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.kylin.common.exception.KylinException;
-
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public enum JarTypeEnum {

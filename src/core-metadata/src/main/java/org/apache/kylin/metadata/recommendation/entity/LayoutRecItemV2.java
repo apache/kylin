@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.recommendation.entity;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -54,6 +55,10 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
         return layout.genUniqueContent();
     }
 
+    public String getUniqueId(String modelId) {
+        return modelId + "@" + layout.getId();
+    }
+
     public int[] genDependIds() {
         List<Integer> colOrder = layout.getColOrder();
         int[] arr = new int[colOrder.size()];
@@ -63,8 +68,14 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
         return arr;
     }
 
-    public void updateLayoutContent(NDataModel dataModel, Map<String, RawRecItem> nonLayoutUniqueFlagRecMap) {
-        Map<String, ComputedColumnDesc> ccMap = getCcNameMapOnModel(dataModel);
+    @Override
+    public int[] genDependIds(Map<String, RawRecItem> nonLayoutUniqueFlagRecMap, String content, NDataModel dataModel) {
+        return genDependIds();
+    }
+
+    public void updateLayoutContent(NDataModel dataModel, Map<String, RawRecItem> nonLayoutUniqueFlagRecMap,
+            Set<String> newCcUuids) {
+        Map<String, ComputedColumnDesc> ccMap = dataModel.getCcMap();
         Map<String, RawRecItem> uniqueContentRecMap = Maps.newHashMap();
         nonLayoutUniqueFlagRecMap.forEach((uniqueFlag, recItem) -> {
             if (recItem.getModelID().equalsIgnoreCase(dataModel.getUuid())) {
@@ -76,10 +87,11 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
         List<Integer> originShardCols = layout.getShardByColumns();
         List<Integer> originSortCols = layout.getSortByColumns();
         List<Integer> originPartitionCols = layout.getPartitionByColumns();
-        List<Integer> colOrderInDB = getColIDInDB(ccMap, dataModel, originColOrder, uniqueContentRecMap);
-        List<Integer> shardColsInDB = getColIDInDB(ccMap, dataModel, originShardCols, uniqueContentRecMap);
-        List<Integer> sortColsInDB = getColIDInDB(ccMap, dataModel, originSortCols, uniqueContentRecMap);
-        List<Integer> partitionColsInDB = getColIDInDB(ccMap, dataModel, originPartitionCols, uniqueContentRecMap);
+        List<Integer> colOrderInDB = getColIDInDB(ccMap, newCcUuids, dataModel, originColOrder, uniqueContentRecMap);
+        List<Integer> shardColsInDB = getColIDInDB(ccMap, newCcUuids, dataModel, originShardCols, uniqueContentRecMap);
+        List<Integer> sortColsInDB = getColIDInDB(ccMap, newCcUuids, dataModel, originSortCols, uniqueContentRecMap);
+        List<Integer> partitionColsInDB = getColIDInDB(ccMap, newCcUuids, dataModel, originPartitionCols,
+                uniqueContentRecMap);
         layout.setColOrder(colOrderInDB);
         layout.setShardByColumns(shardColsInDB);
         layout.setPartitionByColumns(partitionColsInDB);
@@ -89,17 +101,17 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
         log.debug("Origin partition columns is {}, converted to {}", originPartitionCols, partitionColsInDB);
     }
 
-    private List<Integer> getColIDInDB(Map<String, ComputedColumnDesc> ccNameMap, NDataModel model,
-            List<Integer> columnIDs, Map<String, RawRecItem> uniqueContentToRecItemMap) {
+    private List<Integer> getColIDInDB(Map<String, ComputedColumnDesc> ccNameMap, Set<String> newCcUuids,
+            NDataModel model, List<Integer> columnIDs, Map<String, RawRecItem> uniqueContentToRecItemMap) {
         List<Integer> colOrderInDB = Lists.newArrayListWithCapacity(columnIDs.size());
         columnIDs.forEach(colId -> {
             String uniqueContent;
             if (colId < NDataModel.MEASURE_ID_BASE) {
                 TblColRef tblColRef = model.getEffectiveCols().get(colId);
-                uniqueContent = RawRecUtil.dimensionUniqueContent(tblColRef, ccNameMap);
+                uniqueContent = RawRecUtil.dimensionUniqueContent(tblColRef, ccNameMap, newCcUuids);
             } else {
                 NDataModel.Measure measure = model.getEffectiveMeasures().get(colId);
-                uniqueContent = RawRecUtil.measureUniqueContent(measure, ccNameMap);
+                uniqueContent = RawRecUtil.measureUniqueContent(measure, ccNameMap, newCcUuids);
             }
             if (uniqueContentToRecItemMap.containsKey(uniqueContent)) {
                 colOrderInDB.add(-uniqueContentToRecItemMap.get(uniqueContent).getId());
@@ -108,14 +120,5 @@ public class LayoutRecItemV2 extends RecItemV2 implements Serializable {
             }
         });
         return colOrderInDB;
-    }
-
-    private Map<String, ComputedColumnDesc> getCcNameMapOnModel(NDataModel model) {
-        Map<String, ComputedColumnDesc> ccMap = Maps.newHashMap();
-        model.getComputedColumnDescs().forEach(cc -> {
-            String aliasDotName = cc.getTableAlias() + "." + cc.getColumnName();
-            ccMap.putIfAbsent(aliasDotName, cc);
-        });
-        return ccMap;
     }
 }

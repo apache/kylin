@@ -20,12 +20,12 @@ package org.apache.kylin.query;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,6 +41,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.io.Files;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.engine.QueryExec;
@@ -50,9 +52,6 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.io.Files;
 
 import lombok.val;
 
@@ -94,7 +93,7 @@ public class KylinTestBase extends NLocalFileMetadataTestCase {
 
     public static String getTextFromFile(File file) throws IOException {
         BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+                new InputStreamReader(java.nio.file.Files.newInputStream(file.toPath()), StandardCharsets.UTF_8));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
@@ -111,8 +110,7 @@ public class KylinTestBase extends NLocalFileMetadataTestCase {
         int prefixIndex = sqlFileName.lastIndexOf(".sql");
         String dataFielName = sqlFileName.substring(0, prefixIndex) + ".dat";
         File dataFile = new File(dataFielName);
-        List<String> parameters = Files.readLines(dataFile, Charset.defaultCharset());
-        return parameters;
+        return Files.readLines(dataFile, Charset.defaultCharset());
     }
 
     // ////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +159,8 @@ public class KylinTestBase extends NLocalFileMetadataTestCase {
     protected int runSQL(File sqlFile, boolean debug, boolean explain) throws Exception {
         if (debug) {
             overwriteSystemProp("calcite.debug", "true");
-            InputStream inputStream = new FileInputStream("src/test/resources/logging.properties");
+            InputStream inputStream = java.nio.file.Files
+                    .newInputStream(Paths.get("src/test/resources/logging.properties"));
             LogManager.getLogManager().readConfiguration(inputStream);
         }
 

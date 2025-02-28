@@ -20,17 +20,16 @@ package org.apache.kylin.rest.controller;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.query.util.SlowQueryDetector;
-import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.rest.response.HealthResponse;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class HealthControllerTest extends ServiceTestBase {
 

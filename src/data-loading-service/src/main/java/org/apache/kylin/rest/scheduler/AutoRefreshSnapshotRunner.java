@@ -51,10 +51,14 @@ import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.snapshot.SnapshotJobUtils;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.rest.handler.KapNoOpResponseErrorHandler;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -62,9 +66,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -88,8 +89,6 @@ public class AutoRefreshSnapshotRunner implements Runnable {
     private Map<Future<String>, Long> checkSourceTableFutures = Maps.newConcurrentMap();
     @Getter
     private final String project;
-    @Setter
-    @Getter
     private RestTemplate restTemplate;
     @Getter
     private Map<String, List<TableDesc>> sourceTableSnapshotMapping = Maps.newHashMap();
@@ -127,6 +126,8 @@ public class AutoRefreshSnapshotRunner implements Runnable {
                 new LinkedBlockingQueue<>(),
                 new NamedThreadFactory("AutoRefreshSnapshotWorker(project:" + project + ")"));
         this.projectConfig = projectConfig;
+        this.restTemplate = new RestTemplate();
+        this.restTemplate.setErrorHandler(new KapNoOpResponseErrorHandler());
         log.info("AutoRefreshSnapshotRunner init project[{}] job pool size: {}", project, corePoolSize);
     }
 
@@ -139,8 +140,6 @@ public class AutoRefreshSnapshotRunner implements Runnable {
                         poolExecutor.getPoolSize(), poolExecutor.getCorePoolSize(), poolExecutor.getActiveCount(),
                         poolExecutor.getMaximumPoolSize());
             }
-            projectConfig = NProjectManager.getInstance(KylinConfig.readSystemKylinConfig()).getProject(project)
-                    .getConfig();
             saveSnapshotViewMapping(project, restTemplate);
             val tables = SnapshotJobUtils.getSnapshotTables(projectConfig, project);
             val viewTableMapping = readViewTableMapping();
@@ -164,6 +163,20 @@ public class AutoRefreshSnapshotRunner implements Runnable {
             checkSourceTableFutures = Maps.newConcurrentMap();
             sourceTableSnapshotMapping = Maps.newHashMap();
             buildSnapshotCount = Maps.newConcurrentMap();
+        }
+    }
+    
+    private void checkJobPool() {
+        projectConfig = NProjectManager.getInstance(KylinConfig.readSystemKylinConfig()).getProject(project)
+                .getConfig();
+        val pool = (ThreadPoolExecutor) getJobPool();
+        val corePoolSize = pool.getCorePoolSize();
+        val poolSizeFromConfig = projectConfig.getSnapshotAutoRefreshMaxConcurrentJobLimit();
+        if (poolSizeFromConfig != corePoolSize) {
+            pool.setCorePoolSize(poolSizeFromConfig);
+            pool.setMaximumPoolSize(poolSizeFromConfig);
+            log.info("update AutoRefreshSnapshotRunner job pool size : {} old pool size : {}", poolSizeFromConfig,
+                    corePoolSize);
         }
     }
 
@@ -347,6 +360,7 @@ public class AutoRefreshSnapshotRunner implements Runnable {
     @Override
     public void run() {
         try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+            checkJobPool();
             saveMarkFile();
             doRun();
         } catch (Exception e) {

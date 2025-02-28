@@ -20,6 +20,9 @@ package org.apache.kylin.job.core.lock;
 
 import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class JdbcJobLock implements JobLock {
 
     private final String lockId;
@@ -30,6 +33,10 @@ public class JdbcJobLock implements JobLock {
 
     private final JdbcLockClient lockClient;
     private final LockAcquireListener acquireListener;
+    // Now only used for streaming jobLock
+    @Getter
+    @Setter
+    private boolean isLocked = false;
 
     public JdbcJobLock(String lockId, String lockNode, long renewalSec, double renewalRatio, JdbcLockClient lockClient,
             LockAcquireListener acquireListener) {

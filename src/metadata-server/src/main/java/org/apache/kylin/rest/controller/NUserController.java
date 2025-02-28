@@ -44,8 +44,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -87,9 +90,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -106,8 +112,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import lombok.val;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping(value = "/api/user", produces = { HTTP_VND_APACHE_KYLIN_JSON })
@@ -143,6 +147,12 @@ public class NUserController extends NBasicController implements ApplicationList
     UserAclService userAclService;
 
     @Autowired
+    SessionRegistry sessionRegistry;
+
+    @Autowired
+    FindByIndexNameSessionRepository sessionRepository;
+
+    @Autowired
     private Environment env;
 
     private static final Pattern passwordPattern = Pattern
@@ -162,7 +172,7 @@ public class NUserController extends NBasicController implements ApplicationList
         if (!config.isUTEnv()) {
             return;
         }
-        CreateAdminUserUtils.createAllAdmins(userService, env);
+        CreateAdminUserUtils.createAllAdmins(userService, env, userAclService);
     }
 
     @ApiOperation(value = "createUser", tags = {
@@ -488,7 +498,9 @@ public class NUserController extends NBasicController implements ApplicationList
 
         completeAuthorities(existingUser);
         userService.updateUser(existingUser);
-
+        if (MapUtils.isNotEmpty(sessionRepository.findByPrincipalName(existingUser.getUsername()))) {
+            sessionRegistry.getAllSessions(existingUser, false).forEach(SessionInformation::expireNow);
+        }
         // update authentication
         if (StringUtils.equals(getPrincipal(), user.getUsername())) {
             UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(existingUser,
@@ -667,9 +679,8 @@ public class NUserController extends NBasicController implements ApplicationList
 
     private void checkSessionStoreType(KylinConfig env) {
         String type = env.getSpringStoreType();
-        HttpServletRequest request =
-                ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
-                        .getRequest();
+        HttpServletRequest request = ((ServletRequestAttributes) Objects
+                .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
         //todo other session store-type
         if ("jbdc".equals(type)) {
             request.getSession().setMaxInactiveInterval(env.getJdbcSessionMaxInactiveInterval());

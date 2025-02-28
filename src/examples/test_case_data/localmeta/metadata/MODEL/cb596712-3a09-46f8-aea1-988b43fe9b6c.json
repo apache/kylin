@@ -1,0 +1,239 @@
+{
+  "uuid" : "cb596712-3a09-46f8-aea1-988b43fe9b6c",
+  "alias" : "nmodel_full_measure_test",
+  "fact_table" : "DEFAULT.TEST_MEASURE",
+  "owner" : "ADMIN",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_MEASURE1",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_MEASURE1.ID1" ],
+      "foreign_key" : [ "TEST_MEASURE.ID1" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : "1",
+    "name" : "ID1",
+    "column" : "TEST_MEASURE.ID1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : "2",
+    "name" : "ID2",
+    "column" : "TEST_MEASURE.ID2"
+  }, {
+    "id" : "3",
+    "name" : "ID3",
+    "column" : "TEST_MEASURE.ID3"
+  }, {
+    "id" : "4",
+    "name" : "ID4",
+    "column" : "TEST_MEASURE.ID4"
+  }, {
+    "id" : "5",
+    "name" : "PRICE1",
+    "column" : "TEST_MEASURE.PRICE1"
+  }, {
+    "id" : "6",
+    "name" : "PRICE2",
+    "column" : "TEST_MEASURE.PRICE2"
+  }, {
+    "id" : "7",
+    "name" : "PRICE3",
+    "column" : "TEST_MEASURE.PRICE3"
+  }, {
+    "id" : "8",
+    "name" : "PRICE5",
+    "column" : "TEST_MEASURE.PRICE5"
+  }, {
+    "id" : "9",
+    "name" : "PRICE6",
+    "column" : "TEST_MEASURE.PRICE6"
+  }, {
+    "id" : "10",
+    "name" : "PRICE7",
+    "column" : "TEST_MEASURE.PRICE7"
+  }, {
+    "id" : "11",
+    "name" : "NAME1",
+    "column" : "TEST_MEASURE.NAME1"
+  }, {
+    "id" : "12",
+    "name" : "NAME2",
+    "column" : "TEST_MEASURE.NAME2"
+  }, {
+    "id" : "13",
+    "name" : "NAME2",
+    "column" : "TEST_MEASURE.NAME3"
+  }, {
+    "id" : "14",
+    "name" : "NAME4",
+    "column" : "TEST_MEASURE.NAME4"
+  }, {
+    "id" : "15",
+    "name" : "TIME1",
+    "column" : "TEST_MEASURE.TIME1"
+  }, {
+    "id" : "16",
+    "name" : "TIME2",
+    "column" : "TEST_MEASURE.TIME2"
+  }, {
+    "id" : "17",
+    "name" : "FLAG",
+    "column" : "TEST_MEASURE.FLAG"
+  }, {
+    "id" : "18",
+    "name" : "CC_PRICE1",
+    "column" : "TEST_MEASURE.CC_PRICE1"
+  }, {
+    "id" : "19",
+    "name" : "CC_PRICE2",
+    "column" : "TEST_MEASURE.CC_PRICE2"
+  }, {
+    "id" : "20",
+    "name" : "CC_PRICE3",
+    "column" : "TEST_MEASURE.CC_PRICE3"
+  }, {
+    "id" : "21",
+    "name" : "CC_PRICE5",
+    "column" : "TEST_MEASURE.CC_PRICE5"
+  }, {
+    "id" : "22",
+    "name" : "CC_PRICE6",
+    "column" : "TEST_MEASURE.CC_PRICE6"
+  }, {
+    "id" : "23",
+    "name" : "CC_PRICE7",
+    "column" : "TEST_MEASURE.CC_PRICE7"
+  }, {
+    "id" : "24",
+    "name" : "ID1-2",
+    "column" : "TEST_MEASURE1.ID1"
+  }, {
+    "id" : "25",
+    "name" : "ID2-2",
+    "column" : "TEST_MEASURE1.ID2"
+  }, {
+    "id" : "26",
+    "name" : "PRICE1-2",
+    "column" : "TEST_MEASURE1.PRICE1"
+  }, {
+    "id" : "27",
+    "name" : "CC_CROSSTABLE_PRICE1",
+    "column" : "TEST_MEASURE.CC_PRICE8"
+  }, {
+    "id" : "28",
+    "name" : "CC_CROSSTABLE_PRICE2",
+    "column" : "TEST_MEASURE.CC_PRICE9"
+  }, {
+    "id" : 29,
+    "name" : "PRICE7",
+    "column" : "TEST_MEASURE1.PRICE7"
+  }, {
+    "id" : 30,
+    "name" : "ID4",
+    "column" : "TEST_MEASURE1.ID4"
+  }, {
+    "id" : 31,
+    "name" : "FLAG",
+    "column" : "TEST_MEASURE1.FLAG"
+  }, {
+    "id" : 32,
+    "name" : "ID3",
+    "column" : "TEST_MEASURE1.ID3"
+  }, {
+    "id" : 33,
+    "name" : "PRICE3",
+    "column" : "TEST_MEASURE1.PRICE3"
+  }, {
+    "id" : 34,
+    "name" : "PRICE6",
+    "column" : "TEST_MEASURE1.PRICE6"
+  }, {
+    "id" : 35,
+    "name" : "PRICE5",
+    "column" : "TEST_MEASURE1.PRICE5"
+  }, {
+    "id" : 36,
+    "name" : "PRICE2",
+    "column" : "TEST_MEASURE1.PRICE2"
+  }, {
+    "id" : 37,
+    "name" : "NAME3",
+    "column" : "TEST_MEASURE1.NAME3"
+  }, {
+    "id" : 38,
+    "name" : "NAME4",
+    "column" : "TEST_MEASURE1.NAME4"
+  }, {
+    "id" : 39,
+    "name" : "NAME1",
+    "column" : "TEST_MEASURE1.NAME1"
+  }, {
+    "id" : 40,
+    "name" : "NAME2",
+    "column" : "TEST_MEASURE1.NAME2"
+  }, {
+    "id" : 41,
+    "name" : "TIME2",
+    "column" : "TEST_MEASURE1.TIME2"
+  }, {
+    "id" : 42,
+    "name" : "CC_PRICE10",
+    "column" : "TEST_MEASURE.CC_PRICE10"
+  }, {
+    "id" : 43,
+    "name" : "TIME1",
+    "column" : "TEST_MEASURE1.TIME1"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "COUNT_STAR",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "*"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "SUM_1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100002,
+    "name" : "SUM_2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1.0"
+      } ],
+      "returntype" : "double"
+    }
+  }, {
+    "id" : 100003,
+    "name" : "SUM_3",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1.0"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : { },
+  "computed_column_uuids" : [ "282f86ed-1117-7ec7-efd1-238bbce133aa", "f6ed3dd1-42b4-c397-df5e-462e24d59d5e", "bec6ca1c-a9e9-777a-29db-77fa8eced31a", "141bda10-977a-46cf-cb97-57eb11971706", "72c38dcd-8932-503c-8fc5-e27ded0b6568", "b32fbd6d-4c33-218e-0bb6-417c9b294a51", "966114e1-e688-8ab3-fd46-c58efa804125", "53a26650-f98f-6c48-bb04-09bec9545b47", "abcd6af3-0211-212b-6293-f4065ed3b12e" ],
+  "project" : "default"
+}

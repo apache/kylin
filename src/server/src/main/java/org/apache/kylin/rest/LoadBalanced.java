@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.rest;
 
+import org.apache.kylin.rest.cluster.ClusterManager;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
 import org.springframework.context.annotation.Bean;
@@ -24,10 +25,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class LoadBalanced {
-
     @Bean
-    public ReactorLoadBalancer<ServiceInstance> reactorServiceInstanceLoadBalancer() {
-        return new ProjectBasedLoadBalancer();
+    public ReactorLoadBalancer<ServiceInstance> reactorServiceInstanceLoadBalancer(ClusterManager clusterManager) {
+        return new ResourceGroupLoadBalancer(clusterManager);
     }
 
 }

@@ -1,0 +1,123 @@
+{
+  "uuid" : "fc883850-60a2-01c7-d9a1-f8782211bf87",
+  "last_modified" : 1645772742443,
+  "create_time" : 1645772728797,
+  "version" : "4.0.0.0",
+  "alias" : "orders_model_clone",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "TPCH.ORDERS",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "O_CLERK",
+    "column" : "ORDERS.O_CLERK",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "O_CUSTKEY",
+    "column" : "ORDERS.O_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "O_SHIPPRIORITY",
+    "column" : "ORDERS.O_SHIPPRIORITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "O_ORDERDATE",
+    "column" : "ORDERS.O_ORDERDATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "O_COMMENT",
+    "column" : "ORDERS.O_COMMENT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "O_ORDERKEY",
+    "column" : "ORDERS.O_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "O_TOTALPRICE",
+    "column" : "ORDERS.O_TOTALPRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "O_ORDERPRIORITY",
+    "column" : "ORDERS.O_ORDERPRIORITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "O_ORDERSTATUS",
+    "column" : "ORDERS.O_ORDERSTATUS",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_total_price",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "ORDERS.O_TOTALPRICE"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "ORDERS" : {
+        "x" : 409.1111077202691,
+        "y" : 200.44444613986545,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "tpch"
+}

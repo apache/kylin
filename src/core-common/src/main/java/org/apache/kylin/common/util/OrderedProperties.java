@@ -44,7 +44,6 @@ import java.util.Vector;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**

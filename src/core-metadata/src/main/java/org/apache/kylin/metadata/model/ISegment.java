@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Range;
 import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
 
 public interface ISegment extends Comparable<ISegment> {
@@ -40,6 +41,8 @@ public interface ISegment extends Comparable<ISegment> {
     public SegmentRange.KafkaOffsetPartitionedSegmentRange getKSRange();
 
     public TimeRange getTSRange();
+
+    public Range<Long> getRange();
 
     public int getLayoutSize();
 

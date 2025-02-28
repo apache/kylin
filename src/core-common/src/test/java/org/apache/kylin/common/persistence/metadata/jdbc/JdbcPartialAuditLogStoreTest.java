@@ -19,37 +19,35 @@ package org.apache.kylin.common.persistence.metadata.jdbc;
 
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
-import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Locale;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
-import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
+import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStoreTool;
 import org.apache.kylin.common.persistence.metadata.JdbcPartialAuditLogStore;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.junit.JdbcInfo;
 import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
+import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @MetadataInfo(onlyProps = true)
 @JdbcMetadataInfo
+@OverwriteProp(key = "kylin.metadata.url", value = "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=")
 class JdbcPartialAuditLogStoreTest {
-    private static final String LOCAL_INSTANCE = "127.0.0.1";
-    private final Charset charset = Charset.defaultCharset();
 
     @Test
     void testPartialAuditLogRestore() throws Exception {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(),
-                resPath -> resPath.startsWith("/_global/p2/"));
+        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), null);
         workerStore.getMetadataStore().setAuditLogStore(auditLogStore);
         auditLogStore.restore(101);
         Assertions.assertEquals(101, auditLogStore.getLogOffset());
@@ -57,35 +55,23 @@ class JdbcPartialAuditLogStoreTest {
     }
 
     @Test
-    void testPartialFetchAuditLog(JdbcInfo jdbcInfo) throws Exception {
+    void testPartialFetchAuditLog() throws Exception {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(),
-                resPath -> resPath.startsWith("/_global/p2/"));
+        var auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), "uuid1");
         workerStore.getMetadataStore().setAuditLogStore(auditLogStore);
 
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
-        val insertSql = (String) ReflectionTestUtils.getField(JdbcAuditLogStore.class, "INSERT_SQL");
-
-        Assertions.assertNotNull(insertSql, "cannot get insert sql fromm JdbcAuditLogStore");
-
-        Assertions.assertEquals(1, workerStore.listResourcesRecursively("/").size());
-        val url = getTestConfig().getMetadataUrl();
-        val jdbcTemplate = jdbcInfo.getJdbcTemplate();
-        String unitId = RandomUtil.randomUUIDStr();
-        jdbcTemplate.batchUpdate(String.format(Locale.ROOT, insertSql, url.getIdentifier() + "_audit_log"),
-                Arrays.asList(
-                        new Object[] { "/_global/p1/abc", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p1/abc2", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p2/abc3", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p2/abc4", "abc".getBytes(charset), System.currentTimeMillis(), 1,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p1/abc/t1", null, null, null, unitId, null, LOCAL_INSTANCE }));
-
+        workerStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
+        Assertions.assertEquals(1, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
+        auditLogStore.batchInsert(Arrays.asList(
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc", "uuid1", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc", null, 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc2", "uuid1", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc2", "uuid2", 0)
+                )
+        );
         auditLogStore.catchupWithMaxTimeout();
-        val totalR = workerStore.listResourcesRecursively("/_global");
+        var totalR = workerStore.listResourcesRecursively("PROJECT");
         Assertions.assertEquals(2, totalR.size());
         auditLogStore.close();
     }
@@ -93,32 +79,23 @@ class JdbcPartialAuditLogStoreTest {
     @Test
     void testPartialFetchAuditLogEmptyFilter(JdbcInfo jdbcInfo) throws Exception {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), null);
+        var auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), null);
         workerStore.getMetadataStore().setAuditLogStore(auditLogStore);
 
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
-        val insertSql = (String) ReflectionTestUtils.getField(JdbcAuditLogStore.class, "INSERT_SQL");
-
-        Assertions.assertNotNull(insertSql, "cannot get insert sql fromm JdbcAuditLogStore");
-
-        Assertions.assertEquals(1, workerStore.listResourcesRecursively("/").size());
-        val url = getTestConfig().getMetadataUrl();
-        val jdbcTemplate = jdbcInfo.getJdbcTemplate();
-        String unitId = RandomUtil.randomUUIDStr();
-        jdbcTemplate.batchUpdate(String.format(Locale.ROOT, insertSql, url.getIdentifier() + "_audit_log"),
-                Arrays.asList(
-                        new Object[] { "/_global/p1/abc", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p1/abc2", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p2/abc3", "abc".getBytes(charset), System.currentTimeMillis(), 0,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p2/abc4", "abc".getBytes(charset), System.currentTimeMillis(), 1,
-                                unitId, null, LOCAL_INSTANCE }));
-
+        workerStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
+        Assertions.assertEquals(1, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
+        auditLogStore.batchInsert(Arrays.asList(
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc2", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc3", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("abc4", 0),
+                JdbcAuditLogStoreTool.createProjectAuditLog("t1", 0)
+                )
+        );
         auditLogStore.catchupWithMaxTimeout();
-        val totalR = workerStore.listResourcesRecursively("/_global");
-        Assertions.assertEquals(4, totalR.size());
+        var totalR = workerStore.listResourcesRecursively("PROJECT");
+        Assertions.assertEquals(5, totalR.size());
         auditLogStore.close();
     }
 }

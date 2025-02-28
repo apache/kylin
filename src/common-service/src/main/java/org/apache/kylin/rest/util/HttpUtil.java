@@ -20,25 +20,28 @@ package org.apache.kylin.rest.util;
 
 import static org.apache.kylin.common.constant.Constants.TRACE_ID;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServletServerHttpRequest;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
 public class HttpUtil {
     private static final String DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_JSON_VALUE;
     private static final Charset DEFAULT_CONTENT_CHARSET = StandardCharsets.UTF_8;
 
-    private HttpUtil() {}
+    private HttpUtil() {
+    }
 
     public static String getFullRequestUrl(HttpServletRequest request) {
         String url = request.getRequestURL().toString();
@@ -52,8 +55,8 @@ public class HttpUtil {
         return request.getRequestURL().toString();
     }
 
-    public static void setErrorResponse(HttpServletRequest request, HttpServletResponse response, int statusCode, Exception ex)
-            throws IOException {
+    public static void setErrorResponse(HttpServletRequest request, HttpServletResponse response, int statusCode,
+            Exception ex) throws IOException {
         response.setStatus(statusCode);
         response.setContentType(DEFAULT_CONTENT_TYPE);
         ErrorResponse errorResponse = new ErrorResponse(getFullRequestUrl(request), ex);
@@ -83,7 +86,7 @@ public class HttpUtil {
     }
 
     public static String formatSession(HttpSession session) {
-        return String.format("Id=%s; createTime=%s; lastAccessedTime=%s",
-                session.getId(), session.getCreationTime(), session.getLastAccessedTime());
+        return String.format(Locale.ROOT, "Id=%s; createTime=%s; lastAccessedTime=%s", session.getId(),
+                session.getCreationTime(), session.getLastAccessedTime());
     }
 }

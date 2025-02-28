@@ -26,7 +26,7 @@
           </el-dropdown>
         </div>
       </div>
-    </div>  
+    </div>
 
     <div class="clearfix ksd-mb-16">
       <div class="table-filters ksd-fleft">
@@ -355,7 +355,13 @@
         </template>
       </el-table-column>
     </el-table>
-    <index-details :index-detail-title="indexDetailTitle" :detail-type="detailType" :cuboid-data="cuboidData" @close="closeDetailDialog" v-if="indexDetailShow" />
+    <index-details
+      :index-detail-title="indexDetailTitle"
+      :detail-type="detailType"
+      :cuboid-data="cuboidData"
+      :storage-type="cuboidDataStorageType"
+      @close="closeDetailDialog"
+      v-if="indexDetailShow" />
     <diagnostic
       v-if="showDiagnostic"
       @close="showDiagnostic = false"
@@ -510,6 +516,7 @@ export default class QueryHistoryTable extends Vue {
   isShowDetail_PREPARATION = false // 展开查询步骤详情
   isShowDetail_JOB_EXECUTION = false // 展开spark任务执行步骤详情
   cuboidData = {}
+  cuboidDataStorageType = 1
   indexDetailTitle = ''
   indexDetailShow = false
   detailType = ''
@@ -1043,7 +1050,8 @@ export default class QueryHistoryTable extends Vue {
   // 展示 layout 详情
   async openLayoutDetails (item) {
     if (!item.layoutExist) return
-    const {modelId, layoutId} = item
+    const { modelId, layoutId, storageType } = item
+    this.cuboidDataStorageType = storageType
     try {
       const res = await this.loadAllIndex({
         project: this.currentSelectedProject,

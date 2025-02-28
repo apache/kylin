@@ -41,8 +41,8 @@ class ObsConfigTest {
         assert ObsConfig.getByLocation("oss://bucket/path").get() == oss;
         assert ObsConfig.getByLocation("s3a://bucket/path").get() == ObsConfig.S3;
         assert !ObsConfig.getByLocation("/path").isPresent();
-        Map<String, String> credentialConf = FileSystemUtil.generateRoleCredentialConf("oss", "bucket1",
-                "role", "cn-hangzhou", "oss-cn-hangzhou.aliyuncs.com");
+        Map<String, String> credentialConf = FileSystemUtil.generateRoleCredentialConf("oss", "bucket1", "role",
+                "cn-hangzhou", "oss-cn-hangzhou.aliyuncs.com");
         assert credentialConf.get(String.format(ObsConfig.OSS.getRoleArnKey(), "bucket1")).equals("role");
         try {
             FileStatus[] s = FileSystemUtil.listStatus(FileSystem.getLocal(new Configuration()), new Path("/"));

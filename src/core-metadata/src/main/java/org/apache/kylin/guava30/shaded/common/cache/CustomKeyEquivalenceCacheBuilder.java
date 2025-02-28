@@ -18,11 +18,12 @@
 
 package org.apache.kylin.guava30.shaded.common.cache;
 
+import static org.apache.kylin.common.persistence.MetadataType.CASE_INSENSITIVE_METADATA;
+
 import java.util.Locale;
 import java.util.Objects;
 
-import org.apache.kylin.common.KylinConfig;
-
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.guava30.shaded.common.base.Equivalence;
 
 import lombok.experimental.UtilityClass;
@@ -48,11 +49,9 @@ public class CustomKeyEquivalenceCacheBuilder {
         }
     };
 
-    public static CacheBuilder<Object, Object> newBuilder() {
-        if (KylinConfig.getInstanceFromEnv().isMetadataKeyCaseInSensitiveEnabled()) {
-            return CacheBuilder.newBuilder().keyEquivalence(KEY_CASE_IGNORE_EQUIVALENCE);
-        }
-        return CacheBuilder.newBuilder().keyEquivalence(Equivalence.equals());
+    public static CacheBuilder<Object, Object> newBuilder(MetadataType type) {
+        return CacheBuilder.newBuilder().keyEquivalence(
+                CASE_INSENSITIVE_METADATA.contains(type) ? KEY_CASE_IGNORE_EQUIVALENCE : Equivalence.equals());
     }
 
 }

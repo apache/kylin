@@ -1,0 +1,50 @@
+{
+  "uuid" : "54b3b229-a423-4041-92a2-a12c41417349",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_ACCOUNT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID|10000000",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "datatype" : "integer",
+    "data_gen" : "RAND||0|5",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "datatype" : "integer",
+    "data_gen" : "RAND||0|5",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "ACCOUNT_COUNTRY",
+    "datatype" : "varchar(4096)",
+    "data_gen" : "CN|FR|GB|GE|JP|IT|RU|US",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT_CONTACT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "2000",
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

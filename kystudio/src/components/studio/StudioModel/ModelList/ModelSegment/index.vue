@@ -114,9 +114,21 @@
             <span>{{scope.row.last_modified_time | toServerGMTDate}}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('sourceRecords')" width="150" align="right" prop="source_count" sortable="custom">
+        <el-table-column
+          v-if="!isStorageV3"
+          :label="$t('sourceRecords')"
+          width="150"
+          align="right"
+          prop="source_count"
+          sortable="custom">
         </el-table-column>
-        <el-table-column :label="$t('storageSize')" width="140" align="right" prop="storage" sortable="custom">
+        <el-table-column
+          v-if="!isStorageV3"
+          :label="!model.second_storage_enabled ? $t('storageSize') : $store.state.config.platform !== 'iframe' ? $t('storageSizeForDFS') : $t('storageSizeForClound')"
+          width="220"
+          align="right"
+          prop="storage"
+          sortable="custom">
           <template slot-scope="scope">{{scope.row.bytes_size | dataSize}}</template>
         </el-table-column>
         <el-table-column align="left" class-name="ky-hover-icon" fixed="right" :label="$t('kylinLang.common.action')" width="83">
@@ -153,15 +165,15 @@
           <span class="label">{{$t('segmentName')}}</span>
           <span class="text">{{detailSegment.name}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('segmentPath')}}</span>
           <span class="text segment-path">{{detailSegment.segmentPath}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('fileNumber')}}</span>
           <span class="text">{{detailSegment.fileNumber}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('storageSize1')}}</span>
           <span class="text">{{detailSegment.bytes_size | dataSize}}</span>
         </p>
@@ -513,6 +525,11 @@ export default class ModelSegment extends Vue {
   mergeError = false
   timestamp = Date.now().toString(32)
   showRefreshErrorTip = false
+
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
+  }
 
   get getDetails () {
     let notices = [

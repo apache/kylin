@@ -1,0 +1,57 @@
+{
+  "uuid" : "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96",
+  "last_modified" : 1509531215483,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ 0, 1 ],
+    "measures" : [ 100000, 100004 ],
+    "layouts" : [ {
+      "id" : 1,
+      "auto" : true,
+      "col_order" : [ 1, 0, 100000, 100004 ],
+      "storage_type" : 20
+    }, {
+      "id" : 2,
+      "auto" : true,
+      "col_order" : [ 0, 1, 100000, 100004 ],
+      "storage_type" : 20
+    } ]
+  }, {
+    "id" : 10000,
+    "dimensions" : [ 0, 1, 2 ],
+    "measures" : [ 100000 ],
+    "layouts" : [ {
+      "id" : 10001,
+      "auto" : true,
+      "col_order" : [ 1, 0, 2, 100000 ],
+      "storage_type" : 20
+    }, {
+      "id" : 10002,
+      "auto" : true,
+      "col_order" : [ 1, 2, 0, 100000 ],
+      "storage_type" : 20
+    } ]
+  }, {
+    "id" : 20000000000,
+    "dimensions" : [ 9 ],
+    "layouts" : [ {
+      "id" : 20000000001,
+      "auto" : true,
+      "col_order" : [ 9 ],
+      "storage_type" : 20
+    } ]
+  } ],
+  "next_aggregation_index_id" : 20000,
+  "next_table_index_id" : 20000010000,
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : null,
+  "status_need_notify" : [ ],
+  "engine_type" : 0,
+  "project" : "default"
+}

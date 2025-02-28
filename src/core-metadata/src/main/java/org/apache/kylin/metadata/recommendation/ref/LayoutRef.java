@@ -18,9 +18,8 @@
 
 package org.apache.kylin.metadata.recommendation.ref;
 
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

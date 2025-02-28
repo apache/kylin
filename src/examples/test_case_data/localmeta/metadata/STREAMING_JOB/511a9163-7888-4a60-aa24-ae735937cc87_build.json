@@ -1,0 +1,28 @@
+{
+  "uuid" : "511a9163-7888-4a60-aa24-ae735937cc87_build",
+  "last_modified" : 1614132852489,
+  "create_time" : 1612690025917,
+  "version" : "4.0.0.0",
+  "model_alias" : "AUTO_MODEL_P_LINEORDER_0",
+  "owner" : "ADMIN",
+  "model_id" : "511a9163-7888-4a60-aa24-ae735937cc87",
+  "last_start_time" : null,
+  "last_end_time" : null,
+  "last_update_time" : "2021-05-05 08:11:12",
+  "last_batch_count" : null,
+  "subscribe" : "ssb_topic",
+  "fact_table" : "SSB.P_LINEORDER",
+  "job_status" : "STOPPED",
+  "job_type" : "STREAMING_BUILD",
+  "yarn_app_id" : null,
+  "yarn_app_url" : null,
+  "params" : {
+    "spark.executor.memory" : "1g",
+    "spark.master" : "yarn-client",
+    "spark.driver.memory" : "512m",
+    "kylin.streaming.duration" : "30",
+    "spark.executor.cores" : "2",
+    "spark.executor.instances" : "1"
+  },
+  "project" : "streaming_test"
+}

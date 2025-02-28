@@ -18,19 +18,19 @@
 
 package org.apache.kylin.engine.spark.job
 
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
+import java.util.Objects
+import java.util.concurrent.TimeUnit
+
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.job.PartitionExec.PartitionResult
 import org.apache.kylin.engine.spark.job.SegmentExec.ResultType
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.job.JobBucket
 import org.apache.spark.sql.datasource.storage.{StorageListener, WriteTaskStats}
 import org.apache.spark.sql.{Dataset, Row}
 
-import java.util
-import java.util.Objects
-import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -66,12 +66,11 @@ private[job] trait PartitionExec {
       .filter(_.getPartitionId == partitionId) //
       .head.getBucketId
     logInfo(s"Layout partition bucket: ${layout.getId} $partitionId $newBucketId.")
-    val storagePath = NSparkCubingUtil.getStoragePath(dataSegment, layout.getId, newBucketId)
-    val taskStats = saveWithStatistics(layout, layoutDS, storagePath, readableDesc, storageListener)
+    val taskStats = saveWithStatistics(layout, layoutDS, dataSegment, readableDesc, storageListener, newBucketId)
     pipe.offer(PartitionResult(layout.getId, partitionId, newBucketId, taskStats))
   }
 
-  override protected def wrapDimensions(layout: LayoutEntity): util.Set[Integer] = {
+  override protected def wrapDimensions(layout: LayoutEntity): java.util.Set[Integer] = {
     // Implicitly included with multi level partition columns
     val dimensions = NSparkCubingUtil.combineIndices(partitionColumns, layout.getOrderedDimensions.keySet())
     logInfo(s"Layout dimensions: ${layout.getId} ${dimensions.asScala.mkString("[", ",", "]")}")
@@ -99,15 +98,15 @@ private[job] trait PartitionExec {
       override def process(): Int = {
         // Merge into the newest data segment.
         val manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, project)
-        val copiedDataflow = manager.getDataflow(dataflowId).copy()
-        val copiedSegment = copiedDataflow.getSegment(segmentId)
+        val df = manager.getDataflow(dataflowId)
+        val copiedSegment = df.getSegment(segmentId).copy()
 
         val dataLayouts = results.asScala.groupBy(_.layoutId).values.map { grouped =>
           val head = grouped.head
           val layoutId = head.layoutId
           val existedLayout = copiedSegment.getLayout(layoutId)
           val dataLayout = if (Objects.isNull(existedLayout)) {
-            NDataLayout.newDataLayout(copiedDataflow, segmentId, layoutId)
+            NDataLayout.newDataLayout(df, segmentId, layoutId)
           } else {
             existedLayout
           }

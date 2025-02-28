@@ -22,6 +22,7 @@ import static org.apache.kylin.common.exception.QueryErrorCode.UNSUPPORTED_EXPRE
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -29,24 +30,28 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.util.DateString;
 import org.apache.calcite.util.NlsString;
-import org.apache.calcite.util.TimestampString;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
-import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapRel;
+import org.apache.kylin.query.relnode.OlapTableScan;
+import org.apache.kylin.query.util.RexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;
@@ -54,14 +59,13 @@ import lombok.var;
 public class FilterConditionExpander {
     public static final Logger logger = LoggerFactory.getLogger(FilterConditionExpander.class);
 
-    private static final String DATE = "date";
-    private static final String TIMESTAMP = "timestamp";
-
-    private final OLAPContext context;
-    private final RelNode currentRel;
+    private final OlapContext context;
+    private final OlapRel currentRel;
     private final RexBuilder rexBuilder;
 
-    public FilterConditionExpander(OLAPContext context, RelNode currentRel) {
+    private final Map<String, RexNode> cachedConvertedRelMap = Maps.newHashMap();
+
+    public FilterConditionExpander(OlapContext context, OlapRel currentRel) {
         this.context = context;
         this.currentRel = currentRel;
         this.rexBuilder = currentRel.getCluster().getRexBuilder();
@@ -118,14 +122,7 @@ public class FilterConditionExpander {
 
     // handles only simple expression of form <RexInputRef> <op> <RexLiteral>
     public RexNode convertSimpleCall(RexCall call) {
-        val op0 = call.getOperands().get(0);
-        RexInputRef lInputRef = null;
-        if (call.getOperands().get(0) instanceof RexInputRef) {
-            lInputRef = convertInputRef((RexInputRef) call.getOperands().get(0), currentRel);
-        } else if (op0 instanceof RexCall && ((RexCall) op0).getOperator() == SqlStdOperatorTable.CAST
-                && ((RexCall) op0).getOperands().get(0) instanceof RexInputRef) {
-            lInputRef = convertInputRef((RexInputRef) ((RexCall) op0).getOperands().get(0), currentRel);
-        }
+        RexInputRef lInputRef = convertInputRef(call);
 
         if (lInputRef == null) {
             return null;
@@ -133,86 +130,121 @@ public class FilterConditionExpander {
 
         // single operand expr(col)
         if (call.getOperands().size() == 1) {
-            return rexBuilder.makeCall(call.getOperator(), lInputRef);
+            // ifnull(flag, true) simplified by calcite as  `cast(flag): boolean not null`
+            return call.isA(SqlKind.CAST) ? lInputRef : rexBuilder.makeCall(call.getOperator(), lInputRef);
         }
 
         if (call.getOperands().size() > 1) {
-            // col IN (...)
+            // col IN (xxx) or col not_in (xxx)
             if (call.getOperands().get(0) instanceof RexInputRef) {
                 val operator = call.getOperator();
-                if (operator.equals(SqlStdOperatorTable.IN)) {
-                    return convertIn(lInputRef, call.getOperands().subList(1, call.getOperands().size()), true);
-                } else if (operator.equals(SqlStdOperatorTable.NOT_IN)) {
-                    return convertIn(lInputRef, call.getOperands().subList(1, call.getOperands().size()), false);
+                if (operator.equals(SqlStdOperatorTable.IN) || operator.equals(SqlStdOperatorTable.NOT_IN)) {
+                    return convertLiterals(lInputRef, call.getOperands().subList(1, call.getOperands().size()),
+                            operator);
                 }
             }
 
-            // col <op> lit
-            val op1 = call.getOperands().get(1);
-            if (call.getOperands().size() == 2 && op1 instanceof RexLiteral) {
-                var rLit = (RexLiteral) op1;
-                rLit = ((RexLiteral) op1).getValue() instanceof NlsString ? transformRexLiteral(lInputRef, rLit) : rLit;
-                return rexBuilder.makeCall(call.getOperator(), lInputRef, rLit);
+            // col <op> lit, optimized with cache
+            if (cachedConvertedRelMap.containsKey(call.toString())) {
+                return cachedConvertedRelMap.get(call.toString());
+            } else {
+                RexNode simplified = simplify(call, lInputRef);
+                cachedConvertedRelMap.put(call.toString(), simplified); // add cache
+                return simplified;
             }
         }
 
         return null;
     }
 
-    private RexNode convertIn(RexInputRef rexInputRef, List<RexNode> extendedOperands, boolean isIn) {
-        val transformedOperands = Lists.<RexNode> newArrayList();
-        for (RexNode operand : extendedOperands) {
-            RexNode transformedOperand;
+    private RexNode simplify(RexCall call, RexInputRef lInputRef) {
+        val op1 = call.getOperands().get(1);
+        if (call.getOperands().size() == 2) {
+            // accept cases: the right rel is literal
+            if (op1 instanceof RexLiteral) {
+                var rLit = (RexLiteral) op1;
+                rLit = transformRexLiteral(lInputRef, rLit);
+                return rexBuilder.makeCall(call.getOperator(), lInputRef, rLit);
+            }
+            // accept cases: the right rel is cast(literal as datatype)
+            if (op1.isA(SqlKind.CAST)) {
+                RexCall c = (RexCall) op1;
+                RexNode rexNode = c.getOperands().get(0);
+                if (rexNode instanceof RexLiteral) {
+                    RexLiteral rLit = transformRexLiteral(lInputRef, (RexLiteral) rexNode);
+                    return rexBuilder.makeCall(call.getOperator(), lInputRef, rLit);
+                }
+            }
+        }
+        return null;
+    }
+
+    private RexNode convertLiterals(RexInputRef rexInputRef, List<RexNode> rexLiterals, SqlOperator operator) {
+        List<RexNode> transformedOperands = Lists.newArrayList();
+        transformedOperands.add(rexInputRef);
+        for (RexNode operand : rexLiterals) {
             if (!(operand instanceof RexLiteral)) {
                 return null;
             }
-            if (((RexLiteral) operand).getValue() instanceof NlsString) {
-                val transformed = transformRexLiteral(rexInputRef, (RexLiteral) operand);
-                transformedOperand = transformed == null ? operand : transformed;
-            } else {
-                transformedOperand = operand;
-            }
-
-            val operator = isIn ? SqlStdOperatorTable.EQUALS : SqlStdOperatorTable.NOT_EQUALS;
-            transformedOperands.add(rexBuilder.makeCall(operator, rexInputRef, transformedOperand));
+            transformedOperands.add(operand);
         }
-
-        if (transformedOperands.size() == 1) {
-            return transformedOperands.get(0);
-        }
-
-        val operator = isIn ? SqlStdOperatorTable.OR : SqlStdOperatorTable.AND;
         return rexBuilder.makeCall(operator, transformedOperands);
     }
 
     private RexLiteral transformRexLiteral(RexInputRef inputRef, RexLiteral operand2) {
-        val literalValue = operand2.getValue();
-        val literalValueInString = ((NlsString) literalValue).getValue();
-        val typeName = inputRef.getType().getSqlTypeName().getName();
-        try {
-            if (typeName.equalsIgnoreCase(DATE)) {
-                return rexBuilder.makeDateLiteral(new DateString(literalValueInString));
-            } else if (typeName.equalsIgnoreCase(TIMESTAMP)) {
-                return rexBuilder.makeTimestampLiteral(new TimestampString(literalValueInString),
-                        inputRef.getType().getPrecision());
-            }
-        } catch (Exception ex) {
-            logger.warn("transform Date/Timestamp RexLiteral for filterRel failed", ex);
+        DataType dataType = DataType.getType(inputRef.getType().getSqlTypeName().getName());
+        String value;
+        if (operand2.getValue() instanceof NlsString) {
+            value = RexLiteral.stringValue(operand2);
+        } else {
+            Comparable c = RexLiteral.value(operand2);
+            value = c == null ? null : c.toString();
         }
-
+        try {
+            return (RexLiteral) RexUtils.transformValue2RexLiteral(rexBuilder, value, dataType);
+        } catch (Exception ex) {
+            logger.warn("transform rexLiteral({}) failed: {}", RexLiteral.value(operand2), ex.getMessage());
+        }
         return operand2;
     }
 
-    private RexInputRef convertInputRef(RexInputRef rexInputRef, RelNode relNode) {
+    private RexInputRef convertInputRef(RexCall call) {
+        RexInputRef resultInputRef = null;
+        RexInputRef originInputRef = extractInputRef(call.getOperands().get(0));
+        if (originInputRef != null) {
+            RexInputRef rexInputRef = extractTableScanInputRef(originInputRef, currentRel);
+            if (rexInputRef != null) {
+                String tableAliasColName = currentRel.getColumnRowType().getColumnByIndex(originInputRef.getIndex())
+                        .getTableAliasColName();
+                RelDataType targetType = call.isA(SqlKind.CAST) ? call.getType() : rexInputRef.getType();
+                resultInputRef = tableAliasColName == null
+                        ? new RexInputRef(rexInputRef.getName(), rexInputRef.getIndex(), targetType)
+                        : new RexInputRef(tableAliasColName, rexInputRef.getIndex(), targetType);
+            }
+        }
+        return resultInputRef;
+    }
+
+    private RexInputRef extractInputRef(RexNode node) {
+        if (node instanceof RexInputRef) {
+            return (RexInputRef) node;
+        } else if (node instanceof RexCall && ((RexCall) node).getOperator() == SqlStdOperatorTable.CAST) {
+            RexNode operand = ((RexCall) node).getOperands().get(0);
+            if (operand instanceof RexInputRef) {
+                return (RexInputRef) operand;
+            }
+        }
+        return null;
+    }
+
+    private RexInputRef extractTableScanInputRef(RexInputRef rexInputRef, RelNode relNode) {
         if (relNode instanceof TableScan) {
-            return context.createUniqueInputRefContextTables((OLAPTableScan) relNode, rexInputRef.getIndex());
+            return ContextUtil.createUniqueInputRefAmongTables((OlapTableScan) relNode, rexInputRef.getIndex(),
+                    context.getAllTableScans());
         }
 
         if (relNode instanceof Project) {
-            val projectRel = (Project) relNode;
-            val expression = projectRel.getChildExps().get(rexInputRef.getIndex());
-            return expression instanceof RexInputRef ? convertInputRef((RexInputRef) expression, projectRel.getInput(0))
-                    : null;
+            return extractProjectInputRef((Project) relNode, rexInputRef);
         }
 
         val index = rexInputRef.getIndex();
@@ -228,15 +260,22 @@ public class FilterConditionExpander {
                 }
             }
 
-            val child = (OLAPRel) relNode.getInput(i);
+            val child = (OlapRel) relNode.getInput(i);
             val childRowTypeSize = child.getColumnRowType().size();
             if (index < currentSize + childRowTypeSize) {
-                return convertInputRef(RexInputRef.of(index - currentSize, child.getRowType()), child);
+                return extractTableScanInputRef(RexInputRef.of(index - currentSize, child.getRowType()), child);
             }
             currentSize += childRowTypeSize;
         }
 
         return null;
+    }
+
+    private RexInputRef extractProjectInputRef(Project projectRel, RexInputRef rexInputRef) {
+        val expression = projectRel.getProjects().get(rexInputRef.getIndex());
+        return expression instanceof RexInputRef
+                ? extractTableScanInputRef((RexInputRef) expression, projectRel.getInput(0))
+                : null;
     }
 
 }

@@ -162,7 +162,9 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
 
     /**
      * Put element to the head position;
-     * The consumer should call this method with count in ascending way; the item will be directly put to the head of the list, without comparison for best performance;
+     * The consumer should call this method with count in ascending way;
+     * the item will be directly put to the head of the list, 
+     * without comparison for best performance;
      * @param item
      * @param count
      */

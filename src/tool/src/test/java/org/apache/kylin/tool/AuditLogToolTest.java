@@ -47,12 +47,12 @@ import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.tool.util.JobMetadataWriter;
@@ -67,18 +67,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 public class AuditLogToolTest extends NLocalFileMetadataTestCase {
 
-    private final static String project = "calories";
-    private final static String jobId = "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5";
-    private final static String AUDIT_LOG_SUFFIX = ".jsonl";
-    private final static String TEST_RESTORE_TABLE = "test_audit_log_restore";
-    private final static String DATA_DIR = "src/test/resources/ut_audit_log/";
+    private static final String project = "calories";
+    private static final String jobId = "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5";
+    private static final String AUDIT_LOG_SUFFIX = ".jsonl";
+    private static final String TEST_RESTORE_TABLE = "test_audit_log_restore";
+    private static final String DATA_DIR = "src/test/resources/ut_audit_log/";
 
     private static final Option OPTION_START_TIME = OptionBuilder.getInstance().hasArg().withArgName("START_TIMESTAMP")
             .withDescription("Specify the start timestamp (sec) (optional)").isRequired(false).create("startTime");
@@ -100,6 +98,7 @@ public class AuditLogToolTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         prepareData();
     }
@@ -107,9 +106,9 @@ public class AuditLogToolTest extends NLocalFileMetadataTestCase {
     @After
     public void teardown() {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
-        cleanupTestMetadata();
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -245,7 +244,7 @@ public class AuditLogToolTest extends NLocalFileMetadataTestCase {
 
         val jdbcTemplate = getJdbcTemplate();
         long before = jdbcTemplate.queryForObject(String.format(Locale.ROOT,
-                "select count(1) from test_audit_Log where meta_ts between %d and %d", start, end), Long.class);
+                "select count(1) from test_audit_Log_v2 where meta_ts between %d and %d", start, end), Long.class);
         long after = fileLines(jsonl);
         Assertions.assertThat(after).isEqualTo(before);
     }
@@ -289,20 +288,22 @@ public class AuditLogToolTest extends NLocalFileMetadataTestCase {
                         return new AuditLog(x.get("id").asLong(), x.get("meta_key").asText(),
                                 ByteSource.wrap(JsonUtil.writeValueAsBytes(x.get("meta_content"))),
                                 x.get("meta_ts").asLong(), x.get("meta_mvcc").asLong(), x.get("unit_id").asText(),
-                                x.get("operator").asText(), "");
+                                x.get("model_uuid").asText(), x.get("operator").asText(), "", null,
+                                false);
                     } catch (IOException e) {
                         throw Throwables.propagate(e);
                     }
                 }).filter(Objects::nonNull).collect(toList());
 
-        UnitOfWork.doInTransactionWithRetry(
-                UnitOfWorkParams.builder().unitName(project).useProjectLock(true).processor(() -> {
-                    val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-                    metadata.forEach(x -> resourceStore.checkAndPutResource(x.getResPath(), x.getByteSource(), -1));
-                    return 0;
-                }).maxRetry(1).build());
+        val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
+        metadata.forEach(x -> resourceStore.checkAndPutResource(x.getMetaKey(), x.getByteSource(), -1));
 
-        JobMetadataWriter.writeJobMetaData(getTestConfig(), metadata);
+        File jobMeta = Paths.get(DATA_DIR, jobId + ".json").toFile();
+        JsonNode jobNode = JsonUtil.readValue(jobMeta, JsonNode.class);
+        RawResource jobRaw = new RawResource(jobNode.get("meta_table_key").asText(),
+                ByteSource.wrap(JsonUtil.writeValueAsBytes(jobNode.get("meta_table_content"))),
+                jobNode.get("meta_table_ts").asLong(), jobNode.get("meta_table_mvcc").asLong());
+        JobMetadataWriter.writeJobMetaData(getTestConfig(), jobRaw, project);
 
         val auditLogStore = (JdbcAuditLogStore) getStore().getAuditLogStore();
         auditLogStore.batchInsert(auditLog);

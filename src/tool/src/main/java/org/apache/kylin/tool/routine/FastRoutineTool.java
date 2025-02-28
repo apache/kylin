@@ -23,10 +23,8 @@ import java.util.List;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.helper.RoutineToolHelper;
-import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -43,12 +41,6 @@ public class FastRoutineTool extends RoutineTool {
         try {
             if (isMetadataCleanup()) {
                 System.out.println("Start to fast cleanup metadata");
-                MaintainModeTool maintainModeTool = new MaintainModeTool("fast routine tool");
-                maintainModeTool.init();
-                maintainModeTool.markEpochs();
-                if (EpochManager.getInstance().isMaintenanceMode()) {
-                    Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
-                }
                 RoutineToolHelper.cleanMeta(projectsToCleanup);
             }
             System.out.println("Start to fast cleanup hdfs");

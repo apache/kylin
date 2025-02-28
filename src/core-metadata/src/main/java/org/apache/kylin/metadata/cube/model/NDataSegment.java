@@ -32,9 +32,18 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Range;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
@@ -43,24 +52,20 @@ import org.apache.kylin.metadata.model.TimeRange;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-@SuppressWarnings({"rawtypes", "FieldMayBeFinal"})
+@SuppressWarnings({ "rawtypes", "FieldMayBeFinal" })
+@Slf4j
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class NDataSegment implements ISegment, Serializable {
+public class NDataSegment extends RootPersistentEntity implements ISegment, Serializable {
 
-    @JsonBackReference
-    private NDataflow dataflow;
-    @JsonProperty("id")
-    private String id; // Sequence ID within NDataflow
+    @Getter
+    @JsonProperty("model_uuid")
+    private String modelUuid;
     @JsonProperty("name")
     private String name;
     @JsonProperty("create_time_utc")
@@ -145,6 +150,12 @@ public class NDataSegment implements ISegment, Serializable {
 
     private transient volatile LayoutInfo layoutInfo;
 
+    @Getter
+    @Setter
+    private Map<String, String> extraBuildOptions = Maps.newHashMap();
+
+    private NDataflow dataflow;
+
     // only for deserialization
     public NDataSegment() {
     }
@@ -162,7 +173,9 @@ public class NDataSegment implements ISegment, Serializable {
 
     @SuppressWarnings("CopyConstructorMissesField")
     public NDataSegment(NDataSegment other) {
-        this.id = other.id;
+        this.uuid = other.uuid;
+        this.modelUuid = other.modelUuid;
+        this.dataflow = other.dataflow;
         this.name = other.name;
         this.createTimeUTC = other.createTimeUTC;
         this.status = other.status;
@@ -176,23 +189,36 @@ public class NDataSegment implements ISegment, Serializable {
         this.isDictReady = other.isDictReady;
         this.isFlatTableReady = other.isFlatTableReady;
         this.isFactViewReady = other.isFactViewReady;
+        this.setMvcc(other.getMvcc());
         layoutInfo = new LayoutInfo(other.getSegDetails());
     }
 
     public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segmentRange) {
+        this.modelUuid = df.getUuid();
         this.dataflow = df;
         this.segmentRange = segmentRange;
         this.name = Segments.makeSegmentName(segmentRange);
-        this.id = RandomUtil.randomUUIDStr();
         this.createTimeUTC = System.currentTimeMillis();
         this.status = SegmentStatusEnum.NEW;
         this.layoutInfo = new LayoutInfo();
     }
 
-    public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segRange, String id) {
+    public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segmentRange,
+                                                  Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        this.dataflow = df;
+        this.segmentRange = segmentRange;
+        this.name = Segments.makeSegmentName(segmentRange);
+        this.uuid = RandomUtil.randomUUIDStr();
+        this.createTimeUTC = System.currentTimeMillis();
+        this.status = SegmentStatusEnum.NEW;
+        this.layoutInfo = new LayoutInfo();
+        this.dimensionRangeInfoMap = dimensionRangeInfoMap;
+    }
+
+    public <T extends Comparable<?>> NDataSegment(NDataflow df, SegmentRange<T> segRange, String uuid) {
         this(df, segRange);
-        if (!StringUtils.isEmpty(id)) {
-            this.id = id;
+        if (!StringUtils.isEmpty(uuid)) {
+            this.uuid = uuid;
         }
         Map<Long, NDataLayout> layouts = new HashMap<>();
         for (LayoutEntity layout : df.getIndexPlan().getAllLayouts()) {
@@ -208,6 +234,12 @@ public class NDataSegment implements ISegment, Serializable {
             partitionMap.put(partition.getPartitionId(), partition);
         });
 
+    }
+
+    void initDataFlow() {
+        if (dataflow == null) {
+            dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getDataflow(modelUuid);
+        }
     }
 
     @Override
@@ -252,6 +284,12 @@ public class NDataSegment implements ISegment, Serializable {
         return null;
     }
 
+    @Override
+    public Range<Long> getRange() {
+        TimeRange tsRange = getTSRange();
+        return Range.closedOpen(tsRange.getStart(), tsRange.getEnd());
+    }
+
     public void setSegmentRange(SegmentRange segmentRange) {
         checkIsNotCachedAndShared();
         this.segmentRange = segmentRange;
@@ -278,8 +316,8 @@ public class NDataSegment implements ISegment, Serializable {
 
     @Override
     public int getEffectiveLayoutSize() {
-        return (int) getLayoutInfo().getLayoutsMap().values().stream()
-                .filter(NDataLayout::filterEffectiveLayout).count();
+        return (int) getLayoutInfo().getLayoutsMap().values().stream().filter(NDataLayout::filterEffectiveLayout)
+                .count();
     }
 
     public NDataLayout getLayout(long layoutId) {
@@ -318,12 +356,17 @@ public class NDataSegment implements ISegment, Serializable {
     }
 
     public LayoutInfo getLayoutInfo() {
+        boolean doInit = false;
         if (layoutInfo == null) {
             synchronized (this) {
                 if (layoutInfo == null) {
+                    doInit = true;
                     layoutInfo = new LayoutInfo(true);
                 }
             }
+        }
+        if (doInit) {
+            setDependencies(Collections.singletonList(layoutInfo.getSegDetails()));
         }
         return layoutInfo;
     }
@@ -358,20 +401,22 @@ public class NDataSegment implements ISegment, Serializable {
             if (!loadDetail) {
                 return;
             }
-            segDetails = NDataSegDetailsManager.getInstance(getConfig(), dataflow.getProject())
-                    .getForSegment(NDataSegment.this);
+            segDetails = NDataSegDetailsManager.getInstance(getConfig(), project).getForSegment(NDataSegment.this);
             if (segDetails == null) {
-                segDetails = NDataSegDetails.newSegDetails(dataflow, id);
+                segDetails = NDataSegDetails.newSegDetails(dataflow, uuid);
             }
+
+            setDependencies(Collections.singletonList(segDetails));
 
             IndexPlan indexPlan = dataflow.getIndexPlan();
             if (!indexPlan.isBroken()) {
                 List<NDataLayout> filteredCuboids = segDetails.getAllLayouts().stream()
-                        .filter(dataLayout -> dataLayout.getLayout() != null).collect(Collectors.toList());
+                        .filter(dataLayout -> indexPlan.getLayoutEntity(dataLayout.getLayoutId()) != null)
+                        .collect(Collectors.toList());
                 segDetails.setLayouts(filteredCuboids);
             }
 
-            segDetails.setCachedAndShared(dataflow.isCachedAndShared());
+            segDetails.setCachedAndShared(isCachedAndShared());
             List<NDataLayout> allLayouts = segDetails.getAllLayouts();
             allLayoutsMap = Maps.newHashMap();
             effectiveLayoutsMap = Maps.newHashMap();
@@ -380,8 +425,8 @@ public class NDataSegment implements ISegment, Serializable {
                 if (NDataLayout.filterEffectiveLayout(layout)) {
                     effectiveLayoutsMap.put(layout.getLayoutId(), layout);
                     Map<Long, Long> cuboidBucketMap = Maps.newHashMap();
-                    layout.getMultiPartition().forEach(dataPartition -> cuboidBucketMap.put(dataPartition.getPartitionId(),
-                            dataPartition.getBucketId()));
+                    layout.getMultiPartition().forEach(dataPartition -> cuboidBucketMap
+                            .put(dataPartition.getPartitionId(), dataPartition.getBucketId()));
                     partitionBucketMap.put(layout.getLayoutId(), cuboidBucketMap);
                 }
             }
@@ -432,6 +477,16 @@ public class NDataSegment implements ISegment, Serializable {
 
     }
 
+    /**
+     * Expose private {@link LayoutInfo} ONLY for tests!
+     */
+    public class LayoutInfoOnlyForTest extends LayoutInfo {
+
+        public LayoutInfoOnlyForTest(Map<Long, NDataLayout> layoutsMap) {
+            super(layoutsMap);
+        }
+    }
+
     @Override
     public NDataModel getModel() {
         return dataflow.getModel();
@@ -455,17 +510,16 @@ public class NDataSegment implements ISegment, Serializable {
     }
 
     public void setDataflow(NDataflow df) {
-        checkIsNotCachedAndShared();
         this.dataflow = df;
+        if (!df.getUuid().equals(this.modelUuid)) {
+            checkIsNotCachedAndShared();
+            this.modelUuid = df.getUuid();
+        }
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
+    public void setId(String uuid) {
         checkIsNotCachedAndShared();
-        this.id = id;
+        this.uuid = uuid;
     }
 
     @Override
@@ -584,15 +638,17 @@ public class NDataSegment implements ISegment, Serializable {
     }
 
     public Map<String, Long> getColumnSourceBytes() {
+        if (sourceCount == 0) {
+            if (!columnSourceBytes.isEmpty()) {
+                log.warn("Segment[{}] sourceCount is 0, but columnSourceBytes non-empty.", getId());
+            }
+            return Maps.newHashMap();
+        }
         return columnSourceBytes;
     }
 
     public void setColumnSourceBytes(Map<String, Long> columnSourceBytes) {
         this.columnSourceBytes = columnSourceBytes;
-    }
-
-    public String getProject() {
-        return this.dataflow.getProject();
     }
 
     public List<SegmentPartition> getMultiPartitions() {
@@ -610,17 +666,12 @@ public class NDataSegment implements ISegment, Serializable {
 
     // ============================================================================
 
-    public boolean isCachedAndShared() {
-        if (dataflow == null || !dataflow.isCachedAndShared())
-            return false;
-
-        for (NDataSegment cached : dataflow.getSegments()) {
-            if (cached == this)
-                return true;
-        }
-        return false;
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.SEGMENT;
     }
 
+    @Override
     public void checkIsNotCachedAndShared() {
         if (isCachedAndShared())
             throw new IllegalStateException();
@@ -667,11 +718,17 @@ public class NDataSegment implements ISegment, Serializable {
     }
 
     public boolean isDictReady() {
-        return isDictReady;
+        boolean forceBuild = Boolean
+                .parseBoolean(extraBuildOptions.getOrDefault("job.retry.segment.force-build-dict", "false"));
+        return isDictReady && !forceBuild;
     }
 
     public void setDictReady(boolean dictReady) {
         isDictReady = dictReady;
+    }
+
+    public boolean buildedDictColShouldRebuild() {
+        return Boolean.parseBoolean(extraBuildOptions.getOrDefault("job.retry.segment.force-build-dict", "false"));
     }
 
     public boolean isFlatTableReady() {
@@ -719,6 +776,30 @@ public class NDataSegment implements ISegment, Serializable {
         this.maxBucketId = maxBucketId;
     }
 
+    public NDataSegment copy() {
+        initDataFlow();
+        return dataflow.getConfig().getManager(project, NDataSegmentManager.class).copy(this);
+    }
+
+    public NDataSegment copyForWrite() {
+        initDataFlow();
+        return dataflow.getConfig().getManager(project, NDataSegmentManager.class).copyForWrite(this);
+    }
+
+    public String getPartitionCondition() {
+        PartitionDesc descDRP = dataflow.getModel().getPartitionDesc();
+        if (Objects.isNull(descDRP) //
+                || Objects.isNull(descDRP.getPartitionDateColumn()) //
+                || Objects.isNull(segmentRange) //
+                || segmentRange.isInfinite()) {
+            log.info("No available PARTITION-CONDITION segment {}", modelUuid);
+            return null;
+        }
+
+        return descDRP.getPartitionConditionBuilder() //
+                .buildDateRangeCondition(descDRP, this, segmentRange);
+    }
+
     @Override
     public int compareTo(ISegment other) {
         SegmentRange<?> x = this.getSegRange();
@@ -727,11 +808,7 @@ public class NDataSegment implements ISegment, Serializable {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((dataflow == null) ? 0 : dataflow.hashCode());
-        result = prime * result + id.hashCode();
-        return result;
+        return super.hashCode();
     }
 
     @Override
@@ -743,20 +820,15 @@ public class NDataSegment implements ISegment, Serializable {
         if (getClass() != obj.getClass())
             return false;
         NDataSegment other = (NDataSegment) obj;
-        if (dataflow == null) {
-            if (other.dataflow != null)
-                return false;
-        } else if (!dataflow.equals(other.dataflow))
-            return false;
-        return id.equals(other.id);
+        return uuid.equals(other.uuid);
     }
 
     @Override
     public String toString() {
-        return "NDataSegment [" + dataflow.getUuid() + "," + id + "," + segmentRange + "," + status + "]";
+        return "NDataSegment [" + modelUuid + "," + uuid + "," + segmentRange + "," + status + "]";
     }
 
     public String displayIdName() {
-        return String.format(Locale.ROOT, "[id:%s,name:%s]", id, name);
+        return String.format(Locale.ROOT, "[uuid:%s,name:%s]", uuid, name);
     }
 }

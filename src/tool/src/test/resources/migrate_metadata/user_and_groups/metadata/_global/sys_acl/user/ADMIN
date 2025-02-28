@@ -1,0 +1,9 @@
+{
+  "username" : "ADMIN",
+  "uuid" : "3c540383-0ed7-f42e-0a8e-8584d4dc3273",
+  "last_modified" : 0,
+  "create_time" : 1673600301591,
+  "version" : "4.0.0.0",
+  "permissions" : [ 128 ],
+  "data_query_projects" : null
+}

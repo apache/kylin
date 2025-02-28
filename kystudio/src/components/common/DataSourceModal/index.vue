@@ -29,6 +29,7 @@
         :selected-tables="form.selectedTables"
         :selected-databases="form.selectedDatabases"
         :need-sampling="form.needSampling"
+        :load-as-internal-table="form.loadAsInternalTable"
         :sampling-rows="form.samplingRows"
         @input="handleInputTableOrDatabase">
       </SourceHive>
@@ -446,10 +447,10 @@ export default class DataSourceModal extends Vue {
       left: 0;
       right: 0;
       margin: auto;
-      height: 647px;
+      height: 720px;
     }
     .el-dialog__body {
-      height: 524px;
+      height: 600px;
       max-height: inherit !important;
       overflow: hidden !important;
     }

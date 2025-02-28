@@ -1,0 +1,15 @@
+{
+  "uuid" : "d0bbfa51-9c16-b6e5-1d33-76b47d8853eb",
+  "last_modified" : 1699501377516,
+  "create_time" : 1699352541918,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : "OFFLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "segment_overlap_test",
+  "segment_uuids" : [ "a549d3b2-6c37-a7a1-0ac5-94bc8d67f1b0", "6c272580-f1aa-7eb9-65bf-4d8113c695fe", "19d129a3-0070-d228-9cc5-acafe78179f5" ]
+}

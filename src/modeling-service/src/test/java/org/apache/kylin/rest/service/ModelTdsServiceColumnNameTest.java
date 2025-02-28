@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
@@ -41,6 +40,8 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ModelTdsServiceColumnNameTest extends SourceTestCase {
@@ -77,7 +78,7 @@ public class ModelTdsServiceColumnNameTest extends SourceTestCase {
     }
 
     @Before
-    public void setup() {
+    public void setUp() {
         SparkJobFactoryUtils.initJobFactory();
         String localMetaDir = "src/test/resources/ut_meta/tds_export_test";
         createTestMetadata(localMetaDir);

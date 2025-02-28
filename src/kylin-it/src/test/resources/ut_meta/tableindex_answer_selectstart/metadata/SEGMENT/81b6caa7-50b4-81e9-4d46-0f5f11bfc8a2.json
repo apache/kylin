@@ -1,0 +1,103 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1664530743738,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "11" : {
+      "min" : "-0.223",
+      "max" : "999.777"
+    },
+    "12" : {
+      "min" : "ABIN",
+      "max" : "Others"
+    },
+    "13" : {
+      "min" : "Beijing",
+      "max" : "Shanghai"
+    },
+    "0" : {
+      "min" : "0",
+      "max" : "211"
+    },
+    "1" : {
+      "min" : "ADMIN",
+      "max" : "MODELER"
+    },
+    "2" : {
+      "min" : "-12",
+      "max" : "9999"
+    },
+    "3" : {
+      "min" : "8.0E-4",
+      "max" : "99.9908"
+    },
+    "4" : {
+      "min" : "65",
+      "max" : "175750"
+    },
+    "5" : {
+      "min" : "-0.223",
+      "max" : "999.777"
+    },
+    "6" : {
+      "min" : "1",
+      "max" : "20"
+    },
+    "7" : {
+      "min" : "2012-01-01",
+      "max" : "2014-01-01"
+    },
+    "8" : {
+      "min" : "10000001",
+      "max" : "10009998"
+    },
+    "9" : {
+      "min" : "10000000",
+      "max" : "10000999"
+    },
+    "10" : {
+      "min" : "0",
+      "max" : "9999"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1664530914673,
+  "source_count" : 10000,
+  "source_bytes_size" : 986102,
+  "column_source_bytes" : {
+    "DEFAULT.KYLIN_SALES.LSTG_SITE_ID" : 10600,
+    "DEFAULT.KYLIN_SALES.OPS_REGION" : 76470,
+    "DEFAULT.KYLIN_SALES.ITEM_COUNT" : 15560,
+    "DEFAULT.KYLIN_SALES.BUYER_ID" : 80000,
+    "DEFAULT.KYLIN_SALES.PART_DT" : 100000,
+    "DEFAULT.KYLIN_SALES.OPS_USER_ID" : 63760,
+    "DEFAULT.KYLIN_SALES.PRICE" : 67510,
+    "DEFAULT.KYLIN_SALES.TRANS_ID" : 39040,
+    "DEFAULT.KYLIN_SALES.VARCHAR_INT" : 40000,
+    "DEFAULT.KYLIN_SALES.VARCHAR_DOUBLE" : 80000,
+    "DEFAULT.KYLIN_SALES.LEAF_CATEG_ID" : 49650,
+    "DEFAULT.KYLIN_SALES.SELLER_ID" : 80000,
+    "DEFAULT.KYLIN_SALES.VARCHAR_DECIMAL" : 80000,
+    "DEFAULT.KYLIN_SALES.LSTG_FORMAT_NAME" : 66230
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "81b6caa7-50b4-81e9-4d46-0f5f11bfc8a2",
+  "model_uuid" : "ccb82d81-1497-ca6d-f226-3258a0f0ba4f",
+  "project" : "tableindex_answer_selectstart"
+}

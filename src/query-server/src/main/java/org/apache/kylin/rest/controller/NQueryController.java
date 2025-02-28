@@ -51,8 +51,8 @@ import javax.validation.Valid;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
@@ -61,16 +61,17 @@ import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.fileseg.FileSegments;
+import org.apache.kylin.fileseg.FileSegmentsDetector;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistoryRequest;
 import org.apache.kylin.metadata.query.util.QueryHisTransformStandardUtil;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
-import org.apache.kylin.query.plugin.asyncprofiler.AsyncProfiling;
+import org.apache.kylin.query.plugin.profiler.AsyncProfiling;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -81,6 +82,7 @@ import org.apache.kylin.rest.request.SQLFormatRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.request.SyncFileSegmentsRequest;
+import org.apache.kylin.rest.response.BigQueryResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.QueryDetectResponse;
@@ -120,8 +122,6 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import org.apache.kylin.fileseg.FileSegments;
-import org.apache.kylin.fileseg.FileSegmentsDetector;
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
 import redis.clients.jedis.exceptions.JedisException;
@@ -219,8 +219,8 @@ public class NQueryController extends NBasicController {
                         // return modelIds to syncFileSegments()
                         sqlResponse.addNativeRealizationIfNotExist(finding.modelId);
                     }
-                    modelService.forceFileSegments(finding.project, finding.modelId,
-                            finding.storageLocation, Optional.of(finding.fileHashs), SegmentStatusEnum.NEW);
+                    modelService.forceFileSegments(finding.project, finding.modelId, finding.storageLocation,
+                            Optional.of(finding.fileHashs), SegmentStatusEnum.NEW);
                 });
             }
 
@@ -274,12 +274,10 @@ public class NQueryController extends NBasicController {
 
         SyncFileSegmentsResponse resp = new SyncFileSegmentsResponse();
         resp.setProject(project);
-        resp.setModels(touchedModelIds.stream()
-                .map(modelId -> FileSegments.getModelFileSegments(project, modelId))
+        resp.setModels(touchedModelIds.stream().map(modelId -> FileSegments.getModelFileSegments(project, modelId))
                 .collect(Collectors.toList()));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, resp, "");
     }
-
 
     @ApiOperation(value = "cancelQuery", tags = { "QE" })
     @DeleteMapping(value = "/{id:.+}")
@@ -336,7 +334,7 @@ public class NQueryController extends NBasicController {
 
     @ApiOperation(value = "savedQueries", tags = { "QE" })
     @PostMapping(value = "/saved_queries")
-    public EnvelopeResponse<String> saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
+    public EnvelopeResponse<String> saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
         String queryName = sqlRequest.getName();
         checkRequiredArg("name", queryName);
         checkQueryName(queryName);
@@ -351,7 +349,7 @@ public class NQueryController extends NBasicController {
     @DeleteMapping(value = "/saved_queries/{id:.+}")
     @ResponseBody
     public EnvelopeResponse<String> removeSavedQuery(@PathVariable("id") String id,
-            @RequestParam("project") String project) throws IOException {
+            @RequestParam("project") String project) {
 
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeSavedQuery(creator, project, id);
@@ -363,7 +361,7 @@ public class NQueryController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<DataResult<List<Query>>> getSavedQueries(@RequestParam(value = "project") String project,
             @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit) throws IOException {
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit) {
         checkProjectName(project);
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         List<Query> savedQueries = queryService.getSavedQueries(creator, project).getQueries();
@@ -472,9 +470,8 @@ public class NQueryController extends NBasicController {
                 latencyTo, sql, server, submitter, null, null, queryStatus, realizations, excludeRealization, null,
                 false, null, true);
         checkGetQueryHistoriesParam(request);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                QueryHisTransformStandardUtil.transformQueryHistorySqlForDisplay(
-                        queryHistoryService.getQueryHistories(request, limit, offset)), "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, QueryHisTransformStandardUtil
+                .transformQueryHistorySqlForDisplay(queryHistoryService.getQueryHistories(request, limit, offset)), "");
     }
 
     @ApiOperation(value = "getQueryHistories", tags = { "QE" }, notes = "Update Param: start_time_from, start_time_to")
@@ -483,13 +480,15 @@ public class NQueryController extends NBasicController {
     public EnvelopeResponse<Map<String, Object>> getQueryHistories(@RequestParam(value = "project") String project,
             @RequestParam(value = "start_time_from", required = false) String startTimeFrom,
             @RequestParam(value = "start_time_to", required = false) String startTimeTo,
+            @RequestParam(value = "sql", required = false) String sql,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer size) {
         checkProjectName(project);
         QueryHistoryRequest request = new QueryHistoryRequest(project, startTimeFrom, startTimeTo);
+        Optional.ofNullable(sql).ifPresent(request::setSql);
         DataRangeUtils.validateDataRange(startTimeFrom, startTimeTo, null);
-        Map<String, Object> queryHistories = QueryHisTransformStandardUtil.transformQueryHistory(
-                queryHistoryService.getQueryHistories(request, size, offset));
+        Map<String, Object> queryHistories = QueryHisTransformStandardUtil
+                .transformQueryHistory(queryHistoryService.getQueryHistories(request, size, offset));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, queryHistories, "");
     }
 
@@ -524,17 +523,18 @@ public class NQueryController extends NBasicController {
                 queryHistoryService.getQueryHistoryModels(request, size), "");
     }
 
-    @ApiOperation(value = "queryHistoryTiredStorageMetrics", tags = {"QE"}, notes = "Update Param: project, query_id")
+    @ApiOperation(value = "queryHistoryTiredStorageMetrics", tags = { "QE" }, notes = "Update Param: project, query_id")
     @GetMapping(value = "/query_history/tired_storage_metrics")
     @ResponseBody
-    public EnvelopeResponse<Map<String, Long>> queryHistoryTiredStorageMetrics(@RequestParam(value = "project") String project,
-                                                                               @RequestParam(value = "query_id") String queryId) {
+    public EnvelopeResponse<Map<String, Long>> queryHistoryTiredStorageMetrics(
+            @RequestParam(value = "project") String project, @RequestParam(value = "query_id") String queryId) {
         checkProjectName(project);
         checkRequiredArg("query_id", queryId);
         QueryHistoryRequest request = new QueryHistoryRequest();
         request.setProject(project);
         request.setSql(queryId);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, queryHistoryService.queryTiredStorageMetric(request), "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, queryHistoryService.queryTiredStorageMetric(request),
+                "");
     }
 
     @ApiOperation(value = "getServers", tags = { "QE" })
@@ -543,11 +543,9 @@ public class NQueryController extends NBasicController {
     public EnvelopeResponse<List<?>> getServers(
             @RequestParam(value = "ext", required = false, defaultValue = "false") boolean ext) {
         if (ext) {
-            List<ServerExtInfoResponse> serverInfo =
-                clusterManager.getServers().stream().map(server ->
-                    new ServerExtInfoResponse()
-                        .setServer(server)
-                        .setSecretName(encodeHost(server.getHost()))).collect(Collectors.toList());
+            List<ServerExtInfoResponse> serverInfo = clusterManager.getServers().stream().map(
+                    server -> new ServerExtInfoResponse().setServer(server).setSecretName(encodeHost(server.getHost())))
+                    .collect(Collectors.toList());
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, serverInfo, "");
         } else {
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
@@ -600,7 +598,7 @@ public class NQueryController extends NBasicController {
             csvWriter = new CsvListWriter(writer, CsvPreference.STANDARD_PREFERENCE);
             List<String> headerList = new ArrayList<>();
 
-            // avoid handle npe in io.kyligence.kap.rest.controller.NBasicController.handleError
+            // avoid handle npe in org.apache.kylin.rest.controller.NBasicController.handleError
             // when result.getColumnMetas is null
             if (result.isException()) {
                 logger.warn("Download query result failed, exception is {}", result.getExceptionMessage());
@@ -688,18 +686,8 @@ public class NQueryController extends NBasicController {
 
     private void checkForcedToParams(PrepareSqlRequest sqlRequest) {
         if (sqlRequest.isForcedToIndex() && sqlRequest.isForcedToPushDown()) {
-            throw new KylinException(
-                    QueryErrorCode.INVALID_QUERY_PARAMS, MsgPicker.getMsg().getCannotForceToBothPushdodwnAndIndex());
-        }
-        try{
-            int forcedToTieredStorage = sqlRequest.getForcedToTieredStorage();
-            if (forcedToTieredStorage > ForceToTieredStorage.CH_FAIL_TO_RETURN.ordinal()
-                    || forcedToTieredStorage < ForceToTieredStorage.CH_FAIL_TO_DFS.ordinal()) {
-                throw new KylinException(
-                        QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER, MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter());
-            }
-        } catch (NullPointerException e) {
-            //do nothing
+            throw new KylinException(QueryErrorCode.INVALID_QUERY_PARAMS,
+                    MsgPicker.getMsg().getCannotForceToBothPushdodwnAndIndex());
         }
     }
 
@@ -730,5 +718,20 @@ public class NQueryController extends NBasicController {
         } else if (!(tables instanceof List)) {
             throw new KylinException(INVALID_TABLE_REFRESH_PARAMETER, message.getTableRefreshParamInvalid(), false);
         }
+    }
+
+    @ApiOperation(value = "ifBigQuery", tags = {
+            "QE" }, notes = "Update Param: query_id, accept_partial, backdoor_toggles, cache_key")
+    @PostMapping(value = "/if_big_query")
+    @ResponseBody
+    public EnvelopeResponse<BigQueryResponse> ifBigQuery(@Valid @RequestBody PrepareSqlRequest sqlRequest,
+            @RequestHeader(value = "User-Agent") String userAgent) {
+        sqlRequest.setIfBigQuery(true);
+        checkForcedToParams(sqlRequest);
+        checkProjectName(sqlRequest.getProject());
+        sqlRequest.setUserAgent(userAgent != null ? userAgent : "");
+        QueryContext.current().record("end_http_proc");
+        BigQueryResponse bigQueryResponse = queryService.ifBigQuery(sqlRequest);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, bigQueryResponse, "");
     }
 }

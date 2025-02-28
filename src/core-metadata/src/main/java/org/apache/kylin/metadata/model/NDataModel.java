@@ -22,11 +22,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_JOIN_RELATIONSHIP_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.COMPUTE_COLUMN_EXPRESSION;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.COMPUTE_COLUMN_NAME;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.INDEX_PLAN;
-import static org.apache.kylin.common.persistence.lock.ModuleLockEnum.ResourceEnum.MODEL_DESC;
-import static org.apache.kylin.common.persistence.lock.ResourcePathParser.JOINER;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -53,8 +48,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.MissingRootPersistentEntity;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
 import org.apache.kylin.common.util.Pair;
@@ -65,7 +60,6 @@ import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.PartitionDesc.PartitionType;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
@@ -110,6 +104,42 @@ public class NDataModel extends RootPersistentEntity {
 
     public enum MeasureType implements Serializable {
         NORMAL, EXPANDABLE, INTERNAL
+    }
+
+    public enum DataStorageType implements Serializable {
+        V1, DELTA, ICEBERG, INVALID;
+
+        private static final Map<Integer, DataStorageType> typeValueMap = new HashMap<>();
+        static {
+            typeValueMap.put(0, V1);
+            typeValueMap.put(1, V1);
+            typeValueMap.put(3, DELTA);
+            typeValueMap.put(4, ICEBERG);
+        }
+
+        public boolean isV1Storage() {
+            return this == V1;
+        }
+
+        public boolean isV3Storage() {
+            return this == DELTA || this == ICEBERG;
+        }
+
+        public boolean isDeltaStorage() {
+            return this == DELTA;
+        }
+
+        public boolean isIcebergStorage() {
+            return this == ICEBERG;
+        }
+
+        public boolean isInvalidStorage() {
+            return this == INVALID;
+        }
+
+        public static DataStorageType fromValue(int value) {
+            return typeValueMap.getOrDefault(value, INVALID);
+        }
     }
 
     @Getter
@@ -164,7 +194,7 @@ public class NDataModel extends RootPersistentEntity {
 
     @EqualsAndHashCode.Include
     @JsonProperty("description")
-    private String description;
+    private String description = "";
 
     @EqualsAndHashCode.Include
     @JsonProperty("fact_table")
@@ -176,7 +206,7 @@ public class NDataModel extends RootPersistentEntity {
 
     @EqualsAndHashCode.Include
     @JsonProperty("management_type")
-    private ManagementType managementType = ManagementType.TABLE_ORIENTED;
+    private ManagementType managementType = ManagementType.MODEL_BASED;
 
     @JsonProperty("join_tables")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -224,9 +254,9 @@ public class NDataModel extends RootPersistentEntity {
     private int recommendationsCount;
 
     @EqualsAndHashCode.Include
-    @JsonProperty("computed_columns")
+    @JsonProperty("computed_column_uuids")
     @JsonInclude(JsonInclude.Include.NON_NULL) // output to frontend
-    private List<ComputedColumnDesc> computedColumnDescs = Lists.newArrayList();
+    private List<String> computedColumnUuids = Lists.newArrayList();
 
     @JsonProperty("canvas")
     @JsonInclude(JsonInclude.Include.NON_NULL) // output to frontend
@@ -251,8 +281,6 @@ public class NDataModel extends RootPersistentEntity {
     private String fusionId;
 
     // computed fields below
-    private String project;
-
     private ImmutableBiMap<Integer, TblColRef> effectiveCols; // excluding DELETED cols
 
     private ImmutableBiMap<Integer, TblColRef> effectiveDimensions; // including DIMENSION cols
@@ -263,6 +291,8 @@ public class NDataModel extends RootPersistentEntity {
     private Map<Integer, Collection<Integer>> effectiveExpandedMeasures; // excluding DELETED measures, only after init() is called
 
     private List<TblColRef> mpCols;
+
+    protected List<ComputedColumnDesc> computedColumnDescs = new ArrayList<>();
 
     private TableRef rootFactTableRef;
 
@@ -286,12 +316,14 @@ public class NDataModel extends RootPersistentEntity {
     // mark this model as used for model save checking
     private boolean saveCheck = false;
 
+    private DataStorageType dataStorageType;
+
     public enum ColumnStatus {
         TOMB, EXIST, DIMENSION
     }
 
     public enum BrokenReason {
-        SCHEMA, NULL, EVENT
+        SCHEMA, NULL, EVENT, SEGMENT_OVERLAP
     }
 
     @Data
@@ -415,6 +447,7 @@ public class NDataModel extends RootPersistentEntity {
         this.capacity = other.capacity;
         this.allNamedColumns = other.allNamedColumns;
         this.allMeasures = other.allMeasures;
+        this.computedColumnUuids = other.computedColumnUuids;
         this.computedColumnDescs = other.computedColumnDescs;
         this.managementType = other.managementType;
         this.segmentConfig = other.segmentConfig;
@@ -430,15 +463,22 @@ public class NDataModel extends RootPersistentEntity {
         this.modelType = other.modelType;
         this.fusionId = other.fusionId;
         this.allTableRefs = other.allTableRefs;
+        this.storageType = other.storageType;
+        this.dataStorageType = other.dataStorageType;
     }
 
     public KylinConfig getConfig() {
-        return config;
+        return config == null ? KylinConfig.getInstanceFromEnv() : config;
     }
 
     @Override
     public String resourceName() {
         return uuid;
+    }
+
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.MODEL;
     }
 
     public ManagementType getManagementType() {
@@ -702,6 +742,8 @@ public class NDataModel extends RootPersistentEntity {
 
     public void init(KylinConfig config) {
         this.config = config;
+        // set computed columns before get extended tables
+        bindComputedColumns();
         Map<String, TableDesc> tables = getExtendedTables(NDataModelManager.getRelatedTables(this, project));
 
         initJoinTablesForUpgrade();
@@ -716,6 +758,7 @@ public class NDataModel extends RootPersistentEntity {
         if (StringUtils.isEmpty(this.alias)) {
             this.alias = this.uuid;
         }
+        this.dataStorageType = DataStorageType.fromValue(this.storageType);
         checkModelType();
     }
 
@@ -1067,7 +1110,8 @@ public class NDataModel extends RootPersistentEntity {
 
             TableDesc tableDesc = NTableMetadataManager.getInstance(config, project).getTableDesc(t);
             return tableDesc != null ? tableDesc
-                    : new MissingRootPersistentEntity(TableDesc.concatResourcePath(t, project));
+                    : new MissingRootPersistentEntity(MetadataType
+                            .mergeKeyWithType(TableDesc.generateResourceName(project, t), MetadataType.TABLE_INFO));
 
         }).collect(Collectors.toList());
     }
@@ -1182,6 +1226,18 @@ public class NDataModel extends RootPersistentEntity {
     public void initComputedColumnsFailFast(List<NDataModel> ccRelatedModels) {
         initComputedColumns(ccRelatedModels);
         checkCCConflict(ccRelatedModels, new ComputedColumnUtil.DefaultCCConflictHandler());
+    }
+
+    public void bindComputedColumns() {
+        //If this model is loaded from metaStore, the computedColumnDescs will be empty.
+        //If this model is coming from rest API, the computedColumnDescs may be not null.
+        if (this.computedColumnDescs.isEmpty() && !this.computedColumnUuids.isEmpty()) {
+            ComputedColumnManager ccManager = getConfig().getManager(project, ComputedColumnManager.class);
+            this.computedColumnDescs = this.computedColumnUuids.stream()
+                    .map(ccUuid -> ccManager.get(ccUuid).orElseThrow(
+                            () -> new IllegalStateException("CC " + ccUuid + " lost for model: " + this.alias)))
+                    .collect(Collectors.toList());
+        }
     }
 
     public ComputedColumnUtil.CCConflictInfo initComputedColumnsFailAtEnd(List<NDataModel> ccRelatedModels) {
@@ -1354,6 +1410,10 @@ public class NDataModel extends RootPersistentEntity {
                 .map(NamedColumn::getId).findAny().orElse(-1);
     }
 
+    public int getPartitionColumnId() {
+        return getColumnIdByColumnName(partitionDesc.getPartitionDateColumnRef().getAliasDotName());
+    }
+
     public NamedColumn getColumnByColumnNameInModel(String name) {
         Preconditions.checkArgument(Objects.nonNull(allNamedColumns));
         return allNamedColumns.stream().filter(col -> col.name.equalsIgnoreCase(name) && col.isExist()).findFirst()
@@ -1392,29 +1452,6 @@ public class NDataModel extends RootPersistentEntity {
     public String getMeasureNameByMeasureId(int id) {
         Preconditions.checkArgument(Objects.nonNull(effectiveMeasures));
         return effectiveMeasures.containsKey(id) ? effectiveMeasures.get(id).getName() : null;
-    }
-
-    @Override
-    public String getResourcePath() {
-        return concatResourcePath(getUuid(), project);
-    }
-
-    public static String concatResourcePath(String name, String project) {
-        return "/" + project + ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + name + MetadataConstants.FILE_SURFIX;
-    }
-
-    @Override
-    public List<String> getLockPaths(String ignored) {
-        List<String> lockPaths = new ArrayList<>();
-        lockPaths.add(getResourcePath());
-        lockPaths.add(JOINER.join("", project, INDEX_PLAN.value(), getUuid()));
-        lockPaths.add(JOINER.join("", project, MODEL_DESC.value(), alias));
-        for (ComputedColumnDesc ccDesc : computedColumnDescs) {
-            lockPaths.add(JOINER.join("", project, COMPUTE_COLUMN_NAME.value(), ccDesc.getIdentityCcName()));
-            lockPaths.add(JOINER.join("", project, COMPUTE_COLUMN_EXPRESSION.value(),
-                    ccDesc.getInnerExpression().replace('/', '@')));
-        }
-        return lockPaths;
     }
 
     public Collection<NamedColumn> getAllSelectedColumns() {
@@ -1551,5 +1588,18 @@ public class NDataModel extends RootPersistentEntity {
 
     public boolean isFilePartitioned() {
         return partitionDesc != null && partitionDesc.getCubePartitionType() == PartitionType.FILE;
+    }
+
+    public DataStorageType getStorageType() {
+        return dataStorageType;
+    }
+
+    public int getStorageTypeValue() {
+        return storageType;
+    }
+
+    public void setStorageType(int storageType) {
+        this.dataStorageType = DataStorageType.fromValue(storageType);
+        this.storageType = storageType;
     }
 }

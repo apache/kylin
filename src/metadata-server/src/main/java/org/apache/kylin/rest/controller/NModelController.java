@@ -26,6 +26,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_TOO_LONG;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -35,25 +36,23 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.constant.Constant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
-import org.apache.kylin.metadata.cube.model.NDataLayout;
+import org.apache.kylin.metadata.cube.model.NDataLayoutDetails;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.exception.LookupTableException;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.ComputedColumnCheckRequest;
-import org.apache.kylin.rest.request.DataFlowUpdateRequest;
 import org.apache.kylin.rest.request.ModelCheckRequest;
 import org.apache.kylin.rest.request.ModelCloneRequest;
 import org.apache.kylin.rest.request.ModelConfigRequest;
@@ -61,9 +60,10 @@ import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.ModelUpdateRequest;
 import org.apache.kylin.rest.request.ModelValidationRequest;
 import org.apache.kylin.rest.request.MultiPartitionMappingRequest;
+import org.apache.kylin.rest.request.OptimizeLayoutDataRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
 import org.apache.kylin.rest.request.PartitionColumnRequest;
-import org.apache.kylin.rest.request.UnlinkModelRequest;
+import org.apache.kylin.rest.request.UpdateModelStorageTypeRequest;
 import org.apache.kylin.rest.request.UpdateMultiPartitionValueRequest;
 import org.apache.kylin.rest.response.AffectedModelsResponse;
 import org.apache.kylin.rest.response.AggShardByColumnsResponse;
@@ -75,6 +75,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExistedDataRangeResponse;
 import org.apache.kylin.rest.response.IndicesResponse;
 import org.apache.kylin.rest.response.InvalidIndexesResponse;
+import org.apache.kylin.rest.response.JobInfoResponse;
 import org.apache.kylin.rest.response.ModelConfigResponse;
 import org.apache.kylin.rest.response.ModelSaveCheckResponse;
 import org.apache.kylin.rest.response.MultiPartitionValueResponse;
@@ -86,14 +87,13 @@ import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ModelTdsService;
 import org.apache.kylin.rest.service.params.ModelQueryParams;
-import org.apache.kylin.rest.util.ModelUtils;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -114,7 +114,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Controller
 @EnableDiscoveryClient
-@EnableFeignClients
 @RequestMapping(value = "/api/models", produces = { HTTP_VND_APACHE_KYLIN_JSON })
 public class NModelController extends NBasicController {
     public static final String MODEL_ID = "modelId";
@@ -162,11 +161,12 @@ public class NModelController extends NBasicController {
         checkProjectName(project);
         status = formatStatus(status, ModelStatusToDisplayEnum.class);
 
-        ModelQueryParams request = new ModelQueryParams(modelId, modelAlias, exactMatch, project, owner, status,
-                table, offset, limit, sortBy, reverse, modelAliasOrOwner, modelAttributes, lastModifyFrom, lastModifyTo,
+        ModelQueryParams request = new ModelQueryParams(modelId, modelAlias, exactMatch, project, owner, status, table,
+                offset, limit, sortBy, reverse, modelAliasOrOwner, modelAttributes, lastModifyFrom, lastModifyTo,
                 onlyNormalDim, lite);
         DataResult<List<NDataModel>> filterModels = modelService.getModels(request);
         fusionModelService.setModelUpdateEnabled(filterModels);
+        fusionModelService.setAutoIndexPlanEnabled(filterModels);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, filterModels, "");
     }
 
@@ -204,17 +204,34 @@ public class NModelController extends NBasicController {
     @PostMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
     public EnvelopeResponse<BuildBaseIndexResponse> createModel(@RequestBody ModelRequest modelRequest) {
-        checkProjectName(modelRequest.getProject());
+        String project = checkProjectName(modelRequest.getProject());
         modelService.validatePartitionDesc(modelRequest.getPartitionDesc());
         String partitionDateFormat = modelRequest.getPartitionDesc() == null ? null
                 : modelRequest.getPartitionDesc().getPartitionDateFormat();
         DataRangeUtils.validateDataRange(modelRequest.getStart(), modelRequest.getEnd(), partitionDateFormat);
         try {
             NDataModel model = modelService.createModel(modelRequest.getProject(), modelRequest);
+            try {
+                if (modelRequest.isWithRecJob()) {
+                    indexPlanService.optIndexPlan(model.getId(), null, modelRequest.getProject(), 3, null, null);
+                }
+            } catch (Exception e) {
+                log.error("Create rec job failed, due to:", e);
+            }
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
                     BuildBaseIndexResponse.from(modelService.getIndexPlan(model.getId(), model.getProject())), "");
         } catch (LookupTableException e) {
             throw new KylinException(FAILED_CREATE_MODEL, e);
+        }
+    }
+
+    private void executeOptIndexPlan(String project, String modelId, boolean recOptIndexJob) {
+        try {
+            if (recOptIndexJob) {
+                indexPlanService.optIndexPlan(modelId, null, project, 3, null, null);
+            }
+        } catch (Exception e) {
+            log.error("Create rec job failed, due to:", e);
         }
     }
 
@@ -407,15 +424,14 @@ public class NModelController extends NBasicController {
         checkRequiredArg("action", action);
 
         if ("TOGGLE_PARTITION".equals(action)) {
-            modelService.checkSingleIncrementingLoadingTable(project, tableName);
-            val affectedModelResponse = modelService.getAffectedModelsByToggleTableType(tableName, project);
-            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, affectedModelResponse, "");
+            // TABLE_ORIENTED model is deprecated, just return empty response.
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, new AffectedModelsResponse(), "");
         } else if ("DROP_TABLE".equals(action)) {
             val affectedModelResponse = modelService.getAffectedModelsByDeletingTable(tableName, project);
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, affectedModelResponse, "");
         } else if ("RELOAD_ROOT_FACT".equals(action)) {
-            val affectedModelResponse = modelService.getAffectedModelsByToggleTableType(tableName, project);
-            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, affectedModelResponse, "");
+            // TABLE_ORIENTED model is deprecated, just return empty response.
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, new AffectedModelsResponse(), "");
         } else {
             throw new IllegalArgumentException();
         }
@@ -452,13 +468,11 @@ public class NModelController extends NBasicController {
     @PutMapping(value = "/semantic")
     @ResponseBody
     public EnvelopeResponse<BuildBaseIndexResponse> updateSemantic(@RequestBody ModelRequest request) {
-        checkProjectName(request.getProject());
+        String project = checkProjectName(request.getProject());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(request.getProject(), request.getId());
         DataRangeUtils.validateDataRange(request.getStart(), request.getEnd(), partitionColumnFormat);
         modelService.validatePartitionDesc(request.getPartitionDesc());
         checkRequiredArg(MODEL_ID, request.getUuid());
-        ModelUtils.checkSecondStoragePartition(request.getProject(), request.getUuid(), request.getPartitionDesc(),
-                ModelUtils.MessageType.MODEL);
         try {
             BuildBaseIndexResponse response = BuildBaseIndexResponse.EMPTY;
             if (request.getBrokenReason() == NDataModel.BrokenReason.SCHEMA) {
@@ -466,6 +480,7 @@ public class NModelController extends NBasicController {
             } else {
                 response = fusionModelService.updateDataModelSemantic(request.getProject(), request);
             }
+            executeOptIndexPlan(project, request.getId(), request.isWithRecJob());
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
         } catch (LookupTableException e) {
             log.error("Update model failed", e);
@@ -485,8 +500,6 @@ public class NModelController extends NBasicController {
         checkProjectName(request.getProject());
         modelService.validatePartitionDesc(request.getPartitionDesc());
         checkRequiredArg(MODEL_ID, modelId);
-        ModelUtils.checkSecondStoragePartition(request.getProject(), modelId, request.getPartitionDesc(),
-                ModelUtils.MessageType.PARTITION);
         try {
             modelService.updatePartitionColumn(request.getProject(), modelId, request.getPartitionDesc(),
                     request.getMultiPartitionDesc());
@@ -532,11 +545,7 @@ public class NModelController extends NBasicController {
     @ApiOperation(value = "unlinkModel", tags = { "AI" }, notes = "Update Body: model_id")
     @PutMapping(value = "/{model:.+}/management_type")
     @ResponseBody
-    public EnvelopeResponse<String> unlinkModel(@PathVariable("model") String modelId,
-            @RequestBody UnlinkModelRequest unlinkModelRequest) {
-        checkProjectName(unlinkModelRequest.getProject());
-        checkRequiredArg(MODEL_ID, modelId);
-        modelService.unlinkModel(modelId, unlinkModelRequest.getProject());
+    public EnvelopeResponse<String> unlinkModel() {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
@@ -642,8 +651,6 @@ public class NModelController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<ModelSaveCheckResponse> checkBeforeModelSave(@RequestBody ModelRequest modelRequest) {
         checkProjectName(modelRequest.getProject());
-        ModelUtils.checkSecondStoragePartition(modelRequest.getProject(), modelRequest.getUuid(),
-                modelRequest.getPartitionDesc(), ModelUtils.MessageType.MODEL);
         ModelSaveCheckResponse response = modelService.checkBeforeModelSave(modelRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
@@ -731,68 +738,46 @@ public class NModelController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
-    // feign API for smart module
-
-    @PostMapping(value = "/feign/update_recommendations_count")
+    @ApiOperation(value = "optimizeLayoutData", tags = { "DW" }, notes = "Add URL: {model}")
+    @PostMapping(value = "{model:.+}/optimize_layout_data")
     @ResponseBody
-    public void updateRecommendationsCount(@RequestParam("project") String project,
-                                           @RequestParam("modelId") String modelId, @RequestParam("size") int size) {
-        modelService.updateRecommendationsCount(project, modelId, size);
+    public EnvelopeResponse<JobInfoResponse> optimizeModelIndexData(@PathVariable("model") String modelId,
+            @RequestBody OptimizeLayoutDataRequest optimizeRequests) throws Exception {
+        checkProjectName(optimizeRequests.getProject());
+        JobInfoResponse response = modelService.optimizeLayoutData(optimizeRequests.getProject(), modelId,
+                optimizeRequests);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
 
-    @PostMapping(value = "/feign/update_dataflow")
+    @ApiOperation(value = "getOptimizeLayoutDataConfigTemplate")
+    @GetMapping(value = "/optimize_layout_data_template")
     @ResponseBody
-    public void updateDataflow(@RequestBody DataFlowUpdateRequest dataFlowUpdateRequest) {
-        modelService.updateDataflow(dataFlowUpdateRequest);
+    public EnvelopeResponse<String> getOptimizeLayoutDataConfigTemplate(HttpServletResponse response)
+            throws IOException {
+        String templateString = JsonUtil.writeValueAsStringWithPretty(OptimizeLayoutDataRequest.template);
+        InputStream in = IOUtils.toInputStream(templateString, "UTF-8");
+        setDownloadResponse(in, "optimize_layout_data_template.json", MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                response);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
-    @PostMapping(value = "/feign/update_dataflow_maxBucketId")
+    @ApiOperation(value = "setModelStorageType", tags = { "DW" }, notes = "Add URL: {model}")
+    @PutMapping(value = "{model:.+}/storage_type")
     @ResponseBody
-    public void updateDataflow(@RequestParam("project") String project, @RequestParam("dfId") String dfId,
-            @RequestParam("segmentId") String segmentId, @RequestParam("maxBucketId") long maxBucketIt) {
-        modelService.updateDataflow(project, dfId, segmentId, maxBucketIt);
+    public EnvelopeResponse<String> setModelStorageType(@PathVariable("model") String modelId,
+            @RequestBody UpdateModelStorageTypeRequest request) {
+        checkProjectName(request.getProject());
+        modelService.setStorageType(request.getProject(), modelId, request.getStorageType());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
-    @PostMapping(value = "/feign/update_index_plan")
+    @ApiOperation(value = "getLayoutDetail")
+    @GetMapping(value = "/{project}/{model}/{layoutId}/layout_detail")
     @ResponseBody
-    public void updateIndexPlan(@RequestParam("project") String project, @RequestParam("uuid") String uuid,
-                                @RequestBody IndexPlan indexplan, @RequestParam("action") String action) {
-        modelService.updateIndexPlan(project, uuid, indexplan, action);
-    }
-
-    @PostMapping(value = "/feign/update_dataflow_status")
-    @ResponseBody
-    public void updateDataflowStatus(@RequestParam("project") String project, @RequestParam("uuid") String uuid,
-                                     @RequestParam("status") RealizationStatusEnum status) {
-        modelService.updateDataflowStatus(project, uuid, status);
-    }
-
-    @PostMapping(value = "/feign/merge_metadata")
-    @ResponseBody
-    public List<NDataLayout[]> mergeMetadata(@RequestParam("project") String project,
-            @RequestBody MergerInfo mergerInfo) {
-        return modelService.mergeMetadata(project, mergerInfo);
-    }
-
-    @PostMapping(value = "/feign/make_segment_ready")
-    @ResponseBody
-    public void makeSegmentReady(@RequestParam("project") String project, @RequestParam("modelId") String modelId,
-            @RequestParam("segmentId") String segmentId,
-            @RequestParam("errorOrPausedJobCount") int errorOrPausedJobCount) {
-        modelService.makeSegmentReady(project, modelId, segmentId, errorOrPausedJobCount);
-    }
-
-    @PostMapping(value = "/feign/merge_metadata_for_sampling_or_snapshot")
-    @ResponseBody
-    public void mergeMetadataForSamplingOrSnapshot(@RequestParam("project") String project,
-            @RequestBody MergerInfo mergerInfo) {
-        modelService.mergeMetadataForSamplingOrSnapshot(project, mergerInfo);
-    }
-
-    @PostMapping(value = "/feign/check_and_auto_merge_segments")
-    @ResponseBody
-    public void checkAndAutoMergeSegments(@RequestParam("project") String project, @RequestParam("modelId") String modelId,
-                                          @RequestParam("owner") String owner) {
-        modelService.checkAndAutoMergeSegments(project, modelId, owner);
+    public EnvelopeResponse<NDataLayoutDetails> getLayoutDetail(@PathVariable("project") String project,
+            @PathVariable("model") String modelId, @PathVariable("layoutId") Long layoutId) {
+        checkProjectName(project);
+        NDataLayoutDetails details = modelService.getLayoutDetail(project, modelId, layoutId);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, details, "");
     }
 }

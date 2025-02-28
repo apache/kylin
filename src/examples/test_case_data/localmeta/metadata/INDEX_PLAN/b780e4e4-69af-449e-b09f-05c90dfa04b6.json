@@ -1,0 +1,41 @@
+{
+  "uuid" : "b780e4e4-69af-449e-b09f-05c90dfa04b6",
+  "last_modified" : 1604998096145,
+  "create_time" : 1604997347244,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : {
+    "dimensions" : [ 0, 1, 2, 3 ],
+    "measures" : [ 100000, 100001 ],
+    "global_dim_cap" : null,
+    "aggregation_groups" : [ {
+      "includes" : [ 0, 1, 2, 3 ],
+      "measures" : [ 100001, 100000 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ ],
+        "joint_dims" : [ ]
+      }
+    } ],
+    "layout_id_mapping" : [ 1, 10001, 20001, 30001, 40001, 50001, 60001, 70001, 80001, 90001, 100001, 110001, 120001, 130001, 140001 ],
+    "parent_forward" : 3,
+    "index_start_id" : 0,
+    "last_modify_time" : 1604997418355,
+    "layout_black_list" : [ ],
+    "scheduler_version" : 2
+  },
+  "indexes" : [ ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 150000,
+  "next_table_index_id" : 20000000000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 0,
+  "approved_removal_recs" : 0,
+  "project" : "default"
+}

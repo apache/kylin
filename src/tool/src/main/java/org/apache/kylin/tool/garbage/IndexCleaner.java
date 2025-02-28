@@ -147,7 +147,7 @@ public class IndexCleaner extends MetadataCleaner {
         List<LayoutEntity> merged = Lists.newArrayList();
         garbageLayouts.forEach(((layoutId, garbageLayoutType) -> {
             LayoutEntity layout = indexPlan.getLayoutEntity(layoutId);
-            if (GarbageLayoutType.MERGED.equals(garbageLayoutType) && !Objects.isNull(layout)) {
+            if (GarbageLayoutType.MERGED == garbageLayoutType && !Objects.isNull(layout)) {
                 merged.add(layout);
             }
         }));

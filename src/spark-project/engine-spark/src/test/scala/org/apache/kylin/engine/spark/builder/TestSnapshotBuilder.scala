@@ -17,14 +17,16 @@
  */
 package org.apache.kylin.engine.spark.builder
 
-import java.util.concurrent.TimeoutException
-import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, NTableMetadataManager}
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.common.{KapConfig, KylinConfig}
+import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, NTableMetadataManager}
 import org.apache.spark.SparkException
+import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.junit.Assert
+
+import java.util.concurrent.TimeoutException
 
 class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession with LocalMetadata {
 
@@ -37,6 +39,7 @@ class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession wi
 
   def getTestConfig: KylinConfig = {
     val config = KylinConfig.getInstanceFromEnv
+    SparderEnv.getSparkSession
     config
   }
 

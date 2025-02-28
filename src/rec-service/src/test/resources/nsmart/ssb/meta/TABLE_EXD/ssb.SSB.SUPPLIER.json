@@ -1,0 +1,67 @@
+{
+  "uuid" : "a886af23-5008-422d-a96b-d032640333de",
+  "last_modified" : 1483156117838,
+  "version" : "1.6.1",
+  "table_name" : "SSB.SUPPLIER",
+  "last_build_job_id" : "a20aa9aa-ab5c-4461-a3af-a2ad07922160",
+  "columns_stats" : [ {
+    "max_value" : "2000",
+    "min_value" : "1",
+    "max_length_value" : "1000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2016
+  }, {
+    "max_value" : "Supplier#000002000",
+    "min_value" : "Supplier#000000001",
+    "max_length_value" : "Supplier#000000001",
+    "min_length_value" : "Supplier#000000001",
+    "null_count" : 0,
+    "cardinality" : 2052
+  }, {
+    "max_value" : "zw9CeCD4NaTK",
+    "min_value" : "  Bg4GNb1 64E,NhHO",
+    "max_length_value" : "2VEfxrC76mNg2VwZY5DDrWnS",
+    "min_length_value" : "Rfi4rs",
+    "null_count" : 0,
+    "cardinality" : 2137
+  }, {
+    "max_value" : "VIETNAM  100",
+    "min_value" : "ALGERIA  002",
+    "max_length_value" : "PERU     099",
+    "min_length_value" : "PERU     099",
+    "null_count" : 0,
+    "cardinality" : 1384
+  }, {
+    "max_value" : "VIETNAM",
+    "min_value" : "ALGERIA",
+    "max_length_value" : "UNITED KINGDOM",
+    "min_length_value" : "PERU",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "MIDDLE EAST",
+    "min_value" : "AFRICA",
+    "max_length_value" : "MIDDLE EAST",
+    "min_length_value" : "ASIA",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "34-989-565-8883",
+    "min_value" : "10-100-339-4532",
+    "max_length_value" : "27-741-298-7683",
+    "min_length_value" : "27-741-298-7683",
+    "null_count" : 0,
+    "cardinality" : 1974
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "Supplier#000000001", "Supplier#000000003", "Supplier#000000005", "Supplier#000000007", "Supplier#000000009", "Supplier#000000011", "Supplier#000000013", "Supplier#000000015", "Supplier#000000017", "Supplier#000000019" ], [ "sdrGnXCDRcfriBvY0KL,i", "BZ0kXcHUcHjx62L7CjZS", "lONEYAh9sF", " 0W7IPdkpWycU", ",gJ6K2MKveYxQT", "iLv7z1f1 5", "kgTZjbt4CAa4c3Slir", "DF35PepL5saAK", "PYN0m9j98GhX42D", "NN17XNz0Dpmn" ], [ "PERU     099", "ARGENTINA026", "IRAQ     097", "UNITED KI026", "IRAN     027", "CHINA    003", "CANADA   097", "INDIA    045", "ROMANIA  049", "UNITED ST056" ], [ "PERU", "ARGENTINA", "IRAQ", "UNITED KINGDOM", "IRAN", "CHINA", "CANADA", "INDIA", "ROMANIA", "UNITED STATES" ], [ "AMERICA", "AMERICA", "MIDDLE EAST", "EUROPE", "MIDDLE EAST", "ASIA", "AMERICA", "ASIA", "EUROPE", "AMERICA" ], [ "27-741-298-7683", "11-128-190-5944", "21-495-190-9827", "33-906-367-7410", "20-791-276-1263", "28-385-687-5424", "13-682-348-1554", "18-957-234-8742", "29-970-312-4727", "34-468-353-3632" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "2000",
+  "data_source_properties" : { },
+  "project" : "ssb"
+}

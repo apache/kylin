@@ -28,7 +28,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -67,7 +67,8 @@ import org.apache.hive.common.util.TimestampParser;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 
 /**
- * This class contains ALL of our enhancement to Hive's LazySimpleSerDe, for <a href="https://github.com/Kyligence/Diting/blob/release-2.0.0/insight-core/src/main/java/org/apache/hadoop/hive/serde2/lazy/LazyQuoteAwareSerDe.java">
+ * This class contains ALL of our enhancement to Hive's LazySimpleSerDe,
+ * for <a href="https://github.com/Kyligence/Diting/blob/release-2.0.0/insight-core/src/main/java/org/apache/hadoop/hive/serde2/lazy/LazyQuoteAwareSerDe.java">
  * a copy of this file</a> is placed into project Diting, module insight-core, to
  * ensure the consistent behavior of uploading and querying a CSV file.
  * <br/>
@@ -80,17 +81,12 @@ import org.apache.kylin.common.exception.KylinRuntimeException;
  * - in Zen GUI, upload a CSV, make a metric, and query it
  */
 
-@SerDeSpec(schemaProps = {
-        serdeConstants.LIST_COLUMNS, serdeConstants.LIST_COLUMN_TYPES,
-        serdeConstants.FIELD_DELIM, serdeConstants.COLLECTION_DELIM, serdeConstants.MAPKEY_DELIM,
-        serdeConstants.SERIALIZATION_FORMAT, serdeConstants.SERIALIZATION_NULL_FORMAT,
-        serdeConstants.SERIALIZATION_ESCAPE_CRLF,
-        serdeConstants.SERIALIZATION_LAST_COLUMN_TAKES_REST,
-        serdeConstants.ESCAPE_CHAR, serdeConstants.QUOTE_CHAR,
-        serdeConstants.SERIALIZATION_ENCODING,
-        LazySerDeParameters.SERIALIZATION_EXTEND_NESTING_LEVELS,
-        LazySerDeParameters.SERIALIZATION_EXTEND_ADDITIONAL_NESTING_LEVELS
-})
+@SerDeSpec(schemaProps = { serdeConstants.LIST_COLUMNS, serdeConstants.LIST_COLUMN_TYPES, serdeConstants.FIELD_DELIM,
+        serdeConstants.COLLECTION_DELIM, serdeConstants.MAPKEY_DELIM, serdeConstants.SERIALIZATION_FORMAT,
+        serdeConstants.SERIALIZATION_NULL_FORMAT, serdeConstants.SERIALIZATION_ESCAPE_CRLF,
+        serdeConstants.SERIALIZATION_LAST_COLUMN_TAKES_REST, serdeConstants.ESCAPE_CHAR, serdeConstants.QUOTE_CHAR,
+        serdeConstants.SERIALIZATION_ENCODING, LazySerDeParameters.SERIALIZATION_EXTEND_NESTING_LEVELS,
+        LazySerDeParameters.SERIALIZATION_EXTEND_ADDITIONAL_NESTING_LEVELS })
 public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
 
     public static List<String[]> parseCsvLines(List<String> lines) {
@@ -102,18 +98,16 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             return Collections.emptyList();
         }
 
-        int colCountEst = lines.stream()
-                .map(l -> l.chars().filter(c -> c == separator.charAt(0)).count() + 1)
-                .max(Long::compare)
-                .orElse(0L).intValue();
+        int colCountEst = lines.stream().map(l -> l.chars().filter(c -> c == separator.charAt(0)).count() + 1)
+                .max(Long::compare).orElse(0L).intValue();
 
         try {
             Properties tbl = new Properties();
             tbl.put("field.delim", separator);
             tbl.put("escape.delim", escape);
             tbl.put("quote.delim", quote);
-            tbl.put("columns", IntStream.range(0, colCountEst).boxed().map(i -> "col" + i)
-                    .collect(Collectors.joining(",")));
+            tbl.put("columns",
+                    IntStream.range(0, colCountEst).boxed().map(i -> "col" + i).collect(Collectors.joining(",")));
             tbl.put("columns.types", StringUtils.repeat("string", ":", colCountEst));
 
             LazyQuoteAwareSerDe serde = new LazyQuoteAwareSerDe();
@@ -128,8 +122,8 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
                 String[] row = new String[fields.size()];
                 for (int i = 0; i < fields.size(); i++) {
                     //noinspection unchecked
-                    LazyPrimitive<ObjectInspector, Writable> val =
-                            (LazyPrimitive<ObjectInspector, Writable>) soi.getStructFieldData(struct, fields.get(i));
+                    LazyPrimitive<ObjectInspector, Writable> val = (LazyPrimitive<ObjectInspector, Writable>) soi
+                            .getStructFieldData(struct, fields.get(i));
                     row[i] = val == null ? null : val.getWritableObject().toString();
                     if (val != null) {
                         nonNullColLen = Math.max(nonNullColLen, i + 1);
@@ -170,14 +164,10 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             quote = (byte) tbl.getProperty(serdeConstants.QUOTE_CHAR).charAt(0);
         }
 
-        boolean numberForceRead = tbl.containsKey("number.force")
-                && !"false".equals(tbl.getProperty("number.force"));
+        boolean numberForceRead = tbl.containsKey("number.force") && !"false".equals(tbl.getProperty("number.force"));
 
         // overwrite the LazyStruct field to be QuoteAwareStruct
-        myStruct = new QuoteAwareStruct(
-                (LazySimpleStructObjectInspector) getObjectInspector(),
-                quote,
-                numberForceRead);
+        myStruct = new QuoteAwareStruct((LazySimpleStructObjectInspector) getObjectInspector(), quote, numberForceRead);
 
         try {
             FieldUtils.writeField(this, "cachedLazyStruct", myStruct, true);
@@ -227,8 +217,7 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             }
 
             if (foi instanceof LazyStringObjectInspector) {
-                return quoteEnabled
-                        ? new LazyQuoteAwareString((LazyStringObjectInspector) foi, quote)
+                return quoteEnabled ? new LazyQuoteAwareString((LazyStringObjectInspector) foi, quote)
                         : new LazyString((LazyStringObjectInspector) foi);
             } else if (foi instanceof LazyDateObjectInspector) {
                 return new LazyDateEx((LazyDateObjectInspector) foi);
@@ -306,8 +295,7 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
                     fieldByteBegin = fieldByteEnd + 1;
                     fieldByteEnd++;
                 } else {
-                    if (isEscaped && bytes[fieldByteEnd] == escapeChar
-                            && fieldByteEnd + 1 < structByteEnd) {
+                    if (isEscaped && bytes[fieldByteEnd] == escapeChar && fieldByteEnd + 1 < structByteEnd) {
                         // ignore the char after escape_char
                         fieldByteEnd += 2;
                     } else {
@@ -343,8 +331,8 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
 
         private void checkFieldQuoted(int fieldId, int fieldByteBegin, int fieldByteEnd, byte[] bytes) {
             if (quoteEnabled) {
-                isFieldQuoted[fieldId] = (fieldByteEnd - fieldByteBegin >= 2
-                        && bytes[fieldByteBegin] == quote && bytes[fieldByteEnd - 1] == quote);
+                isFieldQuoted[fieldId] = (fieldByteEnd - fieldByteBegin >= 2 && bytes[fieldByteBegin] == quote
+                        && bytes[fieldByteEnd - 1] == quote);
             }
         }
 
@@ -360,11 +348,13 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             }
         }
 
-        private boolean checkEndField(byte separator, int structByteEnd, int fieldByteBegin, int fieldByteEnd, byte[] bytes) {
+        private boolean checkEndField(byte separator, int structByteEnd, int fieldByteBegin, int fieldByteEnd,
+                byte[] bytes) {
             boolean isSep = fieldByteEnd == structByteEnd || bytes[fieldByteEnd] == separator;
-            if (isSep && quoteEnabled
-                    && (fieldByteBegin < structByteEnd && bytes[fieldByteBegin] == quote) // it begins with "
-                    && (fieldByteEnd < fieldByteBegin + 2 || bytes[fieldByteEnd - 1] != quote)) { // but ending is not
+            if (isSep && quoteEnabled && (fieldByteBegin < structByteEnd && bytes[fieldByteBegin] == quote)
+                    && (fieldByteEnd < fieldByteBegin + 2 || bytes[fieldByteEnd - 1] != quote)) {
+                // it begins with "
+                // but ending is not
                 isSep = false;
             }
             return isSep;
@@ -547,7 +537,8 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
         }
     }
 
-    abstract public static class LazyGenericNumber<OI extends ObjectInspector, T extends Writable> extends LazyPrimitive<OI, T> {
+    public abstract static class LazyGenericNumber<OI extends ObjectInspector, T extends Writable>
+            extends LazyPrimitive<OI, T> {
         private final boolean forceRead;
 
         protected LazyGenericNumber(OI oi, boolean forceRead) {
@@ -556,9 +547,9 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             this.forceRead = forceRead;
         }
 
-        abstract protected T newEmptyWritable();
+        protected abstract T newEmptyWritable();
 
-        abstract protected void parseAndSet(String str, T data, boolean force);
+        protected abstract void parseAndSet(String str, T data, boolean force);
 
         @Override
         public void init(ByteArrayRef bytes, int start, int length) {
@@ -644,12 +635,11 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
 
     public static class PrimitiveParser {
 
-        private PrimitiveParser() {}
+        private PrimitiveParser() {
+        }
 
-        public static final String[] DATE_PTNS = new String[]{
-                "yyyy-MM-dd", "yyyy/MM/dd", "MM/dd/yyyy", "yyyy.MM.dd",
-                "yyyyMMdd", "yyyyMM", "yyyy-MM", "yyyy/MM"
-        };
+        public static final String[] DATE_PTNS = new String[] { "yyyy-MM-dd", "yyyy/MM/dd", "MM/dd/yyyy", "yyyy.MM.dd",
+                "yyyyMMdd", "yyyyMM", "yyyy-MM", "yyyy/MM" };
         static final TimestampParser dateParser = new TimestampParser(DATE_PTNS);
 
         public static java.sql.Date parseDate(String str) {
@@ -660,25 +650,15 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
                 Timestamp ts = dateParser.parseTimestamp(str);
                 return new java.sql.Date(ts.getTime());
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Error date value '" + str + "'. "
-                        + "Date format must be " + StringUtils.join(DATE_PTNS, " or "), e);
+                throw new IllegalArgumentException("Error date value '" + str + "'. " + "Date format must be "
+                        + StringUtils.join(DATE_PTNS, " or "), e);
             }
         }
 
-        public static final String[] TIMESTAMP_PTNS = new String[]{
-                "yyyy-MM-dd HH:mm",
-                "yyyy-MM-dd HH:mm:ss",
-                "yyyy-MM-dd HH:mm:ss.SSS",
-                "yyyy-MM-dd HH:mm:ss,SSS",
-                "yyyy-MM-dd'T'HH:mm:ss",
-                "yyyy-MM-dd'T'HH:mm:ss.SSS",
-                "yyyy-MM-dd'T'HH:mm:ss'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy/MM/dd HH:mm",
-                "yyyy/MM/dd HH:mm:ss",
-                "MM/dd/yyyy HH:mm",
-                "MM/dd/yyyy HH:mm:ss",
-        };
+        public static final String[] TIMESTAMP_PTNS = new String[] { "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm:ss,SSS", "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS", "yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy/MM/dd HH:mm", "yyyy/MM/dd HH:mm:ss", "MM/dd/yyyy HH:mm", "MM/dd/yyyy HH:mm:ss", };
         static final TimestampParser timestampParser = new TimestampParser(TIMESTAMP_PTNS);
 
         public static java.sql.Timestamp parseTimestamp(String str) {
@@ -688,8 +668,8 @@ public class LazyQuoteAwareSerDe extends LazySimpleSerDe {
             try {
                 return timestampParser.parseTimestamp(str);
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Error timestamp value '" + str + "'. "
-                        + "Timestamp format must be " + StringUtils.join(TIMESTAMP_PTNS, " or "));
+                throw new IllegalArgumentException("Error timestamp value '" + str + "'. " + "Timestamp format must be "
+                        + StringUtils.join(TIMESTAMP_PTNS, " or "));
             }
         }
 

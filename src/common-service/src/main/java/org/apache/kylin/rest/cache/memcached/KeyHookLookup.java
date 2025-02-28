@@ -22,7 +22,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * A Class implement this interface indicates that the key information need to be calculated from a first lookup from cache itself to get
+ * A Class implement this interface indicates that the key information
+ * need to be calculated from a first lookup from cache itself to get
  * a hook.
  */
 public interface KeyHookLookup {

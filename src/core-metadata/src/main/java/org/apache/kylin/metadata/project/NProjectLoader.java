@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -46,29 +46,24 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.NRealizationRegistry;
 
+import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NProjectLoader {
 
-    private final NProjectManager mgr;
-
-    private static final ThreadLocal<ProjectBundle> cache = new ThreadLocal<>();
+    private static final TransmittableThreadLocal<ProjectBundle> cache = new TransmittableThreadLocal<>();
 
     public static void updateCache(@Nullable String project) {
         if (StringUtils.isNotEmpty(project) && !project.startsWith("_")) {
-            val projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-            val projectLoader = new NProjectLoader(projectManager);
-            if (projectManager.getProject(project) == null) {
-                log.debug("project {} not exist", project);
-                return;
-            }
+            val projectLoader = new NProjectLoader(KylinConfig.getInstanceFromEnv());
             val bundle = projectLoader.load(project);
-            log.trace("set project {} cache {}, prev is {}", project, bundle, cache.get());
-            cache.set(bundle);
+            if (!bundle.isEmpty()) {
+                log.trace("set project {} cache {}, prev is {}", project, bundle, cache.get());
+                cache.set(bundle);
+            }
         }
     }
 
@@ -77,8 +72,10 @@ public class NProjectLoader {
         cache.remove();
     }
 
-    public NProjectLoader(NProjectManager mgr) {
-        this.mgr = mgr;
+    private final KylinConfig kylinConfig;
+
+    public NProjectLoader(KylinConfig kylinConfig) {
+        this.kylinConfig = kylinConfig;
     }
 
     public Set<IRealization> listAllRealizations(String project) {
@@ -95,25 +92,10 @@ public class NProjectLoader {
             return Collections.unmodifiableSet(realizationsByTable);
     }
 
-    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String table, boolean onlyRewriteMeasure) {
-        Set<IRealization> realizations = getRealizationsByTable(project, table);
-        Set<String> modelIds = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
-                .listAllModelIds();
-        List<MeasureDesc> result = Lists.newArrayList();
-        List<IRealization> existingRealizations = realizations.stream().filter(r -> modelIds.contains(r.getUuid()))
-                .collect(Collectors.toList());
-        for (IRealization r : existingRealizations) {
-            if (!r.isOnline())
-                continue;
-            NDataModel model = r.getModel();
-            for (MeasureDesc m : r.getMeasures()) {
-                FunctionDesc func = m.getFunction();
-                if (belongToFactTable(table, model) && (!onlyRewriteMeasure || func.needRewrite())) {
-                    result.add(m);
-                }
-            }
-        }
-        return result;
+    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String table) {
+        List<MeasureDesc> effectiveRewriteMeasures = load(project).tableToMeasuresMap.get(StringUtils.upperCase(table));
+        return effectiveRewriteMeasures == null ? Collections.emptyList()
+                : Collections.unmodifiableList(effectiveRewriteMeasures);
     }
 
     private boolean belongToFactTable(String table, NDataModel model) {
@@ -131,26 +113,27 @@ public class NProjectLoader {
         }
         ProjectBundle projectBundle = new ProjectBundle(project);
 
-        ProjectInstance pi = mgr.getProject(project);
-        Preconditions.checkNotNull(pi, "Project '{}' does not exist.");
+        ProjectInstance pi = NProjectManager.getInstance(kylinConfig).getProject(project);
+        if (pi == null) {
+            log.debug("Project `{}` doest not exist.", project);
+            return projectBundle;
+        }
 
-        NTableMetadataManager metaMgr = NTableMetadataManager.getInstance(mgr.getConfig(), project);
-        Map<String, TableDesc> projectAllTables = metaMgr.getAllTablesMap();
-        NRealizationRegistry registry = NRealizationRegistry.getInstance(mgr.getConfig(), project);
+        NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(kylinConfig, project);
+        Map<String, TableDesc> projectAllTables = tableMgr.getAllTablesMap();
 
-        // before parallel stream, should use outside KylinConfig.getInstanceFromEnv()
-        // in case of load is executed in thread.
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        NDataflowManager dfMgr = NDataflowManager.getInstance(kylinConfig, project);
+        FusionModelManager fusionModelMgr = FusionModelManager.getInstance(kylinConfig, project);
+
         pi.getRealizationEntries().parallelStream().forEach(entry -> {
-            IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
+            IRealization realization = dfMgr.getRealization(entry.getRealization());
             if (realization == null) {
                 log.warn("Realization '{}' defined under project '{}' is not found or it's broken.", entry, project);
                 return;
             }
             NDataflow dataflow = (NDataflow) realization;
             if (dataflow.getModel().isFusionModel() && dataflow.isStreaming()) {
-                FusionModel fusionModel = FusionModelManager.getInstance(kylinConfig, project)
-                        .getFusionModel(dataflow.getModel().getFusionId());
+                FusionModel fusionModel = fusionModelMgr.getFusionModel(dataflow.getModel().getFusionId());
                 if (fusionModel != null) {
                     val batchModel = fusionModel.getBatchModel();
                     if (batchModel.isBroken()) {
@@ -159,8 +142,7 @@ public class NProjectLoader {
                         return;
                     }
                     String batchDataflowId = batchModel.getUuid();
-                    NDataflow batchRealization = NDataflowManager.getInstance(kylinConfig, project)
-                            .getDataflow(batchDataflowId);
+                    NDataflow batchRealization = dfMgr.getDataflow(batchDataflowId);
                     HybridRealization hybridRealization = new HybridRealization(batchRealization, realization, project);
                     hybridRealization.setConfig(dataflow.getConfig());
                     if (sanityCheck(hybridRealization, projectAllTables)) {
@@ -173,7 +155,7 @@ public class NProjectLoader {
                 mapTableToRealization(projectBundle, realization);
             }
         });
-
+        mapEffectiveRewriteMeasuresByTable(projectBundle, projectAllTables);
         return projectBundle;
     }
 
@@ -217,12 +199,49 @@ public class NProjectLoader {
         }
     }
 
+    private void mapEffectiveRewriteMeasuresByTable(ProjectBundle prjCache, Map<String, TableDesc> projectAllTables) {
+        Set<String> modelIds = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), prjCache.getProject())
+                .listAllModelIds();
+
+        projectAllTables.forEach((tableKey, tableDesc) -> {
+            Set<IRealization> realizations = prjCache.realizationsByTable.get(tableKey);
+            if (realizations == null) {
+                return;
+            }
+            List<IRealization> existingRealizations = realizations.stream()
+                    .filter(realization -> modelIds.contains(realization.getUuid())).collect(Collectors.toList());
+            List<MeasureDesc> measureDescs = Lists.newArrayList();
+            for (IRealization realization : existingRealizations) {
+                if (!realization.isOnline()) {
+                    continue;
+                }
+                NDataModel model = realization.getModel();
+                if (model == null || model.isBroken()) {
+                    continue;
+                }
+                for (MeasureDesc measureDesc : realization.getMeasures()) {
+                    FunctionDesc func = measureDesc.getFunction();
+                    if (belongToFactTable(tableKey, model) && func.needRewrite()) {
+                        measureDescs.add(measureDesc);
+                    }
+                }
+            }
+            prjCache.tableToMeasuresMap.put(tableDesc.getIdentity(), measureDescs);
+        });
+    }
+
+    @Getter
     private static class ProjectBundle {
-        private String project;
+        private final String project;
         private final Map<String, Set<IRealization>> realizationsByTable = new ConcurrentHashMap<>();
+        private final Map<String, List<MeasureDesc>> tableToMeasuresMap = new ConcurrentHashMap<>();
 
         ProjectBundle(String project) {
             this.project = project;
+        }
+
+        public boolean isEmpty() {
+            return realizationsByTable.isEmpty();
         }
     }
 

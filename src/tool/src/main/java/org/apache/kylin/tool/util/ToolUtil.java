@@ -37,14 +37,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ProcessUtils;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.query.util.ExtractFactory;
 import org.apache.spark.sql.SparderEnv;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -213,5 +214,21 @@ public class ToolUtil {
 
         final String JOB_TMP = "job_tmp";
         return getHdfsPrefix() + File.separator + project + File.separator + JOB_TMP;
+    }
+
+    public static boolean existsLinuxCommon(String common) {
+        String finalCommand = "command -v " + common;
+        CliCommandExecutor commandExecutor = new CliCommandExecutor();
+        val patternedLogger = new BufferedLogger(log);
+        try {
+            log.info("command = {}", finalCommand);
+            val execute = commandExecutor.execute(finalCommand, patternedLogger);
+            if (!Strings.isNullOrEmpty(execute.getCmd())) {
+                return true;
+            }
+        } catch (ShellException e) {
+            log.error("Failed to execute linux common: " + finalCommand, e);
+        }
+        return false;
     }
 }

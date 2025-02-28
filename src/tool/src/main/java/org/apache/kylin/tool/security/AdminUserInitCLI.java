@@ -26,10 +26,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.PersistException;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.Unsafe;
@@ -48,7 +48,7 @@ public class AdminUserInitCLI {
     protected static final Logger logger = LoggerFactory.getLogger(AdminUserInitCLI.class);
 
     public static final String ADMIN_USER_NAME = "ADMIN";
-    public static final String ADMIN_USER_RES_PATH = "/_global/user/ADMIN";
+    public static final String ADMIN_USER_RES_PATH = "USER_INFO/ADMIN";
 
     public static final Pattern PASSWORD_PATTERN = Pattern
             .compile("^(?=.*\\d)(?=.*[a-zA-Z])(?=.*[~!@#$%^&*(){}|:\"<>?\\[\\];',./`]).{8,}$");
@@ -96,9 +96,12 @@ public class AdminUserInitCLI {
         val metaStore = ResourceStore.getKylinMetaStore(config).getMetadataStore();
         try {
             logger.info("Start init default user.");
-            RawResource rawResource = new RawResource(ADMIN_USER_RES_PATH,
-                    ByteSource.wrap(JsonUtil.writeValueAsBytes(managedUser)), System.currentTimeMillis(), 0L);
-            metaStore.putResource(rawResource, null, UnitOfWork.DEFAULT_EPOCH_ID);
+            RawResource admin = RawResource.constructResource(MetadataType.USER_INFO,
+                    ByteSource.wrap(JsonUtil.writeValueAsBytes(managedUser)));
+            admin.setMvcc(0L);
+            admin.setTs(System.currentTimeMillis());
+            admin.setMetaKey(managedUser.resourceName());
+            metaStore.save(admin.getMetaType(), admin);
 
             String blackColorUsernameForPrint = StringConstant.ANSI_RESET + ADMIN_USER_NAME + StringConstant.ANSI_RED;
             String blackColorPasswordForPrint = StringConstant.ANSI_RESET + password + StringConstant.ANSI_RED;

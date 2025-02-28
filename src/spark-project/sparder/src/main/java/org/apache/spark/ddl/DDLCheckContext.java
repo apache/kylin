@@ -17,61 +17,75 @@
  */
 package org.apache.spark.ddl;
 
-import java.util.Set;
-
-import lombok.Data;
 import static org.apache.spark.ddl.DDLConstant.CREATE_LOGICAL_VIEW;
 import static org.apache.spark.ddl.DDLConstant.DROP_LOGICAL_VIEW;
 import static org.apache.spark.ddl.DDLConstant.HIVE_VIEW;
 import static org.apache.spark.ddl.DDLConstant.REPLACE_LOGICAL_VIEW;
 
+import java.util.Set;
+import java.util.regex.Matcher;
+
+import lombok.Data;
+
 @Data
 public class DDLCheckContext {
 
-  public static final int LOGICAL_VIEW_CREATE_COMMAND = 2;
-  public static final int LOGICAL_VIEW_DROP_COMMAND = 3;
-  public static final int HIVE_COMMAND = 1;
+    public static final int LOGICAL_VIEW_CREATE_COMMAND = 2;
+    public static final int LOGICAL_VIEW_DROP_COMMAND = 3;
+    public static final int HIVE_COMMAND = 1;
 
-  private String sql;
-  private String project;
-  private String userName;
-  private Set<String> groups;
-  private boolean kerberosEnv;
-  private String commandType = HIVE_VIEW;
-  private String logicalViewName;
-  private String restrict;
+    private String sql;
+    private String project;
+    private String userName;
+    private Set<String> groups;
+    private boolean kerberosEnv;
+    private String commandType = HIVE_VIEW;
+    private String logicalViewName;
+    private String restrict;
 
-  public DDLCheckContext(String sql, String project, String restrict, String userName, Set<String> groups,
-      boolean kerberosEnv) {
-    this.sql = sql;
-    this.project = project;
-    this.restrict = restrict;
-    this.userName = userName;
-    this.groups = groups;
-    this.kerberosEnv = kerberosEnv;
-  }
+    public DDLCheckContext(String sql, String project, String restrict, String userName, Set<String> groups,
+            boolean kerberosEnv) {
+        this.sql = sql;
+        this.project = project;
+        this.restrict = restrict;
+        this.userName = userName;
+        this.groups = groups;
+        this.kerberosEnv = kerberosEnv;
+    }
 
-  public String getSql() {
-    return sql;
-  }
+    public String getSql() {
+        return sql;
+    }
 
-  public String getProject() {
-    return project;
-  }
+    public String getLogicalViewPersistSql() {
+        if (isLogicalViewCommand()) {
+            String trimmedSql = sql.trim();
+            Matcher matcher = DDLConstant.LOGICAL_VIEW_DDL_CREATE_OR_REPLACE_SYNTAX.matcher(trimmedSql);
+            if (matcher.find()) {
+                return matcher.replaceFirst(DDLConstant.DDL_CREATE_LOGICAL_VIEW);
+            }
+        }
+        return sql;
+    }
 
-  public String getUserName() {
-    return userName;
-  }
+    public String getProject() {
+        return project;
+    }
 
-  public Set<String> getGroups() {
-    return groups;
-  }
+    public String getUserName() {
+        return userName;
+    }
 
-  public boolean isLogicalViewCommand() {
-    return commandType.equals(REPLACE_LOGICAL_VIEW) || commandType.equals(CREATE_LOGICAL_VIEW)
-        || commandType.equals(DROP_LOGICAL_VIEW);
-  }
-  public boolean isHiveCommand() {
-    return commandType.equals(HIVE_VIEW);
-  }
+    public Set<String> getGroups() {
+        return groups;
+    }
+
+    public boolean isLogicalViewCommand() {
+        return commandType.equals(REPLACE_LOGICAL_VIEW) || commandType.equals(CREATE_LOGICAL_VIEW)
+                || commandType.equals(DROP_LOGICAL_VIEW);
+    }
+
+    public boolean isHiveCommand() {
+        return commandType.equals(HIVE_VIEW);
+    }
 }

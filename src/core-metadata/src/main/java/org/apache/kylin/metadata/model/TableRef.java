@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.metadata.model.NDataModel;
+
 import lombok.Getter;
 import lombok.val;
 
@@ -96,12 +96,9 @@ public class TableRef implements Serializable {
             return false;
 
         TableRef t = (TableRef) o;
-
-        if (!(modelId == null ? t.modelId != null : modelId.equals(t.modelId)))
-            return false;
-        if (!(Objects.equals(alias, t.alias)))
-            return false;
-        return table.getIdentity().equals(t.table.getIdentity());
+        return Objects.equals(modelId, t.modelId) //
+                && Objects.equals(alias, t.alias) //
+                && Objects.equals(table.getIdentity(), t.table.getIdentity());
     }
 
     @Override

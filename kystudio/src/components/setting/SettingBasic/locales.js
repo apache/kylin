@@ -77,7 +77,7 @@ export default {
     from: 'Generate recommendations for the queries of which the duration is between',
     to: 'to',
     secondes: 'second(s)',
-    acclerationRuleSettings: 'Recommendation Preferences',
+    accelerationRuleSettings: 'Recommendation Preferences',
     optimizationSuggestions: 'Limit of Recommendations for Adding Index',
     suggestionTip1: 'Up to',
     suggestionTip2: 'recommendations for adding indexes would be generated per time. Recommendations would be updated every 2 days by default. The frequency could be configured. Check <a class="ky-a-like" href="" target="_blank">user manual</a> for details.',

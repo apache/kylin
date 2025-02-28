@@ -1,0 +1,23 @@
+{
+  "uuid" : "cd3429dd-aee2-483f-8973-29af20a8d0c2",
+  "last_modified" : 1497607294878,
+  "version" : "2.0.0",
+  "name" : "REASON",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "R_REASON_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "R_REASON_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "R_REASON_DESC",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

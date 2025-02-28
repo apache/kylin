@@ -19,11 +19,13 @@
 package org.apache.kylin.rest.health;
 
 import org.apache.spark.sql.SparderEnv;
+import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnEnabledHealthIndicator("sparkContext")
 public class SparkContextHealthIndicator implements HealthIndicator {
 
     @Override

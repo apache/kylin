@@ -21,10 +21,9 @@ package org.apache.kylin.query.mask;
 import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class CompositeQueryResultMasks implements QueryResultMask {
 

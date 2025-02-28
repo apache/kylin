@@ -1,0 +1,14 @@
+{
+  "uuid" : "722b027b-8906-379b-cf4f-ac2055ee528b",
+  "last_modified" : 1657777842412,
+  "create_time" : 1657777842410,
+  "version" : "4.0.0.0",
+  "status" : "BROKEN",
+  "last_status" : "OFFLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "ssb",
+  "segment_uuids" : [ ]
+}

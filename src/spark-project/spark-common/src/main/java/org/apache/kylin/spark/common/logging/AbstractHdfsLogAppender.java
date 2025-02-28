@@ -39,7 +39,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.util.ShutdownHookManager;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -49,9 +52,6 @@ import org.apache.logging.log4j.core.appender.OutputStreamManager;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.utils.SparkHadoopUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -128,7 +128,7 @@ public abstract class AbstractHdfsLogAppender
 
                 } catch (IOException e) {
                     StatusLogger.getLogger().error("Failed to create the file system, ", e);
-                    throw new RuntimeException("Failed to create the file system, ", e);
+                    throw new KylinRuntimeException("Failed to create the file system, ", e);
                 }
             }
         }
@@ -431,7 +431,7 @@ public abstract class AbstractHdfsLogAppender
 
         @Override
         protected synchronized boolean closeOutputStream() {
-            flush();
+            super.flush();
             final OutputStream stream = getOutputStreamQuietly();
             if (stream == null || stream == System.out || stream == System.err) {
                 return true;

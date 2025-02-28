@@ -18,13 +18,12 @@
 
 package org.apache.spark.sql.common
 
-import java.io.{FileDescriptor, InputStream}
-import java.lang
-import java.nio.ByteBuffer
-
 import org.apache.hadoop.fs._
 import org.apache.spark.internal.Logging
 
+import java.io.{FileDescriptor, InputStream}
+import java.lang
+import java.nio.ByteBuffer
 import scala.collection.mutable
 
 object DebugFilesystem extends Logging {

@@ -45,7 +45,7 @@ public class JdbcMetadataExtension implements BeforeEachCallback, AfterEachCallb
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 
     @Override

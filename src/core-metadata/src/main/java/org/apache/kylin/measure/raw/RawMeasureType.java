@@ -36,21 +36,14 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class RawMeasureType extends MeasureType<List<ByteArray>> {
     private static final long serialVersionUID = 1L;
-
-    private static final Logger logger = LoggerFactory.getLogger(RawMeasureType.class);
 
     public static final String FUNC_RAW = "RAW";
     public static final String DATATYPE_RAW = "raw";
@@ -178,7 +171,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
             return null;
 
         TblColRef rawColumn = getRawColumn(measureDesc.getFunction());
-        if (!digest.allColumns.isEmpty() && !digest.allColumns.contains(rawColumn)) {
+        if (!digest.getAllColumns().isEmpty() && !digest.getAllColumns().contains(rawColumn)) {
             return null;
         }
 
@@ -201,32 +194,6 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     @Override
     public boolean needRewrite() {
         return false;
-    }
-
-    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
-
-        if (sqlDigest.isRawQuery) {
-            for (MeasureDesc measureDesc : measureDescs) {
-                if (!sqlDigest.involvedMeasure.contains(measureDesc)) {
-                    continue;
-                }
-                TblColRef col = this.getRawColumn(measureDesc.getFunction());
-                ParameterDesc colParameter = ParameterDesc.newInstance(col);
-                FunctionDesc rawFunc = FunctionDesc.newInstance("RAW", Lists.newArrayList(colParameter), null);
-
-                if (sqlDigest.allColumns.contains(col)) {
-                    if (measureDesc.getFunction().equals(rawFunc)) {
-                        FunctionDesc sumFunc = FunctionDesc.newInstance("SUM", Lists.newArrayList(colParameter), null);
-                        sqlDigest.aggregations.remove(sumFunc);
-                        sqlDigest.aggregations.add(rawFunc);
-                        logger.info("Add RAW measure on column " + col);
-                    }
-                    if (!sqlDigest.metricColumns.contains(col)) {
-                        sqlDigest.metricColumns.add(col);
-                    }
-                }
-            }
-        }
     }
 
     @Override

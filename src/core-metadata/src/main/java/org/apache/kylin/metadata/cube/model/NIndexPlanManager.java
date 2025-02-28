@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -71,8 +72,7 @@ public class NIndexPlanManager {
                     System.identityHashCode(cfg), project);
         this.config = cfg;
         this.project = project;
-        String resourceRootPath = "/" + project + ResourceStore.INDEX_PLAN_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<IndexPlan>(getStore(), resourceRootPath, IndexPlan.class) {
+        this.crud = new CachedCrudAssist<IndexPlan>(getStore(), MetadataType.INDEX_PLAN, project, IndexPlan.class) {
             @Override
             protected IndexPlan initEntityAfterReload(IndexPlan indexPlan, String resourceName) {
                 indexPlan.initAfterReload(config, project);

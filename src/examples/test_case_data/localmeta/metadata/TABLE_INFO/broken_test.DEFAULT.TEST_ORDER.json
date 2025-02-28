@@ -1,0 +1,42 @@
+{
+  "uuid" : "78b70162-5d4b-4fb2-9144-a86e26982480",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "name" : "TEST_ORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000500|10001500",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "TEST_DATE_ENC",
+    "datatype" : "date",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "4",
+    "name" : "TEST_TIME_ENC",
+    "datatype" : "timestamp",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "5",
+    "name" : "TEST_EXTENDED_COLUMN",
+    "datatype" : "varchar(256)",
+    "data_gen" : "RAND"
+  } ],
+  "source_type" : 9,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "0.5",
+  "increment_loading" : false,
+  "database" : "DEFAULT",
+  "project" : "broken_test"
+}

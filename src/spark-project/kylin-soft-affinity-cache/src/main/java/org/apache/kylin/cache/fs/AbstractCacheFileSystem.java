@@ -42,9 +42,12 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.kylin.cache.utils.Hadoop3CompaUtil;
 import org.apache.kylin.cache.utils.ReflectionUtil;
-
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.fileseg.FileSegments;
+import org.apache.kylin.fileseg.FileSegments.SourceFilePredicate;
+import org.apache.kylin.fileseg.FileSegmentsDetector;
 
 import alluxio.client.file.CacheContext;
 import alluxio.client.file.URIStatus;
@@ -57,10 +60,6 @@ import alluxio.hadoop.HadoopUtils;
 import alluxio.metrics.MetricsConfig;
 import alluxio.metrics.MetricsSystem;
 import alluxio.wire.FileInfo;
-import org.apache.kylin.cache.utils.Hadoop3CompaUtil;
-import org.apache.kylin.fileseg.FileSegments;
-import org.apache.kylin.fileseg.FileSegments.SourceFilePredicate;
-import org.apache.kylin.fileseg.FileSegmentsDetector;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -88,7 +87,8 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
                     new AbstractMap.SimpleImmutableEntry<>("s3n", "org.apache.hadoop.fs.s3native.NativeS3FileSystem"),
                     new AbstractMap.SimpleImmutableEntry<>("hdfs", "org.apache.hadoop.hdfs.DistributedFileSystem"),
                     new AbstractMap.SimpleImmutableEntry<>("wasb", "org.apache.hadoop.fs.azure.NativeAzureFileSystem"),
-                    new AbstractMap.SimpleImmutableEntry<>("wasbs", "org.apache.hadoop.fs.azure.NativeAzureFileSystem$Secure"),
+                    new AbstractMap.SimpleImmutableEntry<>("wasbs",
+                            "org.apache.hadoop.fs.azure.NativeAzureFileSystem$Secure"),
                     new AbstractMap.SimpleImmutableEntry<>("alluxio", "alluxio.hadoop.FileSystem"))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -164,23 +164,20 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
                     CacheFileSystemConstants.PARAMS_KEY_FILE_STATUS_CACHE_TTL_DEFAULT_VALUE);
             long fileStatusMaxSize = conf.getLong(CacheFileSystemConstants.PARAMS_KEY_FILE_STATUS_CACHE_MAX_SIZE,
                     CacheFileSystemConstants.PARAMS_KEY_FILE_STATUS_CACHE_MAX_SIZE_DEFAULT_VALUE);
-            this.mStatusCache = new ManagerOfCacheFileStatus(fileStatusTTL, fileStatusMaxSize,
-                    p -> {
-                        try {
-                            return fs.getFileStatus(p);
-                        } catch (IOException e) {
-                            throw new IllegalStateException(e);
-                        }
-                    },
-                    p -> {
-                        try {
-                            List<LocatedFileStatus> ret = Hadoop3CompaUtil.RemoteIterators.toList(fs.listLocatedStatus(p));
-                            return ret.toArray(new LocatedFileStatus[0]);
-                        } catch (IOException e) {
-                            throw new IllegalStateException(e);
-                        }
-                    }
-            );
+            this.mStatusCache = new ManagerOfCacheFileStatus(fileStatusTTL, fileStatusMaxSize, p -> {
+                try {
+                    return fs.getFileStatus(p);
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            }, p -> {
+                try {
+                    List<LocatedFileStatus> ret = Hadoop3CompaUtil.RemoteIterators.toList(fs.listLocatedStatus(p));
+                    return ret.toArray(new LocatedFileStatus[0]);
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
         }
 
         // create LocalCacheFileSystem if it needs
@@ -244,7 +241,8 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
 
         // FilePath is a unique identifier for a file, however it can be a long string
         // hence using md5 hash of the file path as the identifier in the cache.
-        String fileHashFrom = "" + fileStatus.getPath() + fileStatus.getLen() + fileStatus.getModificationTime();
+        String fileHashFrom = String.valueOf(fileStatus.getPath()) + fileStatus.getLen()
+                + fileStatus.getModificationTime();
         String fileId = sha256().hashString(fileHashFrom, UTF_8).toString();
         CacheContext context = CacheContext.defaults().setCacheIdentifier(fileId);
         URIStatus status = new URIStatus(fileInfo, context);
@@ -253,8 +251,7 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
         if (this.useLegacyFileInputStream) {
             log.debug("Local cache (Legacy) opens file ({} pages cached) {} .", cachedCount, f);
             return new FSDataInputStream(new AlluxioHdfsFileInputStream(
-                    new LocalCacheFileInStream(status, mAlluxioFileOpener, mCacheManager, mAlluxioConf),
-                    statistics));
+                    new LocalCacheFileInStream(status, mAlluxioFileOpener, mCacheManager, mAlluxioConf), statistics));
         } else if (this.useBufferFileInputStream) {
             log.debug("Local cache (Direct-Buffer) opens file ({} pages cached) {} .", cachedCount, f);
             return new FSDataInputStream(new CacheFileInputStream(f,
@@ -295,10 +292,8 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
 
     @Override
     public RemoteIterator<FileStatus> listStatusIterator(Path p) throws IOException {
-        return Hadoop3CompaUtil.RemoteIterators.remoteIteratorFromIterator(
-                filteredStatusStream(p)
-                        .map(FileStatus.class::cast)
-                        .iterator());
+        return Hadoop3CompaUtil.RemoteIterators.remoteIteratorFromIterator(filteredStatusStream(p) //
+                .map(FileStatus.class::cast).iterator());
     }
 
     private Stream<LocatedFileStatus> filteredStatusStream(Path p) throws IOException {
@@ -322,7 +317,8 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
 
             long requiredCacheTime = getAcceptCacheTime();
 
-            // path is going to be fetched by the required cached time, use this info to update QueryContext.dataFetchTime
+            // path is going to be fetched by the required cached time,
+            // use this info to update QueryContext.dataFetchTime
             updateDataFetchTimeInContext(p, requiredCacheTime);
 
             mStatusCache.ensureCacheCreateTime(p, requiredCacheTime);
@@ -355,7 +351,8 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
             lastFetchTime = System.currentTimeMillis();
         }
 
-        // path is going to be fetched by the required cached time, use this info to update QueryContext.dataFetchTime
+        // path is going to be fetched by the required cached time, 
+        // use this info to update QueryContext.dataFetchTime
         context.getMetrics().addDataFetchTime(lastFetchTime);
         lastFetchTimeOfPaths.put(p, lastFetchTime);
     }

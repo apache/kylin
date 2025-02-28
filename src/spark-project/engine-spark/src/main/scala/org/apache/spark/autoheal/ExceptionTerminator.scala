@@ -21,12 +21,14 @@ package org.apache.spark.autoheal
 import java.io.IOException
 import java.util
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler.{JobFailed, ResourceLack, RunJob}
 import org.apache.kylin.engine.spark.utils.SparkConfHelper._
+import org.apache.kylin.guava30.shaded.common.base.Throwables
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.spark.SparkConf
 import org.apache.spark.application.RetryInfo
+import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
 import org.apache.spark.sql.internal.SQLConf
@@ -87,11 +89,20 @@ object ExceptionTerminator extends Logging {
     }
   }
 
+  private def reuseOriginalMemory(throwable: Throwable): ResolverResult = {
+    logInfo(s"Retry with original configuration due to exception ${throwable.getClass.getName}")
+    val overrideConf = Maps.newHashMap[String, String]()
+    Success(overrideConf)
+  }
+
   private def resolveRuntimeException(env: KylinBuildEnv, throwable: Throwable): ResolverResult = {
-    if (env.kylinConfig.getJobResourceLackIgnoreExceptionClasses.contains(throwable.getClass.getName)) {
-      logInfo(s"Retry with original configuration due to exception ${throwable.getClass.getName}")
-      val overrideConf = Maps.newHashMap[String, String]()
-      Success(overrideConf)
+    val rootCause = Throwables.getRootCause(throwable)
+    if (rootCause.isInstanceOf[IllegalDictEncodeValueException]) {
+      logWarning(s"Job failed due to dict encode error, rebuild the new dictionary and try again")
+      KylinBuildEnv.get().buildJobInfos.recordJobRetryInfosForSegmentParam("job.retry.segment.force-build-dict", "true")
+      reuseOriginalMemory(throwable)
+    } else if (env.kylinConfig.getJobResourceLackIgnoreExceptionClasses.contains(throwable.getClass.getName)) {
+      reuseOriginalMemory(throwable)
     } else {
       incMemory(env)
     }

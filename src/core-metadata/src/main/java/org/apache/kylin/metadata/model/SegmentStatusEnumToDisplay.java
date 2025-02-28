@@ -24,34 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * @author xduo
  */
 public enum SegmentStatusEnumToDisplay implements Serializable {
-    ONLINE, LOCKED, REFRESHING, MERGING, LOADING, WARNING,
-    @JsonProperty(value = "ONLINE(HDFS)")
-    ONLINE_HDFS {
-        @Override
-        public String toString() {
-            return "ONLINE(HDFS)";
-        }
-    },
-    @JsonProperty(value = "ONLINE(OBJECT STORAGE)")
-    ONLINE_OBJECT_STORAGE {
-        @Override
-        public String toString() {
-            return "ONLINE(OBJECT STORAGE)";
-        }
-    },
-    @JsonProperty(value = "ONLINE(TIERED STORAGE)")
-    ONLINE_TIERED_STORAGE {
-        @Override
-        public String toString() {
-            return "ONLINE(TIERED STORAGE)";
-        }
-    };
+    ONLINE, LOCKED, REFRESHING, MERGING, LOADING, WARNING, OVERLAP;
 
     private static final Map<String, SegmentStatusEnumToDisplay> nameMap = new HashMap<>(9);
 

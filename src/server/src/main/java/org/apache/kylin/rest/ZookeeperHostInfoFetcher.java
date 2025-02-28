@@ -18,6 +18,7 @@
 package org.apache.kylin.rest;
 
 import org.apache.kylin.common.util.HostInfoFetcher;
+import org.apache.kylin.rest.discovery.ConditionalOnNodeRegistryZookeeperEnabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 @ConditionalOnZookeeperEnabled
+@ConditionalOnNodeRegistryZookeeperEnabled
 @Component
 @Slf4j
 public class ZookeeperHostInfoFetcher implements HostInfoFetcher {

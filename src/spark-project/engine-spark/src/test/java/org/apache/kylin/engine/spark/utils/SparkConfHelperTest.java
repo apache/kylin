@@ -23,12 +23,13 @@ import static org.mockito.Mockito.mock;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cluster.AvailableResource;
 import org.apache.kylin.cluster.ResourceInfo;
 import org.apache.kylin.cluster.YarnClusterManager;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.spark.SparkConf;
 import org.apache.spark.conf.rule.ExecutorInstancesRule;
 import org.apache.spark.conf.rule.YarnConfRule;
@@ -39,7 +40,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class SparkConfHelperTest extends NLocalFileMetadataTestCase {
 

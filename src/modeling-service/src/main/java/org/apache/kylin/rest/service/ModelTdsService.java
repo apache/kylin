@@ -46,6 +46,8 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.engine.spark.smarter.IndexDependencyParser;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.acl.AclTCRDigest;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -68,9 +70,6 @@ import org.apache.kylin.tool.bisync.model.ColumnDef;
 import org.apache.kylin.tool.bisync.model.MeasureDef;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -220,7 +219,7 @@ public class ModelTdsService extends AbstractModelService {
                 .count();
 
         if (jointCount != model.getJoinTables().size() || singleTableCount == 0
-                || (modelElement.equals(SyncContext.ModelElement.CUSTOM_COLS)
+                || (modelElement == SyncContext.ModelElement.CUSTOM_COLS
                         && !checkColumnPermission(model, authColumns, dimensions, measures))) {
             throw new KylinException(ServerErrorCode.INVALID_TABLE_AUTH,
                     MsgPicker.getMsg().getTableNoColumnsPermission());

@@ -18,12 +18,14 @@
 
 package org.apache.kylin.rest.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Set;
+
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Set;
 
 @Setter
 @Getter

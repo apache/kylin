@@ -32,8 +32,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.metadata.usergroup.NUserGroupManager;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.usergroup.NUserGroupManager;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
 import org.junit.Assert;
@@ -41,9 +43,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;

@@ -20,12 +20,13 @@ package org.apache.kylin.streaming.jobs.scheduler;
 import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.util.ReflectionUtils;
@@ -63,7 +64,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testInit() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         Assert.assertTrue(streamingScheduler.getInitialized().get());
         Assert.assertTrue(streamingScheduler.getHasStarted().get());
     }
@@ -71,7 +72,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
     @Test
     public void testInitWithStreamingDisabled() {
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobPool = ReflectionUtils.getField(streamingScheduler, "jobPool");
         Assert.assertNull(jobPool);
         Assert.assertEquals(true, streamingScheduler.getInitialized().get());
@@ -82,25 +83,25 @@ public class StreamingSchedulerTest extends StreamingTestCase {
     public void testNoneJobNode() {
         val testConfig = getTestConfig();
         testConfig.setProperty("kylin.server.mode", "query");
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         Assert.assertEquals(false, streamingScheduler.getInitialized().get());
         Assert.assertEquals(false, streamingScheduler.getHasStarted().get());
     }
 
     @Test
     public void testProjectExists() {
-        val streamingScheduler = StreamingScheduler.getInstance(PROJECT);
+        val streamingScheduler = StreamingScheduler.getInstance();
         try {
-            val streamingScheduler1 = new StreamingScheduler(PROJECT);
+            new StreamingScheduler();
         } catch (Exception e) {
-            Assert.assertEquals(true, e instanceof IllegalStateException);
+            Assert.assertTrue(e instanceof IllegalStateException);
         }
         streamingScheduler.forceShutdown();
     }
 
     @Test
     public void testSubmitJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         streamingScheduler.submitJob(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
         streamingScheduler.submitJob(PROJECT, modelId, JobTypeEnum.STREAMING_MERGE);
         val testConfig = getTestConfig();
@@ -115,7 +116,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testSubmitBuildJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobId = StreamingUtils.getJobId(modelId, JobTypeEnum.STREAMING_BUILD.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
@@ -140,7 +141,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testSubmitMergeJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobId = StreamingUtils.getJobId(modelId, JobTypeEnum.STREAMING_MERGE.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
@@ -149,11 +150,12 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
         var dfMgr = NDataflowManager.getInstance(testConfig, PROJECT);
         var df = dfMgr.getDataflow(dataflowId).copy();
-        var seg = df.getSegments(SegmentStatusEnum.NEW).get(0);
+        var seg = df.getSegments(SegmentStatusEnum.NEW).get(0).copy();
         seg.getAdditionalInfo().put("file_layer", "1");
         val update = new NDataflowUpdate(df.getUuid());
         update.setToUpdateSegs(seg);
-        dfMgr.updateDataflow(update);
+        UnitOfWork.doInTransactionWithRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), PROJECT).updateDataflow(update), PROJECT);
         Assert.assertEquals(1, df.getSegments(SegmentStatusEnum.NEW).size());
         Assert.assertEquals("1", seg.getAdditionalInfo().get("file_layer"));
 
@@ -168,7 +170,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testSubmitMergeJobException() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobId = StreamingUtils.getJobId(modelId, JobTypeEnum.STREAMING_MERGE.toString());
         val testConfig = getTestConfig();
 
@@ -191,7 +193,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testStopJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         streamingScheduler.submitJob(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
         streamingScheduler.submitJob(PROJECT, modelId, JobTypeEnum.STREAMING_MERGE);
         val testConfig = getTestConfig();
@@ -203,8 +205,8 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         var mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, mergeJobMeta.getCurrentStatus());
 
-        streamingScheduler.stopJob(modelId, JobTypeEnum.STREAMING_BUILD);
-        streamingScheduler.stopJob(modelId, JobTypeEnum.STREAMING_MERGE);
+        streamingScheduler.stopJob(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
+        streamingScheduler.stopJob(PROJECT, modelId, JobTypeEnum.STREAMING_MERGE);
 
         buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
@@ -215,7 +217,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testStopBuildJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobType = JobTypeEnum.STREAMING_BUILD;
         val jobId = StreamingUtils.getJobId(modelId, jobType.toString());
         streamingScheduler.submitJob(PROJECT, modelId, jobType);
@@ -224,7 +226,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, jobMeta.getCurrentStatus());
 
-        streamingScheduler.stopJob(modelId, jobType);
+        streamingScheduler.stopJob(PROJECT, modelId, jobType);
         mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.STOPPED, jobMeta.getCurrentStatus());
@@ -232,7 +234,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testStopMergeJob() {
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        val streamingScheduler = new StreamingScheduler();
         val jobType = JobTypeEnum.STREAMING_MERGE;
         val jobId = StreamingUtils.getJobId(modelId, jobType.toString());
         streamingScheduler.submitJob(PROJECT, modelId, jobType);
@@ -241,14 +243,14 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, jobMeta.getCurrentStatus());
 
-        streamingScheduler.stopJob(modelId, jobType);
+        streamingScheduler.stopJob(PROJECT, modelId, jobType);
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.STOPPED, jobMeta.getCurrentStatus());
     }
 
     @Test
     public void testStopYarnJob() {
-        val streamingScheduler = Mockito.spy(new StreamingScheduler(PROJECT));
+        val streamingScheduler = Mockito.spy(new StreamingScheduler());
         val jobType = JobTypeEnum.STREAMING_MERGE;
         val jobId = StreamingUtils.getJobId(modelId, jobType.toString());
         val config = getTestConfig();
@@ -261,7 +263,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, jobMeta.getCurrentStatus());
 
-        streamingScheduler.stopJob(modelId, jobType);
+        streamingScheduler.stopJob(PROJECT, modelId, jobType);
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.STOPPING, jobMeta.getCurrentStatus());
     }
@@ -271,17 +273,20 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         val buildJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_build";
         val mergeJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_merge";
 
-        val config = getTestConfig();
-        StreamingJobManager mgr = StreamingJobManager.getInstance(config, PROJECT);
-        mgr.updateStreamingJob(buildJobId, copyForWrite -> {
-            copyForWrite.getParams().put(StreamingConstants.STREAMING_RETRY_ENABLE, "true");
-            copyForWrite.setCurrentStatus(JobStatusEnum.ERROR);
-        });
-        mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
-            copyForWrite.getParams().put(StreamingConstants.STREAMING_RETRY_ENABLE, "true");
-            copyForWrite.setCurrentStatus(JobStatusEnum.ERROR);
-        });
-        val streamingScheduler = new StreamingScheduler(PROJECT);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            StreamingJobManager mgr = StreamingJobManager.getInstance(getTestConfig(), PROJECT);
+            mgr.updateStreamingJob(buildJobId, copyForWrite -> {
+                copyForWrite.getParams().put(StreamingConstants.STREAMING_RETRY_ENABLE, "true");
+                copyForWrite.setCurrentStatus(JobStatusEnum.ERROR);
+            });
+            mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
+                copyForWrite.getParams().put(StreamingConstants.STREAMING_RETRY_ENABLE, "true");
+                copyForWrite.setCurrentStatus(JobStatusEnum.ERROR);
+            });
+            return true;
+        }, PROJECT);
+
+        val streamingScheduler = new StreamingScheduler();
         streamingScheduler.retryJob();
         val retryMap = (Map<String, String>) ReflectionUtils.getField(streamingScheduler, "retryMap");
         Assert.assertTrue(retryMap.containsKey(buildJobId));
@@ -290,6 +295,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         for (int i = 0; i < 5; i++) {
             streamingScheduler.retryJob();
         }
+        StreamingJobManager mgr = StreamingJobManager.getInstance(getTestConfig(), PROJECT);
         val buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         val mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, buildJobMeta.getCurrentStatus());
@@ -310,7 +316,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.STARTING);
         });
-        val instance = new StreamingScheduler(PROJECT);
+        new StreamingScheduler();
         val buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         val mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, buildJobMeta.getCurrentStatus());
@@ -331,7 +337,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.STOPPING);
         });
-        val instance = new StreamingScheduler(PROJECT);
+        new StreamingScheduler();
         val buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         val mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.ERROR, buildJobMeta.getCurrentStatus());
@@ -344,7 +350,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         val mergeJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_merge";
 
         val config = getTestConfig();
-        val instance = new StreamingScheduler(PROJECT);
+        val instance = new StreamingScheduler();
         StreamingJobManager mgr = StreamingJobManager.getInstance(config, PROJECT);
         mgr.updateStreamingJob(buildJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
@@ -352,8 +358,8 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
         });
-        instance.killJob(modelId, JobTypeEnum.STREAMING_MERGE, JobStatusEnum.ERROR);
-        instance.killJob(modelId, JobTypeEnum.STREAMING_BUILD, JobStatusEnum.ERROR);
+        instance.killJob(PROJECT, modelId, JobTypeEnum.STREAMING_MERGE, JobStatusEnum.ERROR);
+        instance.killJob(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD, JobStatusEnum.ERROR);
         val buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         val mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.ERROR, buildJobMeta.getCurrentStatus());
@@ -362,7 +368,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
 
     @Test
     public void testKillYarnApplication() {
-        val streamingScheduler = Mockito.spy(new StreamingScheduler(PROJECT));
+        val streamingScheduler = Mockito.spy(new StreamingScheduler());
         val jobType = JobTypeEnum.STREAMING_MERGE;
         val jobId = StreamingUtils.getJobId(modelId, jobType.toString());
         val config = getTestConfig();
@@ -372,7 +378,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         });
         Mockito.when(streamingScheduler.applicationExisted(jobId)).thenReturn(true);
         thrown.expect(KylinException.class);
-        streamingScheduler.killYarnApplication(jobId, modelId);
+        streamingScheduler.killYarnApplication(PROJECT, jobId, modelId);
     }
 
     @Test
@@ -381,7 +387,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         val mergeJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_merge";
 
         val config = getTestConfig();
-        val instance = new StreamingScheduler(PROJECT);
+        val instance = new StreamingScheduler();
         StreamingJobManager mgr = StreamingJobManager.getInstance(config, PROJECT);
         mgr.updateStreamingJob(buildJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
@@ -389,8 +395,8 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
         });
-        instance.killJob(modelId, JobTypeEnum.STREAMING_MERGE, JobStatusEnum.STOPPED);
-        instance.killJob(modelId, JobTypeEnum.STREAMING_BUILD, JobStatusEnum.STOPPED);
+        instance.killJob(PROJECT, modelId, JobTypeEnum.STREAMING_MERGE, JobStatusEnum.STOPPED);
+        instance.killJob(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD, JobStatusEnum.STOPPED);
         val buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         val mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.STOPPED, buildJobMeta.getCurrentStatus());
@@ -401,7 +407,7 @@ public class StreamingSchedulerTest extends StreamingTestCase {
     public void testSkipJobListener() {
         val buildJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_build";
         val config = getTestConfig();
-        val instance = new StreamingScheduler(PROJECT);
+        val instance = new StreamingScheduler();
         StreamingJobManager mgr = StreamingJobManager.getInstance(config, PROJECT);
         var buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         Assert.assertFalse(buildJobMeta.isSkipListener());
@@ -413,13 +419,5 @@ public class StreamingSchedulerTest extends StreamingTestCase {
         instance.skipJobListener(PROJECT, buildJobId, false);
         buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         Assert.assertFalse(buildJobMeta.isSkipListener());
-    }
-
-    @Test
-    public void testShutdownByProject() {
-        StreamingScheduler.getInstance(PROJECT);
-        StreamingScheduler.shutdownByProject(PROJECT);
-        val map = (Map<String, StreamingScheduler>) ReflectionUtils.getField(StreamingScheduler.class, "INSTANCE_MAP");
-        Assert.assertTrue(map.isEmpty());
     }
 }

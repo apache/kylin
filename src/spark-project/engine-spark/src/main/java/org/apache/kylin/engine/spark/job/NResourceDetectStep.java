@@ -25,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
-import org.apache.kylin.job.execution.NSparkExecutable;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +47,13 @@ public class NResourceDetectStep extends NSparkExecutable {
 
     public NResourceDetectStep(DefaultExecutable parent) {
         if (parent instanceof NSparkCubingJob) {
-            this.setSparkSubmitClassName(RDSegmentBuildJob.class.getName());
+            this.setSparkSubmitClassName(BeforeSegmentBuildJob.class.getName());
         } else if (parent instanceof NSparkMergingJob) {
-            this.setSparkSubmitClassName(ResourceDetectBeforeMergingJob.class.getName());
+            this.setSparkSubmitClassName(BeforeSegmentMergeJob.class.getName());
         } else if (parent instanceof NTableSamplingJob) {
-            this.setSparkSubmitClassName(ResourceDetectBeforeSampling.class.getName());
+            this.setSparkSubmitClassName(BeforeTableAnalyzeJob.class.getName());
+        } else if (parent instanceof NSparkLayoutDataOptimizeJob) {
+            this.setSparkSubmitClassName(ResourceDetectBeforeOptimizeJob.class.getName());
         } else {
             throw new IllegalArgumentException("Unsupported resource detect for " + parent.getName() + " job");
         }
@@ -73,11 +74,11 @@ public class NResourceDetectStep extends NSparkExecutable {
     @Override
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = super.getSparkConfigOverride(config);
-        log.info("spark.master override " + sparkConfigOverride.get(SPARK_MASTER));
+        log.info("spark.master override {}", sparkConfigOverride.get(SPARK_MASTER));
         if (!CLUSTER_MODE.equals(sparkConfigOverride.get(DEPLOY_MODE))) {
             sparkConfigOverride.put("spark.master", "local");
         }
-        log.info("spark.master already " + sparkConfigOverride.get(SPARK_MASTER));
+        log.info("spark.master already {}", sparkConfigOverride.get(SPARK_MASTER));
         sparkConfigOverride.put("spark.sql.autoBroadcastJoinThreshold", "-1");
         sparkConfigOverride.put("spark.sql.adaptive.enabled", "false");
         return sparkConfigOverride;

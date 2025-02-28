@@ -61,11 +61,7 @@ public enum QueryErrorCode implements ErrorCodeSupplier {
 
     // 20080XXX query limit
     REFUSE_NEW_QUERY("KE-020080001"),
-
-    // 20090XXX forcedToTieredStorage route query
-    FORCED_TO_TIEREDSTORAGE_AND_FORCE_TO_INDEX("KE-020090001"),
-    FORCED_TO_TIEREDSTORAGE_RETURN_ERROR("KE-020090002"),
-    FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER("KE-020090003");
+    BIG_QUERY_DECIDE("KE-020008002");
 
     private final ErrorCode errorCode;
 

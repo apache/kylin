@@ -17,8 +17,6 @@
  */
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_RESTART_CHECK_SEGMENT_STATUS;
-
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +27,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.cluster.ClusterManagerFactory;
 import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.common.KylinConfig;
@@ -40,26 +38,16 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringHelper;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.dao.JobStatistics;
 import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.domain.JobInfo;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.JobSchedulerModeEnum;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.rest.JobMapperFilter;
-import org.apache.kylin.metadata.model.SegmentSecondStorageStatusEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
-import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
-import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.BuildAsyncProfileHelper;
 import org.slf4j.Logger;
@@ -68,7 +56,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 @Component("jobService")
@@ -119,63 +106,6 @@ public class JobService extends BasicService {
     public JobService setAclEvaluate(AclEvaluate aclEvaluate) {
         this.aclEvaluate = aclEvaluate;
         return this;
-    }
-
-    public List<ExecutableResponse.SegmentResponse> getSegments(AbstractExecutable executable) {
-        if (SecondStorageUtil.isModelEnable(executable.getProject(), executable.getTargetModelId())) {
-            return modelService
-                    .getSegmentsResponseByJob(executable.getTargetModelId(), executable.getProject(), executable)
-                    .stream()
-                    .map(dataSegmentResponse -> new ExecutableResponse.SegmentResponse(dataSegmentResponse.getId(),
-                            dataSegmentResponse.getStatusToDisplay()))
-                    .collect(Collectors.toList());
-        }
-        return Lists.newArrayList();
-    }
-
-    private void jobActionValidate(String jobId, String project, String action) {
-        JobActionEnum.validateValue(action.toUpperCase(Locale.ROOT));
-
-        AbstractExecutable job = getManager(ExecutableManager.class, project).getJob(jobId);
-        if (SecondStorageUtil.isModelEnable(project, job.getTargetModelId())
-                && job.getJobSchedulerMode().equals(JobSchedulerModeEnum.DAG)) {
-            checkSegmentState(project, action, job);
-        }
-    }
-
-    @VisibleForTesting
-    public void jobActionValidateToTest(String jobId, String project, String action) {
-        jobActionValidate(jobId, project, action);
-    }
-
-    public void checkSegmentState(String project, String action, AbstractExecutable job) {
-        if (!JobActionEnum.RESTART.equals(JobActionEnum.valueOf(action))) {
-            return;
-        }
-
-        val buildJobTypes = Sets.newHashSet(JobTypeEnum.INC_BUILD, JobTypeEnum.INDEX_BUILD, JobTypeEnum.INDEX_REFRESH,
-                JobTypeEnum.SUB_PARTITION_BUILD, JobTypeEnum.SUB_PARTITION_REFRESH, JobTypeEnum.INDEX_MERGE);
-        val segmentHalfOnlineStatuses = Sets.newHashSet(SegmentStatusEnumToDisplay.ONLINE_HDFS,
-                SegmentStatusEnumToDisplay.ONLINE_OBJECT_STORAGE, SegmentStatusEnumToDisplay.ONLINE_TIERED_STORAGE);
-        val segmentMayHalfOnlineStatuses = Sets.newHashSet(SegmentStatusEnumToDisplay.LOADING,
-                SegmentStatusEnumToDisplay.WARNING);
-        if (buildJobTypes.contains(job.getJobType()) && CollectionUtils.isNotEmpty(job.getSegmentIds())) {
-            List<NDataSegmentResponse> segmentsResponseByJob = modelService.getSegmentsResponse(job.getTargetModelId(),
-                    project, "0", "" + (Long.MAX_VALUE - 1), "", null, null, false, "sortBy", false, null, null);
-
-            val onlineSegmentCount = segmentsResponseByJob.stream()
-                    .filter(segmentResponse -> job.getSegmentIds().contains(segmentResponse.getId()))
-                    .filter(segmentResponse -> {
-                        val statusSecondStorageToDisplay = segmentResponse.getStatusSecondStorageToDisplay();
-                        val statusToDisplay = segmentResponse.getStatusToDisplay();
-                        return segmentHalfOnlineStatuses.contains(statusToDisplay)
-                                || (segmentMayHalfOnlineStatuses.contains(statusToDisplay)
-                                && SegmentSecondStorageStatusEnum.LOADED == statusSecondStorageToDisplay);
-                    }).count();
-            if (onlineSegmentCount != 0) {
-                throw new KylinException(JOB_RESTART_CHECK_SEGMENT_STATUS);
-            }
-        }
     }
 
     public JobStatisticsResponse getJobStats(String project, long startTime, long endTime) {
@@ -244,7 +174,7 @@ public class JobService extends BasicService {
     }
 
     public void dumpProfileByProject(String project, String jobStepId, String params,
-                                     Pair<InputStream, String> jobOutputAndDownloadFile) {
+            Pair<InputStream, String> jobOutputAndDownloadFile) {
         if (!KylinConfig.getInstanceFromEnv().buildJobProfilingEnabled()) {
             throw new KylinException(JobErrorCode.PROFILING_NOT_ENABLED, String.format(Locale.ROOT,
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));
@@ -266,7 +196,7 @@ public class JobService extends BasicService {
     }
 
     public void dumpProfileByYarnAppId(String yarnAppId, String params,
-                                       Pair<InputStream, String> jobOutputAndDownloadFile) {
+            Pair<InputStream, String> jobOutputAndDownloadFile) {
         if (!KylinConfig.getInstanceFromEnv().buildJobProfilingEnabled()) {
             throw new KylinException(JobErrorCode.PROFILING_NOT_ENABLED, String.format(Locale.ROOT,
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));

@@ -1,0 +1,27 @@
+{
+  "uuid" : "e286e39e-40d7-44c2-8fa2-41b365632882",
+  "name" : "TEST_COUNTRY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COUNTRY",
+    "datatype" : "string",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "LATITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "3",
+    "name" : "LONGITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "4",
+    "name" : "NAME",
+    "datatype" : "string",
+    "index" : "T"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "infer_filter"
+}

@@ -1,0 +1,75 @@
+{
+  "uuid" : "29576012-b54f-4319-8b20-ed3a3d202314",
+  "last_modified" : 1494334079302,
+  "version" : "2.0.0",
+  "name" : "LINEITEM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "L_ORDERKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "L_PARTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "L_SUPPKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "L_LINENUMBER",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "L_QUANTITY",
+    "datatype" : "double"
+  }, {
+    "id" : "6",
+    "name" : "L_EXTENDEDPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "L_DISCOUNT",
+    "datatype" : "double"
+  }, {
+    "id" : "8",
+    "name" : "L_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "9",
+    "name" : "L_RETURNFLAG",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "L_LINESTATUS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "L_SHIPDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "12",
+    "name" : "L_COMMITDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "13",
+    "name" : "L_RECEIPTDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "14",
+    "name" : "L_SHIPINSTRUCT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "L_SHIPMODE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "L_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "VIRTUAL_VIEW",
+  "database" : "TPCH",
+  "project" : "newten"
+}

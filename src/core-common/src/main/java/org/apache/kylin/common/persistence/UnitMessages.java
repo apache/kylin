@@ -22,9 +22,9 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.StartUnit;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

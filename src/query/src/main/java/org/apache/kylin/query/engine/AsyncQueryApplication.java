@@ -34,6 +34,7 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.scheduler.JobFailed;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryHistorySqlParam;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
@@ -42,6 +43,7 @@ import org.apache.kylin.metadata.query.util.QueryHistoryUtil;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.spark.sql.KapFunctions;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.udf.UdfManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,12 +95,25 @@ public class AsyncQueryApplication extends SparkApplication {
     }
 
     @Override
+    public void disableCurrentThreadGlutenIfNeed() {
+        if (!config.uniqueAsyncQueryUseGlutenEnabled()) {
+            ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
+            logger.info("Disable current thread gluten for Async Query");
+        }
+    }
+
+    @Override
+    public void reportSparkJobExtraInfo(SparkSession sparkSession) {
+        // do nothing
+    }
+
+    @Override
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         return config.getAsyncQuerySparkConfigOverride();
     }
 
     @Override
-    protected void waiteForResourceSuccess() {
+    protected void waitForResourceSuccess() {
         // do nothing
     }
 
@@ -110,6 +125,14 @@ public class AsyncQueryApplication extends SparkApplication {
     @Override
     public void updateJobErrorInfo(JobFailed jobFailed) {
         // do nothing
+    }
+
+    @Override
+    public Map<String, String> removeGlutenParamsIfNeed(Map<String, String> baseSparkConf) {
+        if (!config.uniqueAsyncQueryUseGlutenEnabled()) {
+            return ExecutableUtil.removeGultenParams(baseSparkConf);
+        }
+        return baseSparkConf;
     }
 
     private void saveQueryHistory(QueryContext queryContext, QueryParams queryParams) {

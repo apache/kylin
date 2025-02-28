@@ -1,3 +1,0 @@
-
-select position('A',lstg_format_name) a
-from test_kylin_fact

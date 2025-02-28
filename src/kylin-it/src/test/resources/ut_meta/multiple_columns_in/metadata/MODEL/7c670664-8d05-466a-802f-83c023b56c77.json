@@ -1,0 +1,36 @@
+{
+  "uuid" : "7c670664-8d05-466a-802f-83c023b56c77",
+  "alias" : "multiple_columns_in",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "owner" : "ADMIN",
+  "join_tables" : [ ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "multiple_columns_in"
+}

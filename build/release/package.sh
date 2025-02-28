@@ -55,6 +55,12 @@ bash build/release/build.sh $@             || { exit 1; }
 if [[ "${WITH_SPARK}" = "1" ]]; then
     echo "BUILD STAGE 3 - Prepare spark..."
     bash -x build/release/download-spark.sh      || { exit 1; }
+    if [[ "${WITH_GLUTEN}" = "1" ]]; then
+        echo "Prepare gluten..."
+        sh build/release/download-gluten.sh      || { exit 1; }
+    else
+        sed -i '/^export LD_PRELOAD=/d' build/sbin/bootstrap.sh
+    fi
 else
     rm -rf build/spark
 fi

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.rest;
 
-import java.util.Date;
 import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -43,7 +42,7 @@ public class JobMapperFilter {
     // jobName is jobType
     private List<String> jobNames;
 
-    private Date queryStartTime;
+    private long queryStartTime;
 
     // for sql condition: in (...)
     private List<String> subjects;
@@ -72,7 +71,7 @@ public class JobMapperFilter {
     // placeholder for mybatis ${}
     private String jobInfoTable;
 
-    private List<Date> timeRange;
+    private List<Long> timeRange;
 
     public void setStatuses(List<ExecutableState> stateList) {
         statuses = stateList;

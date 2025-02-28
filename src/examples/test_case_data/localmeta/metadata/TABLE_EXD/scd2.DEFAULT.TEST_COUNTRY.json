@@ -1,0 +1,20 @@
+{
+  "uuid" : "e647c7d7-ddb3-42f6-a5cd-ba96add8581f",
+  "last_modified" : 0,
+  "create_time" : 1601283605112,
+  "version" : "4.0.0.0",
+  "table_name" : "DEFAULT.TEST_COUNTRY",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : { },
+  "loading_range" : [ ],
+  "col_stats_path" : null,
+  "row_count_status" : null,
+  "original_size" : -1,
+  "project" : "scd2"
+}

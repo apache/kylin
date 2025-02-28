@@ -18,14 +18,15 @@
 package org.apache.kylin.common.persistence.transaction;
 
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
+import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.META_KEY_PROPERTIES_NAME;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -35,17 +36,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.VersionConflictException;
 import org.apache.kylin.common.persistence.AuditLog;
+import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceFilter;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
+import org.apache.kylin.common.persistence.VersionConflictException;
 import org.apache.kylin.common.persistence.event.Event;
+import org.apache.kylin.common.persistence.metadata.AuditLogStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
-import org.springframework.transaction.TransactionException;
-
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.springframework.transaction.TransactionException;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -64,12 +68,15 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
     private final long idTimeoutMills;
     private final int replayDelayBatch;
 
-    public AuditLogReplayWorker(KylinConfig config, JdbcAuditLogStore restorer) {
+    public AuditLogReplayWorker(KylinConfig config, AuditLogStore restorer) {
         super(config, restorer);
         delayIdQueue = new ConcurrentLinkedQueue<>();
         idTimeoutMills = config.getEventualReplayDelayItemTimeout();
         replayDelayBatch = config.getEventualReplayDelayItemBatch();
         idEarliestTimeoutMills = TimeUnit.HOURS.toMillis(3);
+        consumeExecutor = restorer instanceof JdbcAuditLogStore
+                ? Executors.newScheduledThreadPool(1, new DaemonThreadFactory("ReplayWorker"))
+                : publicExecutorPool;
     }
 
     public void startSchedule(long currentId, boolean syncImmediately) {
@@ -197,33 +204,42 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
 
         val allCommitOk = waitMaxIdOk(currentWindow.getStart(), currentWindow.getEnd());
 
-        val newOffset = withTransaction(auditLogStore.getTransactionManager(), () -> {
-            fetchAndReplayDelayId(replayer, needReplayedIdList);
-
-            if (currentWindow.isEmpty()) {
-                return -1L;
-            }
-
-            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
-                log.debug("start restore from {}", currentWindow);
-            }
-            val stepWin = new SlideWindow(currentWindow);
-
-            while (stepWin.forwardRightStep(STEP)) {
-                val logs = auditLogStore.fetch(stepWin.getStart(), stepWin.length());
-                replayLogs(replayer, logs);
-                if (!allCommitOk) {
-                    recordStepAbsentIdList(stepWin, logs);
-                }
-                stepWin.syncRightStep();
-            }
-            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
-                log.debug("end restore from {}, delay queue:{}", currentWindow, delayIdQueue.size());
-            }
-            return currentWindow.getEnd();
-        });
+        long newOffset;
+        if (auditLogStore instanceof JdbcAuditLogStore) {
+            newOffset = withTransaction(((JdbcAuditLogStore) auditLogStore).getTransactionManager(),
+                    () -> doFetchAndReplay(replayer, needReplayedIdList, currentWindow, allCommitOk));
+        } else {
+            newOffset = doFetchAndReplay(replayer, needReplayedIdList, currentWindow, allCommitOk);
+        }
 
         updateOffset(newOffset);
+    }
+
+    private long doFetchAndReplay(MessageSynchronization replayer, List<Long> needReplayedIdList,
+            FixedWindow currentWindow, boolean allCommitOk) {
+        fetchAndReplayDelayId(replayer, needReplayedIdList);
+
+        if (currentWindow.isEmpty()) {
+            return -1L;
+        }
+
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            log.debug("start restore from {}", currentWindow);
+        }
+        val stepWin = new SlideWindow(currentWindow);
+
+        while (stepWin.forwardRightStep(STEP)) {
+            val logs = auditLogStore.fetch(stepWin.getStart(), stepWin.length());
+            replayLogs(replayer, logs);
+            if (!allCommitOk) {
+                recordStepAbsentIdList(stepWin, logs);
+            }
+            stepWin.syncRightStep();
+        }
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            log.debug("end restore from {}, delay queue:{}", currentWindow, delayIdQueue.size());
+        }
+        return currentWindow.getEnd();
     }
 
     private boolean waitMaxIdOk(long currentId, long maxId) {
@@ -256,26 +272,31 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         val replayer = MessageSynchronization.getInstance(config);
         val originResource = e.getResource();
         val targetResource = e.getTargetResource();
-        val conflictedPath = originResource.getResPath();
-        log.warn("Resource <{}:{}> version conflict, msg:{}", conflictedPath, originResource.getMvcc(), e.getMessage());
-        log.info("Try to reload {}", originResource.getResPath());
+        val metaKey = originResource.getMetaKey();
+        log.warn("Resource <{}:{}> version conflict, msg:{}", metaKey, originResource.getMvcc(), e.getMessage());
+        log.info("Try to reload {}", originResource.getMetaKey());
         val resourceStore = ResourceStore.getKylinMetaStore(config);
         val metaStore = resourceStore.getMetadataStore();
-        try {
-            val correctedResource = metaStore.load(conflictedPath);
+        RawResourceFilter filter = RawResourceFilter.equalFilter(META_KEY_PROPERTIES_NAME, metaKey);
+        List<RawResource> rawResources = metaStore.get(originResource.getMetaType(), filter, true, true);
+        if (!CollectionUtils.isEmpty(rawResources)) {
+            val correctedResource = rawResources.get(0);
             log.info("Origin version is {},  current version in store is {}", originResource.getMvcc(),
                     correctedResource.getMvcc());
-            val fixResource = new AuditLog(0L, conflictedPath, correctedResource.getByteSource(),
-                    correctedResource.getTimestamp(), originResource.getMvcc() + 1, null, null, null);
+            String resPath = correctedResource.generateKeyWithType();
+            val fixResource = new AuditLog(0L, resPath, correctedResource.getByteSource(), correctedResource.getTs(),
+                    originResource.getMvcc() + 1, null, null, null,
+                    null, correctedResource.getProject(), false);
             replayer.replay(new UnitMessages(Lists.newArrayList(Event.fromLog(fixResource))));
 
-            val currentAuditLog = resourceStore.getAuditLogStore().get(conflictedPath, targetResource.getMvcc());
+            val currentAuditLog = resourceStore.getAuditLogStore().get(resPath, targetResource.getMvcc());
             if (currentAuditLog != null) {
                 log.info("After fix conflict, set offset to {}", currentAuditLog.getId());
                 updateOffset(currentAuditLog.getId());
             }
-        } catch (IOException ioException) {
-            log.warn("Reload metadata <{}> failed", conflictedPath);
+        } else {
+            // Should not happen
+            log.error("Reload metadata <{}> failed, current resource is not exist", metaKey);
         }
         catchupInternal(countDown - 1);
     }
@@ -349,5 +370,4 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
             return "[" + auditLogId + "," + logTimestamp + "]";
         }
     }
-
 }

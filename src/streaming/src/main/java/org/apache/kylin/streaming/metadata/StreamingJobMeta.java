@@ -24,8 +24,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
@@ -34,7 +35,6 @@ import org.apache.kylin.streaming.constants.StreamingConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -128,13 +128,8 @@ public class StreamingJobMeta extends RootPersistentEntity {
         jobMeta.params.put(StreamingConstants.STREAMING_RETRY_ENABLE, "false");
     }
 
-    public static String concatResourcePath(String name, String project, String jobType) {
-        return new StringBuilder().append("/").append(project).append(ResourceStore.STREAMING_RESOURCE_ROOT).append("/")
-                .append(name).append("_" + jobType.toLowerCase(Locale.ROOT)).toString();
-    }
-
     @Override
-    public String getResourcePath() {
-        return concatResourcePath(getUuid(), project, jobType.name());
+    public MetadataType resourceType() {
+        return MetadataType.STREAMING_JOB;
     }
 }

@@ -1,0 +1,9 @@
+{
+  "uuid" : "5cabc32a-a33e-4b69-83dd-2bb8b1f8c92b",
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.metadata.semi-automatic-mode" : "true",
+    "kylin.query.slowquery-detect-interval" : "4"
+  },
+  "project" : "_global"
+}

@@ -47,18 +47,17 @@ public abstract class AbstractSqlVisitor extends SqlBasicVisitor<SqlNode> {
     }
 
     public static boolean isAs(SqlNode call) {
-        return call instanceof SqlBasicCall && ((SqlBasicCall) call).getOperator().isName("AS");
+        return call instanceof SqlBasicCall && ((SqlBasicCall) call).getOperator().isName("AS", false);
     }
 
     public static boolean isSqlBasicCall(SqlNode call) {
-        return call instanceof SqlBasicCall && ((SqlBasicCall) call).getOperands().length != 0;
+        return call instanceof SqlBasicCall && !((SqlBasicCall) call).getOperandList().isEmpty();
     }
 
     @Override
     public SqlNode visit(SqlCall call) {
         if (isUnion(call)) {
-            SqlNode[] operands = ((SqlBasicCall) call).getOperands();
-            for (SqlNode operand : operands) {
+            for (SqlNode operand : call.getOperandList()) {
                 operand.accept(this);
             }
         }
@@ -163,7 +162,7 @@ public abstract class AbstractSqlVisitor extends SqlBasicVisitor<SqlNode> {
     }
 
     protected void visitInAsNode(SqlBasicCall from) {
-        SqlNode left = from.getOperands()[0];
+        SqlNode left = from.operand(0);
         visitInSqlNode(left);
     }
 
@@ -186,8 +185,7 @@ public abstract class AbstractSqlVisitor extends SqlBasicVisitor<SqlNode> {
     }
 
     protected void visitInSqlBasicCall(SqlBasicCall call) {
-        SqlNode[] operands = call.getOperands();
-        for (SqlNode ope : operands) {
+        for (SqlNode ope : call.getOperandList()) {
             visitInSqlNode(ope);
         }
     }

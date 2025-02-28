@@ -29,18 +29,17 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.util.ExecutorServiceUtil;
-import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.metrics.service.JobStatusMonitorMetric;
 import org.apache.kylin.common.metrics.service.MonitorDao;
 import org.apache.kylin.common.metrics.service.MonitorMetric;
 import org.apache.kylin.common.metrics.service.QueryMonitorMetric;
 import org.apache.kylin.common.util.AddressUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MonitorReporter {
     private static final Logger logger = LoggerFactory.getLogger(MonitorReporter.class);

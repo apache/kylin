@@ -1,5 +1,5 @@
 {
-  "@class" : "io.kyligence.kap.event.model.PostMergeOrRefreshSegmentEvent",
+  "@class" : "org.apache.kylin.event.model.PostMergeOrRefreshSegmentEvent",
   "uuid" : "ac3a2686-6c4d-4c73-b689-f873481dce9a",
   "last_modified" : 0,
   "create_time" : 1585806635614,

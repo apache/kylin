@@ -33,20 +33,20 @@ public class SparkCleanupTransactionalTableStepTest extends NLocalWithSparkSessi
 
     @Test
     public void testGenerateDropTableCommand() {
-        SparkCleanupTransactionalTableStep sparkCleanupTransactionalTableStep = new SparkCleanupTransactionalTableStep();
+        SparkCleanupTransactionalTableStep cleanStep = new SparkCleanupTransactionalTableStep();
         String expectResult = "USE `TEST_CDP`;\nDROP TABLE IF EXISTS `TEST_HIVE_TX_INTERMEDIATE5c5851ef8544`;\n";
         String tableFullName = "TEST_CDP.TEST_HIVE_TX_INTERMEDIATE5c5851ef8544";
-        String cmd = sparkCleanupTransactionalTableStep.generateDropTableCommand(tableFullName);
+        String cmd = cleanStep.generateDropTableCommand(tableFullName);
         Assert.assertEquals(expectResult, cmd);
 
         expectResult = "DROP TABLE IF EXISTS `TEST_HIVE_TX_INTERMEDIATE5c5851ef8544`;\n";
         tableFullName = "TEST_HIVE_TX_INTERMEDIATE5c5851ef8544";
-        cmd = sparkCleanupTransactionalTableStep.generateDropTableCommand(tableFullName);
+        cmd = cleanStep.generateDropTableCommand(tableFullName);
         Assert.assertEquals(expectResult, cmd);
 
         expectResult = "";
         tableFullName = "";
-        cmd = sparkCleanupTransactionalTableStep.generateDropTableCommand(tableFullName);
+        cmd = cleanStep.generateDropTableCommand(tableFullName);
         Assert.assertEquals(expectResult, cmd);
     }
 

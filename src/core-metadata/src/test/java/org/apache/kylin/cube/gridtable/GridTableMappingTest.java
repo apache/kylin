@@ -19,14 +19,16 @@
 package org.apache.kylin.cube.gridtable;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.gridtable.NLayoutToGridTableMapping;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,14 +36,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.apache.kylin.guava30.shaded.common.collect.Iterables;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 public class GridTableMappingTest extends NLocalFileMetadataTestCase {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-    private String projectDefault = "default";
+    private static final String DEFAULT_PROJECT = "default";
 
     @Before
     public void setUp() throws Exception {
@@ -57,7 +56,7 @@ public class GridTableMappingTest extends NLocalFileMetadataTestCase {
     public void testHandlerCountReplace() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.replace-count-column-with-count-star", "false");
-        NIndexPlanManager mgr = NIndexPlanManager.getInstance(getTestConfig(), projectDefault);
+        NIndexPlanManager mgr = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         IndexPlan cube = mgr.getIndexPlanByModelAlias("nmodel_basic");
         IndexEntity first = Iterables.getFirst(cube.getAllIndexes(), null);
         LayoutEntity cuboidLayout = first.getLastLayout();
@@ -88,7 +87,7 @@ public class GridTableMappingTest extends NLocalFileMetadataTestCase {
     public void testGetIndexOf() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.replace-count-column-with-count-star", "false");
-        NIndexPlanManager mgr = NIndexPlanManager.getInstance(getTestConfig(), projectDefault);
+        NIndexPlanManager mgr = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         IndexPlan cube = mgr.getIndexPlanByModelAlias("nmodel_basic");
         IndexEntity first = Iterables.getFirst(cube.getAllIndexes(), null);
         LayoutEntity cuboidLayout = first.getLastLayout();
@@ -96,7 +95,8 @@ public class GridTableMappingTest extends NLocalFileMetadataTestCase {
         FunctionDesc functionDesc = new FunctionDesc();
         ParameterDesc parameterDesc = new ParameterDesc();
         parameterDesc.setType("field");
-        parameterDesc.setValue("CUSTOMER_ID");
+        parameterDesc.setValue("ORDER_ID");
+        parameterDesc.setColRef(cube.getModel().getRootFactTable().getColumn("ORDER_ID"));
         functionDesc.setParameters(Lists.newArrayList(parameterDesc));
         functionDesc.setExpression("COUNT");
         functionDesc.setReturnType("bigint");

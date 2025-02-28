@@ -1,0 +1,39 @@
+{
+  "uuid" : "d5b30bbf-333f-c107-3205-1f0995a7de4e",
+  "last_modified" : 1649659300402,
+  "create_time" : 1649659300399,
+  "version" : "4.0.0.0",
+  "name" : "test_inferior_job",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1649659300399,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "principal" : null,
+  "keytab" : null,
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.engine.steps.skip" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
+    "kylin.engine.inferior-flattable-enabled" : "true",
+    "kylin.engine.adaptive-spanning-tree-enabled" : "true",
+    "kylin.engine.index-column-flattable-enabled" : "true",
+    "kylin.engine.inferior-flattable-dimension-factor" : "3",
+    "kylin.source.provider.9" : "org.apache.kylin.engine.spark.mockup.CsvSource"
+  },
+  "segment_config" : {
+    "auto_merge_enabled" : false,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    },
+    "create_empty_segment_enabled" : false
+  },
+  "project" : "_global"
+}

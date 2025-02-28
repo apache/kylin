@@ -29,12 +29,12 @@ import java.util.TreeSet;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.controller.NBasicController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;

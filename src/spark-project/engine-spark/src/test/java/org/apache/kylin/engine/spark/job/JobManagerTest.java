@@ -54,8 +54,8 @@ import org.apache.kylin.metadata.cube.model.LayoutPartition;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.job.JobBucket;
@@ -77,7 +77,7 @@ import lombok.val;
  */
 public class JobManagerTest extends NLocalFileMetadataTestCase {
 
-    private final static String PROJECT = "default";
+    private static final String PROJECT = "default";
 
     private static JobManager jobManager;
 
@@ -88,16 +88,17 @@ public class JobManagerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
-
+        JobContextUtil.cleanUp();
         this.createTestMetadata();
         config = getTestConfig();
 
         config.setProperty("kylin.job.check-quota-storage-enabled", "false");
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(config);
 
         jobManager = JobManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
         SparkJobFactoryUtils.initJobFactory();
+
+        overwriteSystemProp("kylin.job.max-concurrent-jobs", "0");
     }
 
     @After
@@ -162,15 +163,14 @@ public class JobManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(executables.get(0).getLayoutIds().size(), 15);
 
         List<String> partitionValues = Lists.newArrayList("usa", "cn");
-        NDataSegment dataSegment1 = generateSegmentForMultiPartition(modelId, partitionValues, "2010-01-01",
-                "2010-02-01", SegmentStatusEnum.READY);
-        dataSegment1.getMultiPartitions().forEach(partition -> {
-            partition.setStatus(PartitionStatusEnum.NEW);
-        });
-        val segments = Lists.newArrayList(dataSegment1);
-        val update = new NDataflowUpdate(df.getUuid());
-        update.setToUpdateSegs(segments.toArray(new NDataSegment[] {}));
-        dfm.updateDataflow(update);
+        NDataSegment seg = generateSegmentForMultiPartition(modelId, partitionValues, "2010-01-01", "2010-02-01",
+                SegmentStatusEnum.READY);
+        NDataSegment dataSegment1 = UnitOfWork.doInTransactionWithRetry(
+                () -> NDataSegmentManager.getInstance(getTestConfig(), PROJECT).update(seg.getUuid(), copyForWrite -> {
+                    copyForWrite.getMultiPartitions().forEach(partition -> {
+                        partition.setStatus(PartitionStatusEnum.NEW);
+                    });
+                }), PROJECT);
 
         indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
             copyForWrite.removeLayouts(Sets.newHashSet(1L), false, true);
@@ -426,21 +426,25 @@ public class JobManagerTest extends NLocalFileMetadataTestCase {
 
     private NDataSegment generateSegmentForMultiPartition(String modelId, List<String> partitionValues, String start,
             String end, SegmentStatusEnum status) {
-        val dfm = NDataflowManager.getInstance(getTestConfig(), PROJECT);
-        val partitions = Lists.<String[]> newArrayList();
-        partitionValues.forEach(value -> {
-            partitions.add(new String[] { value });
-        });
-        long startTime = SegmentRange.dateToLong(start);
-        long endTime = SegmentRange.dateToLong(end);
-        val segmentRange = new SegmentRange.TimePartitionedSegmentRange(startTime, endTime);
-        val df = dfm.getDataflow(modelId);
-        val newSegment = dfm.appendSegment(df, segmentRange, status, partitions);
-        val copySegment = dfm.copyForWrite(df).getSegment(newSegment.getId());
-        copySegment.getMultiPartitions().forEach(partition -> {
-            partition.setStatus(PartitionStatusEnum.READY);
-        });
-        return copySegment;
+        return UnitOfWork.doInTransactionWithRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), PROJECT);
+            val segManager = NDataSegmentManager.getInstance(getTestConfig(), PROJECT);
+            val partitions = Lists.<String[]> newArrayList();
+            partitionValues.forEach(value -> {
+                partitions.add(new String[] { value });
+            });
+            long startTime = SegmentRange.dateToLong(start);
+            long endTime = SegmentRange.dateToLong(end);
+            val segmentRange = new SegmentRange.TimePartitionedSegmentRange(startTime, endTime);
+            val df = dfm.getDataflow(modelId);
+            val newSegment = dfm.appendSegment(df, segmentRange, status, partitions);
+            NDataSegment seg = segManager.update(newSegment.getUuid(), copyForWrite -> {
+                copyForWrite.getMultiPartitions().forEach(partition -> {
+                    partition.setStatus(PartitionStatusEnum.READY);
+                });
+            });
+            return seg.copy();
+        }, PROJECT);
     }
 
     private NDataLayout generateLayoutForMultiPartition(String modelId, String segmentId, List<String> partitionValues,

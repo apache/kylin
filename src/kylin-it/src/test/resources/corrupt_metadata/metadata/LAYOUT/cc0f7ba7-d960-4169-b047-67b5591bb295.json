@@ -1,0 +1,9 @@
+{
+  "uuid" : "cc0f7ba7-d960-4169-b047-67b5591bb295",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "dataflow" : "0bc7cc29-f27d-4b52-898e-2a70e564b31f",
+  "layout_instances" : [ ],
+  "project" : "index_plan_missing_col_encoding"
+}

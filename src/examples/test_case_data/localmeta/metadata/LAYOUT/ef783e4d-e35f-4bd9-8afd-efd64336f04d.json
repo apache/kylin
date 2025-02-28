@@ -1,0 +1,59 @@
+{
+  "uuid" : "ef783e4d-e35f-4bd9-8afd-efd64336f04d",
+  "last_modified" : 1522136133328,
+  "version" : "3.0.0.0",
+  "dataflow" : "741ca86a-1f13-46da-a59f-95fb68615e3a",
+  "segment_id" : 0,
+  "layout_instances" : [ {
+    "layout_id" : 1000001,
+    "status" : "READY",
+    "build_job_id" : "12a83ab2-ee40-404f-b2ce-71698e497dc1",
+    "rows" : 9896,
+    "byte_size" : 1190912,
+    "file_count" : 2,
+    "source_rows" : 9896,
+    "source_byte_size" : 1645,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 1,
+    "status" : "READY",
+    "build_job_id" : "12a83ab2-ee40-404f-b2ce-71698e497dc1",
+    "rows" : 9896,
+    "byte_size" : 249856,
+    "file_count" : 2,
+    "source_rows" : 9896,
+    "source_byte_size" : 1645,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 10001,
+    "status" : "READY",
+    "build_job_id" : "12a83ab2-ee40-404f-b2ce-71698e497dc1",
+    "rows" : 9896,
+    "byte_size" : 258048,
+    "file_count" : 2,
+    "source_rows" : 9896,
+    "source_byte_size" : 1645,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 10002,
+    "status" : "READY",
+    "build_job_id" : "12a83ab2-ee40-404f-b2ce-71698e497dc1",
+    "rows" : 9896,
+    "byte_size" : 258048,
+    "file_count" : 2,
+    "source_rows" : 9896,
+    "source_byte_size" : 1645,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 20001,
+    "status" : "READY",
+    "build_job_id" : "12a83ab2-ee40-404f-b2ce-71698e497dc1",
+    "rows" : 9896,
+    "byte_size" : 295936,
+    "file_count" : 2,
+    "source_rows" : 9896,
+    "source_byte_size" : 1645,
+    "create_time" : 1538323200000
+  } ],
+  "project" : "default"
+}

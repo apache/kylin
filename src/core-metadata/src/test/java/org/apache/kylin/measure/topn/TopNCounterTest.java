@@ -20,7 +20,6 @@ package org.apache.kylin.measure.topn;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,19 +28,20 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.distribution.ZipfDistribution;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @Ignore("For collecting accuracy statistics, not for functional test")
 public class TopNCounterTest {
@@ -126,7 +126,6 @@ public class TopNCounterTest {
             outputMsg("Compare " + i);
 
             if (isClose(topResult1.get(i).getSecond(), realSequence.get(i).getSecond())) {
-                //            if (topResult1.get(i).getFirst().equals(realSequence.get(i).getFirst()) && topResult1.get(i).getSecond().doubleValue() == realSequence.get(i).getSecond().doubleValue()) {
                 outputMsg("Passed; key:" + topResult1.get(i).getFirst() + ", value:" + topResult1.get(i).getSecond());
             } else {
                 outputMsg("Failed; space saving key:" + topResult1.get(i).getFirst() + ", value:"
@@ -280,9 +279,9 @@ public class TopNCounterTest {
     private void feedDataToConsumer(String dataFile, TopNCounterTest.TestDataConsumer consumer, int startLine,
             int endLine) throws IOException {
         long startTime = System.currentTimeMillis();
-        try (InputStream inputStream = new FileInputStream(dataFile);
+        try (InputStream inputStream = Files.newInputStream(Paths.get(dataFile));
                 BufferedReader bufferedReader = new BufferedReader(
-                        new InputStreamReader(inputStream, Charset.defaultCharset().name()))) {
+                        new InputStreamReader(inputStream, Charset.defaultCharset()))) {
             int lineNum = 0;
             String line = bufferedReader.readLine();
             while (line != null) {

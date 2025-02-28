@@ -33,12 +33,14 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 public class SegmentsTypeEnumJsonDeserializer extends JsonDeserializer<SegmentsRequest.SegmentsRequestType> {
 
     @Override
-    public SegmentsRequest.SegmentsRequestType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public SegmentsRequest.SegmentsRequestType deserialize(JsonParser p, DeserializationContext ctxt)
+            throws IOException {
         String segmentsRequestType = String.valueOf(p.getText());
         if (!SegmentsRequest.SegmentsRequestType.REFRESH.name().equals(segmentsRequestType)
                 && !SegmentsRequest.SegmentsRequestType.MERGE.name().equals(segmentsRequestType)) {
-            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "type", SegmentsRequest.SegmentsRequestType.REFRESH.name()
-                    + "," + SegmentsRequest.SegmentsRequestType.MERGE.name());
+            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "type",
+                    SegmentsRequest.SegmentsRequestType.REFRESH.name() + ","
+                            + SegmentsRequest.SegmentsRequestType.MERGE.name());
         }
         return SegmentsRequest.SegmentsRequestType.valueOf(segmentsRequestType.toUpperCase(Locale.ROOT));
     }

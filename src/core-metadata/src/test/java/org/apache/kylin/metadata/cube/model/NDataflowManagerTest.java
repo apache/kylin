@@ -31,20 +31,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.junit.TimeZoneTestRunner;
 import org.apache.kylin.metadata.cube.CubeTestUtils;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -53,9 +55,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -101,9 +100,9 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
 
         df = df.copy();
         Assert.assertFalse(df.isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().getSegDetails().isCachedAndShared());
-        Assert.assertFalse(df.getSegments().getFirstSegment().getLayout(1).isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().getSegDetails().isCachedAndShared());
+        Assert.assertFalse(df.getSegments().getFirstSegment().copy().getLayout(1).isCachedAndShared());
     }
 
     @Test
@@ -230,7 +229,7 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(2, df.getSegments().size());
 
         mgr.updateDataflow(df.getId(), copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
 
         for (NDataSegment segment : segsSet) {
@@ -459,6 +458,7 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
         }
 
         // Set seg1's cuboid-0's status to NEW
+        seg1.setMvcc(seg1.getMvcc() + 1);
         NDataLayout dataCuboid = NDataLayout.newDataLayout(seg1.getDataflow(), seg1.getId(),
                 df.getIndexPlan().getAllLayouts().get(0).getId());
         update = new NDataflowUpdate(df.getUuid());

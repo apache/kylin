@@ -20,8 +20,9 @@ package org.apache.kylin.rest.request;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 

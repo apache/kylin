@@ -1,0 +1,232 @@
+{
+  "uuid" : "7212bf0c-0716-4cef-b623-69c161981262",
+  "alias" : "ut_left_join_cc_model1",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_ORDER",
+    "kind" : "FACT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_ORDER.ID_PLUS_1" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.ORDER_ID_PLUS_1" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID"
+  }, {
+    "id" : 1,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT"
+  }, {
+    "id" : 2,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+  }, {
+    "id" : 3,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  }, {
+    "id" : 4,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 5,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 6,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE"
+  }, {
+    "id" : 7,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 8,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID"
+  }, {
+    "id" : 9,
+    "name" : "TEST_DATE_ENC",
+    "column" : "TEST_ORDER.TEST_DATE_ENC"
+  }, {
+    "id" : 10,
+    "name" : "TEST_TIME_ENC",
+    "column" : "TEST_ORDER.TEST_TIME_ENC"
+  }, {
+    "id" : 11,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 12,
+    "name" : "BUYER_ID",
+    "column" : "TEST_ORDER.BUYER_ID"
+  }, {
+    "id" : 17,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  } ],
+  "all_measures" : [ {
+    "id" : 1000,
+    "name" : "TRANS_CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 1001,
+    "name" : "GMV_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 1002,
+    "name" : "GMV_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 1003,
+    "name" : "GMV_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 1004,
+    "name" : "ITEM_COUNT_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 1005,
+    "name" : "ITEM_COUNT_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 1006,
+    "name" : "ITEM_COUNT_MIN",
+    "tomb" : true,
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 1007,
+    "name" : "SELLER_HLL",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 1008,
+    "name" : "COUNT_DISTINCT",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 1009,
+    "name" : "TOP_SELLER",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      }, {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "topn(100, 4)",
+      "configuration" : {
+        "topn.encoding.TEST_KYLIN_FACT.SELLER_ID" : "int:4"
+      }
+    }
+  }, {
+    "id" : 1010,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 1011,
+    "name" : "GVM_PERCENTILE",
+    "function" : {
+      "expression" : "PERCENTILE",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "percentile(100)"
+    }
+  } ],
+  "column_correlations" : [ {
+    "name" : "CATEGORY_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME" ]
+  }, {
+    "name" : "DATE_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CAL_DT.WEEK_BEG_DT", "TEST_KYLIN_FACT.CAL_DT" ]
+  }, {
+    "name" : "SITE_JOINT",
+    "correlation_type" : "joint",
+    "columns" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID", "TEST_SITES.SITE_NAME" ]
+  } ],
+  "filter_condition" : null,
+  "partition_desc" : {
+    "partition_date_column" : "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_type" : "APPEND"
+  },
+  "computed_column_uuids" : [ "1dea13e9-c8e0-3a53-4c47-fb6d1dfce3db", "62f5eaf7-207f-8254-9cc7-cff2183929dc", "f08ff58f-742b-7f02-1034-bb4753f785b1", "a0e13a97-3050-f04b-93c0-77402f74bfd3" ],
+  "project" : "default"
+}

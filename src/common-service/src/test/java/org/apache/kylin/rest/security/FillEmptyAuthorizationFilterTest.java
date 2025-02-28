@@ -23,8 +23,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Test;
 import org.sparkproject.jetty.servlet.DefaultServlet;

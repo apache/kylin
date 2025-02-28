@@ -26,12 +26,11 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ProjectTemporaryTableCleanerHelperTest extends NLocalFileMetadataTestCase {
     private final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";

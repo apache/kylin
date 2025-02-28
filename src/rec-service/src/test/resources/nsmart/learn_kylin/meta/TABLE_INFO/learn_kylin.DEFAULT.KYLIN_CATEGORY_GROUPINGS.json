@@ -1,0 +1,152 @@
+{
+  "uuid" : "952d11b5-69d9-45d1-92af-227489485e3f",
+  "project" : "learn_kylin",
+  "name" : "KYLIN_CATEGORY_GROUPINGS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "LEAF_CATEG_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "3",
+    "name" : "SITE_ID",
+    "datatype" : "int"
+  }, {
+    "id" : "4",
+    "name" : "CATEG_BUSN_MGR",
+    "datatype" : "string"
+  }, {
+    "id" : "5",
+    "name" : "CATEG_BUSN_UNIT",
+    "datatype" : "string"
+  }, {
+    "id" : "6",
+    "name" : "REGN_CATEG",
+    "datatype" : "string"
+  }, {
+    "id" : "7",
+    "name" : "USER_DEFINED_FIELD1",
+    "datatype" : "string"
+  }, {
+    "id" : "8",
+    "name" : "USER_DEFINED_FIELD3",
+    "datatype" : "string"
+  }, {
+    "id" : "9",
+    "name" : "KYLIN_GROUPINGS_CRE_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "10",
+    "name" : "KYLIN_GROUPINGS_UPD_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "11",
+    "name" : "KYLIN_GROUPINGS_CRE_USER",
+    "datatype" : "string"
+  }, {
+    "id" : "12",
+    "name" : "KYLIN_GROUPINGS_UPD_USER",
+    "datatype" : "string"
+  }, {
+    "id" : "13",
+    "name" : "META_CATEG_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "14",
+    "name" : "META_CATEG_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "15",
+    "name" : "CATEG_LVL2_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "16",
+    "name" : "CATEG_LVL3_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "17",
+    "name" : "CATEG_LVL4_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "18",
+    "name" : "CATEG_LVL5_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "19",
+    "name" : "CATEG_LVL6_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "20",
+    "name" : "CATEG_LVL7_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "21",
+    "name" : "CATEG_LVL2_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "22",
+    "name" : "CATEG_LVL3_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "23",
+    "name" : "CATEG_LVL4_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "24",
+    "name" : "CATEG_LVL5_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "25",
+    "name" : "CATEG_LVL6_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "26",
+    "name" : "CATEG_LVL7_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "27",
+    "name" : "CATEG_FLAGS",
+    "datatype" : "decimal"
+  }, {
+    "id" : "28",
+    "name" : "ADULT_CATEG_YN",
+    "datatype" : "string"
+  }, {
+    "id" : "29",
+    "name" : "DOMAIN_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "30",
+    "name" : "USER_DEFINED_FIELD5",
+    "datatype" : "string"
+  }, {
+    "id" : "31",
+    "name" : "VCS_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "32",
+    "name" : "GCS_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "33",
+    "name" : "MOVE_TO",
+    "datatype" : "decimal"
+  }, {
+    "id" : "34",
+    "name" : "SAP_CATEGORY_ID",
+    "datatype" : "decimal"
+  }, {
+    "id" : "35",
+    "name" : "SRC_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "36",
+    "name" : "BSNS_VRTCL_NAME",
+    "datatype" : "string"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

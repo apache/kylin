@@ -29,6 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.condition.JobModeCondition;
@@ -42,7 +43,6 @@ import org.apache.kylin.job.runners.JobCheckRunner;
 import org.apache.kylin.job.runners.JobCheckUtil;
 import org.apache.kylin.job.runners.QuotaStorageCheckRunner;
 import org.apache.kylin.job.scheduler.JdbcJobScheduler;
-import org.apache.kylin.job.scheduler.ParallelLimiter;
 import org.apache.kylin.job.scheduler.ResourceAcquirer;
 import org.apache.kylin.job.scheduler.SharedFileProgressReporter;
 import org.apache.kylin.rest.ISmartApplicationListenerForSystem;
@@ -84,7 +84,6 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
 
     private Map<String, Boolean> projectReachQuotaLimitMap;
 
-    private ParallelLimiter parallelLimiter;
     private ResourceAcquirer resourceAcquirer;
 
     private SharedFileProgressReporter progressReporter;
@@ -103,10 +102,6 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
             progressReporter.destroy();
         }
 
-        if (Objects.nonNull(parallelLimiter)) {
-            parallelLimiter.destroy();
-        }
-
         if (Objects.nonNull(jobScheduler)) {
             jobScheduler.destroy();
         }
@@ -114,6 +109,8 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
         if (Objects.nonNull(lockClient)) {
             lockClient.destroy();
         }
+
+        JobCheckUtil.stopJobCheckScheduler();
 
     }
 
@@ -150,7 +147,7 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
         projectReachQuotaLimitMap = Maps.newConcurrentMap();
         QuotaStorageCheckRunner quotaStorageCheckRunner = new QuotaStorageCheckRunner(this);
         JobCheckUtil.startQuotaStorageCheckRunner(quotaStorageCheckRunner);
-        
+
         if (kylinConfig.isJobNode() || kylinConfig.isDataLoadingNode() || kylinConfig.isUTEnv()) {
 
             resourceAcquirer = new ResourceAcquirer(kylinConfig);
@@ -158,9 +155,6 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
 
             progressReporter = new SharedFileProgressReporter(kylinConfig);
             progressReporter.start();
-
-            parallelLimiter = new ParallelLimiter(this);
-            parallelLimiter.start();
 
             lockClient = new JdbcLockClient(this);
             lockClient.start();
@@ -177,7 +171,6 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
         return serverNode;
     }
 
-    @VisibleForTesting
     public KylinConfig getKylinConfig() {
         return kylinConfig;
     }
@@ -197,10 +190,6 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
 
     public JobLockMapper getJobLockMapper() {
         return jobLockMapper;
-    }
-
-    public ParallelLimiter getParallelLimiter() {
-        return parallelLimiter;
     }
 
     public ResourceAcquirer getResourceAcquirer() {
@@ -244,8 +233,8 @@ public class JobContext implements InitializingBean, DisposableBean, ISmartAppli
             try (SetLogCategory ignored = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
                 logger.info("Stop kyligence node, kill spark application for cluster mode");
             }
-            List<AbstractJobExecutable> runningJobs = jobScheduler.getRunningJob().values().stream()
-                    .map(pair -> pair.getFirst()).collect(Collectors.toList());
+            List<AbstractJobExecutable> runningJobs = jobScheduler.getRunningJob().values().stream().map(Pair::getFirst)
+                    .collect(Collectors.toList());
             runningJobs.forEach(jobExecutable -> {
                 ExecutableManager executableManager = ExecutableManager.getInstance(kylinConfig,
                         jobExecutable.getProject());

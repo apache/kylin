@@ -1,0 +1,12 @@
+{
+  "uuid": "787a95f7-156a-4665-8f60-a07e0ec39ac5",
+  "last_modified": 1480842250878,
+  "version": "1.6.1",
+  "name": "tpch",
+  "owner": "ADMIN",
+  "status": "ENABLED",
+  "create_time_utc": 1480841193947,
+  "last_update_time": null,
+  "description": "",
+  "ext_filters": []
+}

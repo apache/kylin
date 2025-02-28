@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import static org.apache.kylin.engine.spark.utils.ExecutableHandleUtils.mergeMetadataForTable;
+
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
@@ -30,14 +32,12 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,13 +85,14 @@ public class NSparkSnapshotBuildingStep extends NSparkExecutable {
         checkNeedQuit(true);
         MergerInfo mergerInfo = new MergerInfo(project, ExecutableHandler.HandlerType.SNAPSHOT);
         mergerInfo.addTaskMergeInfo(this);
-        MetadataInvoker.getInstance().mergeMetadataForSamplingOrSnapshot(project, mergerInfo);
+        mergeMetadataForTable(project, mergerInfo);
         return result;
     }
 
     public static class Mockup {
         public static void main(String[] args) {
-            String msg = String.format(Locale.ROOT, "%s.main() invoked, args: %s", NSparkSnapshotBuildingStep.Mockup.class, Arrays.toString(args));
+            String msg = String.format(Locale.ROOT, "%s.main() invoked, args: %s",
+                    NSparkSnapshotBuildingStep.Mockup.class, Arrays.toString(args));
             logger.info(msg);
         }
     }

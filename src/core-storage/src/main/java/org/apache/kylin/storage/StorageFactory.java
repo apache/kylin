@@ -27,7 +27,8 @@ import org.apache.kylin.metadata.realization.IRealization;
  */
 public class StorageFactory {
 
-    // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
+    // Use thread-local because KylinConfig can be thread-local
+    // and implementation might be different among multiple threads.
     private static ThreadLocal<ImplementationSwitch<IStorage>> storages = new ThreadLocal<>();
 
     public static IStorage storage(IStorageAware aware) {

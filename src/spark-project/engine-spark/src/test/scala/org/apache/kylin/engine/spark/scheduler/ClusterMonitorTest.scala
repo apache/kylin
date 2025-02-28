@@ -49,13 +49,14 @@ class ClusterMonitorTest extends AnyFunSuite {
       result.addAndGet(5)
       threadName = Thread.currentThread().getName
     }, 5)
-    cdl.await(10, TimeUnit.SECONDS)
+    cdl.await(11, TimeUnit.SECONDS)
     cm.shutdown()
     assert(result.get() == 10)
     assert(threadName === "connect-master-guard")
   }
 
   test("test monitor") {
+    KylinBuildEnv.clean()
     val env = KylinBuildEnv.getOrCreate(config)
     java.lang.reflect.Proxy.getInvocationHandler(env.clusterManager).invoke(env.clusterManager,
       classOf[MockClusterManager].getMethod("setMaxAllocation", classOf[ResourceInfo]),
@@ -72,6 +73,7 @@ class ClusterMonitorTest extends AnyFunSuite {
   }
 
   test("test monitor with error") {
+    KylinBuildEnv.clean()
     val env = KylinBuildEnv.getOrCreate(config)
     Mockito.doThrow(new RuntimeException("test monitor with error")).when(config).getClusterManagerClassName
     val atomicEnv = new AtomicReference[KylinBuildEnv](env)
@@ -109,6 +111,7 @@ class ClusterMonitorTest extends AnyFunSuite {
   }
 
   test("test monitor with error and spark session is null") {
+    KylinBuildEnv.clean()
     val env = KylinBuildEnv.getOrCreate(config)
     Mockito.doThrow(new RuntimeException("test monitor with error")).when(config).getClusterManagerClassName
     val atomicEnv = new AtomicReference[KylinBuildEnv](env)

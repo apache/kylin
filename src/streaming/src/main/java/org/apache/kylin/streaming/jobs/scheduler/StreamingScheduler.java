@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,13 +38,23 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.guava30.shaded.common.base.Predicate;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.core.lock.JdbcJobLock;
+import org.apache.kylin.job.core.lock.LockAcquireListener;
+import org.apache.kylin.job.core.lock.LockException;
+import org.apache.kylin.job.domain.JobLock;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -53,6 +64,7 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.jobs.thread.StreamingJobRunner;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
@@ -61,11 +73,6 @@ import org.apache.kylin.streaming.util.JobKiller;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
 import org.springframework.util.CollectionUtils;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.base.Predicate;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 import lombok.Getter;
 import lombok.val;
 import lombok.var;
@@ -73,15 +80,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StreamingScheduler {
-
-    @Getter
-    private String project;
-
     @Getter
     private AtomicBoolean initialized = new AtomicBoolean(false);
 
     @Getter
     private AtomicBoolean hasStarted = new AtomicBoolean(false);
+
+    private JobContext jobContext = JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());
+
+    private final Map<String, JdbcJobLock> streamingJobLockCache = new ConcurrentHashMap<>();
 
     private ExecutorService jobPool;
     private Map<String, StreamingJobRunner> runnerMap = Maps.newHashMap();
@@ -94,18 +101,12 @@ public class StreamingScheduler {
 
     private static StreamingJobStatusWatcher jobStatusUpdater = new StreamingJobStatusWatcher();
 
-    public StreamingScheduler(String project) {
-        Preconditions.checkNotNull(project);
-        this.project = project;
-
-        if (INSTANCE_MAP.containsKey(project))
-            throw new IllegalStateException(
-                    "StreamingScheduler for project " + project + " has been initiated. Use getInstance() instead.");
+    public StreamingScheduler() {
         init();
     }
 
-    public static synchronized StreamingScheduler getInstance(String project) {
-        return INSTANCE_MAP.computeIfAbsent(project, StreamingScheduler::new);
+    public static synchronized StreamingScheduler getInstance() {
+        return Singletons.getInstance(StreamingScheduler.class);
     }
 
     public synchronized void init() {
@@ -122,18 +123,17 @@ public class StreamingScheduler {
             return;
         }
 
-        if (config.streamingEnabled()) {
-            int maxPoolSize = config.getMaxStreamingConcurrentJobLimit();
+        if (config.isStreamingEnabled()) {
+            int maxPoolSize = config.getNodeMaxStreamingConcurrentJobLimit();
             ThreadFactory executorThreadFactory = new BasicThreadFactory.Builder()
-                    .namingPattern("StreamingJobWorker(project:" + project + ")").uncaughtExceptionHandler((t, e) -> {
+                    .namingPattern("StreamingJobWorker-%d").uncaughtExceptionHandler((t, e) -> {
                         log.error("Something wrong happened when building threadFactory of streaming.", e);
                         throw new IllegalStateException(e);
                     }).build();
 
             jobPool = new ThreadPoolExecutor(maxPoolSize, maxPoolSize * 2, Long.MAX_VALUE, TimeUnit.DAYS,
                     new SynchronousQueue<>(), executorThreadFactory);
-            log.debug("New StreamingScheduler created by project '{}': {}", project,
-                    System.identityHashCode(StreamingScheduler.this));
+            log.debug("New StreamingScheduler created : {}", System.identityHashCode(StreamingScheduler.this));
             scheduledExecutorService.scheduleWithFixedDelay(this::retryJob, 5, 1, TimeUnit.MINUTES);
             jobStatusUpdater.schedule();
         }
@@ -143,36 +143,97 @@ public class StreamingScheduler {
 
     public synchronized void submitJob(String project, String modelId, JobTypeEnum jobType) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        if (!config.streamingEnabled()) {
+        if (!config.isStreamingEnabled()) {
             return;
         }
         String jobId = StreamingUtils.getJobId(modelId, jobType.name());
-        var jobMeta = StreamingJobManager.getInstance(config, project).getStreamingJobByUuid(jobId);
-        checkJobStartStatus(jobMeta, jobId);
-        JobKiller.killProcess(jobMeta);
-
-        killYarnApplication(jobId, modelId);
-
-        Predicate<NDataSegment> predicate = item -> (item.getStatus() == SegmentStatusEnum.NEW
-                || item.getStorageBytesSize() == 0) && item.getAdditionalInfo() != null;
-        if (JobTypeEnum.STREAMING_BUILD == jobType) {
-            deleteBrokenSegment(project, modelId, item -> predicate.apply(item)
-                    && !item.getAdditionalInfo().containsKey(StreamingConstants.FILE_LAYER));
-        } else if (JobTypeEnum.STREAMING_MERGE == jobType) {
-            deleteBrokenSegment(project, modelId, item -> predicate.apply(item)
-                    && item.getAdditionalInfo().containsKey(StreamingConstants.FILE_LAYER));
+        JdbcJobLock jobLock = tryJobLock(jobId, project);
+        if (jobLock == null) {
+            throw new IllegalStateException(String.format(Locale.ROOT, "Job %s is locked by other node.", jobId));
         }
-        MetaInfoUpdater.updateJobState(project, jobId, JobStatusEnum.STARTING);
-        StreamingJobRunner jobRunner = new StreamingJobRunner(project, modelId, jobType);
-        runnerMap.put(jobId, jobRunner);
-        jobPool.execute(jobRunner);
-        if (!StreamingUtils.isJobOnCluster(config)) {
-            MetaInfoUpdater.updateJobState(project, jobId, Sets.newHashSet(JobStatusEnum.RUNNING, JobStatusEnum.ERROR),
-                    JobStatusEnum.RUNNING);
+        try {
+            var jobMeta = StreamingJobManager.getInstance(config, project).getStreamingJobByUuid(jobId);
+            checkJobStartStatus(jobMeta, jobId);
+            JobKiller.killProcess(jobMeta);
+
+            killYarnApplication(project, jobId, modelId);
+
+            Predicate<NDataSegment> predicate = item -> (item.getStatus() == SegmentStatusEnum.NEW
+                    || item.getStorageBytesSize() == 0) && item.getAdditionalInfo() != null;
+            if (JobTypeEnum.STREAMING_BUILD == jobType) {
+                deleteBrokenSegment(project, modelId, item -> predicate.apply(item)
+                        && !item.getAdditionalInfo().containsKey(StreamingConstants.FILE_LAYER));
+            } else if (JobTypeEnum.STREAMING_MERGE == jobType) {
+                deleteBrokenSegment(project, modelId, item -> predicate.apply(item)
+                        && item.getAdditionalInfo().containsKey(StreamingConstants.FILE_LAYER));
+            }
+            MetaInfoUpdater.updateJobState(project, jobId, JobStatusEnum.STARTING);
+            StreamingJobRunner jobRunner = new StreamingJobRunner(project, modelId, jobType);
+            runnerMap.put(jobId, jobRunner);
+            jobPool.execute(jobRunner);
+            if (!StreamingUtils.isJobOnCluster(config)) {
+                MetaInfoUpdater.updateJobState(project, jobId,
+                        Sets.newHashSet(JobStatusEnum.RUNNING, JobStatusEnum.ERROR), JobStatusEnum.RUNNING);
+            }
+        } catch (Exception e) {
+            log.error("Submit streaming job failed, jobId: {}", jobId, e);
+            throw e;
+        } finally {
+            try {
+                jobLock.tryRelease();
+            } catch (LockException ex) {
+                log.error("Release streaming job lock failed.", ex);
+            }
         }
     }
 
-    public synchronized void stopJob(String modelId, JobTypeEnum jobType) {
+    private JdbcJobLock tryJobLock(String jobId, String project) {
+        JdbcJobLock jobLock = streamingJobLockCache.computeIfAbsent(jobId,
+                id -> new JdbcJobLock(jobId, jobContext.getServerNode(),
+                        jobContext.getKylinConfig().getJobSchedulerJobRenewalSec(),
+                        jobContext.getKylinConfig().getJobSchedulerJobRenewalRatio(), jobContext.getLockClient(),
+                        new StreamingJobLockListener(jobId, streamingJobLockCache)));
+        if (!jobLock.isLocked()) {
+            if (jobContext.getJobLockMapper().selectByJobId(jobId) == null) {
+                jobContext.getJobLockMapper()
+                        .insertSelective(new JobLock(jobId, project, 3, JobLock.JobTypeEnum.STREAMING));
+            }
+            synchronized (jobLock) {
+                try {
+                    if (!jobLock.isLocked() && !jobLock.tryAcquire()) {
+                        log.info("Acquire job lock failed, jobId: {}", jobId);
+                        return null;
+                    }
+                } catch (LockException e) {
+                    log.info("Acquire job lock failed, jobId: {}, error: {}", jobId, e);
+                    return null;
+                }
+            }
+        }
+        return jobLock;
+    }
+
+    private static class StreamingJobLockListener implements LockAcquireListener {
+        private String jobId;
+        private Map<String, JdbcJobLock> streamingJobLockCache;
+
+        public StreamingJobLockListener(String jobId, Map<String, JdbcJobLock> streamingJobLockCache) {
+            this.jobId = jobId;
+            this.streamingJobLockCache = streamingJobLockCache;
+        }
+
+        @Override
+        public void onSucceed() {
+            streamingJobLockCache.get(jobId).setLocked(true);
+        }
+
+        @Override
+        public void onFailed() {
+            streamingJobLockCache.get(jobId).setLocked(false);
+        }
+    }
+
+    public synchronized void stopJob(String project, String modelId, JobTypeEnum jobType) {
         String jobId = StreamingUtils.getJobId(modelId, jobType.name());
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -184,9 +245,9 @@ public class StreamingScheduler {
                 return;
             }
             MetaInfoUpdater.updateJobState(project, jobId, JobStatusEnum.STOPPING);
-            doStop(modelId, jobType);
+            doStop(project, modelId, jobType);
         } else {
-            doStop(modelId, jobType);
+            doStop(project, modelId, jobType);
             if (StreamingUtils.isJobOnCluster(config)) {
                 MetaInfoUpdater.updateJobState(project, jobId,
                         Sets.newHashSet(JobStatusEnum.STOPPED, JobStatusEnum.ERROR), JobStatusEnum.ERROR);
@@ -197,7 +258,7 @@ public class StreamingScheduler {
         }
     }
 
-    private void doStop(String modelId, JobTypeEnum jobType) {
+    private void doStop(String project, String modelId, JobTypeEnum jobType) {
         String jobId = StreamingUtils.getJobId(modelId, jobType.name());
         StreamingJobRunner runner = runnerMap.get(jobId);
         synchronized (runnerMap) {
@@ -210,14 +271,6 @@ public class StreamingScheduler {
         runner.stop();
     }
 
-    public static synchronized void shutdownByProject(String project) {
-        val instance = INSTANCE_MAP.get(project);
-        if (instance != null) {
-            INSTANCE_MAP.remove(project);
-            instance.forceShutdown();
-        }
-    }
-
     public void forceShutdown() {
         log.info("Shutting down DefaultScheduler ....");
         releaseResources();
@@ -228,7 +281,7 @@ public class StreamingScheduler {
     private void releaseResources() {
         initialized.set(false);
         hasStarted.set(false);
-        INSTANCE_MAP.remove(project);
+        INSTANCE_MAP.clear();
     }
 
     private void checkJobStartStatus(StreamingJobMeta jobMeta, String jobId) {
@@ -239,46 +292,50 @@ public class StreamingScheduler {
 
     public void retryJob() {
         val config = KylinConfig.getInstanceFromEnv();
+        List<String> prjList = ResourceGroupManager.getInstance(config).listProjectWithPermission();
+        prjList.forEach(project -> {
+            StreamingJobManager mgr = StreamingJobManager.getInstance(config, project);
+            List<StreamingJobMeta> jobMetaList = mgr.listAllStreamingJobMeta();
+            List<StreamingJobMeta> retryJobMetaList = jobMetaList.stream()
+                    .filter(meta -> "true".equals(meta.getParams().getOrDefault(
+                            StreamingConstants.STREAMING_RETRY_ENABLE, config.getStreamingJobRetryEnabled())))
+                    .collect(Collectors.toList());
+            retryJobMetaList.forEach(meta -> {
+                JobStatusEnum status = meta.getCurrentStatus();
+                String modelId = meta.getModelId();
+                String jobId = StreamingUtils.getJobId(modelId, meta.getJobType().name());
+                if (retryMap.containsKey(jobId) || status == JobStatusEnum.ERROR) {
+                    boolean canRestart = !applicationExisted(jobId);
+                    if (canRestart) {
+                        if (!retryMap.containsKey(jobId)) {
+                            if (status == JobStatusEnum.ERROR) {
+                                retryMap.put(jobId,
+                                        new AbstractMap.SimpleEntry<>(
+                                                new AtomicInteger(config.getStreamingJobRetryInterval()),
+                                                new AtomicInteger(1)));
+                            }
+                        } else {
+                            int targetCnt = retryMap.get(jobId).getKey().get();
+                            int currCnt = retryMap.get(jobId).getValue().get();
+                            log.debug("targetCnt=" + targetCnt + ",currCnt=" + currCnt + " jobId=" + jobId);
 
-        StreamingJobManager mgr = StreamingJobManager.getInstance(config, project);
-        List<StreamingJobMeta> jobMetaList = mgr.listAllStreamingJobMeta();
-        List<StreamingJobMeta> retryJobMetaList = jobMetaList
-                .stream().filter(meta -> "true".equals(meta.getParams()
-                        .getOrDefault(StreamingConstants.STREAMING_RETRY_ENABLE, config.getStreamingJobRetryEnabled())))
-                .collect(Collectors.toList());
-        retryJobMetaList.forEach(meta -> {
-            JobStatusEnum status = meta.getCurrentStatus();
-            String modelId = meta.getModelId();
-            String jobId = StreamingUtils.getJobId(modelId, meta.getJobType().name());
-            if (retryMap.containsKey(jobId) || status == JobStatusEnum.ERROR) {
-                boolean canRestart = !applicationExisted(jobId);
-                if (canRestart) {
-                    if (!retryMap.containsKey(jobId)) {
-                        if (status == JobStatusEnum.ERROR) {
-                            retryMap.put(jobId, new AbstractMap.SimpleEntry<>(
-                                    new AtomicInteger(config.getStreamingJobRetryInterval()), new AtomicInteger(1)));
+                            if (targetCnt <= config.getStreamingJobMaxRetryInterval()) {
+                                retryMap.get(jobId).getValue().incrementAndGet();
+                                if (targetCnt == currCnt && status == JobStatusEnum.ERROR) {
+                                    log.info("begin to restart job:" + modelId + "_" + meta.getJobType());
+                                    restartJob(config, meta, jobId, targetCnt);
+                                }
+                            }
+
                         }
                     } else {
-                        int targetCnt = retryMap.get(jobId).getKey().get();
-                        int currCnt = retryMap.get(jobId).getValue().get();
-                        log.debug("targetCnt=" + targetCnt + ",currCnt=" + currCnt + " jobId=" + jobId);
-
-                        if (targetCnt <= config.getStreamingJobMaxRetryInterval()) {
-                            retryMap.get(jobId).getValue().incrementAndGet();
-                            if (targetCnt == currCnt && status == JobStatusEnum.ERROR) {
-                                log.info("begin to restart job:" + modelId + "_" + meta.getJobType());
-                                restartJob(config, meta, jobId, targetCnt);
-                            }
+                        if (status == JobStatusEnum.RUNNING && retryMap.containsKey(jobId)) {
+                            log.debug("remove jobId=" + jobId);
+                            retryMap.remove(jobId);
                         }
-
-                    }
-                } else {
-                    if (status == JobStatusEnum.RUNNING && retryMap.containsKey(jobId)) {
-                        log.debug("remove jobId=" + jobId);
-                        retryMap.remove(jobId);
                     }
                 }
-            }
+            });
         });
     }
 
@@ -314,7 +371,7 @@ public class StreamingScheduler {
         return JobKiller.applicationExisted(jobId);
     }
 
-    public void killYarnApplication(String jobId, String modelId) {
+    public void killYarnApplication(String project, String jobId, String modelId) {
         boolean isExists = applicationExisted(jobId);
         if (isExists) {
             JobKiller.killApplication(jobId);
@@ -328,15 +385,15 @@ public class StreamingScheduler {
         }
     }
 
-    private void killJob(String modelId, JobTypeEnum jobTypeEnum) {
-        killJob(modelId, jobTypeEnum, JobStatusEnum.ERROR);
+    private void killJob(String project, String modelId, JobTypeEnum jobTypeEnum) {
+        killJob(project, modelId, jobTypeEnum, JobStatusEnum.ERROR);
     }
 
-    public void killJob(String modelId, JobTypeEnum jobTypeEnum, JobStatusEnum status) {
-        killJob(StreamingUtils.getJobId(modelId, jobTypeEnum.name()), status);
+    public void killJob(String project, String modelId, JobTypeEnum jobTypeEnum, JobStatusEnum status) {
+        killJob(project, StreamingUtils.getJobId(modelId, jobTypeEnum.name()), status);
     }
 
-    private void killJob(String jobId, JobStatusEnum status) {
+    private void killJob(String project, String jobId, JobStatusEnum status) {
         val config = KylinConfig.getInstanceFromEnv();
         var jobMeta = StreamingJobManager.getInstance(config, project).getStreamingJobByUuid(jobId);
         JobKiller.killProcess(jobMeta);
@@ -346,30 +403,52 @@ public class StreamingScheduler {
     }
 
     private void resumeJobs(KylinConfig config) {
-        StreamingJobManager mgr = StreamingJobManager.getInstance(config, project);
-        List<StreamingJobMeta> jobMetaList = mgr.listAllStreamingJobMeta();
+        List<String> prjList = ResourceGroupManager.getInstance(config).listProjectWithPermission();
+        prjList.forEach(project -> {
+            StreamingJobManager mgr = StreamingJobManager.getInstance(config, project);
+            List<StreamingJobMeta> jobMetaList = mgr.listAllStreamingJobMeta();
 
-        if (CollectionUtils.isEmpty(jobMetaList)) {
-            return;
-        }
-        List<StreamingJobMeta> retryJobMetaList = jobMetaList.stream()
-                .filter(meta -> JobStatusEnum.STARTING == meta.getCurrentStatus()
-                        || JobStatusEnum.STOPPING == meta.getCurrentStatus()
-                        || JobStatusEnum.RUNNING == meta.getCurrentStatus()
-                        || JobStatusEnum.ERROR == meta.getCurrentStatus())
-                .collect(Collectors.toList());
-        retryJobMetaList.forEach(meta -> {
-            val modelId = meta.getModelId();
-            val jobType = meta.getJobType();
-            if (meta.isSkipListener()) {
-                skipJobListener(project, StreamingUtils.getJobId(modelId, jobType.name()), false);
+            if (CollectionUtils.isEmpty(jobMetaList)) {
+                return;
             }
-            if (JobStatusEnum.RUNNING == meta.getCurrentStatus() || JobStatusEnum.STARTING == meta.getCurrentStatus()) {
-                killJob(meta.getModelId(), meta.getJobType(), JobStatusEnum.STOPPED);
-                submitJob(project, modelId, jobType);
-            } else {
-                killJob(meta.getModelId(), meta.getJobType());
-            }
+            List<StreamingJobMeta> retryJobMetaList = jobMetaList.stream()
+                    .filter(meta -> JobStatusEnum.STARTING == meta.getCurrentStatus()
+                            || JobStatusEnum.STOPPING == meta.getCurrentStatus()
+                            || JobStatusEnum.RUNNING == meta.getCurrentStatus()
+                            || JobStatusEnum.ERROR == meta.getCurrentStatus())
+                    .collect(Collectors.toList());
+
+            retryJobMetaList.forEach(meta -> {
+                val modelId = meta.getModelId();
+                val jobType = meta.getJobType();
+                val jobId = StreamingUtils.getJobId(modelId, jobType.name());
+                JdbcJobLock jobLock = tryJobLock(jobId, project);
+                if (jobLock == null) {
+                    log.info("Skip to resume job : {}, because it is locked by other node.", jobId);
+                    return;
+                }
+                try {
+                    if (meta.isSkipListener()) {
+                        skipJobListener(project, StreamingUtils.getJobId(modelId, jobType.name()), false);
+                    }
+                    if (JobStatusEnum.RUNNING == meta.getCurrentStatus()
+                            || JobStatusEnum.STARTING == meta.getCurrentStatus()) {
+                        killJob(project, meta.getModelId(), meta.getJobType(), JobStatusEnum.STOPPED);
+                        submitJob(project, modelId, jobType);
+                    } else {
+                        killJob(project, meta.getModelId(), meta.getJobType());
+                        jobLock.tryRelease();
+                    }
+                } catch (Exception e) {
+                    log.error("Error when resume job : {}", jobId, e);
+                } finally {
+                    try {
+                        jobLock.tryRelease();
+                    } catch (LockException ex) {
+                        log.error("Release streaming job lock failed", ex);
+                    }
+                }
+            });
         });
     }
 

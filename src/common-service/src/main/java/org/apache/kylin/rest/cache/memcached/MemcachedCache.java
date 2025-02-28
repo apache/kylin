@@ -61,8 +61,11 @@ import net.spy.memcached.transcoders.SerializingTranscoder;
 
 /**
  * This is a cache backend of Memcached. The implementation leverages spymemcached client to talk to the servers.
- * Memcached itself has a limitation to the size of the key. So the real key for cache lookup is hashed from the orginal key.
- * The implementation provides a way for hash collsion detection. It can also compress/decompress the value bytes based on the preconfigred compression threshold to save network bandwidth and storage space.
+ * Memcached itself has a limitation to the size of the key.
+ * So the real key for cache lookup is hashed from the orginal key.
+ * The implementation provides a way for hash collsion detection.
+ * It can also compress/decompress the value bytes based on the preconfigured
+ * compression threshold to save network bandwidth and storage space.
  */
 public class MemcachedCache {
     public static final int MAX_PREFIX_LENGTH = MemcachedClientIF.MAX_KEY_LENGTH - 40 // length of namespace hash
@@ -88,7 +91,7 @@ public class MemcachedCache {
     protected AtomicLong cacheGetTime = new AtomicLong(0);
 
     public MemcachedCache(final MemcachedClientIF client, final MemcachedCacheConfig config,
-                          final String memcachedPrefix, int timeToLiveSeconds) {
+            final String memcachedPrefix, int timeToLiveSeconds) {
         Preconditions.checkArgument(memcachedPrefix.length() <= MAX_PREFIX_LENGTH,
                 "memcachedPrefix length [%d] exceeds maximum length [%d]", memcachedPrefix.length(), MAX_PREFIX_LENGTH);
         this.memcachedPrefix = memcachedPrefix;
@@ -240,9 +243,8 @@ public class MemcachedCache {
     }
 
     public CacheStats getStats() {
-        return new CacheStats(readBytes.get(), cacheGetTime.get(), putBytes.get(),
-                new CacheStats.CacheStatsCounter(putCount.get(), hitCount.get(),
-                missCount.get(), 0, timeoutCount.get(), errorCount.get()));
+        return new CacheStats(readBytes.get(), cacheGetTime.get(), putBytes.get(), new CacheStats.CacheStatsCounter(
+                putCount.get(), hitCount.get(), missCount.get(), 0, timeoutCount.get(), errorCount.get()));
     }
 
     /**
@@ -378,7 +380,7 @@ public class MemcachedCache {
         return value;
     }
 
-    @SuppressWarnings({"squid:S4790"})
+    @SuppressWarnings({ "squid:S4790" })
     protected String computeKeyHash(String key) {
         // hash keys to keep things under 250 characters for net.spy.memcached
         return Joiner.on(":").skipNulls().join(KylinConfig.getInstanceFromEnv().getDeployEnv(), this.memcachedPrefix,

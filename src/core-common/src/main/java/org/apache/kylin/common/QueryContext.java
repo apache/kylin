@@ -19,8 +19,6 @@
 package org.apache.kylin.common;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,16 +27,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Holds per query information and statistics.
@@ -51,15 +49,17 @@ public class QueryContext implements Closeable {
     public static final String PUSHDOWN_MOCKUP = "MOCKUP";
     public static final String PUSHDOWN_OBJECT_STORAGE = "OBJECT STORAGE";
 
-    public static final long DEFAULT_NULL_SCANNED_DATA = -1L;
-    public static final String ROUTE_USE_FORCEDTOTIEREDSTORAGE = "should route use forcedToTieredStorage";
+    public static final String PUSHDOWN_GLUTEN = "GLUTEN";
 
-    private static final TransmittableThreadLocal<QueryContext> contexts = new TransmittableThreadLocal<QueryContext>() {
-        @Override
-        protected QueryContext initialValue() {
-            return new QueryContext();
-        }
-    };
+    public static final long DEFAULT_NULL_SCANNED_DATA = -1L;
+
+    private static final TransmittableThreadLocal<QueryContext> contexts //
+            = new TransmittableThreadLocal<QueryContext>() {
+                @Override
+                protected QueryContext initialValue() {
+                    return new QueryContext();
+                }
+            };
 
     @Setter
     private String queryId;
@@ -67,9 +67,6 @@ public class QueryContext implements Closeable {
     @Setter
     private String project;
     private long recordMillis;
-    @Getter
-    @Setter
-    private Object calcitePlan;
     @Getter
     @Setter
     private String pushdownEngine;
@@ -113,36 +110,7 @@ public class QueryContext implements Closeable {
 
     @Getter
     @Setter
-    private ForceToTieredStorage forcedToTieredStorage;
-    /**
-     * mark table index use second storage, key is layout id
-     */
-    @Getter
-    @Setter
-    private Map<Long, Boolean> secondStorageUsageMap = new HashMap<>();
-
-    @Getter
-    @Setter
     private boolean forceTableIndex = false;
-
-    // record second storage partition which used
-    @Getter
-    private final List<Integer> usedPartitionIndexes = new ArrayList<>();
-
-    // record second storage partition which used
-    @Getter
-    @Setter
-    private List<String> secondStorageUrls;
-
-    // record last partition status
-    @Getter
-    @Setter
-    private boolean lastFailed = false;
-
-    @Getter
-    @Setter
-    private boolean retrySecondStorage = true;
-
     @Getter
     @Setter
     private Map<String, Boolean> unmatchedJoinDigest = new ConcurrentHashMap<>();
@@ -150,7 +118,6 @@ public class QueryContext implements Closeable {
     @Getter
     @Setter
     private boolean enhancedAggPushDown;
-
 
     /**
      * For debug purpose, will show RelNode
@@ -168,11 +135,41 @@ public class QueryContext implements Closeable {
     @Getter
     private boolean dryRun = false;
 
+    @Getter
+    @Setter
+    private boolean ifBigQuery = false;
+
+    @Getter
+    @Setter
+    private boolean isBigQuery = false;
+
+    @Getter
+    @Setter
+    private boolean outOfSegmentRange = false;
+
+    /** Record right after record `end` */
+    @Getter
+    @Setter
+    private long responseStartTime = 0L;
+
+    @Getter
+    @Setter
+    private String firstHintStr;
+
+    @Getter
+    @Setter
+    private boolean isExplainSql;
+
+    @Getter
+    @Setter
+    private QueryPlan queryPlan;
+
     private QueryContext() {
         // use QueryContext.current() instead
         queryId = RandomUtil.randomUUIDStr();
         recordMillis = System.currentTimeMillis();
         metrics.queryStartTime = recordMillis;
+        queryPlan = new QueryPlan();
     }
 
     public static QueryContext current() {
@@ -277,6 +274,7 @@ public class QueryContext implements Closeable {
         private long queryJobCount;
         private long queryStageCount;
         private long queryTaskCount;
+        private long cpuTime;
         private int retryTimes;
         private long dataFetchTime; // see doc in SQLResponse.dataFetchTime
         private String queryExecutedPlan;
@@ -327,6 +325,10 @@ public class QueryContext implements Closeable {
         @Getter
         @Setter
         private List<Long> scanBytes;
+
+        @Getter
+        @Setter
+        private Boolean glutenFallback;
 
         public long getTotalScanBytes() {
             return calValueWithDefault(scanBytes);
@@ -394,24 +396,21 @@ public class QueryContext implements Closeable {
         private boolean includeHeader;
         private boolean isVacant;
         private boolean isQueryDetect;
+        private boolean isErrInterrupted;
+        private String interruptReason;
     }
 
     @Getter
     @Setter
-    private List<NativeQueryRealization> nativeQueryRealizationList = Lists.newArrayList();
+    private List<NativeQueryRealization> queryRealizations = Lists.newArrayList();
 
-    @AllArgsConstructor
     @Getter
-    public static class NativeQueryRealization {
-        private String modelId;
-        private String modelAlias;
-        private Long layoutId;
-        private String indexType;
-        private boolean isPartialMatchModel;
-        private boolean isValid;
-        private boolean isLayoutExist;
-        private boolean isStreamingLayout;
-        private List<String> snapshots;
+    @Setter
+    @NoArgsConstructor
+    public static class QueryPlan {
+        @JsonProperty("calcite_plan")
+        private String calcitePlan;
+        @JsonProperty("spark_plan")
+        private String sparkPlan;
     }
-
 }

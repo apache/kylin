@@ -18,9 +18,11 @@
 
 package org.apache.kylin.tool.garbage;
 
-import javax.validation.constraints.NotNull;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * The priority of the task to be executed is:
@@ -34,11 +36,11 @@ public abstract class AbstractComparableCleanTask implements Runnable, Comparabl
     }
 
     public String getBrief() {
-        return String.format("Task-%s: {%s}", getName(), details());
+        return String.format(Locale.ROOT, "Task-%s: {%s}", getName(), details());
     }
 
     protected String details() {
-        return String.format("tag: %s, class: %s", getCleanerTag(), getClass().getName());
+        return String.format(Locale.ROOT, "tag: %s, class: %s", getCleanerTag(), getClass().getName());
     }
 
     public CompletableFuture<Void> getWatcher() {

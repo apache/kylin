@@ -25,12 +25,12 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.streaming.common.MergeJobEntry;
 import org.apache.kylin.streaming.request.StreamingSegmentRequest;
@@ -66,8 +66,8 @@ public class SyncMerger {
                 EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                     NDataflowManager dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
                             mergeJobEntry.project());
-                    NDataflow copy = dfMgr.getDataflow(mergeJobEntry.dataflowId()).copy();
-                    val seg = copy.getSegment(mergeJobEntry.afterMergeSegment().getId());
+                    NDataflow df = dfMgr.getDataflow(mergeJobEntry.dataflowId());
+                    val seg = df.getSegment(mergeJobEntry.afterMergeSegment().getId()).copy();
                     seg.setStatus(SegmentStatusEnum.READY);
                     seg.setSourceCount(mergeJobEntry.afterMergeSegmentSourceCount());
                     val dfUpdate = new NDataflowUpdate(mergeJobEntry.dataflowId());

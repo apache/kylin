@@ -20,11 +20,10 @@ package org.apache.kylin.sdk.datasource.framework.conv;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
-import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
-
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
+import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 
 public class GenericSqlConverter {
 

@@ -1,0 +1,270 @@
+{
+  "uuid" : "329c08d7-f178-4094-97e6-a9b1e918ff68",
+  "last_modified" : 1483516286938,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+  "last_build_job_id" : "92c83903-f571-42fd-ab8e-9722b54b5d8b",
+  "columns_stats" : [ {
+    "max_value" : "175750",
+    "min_value" : "65",
+    "max_length_value" : "164261",
+    "min_length_value" : "65",
+    "null_count" : 0,
+    "cardinality" : 137
+  }, {
+    "max_value" : "eBay Premier:Books & Manuscripts:Books: Other:Icollector",
+    "min_value" : "Abbigliamento e accessori:Donna: Accessori:SciarpFoulard e Scialli",
+    "max_length_value" : "Toys & Hobbies:Diecast Toy Vehicles:CarTrucks-Diecast:NASCAR:Action/ Motorsports Authentic:Darrell Waltrip",
+    "min_length_value" : "Half Books",
+    "null_count" : 0,
+    "cardinality" : 145
+  }, {
+    "max_value" : "211",
+    "min_value" : "0",
+    "max_length_value" : "100",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "max_value" : "",
+    "min_value" : "",
+    "max_length_value" : "",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "9428",
+    "min_value" : "",
+    "max_length_value" : "10542",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 17
+  }, {
+    "max_value" : "Sporting Goods",
+    "min_value" : "",
+    "max_length_value" : "Computer Hardware",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "99",
+    "min_value" : "-999",
+    "max_length_value" : "-999",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 30
+  }, {
+    "max_value" : "Vtements et Accessoires",
+    "min_value" : "Apparel",
+    "max_length_value" : "Business (Office & Industrial)",
+    "min_length_value" : "Toys",
+    "null_count" : 0,
+    "cardinality" : 45
+  }, {
+    "max_value" : "2012-09-11",
+    "min_value" : "2008-06-03",
+    "max_length_value" : "2008-06-03",
+    "min_length_value" : "2008-06-03",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "2013-09-10 16:52:46",
+    "min_value" : "2008-06-03 13:36:00",
+    "max_length_value" : "2013-07-16 08:23:09",
+    "min_length_value" : "2013-07-16 08:23:09",
+    "null_count" : 0,
+    "cardinality" : 23
+  }, {
+    "max_value" : "USER_X",
+    "min_value" : "USER_X",
+    "max_length_value" : "USER_X",
+    "min_length_value" : "USER_X",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "USER_Y",
+    "min_value" : "USER_XIANZHU",
+    "max_length_value" : "USER_XIANZHU",
+    "min_length_value" : "USER_Y",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "131090",
+    "min_value" : "-999",
+    "max_length_value" : "131090",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 29
+  }, {
+    "max_value" : "eBay Premier",
+    "min_value" : "Abbigliamento e accessori",
+    "max_length_value" : "Computers/Tablets & Networking",
+    "min_length_value" : "Baby",
+    "null_count" : 0,
+    "cardinality" : 44
+  }, {
+    "max_value" : "177641",
+    "min_value" : "-999",
+    "max_length_value" : "159043",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 92
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 125
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 132
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 132
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 132
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "63",
+    "null_count" : 0,
+    "cardinality" : 132
+  }, {
+    "max_value" : "YarGarden & Outdoor Living",
+    "min_value" : "Action Figures",
+    "max_length_value" : "Radio Communication Equipment",
+    "min_length_value" : "NULL",
+    "null_count" : 0,
+    "cardinality" : 92
+  }, {
+    "max_value" : "Wristwatches",
+    "min_value" : "1970-Now",
+    "max_length_value" : "Video Capture & TV Tuner Cards",
+    "min_length_value" : "Asia",
+    "null_count" : 0,
+    "cardinality" : 129
+  }, {
+    "max_value" : "Wristwatches",
+    "min_value" : "1920-39",
+    "max_length_value" : "Video Capture & TV Tuner Cards",
+    "min_length_value" : "Land",
+    "null_count" : 0,
+    "cardinality" : 121
+  }, {
+    "max_value" : "Wristwatches",
+    "min_value" : "1910-19",
+    "max_length_value" : "Video Capture & TV Tuner Cards",
+    "min_length_value" : "Land",
+    "null_count" : 0,
+    "cardinality" : 115
+  }, {
+    "max_value" : "Wristwatches",
+    "min_value" : "1910-19",
+    "max_length_value" : "Video Capture & TV Tuner Cards",
+    "min_length_value" : "Land",
+    "null_count" : 0,
+    "cardinality" : 114
+  }, {
+    "max_value" : "Wristwatches",
+    "min_value" : "1910-19",
+    "max_length_value" : "Video Capture & TV Tuner Cards",
+    "min_length_value" : "Land",
+    "null_count" : 0,
+    "cardinality" : 114
+  }, {
+    "max_value" : "262144",
+    "min_value" : "0",
+    "max_length_value" : "262144",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "N",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "2515",
+    "min_value" : "-999",
+    "max_length_value" : "-999",
+    "min_length_value" : "-999",
+    "null_count" : 1,
+    "cardinality" : 3
+  }, {
+    "max_value" : "Video Games",
+    "min_value" : "Auto - Parts",
+    "max_length_value" : "Business (Office & Industrial)",
+    "min_length_value" : "Toys",
+    "null_count" : 0,
+    "cardinality" : 29
+  }, {
+    "max_value" : "7721",
+    "min_value" : "-999",
+    "max_length_value" : "5837",
+    "min_length_value" : "5837",
+    "null_count" : 1,
+    "cardinality" : 52
+  }, {
+    "max_value" : "3189",
+    "min_value" : "-999",
+    "max_length_value" : "3069",
+    "min_length_value" : "32",
+    "null_count" : 1,
+    "cardinality" : 44
+  }, {
+    "max_value" : "177661",
+    "min_value" : "-999",
+    "max_length_value" : "158666",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 128
+  }, {
+    "max_value" : "99",
+    "min_value" : "-999",
+    "max_length_value" : "-999",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 30
+  }, {
+    "max_value" : "2",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Business & Industrial",
+    "max_length_value" : "Business & Industrial",
+    "min_length_value" : "Media",
+    "null_count" : 0,
+    "cardinality" : 10
+  } ],
+  "sample_rows" : [ [ "48027", "82494", "152801", "95173", "12688", "108782", "140746", "25147", "53064", "113593" ], [ "Coins & Paper Money:Paper Money: World:Asia:Japan", "BookComics & Mags:Comic Books:Modern (1980-now):Superhero:Sandman", "Jewelry & Watches:Earrings:Studs:DiamonEnhanced Natural:PrincesSquare", "Health & Beauty:Bath & Body:Bath SetKits:Avon", "eBay Premier:Books & Manuscripts:Books: Other:Icollector", "Vehicle Parts & Accessories:CaTruck Parts:Car Care & Cleaning:Air Fresheners", "eBay Motors:Parts & Accessories:Vintage Car & Truck Parts:WheelTire& Hub Caps:Tires", "Sports MeCards & Fan Shop:Fan Apparel & Souvenirs:Baseball-MLB:Philadelphia Phillies:Other Items", "Business & Industrial:Agriculture & Forestry:Antique Tractors & Equipment:Tractors:Massey HarriFerguson", "Mobiles & Phones:Mobile Phones:Samsung:Samsung D500" ], [ "0", "15", "0", "0", "0", "15", "100", "0", "0", "15" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "2038", "", "", "888", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "10", "3", "17", "37", "57", "8", "8", "25", "4", "40" ], [ "Coins", "Books", "JewelrGemWatches", "Health & Beauty", "Sothebys", "Auto Parts", "Auto - Parts", "Sports Memorabilia", "Business (Office & Industrial)", "Cell Phones & Portable Electro" ], [ "2008-06-03", "2008-06-03", "2008-06-03", "2008-06-03", "2008-06-03", "2012-09-11", "2008-06-03", "2008-06-03", "2008-06-03", "2008-06-03" ], [ "2013-07-16 08:23:09", "2010-09-13 07:05:54", "2012-09-11 20:26:04", "2008-06-03 13:36:00", "2008-06-03 13:36:00", "2013-09-10 16:52:46", "2012-06-19 21:15:09", "2010-02-08 10:51:44", "2013-04-28 20:37:19", "2012-09-11 20:26:04" ], [ "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X" ], [ "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y", "USER_Y" ], [ "11116", "267", "281", "26395", "2038", "131090", "6000", "64482", "12576", "15032" ], [ "Coins & Paper Money", "BookMagazines", "Jewelry & Watches", "Health & Beauty", "eBay Premier", "Vehicle Parts & Accessories", "eBay Motors", "Sports MeCards & Fan Shop", "Business & Industrial", "Phones" ], [ "3411", "63", "10968", "11838", "1680", "6030", "6028", "24409", "177641", "9355" ], [ "8008", "63", "50647", "67391", "1681", "72200", "10073", "24410", "177642", "9355" ], [ "48027", "63", "50647", "67391", "12688", "108782", "140744", "24410", "177642", "9355" ], [ "48027", "63", "50647", "67391", "12688", "108782", "140746", "24410", "177642", "9355" ], [ "48027", "63", "50647", "67391", "12688", "108782", "140746", "24410", "177642", "9355" ], [ "48027", "63", "50647", "67391", "12688", "108782", "140746", "24410", "177642", "9355" ], [ "Paper Money: World", "NULL", "NULL", "Bath & Body", "Books & Manuscripts", "CaTruck Parts", "Parts & Accessories", "Fan Apparel & Souvenirs", "Heavy Equipment", "Mobile Phones" ], [ "Asia", "Comic Books", "Earrings", "Bath Sets & Kits", "Books: Other", "Car Care & Cleaning", "Vintage Car & Truck Parts", "Baseball-MLB", "Antique & Vintage Farm Equip", "Mobile Phones" ], [ "Japan", "Comic Books", "Earrings", "Bath Sets & Kits", "Icollector", "Air Fresheners", "WheelTire& Hub Caps", "Baseball-MLB", "Antique & Vintage Farm Equip", "Mobile Phones" ], [ "Japan", "Comic Books", "Earrings", "Bath Sets & Kits", "Icollector", "Air Fresheners", "Tires", "Baseball-MLB", "Antique & Vintage Farm Equip", "Mobile Phones" ], [ "Japan", "Comic Books", "Earrings", "Bath Sets & Kits", "Icollector", "Air Fresheners", "Tires", "Baseball-MLB", "Antique & Vintage Farm Equip", "Mobile Phones" ], [ "Japan", "Comic Books", "Earrings", "Bath Sets & Kits", "Icollector", "Air Fresheners", "Tires", "Baseball-MLB", "Antique & Vintage Farm Equip", "Mobile Phones" ], [ "262144", "262144", "262144", "262144", "60", "262144", "262144", "262144", "262144", "262144" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "-999", "-999", "-999", "-999", "", "-999", "-999", "-999", "-999", "-999" ], [ "Coins", "Books", "JewelrGemWatches", "Health & Beauty", "Sothebys", "Auto - Parts", "Auto - Parts", "Sports Memorabilia", "Business (Office & Industrial)", "Cell Phones & Accessories" ], [ "5837", "-999", "2928", "2919", "-999", "-999", "3517", "2884", "-999", "2246" ], [ "3069", "-999", "1873", "1868", "-999", "-999", "1794", "1845", "-999", "1609" ], [ "48027", "63", "50647", "67391", "0", "108782", "140746", "24410", "177642", "9355" ], [ "10", "3", "17", "37", "57", "8", "8", "25", "4", "40" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "Collectibles", "Media", "Fashion", "Fashion", "Lifestyle", "Parts & Accessories", "Parts & Accessories", "Collectibles", "Business & Industrial", "Electronics" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "144",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

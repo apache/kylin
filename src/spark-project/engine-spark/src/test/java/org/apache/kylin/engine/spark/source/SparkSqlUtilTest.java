@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import lombok.val;
 
-
 public class SparkSqlUtilTest extends NLocalWithSparkSessionTestBase {
 
     @Test

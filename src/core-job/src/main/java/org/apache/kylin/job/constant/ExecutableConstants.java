@@ -25,6 +25,12 @@ public final class ExecutableConstants {
     private ExecutableConstants() {
     }
 
+    public static final String SPARK_PLUGINS = "spark.plugins";
+    public static final String GLUTEN_PREFIX = "spark.gluten.";
+    public static final String GLUTEN_PLUGIN = "org.apache.gluten.GlutenPlugin";
+    public static final String COLUMNAR_SHUFFLE_MANAGER = "org.apache.spark.shuffle.sort.ColumnarShuffleManager";
+    public static final String SPARK_SHUFFLE_MANAGER = "spark.shuffle.manager";
+
     public static final String YARN_APP_ID = "yarn_application_id";
     public static final String YARN_APP_IDS = "yarn_application_ids";
     public static final String YARN_APP_IDS_DELIMITER = ",";
@@ -71,19 +77,31 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_DETECT_RESOURCE = "Detect Resource";
     public static final String STEP_NAME_TABLE_SAMPLING = "Table Sampling";
     public static final String STEP_NAME_BUILD_SNAPSHOT = "Build Snapshot";
-
-    public static final String STAGE_NAME_WAITE_FOR_RESOURCE = "Waiting for yarn resources";
-    public static final String STAGE_NAME_REFRESH_SNAPSHOTS = "Build or refresh snapshot";
-    public static final String STAGE_NAME_MATERIALIZED_FACT_TABLE = "Materialize fact table view";
-    public static final String STAGE_NAME_BUILD_DICT = "Generate global dictionary";
-    public static final String STAGE_NAME_GENERATE_FLAT_TABLE = "Generate flat table";
+    public static final String STEP_NAME_OPTIMIZE_LAYOUT_DATA = "Optimize layout data";
+    public static final String STEP_NAME_LOAD_INTERNAL_TABLE = "Load Internal Table";
+    public static final String STEP_NAME_DROP_INTERNAL_TABLE_PARTITION = "Drop Internal Table Partition";
+    public static final String STEP_NAME_INDEX_PLAN_OPT = "IndexPlan Optimize";
     public static final String STAGE_NAME_COST_BASED_PLANNER = "Cost based planner";
-    public static final String STAGE_NAME_GATHER_FLAT_TABLE_STATS = "Get flat table statistics";
+
+    public static final String STAGE_NAME_WAIT_FOR_RESOURCE = "Wait for yarn resource";
+    public static final String STAGE_NAME_REFRESH_SNAPSHOT = "Refresh snapshot";
+    public static final String STAGE_NAME_MATERIALIZE_FACT_VIEW = "Materialize fact view";
+    public static final String STAGE_NAME_BUILD_GLOBAL_DICT = "Build global dictionary";
+    public static final String STAGE_NAME_MATERIALIZE_FLAT_TABLE = "Materialize flat table";
+    public static final String STAGE_NAME_OPTIMIZE_INDEX_PLAN = "Optimize index plan";
+    public static final String STAGE_NAME_BUILD_FLAT_TABLE_STATS = "Build flat table statistics";
     public static final String STAGE_NAME_BUILD_LAYER = "Build indexes by layer";
     public static final String STAGE_NAME_REFRESH_COLUMN_BYTES = "Update flat table statistics";
     public static final String STAGE_NAME_MERGE_FLAT_TABLE = "Merge flat table";
     public static final String STAGE_NAME_MERGE_INDICES = "Merge indexes";
     public static final String STAGE_NAME_MERGE_COLUMN_BYTES = "Merge flat table statistics";
     public static final String STAGE_NAME_TABLE_SAMPLING = "Sample Table Data";
-    public static final String STAGE_NAME_SNAPSHOT_BUILD = "Build Snapshot";
+    public static final String STAGE_NAME_BUILD_SNAPSHOT = "Build snapshot";
+    public static final String STAGE_NAME_DELETE_USELESS_LAYOUT_DATA = "delete useless layout data";
+    public static final String STAGE_NAME_OPTIMIZE_LAYOUT_DATA_REPARTITION = "Optimize layout data by repartition";
+    public static final String STAGE_NAME_OPTIMIZE_LAYOUT_DATA_ZORDER = "Optimize layout data by zorder";
+    public static final String STAGE_NAME_OPTIMIZE_LAYOUT_DATA_COMPACTION = "Optimize layout data by compaction";
+    public static final String STAGE_NAME_INTERNAL_TABLE_LOAD = "Load Internal Table";
+    public static final String STAGE_NAME_INTERNAL_TABLE_DROP_PARTITION = "Drop Internal Table Partition";
+    public static final String LOAD_GLUTEN_CACHE = "Load Gluten Cache";
 }

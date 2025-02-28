@@ -19,15 +19,14 @@
 package org.apache.spark.sql.execution.datasource
 
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.spark.internal.Logging
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.catalog.BucketSpec
 import org.apache.spark.sql.catalyst.expressions
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.planning.PhysicalOperation
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.execution.{LayoutFileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.{BucketingUtils, HadoopFsRelation, LogicalRelation}
+import org.apache.spark.sql.execution.{LayoutFileSourceScanExec, SparkPlan}
 import org.apache.spark.util.collection.BitSet
 
 /**
@@ -64,9 +63,9 @@ object LayoutFileSourceStrategy extends Strategy with LogEx {
   }
 
   private def getExpressionBuckets(
-      expr: Expression,
-      bucketColumnName: String,
-      numBuckets: Int): BitSet = {
+                                    expr: Expression,
+                                    bucketColumnName: String,
+                                    numBuckets: Int): BitSet = {
 
     def getBucketNumber(attr: Attribute, v: Any): Int = {
       BucketingUtils.getBucketIdFromValue(attr, numBuckets, v)
@@ -102,7 +101,7 @@ object LayoutFileSourceStrategy extends Strategy with LogEx {
           getExpressionBuckets(right, bucketColumnName, numBuckets)
       case expressions.Or(left, right) =>
         getExpressionBuckets(left, bucketColumnName, numBuckets) |
-        getExpressionBuckets(right, bucketColumnName, numBuckets)
+          getExpressionBuckets(right, bucketColumnName, numBuckets)
       case _ =>
         val matchedBuckets = new BitSet(numBuckets)
         matchedBuckets.setUntil(numBuckets)
@@ -111,8 +110,8 @@ object LayoutFileSourceStrategy extends Strategy with LogEx {
   }
 
   private def genBucketSet(
-      normalizedFilters: Seq[Expression],
-      bucketSpec: BucketSpec): Option[BitSet] = {
+                            normalizedFilters: Seq[Expression],
+                            bucketSpec: BucketSpec): Option[BitSet] = {
     if (normalizedFilters.isEmpty) {
       return None
     }
@@ -141,7 +140,15 @@ object LayoutFileSourceStrategy extends Strategy with LogEx {
 
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case PhysicalOperation(projects, filters,
-      l @ LogicalRelation(fsRelation: HadoopFsRelation, _, table, _)) =>
+    l@LogicalRelation(
+    fsRelation@HadoopFsRelation(
+    _: FilePruner,
+    _,
+    _,
+    _,
+    _,
+    _),
+    _, table, _)) =>
       // Filters on this relation fall into four categories based on where we can use them to avoid
       // reading unneeded data:
       //  - partition keys only - used to prune directories to read

@@ -25,10 +25,9 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 public class SqlNodeExtractor extends SqlBasicVisitor<SqlNode> {
 

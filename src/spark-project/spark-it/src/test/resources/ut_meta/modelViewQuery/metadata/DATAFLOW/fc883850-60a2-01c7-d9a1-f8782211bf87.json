@@ -1,0 +1,13 @@
+{
+  "uuid" : "fc883850-60a2-01c7-d9a1-f8782211bf87",
+  "last_modified" : 1645772753149,
+  "create_time" : 1645772742449,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "tpch",
+  "segment_uuids" : [ "46b0e457-e4b4-0b35-b30a-ce888fbdc3bc" ]
+}

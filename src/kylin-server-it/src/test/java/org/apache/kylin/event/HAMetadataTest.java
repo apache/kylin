@@ -18,6 +18,7 @@
 
 package org.apache.kylin.event;
 
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
 import static org.awaitility.Awaitility.await;
 
@@ -33,9 +34,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ImageDesc;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceTool;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -70,9 +72,9 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
                 + "@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=");
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            MemoryLockUtils.lockAndRecord("/UUID", null, false);
-            resourceStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()),
-                    StringEntity.serializer);
+            UnitOfWork.get().getCopyForWriteItems().add(ResourceStore.METASTORE_UUID_TAG);
+            resourceStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG,
+                    new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
             return null;
         }, "");
         queryKylinConfig = KylinConfig.createKylinConfig(getTestConfig());
@@ -85,7 +87,7 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         val jdbcTemplate = getJdbcTemplate();
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
         cleanupTestMetadata();
         queryResourceStore.close();
         ((JdbcAuditLogStore) queryResourceStore.getAuditLogStore()).forceClose();
@@ -96,31 +98,32 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
         queryResourceStore.catchup();
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("/p0/path1", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path2", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path3", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path4", null, false);
-            resourceStore.checkAndPutResource("/p0/path1", ByteSource.wrap("path1".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path2", ByteSource.wrap("path2".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path3", ByteSource.wrap("path3".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path4", ByteSource.wrap("path4".getBytes(charset)), -1);
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
+            resourceStore.checkAndPutResource("PROJECT/path1", RawResourceTool.createByteSource("path1"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path2", RawResourceTool.createByteSource("path2"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path3", RawResourceTool.createByteSource("path3"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path4", RawResourceTool.createByteSource("path4"), -1);
             return 0;
         }, "p0");
-        await().atMost(3, TimeUnit.SECONDS).until(() -> 5 == queryResourceStore.listResourcesRecursively("/").size());
+        await().atMost(3, TimeUnit.SECONDS)
+                .until(() -> 5 == queryResourceStore.listResourcesRecursively(MetadataType.ALL.name()).size());
     }
 
     @Test
     public void testMetadataCatchupWithBackup() throws Exception {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("/p0/path1", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path2", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path3", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path4", null, false);
-            resourceStore.checkAndPutResource("/p0/path1", ByteSource.wrap("path1".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path2", ByteSource.wrap("path2".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path3", ByteSource.wrap("path3".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path4", ByteSource.wrap("path4".getBytes(charset)), -1);
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
+            resourceStore.checkAndPutResource("PROJECT/path1", RawResourceTool.createByteSource("path1"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path2", RawResourceTool.createByteSource("path2"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path3", RawResourceTool.createByteSource("path3"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path4", RawResourceTool.createByteSource("path4"), -1);
             return 0;
         }, "p0");
         String[] args = new String[] { "-backup", "-dir", HadoopUtil.getBackupFolder(getTestConfig()) };
@@ -128,29 +131,31 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
         metadataTool.execute(args);
 
         queryResourceStore.catchup();
-        Assert.assertEquals(5, queryResourceStore.listResourcesRecursively("/").size());
+        Assert.assertEquals(5, queryResourceStore.listResourcesRecursively(MetadataType.ALL.name()).size());
 
+        getTestConfig().setProperty("kylin.metadata.audit-log-json-patch-enabled", "false");
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("/p0/path1", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path2", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path3", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path4", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path5", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path6", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path7", null, false);
-            resourceStore.checkAndPutResource("/p0/path1", ByteSource.wrap("path1".getBytes(charset)), 0);
-            resourceStore.checkAndPutResource("/p0/path2", ByteSource.wrap("path2".getBytes(charset)), 0);
-            resourceStore.checkAndPutResource("/p0/path3", ByteSource.wrap("path3".getBytes(charset)), 0);
-            resourceStore.deleteResource("/p0/path4");
-            resourceStore.checkAndPutResource("/p0/path5", ByteSource.wrap("path5".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path6", ByteSource.wrap("path6".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path7", ByteSource.wrap("path7".getBytes(charset)), -1);
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path5");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path6");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path7");
+            resourceStore.checkAndPutResource("PROJECT/path1", RawResourceTool.createByteSource("path1"), 0);
+            resourceStore.checkAndPutResource("PROJECT/path2", RawResourceTool.createByteSource("path2"), 0);
+            resourceStore.checkAndPutResource("PROJECT/path3", RawResourceTool.createByteSource("path3"), 0);
+            resourceStore.deleteResource("PROJECT/path4");
+            resourceStore.checkAndPutResource("PROJECT/path5", RawResourceTool.createByteSource("path5"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path6", RawResourceTool.createByteSource("path6"), -1);
+            resourceStore.checkAndPutResource("PROJECT/path7", RawResourceTool.createByteSource("path7"), -1);
             return 0;
         }, "p0");
 
-        await().atMost(3, TimeUnit.SECONDS).until(() -> 7 == queryResourceStore.listResourcesRecursively("/").size());
-        String table = getTestConfig().getMetadataUrl().getIdentifier() + "_audit_log";
+        await().atMost(3, TimeUnit.SECONDS)
+                .until(() -> 7 == queryResourceStore.listResourcesRecursively(MetadataType.ALL.name()).size());
+        String table = getTestConfig().getMetadataUrl().getIdentifier() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX;
         val auditCount = getJdbcTemplate().queryForObject(String.format(Locale.ROOT, "select count(*) from %s", table),
                 Long.class);
         Assert.assertEquals(12L, auditCount.longValue());
@@ -161,33 +166,28 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
     public void testMetadata_RemoveAuditLog_Restore() throws Exception {
         UnitOfWork.doInTransactionWithRetry(() -> {
             val resourceStore = getStore();
-            MemoryLockUtils.lockAndRecord("/p0/path1.json", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path2.json", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path3.json", null, false);
-            MemoryLockUtils.lockAndRecord("/p0/path4.json", null, false);
-            resourceStore.checkAndPutResource("/_global/project/p0.json", ByteSource
-                    .wrap("{  \"uuid\": \"1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b\"}".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path1.json",
-                    ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path2.json",
-                    ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path3.json",
-                    ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path4.json",
-                    ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)), -1);
-            resourceStore.checkAndPutResource("/p0/path3.json",
-                    ByteSource.wrap("{ \"mvcc\": 1 }".getBytes(charset)), 0);
-            resourceStore.checkAndPutResource("/p0/path4.json",
-                    ByteSource.wrap("{ \"mvcc\": 1 }".getBytes(charset)), 0);
-            resourceStore.checkAndPutResource("/p0/path3.json",
-                    ByteSource.wrap("{ \"mvcc\": 2 }".getBytes(charset)), 1);
-            resourceStore.checkAndPutResource("/p0/path4.json",
-                    ByteSource.wrap("{ \"mvcc\": 2 }".getBytes(charset)), 1);
-            resourceStore.checkAndPutResource("/p0/path3.json",
-                    ByteSource.wrap("{ \"mvcc\": 3 }".getBytes(charset)), 2);
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path1");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path2");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path3");
+            UnitOfWork.get().getCopyForWriteItems().add("PROJECT/path4");
+            resourceStore.checkAndPutResource("PROJECTPROJECT",
+                    ByteSource.wrap("{  \"uuid\": \"1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b\"}".getBytes(charset)), -1);
+            resourceStore.checkAndPutResource("PROJECT/path1", ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)),
+                    -1);
+            resourceStore.checkAndPutResource("PROJECT/path2", ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)),
+                    -1);
+            resourceStore.checkAndPutResource("PROJECT/path3", ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)),
+                    -1);
+            resourceStore.checkAndPutResource("PROJECT/path4", ByteSource.wrap("{ \"mvcc\": 0 }".getBytes(charset)),
+                    -1);
+            resourceStore.checkAndPutResource("PROJECT/path3", ByteSource.wrap("{ \"mvcc\": 1 }".getBytes(charset)), 0);
+            resourceStore.checkAndPutResource("PROJECT/path4", ByteSource.wrap("{ \"mvcc\": 1 }".getBytes(charset)), 0);
+            resourceStore.checkAndPutResource("PROJECT/path3", ByteSource.wrap("{ \"mvcc\": 2 }".getBytes(charset)), 1);
+            resourceStore.checkAndPutResource("PROJECT/path4", ByteSource.wrap("{ \"mvcc\": 2 }".getBytes(charset)), 1);
+            resourceStore.checkAndPutResource("PROJECT/path3", ByteSource.wrap("{ \"mvcc\": 3 }".getBytes(charset)), 2);
             return 0;
         }, "p0");
-        String table = getTestConfig().getMetadataUrl().getIdentifier() + "_audit_log";
+        String table = getTestConfig().getMetadataUrl().getIdentifier() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX;
         getJdbcTemplate().update(String.format(Locale.ROOT, "delete from %s where id=7", table));
         try {
             queryResourceStore.catchup();
@@ -218,11 +218,11 @@ public class HAMetadataTest extends NLocalFileMetadataTestCase {
         queryResourceStore.getMetadataStore().setAuditLogStore(auditLogStore);
         queryResourceStore.catchup();
 
-        Assert.assertEquals(7, queryResourceStore.listResourcesRecursively("/").size());
+        Assert.assertEquals(7, queryResourceStore.listResourcesRecursively(MetadataType.ALL.name()).size());
         val auditCount = getJdbcTemplate().queryForObject(String.format(Locale.ROOT, "select count(*) from %s", table),
                 Long.class);
         Assert.assertEquals(15, auditCount.longValue());
-        val imageDesc = JsonUtil.readValue(queryResourceStore.getResource("/_image").getByteSource().read(),
+        val imageDesc = JsonUtil.readValue(queryResourceStore.getResource(METASTORE_IMAGE).getByteSource().read(),
                 ImageDesc.class);
         Assert.assertEquals(16, imageDesc.getOffset().longValue());
     }

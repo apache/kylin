@@ -21,6 +21,7 @@ package org.apache.kylin.rest.cache.memcached;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -40,8 +41,10 @@ import org.slf4j.LoggerFactory;
 import net.spy.memcached.internal.BulkFuture;
 
 /**
- * Subclass of MemcachedCache. It supports storing large objects.  Memcached itself has a limitation to the value size with default value of 1M.
- * This implement extends the limit to 1G and can split huge bytes to multiple chunks. It will take care of the data integrity if part of the chunks lost(due to server restart or other reasons)
+ * Subclass of MemcachedCache. It supports storing large objects.  
+ * Memcached itself has a limitation to the value size with default value of 1M.
+ * This implement extends the limit to 1G and can split huge bytes to multiple chunks. 
+ * It will take care of the data integrity if part of the chunks lost(due to server restart or other reasons)
  *
  * @author mingmwang
  */
@@ -96,10 +99,11 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     }
 
     /**
-     * This method overrides the parent getBinary(), it gets the KeyHook from the Cache first and check the KeyHook that whether chunking is enabled or not.
+     * This method overrides the parent getBinary(), it gets the KeyHook from the Cache first
+     * and check the KeyHook that whether chunking is enabled or not.
      */
     @Override
-    @SuppressWarnings({"squid:S3776"})
+    @SuppressWarnings({ "squid:S3776" })
     public byte[] getBinary(String keyS) {
         if (Strings.isNullOrEmpty(keyS)) {
             return new byte[0];
@@ -111,7 +115,8 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
 
         if (keyHook.getChunkskey() == null || keyHook.getChunkskey().length == 0) {
             if (logger.isDebugEnabled() || config.isEnableDebugLog()) {
-                logger.debug("Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = {}", 
+                logger.debug(
+                        "Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = {}",
                         keyHook.getValues().length);
             }
             return keyHook.getValues();
@@ -176,7 +181,8 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     }
 
     /**
-     * This method overrides the parent putBinary() method. It will split the large value bytes into multiple chunks to fit into the internal Cache.
+     * This method overrides the parent putBinary() method.
+     * It will split the large value bytes into multiple chunks to fit into the internal Cache.
      * It generates a KeyHook to store the splitted chunked keys.
      */
     @Override
@@ -196,7 +202,8 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         if (nSplit > 1) {
             for (int i = 0; i < nSplit; i++) {
                 if (logger.isDebugEnabled() || config.isEnableDebugLog()) {
-                    logger.debug(String.format("Chunk[ %d ] bytes size before encoding  = %d", i, splitValueB[i].length));
+                    logger.debug(String.format(Locale.ROOT, "Chunk[ %d ] bytes size before encoding  = %d", i,
+                            splitValueB[i].length));
                 }
                 super.putBinary(keyHook.getChunkskey()[i], splitValueB[i], expiration);
             }
@@ -260,6 +267,6 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return (KeyHook) SerializationUtils.deserialize(bytes);
+        return SerializationUtils.deserialize(bytes);
     }
 }

@@ -1,0 +1,28 @@
+{
+  "uuid" : "32bec5bf-eb82-4e71-8bdb-04d84e9b21e8",
+  "last_modified" : 0,
+  "create_time" : 1575266969662,
+  "version" : "4.0.0.0",
+  "table_name" : "SSB.DATES",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "normal",
+    "create_time" : "1551256668000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://nameservice1/user/root/ssb/data/date",
+    "partition_column" : "",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null,
+  "project" : "newten"
+}

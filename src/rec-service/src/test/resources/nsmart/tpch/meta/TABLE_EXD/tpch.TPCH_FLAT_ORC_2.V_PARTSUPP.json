@@ -1,0 +1,55 @@
+{
+  "uuid" : "080be541-a811-4eca-8aa5-df168cee74ee",
+  "last_modified" : 1493191473568,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.V_PARTSUPP",
+  "last_build_job_id" : "3cad82a4-5a77-4713-a858-85dd3044c08e",
+  "columns_stats" : [ {
+    "max_value" : "20000",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 19945
+  }, {
+    "max_value" : "1000",
+    "min_value" : "1",
+    "max_length_value" : "1000",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 1010
+  }, {
+    "max_value" : "9999",
+    "min_value" : "1",
+    "max_length_value" : "3325",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 10491
+  }, {
+    "max_value" : "999.99",
+    "min_value" : "1.01",
+    "max_length_value" : "771.64",
+    "min_length_value" : "5.5",
+    "null_count" : 0,
+    "cardinality" : 55209
+  }, {
+    "max_value" : "zzle quickly. silent, blithe requests nag furiously quickly final dependencies. regula",
+    "min_value" : " Tiresias haggle quickly upon the special instructions. blithely pending platelets across the bold",
+    "max_length_value" : "ate after the final pinto beans. express requests cajole express packages. carefully bold ideas haggle furiously. blithely express accounts eat carefully among the evenly busy accounts. carefully un",
+    "min_length_value" : " pending instructions before the even, silent dep",
+    "null_count" : 0,
+    "cardinality" : 80987
+  }, {
+    "max_value" : "9988902.43",
+    "min_value" : "20.75",
+    "max_length_value" : "1333528.0399999998",
+    "min_length_value" : "58.5",
+    "null_count" : 0,
+    "cardinality" : 83008
+  } ],
+  "sample_rows" : [ [ "1", "1", "2", "2", "3", "3", "4", "4", "5", "5" ], [ "2", "502", "3", "503", "4", "504", "5", "505", "6", "506" ], [ "3325", "3956", "8895", "8539", "4651", "3917", "1339", "2694", "3735", "1329" ], [ "771.64", "337.09", "378.49", "438.37", "920.92", "645.4", "113.97", "51.37", "255.88", "219.83" ], [ ", even theodolites. regular, final theodolites eat after the carefully pending foxes. furiously regular deposits sleep slyly. carefully bold realms above the ironic dependencies haggle careful", "after the fluffily ironic deposits? blithely special dependencies integrate furiously even excuses. blithely silent theodolites could have to haggle pending, express requests; fu", "nic accounts. final accounts sleep furiously about the ironic, bold packages. regular, regular accounts", "blithely bold ideas. furiously stealthy packages sleep fluffily. slyly special deposits snooze furiously carefully regular accounts. regular deposits according to the accounts nag carefully slyl", "ilent foxes affix furiously quickly unusual requests. even packages across the carefully even theodolites nag above the sp", "of the blithely regular theodolites. final theodolites haggle blithely carefully unusual ideas. blithely even f", " carefully unusual ideas. packages use slyly. blithely final pinto beans cajole along the furiously express requests. regular orbits haggle carefully. care", "g, regular deposits: quick instructions run across the carefully ironic theodolites-- final dependencies haggle into the dependencies. f", "arefully even requests. ironic requests cajole carefully even dolphin", "iously regular deposits wake deposits. pending pinto beans promise ironic dependencies. even, regular pinto beans integrate" ], [ "2565703.0", "1333528.0399999998", "3366668.5500000003", "3743241.43", "4283198.92", "2528031.8", "152605.83", "138390.78", "955711.7999999999", "292154.07" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "80000",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

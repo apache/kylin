@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.kylin.util;
 
 import java.io.File;
@@ -51,18 +52,21 @@ import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.SparderTypeUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -79,7 +83,7 @@ public class ExecAndComp {
             return sql;
 
         String specialStr = "changeJoinType_DELIMITERS";
-        sql = sql.replaceAll(System.getProperty("line.separator"), " " + specialStr + " ");
+        sql = sql.replaceAll(System.lineSeparator(), " " + specialStr + " ");
 
         String[] tokens = StringUtils.split(sql, null);// split white spaces
         for (int i = 0; i < tokens.length - 1; ++i) {
@@ -90,7 +94,7 @@ public class ExecAndComp {
         }
 
         String ret = StringUtils.join(tokens, " ");
-        ret = ret.replaceAll(specialStr, System.getProperty("line.separator"));
+        ret = ret.replaceAll(specialStr, System.lineSeparator());
         log.info("The actual sql executed is: " + ret);
 
         return ret;
@@ -101,23 +105,6 @@ public class ExecAndComp {
         final String[] toDoList = new String[] {
                 // array
                 "query/sql_array/query00.sql", "query/sql_array/query01.sql",
-                // TODO ifnull()
-                "query/sql_function/sql_function_nullHandling/query00.sql",
-                "query/sql_function/sql_function_nullHandling/query01.sql",
-                "query/sql_function/sql_function_nullHandling/query02.sql",
-                "query/sql_function/sql_function_nullHandling/query03.sql",
-                "query/sql_function/sql_function_nullHandling/query04.sql",
-                "query/sql_computedcolumn/sql_computedcolumn_nullHandling/query00.sql",
-                "query/sql_computedcolumn/sql_computedcolumn_nullHandling/query01.sql",
-                "query/sql_computedcolumn/sql_computedcolumn_nullHandling/query02.sql",
-                "query/sql_computedcolumn/sql_computedcolumn_nullHandling/query03.sql",
-                // TODO date_part()
-                "query/sql_function/sql_function_DateUDF/query00.sql",
-                "query/sql_function/sql_function_DateUDF/query02.sql",
-                "query/sql_computedcolumn/sql_computedcolumn_DateUDF/query00.sql",
-                // TODO date_trunc()
-                "query/sql_computedcolumn/sql_computedcolumn_DateUDF/query04.sql",
-                "query/sql_function/sql_function_DateUDF/query06.sql",
                 // TODO divde: spark -> 3/2 = 1.5    calcite -> 3/2 = 1
                 "query/sql_timestamp/query27.sql",
                 // TODO percentile_approx()
@@ -131,6 +118,15 @@ public class ExecAndComp {
             return true;
         }
         return false;
+    }
+
+    @SneakyThrows
+    public static QueryResult queryWithVanillaSpark(String prj, String originSql, String joinType, String sqlPath) {
+        SparkSession ss = SparkSession.active();
+        ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
+        QueryResult result = queryWithSpark(prj, originSql, joinType, sqlPath);
+        ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", null);
+        return result;
     }
 
     @SneakyThrows
@@ -280,8 +276,12 @@ public class ExecAndComp {
 
     private static List<Pair<String, String>> retrieveITSqls(File file) throws IOException {
         File[] sqlFiles = new File[0];
-        if (file != null && file.exists() && file.listFiles() != null) {
-            sqlFiles = file.listFiles((dir, name) -> name.endsWith(".sql"));
+        if (file != null && file.exists()) {
+            if (file.listFiles() != null) {
+                sqlFiles = file.listFiles((dir, name) -> name.endsWith(".sql"));
+            } else if (file.isFile()) {
+                sqlFiles = new File[] { file };
+            }
         }
         List<Pair<String, String>> ret = Lists.newArrayList();
         assert sqlFiles != null;
@@ -347,8 +347,8 @@ public class ExecAndComp {
     public static EnhancedQueryResult queryModelWithOlapContext(String prj, String joinType, String sql,
             List<String> parameters) {
         QueryResult queryResult = queryModelWithMassage(prj, changeJoinType(sql, joinType), parameters);
-        val ctxs = OLAPContext.getThreadLocalContexts();
-        OLAPContext.clearThreadLocalContexts();
+        val ctxs = ContextUtil.getThreadLocalContexts();
+        ContextUtil.clearThreadLocalContexts();
         return new EnhancedQueryResult(queryResult, ctxs);
     }
 
@@ -464,7 +464,7 @@ public class ExecAndComp {
                     if (!QueryResultComparator.compareResults(sparkResult, modelResult.getQueryResult(),
                             compareLevel)) {
                         log.error("Failed on compare query ({}) :{}", joinType, query);
-                        throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
+                        ExecAndComp.throwResultNotMatch(joinType, query);
                     }
                     log.info("Compare Duration(ms): {}", System.currentTimeMillis() - startTs);
                 } else {
@@ -474,6 +474,11 @@ public class ExecAndComp {
                         System.currentTimeMillis() - startTime);
             }
         })).get();
+    }
+
+    public static void throwResultNotMatch(String joinType, Pair<String, String> query) {
+        throw new IllegalStateException(
+                "run with join type(" + joinType + "): " + query.getFirst() + " result not match");
     }
 
     public enum CompareLevel {
@@ -489,15 +494,11 @@ public class ExecAndComp {
     @AllArgsConstructor
     public static class EnhancedQueryResult {
 
+        @Getter
         @Delegate
         QueryResult queryResult;
 
-        public Collection<OLAPContext> olapContexts;
-
-        public QueryResult getQueryResult() {
-            return queryResult;
-        }
-
+        public Collection<OlapContext> olapContexts;
     }
 
     @Data

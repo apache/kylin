@@ -22,12 +22,11 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @MetadataInfo
 class AntiFlatCheckerTest {

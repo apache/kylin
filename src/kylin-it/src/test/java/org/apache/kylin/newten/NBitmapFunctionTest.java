@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.util.JobContextUtil;
@@ -31,26 +33,31 @@ import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.udaf.BitmapSerAndDeSer;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.roaringbitmap.longlong.Roaring64NavigableMap;
 
 public class NBitmapFunctionTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
         JobContextUtil.cleanUp();
+        super.setUp();
         JobContextUtil.getJobContext(getTestConfig());
 
         populateSSWithCSVData(getTestConfig(), getProject(), ss);
     }
 
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
         FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
-        JobContextUtil.cleanUp();
     }
 
     @Override
@@ -92,6 +99,12 @@ public class NBitmapFunctionTest extends NLocalWithSparkSessionTest {
         testSubtractBitmapUUID();
 
         testBitmapBuild();
+
+        testIntersectBimapUuidFunc();
+
+        testUnionBimapUuidFunc();
+
+        testBimapUuidToArrayFunc();
     }
 
     private void testBitmapBuild() throws SQLException {
@@ -104,10 +117,9 @@ public class NBitmapFunctionTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals("AAAAAAEAAAAAOjAAAAEAAAAAAAAAEAAAAAEA", result.get(0));
 
         //================= normal case
-        String query2 = "select CAL_DT, "
-                + "bitmap_build(TEST_COUNT_DISTINCT_BITMAP) as first_day "
-                + "from test_kylin_fact " + "where CAL_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03') "
-                + "group by CAL_DT " + "order by CAL_DT ";
+        String query2 = "select CAL_DT, bitmap_build(TEST_COUNT_DISTINCT_BITMAP) as first_day "
+                + "from test_kylin_fact where CAL_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03') "
+                + "group by CAL_DT order by CAL_DT";
         result = ExecAndComp.queryModel(getProject(), query2).collectAsList().stream()
                 .map(row -> row.toSeq().mkString(",")).collect(Collectors.toList());
         Assert.assertEquals("2012-01-01,AAAAAAEAAAAAOzAAAAEAAA0AAQABAA0A", result.get(0));
@@ -115,15 +127,18 @@ public class NBitmapFunctionTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals("2012-01-03,AAAAAAEAAAAAOjAAAAEAAAAAAAQAEAAAABMAGAAZABoAGwA=", result.get(2));
 
         //================= pushdown case
-        String query3 = "select CAL_DT, "
-                + "bitmap_build(LEAF_CATEG_ID)"
-                + "from test_kylin_fact " + "where CAL_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03') "
-                + "group by CAL_DT " + "order by CAL_DT";
-        result = ExecAndComp.querySparkSql(query3).collectAsList().stream()
-                .map(row -> row.toSeq().mkString(",")).collect(Collectors.toList());
-        Assert.assertEquals("2012-01-01,AAAAAAEAAAAAOjAAAAMAAAAAAAUAAQABAAIAAwAgAAAALAAAADAAAADDA0UFIi0FUPKK4/LFc7h1yiVkQ05shq4=", result.get(0));
-        Assert.assertEquals("2012-01-02,AAAAAAEAAAAAOjAAAAIAAAAAAAYAAQACABgAAAAmAAAATQVKJ31ABVDdX3uckfmRJ7h1CpM=", result.get(1));
-        Assert.assertEquals("2012-01-03,AAAAAAEAAAAAOjAAAAMAAAAAAAEAAQAAAAIAAQAgAAAAJAAAACYAAADSJIFRkSdaXuWn", result.get(2));
+        String query3 = "select CAL_DT, bitmap_build(LEAF_CATEG_ID) from test_kylin_fact "
+                + "where CAL_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03') group by CAL_DT "
+                + "order by CAL_DT";
+        result = ExecAndComp.querySparkSql(query3).collectAsList().stream().map(row -> row.toSeq().mkString(","))
+                .collect(Collectors.toList());
+        Assert.assertEquals(
+                "2012-01-01,AAAAAAEAAAAAOjAAAAMAAAAAAAUAAQABAAIAAwAgAAAALAAAADAAAADDA0UFIi0FUPKK4/LFc7h1yiVkQ05shq4=",
+                result.get(0));
+        Assert.assertEquals("2012-01-02,AAAAAAEAAAAAOjAAAAIAAAAAAAYAAQACABgAAAAmAAAATQVKJ31ABVDdX3uckfmRJ7h1CpM=",
+                result.get(1));
+        Assert.assertEquals("2012-01-03,AAAAAAEAAAAAOjAAAAMAAAAAAAEAAQAAAAIAAQAgAAAAJAAAACYAAADSJIFRkSdaXuWn",
+                result.get(2));
     }
 
     private void testDateType() throws SQLException {
@@ -353,12 +368,220 @@ public class NBitmapFunctionTest extends NLocalWithSparkSessionTest {
     }
 
     private void testSubtractBitmapUUID() throws SQLException {
-        String query = "select intersect_count_by_col(Array[t1.a1, t2.a2]) from " + "(select subtract_bitmap_uuid("
+        String query = "select intersect_count_by_col(Array[t1.a1, t2.a2]) from (select subtract_bitmap_uuid("
                 + "intersect_bitmap_uuid_v2(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC|FP-non GTC', 'Others'], 'RAWSTRING'),"
                 + "intersect_bitmap_uuid_v2(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN', 'Auction'], 'RAWSTRING')) as a1 "
-                + "from TEST_KYLIN_FACT) t1, " + "(select bitmap_uuid(SELLER_ID) as a2 from TEST_KYLIN_FACT) t2";
+                + "from TEST_KYLIN_FACT) t1, (select bitmap_uuid(SELLER_ID) as a2 from TEST_KYLIN_FACT) t2";
         List<String> result = ExecAndComp.queryModel(getProject(), query).collectAsList().stream()
                 .map(row -> row.toSeq().mkString(",")).collect(Collectors.toList());
         Assert.assertEquals("210", result.get(0));
+    }
+
+    private void testIntersectBimapUuidFunc() throws Exception {
+        Dataset<Row> expect = ss
+                .sql("select LSTG_FORMAT_NAME,collect_set( SELLER_ID) from TEST_KYLIN_FACT group by LSTG_FORMAT_NAME");
+
+        List<Row> rows = expect.collectAsList();
+        List<Object> list0 = rows.get(0).getList(1);
+        List<Object> list1 = rows.get(1).getList(1);
+        List<Object> list2 = rows.get(2).getList(1);
+        List<Object> list3 = rows.get(3).getList(1);
+        List<Object> list4 = rows.get(4).getList(1);
+        List intersection = ListUtils.intersection(list0, list1);
+        intersection = ListUtils.intersection(intersection, list2);
+        intersection = ListUtils.intersection(intersection, list3);
+        intersection = ListUtils.intersection(intersection, list4);
+        Collections.sort(intersection);
+
+        String countSql = "select intersect_bitmap_uuid_count(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+
+        int countResult = ExecAndComp.queryModel(getProject(), countSql).collectAsList().get(0).getInt(0);
+        Assert.assertEquals(intersection.size(), countResult);
+
+        String valueSql = "select intersect_bitmap_uuid_value_all(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+
+        List<Object> valueResult = ExecAndComp.queryModel(getProject(), valueSql).collectAsList().get(0).getList(0);
+        for (int i = 0; i < intersection.size(); i++) {
+            Assert.assertEquals(intersection.get(i).toString(), valueResult.get(i).toString());
+        }
+
+        String valueTmp = "select intersect_bitmap_uuid_value(uuid,limit,offset) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT ) t1";
+
+        int limit = 100;
+        int offset = 0;
+        int pageSize = intersection.size() / limit + 1;
+        for (int page = 1; page <= pageSize; page++) {
+            offset = (page - 1) * limit;
+            valueSql = valueTmp.replace("limit", limit + "").replace("offset", offset + "");
+            valueResult = ExecAndComp.queryModel(getProject(), valueSql).collectAsList().get(0).getList(0);
+            for (int i = 0; i < valueResult.size(); i++) {
+                Assert.assertEquals(intersection.get(offset).toString(), valueResult.get(i).toString());
+                offset += 1;
+            }
+        }
+
+        String ep = "both limit and offset must be >= 0";
+        // test limit < 0
+        final String valueSql2 = valueTmp.replace("limit", -1 + "").replace("offset", offset + "");
+        Assert.assertThrows(ep, SQLException.class,
+                () -> ExecAndComp.queryModel(getProject(), valueSql2).collectAsList().get(0).getList(0));
+
+        // test offset < 0
+        final String valueSql3 = valueTmp.replace("limit", 100 + "").replace("offset", -1 + "");
+        Assert.assertThrows(ep, SQLException.class,
+                () -> ExecAndComp.queryModel(getProject(), valueSql3).collectAsList().get(0).getList(0));
+
+        String distinctSql = "select intersect_bitmap_uuid_distinct(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT ) t1";
+        byte[] distinctResult = (byte[]) ExecAndComp.queryModel(getProject(), distinctSql).collectAsList().get(0)
+                .get(0);
+        Roaring64NavigableMap bitmap = BitmapSerAndDeSer.get().deserialize(distinctResult);
+        int i = 0;
+        Iterator<Long> iterator = bitmap.iterator();
+        while (iterator.hasNext()) {
+            Long next = iterator.next();
+            Assert.assertEquals(next.toString(), intersection.get(i).toString());
+            i++;
+        }
+    }
+
+    private void testUnionBimapUuidFunc() throws Exception {
+        Dataset<Row> totalIdQuery = ss.sql("select distinct SELLER_ID from TEST_KYLIN_FACT order by SELLER_ID asc");
+
+        List<Integer> tatalIds = totalIdQuery.collectAsList().stream().map(row -> row.getInt(0))
+                .collect(Collectors.toList());
+
+        String countSql = "select union_bitmap_uuid_count(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+
+        int countResult = ExecAndComp.queryModel(getProject(), countSql).collectAsList().get(0).getInt(0);
+        Assert.assertEquals(tatalIds.size(), countResult);
+
+        String valueSql = "select union_bitmap_uuid_value_all(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT ) t1";
+
+        List<Object> valueResult = ExecAndComp.queryModel(getProject(), valueSql).collectAsList().get(0).getList(0);
+        for (int i = 0; i < tatalIds.size(); i++) {
+            Assert.assertEquals(tatalIds.get(i).toString(), valueResult.get(i).toString());
+        }
+
+        String valueTmp = "select union_bitmap_uuid_value(uuid,limit,offset) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT ) t1";
+
+        int limit = 100;
+        int offset = 0;
+        int pageSize = tatalIds.size() / limit + 1;
+        for (int page = 1; page <= pageSize; page++) {
+            offset = (page - 1) * limit;
+            valueSql = valueTmp.replace("limit", limit + "").replace("offset", offset + "");
+            valueResult = ExecAndComp.queryModel(getProject(), valueSql).collectAsList().get(0).getList(0);
+            for (int i = 0; i < valueResult.size(); i++) {
+                Assert.assertEquals(tatalIds.get(offset).toString(), valueResult.get(i).toString());
+                offset += 1;
+            }
+        }
+
+        String distinctSql = "select union_bitmap_uuid_distinct(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['ABIN']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Auction']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['FP-non GTC']) as uuid "
+                + "from TEST_KYLIN_FACT UNION "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+        byte[] distinctResult = (byte[]) ExecAndComp.queryModel(getProject(), distinctSql).collectAsList().get(0)
+                .get(0);
+        Roaring64NavigableMap bitmap = BitmapSerAndDeSer.get().deserialize(distinctResult);
+        int i = 0;
+        Iterator<Long> iterator = bitmap.iterator();
+        while (iterator.hasNext()) {
+            Long next = iterator.next();
+            Assert.assertEquals(next.toString(), tatalIds.get(i).toString());
+            i++;
+        }
+    }
+
+    private void testBimapUuidToArrayFunc() throws Exception {
+        String arraySql = "select bitmap_uuid_to_array(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+        List<Object> ArrayResult = ExecAndComp.queryModel(getProject(), arraySql).collectAsList().get(0).getList(0);
+
+        String valueSql = "select intersect_bitmap_uuid_value_all(uuid) uuid from ( "
+                + "select intersect_bitmap_uuid(SELLER_ID, LSTG_FORMAT_NAME, array['Others']) as uuid "
+                + "from TEST_KYLIN_FACT) t1";
+        List<Object> valueResult = ExecAndComp.queryModel(getProject(), valueSql).collectAsList().get(0).getList(0);
+        for (int i = 0; i < ArrayResult.size(); i++) {
+            Assert.assertEquals(ArrayResult.get(i).toString(), valueResult.get(i).toString());
+        }
     }
 }

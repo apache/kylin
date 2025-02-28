@@ -89,7 +89,7 @@ public class OptRecManagerV2 {
     }
 
     public boolean genRecItemsFromIndexOptimizer(String project, String modelId,
-                                                 Map<Long, GarbageLayoutType> garbageLayouts) {
+            Map<Long, GarbageLayoutType> garbageLayouts) {
         if (garbageLayouts.isEmpty()) {
             return false;
         }

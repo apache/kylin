@@ -19,12 +19,11 @@
 package org.apache.kylin.job.common;
 
 import org.apache.kylin.common.util.BufferedLogger;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 

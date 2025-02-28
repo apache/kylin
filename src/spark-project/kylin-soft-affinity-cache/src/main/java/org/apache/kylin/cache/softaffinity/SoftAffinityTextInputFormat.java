@@ -30,7 +30,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SplitLocationInfo;
 import org.apache.kylin.common.exception.KylinRuntimeException;
-
 import org.apache.kylin.softaffinity.SoftAffinityManager;
 
 /**
@@ -77,9 +76,7 @@ public class SoftAffinityTextInputFormat extends org.apache.hadoop.mapred.TextIn
 
         @Override
         public SplitLocationInfo[] getLocationInfo() {
-            return Arrays.stream(locations)
-                    .map(l -> new SplitLocationInfo(l, false))
-                    .toArray(SplitLocationInfo[]::new);
+            return Arrays.stream(locations).map(l -> new SplitLocationInfo(l, false)).toArray(SplitLocationInfo[]::new);
         }
 
         @Override

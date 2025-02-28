@@ -32,6 +32,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.core.annotation.Order;
@@ -41,8 +42,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.extern.slf4j.Slf4j;
 

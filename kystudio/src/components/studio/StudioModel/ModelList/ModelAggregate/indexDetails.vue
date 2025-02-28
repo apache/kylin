@@ -36,6 +36,7 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="showShardby"
           label="ShardBy"
           align="center"
           width="80">
@@ -72,6 +73,7 @@
         </template>
           </el-table-column>
         <el-table-column
+        v-if="showShardby"
         label="ShardBy"
         align="center"
         width="80">
@@ -97,6 +99,10 @@ import { transToGmtTime } from '../../../../../util/business'
 
 @Component({
   props: {
+    storageType: {
+      type: Number,
+      default: 1
+    },
     indexDetailTitle: {
       type: String,
       default: ''
@@ -121,6 +127,10 @@ export default class indexDetails extends Vue {
   totalTableIndexColumnSize = 0
   currentAggPage = 0
   totalAggIndexColumnSize = 0
+
+  get showShardby () {
+    return this.storageType !== 3
+  }
 
   get cuboidDetail () {
     if (!this.cuboidData || !this.cuboidData.col_order || this.detailType === 'tabelIndexDetail') {

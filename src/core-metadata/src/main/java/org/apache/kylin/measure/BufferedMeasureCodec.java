@@ -35,10 +35,10 @@ public class BufferedMeasureCodec implements java.io.Serializable {
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1 MB
     public static final int MAX_BUFFER_SIZE = 1 * 1024 * DEFAULT_BUFFER_SIZE; // 1 GB
 
-    final private MeasureCodec codec;
+    private final MeasureCodec codec;
 
     private transient ByteBuffer buf;
-    final private int[] measureSizes;
+    private final int[] measureSizes;
 
     public BufferedMeasureCodec(Collection<MeasureDesc> measureDescs) {
         this.codec = new MeasureCodec(measureDescs);

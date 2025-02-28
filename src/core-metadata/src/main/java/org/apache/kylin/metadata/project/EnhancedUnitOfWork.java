@@ -17,27 +17,13 @@
  */
 package org.apache.kylin.metadata.project;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeSystem.EPOCH_DOES_NOT_BELONG_TO_CURRENT_NODE;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.metadata.JdbcMetadataStore;
-import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.epoch.EpochNotMatchException;
-
-import lombok.val;
 
 public class EnhancedUnitOfWork {
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName) {
-        return doInTransactionWithCheckAndRetry(f, UnitOfWork.DEFAULT_EPOCH_ID, unitName);
-    }
-
-    public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, long epochId, String unitName) {
-        return doInTransactionWithCheckAndRetry(f, unitName, UnitOfWork.DEFAULT_MAX_RETRY, epochId);
+        return doInTransactionWithCheckAndRetry(f, unitName, UnitOfWork.DEFAULT_MAX_RETRY);
     }
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes) {
@@ -46,32 +32,11 @@ public class EnhancedUnitOfWork {
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes,
             long epochId) {
-        return doInTransactionWithCheckAndRetry(f, unitName, retryTimes, epochId, null);
-    }
-
-    public static <T> T doInTransactionWithCheckAndRetry(UnitOfWork.Callback<T> f, String unitName, int retryTimes,
-            long epochId, String tempLockName) {
         return doInTransactionWithCheckAndRetry(UnitOfWorkParams.<T> builder().processor(f).unitName(unitName)
-                .epochId(epochId).maxRetry(retryTimes).tempLockName(tempLockName).build());
+                .maxRetry(retryTimes).epochId(epochId).build());
     }
 
     public static <T> T doInTransactionWithCheckAndRetry(UnitOfWorkParams<T> params) {
-        val config = KylinConfig.getInstanceFromEnv();
-        MetadataStore metadataStore = ResourceStore.getKylinMetaStore(config).getMetadataStore();
-        if (!config.isUTEnv() && metadataStore instanceof JdbcMetadataStore) {
-            params.setEpochChecker(() -> {
-                if (!EpochManager.getInstance().checkEpochOwner(params.getUnitName())) {
-                    throw new EpochNotMatchException(EPOCH_DOES_NOT_BELONG_TO_CURRENT_NODE, params.getUnitName());
-                }
-                return null;
-            });
-        }
-        //disable transaction for data-loading node and smart node
-        if (config.isDataLoadingNode() || config.isSmartNode()) {
-            params.setTransparent(true);
-            params.setMaxRetry(1);
-        }
         return UnitOfWork.doInTransactionWithRetry(params);
     }
 }
-

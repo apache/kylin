@@ -1,0 +1,54 @@
+{
+  "uuid" : "11124840-b3e3-43db-bcab-2b78da666d00",
+  "last_modified" : 1509805113844,
+  "version" : "2.3.0.20500",
+  "dataflow" : "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96",
+  "segment_id" : 0,
+  "layout_instances" : [ {
+    "layout_id" : 1,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 1,
+    "byte_size" : 0,
+    "source_rows" : 1,
+    "source_byte_size" : 1,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 2,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 1,
+    "byte_size" : 0,
+    "source_rows" : 1,
+    "source_byte_size" : 1,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 10001,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 1,
+    "byte_size" : 0,
+    "source_rows" : 1,
+    "source_byte_size" : 1,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 10002,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 1,
+    "byte_size" : 0,
+    "source_rows" : 1,
+    "source_byte_size" : 1,
+    "create_time" : 1538323200000
+  }, {
+    "layout_id" : 20000000001,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 1,
+    "byte_size" : 0,
+    "source_rows" : 1,
+    "source_byte_size" : 1,
+    "create_time" : 1538323200000
+  } ],
+  "project" : "default"
+}

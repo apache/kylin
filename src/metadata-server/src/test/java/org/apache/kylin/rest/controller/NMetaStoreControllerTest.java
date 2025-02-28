@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelImportRequest;
@@ -54,8 +55,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class NMetaStoreControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;
@@ -163,8 +162,8 @@ public class NMetaStoreControllerTest extends NLocalFileMetadataTestCase {
         request.setProjectsToClean(new String[] { "default", "project" });
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/metastore/cleanup_storage/tenant_node")
-                        .contentType(MediaType.APPLICATION_JSON_VALUE).content(JsonUtil.writeValueAsString(request))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .contentType(MediaType.APPLICATION_JSON_VALUE).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nModelController).cleanupStorageForTenantMode(request);

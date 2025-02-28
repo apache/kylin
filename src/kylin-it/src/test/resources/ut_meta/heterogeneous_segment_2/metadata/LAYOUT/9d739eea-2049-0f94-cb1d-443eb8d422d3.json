@@ -1,0 +1,22 @@
+{
+  "uuid" : "9d739eea-2049-0f94-cb1d-443eb8d422d3",
+  "last_modified" : 1630402145995,
+  "create_time" : 1630402145995,
+  "version" : "4.0.0.0",
+  "dataflow" : "8ef6ad65-3f87-5ccd-7e27-814cd828e380",
+  "layout_instances" : [ {
+    "layout_id" : 20001,
+    "build_job_id" : "57017c21-3e6c-4bcc-b963-c1f58ea8f7af",
+    "rows" : 2507,
+    "byte_size" : 32924,
+    "file_count" : 1,
+    "source_rows" : 2510,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "is_ready" : false,
+    "create_time" : 1630403440878,
+    "multi_partition" : [ ]
+  } ],
+  "project" : "heterogeneous_segment_with_snapshot_large_than_input_bytes"
+}

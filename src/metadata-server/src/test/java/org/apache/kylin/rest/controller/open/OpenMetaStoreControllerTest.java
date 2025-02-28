@@ -32,10 +32,11 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.NMetaStoreController;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelPreviewRequest;
@@ -60,8 +61,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class OpenMetaStoreControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;

@@ -20,9 +20,8 @@ package org.apache.kylin.rest.cluster;
 import java.util.List;
 
 import org.apache.kylin.common.util.ClusterConstant;
-import org.apache.kylin.rest.response.ServerInfoResponse;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.rest.response.ServerInfoResponse;
 
 public class MockClusterManager implements ClusterManager {
 

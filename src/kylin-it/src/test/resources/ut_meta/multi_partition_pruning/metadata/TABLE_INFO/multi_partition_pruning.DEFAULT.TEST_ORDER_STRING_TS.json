@@ -1,0 +1,37 @@
+{
+  "uuid" : "f216e39e-40d7-44c2-8fa2-41b3656398a2",
+  "name" : "TEST_ORDER_STRING_TS",
+  "data_gen" : "0.5",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000500|10001500",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "TEST_DATE_ENC",
+    "datatype" : "date",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "4",
+    "name" : "TEST_TIME_ENC",
+    "datatype" : "String",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "5",
+    "name" : "TEST_EXTENDED_COLUMN",
+    "datatype" : "string",
+    "data_gen" : "RAND"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "multi_partition_pruning"
+}

@@ -33,7 +33,7 @@ if [[ -d ${KYLIN_HOME}/spark ]]; then
     exit 1
 fi
 
-spark_version_in_binary=3.2.0-kylin-4.6.9.0
+spark_version_in_binary=$(cat ${KYLIN_HOME}/SPARK_VERSION)
 spark_pkg_name=spark-newten-"`echo ${spark_version_in_binary}| sed "s/-kylin//g"`"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 
@@ -41,8 +41,8 @@ echo "spark_pkg_file_name : "${spark_pkg_file_name}
 wget --directory-prefix=${KYLIN_HOME} https://s3.cn-north-1.amazonaws.com.cn/download-resource/kyspark/${spark_pkg_file_name} || echo "Download spark failed"
 
 mkdir -p ${KYLIN_HOME}/${spark_pkg_name}
-tar -zxf ${spark_pkg_file_name} -C ${spark_pkg_name} --strip-components 1 || { exit 1; }
-mv ${spark_pkg_name} spark
+tar -zxf ${KYLIN_HOME}/${spark_pkg_file_name} -C ${KYLIN_HOME}/${spark_pkg_name} --strip-components 1 || { exit 1; }
+mv ${KYLIN_HOME}/${spark_pkg_name} ${KYLIN_HOME}/spark
 
 # Remove unused components in Spark
 rm -rf ${KYLIN_HOME}/spark/lib/spark-examples-*
@@ -52,7 +52,7 @@ rm -rf ${KYLIN_HOME}/spark/R
 rm -rf ${KYLIN_HOME}/spark/hive_1_2_2
 
 # Temp fix of "Cannot find catalog plugin class for catalog 'spark_catalog': org.apache.spark.sql.delta.catalog.DeltaCatalog"
-cp ${KYLIN_HOME}/server/jars/delta-core_2.12-2.0.2.jar ${KYLIN_HOME}/spark/jars/
+cp ${KYLIN_HOME}/server/jars/delta-core_*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/alluxio-shaded-client-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-soft-affinity-cache-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-external-guava*.jar ${KYLIN_HOME}/spark/jars/
@@ -73,4 +73,26 @@ else
         wget --directory-prefix=${KYLIN_HOME} https://s3.cn-north-1.amazonaws.com.cn/download-resource/kyspark/hive_1_2_2.tar.gz  || echo "Download hive1 failed"
     fi
 fi
-tar -zxf hive_1_2_2.tar.gz -C ${KYLIN_HOME}/spark/ || { exit 1; }
+tar -zxf ${KYLIN_HOME}/hive_1_2_2.tar.gz -C ${KYLIN_HOME}/spark/ || { exit 1; }
+
+# add gluten relevant dependencies to spark
+if [ -d ${KYLIN_HOME}/lib/gluten/ ]
+then
+  find ${KYLIN_HOME}/spark/jars/ -name "protobuf-java*" -delete
+  cp -rf ${KYLIN_HOME}/server/jars/*.jar ${KYLIN_HOME}/spark/jars/
+  cp -rf ${KYLIN_HOME}/server/libch.so ${KYLIN_HOME}/spark/
+else
+  gluten_version=$(cat ${KYLIN_HOME}/GLUTEN_VERSION)
+  gluten_platform="ubuntu22.04-x86_64"
+  if [ ! -f ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}.tar.gz ]
+  then
+    wget --directory-prefix=${KYLIN_HOME} https://repository.kyligence.io/repository/open-raw/org/apache/gluten/${gluten_version}-${gluten_platform}/gluten-${gluten_version}-${gluten_platform}.tar.gz  || echo "Download gluten failed"
+  fi
+  tar -zxf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}.tar.gz -C ${KYLIN_HOME}/ || { exit 1; }
+  cp -rf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}/libs/libch.so ${KYLIN_HOME}/server/
+  cp -rf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}/jars/spark33/gluten.jar ${KYLIN_HOME}/lib/ext/
+  find ${KYLIN_HOME}/spark/jars/ -name "protobuf-java*" -delete
+  cp -rf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}/libs/libch.so ${KYLIN_HOME}/spark/
+  cp -rf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}/jars/spark33/* ${KYLIN_HOME}/spark/jars/
+  rm -rf ${KYLIN_HOME}/gluten-${gluten_version}-${gluten_platform}/
+fi

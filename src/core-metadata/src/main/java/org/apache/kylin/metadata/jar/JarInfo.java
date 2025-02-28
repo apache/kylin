@@ -21,9 +21,8 @@ package org.apache.kylin.metadata.jar;
 import java.io.Serializable;
 import java.util.Locale;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,20 +57,15 @@ public class JarInfo extends RootPersistentEntity implements Serializable {
         if (this.jarType == null || this.jarName == null) {
             return null;
         }
-        return concatResourceName();
+        return concatResourceName(project, jarType, jarName);
     }
 
     @Override
-    public String getResourcePath() {
-        return concatResourcePath(resourceName(), project);
+    public MetadataType resourceType() {
+        return MetadataType.JAR_INFO;
     }
 
-    public static String concatResourcePath(String name, String project) {
-        return String.format(Locale.ROOT, "/%s%s/%s%s", project, ResourceStore.JAR_RESOURCE_ROOT, name,
-                MetadataConstants.FILE_SURFIX);
-    }
-
-    private String concatResourceName() {
-        return String.format(Locale.ROOT, "%s_%s", this.jarType, this.jarName);
+    public static String concatResourceName(String project, JarTypeEnum jarType, String jarName) {
+        return String.format(Locale.ROOT, "%s.%s_%s", project, jarType, jarName);
     }
 }

@@ -1,9 +1,0 @@
-
-
-select --add_months(CAL_DT,2),
-	   count(date_format(CAL_DT,'y')),
-	   count(date_format(CAL_DT,'M')),
-	   count(date_format(CAL_DT,'d')),
-	   count(datediff(CAL_DT,date'2019-8-3')),
-	   count(datediff(cast(CAL_DT as string),'2019-8-3'))
-from TEST_KYLIN_FACT

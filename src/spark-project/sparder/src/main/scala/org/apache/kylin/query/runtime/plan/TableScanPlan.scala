@@ -17,6 +17,10 @@
  */
 package org.apache.kylin.query.runtime.plan
 
+import java.util.concurrent.ConcurrentHashMap
+import java.{lang, util}
+
+import org.apache.commons.collections.CollectionUtils
 import org.apache.kylin.common.util.ClassUtil
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
@@ -30,9 +34,8 @@ import org.apache.kylin.metadata.realization.HybridRealization
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.implicits.sessionToQueryContext
 import org.apache.kylin.query.plugin.runtime.MppOnTheFlyProvider
-import org.apache.kylin.query.relnode.{KapRel, OLAPContext}
+import org.apache.kylin.query.relnode.{OlapContext, OlapRel, OlapTableScan}
 import org.apache.kylin.query.util.{RuntimeHelper, SparderDerivedUtil}
-import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.dsl.plans.DslLogicalPlan
 import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Project, Union}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
@@ -50,34 +53,29 @@ import scala.collection.JavaConverters._
 // scalastyle:off
 object TableScanPlan extends LogEx {
 
-  def listSegmentsForQuery(dataflow: NDataflow): util.List[NDataSegment] = {
-    val r = new util.ArrayList[NDataSegment]
-    dataflow.getQueryableSegments.forEach(seg => r.add(seg))
-    r
-  }
-
   private[runtime] val cachePlan: ThreadLocal[ConcurrentHashMap[String, LogicalPlan]] = new ThreadLocal[ConcurrentHashMap[String, LogicalPlan]] {
     override def initialValue: ConcurrentHashMap[String, LogicalPlan] = {
       new ConcurrentHashMap[String, LogicalPlan]
     }
   }
 
-  def createOLAPTable(rel: KapRel): LogicalPlan = logTime("table scan", debug = true) {
+  def createOlapTable(rel: OlapRel): LogicalPlan = logTime("table scan", debug = true) {
     val session: SparkSession = SparderEnv.getSparkSession
     val olapContext = rel.getContext
-    val context = olapContext.storageContext
-    val prunedSegments = context.getPrunedSegments
-    val prunedStreamingSegments = context.getPrunedStreamingSegments
-    val realizations = olapContext.realization.getRealizations.asScala.toList
+    val storage = olapContext.getStorageContext
+    val batchSeg = storage.getBatchCandidate.getPrunedSegments
+    val streamSeg = storage.getStreamCandidate.getPrunedSegments
+    val realizations = olapContext.getRealization.getRealizations.asScala.toList
     val plans = realizations.map(_.asInstanceOf[NDataflow])
-      .filter(dataflow => (!dataflow.isStreaming && !context.isBatchCandidateEmpty) ||
-        (dataflow.isStreaming && !context.isStreamCandidateEmpty) ||
-        isSegmentsEmpty(prunedSegments, prunedStreamingSegments))
-      .map(dataflow => {
+      .filter(dataflow => {
+        (!dataflow.isStreaming && !storage.isBatchCandidateEmpty) ||
+          (dataflow.isStreaming && !storage.isStreamCandidateEmpty) ||
+          isSegmentsEmpty(batchSeg, streamSeg)
+      }).map(dataflow => {
         if (dataflow.isStreaming) {
-          tableScan(rel, dataflow, olapContext, session, prunedStreamingSegments, context.getStreamingCandidate)
+          tableScan(rel, dataflow, olapContext, session, streamSeg, storage.getStreamCandidate)
         } else {
-          tableScan(rel, dataflow, olapContext, session, prunedSegments, context.getCandidate)
+          tableScan(rel, dataflow, olapContext, session, batchSeg, storage.getBatchCandidate)
         }
       })
 
@@ -90,11 +88,11 @@ object TableScanPlan extends LogEx {
     }
   }
 
-  def createMetadataTable(rel: KapRel): LogicalPlan = {
+  def createMetadataTable(rel: OlapRel): LogicalPlan = {
     val session: SparkSession = SparderEnv.getSparkSession
     val olapContext = rel.getContext
     val allFields: util.List[TblColRef] = new util.ArrayList[TblColRef]
-    olapContext.allTableScans.forEach(tableScan => {
+    olapContext.getAllTableScans.forEach(tableScan => {
       val columns = tableScan.getColumnRowType.getAllColumns
       allFields.addAll(columns)
     })
@@ -138,7 +136,7 @@ object TableScanPlan extends LogEx {
   }
 
   // prunedSegments is null
-  private def tableScanEmptySegment(rel: KapRel): LogicalPlan = {
+  private def tableScanEmptySegment(rel: OlapRel): LogicalPlan = {
     logInfo("prunedSegments is null")
     // KE-41874 DataFrame convert Logical Plan
     SparkOperation.createEmptyDataFrame(
@@ -152,23 +150,23 @@ object TableScanPlan extends LogEx {
     ).queryExecution.logical
   }
 
-  def isSegmentsEmpty(prunedSegments: util.List[NDataSegment], prunedStreamingSegments: util.List[NDataSegment]): Boolean = {
+  def isSegmentsEmpty(prunedSegments: java.util.List[NDataSegment], prunedStreamingSegments: java.util.List[NDataSegment]): Boolean = {
     val isPrunedSegmentsEmpty = prunedSegments == null || prunedSegments.size() == 0
     val isPrunedStreamingSegmentsEmpty = prunedStreamingSegments == null || prunedStreamingSegments.size() == 0
     isPrunedSegmentsEmpty && isPrunedStreamingSegmentsEmpty
   }
 
-  def tableScan(rel: KapRel, dataflow: NDataflow, olapContext: OLAPContext,
+  def tableScan(rel: OlapRel, dataflow: NDataflow, olapContext: OlapContext,
                 session: SparkSession, prunedSegments: util.List[NDataSegment],
                 candidate: NLayoutCandidate): LogicalPlan = {
-    val prunedPartitionMap = olapContext.storageContext.getPrunedPartitions
+    val prunedPartitionMap = olapContext.getStorageContext.getPrunedPartitions
     olapContext.resetSQLDigest()
     //TODO: refactor
     val cuboidLayout = candidate.getLayoutEntity
     if (cuboidLayout.getIndex != null && cuboidLayout.getIndex.isTableIndex) {
       QueryContext.current().getQueryTagInfo.setTableIndex(true)
     }
-    val tableName = olapContext.firstTableScan.getBackupAlias
+    val tableName = olapContext.getFirstTableScan.getBackupAlias
     val mapping = new NLayoutToGridTableMapping(cuboidLayout)
     val columnNames = SchemaProcessor.buildGTSchema(cuboidLayout, mapping, tableName)
 
@@ -178,7 +176,7 @@ object TableScanPlan extends LogEx {
     /////////////////////////////////////////////
     val basePath = kapConfig.getReadParquetStoragePath(dataflow.getProject)
     if (prunedSegments == null || prunedSegments.size() == 0) {
-      return tableScanEmptySegment(rel: KapRel)
+      return tableScanEmptySegment(rel: OlapRel)
     }
     val fileList = prunedSegments.asScala.map(
       seg => toLayoutPath(dataflow, cuboidLayout.getId, basePath, seg, prunedPartitionMap)
@@ -187,7 +185,7 @@ object TableScanPlan extends LogEx {
     printLogInfo(basePath, dataflow.getId, cuboidLayout.getId, prunedSegments, prunedPartitionMap)
 
     val pruningInfo = prunedSegments.asScala.map { seg =>
-      if (prunedPartitionMap != null) {
+      if (prunedPartitionMap != null && CollectionUtils.isNotEmpty(prunedPartitionMap.get(seg.getId))) {
         val partitions = prunedPartitionMap.get(seg.getId)
         seg.getId + ":" + Joiner.on("|").join(partitions)
       } else {
@@ -239,7 +237,7 @@ object TableScanPlan extends LogEx {
       ret
   }
 
-  def bucketEnabled(context: OLAPContext, layout: LayoutEntity): Boolean = {
+  def bucketEnabled(context: OlapContext, layout: LayoutEntity): Boolean = {
     if (!KylinConfig.getInstanceFromEnv.isShardingJoinOptEnabled) {
       return false
     }
@@ -254,15 +252,15 @@ object TableScanPlan extends LogEx {
       && context.getOuterJoinParticipants.iterator().next() == layout.getShardByColumnRefs.get(0))
   }
 
-  def buildSchema(plan: LogicalPlan, tableName: String, cuboidLayout: LayoutEntity, rel: KapRel,
-                  olapContext: OLAPContext, dataflow: NDataflow): (Seq[Column], LogicalPlan) = {
+  def buildSchema(plan: LogicalPlan, tableName: String, cuboidLayout: LayoutEntity, rel: OlapRel,
+                  olapContext: OlapContext, dataflow: NDataflow): (Seq[Column], LogicalPlan) = {
     var newPlan = plan
-    val isBatchOfHybrid = olapContext.realization.isInstanceOf[HybridRealization] && dataflow.getModel.isFusionModel && !dataflow.isStreaming
+    val isBatchOfHybrid = (olapContext.getRealization.isInstanceOf[HybridRealization]
+      && dataflow.getModel.isFusionModel && !dataflow.isStreaming)
     val mapping = new NLayoutToGridTableMapping(cuboidLayout, isBatchOfHybrid)
-    val context = olapContext.storageContext
+    val context = olapContext.getStorageContext
     /////////////////////////////////////////////
-    val groups: util.Collection[TblColRef] =
-      olapContext.getSQLDigest.groupbyColumns
+    val groups: util.Collection[TblColRef] = olapContext.getSQLDigest.getGroupByColumns
     val otherDims = Sets.newHashSet(context.getDimensions)
     otherDims.removeAll(groups)
     // expand derived (xxxD means contains host columns only, derived columns were translated)
@@ -291,7 +289,7 @@ object TableScanPlan extends LogEx {
     val derived = SparderDerivedUtil(tableName,
       dataflow.getLatestReadySegment,
       gtColIdx,
-      olapContext.returnTupleInfo,
+      olapContext.getReturnTupleInfo,
       context.getCandidate)
     if (derived.hasDerived) {
       newPlan = derived.joinDerived(newPlan)
@@ -305,13 +303,13 @@ object TableScanPlan extends LogEx {
       val topNFieldIndex = mapping.getMetricsIndices(List(topNMetric.get).asJava).head
 
       val df = SparkInternalAgent.getDataFrame(SparderEnv.getSparkSession, newPlan)
-      val tp = processTopN(topNMetric.get, df, topNFieldIndex, olapContext.returnTupleInfo, tableName)
+      val tp = processTopN(topNMetric.get, df, topNFieldIndex, olapContext.getReturnTupleInfo, tableName)
       newPlan = tp._1.queryExecution.analyzed
       topNMapping = tp._2
     }
     val tupleIdx = getTupleIdx(dimensionsD,
       context.getMetrics,
-      olapContext.returnTupleInfo)
+      olapContext.getReturnTupleInfo)
     (RuntimeHelper.gtSchemaToCalciteSchema(
       mapping.getPrimaryKey,
       derived,
@@ -471,24 +469,21 @@ object TableScanPlan extends LogEx {
     tupleIdx
   }
 
-  def createLookupTable(rel: KapRel): LogicalPlan = {
+  def createLookupTable(rel: OlapRel): LogicalPlan = {
     val start = System.currentTimeMillis()
 
     val olapContext = rel.getContext
-    val instance = olapContext.realization match {
-      case dataflow: NDataflow => dataflow
-      case _ => olapContext.realization.asInstanceOf[HybridRealization]
-    }
+    val config = olapContext.getOlapSchema.getConfig
+    val project = olapContext.getOlapSchema.getProject
 
-    val tableMetadataManager = NTableMetadataManager.getInstance(instance.getConfig, instance.getProject)
-    val lookupTableName = olapContext.firstTableScan.getTableName
+    val tableMetadataManager = NTableMetadataManager.getInstance(config, project)
+    val lookupTableName = olapContext.getFirstTableScan.getTableName
     val snapshotResPath = tableMetadataManager.getTableDesc(lookupTableName).getLastSnapshotPath
-    val config = instance.getConfig
-    val dataFrameTableName = instance.getProject + "@" + lookupTableName
+    val dataFrameTableName = project + "@" + lookupTableName
     val lookupPlan = SparderLookupManager.getOrCreate(dataFrameTableName, snapshotResPath, config)
 
-    val olapTable = olapContext.firstTableScan.getOlapTable
-    val alisTableName = olapContext.firstTableScan.getBackupAlias
+    val olapTable = olapContext.getFirstTableScan.getOlapTable
+    val alisTableName = olapContext.getFirstTableScan.getBackupAlias
     val newNames = lookupPlan.output.map { c =>
       val gTInfoSchema = SchemaProcessor.parseDeriveTableSchemaName(c.name)
       val name = SchemaProcessor.generateDeriveTableSchemaName(alisTableName,
@@ -501,7 +496,7 @@ object TableScanPlan extends LogEx {
       .map(
         column =>
           if (column.isComputedColumn || column.getZeroBasedIndex < 0) {
-            RuntimeHelper.literalOne.as(column.toString)
+            RuntimeHelper.intOne.as(column.toString)
           } else {
             col(
               SchemaProcessor
@@ -515,6 +510,23 @@ object TableScanPlan extends LogEx {
     val plan = SparkOperation.project(colIndex, newNameLookupPlan)
     logInfo(s"Gen lookup table scan cost Time :${System.currentTimeMillis() - start} ")
     plan
+  }
+
+  def createInternalTable(rel: OlapRel): LogicalPlan = {
+    val sparkSession = SparderEnv.getSparkSession
+    val tableScan = rel.asInstanceOf[OlapTableScan]
+    val project = QueryContext.current().getProject
+    val tableIdentity = tableScan.getTableName
+    val allColumns = tableScan.getOlapTable.getSourceColumns.asScala
+      .map(
+        column =>
+          if (column.isComputedColumn || column.getZeroBasedIndex < 0) {
+            "1"
+          } else {
+            column.getBackTickName
+          })
+    val sql = f"select ${allColumns.mkString(",")} from INTERNAL_CATALOG.$project.$tableIdentity"
+    sparkSession.sql(sql).queryExecution.analyzed
   }
 
   private def expandDerived(layoutCandidate: NLayoutCandidate,

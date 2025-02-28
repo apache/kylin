@@ -1,0 +1,63 @@
+{
+  "uuid" : "f33fc342-a3e2-46aa-91c2-1bb846a531a5",
+  "last_modified" : 1510772070897,
+  "version" : "2.3.0.20500",
+  "name" : "Z_PROVDASH_CI_INDEX",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "C_ID",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "2",
+    "name" : "USER_ID",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "3",
+    "name" : "ACCESS_LEVEL",
+    "datatype" : "varchar(2)"
+  }, {
+    "id" : "4",
+    "name" : "EMAIL_ADDRESS",
+    "datatype" : "varchar(150)"
+  }, {
+    "id" : "5",
+    "name" : "YEARMO",
+    "datatype" : "varchar(6)"
+  }, {
+    "id" : "6",
+    "name" : "NPI",
+    "datatype" : "varchar(10)"
+  }, {
+    "id" : "7",
+    "name" : "QPM_TOTAL_POINTS",
+    "datatype" : "decimal(5,0)"
+  }, {
+    "id" : "8",
+    "name" : "QPM_POSSIBLE_POINTS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "9",
+    "name" : "QPM_SCORE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "10",
+    "name" : "CI_INDEX",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "11",
+    "name" : "FULL_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "12",
+    "name" : "EMP_STATUS",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "13",
+    "name" : "DEFAULT_PRACTICE",
+    "datatype" : "varchar(100)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

@@ -1,0 +1,14 @@
+{
+  "uuid" : "8b6fa01d-1607-9459-81aa-115b9419b830",
+  "last_modified" : 1670816215330,
+  "create_time" : 1670816130299,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "test_tds_export",
+  "segment_uuids" : [ "7592350d-aed6-2ece-c99b-b0bf8002837b" ]
+}

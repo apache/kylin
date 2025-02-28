@@ -1,0 +1,106 @@
+{
+  "uuid" : "b9ccb2fb-ab4c-4242-a4dc-2adbfcafdbc7",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_ENCODING",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "int_dict",
+    "datatype" : "bigint",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "double_dict",
+    "datatype" : "double",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "str_dict",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "date_dict",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "time_dict",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "str_bool",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "standard_bool",
+    "datatype" : "boolean",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "int_bool",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "fix_len",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "fix_len_hex",
+    "datatype" : "varchar(4096)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "standard_int",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "str_int",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "date_in_int",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "standard_date",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "date_in_time",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "date_in_time_ms",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "standard_time",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

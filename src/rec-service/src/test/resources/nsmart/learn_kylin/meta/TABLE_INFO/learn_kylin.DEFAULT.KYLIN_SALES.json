@@ -1,0 +1,56 @@
+{
+  "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
+  "project" : "learn_kylin",
+  "name" : "KYLIN_SALES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "PART_DT",
+    "datatype" : "date"
+  }, {
+    "id" : "3",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "4",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "int"
+  }, {
+    "id" : "6",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint"
+  }, {
+    "id" : "7",
+    "name" : "PRICE",
+    "datatype" : "decimal(18,2)"
+  }, {
+    "id" : "8",
+    "name" : "ITEM_COUNT",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "SELLER_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "11",
+    "name" : "OPS_USER_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "12",
+    "name" : "OPS_REGION",
+    "datatype" : "string"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

@@ -29,4 +29,8 @@ public interface JobScheduler {
     void subscribeJob();
 
     String getJobNode(String jobId);
+
+    boolean isMaster();
+
+    String getJobMaster();
 }

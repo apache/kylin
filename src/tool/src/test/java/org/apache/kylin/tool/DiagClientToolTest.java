@@ -26,13 +26,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.apache.kylin.tool.obf.KylinConfObfuscatorTest;
 import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
+import org.apache.kylin.tool.util.ToolUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,11 +43,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import lombok.val;
 import lombok.var;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ ToolUtil.class })
+@PowerMockIgnore({ "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*",
+        "javax.crypto.*" })
 public class DiagClientToolTest extends NLocalFileMetadataTestCase {
 
     @Rule
@@ -142,6 +154,96 @@ public class DiagClientToolTest extends NLocalFileMetadataTestCase {
                 .readFromPropertiesFile(new File(baseDiagFile, "conf/kylin.properties"));
         Assert.assertTrue(properties.containsValue(SensitiveConfigKeysConstant.HIDDEN));
 
+    }
+
+    @Test
+    public void testObfIpConfig() throws IOException {
+        File mainDir = new File(temporaryFolder.getRoot(), testName.getMethodName());
+        FileUtils.forceMkdir(mainDir);
+
+        ipObfDataPrepare();
+
+        getTestConfig().setProperty("kylin.diag.obf.level", "RAW");
+        getTestConfig().setProperty("kylin.diag.ip-obf-enabled", "true");
+
+        DiagClientTool diagClientTool = new DiagClientTool();
+
+        diagClientTool.execute(new String[] { "-destDir", mainDir.getAbsolutePath() });
+
+        File zipFile = mainDir.listFiles()[0].listFiles()[0];
+        File exportFile = new File(mainDir, "output");
+        FileUtils.forceMkdir(exportFile);
+        ZipFileUtils.decompressZipFile(zipFile.getAbsolutePath(), exportFile.getAbsolutePath());
+        File baseDiagFile = exportFile.listFiles()[0];
+        val properties = org.apache.kylin.common.util.FileUtils
+                .readFromPropertiesFile(new File(baseDiagFile, "conf/kylin.properties"));
+        Assert.assertFalse(properties.get("kylin.metadata.url").contains(SensitiveConfigKeysConstant.HIDDEN + ":3306"));
+    }
+    
+    @Test
+    public void testIpObfByLinux() throws Exception {
+        File mainDir = new File(temporaryFolder.getRoot(), testName.getMethodName());
+        FileUtils.forceMkdir(mainDir);
+
+        ipObfDataPrepare();
+
+        getTestConfig().setProperty("kylin.diag.ip-obf-enabled", "true");
+
+        DiagClientTool diagClientTool = new DiagClientTool();
+
+        diagClientTool.execute(new String[] { "-destDir", mainDir.getAbsolutePath() });
+
+        checkIpObf(mainDir);
+    }
+
+    @Test
+    public void testIpObfByJava() throws Exception {
+        File mainDir = new File(temporaryFolder.getRoot(), testName.getMethodName());
+        FileUtils.forceMkdir(mainDir);
+
+        ipObfDataPrepare();
+
+        getTestConfig().setProperty("kylin.diag.ip-obf-enabled", "true");
+
+        CliCommandExecutor commandExecutor = PowerMockito.mock(CliCommandExecutor.class);
+        PowerMockito.whenNew(CliCommandExecutor.class).withNoArguments().thenReturn(commandExecutor);
+
+        PowerMockito.doReturn(new CliCommandExecutor.CliCmdExecResult(0, "", null)).when(commandExecutor)
+                .execute(Mockito.contains("sed"), Mockito.any());
+
+        DiagClientTool diagClientTool = new DiagClientTool();
+
+        diagClientTool.execute(new String[] { "-destDir", mainDir.getAbsolutePath() });
+
+        checkIpObf(mainDir);
+    }
+
+    private void ipObfDataPrepare() throws IOException {
+        val url = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        File path = new File(url.getIdentifier());
+        File confPath = new File(path.getParentFile(), "conf");
+
+        FileUtils.writeStringToFile(new File(confPath, "a.log"), "111111111111_192.1.2.1");
+        String zipDirName = "clickhouse01_192.1.2.1_8080";
+        FileUtils.forceMkdir(new File(confPath, zipDirName));
+        FileUtils.writeStringToFile(new File(confPath, zipDirName + "/c1_192.1.2.1.txt"), "333333333333 192.1.2.1");
+
+        String zipDirname = confPath.getAbsolutePath() + "/" + zipDirName;
+        ZipFileUtils.compressZipFile(zipDirname, zipDirname + ".zip");
+    }
+
+    private void checkIpObf(File mainDir) throws IOException {
+        File zipFile = mainDir.listFiles()[0].listFiles()[0];
+        File exportFile = new File(mainDir, "output");
+        FileUtils.forceMkdir(exportFile);
+        ZipFileUtils.decompressZipFile(zipFile.getAbsolutePath(), exportFile.getAbsolutePath());
+        File baseDiagFile = exportFile.listFiles()[0];
+        val properties = org.apache.kylin.common.util.FileUtils
+                .readFromPropertiesFile(new File(baseDiagFile, "conf/kylin.properties"));
+        Assert.assertTrue(properties.get("kylin.metadata.url").contains(SensitiveConfigKeysConstant.HIDDEN + ":3306"));
+
+        val logIp = FileUtils.readFileToString(new File(baseDiagFile, "conf/a.log"));
+        Assert.assertTrue(logIp.contains(SensitiveConfigKeysConstant.HIDDEN));
     }
 
     @Test

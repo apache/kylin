@@ -45,20 +45,19 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.acl.DependentColumn;
 import org.apache.kylin.metadata.acl.DependentColumnInfo;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.query.relnode.KapTableScan;
+import org.apache.kylin.query.relnode.OlapTableScan;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.Literal;
 import org.apache.spark.sql.catalyst.parser.ParseException;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class QueryDependentColumnMask implements QueryResultMask {
 
@@ -269,7 +268,7 @@ public class QueryDependentColumnMask implements QueryResultMask {
     private List<ColumnReferences> getProjectColRefs(Project project) {
         List<ColumnReferences> inputRefs = getRefCols(project.getInput(0));
         List<ColumnReferences> refs = new LinkedList<>();
-        for (RexNode expr : project.getChildExps()) {
+        for (RexNode expr : project.getProjects()) {
             ColumnReferences ref = new ColumnReferences();
             for (Integer input : RelOptUtil.InputFinder.bits(expr)) {
                 ref = ref.merge(inputRefs.get(input));
@@ -313,7 +312,7 @@ public class QueryDependentColumnMask implements QueryResultMask {
         String tableName = tableScan.getTable().getQualifiedName().get(1);
         List<ColumnReferences> refs = new ArrayList<>();
         for (RelDataTypeField field : tableScan.getRowType().getFieldList()) {
-            ColumnDesc columnDesc = ((KapTableScan) tableScan).getOlapTable().getSourceColumns().get(field.getIndex());
+            ColumnDesc columnDesc = ((OlapTableScan) tableScan).getOlapTable().getSourceColumns().get(field.getIndex());
             if (columnDesc.isComputedColumn()) {
                 refs.add(getCCReferences(columnDesc.getComputedColumnExpr()));
             } else {

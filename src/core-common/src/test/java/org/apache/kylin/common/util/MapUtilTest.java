@@ -20,24 +20,22 @@ package org.apache.kylin.common.util;
 
 import java.util.Map;
 
-import org.junit.Assert;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-public class MapUtilTest {
+class MapUtilTest {
 
     @Test
-    public void testNomal() {
+    void testNomal() {
         Map<String, String> x = Maps.newHashMap();
         x.put("a", "aa");
-        Assert.assertEquals("aa", MapUtil.getOrElse(x, "a", "default"));
-        Assert.assertEquals("default", MapUtil.getOrElse(x, "b", "default"));
+        Assertions.assertEquals("aa", MapUtil.getOrElse(x, "a", "default"));
+        Assertions.assertEquals("default", MapUtil.getOrElse(x, "b", "default"));
     }
 
     @Test
-    public void testError() {
+    void testError() {
         Assertions.assertThrows(NullPointerException.class, () -> {
             MapUtil.getOrElse(null, "a", "default");
         });

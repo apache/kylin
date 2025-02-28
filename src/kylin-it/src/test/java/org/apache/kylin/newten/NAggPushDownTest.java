@@ -28,32 +28,41 @@ import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.tools.javac.util.Assert;
-
 public class NAggPushDownTest extends NLocalWithSparkSessionTest {
     private static final Logger logger = LoggerFactory.getLogger(NAggPushDownTest.class);
     private static final String SQL_FOLDER = "sql_select_subquery";
+    private static final String SQL_FOLDER_AGG_NOT_PUSHDOWN = "sql_agg_not_pushdown";
     private static final String JOIN_TYPE = "inner"; // only support inner join
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.query.match-partial-inner-join-model", "true");
         overwriteSystemProp("kylin.query.calcite.aggregate-pushdown-enabled", "true");
-        this.createTestMetadata("src/test/resources/ut_meta/agg_push_down");
+        setOverlay("src/test/resources/ut_meta/agg_push_down");
+        super.setUp();
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/agg_push_down" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Override
@@ -72,11 +81,23 @@ public class NAggPushDownTest extends NLocalWithSparkSessionTest {
             List<Pair<String, String>> queries = ExecAndComp
                     .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + SQL_FOLDER);
             ExecAndComp.execAndCompare(queries, getProject(), compareLevel, JOIN_TYPE);
+            Assert.fail();
         } catch (Throwable th) {
             logger.error("Query fail on: {}", identity);
-            Assert.error();
         }
         logger.info("Query succeed on: {}", identity);
+
+        identity = "sqlFolder:" + SQL_FOLDER_AGG_NOT_PUSHDOWN + ", joinType:" + JOIN_TYPE + ", compareLevel:"
+                + compareLevel;
+        try {
+            List<Pair<String, String>> queries = ExecAndComp
+                    .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + SQL_FOLDER_AGG_NOT_PUSHDOWN);
+            ExecAndComp.execAndCompare(queries, getProject(), compareLevel, JOIN_TYPE);
+        } catch (Throwable th) {
+            logger.error("Query fail on: {}", identity);
+            String message = th.getCause().getCause().getCause().getMessage();
+            Assert.assertTrue(message.contains("No realization found for OlapContext"));
+        }
     }
 
     @Test
@@ -91,9 +112,9 @@ public class NAggPushDownTest extends NLocalWithSparkSessionTest {
             List<Pair<String, String>> queries = ExecAndComp
                     .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql_agg_pushdown");
             ExecAndComp.execAndCompare(queries, getProject(), compareLevel, JOIN_TYPE);
+            Assert.fail();
         } catch (Throwable th) {
             logger.error("Query fail on: {}", identity);
-            Assert.error();
         }
         logger.info("Query succeed on: {}", identity);
     }

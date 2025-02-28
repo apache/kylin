@@ -28,12 +28,12 @@ import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Table;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.query.engine.data.TableSchema;
+import org.apache.kylin.rest.constant.Constant;
 
 public class SchemaMetaData {
 
-    private QueryExec queryExec;
+    private final QueryExec queryExec;
 
     public SchemaMetaData(String project, KylinConfig kylinConfig) {
         queryExec = new QueryExec(project, kylinConfig);
@@ -65,7 +65,7 @@ public class SchemaMetaData {
     }
 
     private JavaTypeFactory javaTypeFactory() {
-        return new TypeSystem().javaTypeFactory();
+        return TypeSystem.javaTypeFactory();
     }
 
 }

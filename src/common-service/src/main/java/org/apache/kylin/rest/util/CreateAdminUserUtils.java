@@ -27,18 +27,18 @@ import java.util.regex.Pattern;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.service.UserAclService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.util.PasswordEncodeFactory;
-import org.apache.kylin.metadata.user.ManagedUser;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -89,12 +89,14 @@ public class CreateAdminUserUtils {
         managedUser.setGrantedAuthorities(detailRoles);
     }
 
-    public static void createAllAdmins(UserService userService, Environment env) throws IOException {
+    public static void createAllAdmins(UserService userService, Environment env, UserAclService userAclService)
+            throws IOException {
         List<ManagedUser> all = userService.listUsers();
         log.info("All {} users", all.size());
         if (all.isEmpty() && env.acceptsProfiles(PROFILE_DEFAULT)) {
             createAdminUser(new ManagedUser("ADMIN", "KYLIN", true, ROLE_ADMIN, Constant.GROUP_ALL_USERS), userService,
                     env);
+            userAclService.syncAdminUserAcl();
         }
     }
 }

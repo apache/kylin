@@ -30,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -90,6 +91,7 @@ public class QueryRedisCacheTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    @Ignore("KE-42517")
     public void testProjectRedisCacheQuery() {
         if (redisServer != null) {
             overwriteSystemProp("kylin.cache.redis.enabled", "true");

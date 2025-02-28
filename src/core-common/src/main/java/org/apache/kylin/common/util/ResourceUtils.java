@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.apache.kylin.common.KylinConfigBase;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class ResourceUtils {

@@ -42,6 +42,10 @@ import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.metrics.service.InfluxDBInstance;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +58,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
-import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

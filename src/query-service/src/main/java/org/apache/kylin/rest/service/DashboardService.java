@@ -18,10 +18,17 @@
 
 package org.apache.kylin.rest.service;
 
-import lombok.extern.slf4j.Slf4j;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.response.MetricsResponse;
-import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.query.exception.UnsupportedQueryException;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
@@ -36,12 +43,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component("dashboardService")
@@ -69,20 +71,20 @@ public class DashboardService extends BasicService {
         long totalModelSize = 0;
         long totalRecordSize = 0;
         List<NDataModelResponse> models = modelService.getCubes0(modelName, projectName);//5.0 cube is model
-        Integer totalModel = models.size();
+        int totalModel = models.size();
         ProjectInstance project = getProjectManager().getProject(projectName);
         totalModel += project.getRealizationCount(HybridRealization.REALIZATION_TYPE);
-        modelMetrics.increase("totalModel", totalModel.floatValue());
+        modelMetrics.increase("totalModel", (float) totalModel);
 
-        Float minModelExpansion = Float.POSITIVE_INFINITY;
-        Float maxModelExpansion = Float.NEGATIVE_INFINITY;
+        float minModelExpansion = Float.POSITIVE_INFINITY;
+        float maxModelExpansion = Float.NEGATIVE_INFINITY;
 
         for (NDataModelResponse dataModel : models) {
             NDataModelOldParams params = dataModel.getOldParams();
             if (params.getInputRecordSizeBytes() > 0) {
                 totalModelSize += params.getSizeKB() * 1024;
                 totalRecordSize += params.getInputRecordSizeBytes();//size / 1024 * 1024 * 1024 = x GB
-                Float modelExpansion = Float.valueOf(dataModel.getExpansionrate());
+                float modelExpansion = Float.parseFloat(dataModel.getExpansionrate());
 
                 if (modelExpansion > maxModelExpansion) {
                     maxModelExpansion = modelExpansion;
@@ -93,9 +95,9 @@ public class DashboardService extends BasicService {
             }
         }
 
-        Float avgModelExpansion = 0f;
+        float avgModelExpansion = 0f;
         if (totalRecordSize != 0) {
-            avgModelExpansion = Float.valueOf(ModelUtils.computeExpansionRate(totalModelSize, totalRecordSize));
+            avgModelExpansion = Float.parseFloat(ModelUtils.computeExpansionRate(totalModelSize, totalRecordSize));
         }
 
         modelMetrics.increase("avgModelExpansion", avgModelExpansion);
@@ -138,12 +140,12 @@ public class DashboardService extends BasicService {
             switch (metric) {
             case QUERY_COUNT:
                 Map<String, Object> queryCounts = queryHistoryService.getQueryCountByRealization(projectName,
-                        _startTime, _endTime, dimension.toLowerCase());
+                        _startTime, _endTime, StringUtils.lowerCase(dimension));
                 return transformChartData(queryCounts);
 
             case AVG_QUERY_LATENCY:
                 Map<String, Object> avgDurations = queryHistoryService.getAvgDurationByRealization(projectName,
-                        _startTime, _endTime, dimension.toLowerCase());
+                        _startTime, _endTime, StringUtils.lowerCase(dimension));
                 return transformChartData(avgDurations);
             default:
                 throw new UnsupportedQueryException("Metric should be COUNT or AVG_QUERY_LATENCY");
@@ -153,15 +155,15 @@ public class DashboardService extends BasicService {
             switch (metric) {
             case JOB_COUNT:
                 Map<String, Integer> jobCounts = jobService.getJobCount(projectName, _startTime, _endTime,
-                        dimension.toLowerCase());
+                        StringUtils.lowerCase(dimension));
                 MetricsResponse counts = new MetricsResponse();
                 jobCounts.forEach((k, v) -> counts.increase(k, Float.valueOf(v)));
                 return counts;
             case AVG_JOB_BUILD_TIME:
                 Map<String, Double> jobDurationPerByte = jobService.getJobDurationPerByte(projectName, _startTime,
-                        _endTime, dimension.toLowerCase());
+                        _endTime, StringUtils.lowerCase(dimension));
                 MetricsResponse avgBuild = new MetricsResponse();
-                jobDurationPerByte.forEach((k, v) -> avgBuild.increase(k, Float.valueOf(String.valueOf(v))));
+                jobDurationPerByte.forEach((k, v) -> avgBuild.increase(k, Float.parseFloat(String.valueOf(v))));
                 return avgBuild;
             default:
                 throw new UnsupportedQueryException("Metric should be JOB_COUNT or AVG_JOB_BUILD_TIME");

@@ -20,9 +20,10 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_EARLY_JSON;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.controller.v2.NQueryMetaController;
+import org.apache.kylin.rest.service.QueryService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +37,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @MetadataInfo(onlyProps = true)
 class NQueryMetaControllerTest {

@@ -1,0 +1,40 @@
+{
+  "uuid" : "4a575be0-1116-44ec-9e22-912de0d3a939",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_COUNTRY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COUNTRY",
+    "datatype" : "varchar(4096)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "LATITUDE",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "LONGITUDE",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "NAME",
+    "datatype" : "varchar(4096)",
+    "index" : "T",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

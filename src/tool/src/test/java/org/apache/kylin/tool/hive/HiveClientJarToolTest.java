@@ -29,12 +29,10 @@ import java.util.stream.Collectors;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-//import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -70,7 +68,7 @@ class HiveClientJarToolTest extends HiveClientJarToolTestBase {
         Files.deleteIfExists(sparkPath);
     }
 
-//    @Test
+    //    @Test
     void uploadHiveJars() throws IOException {
         uploadHiveJars(false);
         uploadHiveJars(true);
@@ -119,7 +117,7 @@ class HiveClientJarToolTest extends HiveClientJarToolTestBase {
         }
     }
 
-//    @Test
+    //    @Test
     void testExecute() throws IOException {
         testExecute(true, false, "kylin.engine.spark-conf.spark.sql.hive.metastore.jars.path not setting");
         testExecute(true, true, "Upload Spark HIVE jars success");

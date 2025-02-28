@@ -23,13 +23,8 @@ import java.util.Locale;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.user.NKylinUserManager;
-import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.MetadataTool;
 import org.apache.kylin.tool.constant.StringConstant;
 import org.apache.kylin.util.PasswordEncodeFactory;
@@ -44,13 +39,7 @@ public class KylinPasswordResetCLI {
 
     public static void main(String[] args) {
         int exit;
-        MaintainModeTool maintainModeTool = new MaintainModeTool("admin password resetting");
-        maintainModeTool.init();
         try {
-            maintainModeTool.markEpochs();
-            if (EpochManager.getInstance().isMaintenanceMode()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
-            }
             exit = reset() ? 0 : 1;
         } catch (Exception e) {
             exit = 1;
@@ -67,7 +56,7 @@ public class KylinPasswordResetCLI {
         }
 
         PasswordEncoder pwdEncoder = PasswordEncodeFactory.newUserPasswordEncoder();
-        String id = "/_global/user/ADMIN";
+        String id = "USER_INFO/ADMIN";
 
         ResourceStore aclStore = ResourceStore.getKylinMetaStore(config);
         NKylinUserManager userManager = NKylinUserManager.getInstance(config);
@@ -77,25 +66,24 @@ public class KylinPasswordResetCLI {
             logger.warn("The password cannot be reset because there is no ADMIN user.");
             return false;
         }
-        boolean randomPasswordEnabled = KylinConfig.getInstanceFromEnv().getRandomAdminPasswordEnabled();
-        String password = randomPasswordEnabled ? AdminUserInitCLI.generateRandomPassword() : "KYLIN";
-        user.setPassword(pwdEncoder.encode(password));
-        user.setDefaultPassword(true);
-
         val res = aclStore.getResource(id);
-
         if (res == null) {
             logger.warn("The password cannot be reset because there is no ADMIN user.");
             return false;
         }
-
         user.clearAuthenticateFailedRecord();
 
-        UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT)
-                .useProjectLock(true)
-                .processor(() -> ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).checkAndPutResource(
-                        id, ByteSource.wrap(JsonUtil.writeValueAsBytes(user)), aclStore.getResource(id).getMvcc()))
-                .build());
+        boolean randomPasswordEnabled = KylinConfig.getInstanceFromEnv().getRandomAdminPasswordEnabled();
+        String password = randomPasswordEnabled ? AdminUserInitCLI.generateRandomPassword() : "KYLIN";
+
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            KylinConfig conf = KylinConfig.getInstanceFromEnv();
+            NKylinUserManager.getInstance(conf).updateUser("ADMIN", copyForWrite -> {
+                copyForWrite.setPassword(pwdEncoder.encode(password));
+                copyForWrite.setDefaultPassword(true);
+            });
+            return true;
+        }, UnitOfWork.GLOBAL_UNIT);
 
         logger.trace("update user : {}", user.getUsername());
         logger.info("User {}'s password is set to default password.", user.getUsername());

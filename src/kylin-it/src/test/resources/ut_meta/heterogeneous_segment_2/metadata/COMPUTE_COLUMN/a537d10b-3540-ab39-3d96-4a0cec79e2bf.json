@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "DEFAULT.KYLIN_SALES",
+  "tableAlias" : "KYLIN_SALES",
+  "columnName" : "CC1",
+  "expression" : "KYLIN_SALES.BUYER_ID + KYLIN_ACCOUNT.ACCOUNT_ID",
+  "innerExpression" : "`KYLIN_SALES`.`BUYER_ID` + `KYLIN_ACCOUNT`.`ACCOUNT_ID`",
+  "datatype" : "BIGINT",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "a537d10b-3540-ab39-3d96-4a0cec79e2bf",
+  "project" : "heterogeneous_segment_2"
+}

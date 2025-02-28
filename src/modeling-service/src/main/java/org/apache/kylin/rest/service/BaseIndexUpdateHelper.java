@@ -28,11 +28,6 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
-import org.apache.kylin.rest.util.SpringContext;
-
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import lombok.Setter;
 
 /**
  * due to complex model semantic update and table reload,
@@ -49,9 +44,6 @@ public class BaseIndexUpdateHelper {
     private String modelId;
     private List<IndexEntity.Source> updateBaseIndexTypes;
     private boolean needUpdate;
-    private boolean secondStorageEnabled = false;
-    @Setter
-    private boolean needCleanSecondStorage = true;
 
     public BaseIndexUpdateHelper(NDataModel model, boolean createIfNotExist) {
         this(model, updateTypesByFlag(createIfNotExist));
@@ -82,11 +74,6 @@ public class BaseIndexUpdateHelper {
         }
     }
 
-    public BaseIndexUpdateHelper setSecondStorageEnabled(final boolean secondStorageEnabled) {
-        this.secondStorageEnabled = secondStorageEnabled;
-        return this;
-    }
-
     public BuildBaseIndexResponse update(IndexPlanService service) {
         return update(service, true);
     }
@@ -112,9 +99,6 @@ public class BaseIndexUpdateHelper {
         if (exist(preBaseAggLayout) && notExist(curExistBaseAggLayout)) {
             needCreateBaseAgg = true;
         }
-        if (secondStorageEnabled) {
-            needCreateBaseAgg = false;
-        }
 
         CreateBaseIndexRequest indexRequest = new CreateBaseIndexRequest();
         indexRequest.setModelId(modelId);
@@ -130,13 +114,6 @@ public class BaseIndexUpdateHelper {
         response.judgeIndexOperateType(exist(preBaseAggLayout), true);
         response.judgeIndexOperateType(exist(preBaseTableLayout), false);
 
-        long updatedBaseTableLayout = getBaseTableLayout();
-
-        if (SecondStorageUtil.isModelEnable(project, modelId)
-                && hasChange(preBaseTableLayout, updatedBaseTableLayout)) {
-            SecondStorageUpdater updater = SpringContext.getBean(SecondStorageUpdater.class);
-            updater.updateIndex(project, modelId);
-        }
         return response;
     }
 
@@ -146,10 +123,6 @@ public class BaseIndexUpdateHelper {
 
     private boolean exist(long layout) {
         return layout != NON_EXIST_LAYOUT;
-    }
-
-    private boolean hasChange(long preId, long curId) {
-        return preId != curId;
     }
 
     private long getBaseTableLayout() {

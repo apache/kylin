@@ -18,6 +18,7 @@
 
 package org.apache.spark.sql.execution.datasource
 
+import org.apache.kylin.common.QueryContext
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.common.{LocalMetadata, SparderBaseFunSuite}
 import org.apache.spark.sql.internal.SQLConf
@@ -27,6 +28,7 @@ class ResetShufflePartitionSuite extends SparderBaseFunSuite with LocalMetadata 
   private val testResetShufflePartition = new ResetShufflePartition {}
 
   test("KE-39271: test shuffle partition reset without kylin.query.engine.spark-sql-shuffle-partitions") {
+    QueryContext.current().setShufflePartitionsReset(0)
     overwriteSystemProp("kylin.storage.columnar.partition-split-size-mb", "1")
     val workerThread = 10
     val sparkSession = SparkSession.builder()
@@ -34,27 +36,30 @@ class ResetShufflePartitionSuite extends SparderBaseFunSuite with LocalMetadata 
       .config("spark.sql.shuffle.partitions", workerThread.toString)
       .getOrCreate()
 
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
+    try {
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
 
-    val sourceRows = 0
-    var totalFileSize = 1024 * 1024 * 5
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 6)
+      val sourceRows = 0
+      var totalFileSize = 1024 * 1024 * 5
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 6)
 
-    totalFileSize = 1024 * 1024 * 6
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 7)
+      totalFileSize = 1024 * 1024 * 6
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 7)
 
-    totalFileSize = 1024 * 1024 * 3
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 7)
+      totalFileSize = 1024 * 1024 * 3
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 7)
 
-    totalFileSize = 1024 * 1024 * 12
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
+      totalFileSize = 1024 * 1024 * 12
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
+    } finally sparkSession.close()
   }
 
   test("KE-39271: test shuffle partition reset with kylin.query.engine.spark-sql-shuffle-partitions") {
+    QueryContext.current().setShufflePartitionsReset(0)
     overwriteSystemProp("kylin.storage.columnar.partition-split-size-mb", "1")
     overwriteSystemProp("kylin.query.engine.spark-sql-shuffle-partitions", "100")
 
@@ -64,19 +69,55 @@ class ResetShufflePartitionSuite extends SparderBaseFunSuite with LocalMetadata 
       .config("spark.sql.shuffle.partitions", workerThread.toString)
       .getOrCreate()
 
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
+    try {
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
 
-    val sourceRows = 0
-    var totalFileSize = 1024 * 1024 * 5
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
+      val sourceRows = 0
+      var totalFileSize = 1024 * 1024 * 5
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
 
-    totalFileSize = 1024 * 1024 * 15
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
+      totalFileSize = 1024 * 1024 * 15
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
 
-    totalFileSize = 1024 * 1024 * 105
-    testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
-    assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
+      totalFileSize = 1024 * 1024 * 105
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 100)
+    } finally sparkSession.close()
+  }
+
+  test("KE-43302: test shuffle partition reset without spark-sql-shuffle-partitions and split source partition enabled") {
+    QueryContext.current().setShufflePartitionsReset(0)
+    val workerThread = 10
+    val sparkSession = SparkSession.builder()
+      .master(s"local[$workerThread]")
+      .config("spark.sql.shuffle.partitions", workerThread.toString)
+      .config("spark.sql.splitSourcePartition.enabled", "true")
+      .config("spark.sql.splitSourcePartition.maxExpandNum", "3")
+      .config("spark.sql.splitSourcePartition.thresholdInBytes", "3MB")
+      .getOrCreate()
+
+    try {
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 10)
+
+      val sourceRows = 0
+      var totalFileSize = 1024 * 1024 * 2
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 1)
+
+      totalFileSize = 1024 * 1024 * 5
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 3)
+
+      totalFileSize = 1024 * 1024 * 1
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == 3)
+
+      sparkSession.sessionState.conf.setConfString("spark.sql.splitSourcePartition.maxExpandNum", "30")
+      totalFileSize = 1024 * 1024 * 3
+      testResetShufflePartition.setShufflePartitions(totalFileSize, sourceRows, sparkSession)
+      assert(sparkSession.sessionState.conf.getConf(SQLConf.SHUFFLE_PARTITIONS) == workerThread)
+    } finally sparkSession.close()
   }
 }

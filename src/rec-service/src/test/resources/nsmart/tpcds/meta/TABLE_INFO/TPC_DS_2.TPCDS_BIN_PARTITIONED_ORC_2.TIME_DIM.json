@@ -1,0 +1,51 @@
+{
+  "uuid" : "8258331c-c6ec-4821-aed1-9b408d5fc959",
+  "last_modified" : 1497607294786,
+  "version" : "2.0.0",
+  "name" : "TIME_DIM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "T_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "T_TIME_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "T_TIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "T_HOUR",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "T_MINUTE",
+    "datatype" : "integer"
+  }, {
+    "id" : "6",
+    "name" : "T_SECOND",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "T_AM_PM",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "T_SHIFT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "T_SUB_SHIFT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "T_MEAL_TIME",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

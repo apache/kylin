@@ -27,9 +27,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 /**
  * Encoding Boolean values to bytes
@@ -61,7 +60,7 @@ public class BooleanDimEnc extends DimensionEncoding implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new BooleanDimEnc();
         }
-    };
+    }
 
     // ============================================================================
 
@@ -163,17 +162,16 @@ public class BooleanDimEnc extends DimensionEncoding implements Serializable {
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    public void readExternal(ObjectInput in) throws IOException {
         fixedLen = in.readShort();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        return true;
+        }
+        return o != null && getClass() == o.getClass();
     }
 
     @Override

@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
@@ -64,26 +63,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({SecondStorageUtil.class})
-@PowerMockIgnore({"javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*", "javax.script.*"})
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class SegmentControllerTest extends NLocalFileMetadataTestCase {
 
     private MockMvc mockMvc;
@@ -132,12 +128,12 @@ public class SegmentControllerTest extends NLocalFileMetadataTestCase {
                         .contentType(MediaType.APPLICATION_JSON).param("offset", "0").param("project", "default")
                         .param("limit", "10").param("start", "432").param("end", "2234").param("sort_by", "end_time")
                         .param("reverse", "true").param("status", "")
-                        .param("statuses", "").param("statuses_second_storage", "")
+                        .param("statuses", "")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Mockito.verify(segmentController).getSegments("89af4ee2-2cdb-4b07-b39e-4c29856309aa", "default", "", 0, 10,
                 "432", "2234", null, null, false, "end_time", true,
-                Lists.newArrayList(), Lists.newArrayList());
+                Lists.newArrayList());
     }
 
     @Test
@@ -276,43 +272,6 @@ public class SegmentControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(segmentController).incrementBuildSegmentsManually(eq("89af4ee2-2cdb-4b07-b39e-4c29856309aa"),
                 Mockito.any(IncrementBuildSegmentsRequest.class));
-    }
-
-    private PartitionDesc makePartition(String column) {
-        PartitionDesc partitionDesc = new PartitionDesc();
-        partitionDesc.setPartitionDateColumn(column);
-        return partitionDesc;
-    }
-
-    @Test
-    public void testBuildSegments_withSecondStoragePartitionCheck() throws Exception {
-        IncrementBuildSegmentsRequest request = new IncrementBuildSegmentsRequest();
-        String project = "default";
-        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-        request.setProject(project);
-        request.setStart("100");
-        request.setEnd("200");
-        PowerMockito.mockStatic(SecondStorageUtil.class);
-        PowerMockito.when(SecondStorageUtil.isModelEnable(project, modelId)).thenReturn(true);
-        request.setPartitionDesc(makePartition("TEST_KYLIN_FACT.ORDER_ID"));
-        IncrementBuildSegmentParams incrParams = new IncrementBuildSegmentParams(project, modelId, request.getStart(),
-                request.getEnd(), request.getPartitionDesc(), null, request.getSegmentHoles(), true, null);
-        Mockito.doAnswer(x -> null).when(fusionModelService).incrementBuildSegmentsManually(incrParams);
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/{model}/model_segments", modelId)
-                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(segmentController).incrementBuildSegmentsManually(eq(modelId),
-                Mockito.any(IncrementBuildSegmentsRequest.class));
-
-        request.setPartitionDesc(makePartition("TEST_KYLIN_FACT.PRICE"));
-        MvcResult mvcResult = mockMvc
-                .perform(MockMvcRequestBuilders.put("/api/models/{model}/model_segments", modelId)
-                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
-        Assert.assertEquals(ErrorCodeServer.SEGMENT_SECOND_STORAGE_PARTITION_INVALID.getMsg(),
-                mvcResult.getResolvedException().getMessage());
     }
 
     @Test

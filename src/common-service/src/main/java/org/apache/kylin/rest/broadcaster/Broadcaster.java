@@ -45,6 +45,7 @@ import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifi
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.tool.restclient.RestClient;
@@ -52,8 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 @Component
 public class Broadcaster implements Closeable {
@@ -83,6 +82,7 @@ public class Broadcaster implements Closeable {
         this.isRunning = true;
         this.eventPollExecutor.submit(this::consumeEvent);
     }
+
     public void register(BroadcastEventHandler handler) {
         this.handler = handler;
     }

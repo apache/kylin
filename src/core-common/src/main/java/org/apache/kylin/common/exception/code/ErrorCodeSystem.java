@@ -37,10 +37,7 @@ public enum ErrorCodeSystem implements ErrorCodeProducer {
     MAINTENANCE_MODE_LEAVE_FAILED("KE-040024203"),
 
     // 400252XX system config
-    SYSTEM_PROFILE_ABNORMAL_DATA("KE-040026201"),
-
-    // 400282XX deadlock
-    NOT_DEADLOCK_THREAD_IDS("KE-040028201");
+    SYSTEM_PROFILE_ABNORMAL_DATA("KE-040026201");
 
     private final ErrorCode errorCode;
     private final ErrorMsg errorMsg;

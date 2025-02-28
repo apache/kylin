@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 @MetadataInfo(project = "ssb")
@@ -41,13 +41,13 @@ class SnapshotRawResourceTest {
         val mockContent = new MockMetaContent("abc", 18);
         val mockContentJson = JsonUtil.writeValueAsBytes(mockContent);
         val resourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        resourceStore.putResourceWithoutCheck("/path/meta/abc", ByteSource.wrap(mockContentJson), 123, 101);
+        resourceStore.putResourceWithoutCheck("TABLE_INFO/abc", ByteSource.wrap(mockContentJson), 123, 101);
     }
 
     @Test
     void testRawResourceByteSourceSerializer() throws IOException {
         val resourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val rawSnapshotRes = new SnapshotRawResource(resourceStore.getResource("/path/meta/abc"));
+        val rawSnapshotRes = new SnapshotRawResource(resourceStore.getResource("TABLE_INFO/abc"));
         val mockContentSer = JsonUtil.readValue(rawSnapshotRes.getByteSource().read(), MockMetaContent.class);
 
         Assertions.assertEquals("abc", mockContentSer.getName());
@@ -57,7 +57,7 @@ class SnapshotRawResourceTest {
     @Test
     void testSnapShotRawResourceSerializer() throws IOException {
         val resourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val rawSnapshotRes = new SnapshotRawResource(resourceStore.getResource("/path/meta/abc"));
+        val rawSnapshotRes = new SnapshotRawResource(resourceStore.getResource("TABLE_INFO/abc"));
 
         val snapshotRawJson = JsonUtil.writeValueAsString(rawSnapshotRes);
         Assertions.assertEquals("{\"byte_source\":\"eyJuYW1lIjoiYWJjIiwiYWdlIjoxOH0=\",\"timestamp\":123,\"mvcc\":101}",

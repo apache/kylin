@@ -85,7 +85,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      *          weight as Integer
      */
     public RefinedKetamaNodeLocator(List<MemcachedNode> nodes, HashAlgorithm alg,
-                                    KetamaNodeKeyFormatter.Format nodeKeyFormat, Map<InetSocketAddress, Integer> weights) {
+            KetamaNodeKeyFormatter.Format nodeKeyFormat, Map<InetSocketAddress, Integer> weights) {
         this(nodes, alg, weights, new DefaultKetamaNodeLocatorConfiguration(new KetamaNodeKeyFormatter(nodeKeyFormat)));
     }
 
@@ -116,7 +116,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      * @param configuration node locator configuration
      */
     public RefinedKetamaNodeLocator(List<MemcachedNode> nodes, HashAlgorithm alg,
-                                    Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration configuration) {
+            Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration configuration) {
         super();
         allNodes.set(nodes);
         hashAlg = alg;
@@ -127,7 +127,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     }
 
     private RefinedKetamaNodeLocator(TreeMap<Long, MemcachedNode> smn, Collection<MemcachedNode> an, HashAlgorithm alg,
-                                     Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration conf) {
+            Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration conf) {
         super();
         ketamaNodes.set(smn);
         allNodes.set(an);
@@ -220,7 +220,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      * @param nodes a List of MemcachedNodes for this KetamaNodeLocator to use in
      *          its continuum
      */
-    @SuppressWarnings({"squid:S3776"})
+    @SuppressWarnings({ "squid:S3776" })
     protected void setKetamaNodes(List<MemcachedNode> nodes) {
         TreeMap<Long, MemcachedNode> newNodeMap = new TreeMap<>();
         int numReps = config.getNodeRepetitions();
@@ -238,9 +238,8 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
 
                 int thisWeight = weights.get(node.getSocketAddress());
                 float percent = (totalWeight == 0 ? 0f : (float) thisWeight / (float) totalWeight);
-                int pointerPerServer = (int) ((Math.floor(
-                        (float) (percent * config.getNodeRepetitions() / 4 * nodeCount + 0.0000000001)))
-                        * 4);
+                int pointerPerServer = (int) ((Math
+                        .floor((float) (percent * config.getNodeRepetitions() / 4 * nodeCount + 0.0000000001))) * 4);
                 for (int i = 0; i < pointerPerServer / 4; i++) {
                     for (long position : ketamaNodePositionsAtIteration(node, i)) {
                         newNodeMap.put(position, node);

@@ -18,18 +18,18 @@
 
 package org.apache.kylin.job.domain;
 
+import java.util.Random;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Random;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PriorityFistRandomOrderJob implements Comparable<PriorityFistRandomOrderJob>{
+public class PriorityFistRandomOrderJob implements Comparable<PriorityFistRandomOrderJob> {
 
     private static Random random = new Random();
 
@@ -46,7 +46,7 @@ public class PriorityFistRandomOrderJob implements Comparable<PriorityFistRandom
         }
         if (this.getPriority() < o.getPriority()) {
             return -1;
-        } else if (this.getPriority() > o.getPriority()){
+        } else if (this.getPriority() > o.getPriority()) {
             return 1;
         } else {
             return this.randomOrder > o.randomOrder ? 1 : -1;

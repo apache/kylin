@@ -23,12 +23,11 @@ import java.util.Locale;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class NUserGroupManagerTest extends NLocalFileMetadataTestCase {
 
@@ -52,7 +51,7 @@ public class NUserGroupManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(group.exists("g1"));
         Assert.assertFalse(group.exists("g4"));
         Assert.assertEquals(Lists.newArrayList("g1", "g2", "g3"), group.getAllGroupNames());
-        Assert.assertEquals("g1", group.getAllGroups(path -> path.endsWith("g1")).get(0).getGroupName());
+        Assert.assertEquals("g1", group.getGroupsByName("g1", false).get(0).getGroupName());
 
         Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupExist(), "g1"),
                 KylinException.class, () -> group.add("g1"));

@@ -27,6 +27,8 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.types._
 
+import java.util.Locale
+
 /**
  * Build sum_lc measure, has two implements，
  * for non-reuse sum_lc, two input, one for value column, another for date column
@@ -125,7 +127,7 @@ case class EncodeSumLC(
         columnEvalVal.asInstanceOf[Number]
     }
     val dateEvalVal = dateCol.eval(input)
-    if (dateEvalVal == null || dateEvalVal.toString.toUpperCase().equals("NULL")) {
+    if (dateEvalVal == null || dateEvalVal.toString.toUpperCase(Locale.ROOT).equals("NULL")) {
       buffer
     } else {
       val dateValStr = String.valueOf(dateEvalVal).trim

@@ -32,6 +32,8 @@ export default {
     samplingTableJobBeginTips: 'Sampling job for table [{tableName}] has been submitted successfully, you can view the job progress in the Monitor page.',
     deleteAll: 'Delete All',
     deleteTable: 'Delete Table',
-    kafkaCluster: 'Kafka Info'
+    kafkaCluster: 'Kafka Info',
+    createNativeTable: 'Create Internal Table',
+    viewNativeTable: 'View Internal Table'
   }
 }

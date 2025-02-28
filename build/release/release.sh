@@ -64,6 +64,11 @@ for PARAM in $@; do
         export SKIP_COMPILE=1
         shift
     fi
+    if [[ "$PARAM" == "-withGluten" ]]; then
+        echo 'Package with Gluten relevant dependencies...'
+        export WITH_GLUTEN=1
+        shift
+    fi
 done
 
 ## Fetch kylin version from pom

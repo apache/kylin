@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.time.Instant;
@@ -38,11 +37,13 @@ import org.apache.kylin.junit.TimeZoneTestRunner;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.util.ExecAndComp;
@@ -94,18 +95,26 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
 
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/file_pruning");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    public String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/file_pruning" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -590,15 +599,21 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
         NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
         Segments<NDataSegment> segments = dataflow.getSegments();
         Assert.assertEquals(3, segments.size());
-        segments.get(1).getDimensionRangeInfoMap().clear();
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataSegment nDataSegment = segments.get(1);
+            NDataSegmentManager.getInstance(getTestConfig(), getProject()).update(nDataSegment.getUuid(), copy -> {
+                copy.getDimensionRangeInfoMap().clear();
+            });
+            return null;
+        }, getProject());
         NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
         NDataflow df = dsMgr.getDataflow(dataflowId);
         IndexPlan indexPlan = df.getIndexPlan();
         List<LayoutEntity> layouts = indexPlan.getAllLayouts();
         mergeSegments(dataflowId, Sets.newLinkedHashSet(layouts));
-        segments = dataflowManager.getDataflow(dataflowId).getSegments();
-        Assert.assertEquals(2, segments.size());
-        NDataSegment segment = segments.get(1);
+        Segments<NDataSegment> segments2 = dataflowManager.getDataflow(dataflowId).getSegments();
+        Assert.assertEquals(2, segments2.size());
+        NDataSegment segment = segments2.get(1);
         Assert.assertTrue(segment.getDimensionRangeInfoMap().isEmpty());
     }
 
@@ -639,12 +654,12 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
     }
 
     private long assertResultsAndScanFiles(String modelId, String sql, long numScanFiles, boolean emptyLayout,
-            List<Pair<String, String>> expectedRanges) throws Exception {
+            List<Pair<String, String>> expectedRanges) {
         val df = ExecAndComp.queryModelWithoutCompute(getProject(), sql);
         val context = ContextUtil.listContexts().get(0);
         if (emptyLayout) {
-            Assert.assertTrue(context.storageContext.isEmptyLayout());
-            Assert.assertEquals(Long.valueOf(-1), context.storageContext.getLayoutId());
+            Assert.assertTrue(context.getStorageContext().isDataSkipped());
+            Assert.assertEquals(-1L, context.getStorageContext().getBatchCandidate().getLayoutId());
             return numScanFiles;
         }
         df.collect();
@@ -652,7 +667,7 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
         val actualNum = findFileSourceScanExec(df.queryExecution().executedPlan()).metrics().get("numFiles").get()
                 .value();
         Assert.assertEquals(numScanFiles, actualNum);
-        val segmentIds = context.storageContext.getPrunedSegments();
+        val segmentIds = context.getStorageContext().getBatchCandidate().getPrunedSegments();
         assertPrunedSegmentRange(modelId, segmentIds, expectedRanges);
         return actualNum;
     }

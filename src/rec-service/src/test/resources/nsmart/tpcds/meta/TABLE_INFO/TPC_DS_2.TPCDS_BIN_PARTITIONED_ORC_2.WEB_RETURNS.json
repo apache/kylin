@@ -1,0 +1,107 @@
+{
+  "uuid" : "c5bd3fe2-f2c1-4a08-a598-be2dffb7176d",
+  "last_modified" : 1497607295120,
+  "version" : "2.0.0",
+  "name" : "WEB_RETURNS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "WR_RETURNED_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "WR_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "WR_REFUNDED_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "WR_REFUNDED_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "WR_REFUNDED_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "WR_REFUNDED_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "WR_RETURNING_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "WR_RETURNING_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "WR_RETURNING_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "WR_RETURNING_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "11",
+    "name" : "WR_WEB_PAGE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "12",
+    "name" : "WR_REASON_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "13",
+    "name" : "WR_ORDER_NUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "14",
+    "name" : "WR_RETURN_QUANTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "15",
+    "name" : "WR_RETURN_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "16",
+    "name" : "WR_RETURN_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "17",
+    "name" : "WR_RETURN_AMT_INC_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "18",
+    "name" : "WR_FEE",
+    "datatype" : "double"
+  }, {
+    "id" : "19",
+    "name" : "WR_RETURN_SHIP_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "20",
+    "name" : "WR_REFUNDED_CASH",
+    "datatype" : "double"
+  }, {
+    "id" : "21",
+    "name" : "WR_REVERSED_CHARGE",
+    "datatype" : "double"
+  }, {
+    "id" : "22",
+    "name" : "WR_ACCOUNT_CREDIT",
+    "datatype" : "double"
+  }, {
+    "id" : "23",
+    "name" : "WR_NET_LOSS",
+    "datatype" : "double"
+  }, {
+    "id" : "24",
+    "name" : "WR_RETURNED_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

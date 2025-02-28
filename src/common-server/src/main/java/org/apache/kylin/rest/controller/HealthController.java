@@ -30,9 +30,10 @@ import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.SecretKeyUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.util.QueryLimiter;
 import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.common.util.SecretKeyUtil;
 import org.apache.kylin.rest.response.HealthResponse;
 import org.apache.kylin.rest.service.HealthService;
 import org.apache.kylin.tool.daemon.ServiceOpLevelEnum;
@@ -46,15 +47,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import io.swagger.annotations.ApiOperation;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j;
 
 @Log4j
 @Controller
-@RequestMapping(value = "/api/kg/health", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+@RequestMapping(value = "/api/kg/health", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+        HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class HealthController extends NBasicController {
 
     private static final int MAX_TOKEN_LENGTH = 64;

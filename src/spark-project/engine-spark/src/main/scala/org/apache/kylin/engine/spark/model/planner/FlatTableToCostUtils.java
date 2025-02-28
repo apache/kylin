@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -208,7 +209,7 @@ public class FlatTableToCostUtils {
             } else {
                 // not find the column id
                 throw new RuntimeException(
-                        String.format("Can't find the column id %d, column ids %s", columnId, columnIds.toString()));
+                        String.format(Locale.ROOT, "Can't find the column id %d, column ids %s", columnId, columnIds));
             }
         }
         return rowkeyColumnIndexes;
@@ -460,7 +461,7 @@ public class FlatTableToCostUtils {
             } else {
                 // not find the column id
                 throw new RuntimeException(
-                        String.format("Can't find the column id %d, column ids %s", i, columnIds.toString()));
+                        String.format(Locale.ROOT, "Can't find the column id %d, column ids %s", i, columnIds));
             }
         }
         // the index means column id for the dimension, the value is the estimated size for this dimension

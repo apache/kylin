@@ -1,0 +1,63 @@
+{
+  "uuid" : "776e6241-8682-4978-97fd-ab876264f207",
+  "last_modified" : 1497607295019,
+  "version" : "2.0.0",
+  "name" : "CUSTOMER_ADDRESS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CA_ADDRESS_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "CA_ADDRESS_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "CA_STREET_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "CA_STREET_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "CA_STREET_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "CA_SUITE_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "CA_CITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "CA_COUNTY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "CA_STATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "CA_ZIP",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "CA_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "CA_GMT_OFFSET",
+    "datatype" : "double"
+  }, {
+    "id" : "13",
+    "name" : "CA_LOCATION_TYPE",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

@@ -45,6 +45,10 @@ import lombok.extern.slf4j.Slf4j;
 public class VacantIndexPruningRule extends PruningRule {
     @Override
     public void apply(Candidate candidate) {
+        if (!isStorageMatch(candidate)) {
+            return;
+        }
+
         if (nonBatchRealizationSkipEmptySegments(candidate)) {
             log.info("{}({}/{}): only batch model support this feature, but the type of this model is {}",
                     this.getClass().getName(), candidate.getRealization().getProject(),
@@ -86,6 +90,11 @@ public class VacantIndexPruningRule extends PruningRule {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean isStorageMatch(Candidate candidate) {
+        return true;
     }
 
     private NLayoutCandidate selectLayoutCandidate(NDataflow dataflow, SQLDigest sqlDigest) {

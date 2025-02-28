@@ -18,7 +18,6 @@
 
 package org.apache.kylin.newten;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,18 +45,26 @@ import scala.runtime.AbstractFunction1;
 
 public class ExactlyMatchTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() throws Exception {
-        this.createTestMetadata("src/test/resources/ut_meta/agg_exact_match");
-
+    public void setUp() throws Exception {
         JobContextUtil.cleanUp();
+        setOverlay("src/test/resources/ut_meta/agg_exact_match");
+        super.setUp();
+
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/agg_exact_match" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Override
@@ -86,7 +93,7 @@ public class ExactlyMatchTest extends NLocalWithSparkSessionTest {
         String not_in2 = base + "where substring(LSTG_FORMAT_NAME, 1, 1) not in ('A','F')"
                 + " or substring(LSTG_FORMAT_NAME, 1, 1) not in ('O','B')";
 
-        overwriteSystemProp("calcite.keep-in-clause", "true");
+        overwriteSystemProp("kylin.query.convert-in-to-or-threshold", "0"); // default value
         Dataset<Row> df1 = ExecAndComp.queryModelWithoutCompute(getProject(), in1);
         Dataset<Row> df2 = ExecAndComp.queryModelWithoutCompute(getProject(), in2);
         Dataset<Row> df3 = ExecAndComp.queryModelWithoutCompute(getProject(), not_in2);
@@ -99,7 +106,7 @@ public class ExactlyMatchTest extends NLocalWithSparkSessionTest {
         ArrayList<String> querys = Lists.newArrayList(in1, in2, not_in1, not_in2);
         ExecAndComp.execAndCompareQueryList(querys, getProject(), ExecAndComp.CompareLevel.SAME, "left");
 
-        overwriteSystemProp("calcite.keep-in-clause", "false");
+        overwriteSystemProp("kylin.query.convert-in-to-or-threshold", "100");
         Dataset<Row> df5 = ExecAndComp.queryModelWithoutCompute(getProject(), in1);
         Dataset<Row> df6 = ExecAndComp.queryModelWithoutCompute(getProject(), in2);
         Dataset<Row> df7 = ExecAndComp.queryModelWithoutCompute(getProject(), not_in2);

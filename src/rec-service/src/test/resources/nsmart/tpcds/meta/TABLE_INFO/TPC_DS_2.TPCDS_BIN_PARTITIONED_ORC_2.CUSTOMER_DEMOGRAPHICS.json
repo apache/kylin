@@ -1,0 +1,47 @@
+{
+  "uuid" : "53326993-45c0-4383-ad7d-55babc2e0240",
+  "last_modified" : 1497607295002,
+  "version" : "2.0.0",
+  "name" : "CUSTOMER_DEMOGRAPHICS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CD_DEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "CD_GENDER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "CD_MARITAL_STATUS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "CD_EDUCATION_STATUS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "CD_PURCHASE_ESTIMATE",
+    "datatype" : "integer"
+  }, {
+    "id" : "6",
+    "name" : "CD_CREDIT_RATING",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "CD_DEP_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "8",
+    "name" : "CD_DEP_EMPLOYED_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "CD_DEP_COLLEGE_COUNT",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

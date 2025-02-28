@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -36,10 +35,9 @@ import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
-import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
+import org.apache.kylin.common.persistence.metadata.AuditLogStore;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
-import org.apache.kylin.common.util.NamedThreadFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
@@ -52,12 +50,14 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractAuditLogReplayWorker {
 
     protected static final long STEP = 1000;
-    protected final JdbcAuditLogStore auditLogStore;
+    protected final AuditLogStore auditLogStore;
     protected final KylinConfig config;
 
+    protected volatile ScheduledExecutorService consumeExecutor;
+
     // only a thread is necessary
-    protected volatile ScheduledExecutorService consumeExecutor = Executors.newScheduledThreadPool(1,
-            new NamedThreadFactory("ReplayWorker"));
+    protected static volatile ScheduledExecutorService publicExecutorPool = Executors.newScheduledThreadPool(1,
+            new DaemonThreadFactory("PublicReplayWorker"));
 
     protected final AtomicBoolean isStopped = new AtomicBoolean(false);
 
@@ -65,9 +65,9 @@ public abstract class AbstractAuditLogReplayWorker {
     protected final long replayWaitMaxTimeoutMills;
 
     @Setter
-    protected Predicate<String> filterByResPath;
+    protected String modelUuid;
 
-    protected AbstractAuditLogReplayWorker(KylinConfig config, JdbcAuditLogStore auditLogStore) {
+    protected AbstractAuditLogReplayWorker(KylinConfig config, AuditLogStore auditLogStore) {
         this.config = config;
         this.auditLogStore = auditLogStore;
         this.replayWaitMaxRetryTimes = config.getReplayWaitMaxRetryTimes();
@@ -90,10 +90,12 @@ public abstract class AbstractAuditLogReplayWorker {
 
     public void close(boolean isGracefully) {
         isStopped.set(true);
-        if (isGracefully) {
-            ExecutorServiceUtil.shutdownGracefully(consumeExecutor, 60);
-        } else {
-            ExecutorServiceUtil.forceShutdown(consumeExecutor);
+        if (!consumeExecutor.equals(publicExecutorPool)) {
+            if (isGracefully) {
+                ExecutorServiceUtil.shutdownGracefully(consumeExecutor, 60);
+            } else {
+                ExecutorServiceUtil.forceShutdown(consumeExecutor);
+            }
         }
     }
 
@@ -103,7 +105,7 @@ public abstract class AbstractAuditLogReplayWorker {
         }
         Map<String, UnitMessages> messagesMap = Maps.newLinkedHashMap();
         for (AuditLog log : logs) {
-            if (filterByResPath != null && !filterByResPath.test(log.getResPath())) {
+            if (modelUuid != null && !modelUuid.equals(log.getModelUuid())) {
                 continue;
             }
 
@@ -181,7 +183,7 @@ public abstract class AbstractAuditLogReplayWorker {
             return;
         }
         isStopped.set(false);
-        consumeExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("ReplayWorker"));
+        consumeExecutor = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("ReplayWorker"));
         startSchedule(currentId, false);
     }
 

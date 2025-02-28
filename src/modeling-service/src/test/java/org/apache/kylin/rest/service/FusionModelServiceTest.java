@@ -67,7 +67,6 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -98,7 +97,7 @@ public class FusionModelServiceTest extends SourceTestCase {
     @InjectMocks
     private final ModelSemanticHelper semanticService = Mockito.spy(new ModelSemanticHelper());
 
-    @Autowired
+    @InjectMocks
     private final IndexPlanService indexPlanService = Mockito.spy(new IndexPlanService());
 
     @Mock
@@ -113,8 +112,8 @@ public class FusionModelServiceTest extends SourceTestCase {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         EventBusFactory.getInstance().register(modelUpdateListener, true);
         ReflectionTestUtils.setField(fusionModelService, "modelService", modelService);
@@ -136,8 +135,8 @@ public class FusionModelServiceTest extends SourceTestCase {
 
     @After
     public void tearDown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -274,8 +273,8 @@ public class FusionModelServiceTest extends SourceTestCase {
         fusionModelService.dropModel("e78a89dd-847f-4574-8afa-8768b4228b73", "streaming_test");
         models = modelService.getModels("stream_merge1", "streaming_test", true, "", null, "", false);
         Assert.assertEquals(0, models.size());
-        Set<IRealization> realizations = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getRealizationsByTable("streaming_test", "DEFAULT.SSB_TOPIC");
+        Set<IRealization> realizations = NProjectManager.getRealizations(KylinConfig.getInstanceFromEnv(),
+                "streaming_test", "DEFAULT.SSB_TOPIC");
         Assert.assertEquals(0, realizations.size());
     }
 
@@ -292,8 +291,8 @@ public class FusionModelServiceTest extends SourceTestCase {
         fusionModelService.dropModel("b05034a8-c037-416b-aa26-9e6b4a41ee40", "streaming_test");
         models = modelService.getModels(" streaming_test", "streaming_test", true, "", null, "", false);
         Assert.assertEquals(0, models.size());
-        Set<IRealization> realizations = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getRealizationsByTable("streaming_test", "SSB.P_LINEORDER_STREAMING");
+        Set<IRealization> realizations = NProjectManager.getRealizations(KylinConfig.getInstanceFromEnv(),
+                "streaming_test", "SSB.P_LINEORDER_STREAMING");
         Assert.assertEquals(0, realizations.size());
     }
 
@@ -336,7 +335,7 @@ public class FusionModelServiceTest extends SourceTestCase {
         // check batch segment of fusion model
         pair = fusionModelService.convertSegmentIdWithName(fusionId, "streaming_test", null,
                 new String[] { "20200518111100_20210118111100" });
-        String[] originBatchSegIds = { "86b5daaa-e295-4e8c-b877-f97bda69bee5" };
+        String[] originBatchSegIds = { "027db8f2-145d-4e6c-6a1b-7139bb1fb5bc" };
         Assert.assertEquals("cd2b9a23-699c-4699-b0dd-38c9412b3dfd", pair.getFirst());
         Assert.assertTrue(ArrayUtils.isEquals(pair.getSecond(), originBatchSegIds));
 

@@ -71,13 +71,13 @@ public class LdapUserGroupService extends NUserGroupService {
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final Cache<String, List<ManagedUser>> ldapGroupsMembersCache = CacheBuilder
-            .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
+    private static final Cache<String, List<ManagedUser>> ldapGroupsMembersCache = CacheBuilder.newBuilder()
+            .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final Cache<String, List<String>> ldapGroupsAndMembersCache = CacheBuilder
-            .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
+    private static final Cache<String, List<String>> ldapGroupsAndMembersCache = CacheBuilder.newBuilder()
+            .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 

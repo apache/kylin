@@ -24,18 +24,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.SegmentOnlineMode;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.ChooserContext;
 import org.apache.kylin.metadata.cube.cuboid.ComparatorUtils;
 import org.apache.kylin.metadata.cube.cuboid.IndexMatcher;
@@ -64,14 +60,13 @@ public class QueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectPartialLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest, Map<String, Set<Long>> chSegmentToLayoutsMap) {
+            SQLDigest sqlDigest) {
 
         NLayoutCandidate candidate = null;
         List<NDataSegment> toRemovedSegments = Lists.newArrayList();
         for (NDataSegment segment : prunedSegments) {
             if (candidate == null) {
-                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest,
-                        chSegmentToLayoutsMap);
+                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest);
             }
 
             long layoutId = candidate == null ? -1L : candidate.getLayoutEntity().getId();
@@ -84,11 +79,11 @@ public class QueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest, Map<String, Set<Long>> chSegmentToLayoutsMap) {
+            SQLDigest sqlDigest) {
 
         if (CollectionUtils.isEmpty(prunedSegments)) {
             log.info("There is no segment to answer sql");
-            return NLayoutCandidate.EMPTY;
+            return NLayoutCandidate.ofEmptyCandidate();
         }
 
         ChooserContext chooserContext = new ChooserContext(sqlDigest, dataflow);
@@ -96,7 +91,7 @@ public class QueryLayoutChooser {
             return null;
         }
 
-        Collection<NDataLayout> commonLayouts = getCommonLayouts(prunedSegments, dataflow, chSegmentToLayoutsMap);
+        Collection<NDataLayout> commonLayouts = getCommonLayouts(prunedSegments, dataflow);
         log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
         Map<Long, List<NDataLayout>> commonLayoutsMap = commonLayouts.stream()
                 .collect(Collectors.toMap(NDataLayout::getLayoutId, Lists::newArrayList));
@@ -124,7 +119,7 @@ public class QueryLayoutChooser {
             CapabilityResult tempResult = new CapabilityResult(matchResult);
             if (!matchResult.getNeedDerive().isEmpty()) {
                 candidate.setDerivedToHostMap(matchResult.getNeedDerive());
-                candidate.setDerivedTableSnapshots(candidate.getDerivedToHostMap().keySet().stream()
+                candidate.setDerivedLookups(candidate.getDerivedToHostMap().keySet().stream()
                         .map(i -> chooserContext.convertToRef(i).getTable()).collect(Collectors.toSet()));
             }
             List<NDataLayout> dataLayouts = entry.getValue();
@@ -167,7 +162,7 @@ public class QueryLayoutChooser {
         }
         if (CollectionUtils.isEmpty(prunedSegments)) {
             log.info("There is no segment to answer sql");
-            return NLayoutCandidate.EMPTY;
+            return NLayoutCandidate.ofEmptyCandidate();
         }
 
         ChooserContext chooserContext = new ChooserContext(digest, dataflow);
@@ -175,15 +170,14 @@ public class QueryLayoutChooser {
             return null;
         }
 
-        Map<Long, List<NDataLayout>> idToDataLayoutsMap = getCommonLayouts(dataflow, chooserContext, candidate,
-                prunedSegments);
+        Map<Long, List<NDataLayout>> idToDataLayoutsMap = getCommonLayouts(prunedSegments);
         List<NLayoutCandidate> allLayoutCandidates = QueryLayoutChooser.collectAllLayoutCandidates(dataflow,
                 chooserContext, idToDataLayoutsMap);
         return chooseBestLayoutCandidate(dataflow, digest, chooserContext, allLayoutCandidates,
                 "selectHighIntegrityCandidate");
     }
 
-    private static NLayoutCandidate chooseBestLayoutCandidate(NDataflow dataflow, SQLDigest digest,
+    public static NLayoutCandidate chooseBestLayoutCandidate(NDataflow dataflow, SQLDigest digest,
             ChooserContext chooserContext, List<NLayoutCandidate> allLayoutCandidates, String invokedByMethod) {
         QueryInterruptChecker.checkThreadInterrupted("Interrupted exception occurs.",
                 "Current step involves gathering all the layouts that "
@@ -200,8 +194,7 @@ public class QueryLayoutChooser {
         return allLayoutCandidates.get(0);
     }
 
-    private static Map<Long, List<NDataLayout>> getCommonLayouts(NDataflow dataflow, ChooserContext chooserContext,
-            Candidate candidate, List<NDataSegment> prunedSegments) {
+    private static Map<Long, List<NDataLayout>> getCommonLayouts(List<NDataSegment> prunedSegments) {
         Map<Long, List<NDataLayout>> idToDataLayoutsMap = Maps.newHashMap();
         for (NDataSegment segment : prunedSegments) {
             segment.getLayoutsMap().forEach((id, dataLayout) -> {
@@ -209,40 +202,10 @@ public class QueryLayoutChooser {
                 idToDataLayoutsMap.get(id).add(dataLayout);
             });
         }
-
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
-        String segmentOnlineMode = projectConfig.getKylinEngineSegmentOnlineMode();
-        Map<String, Set<Long>> chSegToLayoutsMap = candidate.getChSegToLayoutsMap(dataflow);
-        if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(segmentOnlineMode)
-                && MapUtils.isNotEmpty(chSegToLayoutsMap)) {
-            Map<Long, List<NDataLayout>> chLayoutsMap = Maps.newHashMap();
-            chSegToLayoutsMap.forEach((segId, chLayoutIds) -> chLayoutIds.forEach(id -> {
-                NDataLayout dataLayout = NDataLayout.newDataLayout(dataflow, segId, id);
-                chLayoutsMap.putIfAbsent(id, Lists.newArrayList());
-                chLayoutsMap.get(id).add(dataLayout);
-            }));
-            chLayoutsMap.forEach((layoutId, chLayouts) -> {
-                if (!idToDataLayoutsMap.containsKey(layoutId)) {
-                    idToDataLayoutsMap.put(layoutId, chLayouts);
-                } else {
-                    List<NDataLayout> normalLayouts = idToDataLayoutsMap.get(layoutId);
-                    long[] normalRangeAndMax = calcSegRangeAndMaxEnd(chooserContext, dataflow, normalLayouts);
-                    long[] chRangeAndMax = calcSegRangeAndMaxEnd(chooserContext, dataflow, chLayouts);
-                    // CH Layouts is more preferred: 
-                    // 1. with bigger built data range
-                    // 2. have the latest build data
-                    if ((normalRangeAndMax[0] < chRangeAndMax[0])
-                            || (normalRangeAndMax[0] == chRangeAndMax[0] && normalRangeAndMax[1] <= chRangeAndMax[1])) {
-                        idToDataLayoutsMap.put(layoutId, chLayouts);
-                    }
-                }
-            });
-        }
         return idToDataLayoutsMap;
     }
 
-    private static Collection<NDataLayout> getCommonLayouts(List<NDataSegment> segments, NDataflow dataflow,
-            Map<String, Set<Long>> chSegmentToLayoutsMap) {
+    private static Collection<NDataLayout> getCommonLayouts(List<NDataSegment> segments, NDataflow dataflow) {
         KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
         if (!projectConfig.isHeterogeneousSegmentEnabled()) {
             return dataflow.getLatestReadySegment().getLayoutsMap().values();
@@ -255,23 +218,11 @@ public class QueryLayoutChooser {
 
         val isMppOnTheFlyLayoutsEnabled = dataflow.getConfig().isMppOnTheFlyLayoutsEnabled();
 
-        String segmentOnlineMode = projectConfig.getKylinEngineSegmentOnlineMode();
         for (int i = 0; i < segments.size(); i++) {
             val dataSegment = segments.get(i);
             var layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
-            val isReadyEmptySeg = isMppOnTheFlyLayoutsEnabled
-                    && dataSegment.getStatus() == SegmentStatusEnum.READY && layoutIdMapToDataLayout.isEmpty();
-            if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(segmentOnlineMode)
-                    && MapUtils.isNotEmpty(chSegmentToLayoutsMap)) {
-                // Only the basic TableIndex is built in the CH storage
-                Set<Long> chLayouts = chSegmentToLayoutsMap.getOrDefault(dataSegment.getId(), Sets.newHashSet());
-                Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream()
-                        .map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
-                        .collect(Collectors.toMap(NDataLayout::getLayoutId, Function.identity()));
-
-                nDataLayoutMap.putAll(layoutIdMapToDataLayout);
-                layoutIdMapToDataLayout = nDataLayoutMap;
-            }
+            val isReadyEmptySeg = isMppOnTheFlyLayoutsEnabled && dataSegment.getStatus() == SegmentStatusEnum.READY
+                    && layoutIdMapToDataLayout.isEmpty();
             if (i == 0 || isReadyEmptySeg) { // ACCEPT empty & ready segments, they can be served by mpp on-the-fly
                 commonLayouts.putAll(layoutIdMapToDataLayout);
             } else {
@@ -317,7 +268,7 @@ public class QueryLayoutChooser {
     }
 
     private static List<Integer> getFilterColIds(ChooserContext chooserContext, SQLDigest sqlDigest) {
-        Set<TblColRef> filterColSet = ImmutableSet.copyOf(sqlDigest.filterColumns);
+        Set<TblColRef> filterColSet = ImmutableSet.copyOf(sqlDigest.getFilterColumns());
         List<TblColRef> filterCols = Lists.newArrayList(filterColSet);
         return filterCols.stream().sorted(ComparatorUtils.filterColComparator(chooserContext))
                 .map(col -> chooserContext.getTblColMap().get(col)).collect(Collectors.toList());
@@ -327,11 +278,11 @@ public class QueryLayoutChooser {
 
         Set<TblColRef> nonFilterColSet;
         if (sqlDigest.isRawQuery) {
-            nonFilterColSet = sqlDigest.allColumns.stream()
+            nonFilterColSet = sqlDigest.getAllColumns().stream()
                     .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE)
                     .collect(Collectors.toSet());
         } else {
-            nonFilterColSet = sqlDigest.groupbyColumns.stream()
+            nonFilterColSet = sqlDigest.getGroupByColumns().stream()
                     .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE)
                     .collect(Collectors.toSet());
         }

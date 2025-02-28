@@ -1,2 +1,0 @@
-
-select INITCAP(SUBSTR(lstg_format_name,2)) a from test_kylin_fact

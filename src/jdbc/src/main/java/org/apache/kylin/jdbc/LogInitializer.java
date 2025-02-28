@@ -18,7 +18,6 @@
 
 package org.apache.kylin.jdbc;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,10 +25,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Matcher;
-
 
 public class LogInitializer {
 
@@ -42,9 +42,11 @@ public class LogInitializer {
             Class<?> logManagerClz = Class.forName("org.apache.logging.log4j.LogManager");
             Class<?> logContextClz = Class.forName("org.apache.logging.log4j.core.LoggerContext");
 
-            String classPath = new File(KylinConnection.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            String classPath = new File(
+                    KylinConnection.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
             String separator = String.valueOf(File.separatorChar);
-            String configFileName = classPath.substring(0, classPath.lastIndexOf(separator)+1) + "kylin-jdbc.properties";
+            String configFileName = classPath.substring(0, classPath.lastIndexOf(separator) + 1)
+                    + "kylin-jdbc.properties";
             Properties properties = new Properties();
             if (new File(configFileName).exists()) {
                 properties.load(preprocessPropertiesFile(configFileName));
@@ -57,11 +59,13 @@ public class LogInitializer {
                 String maxFileSize = properties.getProperty("MaxFileSize");
 
                 tmp = File.createTempFile("KylinJDBCDRiver", "xml");
-                try(PrintStream out = new PrintStream(tmp)) {
+                try (PrintStream out = new PrintStream(Files.newOutputStream(tmp.toPath()), false,
+                        Charset.defaultCharset().name())) {
                     out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                     out.println("<Configuration>");
                     out.println("  <Appenders>");
-                    out.println("    <RollingFile name=\"RollingFile\" fileName=\"" + file + "\" filePattern=\"" + file + ".%i\">");
+                    out.println("    <RollingFile name=\"RollingFile\" fileName=\"" + file + "\" filePattern=\"" + file
+                            + ".%i\">");
                     out.println("      <PatternLayout>");
                     out.println("        <pattern>%d{ISO8601} %-5p [%t] : %m%n</pattern>");
                     out.println("      </PatternLayout>");
@@ -98,11 +102,11 @@ public class LogInitializer {
     }
 
     private static InputStream preprocessPropertiesFile(String myFile) throws IOException {
-        try(Scanner in = new Scanner(new FileReader(myFile))) {
+        try (Scanner in = new Scanner(new FileReader(myFile))) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            while(in.hasNext()) {
-                out.write(in.nextLine().replace("\\", "\\\\").getBytes());
-                out.write("\n".getBytes());
+            while (in.hasNext()) {
+                out.write(in.nextLine().replace("\\", "\\\\").getBytes(Charset.defaultCharset()));
+                out.write("\n".getBytes(Charset.defaultCharset()));
             }
             return new ByteArrayInputStream(out.toByteArray());
         }

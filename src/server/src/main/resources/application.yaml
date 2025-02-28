@@ -62,6 +62,12 @@ management:
       enabled: true
     refresh:
       enabled: true
+    licenseService:
+      enabled: false
+
+springfox:
+  documentation:
+    enabled: ${kylin.swagger.enabled}
 
 spring:
   servlet:
@@ -83,6 +89,7 @@ spring:
         composite-indicator:
           enabled: false
     zookeeper:
+      enabled: ${kylin.env.zookeeper.enabled}
       connect-string: ${kylin.env.zookeeper-connect-string}
       discovery:
         root: /kylin/${kylin.metadata.url.unique-id}/services
@@ -109,19 +116,13 @@ spring:
 
 mybatis:
   mapper-locations: classpath:/mybatis-mapper/*Mapper.xml
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
 arthas:
   app-name: ${kylin.server.mode}_${server.port}
   http-port: -1
   telnet-port: -1
-
-feign:
-  hystrix:
-    enabled: true
-  circuitbreaker:
-    enabled: true
 
 ---
 spring:

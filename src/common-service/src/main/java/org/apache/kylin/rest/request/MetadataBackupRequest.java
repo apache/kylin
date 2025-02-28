@@ -32,4 +32,6 @@ public class MetadataBackupRequest {
     private Long tmpFileSize;
     @JsonProperty("backup_dir")
     private String backupDir;
+    @JsonProperty("from_host")
+    private String fromHost;
 }

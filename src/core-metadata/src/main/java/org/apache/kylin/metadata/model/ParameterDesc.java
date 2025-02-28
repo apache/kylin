@@ -24,10 +24,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -126,5 +127,9 @@ public class ParameterDesc implements Serializable {
     @Override
     public String toString() {
         return isColumnType() && colRef != null ? colRef.toString() : value;
+    }
+
+    public String toStringWithoutAlias() {
+        return isColumnType() && colRef != null ? colRef.getColumnWithTableAndSchema() : value;
     }
 }

@@ -22,94 +22,61 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @author xjiang
- */
+@Setter
+@Getter
 @Slf4j
 public class StorageContext {
-    @Getter
-    private int ctxId;
 
-    @Getter
-    @Setter
-    private Long layoutId = -1L;
+    private final int ctxId;
 
-    @Getter
-    @Setter
-    private Long streamingLayoutId = -1L;
-
-    @Setter
-    @Getter
-    private boolean partialMatchModel = false;
-
-    @Setter
-    private NLayoutCandidate candidate;
-
-    @Getter
-    @Setter
-    private boolean isFilterCondAlwaysFalse;
-
-    public NLayoutCandidate getCandidate() {
-        if (isBatchCandidateEmpty() && !isStreamCandidateEmpty()) {
-            return streamingCandidate;
-        }
-        return candidate == null ? NLayoutCandidate.EMPTY : candidate;
-    }
-
-    @Setter
-    private NLayoutCandidate streamingCandidate;
-
-    public NLayoutCandidate getStreamingCandidate() {
-        return streamingCandidate == null ? NLayoutCandidate.EMPTY : streamingCandidate;
-    }
-
-    public boolean isBatchCandidateEmpty() {
-        return candidate == null || candidate == NLayoutCandidate.EMPTY;
-    }
-
-    public boolean isStreamCandidateEmpty() {
-        return streamingCandidate == null || streamingCandidate == NLayoutCandidate.EMPTY;
-    }
-
-    @Getter
-    @Setter
+    // dimensions & metrics
     private Set<TblColRef> dimensions;
-
-    @Getter
-    @Setter
     private Set<FunctionDesc> metrics;
 
-    @Getter
-    @Setter
-    private boolean useSnapshot = false;
+    // storage related info
+    private NLayoutCandidate batchCandidate = NLayoutCandidate.ofEmptyCandidate();
+    private NLayoutCandidate streamCandidate = NLayoutCandidate.ofEmptyCandidate();
+    private NLookupCandidate lookupCandidate;
+    private boolean isDataSkipped;
 
-    @Getter
-    @Setter
-    private List<NDataSegment> prunedSegments;
-
-    @Getter
-    @Setter
-    private List<NDataSegment> prunedStreamingSegments;
-
-    @Getter
-    @Setter
+    // other info
     private Map<String, List<Long>> prunedPartitions;
-
-    @Getter
-    @Setter
-    private boolean isEmptyLayout;
+    private boolean isPartialMatch = false;
+    private boolean isFilterCondAlwaysFalse;
 
     public StorageContext(int ctxId) {
         this.ctxId = ctxId;
     }
 
+    public NLookupCandidate getLookupCandidate() {
+        if (streamCandidate.isEmpty() && batchCandidate.isEmpty()) {
+            return lookupCandidate;
+        } else {
+            return null;
+        }
+    }
+
+    public NLayoutCandidate getCandidate() {
+        if (isBatchCandidateEmpty() && !isStreamCandidateEmpty()) {
+            return streamCandidate;
+        }
+        return batchCandidate;
+    }
+
+    public boolean isBatchCandidateEmpty() {
+        return batchCandidate.getLayoutId() == -1L;
+    }
+
+    public boolean isStreamCandidateEmpty() {
+        return streamCandidate.getLayoutId() == -1L;
+    }
 }

@@ -21,6 +21,7 @@ package org.apache.kylin.mapper;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +44,7 @@ public class JobLockMapperTest {
     @BeforeEach
     public void setup() throws Exception {
         KylinConfig config = getTestConfig();
+        JobContextUtil.cleanUp();
         ReflectionTestUtils.invokeMethod(JobContextUtil.class, "initMappers", config);
         config.setProperty("kylin.job.slave-lock-renew-sec", "3");
         jobLockMapper = (JobLockMapper) ReflectionTestUtils.getField(JobContextUtil.class, "jobLockMapper");
@@ -56,6 +58,7 @@ public class JobLockMapperTest {
     private JobLock generateJobLock() {
 
         JobLock jobLock = new JobLock();
+        jobLock.setProject("default");
         jobLock.setLockId("mock_lock_id");
         jobLock.setLockNode("mock_lock_node");
         long renewalSec = getTestConfig().getJobSchedulerJobRenewalSec();
@@ -80,7 +83,7 @@ public class JobLockMapperTest {
 
         long renewSec = getTestConfig().getJobSchedulerJobRenewalSec();
         Awaitility.await().atMost(renewSec + 1, TimeUnit.SECONDS)
-                .until(() -> jobLockMapper.findNonLockIdList(10).size() > 0);
+                .until(() -> jobLockMapper.findNonLockIdList(10, Collections.singletonList("default")).size() > 0);
 
         // update (h2 no support mysql-dialect)
         //        int updateAffect = jobLockMapper.upsertLock("mock_job_id", "mock_node_id", 10000L);

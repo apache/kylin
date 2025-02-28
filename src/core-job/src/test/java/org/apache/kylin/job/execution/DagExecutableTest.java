@@ -18,31 +18,61 @@
 
 package org.apache.kylin.job.execution;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.jupiter.api.BeforeEach;
+import static org.apache.kylin.job.execution.AbstractExecutable.DEPENDENT_FILES;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-//TODO KE-36632
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.JobContext;
+import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.awaitility.Duration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import lombok.val;
+import lombok.var;
+
 @MetadataInfo
 class DagExecutableTest {
 
     private ExecutableManager manager;
-    private ExecutableContext context;
+    private JobContext context;
 
     private static final String DEFAULT_PROJECT = "default";
 
     @BeforeEach
     void setup() {
-        manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), DEFAULT_PROJECT);
-        context = new ExecutableContext(Maps.newConcurrentMap(), Maps.newConcurrentMap(),
-                KylinConfig.getInstanceFromEnv(), 0);
-        for (String jobPath : manager.getJobs()) {
-            manager.deleteJob(jobPath);
-        }
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.job.max-concurrent-jobs", "0");
+        JobContextUtil.cleanUp();
+        manager = ExecutableManager.getInstance(config, DEFAULT_PROJECT);
+        context = JobContextUtil.getJobContext(config);
     }
 
-    /*
+    @AfterEach
+    void cleanUp() {
+        JobContextUtil.cleanUp();
+    }
+
     @Test
     void testCheckPreviousStepFailed() {
         val job = new DefaultExecutable();
@@ -86,6 +116,7 @@ class DagExecutableTest {
         executable1.setNextSteps(Sets.newHashSet(executable2.getId()));
         executable2.setPreviousStep(executable1.getId());
         manager.addJob(job);
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable1.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable1.getId(), ExecutableState.SUCCEED);
 
@@ -110,6 +141,7 @@ class DagExecutableTest {
         executable1.setNextSteps(Sets.newHashSet(executable2.getId()));
         executable2.setPreviousStep(executable1.getId());
         manager.addJob(job);
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable1.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable1.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
@@ -135,13 +167,14 @@ class DagExecutableTest {
         executable1.setNextSteps(Sets.newHashSet(executable2.getId()));
         executable2.setPreviousStep(executable1.getId());
         manager.addJob(job);
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable1.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable1.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(executable2.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         final Map<String, Executable> dagExecutablesMap = job.getTasks().stream()
                 .collect(Collectors.toMap(Executable::getId, executable -> executable));
@@ -176,6 +209,7 @@ class DagExecutableTest {
         executable2.setNextSteps(Sets.newHashSet(executable3.getId()));
         executable3.setPreviousStep(executable2.getId());
         manager.addJob(job);
+        manager.publishJob(job.getId(), job);
         manager.updateJobOutput(executable1.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable1.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
@@ -213,6 +247,7 @@ class DagExecutableTest {
         final Map<String, Executable> dagExecutablesMap = job.getTasks().stream()
                 .collect(Collectors.toMap(Executable::getId, executable -> executable));
 
+        manager.publishJob(job.getJobId(), job);
         job.dagExecute(Lists.newArrayList(executable1), dagExecutablesMap, context);
 
         assertEquals(ExecutableState.SUCCEED, executable1.getStatus());
@@ -222,6 +257,7 @@ class DagExecutableTest {
 
     @Test
     void dagExecute() throws ExecuteException {
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.job.max-transaction-retry", "23");
         val job = new DefaultExecutable();
         job.setProject(DEFAULT_PROJECT);
         val executable1 = new SucceedDagTestExecutable();
@@ -301,6 +337,7 @@ class DagExecutableTest {
         final Map<String, Executable> dagExecutablesMap = job.getTasks().stream()
                 .collect(Collectors.toMap(Executable::getId, executable -> executable));
 
+        manager.publishJob(job.getJobId(), job);
         job.dagExecute(Lists.newArrayList(executable1, executable01), dagExecutablesMap, context);
 
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -345,6 +382,7 @@ class DagExecutableTest {
 
         List<Executable> executables = job.getTasks().stream().map(task -> ((Executable) task))
                 .collect(Collectors.toList());
+        manager.publishJob(job.getJobId(), job);
         job.dagSchedule(executables, context);
 
         assertEquals(ExecutableState.SUCCEED, executable1.getStatus());
@@ -370,6 +408,7 @@ class DagExecutableTest {
 
         List<Executable> executables = job.getTasks().stream().map(task -> ((Executable) task))
                 .collect(Collectors.toList());
+        manager.publishJob(job.getJobId(), job);
         job.chainedSchedule(executables, context);
 
         assertEquals(ExecutableState.SUCCEED, executable1.getStatus());
@@ -393,13 +432,14 @@ class DagExecutableTest {
         job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable2.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(executable3.getId(), ExecutableState.RUNNING);
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(executable3.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         List<Executable> executables = job.getTasks().stream().map(task -> ((Executable) task))
                 .collect(Collectors.toList());
@@ -437,6 +477,7 @@ class DagExecutableTest {
         executable3.setPreviousStep(executable2.getId());
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         val executeResult = job.doWork(context);
         assertEquals(ExecuteResult.State.SUCCEED, executeResult.state());
         assertEquals("succeed", executeResult.output());
@@ -470,6 +511,7 @@ class DagExecutableTest {
         job.setJobSchedulerMode(JobSchedulerModeEnum.CHAIN);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         val executeResult = job.doWork(context);
         assertEquals(ExecuteResult.State.SUCCEED, executeResult.state());
         assertEquals("succeed", executeResult.output());
@@ -503,6 +545,7 @@ class DagExecutableTest {
         job.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         val executeResult = job.doWork(context);
         assertEquals(ExecuteResult.State.SUCCEED, executeResult.state());
         assertEquals("succeed", executeResult.output());
@@ -542,6 +585,7 @@ class DagExecutableTest {
         job.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
 
         manager.addJob(job);
+        manager.publishJob(job.getJobId(), job);
         job.doWork(context);
 
         await().atMost(new Duration(120, TimeUnit.SECONDS)).untilAsserted(() -> {
@@ -550,8 +594,8 @@ class DagExecutableTest {
             assertEquals(ExecutableState.SUCCEED, executable22.getStatus());
             assertEquals(ExecutableState.SUCCEED, executable222.getStatus());
         });
-
-        val durationFromStepOrStageDurationSum = job.getDurationFromStepOrStageDurationSum();
+        ExecutablePO po = manager.getExecutablePO(job.getId());
+        val durationFromStepOrStageDurationSum = job.getDurationFromStepOrStageDurationSum(po);
         val expected = executable1.getDuration() + executable2.getDuration() + executable22.getDuration();
         assertEquals(expected, durationFromStepOrStageDurationSum);
     }
@@ -583,6 +627,7 @@ class DagExecutableTest {
         executable222.setPreviousStep(executable2.getId());
 
         manager.addJob(job);
+        manager.publishJob(job.getJobId(), job);
         job.doWork(context);
 
         assertEquals(ExecutableState.SUCCEED, executable1.getStatus());
@@ -590,7 +635,8 @@ class DagExecutableTest {
         assertEquals(ExecutableState.SUCCEED, executable22.getStatus());
         assertEquals(ExecutableState.SUCCEED, executable222.getStatus());
 
-        val durationFromStepOrStageDurationSum = job.getDurationFromStepOrStageDurationSum();
+        ExecutablePO po = manager.getExecutablePO(job.getId());
+        val durationFromStepOrStageDurationSum = job.getDurationFromStepOrStageDurationSum(po);
         val expected = executable1.getDuration() + executable2.getDuration() + executable22.getDuration()
                 + executable222.getDuration();
         assertEquals(expected, durationFromStepOrStageDurationSum);
@@ -616,12 +662,12 @@ class DagExecutableTest {
         job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(job.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(task.getId(), ExecutableState.RUNNING);
         manager.updateStageStatus(stage1.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.RUNNING, null, null);
-        manager.saveUpdatedJob();
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateJobOutput(job.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED);
@@ -630,9 +676,9 @@ class DagExecutableTest {
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
-        manager.saveUpdatedJob();
 
-        val taskDuration = task.getTaskDurationToTest(task);
+        ExecutablePO po = manager.getExecutablePO(job.getId());
+        val taskDuration = task.getTaskDurationToTest(task, po);
         val expected = AbstractExecutable.getDuration(stage1.getOutput(task.getId()))
                 + AbstractExecutable.getDuration(stage2.getOutput(task.getId()))
                 + AbstractExecutable.getDuration(stage3.getOutput(task.getId()));
@@ -661,12 +707,12 @@ class DagExecutableTest {
         job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(job.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(task.getId(), ExecutableState.RUNNING);
         manager.updateStageStatus(stage1.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.RUNNING, null, null);
-        manager.saveUpdatedJob();
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateJobOutput(job.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED);
@@ -675,9 +721,9 @@ class DagExecutableTest {
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
-        manager.saveUpdatedJob();
 
-        val taskDuration = task.getTaskDurationToTest(task);
+        ExecutablePO po = manager.getExecutablePO(job.getId());
+        val taskDuration = task.getTaskDurationToTest(task, po);
         val expected = task.getDuration();
         assertEquals(expected, taskDuration);
     }
@@ -695,10 +741,11 @@ class DagExecutableTest {
         job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task1.getId(), ExecutableState.ERROR);
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val stack = ExceptionUtils.getStackTrace(new MockJobException());
         val reason = new MockJobException().getMessage();
@@ -723,12 +770,14 @@ class DagExecutableTest {
     void getDependentFiles() {
         val job = new DefaultExecutable();
         job.setProject(DEFAULT_PROJECT);
+        job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
         var dependentFiles = job.getDependentFiles();
         assertTrue(CollectionUtils.isEmpty(dependentFiles));
 
         val info = Maps.<String, String> newHashMap();
         info.put(DEPENDENT_FILES, "12");
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(job.getId(), ExecutableState.RUNNING, info);
         dependentFiles = job.getDependentFiles();
         assertEquals(1, dependentFiles.size());
@@ -742,6 +791,7 @@ class DagExecutableTest {
         val executable1 = new SucceedDagTestExecutable();
         executable1.setProject(DEFAULT_PROJECT);
         job.addTask(executable1);
+        job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
         executable1.killApplicationIfExistsOrUpdateStepStatus();
         assertEquals(ExecutableState.PAUSED, executable1.getStatus());
@@ -791,6 +841,7 @@ class DagExecutableTest {
         job.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable3.getId(), ExecutableState.RUNNING);
 
@@ -855,11 +906,11 @@ class DagExecutableTest {
 
         manager.addJob(job);
 
+        manager.publishJob(job.getJobId(), job);
         manager.updateJobOutput(executable2.getId(), ExecutableState.RUNNING);
         manager.updateJobOutput(executable3.getId(), ExecutableState.RUNNING);
 
         val otherPipelineRunningSteps = executable3.getOtherPipelineRunningStep();
         assertTrue(CollectionUtils.isEmpty(otherPipelineRunningSteps));
     }
-    */
 }

@@ -1,0 +1,203 @@
+{
+  "uuid" : "4ac19298-c5dd-4f75-978b-9b9849388805",
+  "last_modified" : 1644402305312,
+  "create_time" : 1643635546541,
+  "version" : "4.0.0.0",
+  "name" : "POSITION_DATA_VD",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COST_CENTRE_SAP_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "PNL_START_POSITION",
+    "datatype" : "decimal(38,18)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "DATA_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "COMPONENT_TYPE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "POSITION_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "COUNTERPARTY_CCONSOL",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "BUSINESS_DATE",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "COLLATERAL_TYPE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "RUN_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "NOTIONAL_CCY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "RUN_VERSION",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "NOTIONAL",
+    "datatype" : "decimal(38,18)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "TRADING_BOOK_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "JOB_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "PRODUCT_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "SOURCE_SYSTEM",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "POSITION_KEY_EXTERNAL",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "ORIGINAL_NOTIONAL",
+    "datatype" : "decimal(38,18)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "INSTRUMENT_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "POSITION_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "SOURCE_SYSTEM_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "POSITION_GROUP",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "UPDATE_TIME",
+    "datatype" : "timestamp",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "NET_POSITION",
+    "datatype" : "decimal(38,18)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "26",
+    "name" : "MEGDP_TENANT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "27",
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "28",
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "29",
+    "name" : "POSITION_DATA_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "Coriander_PnL_Reporting/table_snapshot/CRS.POSITION_DATA_VD/bccf8649-812f-421f-abec-edb09aeff219",
+  "last_snapshot_size" : 15261348103,
+  "snapshot_last_modified" : 1644402305312,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 159628320,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : "POSITION_DATA_KEY",
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "CRS",
+  "project" : "original_project_cc_linebreak"
+}

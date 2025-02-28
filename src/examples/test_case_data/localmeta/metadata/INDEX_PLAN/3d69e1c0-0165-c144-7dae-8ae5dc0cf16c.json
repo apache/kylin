@@ -1,0 +1,43 @@
+{
+  "uuid" : "3d69e1c0-0165-c144-7dae-8ae5dc0cf16c",
+  "last_modified" : 1631934817833,
+  "create_time" : 1631934810411,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 20000000000,
+    "dimensions" : [ 4 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000000001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 4 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1631934810415,
+      "manual" : true,
+      "auto" : false,
+      "base" : true,
+      "draft_version" : null,
+      "index_range" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 10000,
+  "next_table_index_id" : 20000010000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 0,
+  "approved_removal_recs" : 0,
+  "project" : "streaming_test"
+}

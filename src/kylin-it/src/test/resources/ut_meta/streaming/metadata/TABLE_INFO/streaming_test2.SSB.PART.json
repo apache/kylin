@@ -1,0 +1,54 @@
+{
+  "uuid" : "6d2e2e57-8bdb-43f8-ba92-8c8aae08bed1",
+  "last_modified" : 0,
+  "create_time" : 1575958417702,
+  "version" : "4.0.0.0",
+  "name" : "PART",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "P_PARTKEY",
+    "datatype" : "integer"
+  }, {
+    "id" : "2",
+    "name" : "P_NAME",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "3",
+    "name" : "P_MFGR",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "4",
+    "name" : "P_CATEGORY",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "5",
+    "name" : "P_BRAND",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "6",
+    "name" : "P_COLOR",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "7",
+    "name" : "P_TYPE",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "8",
+    "name" : "P_SIZE",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "P_CONTAINER",
+    "datatype" : "varchar(4096)"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "SSB",
+  "project" : "streaming_test2"
+}

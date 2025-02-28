@@ -61,6 +61,10 @@ management:
     refresh:
       enabled: true
 
+springfox:
+  documentation:
+    enabled: ${kylin.swagger.enabled}
+
 spring:
   http:
     multipart:

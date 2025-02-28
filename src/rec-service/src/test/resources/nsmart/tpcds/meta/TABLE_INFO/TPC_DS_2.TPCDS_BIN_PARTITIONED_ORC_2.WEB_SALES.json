@@ -1,0 +1,147 @@
+{
+  "uuid" : "de109a57-5ad9-4b6e-8699-d0212a33b5ff",
+  "last_modified" : 1497607295138,
+  "version" : "2.0.0",
+  "name" : "WEB_SALES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "WS_SOLD_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "WS_SHIP_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "WS_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "WS_BILL_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "WS_BILL_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "WS_BILL_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "WS_BILL_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "WS_SHIP_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "WS_SHIP_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "WS_SHIP_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "11",
+    "name" : "WS_SHIP_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "12",
+    "name" : "WS_WEB_PAGE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "13",
+    "name" : "WS_WEB_SITE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "14",
+    "name" : "WS_SHIP_MODE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "15",
+    "name" : "WS_WAREHOUSE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "16",
+    "name" : "WS_PROMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "17",
+    "name" : "WS_ORDER_NUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "18",
+    "name" : "WS_QUANTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "19",
+    "name" : "WS_WHOLESALE_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "20",
+    "name" : "WS_LIST_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "21",
+    "name" : "WS_SALES_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "22",
+    "name" : "WS_EXT_DISCOUNT_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "23",
+    "name" : "WS_EXT_SALES_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "24",
+    "name" : "WS_EXT_WHOLESALE_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "25",
+    "name" : "WS_EXT_LIST_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "26",
+    "name" : "WS_EXT_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "27",
+    "name" : "WS_COUPON_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "28",
+    "name" : "WS_EXT_SHIP_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "29",
+    "name" : "WS_NET_PAID",
+    "datatype" : "double"
+  }, {
+    "id" : "30",
+    "name" : "WS_NET_PAID_INC_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "31",
+    "name" : "WS_NET_PAID_INC_SHIP",
+    "datatype" : "double"
+  }, {
+    "id" : "32",
+    "name" : "WS_NET_PAID_INC_SHIP_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "33",
+    "name" : "WS_NET_PROFIT",
+    "datatype" : "double"
+  }, {
+    "id" : "34",
+    "name" : "WS_SOLD_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

@@ -71,6 +71,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.manager.SegmentAutoMergeUtil;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -79,7 +80,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TimeRange;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.constant.SnapshotStatus;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.util.SpringContext;
 import org.springframework.stereotype.Component;
@@ -160,7 +160,7 @@ public class JobSyncListener {
     public void onBuildJobFinished(JobFinishedNotifier notifier) {
         try {
             if (notifier.getJobClass().equals(NSparkCubingJob.class.getName()) && notifier.isSucceed()) {
-                MetadataInvoker.getInstance().checkAndAutoMergeSegments(notifier.getProject(), notifier.getSubject(),
+                SegmentAutoMergeUtil.autoMergeSegments(notifier.getProject(), notifier.getSubject(),
                         notifier.getOwner());
             }
         } catch (Exception e) {
@@ -252,9 +252,9 @@ public class JobSyncListener {
                 .state("SUICIDAL".equalsIgnoreCase(notifier.getJobState()) ? "DISCARDED" : notifier.getJobState())
                 .jobType(notifier.getJobType()).segRanges(segRangeList)
                 .segmentPartitionInfoList(segmentPartitionsInfoList)
-                .snapshotJobInfo(getSnapshotJobInfo(tableDesc, notifier))
-                .startTime(notifier.getStartTime()).endTime(notifier.getEndTime()).tag(notifier.getTag())
-                .errorCode(errorCode).suggestion(suggestion).msg(msg).code(code).stacktrace(stacktrace).build();
+                .snapshotJobInfo(getSnapshotJobInfo(tableDesc, notifier)).startTime(notifier.getStartTime())
+                .endTime(notifier.getEndTime()).tag(notifier.getTag()).errorCode(errorCode).suggestion(suggestion)
+                .msg(msg).code(code).stacktrace(stacktrace).build();
 
     }
 
@@ -530,7 +530,7 @@ public class JobSyncListener {
                 DistributionSummary.builder(PrometheusMetrics.MODEL_BUILD_DURATION.getValue())
                         .tags(MetricsTag.MODEL.getVal(), modelAlias, MetricsTag.PROJECT.getVal(), notifier.getProject(),
                                 MetricsTag.JOB_TYPE.getVal(), notifier.getJobType(), MetricsTag.SUCCEED.getVal(),
-                                (ExecutableState.SUCCEED == state) + "")
+                                String.valueOf(ExecutableState.SUCCEED == state))
                         .distributionStatisticExpiry(Duration.ofDays(1))
                         .sla(KylinConfig.getInstanceFromEnv().getMetricsJobSlaMinutes()).register(meterRegistry)
                         .record((notifier.getDuration() + notifier.getWaitTime()) / (60.0 * 1000.0));

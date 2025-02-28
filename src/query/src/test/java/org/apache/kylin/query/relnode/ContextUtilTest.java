@@ -34,25 +34,25 @@ public class ContextUtilTest {
     @Test
     public void testDerivedFromSameContextWhenMetWindowOrSort() throws Exception {
         Method derivedMethod = ContextUtil.class.getDeclaredMethod("derivedFromSameContext", Collection.class,
-                RelNode.class, OLAPContext.class, boolean.class);
+                RelNode.class, OlapContext.class, boolean.class);
         Unsafe.changeAccessibleObject(derivedMethod, true);
         {
-            RelNode rel = Mockito.mock(OLAPWindowRel.class);
+            RelNode rel = Mockito.mock(OlapWindowRel.class);
             Object result = derivedMethod.invoke(null, Collections.EMPTY_LIST, rel, null, false);
             Assert.assertEquals(false, result);
         }
         {
-            RelNode rel = Mockito.mock(OLAPSortRel.class);
+            RelNode rel = Mockito.mock(OlapSortRel.class);
             Object result = derivedMethod.invoke(null, Collections.EMPTY_LIST, rel, null, false);
             Assert.assertEquals(false, result);
         }
         {
-            RelNode rel = Mockito.mock(OLAPLimitRel.class);
+            RelNode rel = Mockito.mock(OlapLimitRel.class);
             Object result = derivedMethod.invoke(null, Collections.EMPTY_LIST, rel, null, false);
             Assert.assertEquals(false, result);
         }
         {
-            RelNode rel = Mockito.mock(OLAPValuesRel.class);
+            RelNode rel = Mockito.mock(OlapValuesRel.class);
             Object result = derivedMethod.invoke(null, Collections.EMPTY_LIST, rel, null, false);
             Assert.assertEquals(false, result);
         }

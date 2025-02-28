@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.config;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
 
@@ -69,11 +68,11 @@ public class JobTableInterceptor implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
 
-        Object target = invocation.getTarget();
-        Method method = invocation.getMethod();
         Object[] args = invocation.getArgs();
 
-        if (JobMybatisConfig.JOB_INFO_TABLE == null || JobMybatisConfig.JOB_LOCK_TABLE == null) {
+        String jobInfoTableName = jobMybatisConfig.getJobInfoTableName();
+        String jobLockTableName = jobMybatisConfig.getJobLockTableName();
+        if (jobInfoTableName == null || jobLockTableName == null) {
             logger.info("mybatis table not init, skip");
             return null;
         }
@@ -95,24 +94,24 @@ public class JobTableInterceptor implements Interceptor {
         }
         if (args[1] == null) {
             MapperMethod.ParamMap map = new MapperMethod.ParamMap();
-            map.put("jobLockTable", JobMybatisConfig.JOB_LOCK_TABLE);
-            map.put("jobInfoTable", JobMybatisConfig.JOB_INFO_TABLE);
+            map.put("jobLockTable", jobLockTableName);
+            map.put("jobInfoTable", jobInfoTableName);
             map.put("database", database);
             invocation.getArgs()[1] = map;
-        } else if (args[1].getClass() == MapperMethod.ParamMap.class) {
+        } else if (args[1] instanceof MapperMethod.ParamMap) {
             MapperMethod.ParamMap map = (MapperMethod.ParamMap) args[1];
-            map.put("jobLockTable", JobMybatisConfig.JOB_LOCK_TABLE);
-            map.put("jobInfoTable", JobMybatisConfig.JOB_INFO_TABLE);
+            map.put("jobLockTable", jobLockTableName);
+            map.put("jobInfoTable", jobInfoTableName);
             map.put("database", database);
-        } else if (args[1].getClass() == JobMapperFilter.class) {
+        } else if (args[1] instanceof JobMapperFilter) {
             JobMapperFilter mapperFilter = (JobMapperFilter) args[1];
-            mapperFilter.setJobInfoTable(JobMybatisConfig.JOB_INFO_TABLE);
-        } else if (args[1].getClass() == JobInfo.class) {
+            mapperFilter.setJobInfoTable(jobInfoTableName);
+        } else if (args[1] instanceof JobInfo) {
             JobInfo jobInfo = (JobInfo) args[1];
-            jobInfo.setJobInfoTable(JobMybatisConfig.JOB_INFO_TABLE);
-        } else if (args[1].getClass() == JobLock.class) {
+            jobInfo.setJobInfoTable(jobInfoTableName);
+        } else if (args[1] instanceof JobLock) {
             JobLock jobLock = (JobLock) args[1];
-            jobLock.setJobLockTable(JobMybatisConfig.JOB_LOCK_TABLE);
+            jobLock.setJobLockTable(jobLockTableName);
             jobLock.setDatabase(database);
         } else {
             logger.error("miss type of param {}", args[1].getClass());
@@ -124,7 +123,7 @@ public class JobTableInterceptor implements Interceptor {
     private boolean isControlledMapper(String mappedStatementId) {
         for (String controlledMapper : controlledMappers) {
             if (mappedStatementId.startsWith(controlledMapper)) {
-                // ok, find controlled mapper, mappedStatementId like "io.kyligence.kap.job.mapper.JobLockMapper.findCount"
+                // ok, find controlled mapper, mappedStatementId like "org.apache.kylin.job.mapper.JobLockMapper.findCount"
                 return true;
             }
         }

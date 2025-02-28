@@ -43,6 +43,7 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.Segments;
@@ -55,8 +56,10 @@ public class SegmentUtil {
 
     public static Segments<NDataSegment> getSegmentsExcludeRefreshingAndMerging(Segments<NDataSegment> segments) {
         Segments<NDataSegment> result = new Segments<>();
+        Set<String> allIndexJobRunningSegments = segments.getFirstSegment() == null ? null
+                : getAllIndexJobRunningSegments(segments.getFirstSegment().getModel());
         for (val seg : segments) {
-            val status = getSegmentStatusToDisplay(segments, seg, null);
+            val status = getSegmentStatusToDisplay(segments, seg, null, allIndexJobRunningSegments);
             if (!(Objects.equals(SegmentStatusEnumToDisplay.REFRESHING, status)
                     || Objects.equals(SegmentStatusEnumToDisplay.MERGING, status))) {
                 result.add(seg);
@@ -65,8 +68,11 @@ public class SegmentUtil {
         return result;
     }
 
+    // Shouldn't fetch all the run segments first without thinking about it, for example this may affect
+    // the performance of fetching the model list
+    // TODO Consider decoupling with the SegmentUtil#getAllIndexJobRunningSegments
     public static <T extends ISegment> SegmentStatusEnumToDisplay getSegmentStatusToDisplay(Segments segments,
-            T segment, List<AbstractExecutable> executables) {
+            T segment, List<AbstractExecutable> executables, Set<String> allIndexJobRunningSegments) {
         Segments<T> overlapSegs = segments.getSegmentsByRange(segment.getSegRange());
         overlapSegs.remove(segment);
         if (SegmentStatusEnum.NEW == segment.getStatus()) {
@@ -91,11 +97,13 @@ public class SegmentUtil {
         }
 
         if (CollectionUtils.isNotEmpty(overlapSegs)) {
-            Preconditions.checkState(CollectionUtils.isNotEmpty(overlapSegs.getSegments(SegmentStatusEnum.NEW)));
+            if (CollectionUtils.isEmpty(overlapSegs.getSegments(SegmentStatusEnum.NEW))) {
+                return SegmentStatusEnumToDisplay.OVERLAP;
+            }
             return SegmentStatusEnumToDisplay.LOCKED;
         }
 
-        if (anyIndexJobRunning(segment, executables)) {
+        if (anyIndexJobRunning(segment, executables, allIndexJobRunningSegments)) {
             return SegmentStatusEnumToDisplay.LOADING;
         }
 
@@ -122,12 +130,23 @@ public class SegmentUtil {
         return executables.stream().anyMatch(task -> task.getSegmentIds().contains(segment.getId()));
     }
 
-    protected static <T extends ISegment> boolean anyIndexJobRunning(T segment, List<AbstractExecutable> executables) {
+    protected static <T extends ISegment> boolean anyIndexJobRunning(T segment, List<AbstractExecutable> executables,
+            Set<String> allIndexJobRunningSegments) {
         if (Objects.isNull(executables)) {
-            return anyIndexJobRunning(segment);
+            return allIndexJobRunningSegments == null ? anyIndexJobRunning(segment)
+                    : allIndexJobRunningSegments.contains(segment.getId());
         } else {
             return executables.stream().anyMatch(task -> task.getSegmentIds().contains(segment.getId()));
         }
+    }
+
+    // Calling this method takes into account the case of an empty segment
+    public static Set<String> getAllIndexJobRunningSegments(NDataModel model) {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        ExecutableManager execManager = ExecutableManager.getInstance(kylinConfig, model.getProject());
+        List<AbstractExecutable> executables = execManager.listExecByModelAndStatus(model.getId(),
+                ExecutableState::isRunning, INDEX_BUILD, SUB_PARTITION_BUILD);
+        return executables.stream().flatMap(task -> task.getSegmentIds().stream()).collect(Collectors.toSet());
     }
 
     private static <T extends ISegment> boolean isAnyPartitionLoading(T segment) {

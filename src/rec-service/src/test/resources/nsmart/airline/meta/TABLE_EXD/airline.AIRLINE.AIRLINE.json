@@ -1,0 +1,786 @@
+{
+  "uuid" : "5a827a0f-3e4d-4aa9-844e-cd073a838cc9",
+  "last_modified" : 1493262537713,
+  "version" : "2.0.0",
+  "table_name" : "AIRLINE.AIRLINE",
+  "last_build_job_id" : "1b5565be-d77a-4592-8fb4-787f9c28b0cc",
+  "columns_stats" : [ {
+    "max_value" : "2017",
+    "min_value" : "2017",
+    "max_length_value" : "2017",
+    "min_length_value" : "2017",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "31",
+    "min_value" : "1",
+    "max_length_value" : "20",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 31
+  }, {
+    "max_value" : "7",
+    "min_value" : "1",
+    "max_length_value" : "5",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "WN",
+    "min_value" : "AA",
+    "max_length_value" : "AA",
+    "min_length_value" : "AA",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "21171",
+    "min_value" : "19393",
+    "max_length_value" : "19805",
+    "min_length_value" : "19805",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "WN",
+    "min_value" : "AA",
+    "max_length_value" : "AA",
+    "min_length_value" : "AA",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "N999DN",
+    "min_value" : "",
+    "max_length_value" : "N724AA",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4498
+  }, {
+    "max_value" : "7439",
+    "min_value" : "1",
+    "max_length_value" : "1655",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 6479
+  }, {
+    "max_value" : "16218",
+    "min_value" : "10135",
+    "max_length_value" : "11057",
+    "min_length_value" : "11057",
+    "null_count" : 0,
+    "cardinality" : 308
+  }, {
+    "max_value" : "1621801",
+    "min_value" : "1013503",
+    "max_length_value" : "1105703",
+    "min_length_value" : "1105703",
+    "null_count" : 0,
+    "cardinality" : 292
+  }, {
+    "max_value" : "35991",
+    "min_value" : "30070",
+    "max_length_value" : "31057",
+    "min_length_value" : "31057",
+    "null_count" : 0,
+    "cardinality" : 279
+  }, {
+    "max_value" : "YUM",
+    "min_value" : "ABE",
+    "max_length_value" : "CLT",
+    "min_length_value" : "CLT",
+    "null_count" : 0,
+    "cardinality" : 288
+  }, {
+    "max_value" : "Yuma, AZ",
+    "min_value" : "Aberdeen, SD",
+    "max_length_value" : "Bristol/Johnson City/Kingsport, TN",
+    "min_length_value" : "Reno, NV",
+    "null_count" : 0,
+    "cardinality" : 296
+  }, {
+    "max_value" : "WY",
+    "min_value" : "AK",
+    "max_length_value" : "NC",
+    "min_length_value" : "NC",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "78",
+    "min_value" : "1",
+    "max_length_value" : "37",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "Wyoming",
+    "min_value" : "Alabama",
+    "max_length_value" : "U.S. Pacific Trust Territories and Possessions",
+    "min_length_value" : "Ohio",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "93",
+    "min_value" : "1",
+    "max_length_value" : "36",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 52
+  }, {
+    "max_value" : "16218",
+    "min_value" : "10135",
+    "max_length_value" : "12451",
+    "min_length_value" : "12451",
+    "null_count" : 0,
+    "cardinality" : 307
+  }, {
+    "max_value" : "1621801",
+    "min_value" : "1013503",
+    "max_length_value" : "1245102",
+    "min_length_value" : "1245102",
+    "null_count" : 0,
+    "cardinality" : 291
+  }, {
+    "max_value" : "35991",
+    "min_value" : "30070",
+    "max_length_value" : "31136",
+    "min_length_value" : "31136",
+    "null_count" : 0,
+    "cardinality" : 277
+  }, {
+    "max_value" : "YUM",
+    "min_value" : "ABE",
+    "max_length_value" : "JAX",
+    "min_length_value" : "JAX",
+    "null_count" : 0,
+    "cardinality" : 287
+  }, {
+    "max_value" : "Yuma, AZ",
+    "min_value" : "Aberdeen, SD",
+    "max_length_value" : "Bristol/Johnson City/Kingsport, TN",
+    "min_length_value" : "Reno, NV",
+    "null_count" : 0,
+    "cardinality" : 295
+  }, {
+    "max_value" : "WY",
+    "min_value" : "AK",
+    "max_length_value" : "FL",
+    "min_length_value" : "FL",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "78",
+    "min_value" : "1",
+    "max_length_value" : "12",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "Wyoming",
+    "min_value" : "Alabama",
+    "max_length_value" : "U.S. Pacific Trust Territories and Possessions",
+    "min_length_value" : "Ohio",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "93",
+    "min_value" : "1",
+    "max_length_value" : "33",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 52
+  }, {
+    "max_value" : "2359",
+    "min_value" : "5",
+    "max_length_value" : "1805",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 1217
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1804",
+    "min_length_value" : "8",
+    "null_count" : 8541,
+    "cardinality" : 1456
+  }, {
+    "max_value" : "2755",
+    "min_value" : "-59",
+    "max_length_value" : "1199",
+    "min_length_value" : "5",
+    "null_count" : 8541,
+    "cardinality" : 905
+  }, {
+    "max_value" : "2755",
+    "min_value" : "0",
+    "max_length_value" : "1199",
+    "min_length_value" : "0",
+    "null_count" : 8541,
+    "cardinality" : 853
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 8541,
+    "cardinality" : 2
+  }, {
+    "max_value" : "12",
+    "min_value" : "-2",
+    "max_length_value" : "-1",
+    "min_length_value" : "0",
+    "null_count" : 8541,
+    "cardinality" : 15
+  }, {
+    "max_value" : "2300-2359",
+    "min_value" : "0001-0559",
+    "max_length_value" : "1800-1859",
+    "min_length_value" : "1800-1859",
+    "null_count" : 0,
+    "cardinality" : 19
+  }, {
+    "max_value" : "176",
+    "min_value" : "1",
+    "max_length_value" : "119",
+    "min_length_value" : "9",
+    "null_count" : 8773,
+    "cardinality" : 167
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1820",
+    "min_length_value" : "5",
+    "null_count" : 8773,
+    "cardinality" : 1465
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1917",
+    "min_length_value" : "3",
+    "null_count" : 9271,
+    "cardinality" : 1469
+  }, {
+    "max_value" : "413",
+    "min_value" : "1",
+    "max_length_value" : "120",
+    "min_length_value" : "6",
+    "null_count" : 9271,
+    "cardinality" : 170
+  }, {
+    "max_value" : "2359",
+    "min_value" : "1",
+    "max_length_value" : "1925",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 1369
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1923",
+    "min_length_value" : "5",
+    "null_count" : 9271,
+    "cardinality" : 1469
+  }, {
+    "max_value" : "1944",
+    "min_value" : "-98",
+    "max_length_value" : "1197",
+    "min_length_value" : "7",
+    "null_count" : 10372,
+    "cardinality" : 940
+  }, {
+    "max_value" : "1944",
+    "min_value" : "0",
+    "max_length_value" : "1197",
+    "min_length_value" : "0",
+    "null_count" : 10372,
+    "cardinality" : 847
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 10372,
+    "cardinality" : 2
+  }, {
+    "max_value" : "12",
+    "min_value" : "-2",
+    "max_length_value" : "-1",
+    "min_length_value" : "0",
+    "null_count" : 10372,
+    "cardinality" : 15
+  }, {
+    "max_value" : "2300-2359",
+    "min_value" : "0001-0559",
+    "max_length_value" : "1900-1959",
+    "min_length_value" : "1900-1959",
+    "null_count" : 0,
+    "cardinality" : 19
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "D",
+    "min_value" : "",
+    "max_length_value" : "A",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "712",
+    "min_value" : "21",
+    "max_length_value" : "211",
+    "min_length_value" : "80",
+    "null_count" : 4,
+    "cardinality" : 464
+  }, {
+    "max_value" : "734",
+    "min_value" : "16",
+    "max_length_value" : "196",
+    "min_length_value" : "79",
+    "null_count" : 10372,
+    "cardinality" : 648
+  }, {
+    "max_value" : "704",
+    "min_value" : "7",
+    "max_length_value" : "167",
+    "min_length_value" : "9",
+    "null_count" : 10372,
+    "cardinality" : 638
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "4983",
+    "min_value" : "31",
+    "max_length_value" : "1067",
+    "min_length_value" : "68",
+    "null_count" : 0,
+    "cardinality" : 1254
+  }, {
+    "max_value" : "11",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "1934",
+    "min_value" : "0",
+    "max_length_value" : "1208",
+    "min_length_value" : "0",
+    "null_count" : 352318,
+    "cardinality" : 724
+  }, {
+    "max_value" : "1934",
+    "min_value" : "0",
+    "max_length_value" : "1038",
+    "min_length_value" : "0",
+    "null_count" : 352318,
+    "cardinality" : 390
+  }, {
+    "max_value" : "1457",
+    "min_value" : "0",
+    "max_length_value" : "1457",
+    "min_length_value" : "0",
+    "null_count" : 352318,
+    "cardinality" : 391
+  }, {
+    "max_value" : "653",
+    "min_value" : "0",
+    "max_length_value" : "250",
+    "min_length_value" : "0",
+    "null_count" : 352318,
+    "cardinality" : 73
+  }, {
+    "max_value" : "1392",
+    "min_value" : "0",
+    "max_length_value" : "1197",
+    "min_length_value" : "0",
+    "null_count" : 352318,
+    "cardinality" : 481
+  }, {
+    "max_value" : "2359",
+    "min_value" : "3",
+    "max_length_value" : "1053",
+    "min_length_value" : "3",
+    "null_count" : 447016,
+    "cardinality" : 1042
+  }, {
+    "max_value" : "377",
+    "min_value" : "1",
+    "max_length_value" : "109",
+    "min_length_value" : "5",
+    "null_count" : 447016,
+    "cardinality" : 179
+  }, {
+    "max_value" : "377",
+    "min_value" : "1",
+    "max_length_value" : "109",
+    "min_length_value" : "5",
+    "null_count" : 447016,
+    "cardinality" : 169
+  }, {
+    "max_value" : "9",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 448531,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1679",
+    "min_value" : "118",
+    "max_length_value" : "1099",
+    "min_length_value" : "411",
+    "null_count" : 448916,
+    "cardinality" : 458
+  }, {
+    "max_value" : "2853",
+    "min_value" : "26",
+    "max_length_value" : "1275",
+    "min_length_value" : "90",
+    "null_count" : 448916,
+    "cardinality" : 421
+  }, {
+    "max_value" : "2429",
+    "min_value" : "0",
+    "max_length_value" : "2417",
+    "min_length_value" : "0",
+    "null_count" : 448531,
+    "cardinality" : 163
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : "16218",
+    "min_value" : "10136",
+    "max_length_value" : "11057",
+    "min_length_value" : "11057",
+    "null_count" : 448418,
+    "cardinality" : 184
+  }, {
+    "max_value" : "1621801",
+    "min_value" : "1013603",
+    "max_length_value" : "1105703",
+    "min_length_value" : "1105703",
+    "null_count" : 448418,
+    "cardinality" : 178
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1522",
+    "min_length_value" : "8",
+    "null_count" : 448418,
+    "cardinality" : 802
+  }, {
+    "max_value" : "241",
+    "min_value" : "2",
+    "max_length_value" : "122",
+    "min_length_value" : "3",
+    "null_count" : 448418,
+    "cardinality" : 144
+  }, {
+    "max_value" : "227",
+    "min_value" : "2",
+    "max_length_value" : "122",
+    "min_length_value" : "3",
+    "null_count" : 448418,
+    "cardinality" : 125
+  }, {
+    "max_value" : "2400",
+    "min_value" : "1",
+    "max_length_value" : "1724",
+    "min_length_value" : "5",
+    "null_count" : 448900,
+    "cardinality" : 688
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : "15016",
+    "min_value" : "10299",
+    "max_length_value" : "10397",
+    "min_length_value" : "10397",
+    "null_count" : 449989,
+    "cardinality" : 16
+  }, {
+    "max_value" : "1501603",
+    "min_value" : "1029904",
+    "max_length_value" : "1039705",
+    "min_length_value" : "1039705",
+    "null_count" : 449989,
+    "cardinality" : 16
+  }, {
+    "max_value" : "2330",
+    "min_value" : "33",
+    "max_length_value" : "1740",
+    "min_length_value" : "33",
+    "null_count" : 449989,
+    "cardinality" : 28
+  }, {
+    "max_value" : "109",
+    "min_value" : "3",
+    "max_length_value" : "109",
+    "min_length_value" : "7",
+    "null_count" : 449989,
+    "cardinality" : 18
+  }, {
+    "max_value" : "109",
+    "min_value" : "3",
+    "max_length_value" : "109",
+    "min_length_value" : "7",
+    "null_count" : 449989,
+    "cardinality" : 15
+  }, {
+    "max_value" : "2308",
+    "min_value" : "856",
+    "max_length_value" : "1242",
+    "min_length_value" : "856",
+    "null_count" : 450005,
+    "cardinality" : 12
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 450017,
+    "cardinality" : 0
+  }, {
+    "max_value" : "2017-01-31",
+    "min_value" : "2017-01-02",
+    "max_length_value" : "2017-01-01",
+    "min_length_value" : "2017-01-01",
+    "null_count" : 0,
+    "cardinality" : 31
+  } ],
+  "sample_rows" : [ [ "2017", "2017", "2017", "2017", "2017", "2017", "2017", "2017", "2017", "2017" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "18", "18", "18", "18", "18", "18", "18", "18", "18", "18" ], [ "6", "6", "6", "6", "6", "6", "6", "6", "6", "6" ], [ "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA" ], [ "19805", "19805", "19805", "19805", "19805", "19805", "19805", "19805", "19805", "19805" ], [ "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA" ], [ "N700AA", "N745AA", "N979AA", "N944AA", "N812AA", "N652AA", "N124AA", "N703AA", "N812AA", "N102AA" ], [ "1655", "1659", "1660", "1663", "1665", "1670", "1672", "1675", "1676", "1678" ], [ "11057", "10713", "12889", "14100", "11298", "10821", "12451", "14524", "11298", "14100" ], [ "1402702", "1289204", "1072102", "1072102", "1105703", "1105703", "1039705", "1143302", "1320402", "1039705" ], [ "31057", "30713", "32211", "34100", "30194", "30852", "31136", "34524", "30194", "34100" ], [ "CLT", "BOI", "LAS", "PHL", "DFW", "BWI", "JAX", "RIC", "DFW", "PHL" ], [ "Charlotte, NC", "Las Vegas, NV", "Dallas/Fort Worth, TX", "New York, NY", "Baltimore, MD", "San Antonio, TX", "New York, NY", "Richmond, VA", "Dallas/Fort Worth, TX", "Newark, NJ" ], [ "NC", "ID", "NV", "PA", "TX", "MD", "FL", "VA", "TX", "NY" ], [ "37", "16", "32", "42", "48", "24", "12", "51", "48", "42" ], [ "North Carolina", "Idaho", "Nevada", "Pennsylvania", "Texas", "Maryland", "Florida", "Virginia", "Texas", "Pennsylvania" ], [ "36", "83", "85", "23", "74", "35", "33", "38", "74", "22" ], [ "12451", "14107", "12892", "10721", "14122", "11057", "11057", "11057", "11042", "14027" ], [ "1245102", "1410702", "1289204", "1072102", "1412202", "1105703", "1105703", "1105703", "1104203", "1039705" ], [ "31136", "30466", "32575", "30721", "30198", "31057", "31057", "31057", "30647", "34027" ], [ "JAX", "PHX", "LAX", "BOS", "PIT", "CLT", "CLT", "CLT", "CLE", "PBI" ], [ "Jacksonville, FL", "Phoenix, AZ", "Los Angeles, CA", "Boston, MA", "Pittsburgh, PA", "Charlotte, NC", "Charlotte, NC", "Charlotte, NC", "Cleveland, OH", "West Palm Beach/Palm Beach, FL" ], [ "FL", "CA", "PA", "NC", "NC", "NC", "NC", "NC", "OH", "NC" ], [ "12", "4", "6", "25", "42", "37", "37", "37", "39", "13" ], [ "Florida", "Arizona", "California", "Massachusetts", "Pennsylvania", "North Carolina", "North Carolina", "North Carolina", "Ohio", "Florida" ], [ "33", "91", "23", "36", "36", "36", "36", "36", "44", "36" ], [ "1805", "640", "840", "1345", "1825", "1910", "840", "515", "1120", "1825" ], [ "1804", "918", "833", "1340", "1912", "1905", "837", "512", "1234", "1823" ], [ "-2", "178", "-10", "154", "15", "93", "", "-3", "-5", "" ], [ "30", "0", "76", "0", "32", "0", "0", "0", "36", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "2", "-1", "5", "-1", "2", "-1", "-1", "-1", "2", "-1" ], [ "0800-0859", "0900-0959", "1200-1259", "1100-1159", "0700-0759", "1100-1159", "1500-1559", "2100-2159", "1700-1759", "0001-0559" ], [ "24", "20", "15", "16", "15", "14", "11", "13", "13", "23" ], [ "832", "1031", "1259", "1326", "744", "1130", "1535", "2208", "1740", "539" ], [ "821", "2205", "1037", "1524", "1359", "2114", "", "818", "639", "" ], [ "7", "7", "11", "6", "4", "6", "", "8", "7", "" ], [ "1208", "1125", "1419", "1258", "834", "1315", "1707", "533", "1951", "854" ], [ "828", "2212", "1048", "1530", "1403", "2120", "", "826", "646", "" ], [ "46", "-7", "55", "-3", "23", "-12", "-22", "-12", "33", "-3" ], [ "46", "0", "55", "0", "23", "0", "0", "0", "33", "0" ], [ "0", "0", "0", "1", "1", "0", "0", "0", "0", "0" ], [ "-1", "-1", "-1", "6", "1", "-1", "-1", "-2", "-1", "-1" ], [ "0800-0859", "1900-1959", "1000-1059", "1200-1259", "1300-1359", "1900-1959", "1900-1959", "0800-0859", "0600-0659", "0800-0859" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "211", "93", "154", "163", "61", "108", "137", "186", "91", "134" ], [ "145", "294", "118", "116", "148", "157", "", "184", "96", "" ], [ "127", "270", "84", "70", "114", "134", "", "163", "68", "" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1067", "236", "1067", "951", "257", "590", "544", "1021", "366", "762" ], [ "4", "10", "2", "2", "3", "4", "4", "5", "2", "4" ], [ "", "", "1", "", "", "", "", "", "", "28" ], [ "", "", "0", "", "", "", "", "", "", "0" ], [ "", "163", "", "25", "33", "0", "", "", "", "" ], [ "", "", "", "0", "0", "", "", "", "", "" ], [ "", "0", "", "0", "0", "0", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10", "2017-01-10" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "450017",
+  "data_source_properties" : {
+    "owner" : "kylin",
+    "skip_header_line_count" : "0",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/airline.db/airline",
+    "partition_column" : "FLIGHTDATE",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "project" : "airline"
+}

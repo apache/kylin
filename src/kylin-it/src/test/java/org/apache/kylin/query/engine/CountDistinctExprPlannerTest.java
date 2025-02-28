@@ -19,9 +19,9 @@
 package org.apache.kylin.query.engine;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.test.DiffRepository;
@@ -43,13 +43,14 @@ public class CountDistinctExprPlannerTest extends CalciteRuleTestBase {
     static final DiffRepository diff = DiffRepository.lookup(CountDistinctExprPlannerTest.class);
 
     @Before
-    public void setup() {
+    public void setUp() {
         createTestMetadata();
         overwriteSystemProp("kylin.query.optimized-sum-cast-double-rule-enabled", "FALSE");
+        overwriteSystemProp("kylin.query.improved-sum-decimal-precision.enabled", "true");
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
@@ -58,21 +59,15 @@ public class CountDistinctExprPlannerTest extends CalciteRuleTestBase {
         return diff;
     }
 
-    protected void checkSQL(String project, String sql, String prefix, StringOutput StrOut, Collection<RelOptRule>... ruleSets) {
-        Collection<RelOptRule> rules = new HashSet<>();
-        for (Collection<RelOptRule> ruleSet : ruleSets) {
-            rules.addAll(ruleSet);
-        }
-        super.checkSQLPostOptimize(project, sql, prefix, StrOut, rules);
-    }
-
     @Test
     @Ignore("For development")
     public void dumpPlans() throws IOException {
         List<Pair<String, String>> queries = readALLSQLs(KylinConfig.getInstanceFromEnv(), defaultProject,
                 "query/sql_count_distinct_expr");
         CalciteRuleTestBase.StringOutput output = new CalciteRuleTestBase.StringOutput(false);
-        queries.forEach(e -> checkSQL(defaultProject, e.getSecond(), e.getFirst(), output, HepUtils.SumExprRules, HepUtils.CountDistinctExprRules));
+        List<RelOptRule> rules = Stream.concat(HepUtils.SumExprRules.stream(), HepUtils.CountDistinctExprRules.stream())
+                .collect(Collectors.toList());
+        queries.forEach(e -> checkSQLPostOptimize(defaultProject, e.getSecond(), e.getFirst(), output, rules));
         output.dump(log);
     }
 
@@ -80,11 +75,13 @@ public class CountDistinctExprPlannerTest extends CalciteRuleTestBase {
     public void testAllCases() throws IOException {
         List<Pair<String, String>> queries = readALLSQLs(KylinConfig.getInstanceFromEnv(), defaultProject,
                 "query/sql_count_distinct_expr");
-        queries.forEach(e -> checkSQL(defaultProject, e.getSecond(), e.getFirst(), null, HepUtils.SumExprRules, HepUtils.CountDistinctExprRules));
+        List<RelOptRule> rules = Stream.concat(HepUtils.SumExprRules.stream(), HepUtils.CountDistinctExprRules.stream())
+                .collect(Collectors.toList());
+        queries.forEach(e -> checkSQLPostOptimize(defaultProject, e.getSecond(), e.getFirst(), null, rules));
     }
 
     @Test
-    public void testSimpleCountDistinctExpr() throws IOException {
+    public void testSimpleCountDistinctExpr() {
         String SQL = "SELECT COUNT(DISTINCT CASE WHEN LSTG_FORMAT_NAME='FP-NON GTC' THEN PRICE ELSE null END) "
                 + "FROM TEST_KYLIN_FACT";
         checkSQLPostOptimize(defaultProject, SQL, null, null, HepUtils.CountDistinctExprRules);

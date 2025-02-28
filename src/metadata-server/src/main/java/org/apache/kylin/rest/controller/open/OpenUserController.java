@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.controller.NUserController;
@@ -48,7 +49,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import io.swagger.annotations.ApiOperation;
 
 @Controller

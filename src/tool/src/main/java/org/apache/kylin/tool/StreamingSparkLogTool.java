@@ -246,7 +246,8 @@ public class StreamingSparkLogTool extends ExecutableApplication {
                 return projectJobMap;
             }
             // full
-            // In any case, ensure that each job in the full diagnostic package has an oldest driver log that can be returned
+            // In any case, ensure that each job in the full diagnostic package 
+            // has the oldest driver log that can be returned
             if (needCopyJobStartedSet.isEmpty()) {
                 needCopyJobStartedSet.add(Collections.max(jobStartedFullSet));
             }

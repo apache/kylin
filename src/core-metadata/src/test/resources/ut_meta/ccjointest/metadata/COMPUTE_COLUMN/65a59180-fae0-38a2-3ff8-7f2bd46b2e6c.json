@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_27",
+  "expression" : "HOUR(CALCS.DATE0)",
+  "innerExpression" : "HOUR(CALCS.DATE0)",
+  "datatype" : "INTEGER",
+  "comment" : "Auto suggested from: HOUR(CALCS.DATE0)",
+  "uuid" : "65a59180-fae0-38a2-3ff8-7f2bd46b2e6c",
+  "project" : "tdvt"
+}

@@ -22,13 +22,15 @@ import static org.apache.kylin.common.constant.Constants.METADATA_FILE;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.KylinException.CODE_SUCCESS;
 import static org.apache.kylin.common.exception.KylinException.CODE_UNDEFINED;
+import static org.apache.kylin.common.persistence.ResourceStore.GLOBAL_PROJECT;
+import static org.apache.kylin.job.factory.JobFactoryConstant.ROUTINE_JOB_FACTORY;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,12 +49,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.AddressUtil;
-import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
@@ -61,12 +63,16 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.helper.RoutineToolHelper;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.resourcegroup.KylinInstance;
 import org.apache.kylin.metadata.resourcegroup.RequestTypeEnum;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupMappingInfo;
-import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.tool.garbage.LogCleaner;
@@ -82,7 +88,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,6 +98,10 @@ public class ScheduleService extends BasicService {
     private static final String GLOBAL = "global";
 
     private static final String CLEAN_SPARDER_EVENT_LOG = "http://%s/kylin/api/system/clean_sparder_event_log";
+
+    static {
+        JobFactory.register(ROUTINE_JOB_FACTORY, new RoutineJob.RoutineJobFactory());
+    }
 
     @Autowired
     @Qualifier("normalRestTemplate")
@@ -107,15 +116,6 @@ public class ScheduleService extends BasicService {
     @Autowired
     ProjectService projectService;
 
-    @Autowired(required = false)
-    ProjectSmartSupporter projectSmartSupporter;
-
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-    private final String DO_CLEANUP_GARBAGE_PATH = "/kylin/api/system/do_cleanup_garbage";
-    @Autowired
-    private ClusterManager clusterManager;
-
     private final ExecutorService executors = Executors
             .newSingleThreadExecutor(new NamedThreadFactory("RoutineTaskScheduler"));
     private final ExecutorService asyncExecutors = new ThreadPoolExecutor(20, 20, 30, TimeUnit.MINUTES,
@@ -128,53 +128,79 @@ public class ScheduleService extends BasicService {
 
     private static final Map<Future<?>, Long> ASYNC_FUTURES = Maps.newConcurrentMap();
 
-
     @Scheduled(cron = "${kylin.metadata.ops-cron:0 0 0 * * *}")
-    public void routineTask() throws Exception {
-        executorService.submit(() -> {
-            try {
-                doRoutineTask();
-            } catch (Exception e) {
-                log.error("Execute cleanup garbage failed", e);
-            }
-        });
-        log.info("Successfully trigger garbage cleanup");
+    public void routineTask() {
+        submitJob();
     }
 
-    public void doRoutineTask() throws Exception {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        opsCronTimeout = kylinConfig.getRoutineOpsTaskTimeOut();
-        CURRENT_FUTURE.remove();
-        ASYNC_FUTURES.clear();
-        EpochManager epochManager = EpochManager.getInstance();
-        try {
+    private void submitJob() {
+        if (!JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv()).getJobScheduler().isMaster()) {
+            log.info("Not master node, skip submitting routine job");
+            return;
+        }
+        List<String> projects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects().stream()
+                .map(ProjectInstance::getName).collect(Collectors.toList());
+        projects.add(GLOBAL_PROJECT);
+        for (String project : projects) {
+            ExecutableManager manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            manager.checkAndSubmitCronJob(ROUTINE_JOB_FACTORY, JobTypeEnum.ROUTINE);
+        }
+        log.info("Successfully create garbage cleanup jobs.");
+    }
+
+    public void doRoutineTaskForGlobal() {
+        doTask(() -> {
+            log.info("Start to work");
+            val kylinConfig = KylinConfig.getInstanceFromEnv();
+            long startTime = System.currentTimeMillis();
+            MetricsGroup.hostTagCounterInc(MetricsName.METADATA_OPS_CRON, MetricsCategory.GLOBAL, GLOBAL);
+            try (SetThreadName ignored = new SetThreadName("RoutineOpsWorker")) {
+                AtomicReference<Pair<String, String>> backupFolder = new AtomicReference<>(null);
+                broadcastCleanSparderEventLogToAllNodes();
+                executeTask(() -> backupFolder.set(backupService.backupAll()), "MetadataBackup", startTime);
+                executeMetadataBackupInTenantMode(kylinConfig, startTime, backupFolder);
+                executeTask(() -> RoutineToolHelper.cleanQueryHistoriesAsync(getRemainingTime(startTime),
+                        TimeUnit.MILLISECONDS), "QueryHistoriesCleanup", startTime);
+                executeTask(RoutineToolHelper::cleanStreamingStats, "StreamingStatsCleanup", startTime);
+                executeTask(RoutineToolHelper::deleteRawRecItems, "RawRecItemsDeletion", startTime);
+                executeTask(RoutineToolHelper::cleanGlobalSourceUsage, "SourceUsageCleanup", startTime);
+                executeTask(() -> projectService.cleanupAcl(), "AclCleanup", startTime);
+                executeTask(() -> projectService.cleanRawRecForDeletedProject(), "RawRecCleanup", startTime);
+
+                // clean storage
+                executeTask(RoutineToolHelper::cleanStorageForRoutine, "HdfsCleanup", startTime);
+                // clear logs for stopped instance
+                executeTask(() -> new LogCleaner().cleanUp(), "RemoteLogCleanup", startTime);
+                log.info("Finish to work for global, cost {}ms", System.currentTimeMillis() - startTime);
+            }
+            return true;
+        });
+    }
+
+    public void doRoutineTaskForProject(String project) {
+        doTask(() -> {
             log.info("Start to work");
             long startTime = System.currentTimeMillis();
             MetricsGroup.hostTagCounterInc(MetricsName.METADATA_OPS_CRON, MetricsCategory.GLOBAL, GLOBAL);
             try (SetThreadName ignored = new SetThreadName("RoutineOpsWorker")) {
-                if (epochManager.checkEpochOwner(EpochManager.GLOBAL)) {
-                    AtomicReference<Pair<String, String>> backupFolder = new AtomicReference<>(null);
-                    broadcastCleanSparderEventLogToQueryNodes();
-                    executeTask(() -> backupFolder.set(backupService.backupAll()), "MetadataBackup", startTime);
-                    executeMetadataBackupInTenantMode(kylinConfig, startTime, backupFolder);
-                    executeTask(() -> RoutineToolHelper.cleanQueryHistoriesAsync(getRemainingTime(startTime),
-                            TimeUnit.MILLISECONDS), "QueryHistoriesCleanup", startTime);
-                    executeTask(RoutineToolHelper::cleanStreamingStats, "StreamingStatsCleanup", startTime);
-                    executeTask(RoutineToolHelper::deleteRawRecItems, "RawRecItemsDeletion", startTime);
-                    executeTask(RoutineToolHelper::cleanGlobalSourceUsage, "SourceUsageCleanup", startTime);
-                    executeTask(() -> projectService.cleanupAcl(), "AclCleanup", startTime);
-                }
-                executeTask(() -> projectService.garbageCleanup(getRemainingTime(startTime)), "ProjectGarbageCleanup",
-                        startTime);
+                executeTask(() -> projectService.garbageCleanup(project, getRemainingTime(startTime)),
+                        "ProjectGarbageCleanup", startTime);
                 // clean storage
-                if (epochManager.checkEpochOwner(EpochManager.GLOBAL)) {
-                    executeTask(RoutineToolHelper::cleanStorageForRoutine, "HdfsCleanup", startTime);
-                }
-                // clear logs for stopped instance
-                executeTask(() -> new LogCleaner().cleanUp(), "RemoteLogCleanup", startTime);
-                executeTask(() -> RoutineToolHelper.cleanEventLog(true, false, false), "EventLogCleanup", startTime);
-                log.info("Finish to work, cost {}ms", System.currentTimeMillis() - startTime);
+                executeTask(() -> RoutineToolHelper.cleanEventLog(RoutineToolHelper.CleanType.SPARK, project),
+                        "EventLogCleanup", startTime);
+                log.info("Finish to work for project {}, cost {}ms", project, System.currentTimeMillis() - startTime);
             }
+            return true;
+        });
+    }
+
+    private void doTask(Callable<Boolean> callable) {
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        opsCronTimeout = kylinConfig.getRoutineOpsTaskTimeOut();
+        CURRENT_FUTURE.remove();
+        ASYNC_FUTURES.clear();
+        try {
+            callable.call();
         } catch (InterruptedException e) {
             log.warn("Routine task execution interrupted", e);
             Thread.currentThread().interrupt();
@@ -184,6 +210,8 @@ public class ScheduleService extends BasicService {
                 CURRENT_FUTURE.get().cancel(true);
             }
             ASYNC_FUTURES.keySet().forEach(asyncTask -> asyncTask.cancel(true));
+        } catch (Exception e) {
+            throw new KylinRuntimeException("Unexpected exception.", e);
         } finally {
             ASYNC_FUTURES.clear();
         }
@@ -222,8 +250,7 @@ public class ScheduleService extends BasicService {
                 .filter(instance -> instance.getInstance().equals(concurrentServer))
                 .map(KylinInstance::getResourceGroupId).findFirst().orElse(null);
         val buildResourceGroups = allResourceGroups.getResourceGroupMappingInfoList().stream()
-                .filter(resourceGroupMappingInfo -> resourceGroupMappingInfo.getRequestType()
-                        .equals(RequestTypeEnum.BUILD))
+                .filter(resourceGroupMappingInfo -> resourceGroupMappingInfo.getRequestType() == RequestTypeEnum.BUILD)
                 .map(ResourceGroupMappingInfo::getResourceGroupId)
                 .filter(groupId -> !StringUtils.equals(groupId, concurrentServerResourceGroupId))
                 .collect(Collectors.toList());
@@ -262,15 +289,11 @@ public class ScheduleService extends BasicService {
         }
     }
 
-    private void broadcastCleanSparderEventLogToQueryNodes() {
-        List<ServerInfoResponse> queryNodes = clusterManager.getQueryServers();
+    private void broadcastCleanSparderEventLogToAllNodes() {
+        List<ServerInfoResponse> allNodes = clusterManager.getServers();
 
         try {
-            for (ServerInfoResponse node : queryNodes) {
-                if (ClusterConstant.ALL.equals(node.getMode())) {
-                    continue;
-                }
-
+            for (ServerInfoResponse node : allNodes) {
                 val url = String.format(Locale.ROOT, CLEAN_SPARDER_EVENT_LOG, node.getHost());
                 log.info("Start broadcasting to clean the sparder event log of {}", url);
 
@@ -308,6 +331,7 @@ public class ScheduleService extends BasicService {
             req.put("tmp_file_path", tmpFilePath);
             req.put("tmp_file_size", tmpFileLength);
             req.put("backup_dir", backupDir);
+            req.put("from_host", AddressUtil.getLocalInstance());
             val httpHeaders = new HttpHeaders();
             httpHeaders.add(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON);
             val exchange = restTemplate.exchange(url, HttpMethod.POST,
@@ -372,50 +396,26 @@ public class ScheduleService extends BasicService {
     }
 
     public Pair<String, String> triggerAllCleanupGarbage(HttpServletRequest request) {
-        Map<String, List<String>> epochOwnerMap = new HashMap<>();
-
-        EpochManager epochManager = EpochManager.getInstance();
-        String globalOwner = epochManager.getGlobalEpoch().getCurrentEpochOwner();
-
-        epochOwnerMap.put(StringUtils.split(globalOwner, '|')[0],
-                Lists.newArrayList(epochManager.getGlobalEpoch().getEpochTarget()));
-
-        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        List<String> projectNames = projectManager.listAllProjects().stream()
-                .map(projectInstance -> projectInstance.getName()).collect(Collectors.toList());
-        projectNames.forEach(projectName -> {
-            String projectOwner = epochManager.getEpoch(projectName).getCurrentEpochOwner();
-            String host = StringUtils.split(projectOwner, '|')[0];
-            epochOwnerMap.putIfAbsent(host, Lists.newArrayList());
-            epochOwnerMap.get(host).add(projectName);
-        });
+        String jobMaster = JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv()).getJobScheduler()
+                .getJobMaster();
 
         StringBuilder msg = new StringBuilder();
-
         Pair<String, String> result = new Pair<>();
         result.setFirst(CODE_SUCCESS);
-        epochOwnerMap.entrySet().forEach(entry -> {
-            String host = entry.getKey();
-            String target = StringUtils.join(entry.getValue(), ",");
-            String url = "http://" + host + DO_CLEANUP_GARBAGE_PATH;
-            try {
-                EnvelopeResponse response = generateTaskForRemoteHost(request, url);
-                if (response.getCode().equals(CODE_SUCCESS)) {
-                    msg.append(target).append(":").append(host).append(":").append("triggered successfully")
-                            .append(";");
-                }
-                if (response.getCode().equals(CODE_UNDEFINED)) {
-                    result.setFirst(CODE_UNDEFINED);
-                    msg.append(target).append(":").append(host).append(":").append("triggered failed")
-                            .append(response.getMsg()).append(";");
-                }
-            } catch (Exception e) {
-                msg.append(target).append(":").append(host).append(":").append("triggered failed: ")
-                        .append(e.getMessage()).append(";");
+        String url = "http://" + jobMaster + "/kylin/api/system/do_cleanup_garbage";
+        try {
+            EnvelopeResponse response = generateTaskForRemoteHost(request, url);
+            if (response.getCode().equals(CODE_SUCCESS)) {
+                msg.append(jobMaster).append(":").append("triggered successfully").append(";");
             }
-        });
+            if (response.getCode().equals(CODE_UNDEFINED)) {
+                result.setFirst(CODE_UNDEFINED);
+                msg.append(jobMaster).append(":").append("triggered failed").append(response.getMsg()).append(";");
+            }
+        } catch (Exception e) {
+            msg.append(jobMaster).append(":").append("triggered failed: ").append(e.getMessage()).append(";");
+        }
         result.setSecond(msg.toString());
         return result;
     }
-
 }

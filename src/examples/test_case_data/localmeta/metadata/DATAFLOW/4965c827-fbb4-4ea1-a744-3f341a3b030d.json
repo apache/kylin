@@ -1,0 +1,26 @@
+{
+  "uuid" : "4965c827-fbb4-4ea1-a744-3f341a3b030d",
+  "last_modified" : 1622215812977,
+  "create_time" : 1622186665129,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1622186665129,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 3,
+  "last_query_time" : 1622190359865,
+  "layout_query_hit_count" : {
+    "0" : {
+      "1622131200000" : 2
+    },
+    "20001" : {
+      "1622131200000" : 1
+    }
+  },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "streaming_test",
+  "segment_uuids" : [ "3e560d22-b749-48c3-9f64-d4230207f120" ]
+}

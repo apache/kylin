@@ -19,32 +19,32 @@
 package org.apache.kylin.query.pushdown
 
 import java.math.BigDecimal
+import java.nio.charset.StandardCharsets
 import java.sql.Timestamp
 import java.util
 import java.util.concurrent.{Callable, Executors, TimeUnit, TimeoutException}
 import java.util.{UUID, List => JList}
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.cache.kylin.KylinCacheFileSystem
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList
-import org.apache.kylin.guava30.shaded.common.collect.Lists
+import org.apache.kylin.fileseg.FileSegments
+import org.apache.kylin.engine.spark.QueryCostCollector
+import org.apache.kylin.guava30.shaded.common.collect.{ImmutableList, Lists}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.query.StructField
 import org.apache.kylin.query.mask.QueryResultMasks
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
 import org.apache.kylin.query.runtime.plan.ResultPlan.saveAsyncQueryResult
 import org.apache.kylin.query.util.{QueryInterruptChecker, SparkJobTrace}
+import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.spark.network.util.JavaUtils
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{DataFrame, Row, SparderEnv, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
-
-import org.apache.kylin.cache.kylin.KylinCacheFileSystem
-import org.apache.kylin.softaffinity.SoftAffinityManager
-import org.apache.kylin.fileseg.FileSegments
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
@@ -73,7 +73,7 @@ object SparkSqlClient {
 
     try {
       // process cache hint like -- select * from xxx /*+ ACCEPT_CACHE_TIME(158176387682000) */
-      val sqlToRun = KylinCacheFileSystem.processAcceptCacheTimeInSql(sql)
+      KylinCacheFileSystem.processAcceptCacheTimeInHintStr(QueryContext.current().getFirstHintStr)
 
       val db = if (StringUtils.isNotBlank(project)) {
         NProjectManager.getInstance(KylinConfig.getInstanceFromEnv).getDefaultDatabase(project)
@@ -81,7 +81,7 @@ object SparkSqlClient {
         null
       }
       ss.sessionState.conf.setLocalProperty(DEFAULT_DB, db)
-      val dfOfPushDown = ss.sql(sqlToRun)
+      val dfOfPushDown = ss.sql(sql)
       if (NProjectManager.getProjectConfig(project).isPrintQueryPlanEnabled) {
         logger.info(dfOfPushDown.queryExecution.logical.toString())
       }
@@ -92,7 +92,7 @@ object SparkSqlClient {
       autoSetShufflePartitions(df)
       QueryContext.current().record("auto_set_parts")
 
-      val iter = if (FileSegments.isSyncFileSegSql(sqlToRun)) {
+      val iter = if (FileSegments.isSyncFileSegSql(sql)) {
         val nParts = df.rdd.getNumPartitions // trigger file scan, whose result will be captured by FileSegmentsDetector
         (
           ImmutableList.of(ImmutableList.of(nParts.toString).asInstanceOf[JList[String]]),
@@ -100,7 +100,7 @@ object SparkSqlClient {
           ImmutableList.of(new StructField("CNT", -5, "BIGINT", 0, 0, false))
         )
       } else {
-        dfToList(ss, sqlToRun, df)
+        dfToList(ss, sql, df)
       }
       QueryContext.current().record("collect_result")
       SoftAffinityManager.logAuditAsks()
@@ -180,12 +180,23 @@ object SparkSqlClient {
         QueryContext.current().setColumnNames(columnNames)
         saveAsyncQueryResult(df, queryTagInfo.getFileFormat, queryTagInfo.getFileEncode, null)
         return (Lists.newArrayList(), 0, fieldList)
+      } else if (QueryContext.current().isExplainSql) {
+        val fieldList = df.schema.map(field => SparderTypeUtil.convertSparkFieldToJavaField(field)).asJava
+        QueryContext.current().getQueryPlan.setSparkPlan(df.queryExecution.analyzed.toString())
+        return (Lists.newArrayList(), 0, fieldList)
       }
       QueryContext.currentTrace().endLastSpan()
       val jobTrace = new SparkJobTrace(jobGroup, QueryContext.currentTrace()
         , QueryContext.current().getQueryId, SparderEnv.getSparkSession.sparkContext)
 
-      val results = df.toIterator()
+      NProjectManager.getProjectConfig(QueryContext.current().getProject).isQueryUseIterableCollectApi
+
+      val results = if (NProjectManager.getProjectConfig(QueryContext.current().getProject)
+        .isQueryUseIterableCollectApi) {
+        df.collectToIterator()
+      } else {
+        df.toIterator()
+      }
       val resultRows = results._1
       val resultSize = results._2
       if (config.isQuerySparkJobTraceEnabled) jobTrace.jobFinished()
@@ -197,6 +208,7 @@ object SparkSqlClient {
       QueryContext.current().getMetrics.setQueryJobCount(jobCount)
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
+      QueryContext.current().getMetrics.setCpuTime(QueryCostCollector.getAndCleanStatus(QueryContext.current().getQueryId))
       // return result
       (readPushDownResultRow(resultRows, checkInterrupt = true), resultSize, fieldList)
     } catch {
@@ -246,7 +258,7 @@ object SparkSqlClient {
     case value: mutable.WrappedArray.ofRef[AnyRef] => value.array.map(v => rawValueToString(v, true)).mkString("[", ",", "]")
     case value: immutable.Map[Any, Any] =>
       value.map(p => rawValueToString(p._1, true) + ":" + rawValueToString(p._2, true)).mkString("{", ",", "}")
-    case value: Array[Byte] => new String(value)
+    case value: Array[Byte] => new String(value, StandardCharsets.UTF_8)
     case value: BigDecimal => SparderTypeUtil.adjustDecimal(value)
     case value: Any => value.toString
   }

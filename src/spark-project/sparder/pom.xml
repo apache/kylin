@@ -30,7 +30,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
@@ -50,17 +50,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-core</artifactId>
-        </dependency>
-        <!--dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>ke-external-catalog-sdk</artifactId>
-        </dependency-->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-soft-affinity-cache</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-internal-catalog</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
@@ -80,6 +75,12 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-unsafe_2.12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+            <version>${calcite.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -142,6 +143,11 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -20,10 +20,8 @@ package org.apache.kylin.job.dao;
 
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,7 +29,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class JobStatisticsBasic extends RootPersistentEntity {
     @JsonProperty("count")
     private int count;
@@ -39,9 +36,6 @@ public class JobStatisticsBasic extends RootPersistentEntity {
     private long totalDuration;
     @JsonProperty("total_byte_size")
     private long totalByteSize;
-
-    @JsonIgnore
-    private String project;
 
     public void update(long duration, long byteSize, int deltaCount) {
         this.count += deltaCount;

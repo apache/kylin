@@ -25,19 +25,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import lombok.Getter;
+import lombok.Setter;
 
-/**
- */
+@Getter
 public class SQLDigest {
 
     public enum OrderEnum {
@@ -45,41 +46,45 @@ public class SQLDigest {
     }
 
     // model
-    public String factTable;
-    public Set<TblColRef> allColumns;
-    public List<JoinDesc> joinDescs;
+    private final String factTable;
+    private Set<TblColRef> allColumns;
+    private final List<JoinDesc> joinDescs;
 
     // group by
-    public List<TblColRef> groupbyColumns;
-    public Set<TblColRef> subqueryJoinParticipants; // FIXME: can we add subqueryJoinParticipants to allColumns/groupbyCols at OLAPContext?
+    @Setter
+    private List<TblColRef> groupByColumns;
+
+    // can we add subqueryJoinParticipants to allColumns/groupByColumns at OLAPContext? from dong@newten
+    private final Set<TblColRef> subqueryJoinParticipants;
 
     // aggregation
-    public Set<TblColRef> metricColumns;
-    public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
+    private final Set<TblColRef> metricColumns;
+    // storage level measure type, on top of which various sql aggr function may apply
+    @Setter
+    private List<FunctionDesc> aggregations;
 
     // filter
-    public Set<TblColRef> filterColumns;
+    private final Set<TblColRef> filterColumns;
 
     // sort & limit
-    public List<TblColRef> sortColumns;
-    public List<OrderEnum> sortOrders;
+    private final List<TblColRef> sortColumns;
+    private final List<OrderEnum> sortOrders;
     public boolean isRawQuery;
-    public int limit = Integer.MAX_VALUE;
-    public boolean limitPrecedesAggr;
-
-    public Set<MeasureDesc> involvedMeasure;
+    private int limit = Integer.MAX_VALUE;
+    private final boolean limitPrecedesAggr;
 
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
-            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
+            List<TblColRef> groupByColumns, Set<TblColRef> subqueryJoinParticipants, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, // aggregation
             Set<TblColRef> filterColumns, // filter
-            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, int limit, boolean limitPrecedesAggr, // sort & limit
-            Set<MeasureDesc> involvedMeasure) {
+            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, // sort
+            int limit, boolean limitPrecedesAggr // limit
+    ) {
         this.factTable = factTable;
         this.allColumns = allColumns;
         this.joinDescs = joinDescs;
 
-        this.groupbyColumns = groupbyColumns;
+        this.groupByColumns = groupByColumns;
         this.subqueryJoinParticipants = subqueryJoinParticipants;
 
         this.metricColumns = metricColumns;
@@ -89,37 +94,36 @@ public class SQLDigest {
 
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
-        this.isRawQuery = isRawQuery();
+        this.isRawQuery = isDigestOfRawQuery();
         this.limit = limit;
         this.limitPrecedesAggr = limitPrecedesAggr;
-
-        this.involvedMeasure = involvedMeasure;
 
         this.includeSubqueryJoinParticipants();
         this.allColumns = Collections.unmodifiableSet(allColumns);
     }
 
-    private boolean isRawQuery() {
-        return this.groupbyColumns.isEmpty() && // select a group by a -> not raw
+    public boolean isDigestOfRawQuery() {
+        return this.groupByColumns.isEmpty() && // select a group by a -> not raw
                 this.aggregations.isEmpty(); // has aggr -> not raw
-        //the reason to choose aggregations rather than metricColumns is because the former is set earlier at implOLAP
+        // the reason to choose aggregations rather than metricColumns
+        // is that the former is set earlier at implementOlap
     }
 
     public void includeSubqueryJoinParticipants() {
         if (this.isRawQuery) {
             this.allColumns.addAll(this.subqueryJoinParticipants);
         } else {
-            this.groupbyColumns.addAll(this.subqueryJoinParticipants);
+            this.groupByColumns.addAll(this.subqueryJoinParticipants);
             this.allColumns.addAll(this.subqueryJoinParticipants);
         }
     }
 
     @Override
     public String toString() {
-        return "fact table " + this.factTable + "," + //
-                "group by " + this.groupbyColumns + "," + //
-                "filter on " + this.filterColumns + "," + //
-                "with aggregates" + this.aggregations + ".";
+        return "fact table " + this.factTable + "," //
+                + "group by " + this.groupByColumns + "," //
+                + "filter on " + this.filterColumns + "," //
+                + "with aggregates" + this.aggregations + ".";
     }
 
     @Override
@@ -129,17 +133,16 @@ public class SQLDigest {
         if (!(o instanceof SQLDigest))
             return false;
         SQLDigest sqlDigest = (SQLDigest) o;
-        return isRawQuery() == sqlDigest.isRawQuery() && limit == sqlDigest.limit
+        return isDigestOfRawQuery() == sqlDigest.isDigestOfRawQuery() && limit == sqlDigest.limit
                 && limitPrecedesAggr == sqlDigest.limitPrecedesAggr && factTable.equals(sqlDigest.factTable)
                 && equalsIgnoreOrder(allColumns, sqlDigest.allColumns)
                 && equalsIgnoreOrder(joinDescs, sqlDigest.joinDescs)
-                && equalsIgnoreOrder(groupbyColumns, sqlDigest.groupbyColumns)
+                && equalsIgnoreOrder(groupByColumns, sqlDigest.groupByColumns)
                 && subqueryJoinParticipants.equals(sqlDigest.subqueryJoinParticipants)
                 && equalsIgnoreOrder(metricColumns, sqlDigest.metricColumns)
                 && equalsIgnoreOrder(aggregations, sqlDigest.aggregations)
                 && equalsIgnoreOrder(filterColumns, sqlDigest.filterColumns)
-                && equalsIgnoreOrder(sortColumns, sqlDigest.sortColumns) && sortOrders.equals(sqlDigest.sortOrders)
-                && involvedMeasure.equals(sqlDigest.involvedMeasure);
+                && equalsIgnoreOrder(sortColumns, sqlDigest.sortColumns) && sortOrders.equals(sqlDigest.sortOrders);
     }
 
     private static boolean equalsIgnoreOrder(Collection c1, Collection c2) {
@@ -235,9 +238,7 @@ public class SQLDigest {
                 Lists.newArrayList(j2.getPrimaryKeyColumns()))) {
             return false;
         }
-        if (!j1.getType().equalsIgnoreCase(j2.getType()))
-            return false;
-        return true;
+        return j1.getType().equalsIgnoreCase(j2.getType());
     }
 
     private static boolean equals(FunctionDesc f1, FunctionDesc f2) {
@@ -250,8 +251,7 @@ public class SQLDigest {
         if (f1.isCountDistinct()) {
             // for count distinct func, param's order doesn't matter
             if (CollectionUtils.isEmpty(f1.getParameters())) {
-                if (CollectionUtils.isNotEmpty(f2.getParameters()))
-                    return false;
+                return !CollectionUtils.isNotEmpty(f2.getParameters());
             } else {
                 return equalsIgnoreOrder(f1.getParameters(), f2.getParameters());
             }
@@ -259,14 +259,11 @@ public class SQLDigest {
             return true;
         } else {
             if (CollectionUtils.isEmpty(f1.getParameters())) {
-                if (CollectionUtils.isNotEmpty(f2.getParameters()))
-                    return false;
+                return !CollectionUtils.isNotEmpty(f2.getParameters());
             } else {
-                if (!equalsConsiderOrder(f1.getParameters(), f2.getParameters()))
-                    return false;
+                return equalsConsiderOrder(f1.getParameters(), f2.getParameters());
             }
         }
-        return true;
     }
 
     private static boolean equals(ParameterDesc p1, ParameterDesc p2) {
@@ -282,10 +279,7 @@ public class SQLDigest {
         if (p1.isColumnType() && !equals(p2.getColRef(), p1.getColRef())) {
             return false;
         }
-        if (!p1.isColumnType() && !p1.getValue().equals(p2.getValue())) {
-            return false;
-        }
-        return true;
+        return p1.isColumnType() || p1.getValue().equals(p2.getValue());
     }
 
     private static boolean equals(TblColRef t1, TblColRef t2) {
@@ -300,16 +294,33 @@ public class SQLDigest {
             return false;
         if (!(t1.getTableRef() == null ? t2.getTableRef() == null : t1.getTableRef().equals(t2.getTableRef())))
             return false;
-        if (t1.isInnerColumn() != t2.isInnerColumn())
-            return false;
-        return true;
+        return t1.isInnerColumn() == t2.isInnerColumn();
+    }
+
+    public boolean equalsWithoutAlias(SQLDigest other) {
+        if (this.equals(other)) {
+            return true;
+        }
+        return toStringWithoutAlias().equals(other.toStringWithoutAlias());
+    }
+
+    public String toStringWithoutAlias() {
+        List<String> newGroupByColumns = groupByColumns.stream().map(TblColRef::getColumnWithTableAndSchema)
+                .collect(Collectors.toList());
+        List<String> newFilterColumns = filterColumns.stream().map(TblColRef::getColumnWithTableAndSchema)
+                .collect(Collectors.toList());
+        List<String> newAggregations = aggregations.stream().map(FunctionDesc::toStringWithoutAlias)
+                .collect(Collectors.toList());
+
+        return "fact table " + this.factTable + "," //
+                + "group by " + newGroupByColumns + "," //
+                + "filter on " + newFilterColumns + "," //
+                + "with aggregates" + newAggregations + ".";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(factTable, allColumns, joinDescs, groupbyColumns, subqueryJoinParticipants, metricColumns,
-                aggregations, filterColumns, sortColumns, sortOrders, isRawQuery(), limit, limitPrecedesAggr,
-                involvedMeasure);
+        return Objects.hash(factTable, allColumns, joinDescs, groupByColumns, subqueryJoinParticipants, metricColumns,
+                aggregations, filterColumns, sortColumns, sortOrders, isDigestOfRawQuery(), limit, limitPrecedesAggr);
     }
-
 }

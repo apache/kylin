@@ -17,48 +17,43 @@
  */
 package org.apache.kylin.query.util;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
-
-import org.apache.kylin.query.relnode.ColumnRowType;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.alias.AliasMapping;
+import java.util.Set;
 
 import org.apache.kylin.guava30.shaded.common.collect.BiMap;
 import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.alias.AliasMapping;
+import org.apache.kylin.query.relnode.ColumnRowType;
 
+import lombok.Getter;
+
+@Getter
 public class QueryAliasMatchInfo extends AliasMapping {
-    // each alias's ColumnRowType
-    private LinkedHashMap<String, ColumnRowType> alias2CRT;
 
-    // for model view
-    private NDataModel model;
+    private final NDataModel model;
+    private final LinkedHashMap<String, ColumnRowType> alias2CRT; // each alias's ColumnRowType
+    private boolean isModelView;
 
     public QueryAliasMatchInfo(BiMap<String, String> aliasMapping, LinkedHashMap<String, ColumnRowType> alias2CRT) {
+        this(aliasMapping, alias2CRT, null, Collections.emptySet());
+    }
+
+    public QueryAliasMatchInfo(BiMap<String, String> aliasMapping, LinkedHashMap<String, ColumnRowType> alias2CRT,
+            NDataModel model, Set<String> excludedColumns) {
         super(aliasMapping);
         this.alias2CRT = alias2CRT;
-    }
-
-    private QueryAliasMatchInfo(BiMap<String, String> aliasMapping, NDataModel model) {
-        super(aliasMapping);
         this.model = model;
+        this.getExcludedColumns().addAll(excludedColumns);
     }
 
-    public static QueryAliasMatchInfo fromModelView(String queryTableAlias, NDataModel model) {
+    public static QueryAliasMatchInfo fromModelView(String queryTableAlias, NDataModel model,
+            Set<String> excludedColumns) {
         BiMap<String, String> map = HashBiMap.create();
         map.put(queryTableAlias, model.getAlias());
-        return new QueryAliasMatchInfo(map, model);
+        QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(map, null, model, excludedColumns);
+        matchInfo.isModelView = true;
+        return matchInfo;
     }
-
-    LinkedHashMap<String, ColumnRowType> getAlias2CRT() {
-        return alias2CRT;
-    }
-
-    public boolean isModelView() {
-        return model != null;
-    }
-
-    public NDataModel getModel() {
-        return model;
-    }
-
 }

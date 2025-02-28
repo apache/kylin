@@ -1,0 +1,14 @@
+{
+  "uuid" : "4623e6d3-2ca2-319e-9a3f-e26bd819734f",
+  "last_modified" : 1678694363841,
+  "create_time" : 1678693815468,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "min_max",
+  "segment_uuids" : [ "c183b315-eb0e-3eac-8607-73c5b1552bce" ]
+}

@@ -18,6 +18,7 @@
 package org.apache.kylin.tool.domain;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.tool.daemon.CheckResult;
 import org.apache.kylin.tool.daemon.CheckStateEnum;
 import org.apache.kylin.tool.daemon.checker.KEStatusChecker;
@@ -26,8 +27,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class KEStatusCheckerTest extends NLocalFileMetadataTestCase {
 

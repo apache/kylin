@@ -35,8 +35,8 @@ public class AbstractErrorContentTest {
                 "Can't build, the expected number of rows for index \"%s\" does not match the actual built number of rows.",
                 errorMsg.getLocalizedString());
 
-//        ErrorMsg.setMsg("cn");
-//        assertEquals("无法构建，索引“%s” 的预期行数与实际构建行数不匹配。", errorMsg.getLocalizedString());
+        //        ErrorMsg.setMsg("cn");
+        //        assertEquals("无法构建，索引“%s” 的预期行数与实际构建行数不匹配。", errorMsg.getLocalizedString());
     }
 
     @Test
@@ -48,7 +48,7 @@ public class AbstractErrorContentTest {
         ErrorSuggestion.setMsg("en");
         assertEquals("", errorSuggestion.getLocalizedString());
 
-//        ErrorSuggestion.setMsg("cn");
-//        assertEquals("", errorSuggestion.getLocalizedString());
+        //        ErrorSuggestion.setMsg("cn");
+        //        assertEquals("", errorSuggestion.getLocalizedString());
     }
 }

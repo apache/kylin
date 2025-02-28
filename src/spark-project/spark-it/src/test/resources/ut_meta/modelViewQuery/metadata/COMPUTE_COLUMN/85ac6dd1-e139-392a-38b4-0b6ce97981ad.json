@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "TPCH.ORDERS",
+  "tableAlias" : "ORDERS",
+  "columnName" : "CC1",
+  "expression" : "ORDERS.O_TOTALPRICE + 1",
+  "innerExpression" : "`ORDERS`.`O_TOTALPRICE` + 1",
+  "datatype" : "DOUBLE",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "85ac6dd1-e139-392a-38b4-0b6ce97981ad",
+  "project" : "tpch"
+}

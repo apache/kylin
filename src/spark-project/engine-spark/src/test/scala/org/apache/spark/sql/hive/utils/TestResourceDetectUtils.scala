@@ -18,16 +18,16 @@
 
 package org.apache.spark.sql.hive.utils
 
-import java.io.FileOutputStream
-import java.nio.charset.Charset
-import java.util.{List => JList, Map => JMap}
-
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.apache.spark.util.Utils
+
+import java.io.FileOutputStream
+import java.nio.charset.Charset
+import java.util.{List => JList, Map => JMap}
 
 class TestResourceDetectUtils extends SparderBaseFunSuite {
   private var config: KylinConfig = _

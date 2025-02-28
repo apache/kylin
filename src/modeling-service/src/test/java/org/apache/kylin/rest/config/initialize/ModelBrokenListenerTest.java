@@ -23,6 +23,7 @@ import static org.awaitility.Awaitility.await;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.job.manager.JobManager;
 import org.apache.kylin.job.model.JobParam;
@@ -78,12 +79,13 @@ public class ModelBrokenListenerTest extends SourceTestCase {
     @InjectMocks
     private JobSupporter jobInfoService = Mockito.spy(JobSupporter.class);
 
+    @Override
     @Before
-    public void setup() {
+    public void setUp() {
         logger.info("ModelBrokenListenerTest setup");
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         overwriteSystemProp("kylin.job.event.poll-interval-second", "3");
-        super.setup();
+        super.setUp();
         EventBusFactory.getInstance().register(modelBrokenListener, false);
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", Mockito.spy(AclUtil.class));
         ReflectionTestUtils.setField(tableService, "aclEvaluate", aclEvaluate);
@@ -97,14 +99,14 @@ public class ModelBrokenListenerTest extends SourceTestCase {
         JobContextUtil.getJobInfoDao(getTestConfig());
     }
 
+    @Override
     @After
-    public void cleanup() {
+    public void tearDown() {
         logger.info("ModelBrokenListenerTest cleanup");
         EventBusFactory.getInstance().unregister(modelBrokenListener);
         EventBusFactory.getInstance().restart();
-        super.cleanup();
-
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     private void generateJob(String modelId, String project) {
@@ -123,7 +125,8 @@ public class ModelBrokenListenerTest extends SourceTestCase {
         val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         overwriteSystemProp("kylin.metadata.broken-model-deleted-on-smart-mode", "true");
 
-        tableService.unloadTable(project, "DEFAULT.TEST_KYLIN_FACT", false);
+        UnitOfWork.doInTransactionWithRetry(() -> tableService.unloadTable(project, "DEFAULT.TEST_KYLIN_FACT", false),
+                project);
 
         await().atMost(60000, TimeUnit.MILLISECONDS).untilAsserted(() -> {
             Assert.assertNull(modelManager.getDataModelDesc(modelId));

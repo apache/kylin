@@ -1,0 +1,93 @@
+{
+  "uuid" : "1be19ce3-cd13-4c83-8818-9ff6da6ccf82",
+  "last_modified" : 1497949997858,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.TIME_DIM",
+  "last_build_job_id" : "7bb2a3ee-7396-4fef-9d18-d7ed69a83c9f",
+  "columns_stats" : [ {
+    "max_value" : "86399",
+    "min_value" : "0",
+    "max_length_value" : "10000",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 84520
+  }, {
+    "max_value" : "AAAAAAAAPPPPAAAA",
+    "min_value" : "AAAAAAAAAAAABAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 86293
+  }, {
+    "max_value" : "86399",
+    "min_value" : "0",
+    "max_length_value" : "10000",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 84520
+  }, {
+    "max_value" : "23",
+    "min_value" : "0",
+    "max_length_value" : "10",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 24
+  }, {
+    "max_value" : "59",
+    "min_value" : "0",
+    "max_length_value" : "10",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 62
+  }, {
+    "max_value" : "59",
+    "min_value" : "0",
+    "max_length_value" : "10",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 62
+  }, {
+    "max_value" : "PM",
+    "min_value" : "AM",
+    "max_length_value" : "AM",
+    "min_length_value" : "AM",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "third",
+    "min_value" : "first",
+    "max_length_value" : "second",
+    "min_length_value" : "third",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "night",
+    "min_value" : "afternoon",
+    "max_length_value" : "afternoon",
+    "min_length_value" : "night",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "lunch",
+    "min_value" : "",
+    "max_length_value" : "breakfast",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  } ],
+  "sample_rows" : [ [ "0", "2", "4", "6", "8", "10", "12", "14", "16", "18" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAADAAAAAAA", "AAAAAAAAFAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAJAAAAAAA", "AAAAAAAALAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAPAAAAAAA", "AAAAAAAABBAAAAAA", "AAAAAAAADBAAAAAA" ], [ "0", "2", "4", "6", "8", "10", "12", "14", "16", "18" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "2", "4", "6", "8", "10", "12", "14", "16", "18" ], [ "AM", "AM", "AM", "AM", "AM", "AM", "AM", "AM", "AM", "AM" ], [ "third", "third", "third", "third", "third", "third", "third", "third", "third", "third" ], [ "night", "night", "night", "night", "night", "night", "night", "night", "night", "night" ], [ "", "", "", "", "", "", "", "", "", "" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "86400",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "133882",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/time_dim",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

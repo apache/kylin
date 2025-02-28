@@ -51,6 +51,7 @@ export default {
     jobLogs: '',
     showRevertPasswordDialog: 'true',
     isEditForm: false,
+    recommendationPageSize: 0,
     isShowGlobalAlter: false,
     dimMeasNameMaxLength: 300,
     favoriteImportSqlMaxSize: 1000,
@@ -178,6 +179,7 @@ export default {
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.metadata.random-admin-password.enabled', key: 'showRevertPasswordDialog', defaultValue: 'true'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.model.dimension-measure-name.max-length', key: 'dimMeasNameMaxLength', defaultValue: 300})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.model.suggest-model-sql-limit', key: 'favoriteImportSqlMaxSize'})
+          commit(types.GET_CONF_BY_NAME, { name: 'kylin.model.recommendation-page-size', key: 'recommendationPageSize' })
           commit(types.GET_CONF_BY_NAME, {name: 'resource_group_enabled', key: 'resourceGroupEnabled', defaultValue: 'false'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.query.query-history-download-max-size', key: 'queryDownloadMaxSize', defaultValue: 100000})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.second-storage.class', key: 'isShowSecondStorage'})
@@ -243,6 +245,9 @@ export default {
     },
     queryDownloadMaxSize: (state) => {
       return state.queryDownloadMaxSize
+    },
+    isStreamingEnabled: (state) => {
+      return state.streamingEnabled === 'true'
     },
     isNonAdminGenQueryDiagPackage: (state) => {
       return state.isNonAdminGenQueryDiagPackage === 'true'

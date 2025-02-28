@@ -1,5 +1,5 @@
 {
-  "@class" : "io.kyligence.kap.event.model.PostAddCuboidEvent",
+  "@class" : "org.apache.kylin.event.model.PostAddCuboidEvent",
   "uuid" : "9574fb41-bdf0-4bdb-9445-510eebdf25e9",
   "last_modified" : 0,
   "create_time" : 1585806630206,

@@ -1,0 +1,119 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1665388282375,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "11" : {
+      "min" : "-99.9400",
+      "max" : "999.6500"
+    },
+    "12" : {
+      "min" : "2009-12-22",
+      "max" : "2014-12-20"
+    },
+    "13" : {
+      "min" : "0",
+      "max" : "4999"
+    },
+    "14" : {
+      "min" : "2009-12-22 08:25:28.0",
+      "max" : "2014-12-20 23:16:29.0"
+    },
+    "15" : {
+      "min" : "TEST0",
+      "max" : "TEST999"
+    },
+    "37" : {
+      "min" : "65",
+      "max" : "175750"
+    },
+    "16" : {
+      "min" : "10000500",
+      "max" : "10001499"
+    },
+    "0" : {
+      "min" : "0",
+      "max" : "9999"
+    },
+    "1" : {
+      "min" : "65",
+      "max" : "175750"
+    },
+    "2" : {
+      "min" : "0",
+      "max" : "211"
+    },
+    "3" : {
+      "min" : "0",
+      "max" : "999"
+    },
+    "4" : {
+      "min" : "0",
+      "max" : "4999"
+    },
+    "5" : {
+      "min" : "2012-01-01",
+      "max" : "2014-01-01"
+    },
+    "6" : {
+      "min" : "ABIN",
+      "max" : "Others"
+    },
+    "7" : {
+      "min" : "TEST0",
+      "max" : "TEST999"
+    },
+    "9" : {
+      "min" : "-99",
+      "max" : "16"
+    },
+    "10" : {
+      "min" : "10000000",
+      "max" : "10000999"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1665388468323,
+  "source_count" : 11425,
+  "source_bytes_size" : 1410166,
+  "column_source_bytes" : {
+    "DEFAULT.TEST_KYLIN_FACT.PRICE" : 89891,
+    "DEFAULT.TEST_KYLIN_FACT.LEAF_CATEG_ID" : 57593,
+    "DEFAULT.TEST_ORDER.TEST_EXTENDED_COLUMN" : 35026,
+    "DEFAULT.TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP" : 78695,
+    "DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID" : 14109,
+    "DEFAULT.TEST_KYLIN_FACT.LSTG_FORMAT_NAME" : 75473,
+    "DEFAULT.TEST_KYLIN_FACT.TRANS_ID" : 32789,
+    "DEFAULT.TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID" : 725,
+    "DEFAULT.TEST_KYLIN_FACT.SELLER_ID" : 91400,
+    "DEFAULT.TEST_KYLIN_FACT.IS_EFFECTUAL" : 0,
+    "DEFAULT.TEST_ORDER.TEST_TIME_ENC" : 106680,
+    "DEFAULT.TEST_KYLIN_FACT.ORDER_ID" : 42443,
+    "DEFAULT.TEST_ORDER.BUYER_ID" : 40640,
+    "DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT" : 32961,
+    "DEFAULT.TEST_ORDER.TEST_DATE_ENC" : 50800,
+    "DEFAULT.TEST_KYLIN_FACT.SLR_SEGMENT_CD" : 23238,
+    "DEFAULT.TEST_ORDER.ORDER_ID" : 18872,
+    "DEFAULT.TEST_KYLIN_FACT.CAL_DT" : 114250
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "12e442b5-eee2-ca6d-90e2-bcf02406a223",
+  "model_uuid" : "1e74b613-6134-a986-810b-ac5b4f663af3",
+  "project" : "test_agg_pushdown"
+}

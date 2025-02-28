@@ -20,7 +20,9 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.commons.net.util.Base64.encodeBase64;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.charset.Charset;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.streaming.ReflectionUtils;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.SparderUIUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -48,6 +51,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpMethod;
@@ -61,6 +65,9 @@ import lombok.val;
 import lombok.var;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ HttpMethod.class, KylinConfig.class })
 public class SparderUIServiceTest {
     @InjectMocks
@@ -69,6 +76,8 @@ public class SparderUIServiceTest {
     private RouteService routeService = Mockito.mock(RouteService.class);
     @Mock
     private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
+    @Mock
+    private AclEvaluate aclEvaluate = Mockito.mock(AclEvaluate.class);
     @Mock
     private KylinConfig kylinConfig = Mockito.mock(KylinConfig.class);
     private SparderUIUtil sparderUIUtil;
@@ -79,11 +88,13 @@ public class SparderUIServiceTest {
         PowerMockito.when(HttpMethod.valueOf(ArgumentMatchers.anyString())).thenAnswer(invocation -> HttpMethod.GET);
         PowerMockito.when(KylinConfig.getInstanceFromEnv()).thenAnswer(invocation -> kylinConfig);
         Mockito.when(kylinConfig.getUIProxyLocation()).thenReturn("/kylin");
+        Mockito.when(kylinConfig.isSparkUIAclEnabled()).thenReturn(false);
 
         sparderUIUtil = Mockito.mock(SparderUIUtil.class);
         ReflectionUtils.setField(sparderUIService, "routeService", routeService);
         ReflectionUtils.setField(sparderUIService, "restTemplate", restTemplate);
         ReflectionUtils.setField(sparderUIService, "sparderUIUtil", sparderUIUtil);
+        ReflectionUtils.setField(sparderUIService, "aclEvaluate", aclEvaluate);
 
         val restResult = JsonUtil.writeValueAsBytes(RestResponse.ok(true));
         val resp = new ResponseEntity<>(restResult, HttpStatus.OK);
@@ -93,7 +104,45 @@ public class SparderUIServiceTest {
     }
 
     @Test
+    public void proxyFail() {
+        {
+            try {
+                Mockito.when(routeService.needRoute()).thenReturn(true);
+                val req = new MockHttpServletRequest();
+                req.addHeader("routed", false);
+                setCookie(true, req, "127.0.0.1:7979");
+                val res = new MockHttpServletResponse();
+                sparderUIService.proxy("123", "321", "127.0.0.1:7979>", req, res);
+                fail();
+            } catch (Exception e) {
+                assertInstanceOf(IllegalArgumentException.class, e);
+                assertTrue(e.getMessage().contains("Url contains disallowed chars, host: "));
+            }
+        }
+        {
+            try {
+                Mockito.when(routeService.needRoute()).thenReturn(true);
+                val req = new MockHttpServletRequest();
+                setCookie(true, req, "127.0.0.1:7979>");
+                req.addHeader("routed", false);
+                val res = new MockHttpServletResponse();
+                sparderUIService.proxy(req, res);
+                fail();
+            } catch (Exception e) {
+                assertInstanceOf(IllegalArgumentException.class, e);
+                assertTrue(e.getMessage().contains("Url contains disallowed chars, host: "));
+            }
+        }
+    }
+
+    @Test
     public void proxy() throws Exception {
+        proxyInner();
+        Mockito.when(kylinConfig.isSparkUIAclEnabled()).thenReturn(true);
+        proxyInner();
+    }
+
+    private void proxyInner() throws Exception {
         proxy(false, false, false);
         proxy(true, false, false);
         proxy(true, true, false);
@@ -117,14 +166,7 @@ public class SparderUIServiceTest {
             ((Logger) LogManager.getRootLogger()).addAppender(appender);
             Mockito.when(routeService.needRoute()).thenReturn(needRoute);
             val req = new MockHttpServletRequest();
-            if (needCookie) {
-                val server = "127.0.0.1:7070";
-                val serverBytes = server.getBytes(Charset.defaultCharset());
-                val serverCookie = new String(encodeBase64(serverBytes), Charset.defaultCharset());
-                Cookie cookie = new Cookie("server", serverCookie);
-                cookie.setPath(SparderUIUtil.KYLIN_UI_BASE);
-                req.setCookies(cookie);
-            }
+            setCookie(needCookie, req, "127.0.0.1:7070");
             req.addHeader("routed", isRouted);
             val res = new MockHttpServletResponse();
             sparderUIService.proxy(req, res);
@@ -154,13 +196,7 @@ public class SparderUIServiceTest {
             ((Logger) LogManager.getRootLogger()).addAppender(appender);
             Mockito.when(routeService.needRoute()).thenReturn(needRoute);
             val req = new MockHttpServletRequest();
-            if (needCookie) {
-                val serverBytes = "127.0.0.1:7979".getBytes(Charset.defaultCharset());
-                val serverCookie = new String(encodeBase64(serverBytes), Charset.defaultCharset());
-                Cookie cookie = new Cookie("server", serverCookie);
-                cookie.setPath(SparderUIUtil.KYLIN_UI_BASE);
-                req.setCookies(cookie);
-            }
+            setCookie(needCookie, req, "127.0.0.1:7979");
             req.addHeader("routed", isRouted);
             val res = new MockHttpServletResponse();
             sparderUIService.proxy("123", "321", server, req, res);
@@ -180,6 +216,16 @@ public class SparderUIServiceTest {
             }
         } finally {
             ((Logger) LogManager.getRootLogger()).removeAppender(appender);
+        }
+    }
+
+    private void setCookie(boolean needCookie, MockHttpServletRequest req, String server) {
+        if (needCookie) {
+            val serverBytes = server.getBytes(Charset.defaultCharset());
+            val serverCookie = new String(encodeBase64(serverBytes), Charset.defaultCharset());
+            Cookie cookie = new Cookie("server", serverCookie);
+            cookie.setPath(SparderUIUtil.KYLIN_UI_BASE);
+            req.setCookies(cookie);
         }
     }
 }

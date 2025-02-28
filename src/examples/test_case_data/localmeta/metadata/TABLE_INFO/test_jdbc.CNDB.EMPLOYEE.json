@@ -1,0 +1,48 @@
+{
+  "uuid" : "6fcb7a73-9827-1e00-5ac8-3d7ca47e0014",
+  "last_modified" : 0,
+  "create_time" : 1699343706015,
+  "version" : "4.0.0.0",
+  "name" : "EMPLOYEE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "EMP_ID",
+    "datatype" : "integer",
+    "comment" : "员工ID",
+    "case_sensitive_name" : "emp_id"
+  }, {
+    "id" : "2",
+    "name" : "EMP_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "员工姓名",
+    "case_sensitive_name" : "emp_name"
+  }, {
+    "id" : "3",
+    "name" : "EMP_DEPT",
+    "datatype" : "varchar(4096)",
+    "comment" : "员工所在部门",
+    "case_sensitive_name" : "emp_dept"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "CNDB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "table_comment" : "员工信息表",
+  "project" : "test_jdbc"
+}

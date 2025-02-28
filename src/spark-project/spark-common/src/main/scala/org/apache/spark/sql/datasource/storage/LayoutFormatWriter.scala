@@ -18,11 +18,11 @@
 package org.apache.spark.sql.datasource.storage
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.{ContentSummary, Path}
 import org.apache.kylin.common.KapConfig
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
-import org.apache.kylin.engine.spark.utils.StorageUtils.findCountDistinctMeasure
+import org.apache.kylin.engine.spark.utils.StorageUtils.{MB, findCountDistinctMeasure}
 import org.apache.kylin.engine.spark.utils.{JobMetrics, Metrics, Repartitioner, StorageUtils}
 import org.apache.kylin.metadata.cube.model.LayoutEntity
 import org.apache.spark.internal.Logging
@@ -33,18 +33,16 @@ object LayoutFormatWriter extends Logging {
   protected val TEMP_FLAG = "_temp_"
 
   /** Describes how output files should be placed in the filesystem. */
-  case class OutputSpec(
-      metrics: JobMetrics,
-      rowCount: Long,
-      hadoopConf: Configuration,
-      bucketNum: Int)
+  case class OutputSpec(metrics: JobMetrics,
+                        rowCount: Long,
+                        hadoopConf: Configuration,
+                        bucketNum: Int)
 
-  def write(
-      dataFrame: DataFrame,
-      layout: LayoutEntity,
-      outputPath: Path,
-      kapConfig: KapConfig,
-      storageListener: Option[StorageListener]): OutputSpec = {
+  def write(dataFrame: DataFrame,
+            layout: LayoutEntity,
+            outputPath: Path,
+            kapConfig: KapConfig,
+            storageListener: Option[StorageListener]): OutputSpec = {
     val ss = dataFrame.sparkSession
     val hadoopConf = ss.sparkContext.hadoopConfiguration
     val fs = outputPath.getFileSystem(hadoopConf)
@@ -53,7 +51,7 @@ object LayoutFormatWriter extends Logging {
     val sortColumns = NSparkCubingUtil.getColumns(dims)
 
     if (kapConfig.isAggIndexAdaptiveBuildEnabled
-        && unNeedRepartitionByShardCols(layout)) {
+      && unNeedRepartitionByShardCols(layout)) {
       val df = dataFrame
         .repartition()
         .sortWithinPartitions(sortColumns: _*)
@@ -78,6 +76,9 @@ object LayoutFormatWriter extends Logging {
       val repartitioner = new Repartitioner(
         kapConfig.getParquetStorageShardSizeMB,
         kapConfig.getParquetStorageRepartitionThresholdSize,
+        needResetRowGroup(rowCount, summary, kapConfig),
+        kapConfig.getParquetBlockSize,
+        kapConfig.getParquetPageSizeRowCheckMax,
         rowCount,
         repartitionThresholdSize,
         summary,
@@ -95,4 +96,9 @@ object LayoutFormatWriter extends Logging {
     layout.getShardByColumns == null || layout.getShardByColumns.isEmpty
   }
 
+  def needResetRowGroup(totalRowCount: Long, contentSummary: ContentSummary, kapConfig: KapConfig): Boolean = {
+    // per file size < threshold file size
+    kapConfig.isResetParquetBlockSize &&
+      (totalRowCount / (contentSummary.getLength * 1.0 / MB)) > kapConfig.getParquetRowCountPerMb
+  }
 }

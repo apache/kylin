@@ -24,7 +24,9 @@ import java.net.ConnectException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
@@ -36,7 +38,12 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 
-public class NUnauthorisedEntryPointTest {
+public class NUnauthorisedEntryPointTest extends NLocalFileMetadataTestCase {
+
+    @BeforeEach
+    void setUp() {
+        createTestMetadata();
+    }
 
     @InjectMocks
     private NUnauthorisedEntryPoint nUnauthorisedEntryPoint = Mockito.spy(new NUnauthorisedEntryPoint());

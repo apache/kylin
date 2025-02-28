@@ -24,13 +24,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MultiTimezoneTest;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

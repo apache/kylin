@@ -1,0 +1,14 @@
+{
+  "uuid" : "8c670664-8d05-466a-802f-83c023b56c77",
+  "last_modified" : 1522545367929,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "owner" : "test_owner",
+  "mp_values" : null,
+  "create_time_utc" : 1509791792901,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "project" : "timezone",
+  "segment_uuids" : [ ]
+}

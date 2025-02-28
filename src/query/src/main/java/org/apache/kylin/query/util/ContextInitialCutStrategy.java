@@ -23,9 +23,8 @@ import java.util.List;
 import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.KapRel;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapRel;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,37 +32,37 @@ import lombok.extern.slf4j.Slf4j;
 public class ContextInitialCutStrategy implements ICutContextStrategy {
 
     @Override
-    public List<OLAPRel> cutOffContext(OLAPRel rootRel, RelNode parentOfRoot) {
+    public List<OlapRel> cutOffContext(OlapRel rootRel, RelNode parentOfRoot) {
         //Step 1.first round, cutting olap context
-        KapRel.OLAPContextImplementor contextImplementor = new KapRel.OLAPContextImplementor();
-        KapRel.ContextVisitorState initState = KapRel.ContextVisitorState.init();
-        contextImplementor.visitChild(rootRel, rootRel, initState);
+        OlapRel.ContextImpl contextImpl = new OlapRel.ContextImpl();
+        OlapRel.ContextVisitorState initState = OlapRel.ContextVisitorState.init();
+        contextImpl.visitChild(rootRel, rootRel, initState);
         if (initState.hasFreeTable()) {
             // if there are free tables, allocate a context for it
-            contextImplementor.allocateContext((KapRel) rootRel, parentOfRoot);
+            contextImpl.allocateContext(rootRel, parentOfRoot);
         }
         toLeafJoinForm();
 
         ContextUtil.dumpCalcitePlan("EXECUTION PLAN AFTER HEP PLANNER", rootRel, log);
-        contextImplementor.optimizeContextCut();
+        contextImpl.optimizeContextCut();
         return Lists.newArrayList(rootRel);
     }
 
     @Override
-    public boolean needCutOff(OLAPRel rootRel) {
+    public boolean needCutOff(OlapRel rootRel) {
         return true;
     }
 
     private void toLeafJoinForm() {
         // filter and project pull up
-        for (OLAPContext context : ContextUtil.listContexts()) {
+        for (OlapContext context : ContextUtil.listContexts()) {
             RelNode parentOfTopNode = context.getParentOfTopNode();
             if (parentOfTopNode == null) {
                 for (int i = 0; i < context.getTopNode().getInputs().size(); i++) {
                     context.getTopNode().replaceInput(i,
                             HepUtils.runRuleCollection(context.getTopNode().getInput(i), HepUtils.CUBOID_OPT_RULES));
                 }
-                ((KapRel) context.getTopNode()).setContext(context);
+                context.getTopNode().setContext(context);
                 continue;
             }
 
@@ -72,8 +71,8 @@ public class ContextInitialCutStrategy implements ICutContextStrategy {
                     continue;
 
                 RelNode newInput = HepUtils.runRuleCollection(parentOfTopNode.getInput(i), HepUtils.CUBOID_OPT_RULES);
-                ((KapRel) newInput).setContext(context);
-                context.setTopNode((KapRel) newInput);
+                ((OlapRel) newInput).setContext(context);
+                context.setTopNode((OlapRel) newInput);
                 parentOfTopNode.replaceInput(i, newInput);
             }
         }

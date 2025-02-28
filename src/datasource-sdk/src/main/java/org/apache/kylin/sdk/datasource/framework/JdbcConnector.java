@@ -23,11 +23,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.sql.rowset.CachedRowSet;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.sdk.datasource.framework.conv.ConvMaster;
@@ -35,11 +39,9 @@ import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfigurer;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
+import org.apache.kylin.source.SupportsSparkCatalog;
 
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-public class JdbcConnector implements Closeable {
+public class JdbcConnector implements Closeable, SupportsSparkCatalog {
 
     private final AbstractJdbcAdaptor adaptor;
     private SqlConverter sqlConverter;
@@ -194,6 +196,14 @@ public class JdbcConnector implements Closeable {
 
     public Connection getConnection() throws SQLException {
         return adaptor.getConnection();
+    }
+
+    public String addCatalog(KylinConfig config, String sql, String project) {
+        return adaptor.addCatalog(config, sql, project);
+    }
+    
+    public Map<String, String> getSourceCatalogConf(KylinConfig config, String project) {
+        return adaptor.getSourceCatalogConf(config, project);
     }
 
     public Connection getConnectionWithDefaultDb(String dbName) throws SQLException {

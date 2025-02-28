@@ -23,18 +23,19 @@ import java.util.Locale;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.asyncprofiler.Message;
 import org.apache.kylin.common.exception.JobErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.profiler.Message;
+import org.apache.kylin.profiler.ProfilerStatus;
 
 import lombok.SneakyThrows;
 
 public class BuildAsyncProfileHelper {
 
-    private BuildAsyncProfileHelper(){}
+    private BuildAsyncProfileHelper() {
+    }
 
     public static final String NOT_EXIST = "not_exist";
 
@@ -54,8 +55,8 @@ public class BuildAsyncProfileHelper {
         checkInvalidStatus(status);
 
         if (ProfilerStatus.RUNNING().equals(status)) {
-            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getProfilingStartedError()));
+            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getProfilingStartedError()));
         }
 
         String cmd = Message.createDriverMessage(Message.START(), param);
@@ -69,8 +70,8 @@ public class BuildAsyncProfileHelper {
         String status = getProfileStatus(project, jobStepId);
         checkInvalidStatus(status);
         if (ProfilerStatus.IDLE().equals(status)) {
-            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getProfilingNotStartError()));
+            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getProfilingNotStartError()));
         }
         String cmd = Message.createDriverMessage(Message.DUMP(), param);
         Path actionPath = new Path(
@@ -86,21 +87,20 @@ public class BuildAsyncProfileHelper {
             timeout -= 500;
         }
         if (!fileSystem.exists(dumpFilePath)) {
-            throw new KylinException(JobErrorCode.PROFILING_COLLECT_TIMEOUT, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getProfilingCollectTimeout()));
+            throw new KylinException(JobErrorCode.PROFILING_COLLECT_TIMEOUT,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getProfilingCollectTimeout()));
         }
         return fileSystem.open(dumpFilePath);
     }
 
     public static void checkInvalidStatus(String status) {
         if (NOT_EXIST.equals(status)) {
-            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getProfilingJobNotStartError()));
+            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getProfilingJobNotStartError()));
         }
         if (ProfilerStatus.CLOSED().equals(status)) {
-            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getProfilingJobFinishedError()));
+            throw new KylinException(JobErrorCode.PROFILING_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getProfilingJobFinishedError()));
         }
     }
-
 }

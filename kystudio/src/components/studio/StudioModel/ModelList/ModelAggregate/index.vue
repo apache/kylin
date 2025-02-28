@@ -103,6 +103,15 @@
                   </el-dropdown-menu>
                 </el-dropdown>
               </template>
+              <!-- 存储优化按钮 -->
+              <el-button
+                v-if="isStorageV3 && modelActions.includes('indexOptimization')"
+                icon="el-ksd-n-icon-setting-outlined"
+                text type="primary"
+                class="ksd-ml-2 ksd-fleft"
+                @click="handleShowIndexOptimizationDialog">
+                {{$t('indexOptimization')}}
+              </el-button>
               <div class="right fix">
                 <el-input class="search-input" v-model.trim="filterArgs.key" size="medium" :placeholder="$t('searchAggregateID')" prefix-icon="el-ksd-icon-search_22" v-global-key-event.enter.debounce="searchAggs" @clear="searchAggs()"></el-input>
               </div>
@@ -176,6 +185,9 @@
                     <common-tip :content="$t('editIndex')" v-if="isShowAggregateAction&&datasourceActions.includes('editAggGroup')">
                       <i class="el-icon-ksd-table_edit ksd-ml-5" v-if="scope.row.source === 'MANUAL_TABLE'" @click="confrimEditTableIndex(scope.row)"></i>
                     </common-tip>
+                    <common-tip :content="$t('viewDetail')" v-if="isStorageV3">
+                      <i class="el-ksd-icon-view_22 ksd-ml-5" @click="handleShowIndexDetail(scope.row)"></i>
+                    </common-tip>
                     <common-tip :content="$t('update')" v-if="scope.row.need_update">
                       <i class="action-icons el-ksd-icon-refresh_22 ksd-ml-5" @click="updateBaseIndexEvent(scope.row)"></i>
                     </common-tip>
@@ -188,7 +200,15 @@
         </el-card>
       </div>
     </div>
-    <index-details :indexDetailTitle="indexDetailTitle" :detailType="detailType" :cuboidData="cuboidData" @close="closeDetailDialog" v-if="indexDetailShow" />
+    <index-details
+      :indexDetailTitle="indexDetailTitle"
+      :detailType="detailType"
+      :cuboidData="cuboidData"
+      :storageType="model.storage_type"
+      @close="closeDetailDialog"
+      v-if="indexDetailShow" />
+    <IndexOptimizationModal />
+    <IndexDetailModal />
   </div>
 </template>
 
@@ -204,6 +224,8 @@ import { BuildIndexStatus } from '../../../../../config/model'
 import { formatGraphData } from './handler'
 import NModel from '../../ModelEdit/model.js'
 import IndexDetails from './indexDetails'
+import IndexOptimizationModal from '../../IndexOptimizationModal'
+import IndexDetailModal from '../IndexDetailModal'
 
 @Component({
   props: {
@@ -245,7 +267,8 @@ import IndexDetails from './indexDetails'
     ...mapGetters([
       'currentProjectData',
       'datasourceActions',
-      'isOnlyQueryNode'
+      'isOnlyQueryNode',
+      'modelActions'
     ]),
     modelInstance () {
       this.model.project = this.currentProjectData.name
@@ -261,6 +284,12 @@ import IndexDetails from './indexDetails'
     }),
     ...mapActions('TableIndexEditModal', {
       showTableIndexEditModal: 'CALL_MODAL'
+    }),
+    ...mapActions('IndexOptimizationModal', {
+      callIndexOptimizationModal: 'CALL_MODAL'
+    }),
+    ...mapActions('IndexDetailModal', {
+      callIndexDetailModal: 'CALL_MODAL'
     }),
     ...mapActions({
       fetchIndexGraph: 'FETCH_INDEX_GRAPH',
@@ -278,7 +307,9 @@ import IndexDetails from './indexDetails'
     })
   },
   components: {
-    IndexDetails
+    IndexDetails,
+    IndexOptimizationModal,
+    IndexDetailModal
   },
   locales
 })
@@ -332,9 +363,27 @@ export default class ModelAggregate extends Vue {
       return this.switchModelType === 'BATCH' ? this.model.batch_id : this.model.uuid
     }
   }
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
+  }
 
   get isHaveDelIndexActionSpec () {
     return this.datasourceActions.includes('delAggIdx') || this.isAdvancedOperatorUser()
+  }
+
+  async handleShowIndexDetail (row) {
+    await this.callIndexDetailModal(row)
+  }
+
+  // 打开索引优化的弹窗
+  async handleShowIndexOptimizationDialog () {
+    const { isSubmit } = await this.callIndexOptimizationModal({
+      modelInstance: this.model
+    })
+    if (isSubmit) {
+      this.$emit('refreshModel')
+    }
   }
 
   formatDataSize (dataSize) {

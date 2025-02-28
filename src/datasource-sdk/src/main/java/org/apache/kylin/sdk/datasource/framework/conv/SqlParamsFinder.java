@@ -27,14 +27,13 @@ import java.util.concurrent.TimeUnit;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class SqlParamsFinder {
 
-    private final static Cache<SqlCall, Map<Integer, List<Integer>>> PATH_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<SqlCall, Map<Integer, List<Integer>>> PATH_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(100).build();
 
     private Map<Integer, List<Integer>> paramPath;

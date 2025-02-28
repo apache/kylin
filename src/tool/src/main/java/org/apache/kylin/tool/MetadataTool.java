@@ -18,6 +18,7 @@
 
 package org.apache.kylin.tool;
 
+import static org.apache.kylin.common.constant.Constants.CORE_META_DIR;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.PARAMETER_NOT_SPECIFY;
 import static org.apache.kylin.common.persistence.transaction.UnitOfWork.GLOBAL_UNIT;
 
@@ -53,7 +54,6 @@ public class MetadataTool extends ExecutableApplication {
 
     private static final Logger logger = LoggerFactory.getLogger("diag");
 
-    @SuppressWarnings("static-access")
     private static final Option OPERATE_BACKUP = OptionBuilder.getInstance()
             .withDescription("Backup metadata to local path or HDFS path").isRequired(false).create("backup");
 
@@ -94,9 +94,9 @@ public class MetadataTool extends ExecutableApplication {
     private final KylinConfig kylinConfig;
     private final MetadataToolHelper helper;
 
-    private JobInfoTool jobInfoTool = new JobInfoTool();
-    private QueryHistoryOffsetTool queryHistoryOffsetTool = new QueryHistoryOffsetTool();
-    private FavoriteRuleTool favoriteRuleTool = new FavoriteRuleTool();
+    private final JobInfoTool jobInfoTool = new JobInfoTool();
+    private final QueryHistoryOffsetTool queryHistoryOffsetTool = new QueryHistoryOffsetTool();
+    private final FavoriteRuleTool favoriteRuleTool = new FavoriteRuleTool();
 
     public MetadataTool() {
         this(KylinConfig.getInstanceFromEnv());
@@ -114,7 +114,7 @@ public class MetadataTool extends ExecutableApplication {
 
     public static void backup(KylinConfig kylinConfig) throws IOException {
         HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
-        String[] args = new String[]{"-backup", "-compress", "-dir", HadoopUtil.getBackupFolder(kylinConfig)};
+        String[] args = new String[] { "-backup", "-compress", "-dir", HadoopUtil.getBackupFolder(kylinConfig) };
         val backupTool = new MetadataTool(kylinConfig);
         backupTool.execute(args);
     }
@@ -128,7 +128,7 @@ public class MetadataTool extends ExecutableApplication {
         if (afterTruncate) {
             tool.execute(new String[] { "-restore", "-dir", folder, "--after-truncate" });
         } else {
-            tool.execute(new String[] { "-restore", "-dir", folder});
+            tool.execute(new String[] { "-restore", "-dir", folder });
         }
     }
 
@@ -137,9 +137,10 @@ public class MetadataTool extends ExecutableApplication {
         if (afterTruncate) {
             tool.execute(new String[] { "-restore", "-dir", folder, "-project", project, "--after-truncate" });
         } else {
-            tool.execute(new String[] { "-restore", "-dir", folder, "-project", project});
+            tool.execute(new String[] { "-restore", "-dir", folder, "-project", project });
         }
     }
+
     public static void main(String[] args) {
         ToolMainWrapper.wrap(args, () -> {
             val config = KylinConfig.getInstanceFromEnv();
@@ -171,7 +172,6 @@ public class MetadataTool extends ExecutableApplication {
         result.addOption(OPTION_DIR);
         result.addOption(OPTION_PROJECT);
         result.addOption(FOLDER_NAME);
-        result.addOption(OPTION_TARGET);
         result.addOption(OPERATE_COMPRESS);
         result.addOption(OPTION_EXCLUDE_TABLE_EXD);
         result.addOption(OPTION_AFTER_TRUNCATE);
@@ -189,21 +189,21 @@ public class MetadataTool extends ExecutableApplication {
         String project = optionsHelper.getOptionValue(OPTION_PROJECT);
         String path = optionsHelper.getOptionValue(OPTION_DIR);
         String folder = optionsHelper.getOptionValue(FOLDER_NAME);
-        String target = optionsHelper.getOptionValue(OPTION_TARGET);
         boolean compress = optionsHelper.hasOption(OPERATE_COMPRESS);
         boolean excludeTableExd = optionsHelper.hasOption(OPTION_EXCLUDE_TABLE_EXD);
         if (optionsHelper.hasOption(OPERATE_BACKUP)) {
             backupMetadata(project, path, folder, compress, excludeTableExd);
-        } else if (optionsHelper.hasOption(OPERATE_FETCH)) {
-            helper.fetch(kylinConfig, path, folder, target, excludeTableExd);
-        } else if (optionsHelper.hasOption(OPERATE_LIST)) {
-            helper.list(kylinConfig, target);
+            // todo: upgrading to kylin5 need more work on MetadataTool
+            // } else if (optionsHelper.hasOption(OPERATE_FETCH)) {
+            //     helper.fetch(kylinConfig, path, folder, target, excludeTableExd);
+            // } else if (optionsHelper.hasOption(OPERATE_LIST)) {
+            //     helper.list(kylinConfig, target);
         } else if (optionsHelper.hasOption(OPERATE_RESTORE)) {
             boolean delete = optionsHelper.hasOption(OPTION_AFTER_TRUNCATE);
-            UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().processor(() -> {
+            UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().skipReplay(true).processor(() -> {
                 restoreMetadata(project, path, delete);
                 return null;
-            }).useProjectLock(true).unitName(GLOBAL_UNIT).all(true).build());
+            }).unitName(GLOBAL_UNIT).all(true).build());
         } else {
             throw new KylinException(PARAMETER_NOT_SPECIFY, "-restore");
         }
@@ -212,8 +212,7 @@ public class MetadataTool extends ExecutableApplication {
     private void backupMetadata(String project, String path, String folder, boolean compress, boolean excludeTableExd)
             throws Exception {
 
-        String backupPath = helper.backup(kylinConfig, project, path, folder, compress, excludeTableExd)
-                .getFirst();
+        String backupPath = helper.backup(kylinConfig, project, path, folder, compress, excludeTableExd).getFirst();
 
         if (StringUtils.isNotEmpty(project)) {
             jobInfoTool.backupToLocal(backupPath, project);
@@ -233,14 +232,14 @@ public class MetadataTool extends ExecutableApplication {
 
     private void restoreMetadata(String project, String path, boolean delete) throws Exception {
         if (StringUtils.isNotEmpty(project)) {
-            helper.restore(kylinConfig, project, StringUtils.appendIfMissing(path, "/") + "core_meta", delete, true);
+            helper.restore(kylinConfig, project, StringUtils.appendIfMissing(path, "/") + CORE_META_DIR, delete, true);
             UnitOfWork.get().doAfterUpdate(() -> {
                 queryHistoryOffsetTool.restoreProjectFromLocal(path, project, delete);
                 favoriteRuleTool.restoreProjectFromLocal(path, project, delete);
                 jobInfoTool.restoreProjectFromLocal(path, project, delete);
             });
         } else {
-            helper.restore(kylinConfig, project, StringUtils.appendIfMissing(path, "/") + "core_meta", delete, true);
+            helper.restore(kylinConfig, project, StringUtils.appendIfMissing(path, "/") + CORE_META_DIR, delete, true);
             UnitOfWork.get().doAfterUpdate(() -> {
                 queryHistoryOffsetTool.restoreFromLocal(path, delete);
                 favoriteRuleTool.restoreFromLocal(path, delete);

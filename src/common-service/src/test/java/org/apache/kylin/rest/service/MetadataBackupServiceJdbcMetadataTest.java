@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.persistence.MetadataType.ALL;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.awaitility.Awaitility.await;
 
@@ -32,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.persistence.ImageDesc;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
+import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStoreTool;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
@@ -63,14 +66,14 @@ class MetadataBackupServiceJdbcMetadataTest {
         kylinConfig.setProperty("kylin.env.hdfs-working-dir", tempDir.getAbsolutePath());
 
         val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-        resourceStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()),
-                StringEntity.serializer);
-        Assert.assertEquals(1, resourceStore.listResourcesRecursively("/").size());
+        resourceStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG,
+                new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
+        Assert.assertEquals(1, resourceStore.listResourcesRecursively(ALL.name()).size());
 
         val url = getTestConfig().getMetadataUrl();
         val jdbcTemplate = info.getJdbcTemplate();
-        val table = url.getIdentifier() + "_audit_log";
-        JdbcAuditLogStoreTool.prepareJdbcAuditLogStore(table, jdbcTemplate);
+        JdbcAuditLogStoreTool.prepareJdbcAuditLogStore(null, jdbcTemplate, 100);
+        val table = url.getIdentifier() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX;
         long count = jdbcTemplate.queryForObject("select count(1) from " + table, Long.class);
 
         val rootPath = new Path(kylinConfig.getHdfsWorkingDirectory()).getParent();
@@ -87,7 +90,8 @@ class MetadataBackupServiceJdbcMetadataTest {
         Assert.assertEquals(1, rootMetadataFS.listStatus(path).length);
         val coreMetadataPath = rootMetadataFS.listStatus(path)[0].getPath();
         Assert.assertEquals(2, rootMetadataFS.listStatus(coreMetadataPath).length);
-        FSDataInputStream fis = rootMetadataFS.open(new Path(coreMetadataPath.toString() + File.separator + "_image"));
+        FSDataInputStream fis = rootMetadataFS
+                .open(new Path(coreMetadataPath.toString() + File.separator + METASTORE_IMAGE +".json"));
         BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
         String image = reader.readLine();
         ImageDesc imageDesc = JsonUtil.readValue(image, ImageDesc.class);
@@ -98,6 +102,6 @@ class MetadataBackupServiceJdbcMetadataTest {
             long newCount = jdbcTemplate.queryForObject("select count(1) from " + table, Long.class);
             return newCount == 20;
         });
-        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        jdbcTemplate.batchUpdate("SHUTDOWN;");
     }
 }

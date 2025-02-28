@@ -32,9 +32,8 @@ import org.apache.calcite.schema.impl.ViewTableMacro;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
-import org.apache.kylin.metadata.model.NDataModel;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.model.NDataModel;
 
 /**
  * A schema with no concrete tables
@@ -93,7 +92,7 @@ public class ViewSchema extends AbstractSchema {
         }
 
         @Override
-        public TranslatableTable apply(List<Object> arguments) {
+        public TranslatableTable apply(List<? extends Object> arguments) {
             return this.viewTable(getParsed(), viewSql, schemaPath, viewPath);
         }
 

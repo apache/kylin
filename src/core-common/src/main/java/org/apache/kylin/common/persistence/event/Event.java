@@ -20,9 +20,10 @@ package org.apache.kylin.common.persistence.event;
 
 import java.io.Serializable;
 
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.AuditLog;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.util.Pair;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -38,17 +39,17 @@ public class Event implements Serializable {
 
     public static Event fromLog(AuditLog log) {
         Event event;
+        Pair<MetadataType, String> pair = MetadataType.splitKeyWithType(log.getResPath());
         if (log.getByteSource() == null) {
             event = new ResourceDeleteEvent(log.getResPath());
         } else {
-            event = new ResourceCreateOrUpdateEvent(
-                    new RawResource(log.getResPath(), log.getByteSource(), log.getTimestamp(), log.getMvcc()));
+            RawResource rawResource = new RawResource(pair.getValue(), log.getByteSource(), log.getTimestamp(),
+                    log.getMvcc());
+            rawResource.setContentDiff(log.isDiffFlag() ? rawResource.getContent() : null);
+            event = new ResourceCreateOrUpdateEvent(log.getResPath(), rawResource);
         }
-        if (log.getResPath().startsWith(ResourceStore.PROJECT_ROOT)) {
-            event.setKey(log.getResPath().substring(ResourceStore.PROJECT_ROOT.length() + 1).replace(".json", ""));
-        } else {
-            event.setKey(log.getResPath().split("/")[1]);
-        }
+
+        event.setKey(pair.getValue());
         event.setInstance(log.getInstance());
         return event;
     }

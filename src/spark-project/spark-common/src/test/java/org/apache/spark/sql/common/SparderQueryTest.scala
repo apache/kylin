@@ -17,14 +17,14 @@
  */
 package org.apache.spark.sql.common
 
-import java.sql.Types
-import java.util.TimeZone
-
 import org.apache.kylin.metadata.query.StructField
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.util.sideBySide
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Row}
+
+import java.sql.Types
+import java.util.TimeZone
 
 object SparderQueryTest extends Logging {
 

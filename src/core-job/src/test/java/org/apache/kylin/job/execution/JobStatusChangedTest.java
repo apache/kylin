@@ -22,6 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mail.MailNotificationType;
 import org.apache.kylin.common.util.LogOutputTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +34,7 @@ public class JobStatusChangedTest extends LogOutputTestCase {
 
     @Before
     public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         getTestConfig().setMetadataUrl(
                 "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=");
@@ -40,57 +42,6 @@ public class JobStatusChangedTest extends LogOutputTestCase {
         NProjectManager prjMgr = NProjectManager.getInstance(config);
         prjMgr.createProject(project, "", "", Maps.newLinkedHashMap());
     }
-
-    //TODO need to be rewritten
-    /*
-    @Test
-    public void test_KE24110_FailSamplingJobWithEpochChanged() throws Exception {
-        EpochManager epcMgr = EpochManager.getInstance();
-        epcMgr.tryUpdateEpoch(project, true);
-
-        ExecutableManager execMgr = ExecutableManager.getInstance(config, project);
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setJobType(JobTypeEnum.TABLE_SAMPLING);
-        job.setProject("default");
-
-        BaseTestExecutable task1 = new SucceedTestExecutable();
-        task1.setProject("default");
-        job.addTask(task1);
-
-        BaseTestExecutable task2 = new FiveSecondErrorTestExecutable();
-        task2.setProject("default");
-
-        job.addTask(task2);
-        execMgr.addJob(job);
-
-        config.setProperty("kylin.env", "dev");
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-        if (!scheduler.hasStarted()) {
-            throw new RuntimeException("scheduler has not been started");
-        }
-        // record old avail mem
-        final double before = NDefaultScheduler.currentAvailableMem();
-
-        // wait until to_failed step2 is running
-        ConditionFactory conditionFactory = with().pollInterval(10, TimeUnit.MILLISECONDS) //
-                .and().with().pollDelay(10, TimeUnit.MILLISECONDS) //
-                .await().atMost(60000, TimeUnit.MILLISECONDS);
-        conditionFactory.until(() -> ExecutableState.RUNNING == job.getTasks().get(1).getStatus());
-
-        // after to_failed step2 is running, change epoch
-        Epoch epoch = epcMgr.getEpoch(project);
-        epoch.setEpochId(epoch.getEpochId() + 1);
-        EpochStore epochStore = EpochStore.getEpochStore(config);
-        epochStore.update(epoch);
-        // wait util job finished
-        conditionFactory.until(() -> before == NDefaultScheduler.currentAvailableMem());
-
-        // to_failed step2 can not update job status due to epoch changed
-        Assert.assertEquals(ExecutableState.RUNNING, job.getStatus());
-    }
-
-     */
 
     @Test
     public void testJobStatusChanged() {

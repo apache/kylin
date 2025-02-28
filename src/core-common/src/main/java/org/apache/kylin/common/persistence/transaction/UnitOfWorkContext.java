@@ -18,18 +18,16 @@
 package org.apache.kylin.common.persistence.transaction;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.TransactionLock;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.springframework.transaction.TransactionStatus;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +44,9 @@ public class UnitOfWorkContext {
     private final String project;
 
     private KylinConfig.SetAndUnsetThreadLocalConfig localConfig;
-    private Set<TransactionLock> currentLock = new LinkedHashSet<>();
-    private Set<String> writeLockPath = new HashSet<>();
+    private Set<String> copyForWriteItems = new HashSet<>();
     private Set<String> readLockPath = new HashSet<>();
+    private TransactionStatus transactionStatus = null;
 
     @Delegate
     private UnitOfWorkParams params;
@@ -86,12 +84,6 @@ public class UnitOfWorkContext {
         localConfig = null;
     }
 
-    void checkLockStatus() {
-        Preconditions.checkState(CollectionUtils.isNotEmpty(currentLock));
-        // Some readLocks have been released when upgrade to writeLock.
-        Preconditions.checkState(currentLock.stream().anyMatch(TransactionLock::isHeldByCurrentThread));
-    }
-
     void checkReentrant(UnitOfWorkParams params) {
         Preconditions.checkState(project.equals(params.getUnitName()) || this.params.isAll(),
                 "re-entry of UnitOfWork with different unit name? existing: %s, new: %s", project,
@@ -120,6 +112,9 @@ public class UnitOfWorkContext {
                 task.run();
             } catch (Exception e) {
                 log.warn("Failed to run task after update metadata", e);
+                if (e instanceof KylinException) {
+                    throw (KylinException) e;
+                }
                 throw new KylinException(CommonErrorCode.FAILED_UPDATE_METADATA, "task failed");
             }
         });

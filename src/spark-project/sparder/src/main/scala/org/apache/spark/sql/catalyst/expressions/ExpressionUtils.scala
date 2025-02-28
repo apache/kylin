@@ -18,14 +18,17 @@
 
 package org.apache.spark.sql.catalyst.expressions
 
+import java.nio.ByteBuffer
+
 import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.kylin.measure.percentile.PercentileSerializer
 import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.types.{DataType, Decimal}
-import org.apache.spark.sql.udaf.{BitmapSerAndDeSerObj, SumLCUtil}
+import org.apache.spark.sql.udaf.{BitmapSerAndDeSer, BitmapSerAndDeSerObj, SumLCUtil}
+import org.roaringbitmap.longlong.Roaring64NavigableMap
 
-import java.nio.ByteBuffer
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
@@ -146,4 +149,17 @@ object ExpressionUtils {
     }
   }
 
+  def bitmapUuidToArray(bytes: Any): GenericArrayData = {
+    val bitmapbyte = bytes.asInstanceOf[Array[Byte]]
+    val bitmap: Roaring64NavigableMap = BitmapSerAndDeSer.get().deserialize(bitmapbyte)
+    val cardinality = bitmap.getIntCardinality
+    val longs = new Array[Long](cardinality)
+    var id = 0
+    val iterator = bitmap.iterator()
+    while (iterator.hasNext) {
+      longs(id) = iterator.next()
+      id += 1
+    }
+    new GenericArrayData(longs)
+  }
 }

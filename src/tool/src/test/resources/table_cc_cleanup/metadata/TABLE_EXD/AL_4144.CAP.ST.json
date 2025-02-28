@@ -1,0 +1,30 @@
+{
+  "uuid" : "618d7c43-0959-560a-e67d-588f62e258a8",
+  "last_modified" : 0,
+  "create_time" : 1632742752130,
+  "version" : "4.0.0.0",
+  "table_name" : "CAP.ST",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "root",
+    "create_time" : "1631183982000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://quickstart.cloudera:8020/user/hive/warehouse/cap.db/st",
+    "partition_column" : "DT",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null,
+  "row_count_status" : null,
+  "original_size" : -1,
+  "project" : "AL_4144"
+}

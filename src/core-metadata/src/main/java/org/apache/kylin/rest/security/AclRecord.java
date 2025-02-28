@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PermissionFactory;
@@ -114,6 +114,11 @@ public class AclRecord extends RootPersistentEntity implements Acl, OwnershipAcl
     @Override
     public String resourceName() {
         return String.valueOf(domainObjectInfo.getIdentifier());
+    }
+
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.ACL;
     }
 
     public SidInfo getOwnerInfo() {
@@ -297,10 +302,5 @@ public class AclRecord extends RootPersistentEntity implements Acl, OwnershipAcl
     public boolean isSidLoaded(List<Sid> sids) {
         // don't support sid filtering yet
         return true;
-    }
-
-    @Override
-    public String getResourcePath() {
-        return ResourceStore.ACL_ROOT + "/" + resourceName();
     }
 }

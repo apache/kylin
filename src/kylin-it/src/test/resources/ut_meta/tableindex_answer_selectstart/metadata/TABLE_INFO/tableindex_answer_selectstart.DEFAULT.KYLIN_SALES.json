@@ -1,0 +1,99 @@
+{
+  "uuid" : "f3a18c94-dc35-d0e7-79fe-4bb11299e67f",
+  "last_modified" : 0,
+  "create_time" : 1664530330783,
+  "version" : "4.0.0.0",
+  "name" : "KYLIN_SALES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "trans_id"
+  }, {
+    "id" : "2",
+    "name" : "PART_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "part_dt"
+  }, {
+    "id" : "3",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "lstg_format_name"
+  }, {
+    "id" : "4",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "leaf_categ_id"
+  }, {
+    "id" : "5",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lstg_site_id"
+  }, {
+    "id" : "6",
+    "name" : "PRICE",
+    "datatype" : "double",
+    "case_sensitive_name" : "price"
+  }, {
+    "id" : "7",
+    "name" : "ITEM_COUNT",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "item_count"
+  }, {
+    "id" : "8",
+    "name" : "SELLER_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "seller_id"
+  }, {
+    "id" : "9",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "buyer_id"
+  }, {
+    "id" : "10",
+    "name" : "OPS_USER_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "ops_user_id"
+  }, {
+    "id" : "11",
+    "name" : "OPS_REGION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "ops_region"
+  }, {
+    "id" : "12",
+    "name" : "VARCHAR_INT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "varchar_int"
+  }, {
+    "id" : "13",
+    "name" : "VARCHAR_DOUBLE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "varchar_double"
+  }, {
+    "id" : "14",
+    "name" : "VARCHAR_DECIMAL",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "varchar_decimal"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "tableindex_answer_selectstart"
+}

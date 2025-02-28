@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
@@ -57,18 +56,26 @@ public class SimilarToEscapeFunctionTest extends NLocalWithSparkSessionTest {
         SparderEnv.setSparkSession(ss);
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         this.createTestMetadata("src/test/resources/ut_meta/file_pruning");
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/file_pruning" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Override

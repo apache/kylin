@@ -1,0 +1,72 @@
+{
+  "uuid" : "c6381db2-802f-4a25-98f0-bfe021c304ed",
+  "last_modified" : 0,
+  "create_time" : 1588906562333,
+  "version" : "4.0.0.0",
+  "alias" : "broken",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.KYLIN_COUNTRY",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "NAME",
+    "column" : "KYLIN_COUNTRY.NAME"
+  }, {
+    "id" : 1,
+    "name" : "COUNTRY",
+    "column" : "KYLIN_COUNTRY.COUNTRY"
+  }, {
+    "id" : 2,
+    "name" : "LATITUDE",
+    "column" : "KYLIN_COUNTRY.LATITUDE"
+  }, {
+    "id" : 3,
+    "name" : "LONGITUDE",
+    "column" : "KYLIN_COUNTRY.LONGITUDE"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "KYLIN_COUNTRY" : {
+        "x" : 362.1111043294271,
+        "y" : 285.83333333333337,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "handled_after_broken" : true,
+  "computed_column_uuids" : [ ],
+  "project" : "gc_test"
+}

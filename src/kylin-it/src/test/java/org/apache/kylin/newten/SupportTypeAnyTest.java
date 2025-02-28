@@ -31,13 +31,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SupportTypeAnyTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
     }
 
+    @Override
     @After
-    public void after() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 

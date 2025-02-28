@@ -1,0 +1,14 @@
+{
+  "uuid" : "cc2fd5e4-84a4-4ca4-aefb-307c3c957f37",
+  "last_modified" : 0,
+  "create_time" : 1622186324509,
+  "version" : "4.0.0.0",
+  "database" : "DEFAULT",
+  "name" : "SSB_STREAMING",
+  "project" : "streaming_test",
+  "kafka_bootstrap_servers" : "10.1.2.210:9092",
+  "subscribe" : "streaming_fusion_ssb_topic",
+  "starting_offsets" : "latest",
+  "batch_table_identity" : "SSB.LINEORDER_HIVE",
+  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
+}

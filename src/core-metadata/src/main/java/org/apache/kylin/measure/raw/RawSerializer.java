@@ -81,8 +81,8 @@ public class RawSerializer extends DataTypeSerializer<List<ByteArray>> {
             BytesUtil.writeVInt(values.size(), out);
             for (ByteArray array : values) {
                 if (!out.hasRemaining() || out.remaining() < array.length()) {
-                    throw new RuntimeException(
-                            "BufferOverflow! Please use one higher cardinality column for dimension column when build RAW cube!");
+                    throw new RuntimeException("BufferOverflow! Please use one higher cardinality "
+                            + "column for dimension column when build RAW cube!");
                 }
                 BytesUtil.writeByteArray(
                         BytesUtil.subarray(array.array(), array.offset(), array.offset() + array.length()), out);

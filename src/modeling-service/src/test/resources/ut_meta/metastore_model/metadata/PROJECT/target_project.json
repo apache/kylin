@@ -1,0 +1,33 @@
+{
+  "uuid" : "0e4bceb1-60f6-42f4-a3f9-887639776eba",
+  "last_modified" : 1575724314755,
+  "create_time" : 1575724314752,
+  "version" : "4.0.0.0",
+  "name" : "target_project",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1575724314752,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "ext_filters" : [ ],
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.metadata.semi-automatic-mode" : "true",
+    "kylin.source.default" : "9"
+  },
+  "segment_config" : {
+    "auto_merge_enabled" : true,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    }
+  },
+  "project" : "_global"
+}

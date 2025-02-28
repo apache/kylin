@@ -73,7 +73,7 @@
               <span>{{$t('next')}}</span>
             </span>
           </div>
-          <kylin-editor v-model="sourceSchema" @input="handleParseKafkaData" ref="jsonDataBox" :dragable="false" lang="json" theme="chrome" width="460px" height="300"></kylin-editor>
+          <kylin-editor v-model="sourceSchema" @input="handleParseKafkaData" ref="jsonDataBox" :dragable="false" lang="txt" theme="chrome" width="460px" height="300"></kylin-editor>
           <div class="json-empty-tips" v-if="!sourceSchema&&!isEmptyTopic&&!isShowError">
             {{$t('emptyDataTips')}}
           </div>
@@ -87,7 +87,15 @@
         </el-col>
       </el-row>
       <div class="ksd-title-label-small ksd-mb-4">{{$t('parserName')}}</div>
-      <el-input v-model="kafkaMeta.parser_name" disabled size="medium" @input="resetParser"></el-input>
+      <el-select style="width: 100%" v-model="kafkaMeta.parser_name" @change="handleParseKafkaData">
+        <el-option
+          v-for="item in parserOptions"
+          :key="item"
+          :label="item"
+          :value="item">
+        </el-option>
+      </el-select>
+      <!-- <el-input v-model="kafkaMeta.parser_name" disabled size="medium" @input="resetParser"></el-input>-->
       <!-- <el-button :disabled="!sourceSchema || !kafkaMeta.parserName" :loading="convertLoading" @click='streamingOnChange()' size="small" type="primary" class="convert-btn ksd-mt-10">{{$t('parse')}}</el-button> -->
       <div v-if="isParserErrorShow" class="parser-msg ksd-mt-10">
         <i class="el-icon-ksd-error_01"></i>
@@ -104,7 +112,7 @@ import { Component } from 'vue-property-decorator'
 import locales from './locales'
 import TreeList from '../../TreeList'
 import arealabel from '../../area_label.vue'
-import { handleSuccess, handleError, objectClone, ArrayFlat } from 'util'
+import { handleSuccessAsync, handleSuccess, handleError, objectClone, ArrayFlat } from 'util'
 @Component({
   props: {
     convertDataStore: {
@@ -134,7 +142,8 @@ import { handleSuccess, handleError, objectClone, ArrayFlat } from 'util'
       loadDatabase: 'LOAD_KAFKA_DATABASE',
       loadClusters: 'GET_CLUSTERS',
       convertTopicJson: 'CONVERT_TOPIC_JSON',
-      validateTableSchema: 'VALIDATE_TABLE_SCHEMA'
+      validateTableSchema: 'VALIDATE_TABLE_SCHEMA',
+      loadParsers: 'LOAD_PARSERS'
     })
   },
   locales
@@ -178,6 +187,7 @@ export default class SourceKafka extends Vue {
   failed_servers = []
   isShowErrorBrokers = false
   lastFiveBrokers = []
+  parserOptions = []
   checkDuplicateValue (val) {
     this.isHaveDupBlokers = val
   }
@@ -202,22 +212,27 @@ export default class SourceKafka extends Vue {
     this.kafkaMeta.clusters.splice(index, 1)
   }
   nextMessage () {
-    this.isShowError = false
-    this.resetParser()
-    const message = this.sampleData.message
-    const msgLength = this.sampleData.message.length
-    this.currentMessageIndex++
-    if (this.currentMessageIndex > msgLength - 1) {
-      this.currentMessageIndex = 0
-    }
-    if (this.sampleData.message_type === 'binary') {
-      this.sourceSchema = message[this.currentMessageIndex]
-      this.isShowError = true
-    } else if (this.sampleData.message_type === 'json') {
-      this.sourceSchema = JSON.stringify(JSON.parse(message[this.currentMessageIndex]), null, '\t')
+    try {
       this.isShowError = false
+      this.resetParser()
+      const message = this.sampleData.message
+      const msgLength = this.sampleData.message.length
+      this.currentMessageIndex++
+      if (this.currentMessageIndex > msgLength - 1) {
+        this.currentMessageIndex = 0
+      }
+      if (this.sampleData.message_type === 'binary') {
+        this.sourceSchema = message[this.currentMessageIndex]
+        this.isShowError = true
+      } else if (this.sampleData.message_type === 'json' || this.sampleData.message_type === 'custom') {
+        this.sourceSchema = JSON.stringify(JSON.parse(message[this.currentMessageIndex]), null, '\t')
+        this.isShowError = false
+      }
+      this.handleParseKafkaData()
+    } catch {
+      this.isShowError = true
+      this.sourceSchema = this.sampleData.message[this.currentMessageIndex]
     }
-    this.handleParseKafkaData()
   }
   handleParseKafkaData () {
     const convertData = objectClone(this.topicOptions)
@@ -234,7 +249,7 @@ export default class SourceKafka extends Vue {
   }
   getLastFiveBrokers () {
     const cacheBrokers = JSON.parse(localStorage.getItem('cacheTags'))
-    this.lastFiveBrokers = cacheBrokers.map(b => {
+    this.lastFiveBrokers = cacheBrokers && cacheBrokers.map(b => {
       return {label: b, value: b}
     })
   }
@@ -369,7 +384,7 @@ export default class SourceKafka extends Vue {
           if (data) {
             this.currentMessageIndex++
             this.sampleData = data
-            if (data.message_type === 'json' && data.message && data.message[this.currentMessageIndex]) {
+            if ((data.message_type === 'json' || data.message_type === 'custom') && data.message && data.message[this.currentMessageIndex]) {
               this.sourceSchema = JSON.stringify(JSON.parse(data.message[this.currentMessageIndex]), null, '\t')
               this.isShowError = false
             } else if (data.message_type === 'binary' && data.message && data.message[this.currentMessageIndex]) {
@@ -392,22 +407,35 @@ export default class SourceKafka extends Vue {
       }).catch((res) => {
         this.topicDetailLoading = false
         this.isShowError = true
+        this.sourceSchema = this.sampleData.message[this.currentMessageIndex]
       })
     }
   }
+
+  // 获取自定义解析器
+  async getParsers () {
+    const res = await this.loadParsers({project: this.currentSelectedProject})
+    this.parserOptions = await handleSuccessAsync(res)
+  }
+
   mounted () {
     this.brokers = []
     this.getLastFiveBrokers()
-    if (this.convertDataStore && this.sampleDataStore && this.treeDataStore.length) {
-      this.topicOptions = objectClone(this.convertDataStore)
-      this.kafkaMeta = this.convertDataStore.kafka.kafka_config
-      this.brokers = [this.kafkaMeta.kafka_bootstrap_servers]
-      this.kafkaMeta.clusters = [{brokers: [this.kafkaMeta.kafka_bootstrap_servers]}]
-      this.showTopicBox = true
-      this.treeData = this.treeDataStore
-      this.sourceSchema = JSON.stringify(JSON.parse(this.convertDataStore.kafka.message), null, '\t')
-      this.sampleData = this.sampleDataStore
-      this.currentMessageIndex = this.sampleData.message.indexOf(this.convertDataStore.kafka.message)
+    this.getParsers()
+    try {
+      if (this.convertDataStore && this.sampleDataStore && this.treeDataStore.length) {
+        this.topicOptions = objectClone(this.convertDataStore)
+        this.kafkaMeta = this.convertDataStore.kafka.kafka_config
+        this.brokers = [this.kafkaMeta.kafka_bootstrap_servers]
+        this.kafkaMeta.clusters = [{brokers: [this.kafkaMeta.kafka_bootstrap_servers]}]
+        this.showTopicBox = true
+        this.treeData = this.treeDataStore
+        this.sampleData = this.sampleDataStore
+        this.currentMessageIndex = this.sampleData.message.indexOf(this.convertDataStore.kafka.message)
+        this.sourceSchema = JSON.stringify(JSON.parse(this.convertDataStore.kafka.message), null, '\t')
+      }
+    } catch {
+      this.sourceSchema = this.convertDataStore.kafka.message
     }
   }
 }

@@ -18,26 +18,15 @@
 
 package org.apache.kylin.rest;
 
-import org.apache.kylin.rest.delegate.JobStatisticsInvoker;
-import org.apache.kylin.rest.delegate.JobStatisticsRPC;
-import org.apache.kylin.rest.feign.MetadataInvoker;
-import org.apache.kylin.rest.feign.MetadataRPC;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataLoadingContractConfig implements InitializingBean, ApplicationContextAware {
+public class DataLoadingContractConfig implements ApplicationContextAware {
 
     ApplicationContext applicationContext = null;
-
-    @Override
-    public void afterPropertiesSet() {
-        MetadataInvoker.setDelegate(applicationContext.getBean(MetadataRPC.class));
-        JobStatisticsInvoker.setDelegate(applicationContext.getBean(JobStatisticsRPC.class));
-    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {

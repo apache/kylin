@@ -21,11 +21,10 @@ package org.apache.kylin.query.engine.data;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.metadata.query.StructField;
-import org.apache.kylin.query.engine.exec.ExecuteResult;
-
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.metadata.query.StructField;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.query.engine.exec.ExecuteResult;
 
 public class QueryResult {
 

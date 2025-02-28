@@ -17,11 +17,11 @@
  */
 package org.apache.kylin.rest.config;
 
-import org.springframework.util.ClassUtils;
-
 import org.apache.kylin.guava30.shaded.common.base.Function;
 import org.apache.kylin.guava30.shaded.common.base.Optional;
 import org.apache.kylin.guava30.shaded.common.base.Predicate;
+import org.springframework.util.ClassUtils;
+
 import springfox.documentation.RequestHandler;
 
 public class KylinRequestHandlerSelectors {

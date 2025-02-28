@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.ResourceUtils;
-
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,11 +66,11 @@ public class ErrorCode implements Serializable {
     }
 
     public static void setMsg(String lang) {
-//        if (StringUtils.equalsIgnoreCase(CN_LANG, lang)) {
-//            FRONT_MAP.set(ZH_MAP);
-//        } else {
-            FRONT_MAP.set(EN_MAP);
-//        }
+        //        if (StringUtils.equalsIgnoreCase(CN_LANG, lang)) {
+        //            FRONT_MAP.set(ZH_MAP);
+        //        } else {
+        FRONT_MAP.set(EN_MAP);
+        //        }
     }
 
     private static ImmutableMap<String, String> getMap() {

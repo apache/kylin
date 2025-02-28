@@ -27,23 +27,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo;
 import org.apache.kylin.engine.spark.job.BuildJobInfos;
 import org.apache.kylin.engine.spark.job.DFBuildJob;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.streaming.common.BuildJobEntry;
 import org.apache.kylin.streaming.metadata.BuildLayoutWithRestUpdate;
 import org.apache.kylin.streaming.request.StreamingSegmentRequest;
@@ -51,9 +52,6 @@ import org.apache.kylin.streaming.rest.RestSupport;
 import org.apache.kylin.streaming.util.JobExecutionIdHolder;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 
@@ -100,8 +98,8 @@ public class StreamingDFBuildJob extends DFBuildJob {
         if (config.isUTEnv()) {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 NDataflowManager dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-                NDataflow newDF = dfMgr.getDataflow(buildJobEntry.dataflowId()).copy();
-                NDataSegment segUpdate = newDF.getSegment(buildJobEntry.batchSegment().getId());
+                NDataSegment segUpdate = dfMgr.getDataflow(buildJobEntry.dataflowId())
+                        .getSegment(buildJobEntry.batchSegment().getId()).copy();
                 segUpdate.setStatus(SegmentStatusEnum.READY);
                 segUpdate.setSourceCount(buildJobEntry.flatTableCount());
                 val dfUpdate = new NDataflowUpdate(buildJobEntry.dataflowId());

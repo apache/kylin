@@ -24,11 +24,10 @@ import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExceptionReason implements Serializable {
     public static final Logger logger = LoggerFactory.getLogger(ExceptionReason.class);

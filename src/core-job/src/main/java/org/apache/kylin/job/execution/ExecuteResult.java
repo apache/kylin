@@ -21,7 +21,6 @@ package org.apache.kylin.job.execution;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -48,17 +47,17 @@ public final class ExecuteResult {
         Preconditions.checkArgument(state != null, "state cannot be null");
 
         switch (state) {
-            case SUCCEED:
-            case SKIP:
-                Preconditions.checkNotNull(output);
-                Preconditions.checkState(throwable == null);
-                break;
-            case ERROR:
-                Preconditions.checkNotNull(throwable);
-                Preconditions.checkState(output == null);
-                break;
-            default:
-                throw new IllegalStateException();
+        case SUCCEED:
+        case SKIP:
+            Preconditions.checkNotNull(output);
+            Preconditions.checkState(throwable == null);
+            break;
+        case ERROR:
+            Preconditions.checkNotNull(throwable);
+            Preconditions.checkState(output == null);
+            break;
+        default:
+            throw new IllegalStateException();
         }
 
         this.state = state;

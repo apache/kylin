@@ -17,13 +17,13 @@
  */
 package org.apache.spark.sql
 
-import java.nio.ByteBuffer
-
 import org.apache.kylin.measure.bitmap.RoaringBitmapCounter
 import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.spark.sql.catalyst.util.stackTraceToString
 import org.apache.spark.sql.common.SparderQueryTest
 import org.scalatest.Assertions
+
+import java.nio.ByteBuffer
 
 trait KapQueryUtils {
   this : Assertions =>

@@ -1,0 +1,10 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "LEFTJOIN_SELLER_ID_AND_COUNTRY_NAME",
+  "expression" : "CONCAT(SELLER_ACCOUNT.ACCOUNT_ID, SELLER_COUNTRY.NAME)",
+  "datatype" : "string",
+  "comment" : "synthetically concat seller's account id and seller country",
+  "uuid" : "3998a562-8244-6f08-d583-0684ca18d25d",
+  "project" : "infer_filter"
+}

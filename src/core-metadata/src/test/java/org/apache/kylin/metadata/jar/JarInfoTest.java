@@ -37,7 +37,7 @@ public class JarInfoTest {
             Assert.assertEquals(jarName, jarInfo.getJarName());
             Assert.assertEquals(jarPath, jarInfo.getJarPath());
             Assert.assertEquals(STREAMING_CUSTOM_PARSER, jarInfo.getJarType());
-            Assert.assertEquals("/streaming_test/jar/" + STREAMING_CUSTOM_PARSER + "_" + jarName + ".json",
+            Assert.assertEquals("JAR_INFO/streaming_test.STREAMING_CUSTOM_PARSER_test.jar",
                     jarInfo.getResourcePath());
         }
 

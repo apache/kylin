@@ -37,12 +37,17 @@ import java.util.stream.Stream;
 
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.util.JobContextUtil;
@@ -65,7 +70,6 @@ import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.rest.service.merger.AfterBuildResourceMerger;
 import org.apache.kylin.server.AbstractMVCIntegrationTestCase;
 import org.apache.kylin.source.jdbc.H2Database;
 import org.apache.kylin.util.JobFinishHelper;
@@ -83,10 +87,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -113,7 +113,8 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
 
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
-
+    protected Connection h2Connection;
+    protected H2Database h2DB;
     @Autowired
     TableService tableService;
 
@@ -147,7 +148,9 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
+        super.setUp();
         setupPushdownEnv();
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
@@ -164,56 +167,63 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
         projectManager.forceDropProject("broken_test");
         projectManager.forceDropProject("bad_query_test");
 
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
 
         ExecutableManager originExecutableManager = ExecutableManager.getInstance(getTestConfig(), getProject());
         ExecutableManager executableManager = Mockito.spy(originExecutableManager);
 
-        val config = KylinConfig.getInstanceFromEnv();
+        NDataSegment oneSeg = UnitOfWork.doInTransactionWithRetry(() -> {
+            val config = KylinConfig.getInstanceFromEnv();
+            val dsMgr = NDataflowManager.getInstance(config, getProject());
+            // ready dataflow, segment, cuboid layout
+            var df = dsMgr.getDataflowByModelAlias("nmodel_basic");
+            // cleanup all segments first
+            val update = new NDataflowUpdate(df.getUuid());
+            update.setToRemoveSegsWithArray(df.getSegments().toArray(new NDataSegment[0]));
+            dsMgr.updateDataflow(update);
+            df = dsMgr.getDataflowByModelAlias("nmodel_basic");
+            val segmentRange = SegmentRange.TimePartitionedSegmentRange.createInfinite();
+            // ready dataflow, segment, cuboid layout
+            return dsMgr.appendSegment(df, segmentRange);
+        }, getProject());
+
+        val config = getTestConfig();
         val dsMgr = NDataflowManager.getInstance(config, getProject());
-        // ready dataflow, segment, cuboid layout
-        var df = dsMgr.getDataflowByModelAlias("nmodel_basic");
-        // cleanup all segments first
-        val update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegsWithArray(df.getSegments().toArray(new NDataSegment[0]));
-        dsMgr.updateDataflow(update);
-        df = dsMgr.getDataflowByModelAlias("nmodel_basic");
-        val layouts = df.getIndexPlan().getAllLayouts();
-        val round1 = Lists.newArrayList(layouts);
-        val segmentRange = SegmentRange.TimePartitionedSegmentRange.createInfinite();
-        val toBuildLayouts = Sets.newLinkedHashSet(round1);
-        val execMgr = ExecutableManager.getInstance(config, getProject());
-        // ready dataflow, segment, cuboid layout
-        val oneSeg = dsMgr.appendSegment(df, segmentRange);
-        val job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), toBuildLayouts, "ADMIN", null);
+        val df = dsMgr.getDataflowByModelAlias("nmodel_basic");
+        val toBuildLayouts = df.getIndexPlan().getAllLayouts();
+        val job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newHashSet(toBuildLayouts), "ADMIN", null);
         // launch the job
+        val execMgr = ExecutableManager.getInstance(config, getProject());
+
         execMgr.addJob(job);
         JobFinishHelper.waitJobFinish(config, getProject(), job.getId(), 600 * 1000);
         Preconditions.checkArgument(executableManager.getJob(job.getId()).getStatus() == ExecutableState.SUCCEED);
 
         val buildStore = ExecutableUtils.getRemoteStore(config, job.getSparkCubingStep());
-        val merger = new AfterBuildResourceMerger(config, getProject());
         val layoutIds = toBuildLayouts.stream().map(LayoutEntity::getId).collect(Collectors.toSet());
-        merger.mergeAfterIncrement(df.getUuid(), oneSeg.getId(), layoutIds, buildStore);
-
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
-        indexManager.updateIndexPlan("abe3bf1a-c4bc-458d-8278-7ea8b00f5e96", copyForWrite -> {
-            List<IndexEntity> indexes = copyForWrite.getIndexes().stream().peek(i -> {
-                if (i.getId() == 0) {
-                    i.setLayouts(Lists.newArrayList(i.getLayouts().get(0)));
-                }
-            }).collect(Collectors.toList());
-            copyForWrite.setIndexes(indexes);
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            val merger = new AfterBuildResourceMerger(getTestConfig(), getProject());
+            merger.mergeAfterIncrement(df.getUuid(), oneSeg.getId(), layoutIds, buildStore);
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
+            indexManager.updateIndexPlan("abe3bf1a-c4bc-458d-8278-7ea8b00f5e96", copyForWrite -> {
+                List<IndexEntity> indexes = copyForWrite.getIndexes().stream().peek(i -> {
+                    if (i.getId() == 0) {
+                        i.setLayouts(Lists.newArrayList(i.getLayouts().get(0)));
+                    }
+                }).collect(Collectors.toList());
+                copyForWrite.setIndexes(indexes);
+            });
+            return true;
+        }, getProject());
         userService.createUser(new ManagedUser("ADMIN", "KYLIN", false,
                 Collections.singletonList(new UserGrantedAuthority("ROLE_ADMIN"))));
     }
 
     @After
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         cleanPushdownEnv();
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Test
@@ -333,11 +343,11 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
                 "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
         getTestConfig().setProperty("kylin.query.pushdown-enabled", "true");
         // Load H2 Tables (inner join)
-        Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
-        H2Database h2DB = new H2Database(h2Connection, getTestConfig(), "default");
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
+        h2DB = new H2Database(h2Connection, getTestConfig(), "default");
         h2DB.loadAllTables();
 
-        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=DEFAULT");
+        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=`DEFAULT`");
         overwriteSystemProp("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
         overwriteSystemProp("kylin.query.pushdown.jdbc.username", "sa");
         overwriteSystemProp("kylin.query.pushdown.jdbc.password", "");
@@ -346,7 +356,7 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
     private void cleanPushdownEnv() throws Exception {
         getTestConfig().setProperty("kylin.query.pushdown-enabled", "false");
         // Load H2 Tables (inner join)
-        Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default", "sa", "");
+        h2DB.dropAll();
         h2Connection.close();
     }
 

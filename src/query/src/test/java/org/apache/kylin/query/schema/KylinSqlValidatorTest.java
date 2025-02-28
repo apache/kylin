@@ -29,14 +29,18 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.engine.NDataModelWrapper;
 import org.apache.kylin.query.engine.QueryExec;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,8 +55,9 @@ public class KylinSqlValidatorTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() throws IOException {
         createTestMetadata();
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
         val mgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
-        val serializer = mgr.getDataModelSerializer();
+        val serializer = new JsonSerializer<>(NDataModelWrapper.class);
         val contents = StringUtils.join(Files.readAllLines(
                 new File("src/test/resources/ut_meta/validator/model.json").toPath(), Charset.defaultCharset()), "\n");
         val bais = IOUtils.toInputStream(contents, Charset.defaultCharset());

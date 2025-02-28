@@ -31,7 +31,8 @@ import org.apache.kylin.metadata.model.TableDesc;
 import lombok.val;
 
 public class TableUtils {
-    private TableUtils() {}
+    private TableUtils() {
+    }
 
     public static void checkTimestampColumn(TableDesc tableDesc) {
         val columns = tableDesc.getColumns();
@@ -45,7 +46,8 @@ public class TableUtils {
     /**
      * <p>
      * Calculate the number of valid tables to be returned based on pageOffset and pageSize
-     * Note: Tables will be filtered under certain conditions, but the final result must still be the number of valid tables,
+     * Note: Tables will be filtered under certain conditions,
+     * but the final result must still be the number of valid tables,
      *       unless all tables have been processed.
      * For example:
      *      the first page:  pageOffset 0, pageSize 7, return 0 * 7 + 7 = 7

@@ -139,9 +139,10 @@ public class AceImpl implements AccessControlEntry {
 
     void setPermission(Permission perm) {
         if (perm instanceof CompositeAclPermission) {
-            val compositeAclPerm = ((CompositeAclPermission)perm);
+            val compositeAclPerm = ((CompositeAclPermission) perm);
             this.permissionMask = compositeAclPerm.getBasePermission().getMask();
-            this.extMasks = compositeAclPerm.getExtPermissions().stream().map(p -> p.getMask()).collect(Collectors.toList());
+            this.extMasks = compositeAclPerm.getExtPermissions().stream().map(Permission::getMask)
+                    .collect(Collectors.toList());
         } else {
             this.permissionMask = perm.getMask();
             this.extMasks = null;

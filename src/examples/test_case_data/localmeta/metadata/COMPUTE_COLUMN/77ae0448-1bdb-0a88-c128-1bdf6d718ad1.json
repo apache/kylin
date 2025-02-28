@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_NUM",
+  "expression" : "1+2",
+  "innerExpression" : "1+2",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "uuid" : "77ae0448-1bdb-0a88-c128-1bdf6d718ad1",
+  "project" : "cc_test"
+}

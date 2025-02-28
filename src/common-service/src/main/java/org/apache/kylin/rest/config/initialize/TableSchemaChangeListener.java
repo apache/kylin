@@ -45,7 +45,7 @@ public class TableSchemaChangeListener implements EventListenerRegistry.Resource
         if (Objects.isNull(rawResource)) {
             return;
         }
-        getProjectName(rawResource.getResPath()).ifPresent(project -> clearSchemaCache(config, project));
+        getProjectName(rawResource.getMetaKey()).ifPresent(project -> clearSchemaCache(config, project));
     }
 
     @Override

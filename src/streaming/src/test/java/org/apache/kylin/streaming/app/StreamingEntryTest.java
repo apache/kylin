@@ -405,7 +405,7 @@ public class StreamingEntryTest extends StreamingTestCase {
         entry.parseParams(new String[] { PROJECT, dataflowId, "5", "", "xx" });
 
         ReflectionUtils.invokeGetterMethod(entry, "prepareKylinConfig");
-        Assert.assertEquals("xx", config.getMetadataUrl().toString());
+        Assert.assertEquals("xx@file", config.getMetadataUrl().toString());
     }
 
     @Test
@@ -421,17 +421,17 @@ public class StreamingEntryTest extends StreamingTestCase {
         val metaPathSet = (Set<String>) ReflectionUtils.invokeGetterMethod(entry, "initMetaPathSet");
 
         Assert.assertEquals(11, metaPathSet.size());
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/streaming/511a9163-7888-4a60-aa24-ae735937cc87_build"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/dataflow/511a9163-7888-4a60-aa24-ae735937cc87.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/index_plan/511a9163-7888-4a60-aa24-ae735937cc87.json"));
-        Assert.assertTrue(metaPathSet.contains("/_global/project/streaming_test.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/model_desc/511a9163-7888-4a60-aa24-ae735937cc87.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/table/SSB.P_LINEORDER.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/kafka/SSB.P_LINEORDER.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/table/SSB.DATES.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/table/SSB.CUSTOMER.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/table/SSB.SUPPLIER.json"));
-        Assert.assertTrue(metaPathSet.contains("/streaming_test/table/SSB.PART.json"));
+        Assert.assertTrue(metaPathSet.contains("STREAMING_JOB/511a9163-7888-4a60-aa24-ae735937cc87_build"));
+        Assert.assertTrue(metaPathSet.contains("DATAFLOW/511a9163-7888-4a60-aa24-ae735937cc87"));
+        Assert.assertTrue(metaPathSet.contains("INDEX_PLAN/511a9163-7888-4a60-aa24-ae735937cc87"));
+        Assert.assertTrue(metaPathSet.contains("PROJECT/streaming_test"));
+        Assert.assertTrue(metaPathSet.contains("MODEL/511a9163-7888-4a60-aa24-ae735937cc87"));
+        Assert.assertTrue(metaPathSet.contains("TABLE_INFO/streaming_test.SSB.P_LINEORDER"));
+        Assert.assertTrue(metaPathSet.contains("KAFKA_CONFIG/streaming_test.SSB.P_LINEORDER"));
+        Assert.assertTrue(metaPathSet.contains("TABLE_INFO/streaming_test.SSB.DATES"));
+        Assert.assertTrue(metaPathSet.contains("TABLE_INFO/streaming_test.SSB.CUSTOMER"));
+        Assert.assertTrue(metaPathSet.contains("TABLE_INFO/streaming_test.SSB.SUPPLIER"));
+        Assert.assertTrue(metaPathSet.contains("TABLE_INFO/streaming_test.SSB.PART"));
     }
 
     @Test

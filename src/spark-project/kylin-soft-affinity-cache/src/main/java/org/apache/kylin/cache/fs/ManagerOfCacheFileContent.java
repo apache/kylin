@@ -17,14 +17,14 @@
  */
 package org.apache.kylin.cache.fs;
 
+import java.util.BitSet;
+import java.util.concurrent.ConcurrentHashMap;
+
 import alluxio.client.file.CacheContext;
 import alluxio.client.file.cache.CacheManager;
 import alluxio.client.file.cache.PageId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.BitSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A wrapper around alluxio CacheManager, enriching some file operations, like
@@ -46,7 +46,8 @@ public class ManagerOfCacheFileContent implements CacheManager {
     }
 
     @Override
-    public int get(PageId pageId, int pageOffset, int bytesToRead, byte[] buffer, int offsetInBuffer, CacheContext cacheContext) {
+    public int get(PageId pageId, int pageOffset, int bytesToRead, byte[] buffer, int offsetInBuffer,
+            CacheContext cacheContext) {
         int bytesRead = under.get(pageId, pageOffset, bytesToRead, buffer, offsetInBuffer, cacheContext);
         if (bytesRead > 0)
             markFilePageCached(pageId);
@@ -94,23 +95,21 @@ public class ManagerOfCacheFileContent implements CacheManager {
     }
 
     protected void markFilePageCached(PageId pageId) {
-        fileMetas.compute(pageId.getFileId(),
-                (fileId, fmeta) -> {
-                    if (fmeta == null)
-                        fmeta = new FileMeta(fileId);
-                    fmeta.cachedPageIndex.set((int) pageId.getPageIndex());
-                    return fmeta;
-                });
+        fileMetas.compute(pageId.getFileId(), (fileId, fmeta) -> {
+            if (fmeta == null)
+                fmeta = new FileMeta(fileId);
+            fmeta.cachedPageIndex.set((int) pageId.getPageIndex());
+            return fmeta;
+        });
     }
 
     protected void markFilePageRemoved(PageId pageId) {
-        fileMetas.compute(pageId.getFileId(),
-                (fileId, fmeta) -> {
-                    if (fmeta == null)
-                        fmeta = new FileMeta(fileId);
-                    fmeta.cachedPageIndex.clear((int) pageId.getPageIndex());
-                    return fmeta;
-                });
+        fileMetas.compute(pageId.getFileId(), (fileId, fmeta) -> {
+            if (fmeta == null)
+                fmeta = new FileMeta(fileId);
+            fmeta.cachedPageIndex.clear((int) pageId.getPageIndex());
+            return fmeta;
+        });
     }
 
 }

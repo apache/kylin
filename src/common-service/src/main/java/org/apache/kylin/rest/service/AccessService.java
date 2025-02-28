@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_USERGROUP_NAME;
@@ -84,6 +66,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AccessRequest;
@@ -122,10 +105,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -941,30 +922,36 @@ public class AccessService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
-    public boolean remoteGrantAccess(AclEntity ae, String identifier, Boolean isPrincipal, String permission) {
+    @Transaction
+    public boolean grantAccess(AclEntity ae, String identifier, Boolean isPrincipal, String permission)
+            throws IOException {
         AccessGrantEventNotifier notifier = new AccessGrantEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(), identifier,
                 isPrincipal, permission);
-        return remoteRequest(notifier, null);
+        updateAccess(notifier, null, null);
+        return true;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
-    public boolean remoteBatchGrantAccess(List<AccessRequest> requests, AclEntity ae) throws JsonProcessingException {
+    @Transaction
+    public boolean batchGrantAccess(List<AccessRequest> requests, AclEntity ae) throws IOException {
         AccessBatchGrantEventNotifier notifier = new AccessBatchGrantEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(),
                 JsonUtil.writeValueAsString(requests));
-        return remoteRequest(notifier, null);
+        updateAccess(null, notifier, null);
+        return true;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
-    public boolean remoteRevokeAccess(AclEntity ae, String name, boolean principal) {
+    @Transaction
+    public boolean revokeAccess(AclEntity ae, String name, boolean principal) throws IOException {
         AccessRevokeEventNotifier notifier = new AccessRevokeEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(), name,
                 principal);
-        return remoteRequest(notifier, null);
+        updateAccess(null, null, notifier);
+        return true;
     }
 
     @Transaction
-    public void updateAccessFromRemote(AccessGrantEventNotifier grantNotifier,
-            AccessBatchGrantEventNotifier batchGrantNotifier, AccessRevokeEventNotifier revokeNotifier)
-            throws IOException {
+    public void updateAccess(AccessGrantEventNotifier grantNotifier, AccessBatchGrantEventNotifier batchGrantNotifier,
+            AccessRevokeEventNotifier revokeNotifier) throws IOException {
         if (grantNotifier != null) {
             AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, grantNotifier.getEntityId());
             grant(ae, grantNotifier.getIdentifier(), grantNotifier.getIsPrincipal(), grantNotifier.getPermission());

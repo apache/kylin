@@ -26,41 +26,53 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.query.util.UnsupportedSparkFunctionException
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.KapFunctions._
-import org.apache.spark.sql.catalyst.expressions
-import org.apache.spark.sql.catalyst.expressions.{Cast, If, IntersectCountByCol, Literal, Nvl, StringLocate, StringRepeat, StringReplace, SubtractBitmapUUID, SubtractBitmapValue}
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.util.SparderTypeUtil
 
+import scala.collection.convert.ImplicitConversions.`seq AsJavaList`
 import scala.collection.mutable
 
 object ExpressionConverter {
 
-  private val unaryParameterFunc = mutable.HashSet("ucase", "lcase", "base64",
-    "sentences", "unbase64", "crc32", "md5", "sha", "sha1",
-    // time
-    "weekofyear",
-    // math
-    "cbrt", "cosh", "expm1", "factorial", "log1p", "log2", "rint", "sinh", "tanh",
-    // other
-    "explode"
+  private val sparkUdfSet = mutable.HashSet(
+    // string functions
+    "ascii", "base64", "btrim", "chr", "char", "char_length", "character_length", "concat_ws",
+    "decode", "encode", "find_in_set", "initcap", "initcapb", "instr",
+    "lcase", "length", "left", "levenshtein", "locate", "lower", "lpad", "ltrim", "overlay",
+    "replace", "regexp_extract", "regexp_like", "right", "rlike", "rpad", "repeat", "rtrim",
+    "sentences", "space", "split", "split_part", "strpos", "substring_index", "substring", "substr",
+    "ucase", "unbase64", "upper",
+
+    // datetime functions
+    "add_months", "current_date", "current_timestamp",
+    "date_add", "datediff", "date_format", "date_part", "date_sub", "date_trunc",
+    "from_utc_timestamp", "from_unixtime", "months_between",
+    "to_date", "to_timestamp", "to_utc_timestamp", "trunc", "unix_timestamp", "weekofyear",
+    "_ymdint_between",
+
+    // math functions
+    "acos", "asin", "atan", "atan2", "bround", "cbrt", "cos", "cosh", "cot", "conv",
+    "degrees", "exp", "expm1", "factorial", "hypot",
+    "ln", "log", "log1p", "log10", "log2", "pi", "power", "pow",
+    "radians", "rint", "round", "sign", "sin", "sinh", "tan", "tanh",
+
+    // leaf functions
+    "current_database", "input_file_block_length", "input_file_block_start", "input_file_name",
+    "monotonically_increasing_id", "now", "spark_partition_id", "uuid",
+
+    // misc functions
+    "crc32", "explode", "if", "ifnull", "isnull", "md5", "nvl", "sha", "sha1", "sha2",
+
+    // collection functions
+    "concat", "size"
   )
 
-  private val ternaryParameterFunc = mutable.HashSet("replace", "substring_index", "conv", "regexp_extract")
-  private val binaryParameterFunc =
-    mutable.HashSet("decode", "encode", "find_in_set", "levenshtein", "sha2",
-      "trunc", "add_months", "date_add", "date_sub", "from_utc_timestamp", "to_utc_timestamp",
-      // math function
-      "hypot", "log"
-    )
-
-  private val noParameterFunc = mutable.HashSet("current_database", "input_file_block_length", "input_file_block_start",
-    "input_file_name", "monotonically_increasing_id", "now", "spark_partition_id", "uuid"
+  private val bitmapUDF = mutable.HashSet("intersect_count_by_col",
+    "subtract_bitmap_value", "subtract_bitmap_uuid", "bitmap_uuid_to_array",
+    "subtract_bitmap_uuid_count", "subtract_bitmap_uuid_distinct", "subtract_bitmap_uuid_value_all", "subtract_bitmap_uuid_value"
   )
-
-  private val varArgsFunc = mutable.HashSet("months_between", "locate", "rtrim", "from_unixtime", "to_date",
-    "to_timestamp", "split", "bround", "lpad", "rpad", "round")
-
-  private val bitmapUDF = mutable.HashSet("intersect_count_by_col", "subtract_bitmap_value", "subtract_bitmap_uuid");
 
   // scalastyle:off
   def convert(sqlTypeName: SqlTypeName, relDataType: RelDataType, op: SqlKind, opName: String, children: Seq[Any]): Any = {
@@ -124,13 +136,29 @@ object ExpressionConverter {
       case MINUS_PREFIX =>
         assert(children.size == 1)
         negate(k_lit(children.head))
-      case IN => val values = children.drop(1).map(c => k_lit(c).expr)
-        in(k_lit(children.head).expr, values)
+      case IN =>
+        val (columns, values) = children.map(c => k_lit(c).expr).partition {
+          case _: AttributeReference | _: UnresolvedAttribute => true
+          case _ => false
+        }
+        if (columns.size > 1) {
+          in(CreateStruct(columns), values)
+        } else {
+          val values = children.drop(1).map(c => k_lit(c).expr)
+          in(k_lit(children.head).expr, values)
+        }
       case NOT_IN =>
-        val values = children.drop(1).map(c => k_lit(c).expr)
-        not(in(k_lit(children.head).expr, values))
+        val (columns, values) = children.map(c => k_lit(c).expr).partition {
+          case _: AttributeReference | _: UnresolvedAttribute => true
+          case _ => false
+        }
+        if (columns.size > 1) {
+          not(in(CreateStruct(columns), values))
+        } else {
+          val values = children.drop(1).map(c => k_lit(c).expr)
+          not(in(k_lit(children.head).expr, values))
+        }
       case DIVIDE =>
-        
         assert(children.size == 2)
         k_lit(children.head).divide(k_lit(children.last))
       case CASE =>
@@ -202,218 +230,62 @@ object ExpressionConverter {
       case OTHER_FUNCTION =>
         val funcName = opName.toLowerCase
         funcName match {
-          //math_funcs
+          // math functions
           case "abs" =>
             abs(
               k_lit(children.head).cast(SparderTypeUtil
                 .convertSqlTypeToSparkType(relDataType)))
           case "truncate" =>
             if (children.size == 1) {
-              k_truncate(k_lit(children.head), 0)
+              k_truncate(k_lit(children.head), k_lit(0))
             } else {
-              k_truncate(k_lit(children.head), children.apply(1).asInstanceOf[Int])
+              k_truncate(k_lit(children.head), k_lit(children.apply(1)))
             }
-          case "cot" =>
-            k_lit(1).divide(tan(k_lit(children.head)))
-          // null handling funcs
-          case "isnull" =>
-            isnull(k_lit(children.head))
-          case "ifnull" =>
-            new Column(new Nvl(k_lit(children.head).expr, k_lit(children.apply(1)).expr))
-          case "nvl" =>
-            new Column(new Nvl(k_lit(children.head).expr, k_lit(children.apply(1)).expr))
-          // string_funcs
-          case "lower" => lower(k_lit(children.head))
-          case "upper" => upper(k_lit(children.head))
-          case "char_length" => length(k_lit(children.head))
-          case "character_length" => length(k_lit(children.head))
-          case "replace" =>
-            new Column(StringReplace(k_lit(children.head).expr,
-              k_lit(children.apply(1)).expr,
-              k_lit(children.apply(2)).expr))
-          case "substring" | "substr" =>
-            if (children.length == 3) { //substr(str1,startPos,length)
-              k_lit(children.head)
-                .substr(k_lit(children.apply(1)), k_lit(children.apply(2)))
-            } else if (children.length == 2) { //substr(str1,startPos)
-              k_lit(children.head).
-                substr(k_lit(children.apply(1)), k_lit(Int.MaxValue))
-            } else {
-              throw new UnsupportedOperationException(
-                s"substring must provide three or two parameters under sparder")
-            }
-          case "initcapb" =>
-            initcap(k_lit(children.head))
-          case "instr" =>
-            val instr =
-              if (children.length == 2) 1
-              else children.apply(2).asInstanceOf[Int]
-            new Column(StringLocate(k_lit(children.apply(1)).expr, k_lit(children.head).expr, lit(instr).expr)) //instr(str,substr,start)
-          case "length" =>
-            length(k_lit(children.head))
-          case "left" =>
-            substring(k_lit(children.head), 1, children.apply(1).asInstanceOf[Int])
-          case "repeat" =>
-            repeat(k_lit(children.head), children.apply(1).asInstanceOf[Int])
-          case "size" =>
-            size(k_lit(children.head))
-          case "strpos" =>
-            val pos =
-              if (children.length == 2) 1
-              else children.apply(2).asInstanceOf[Int]
-            new Column(StringLocate(k_lit(children.apply(1)).expr, k_lit(children.head).expr, lit(pos).expr)) //strpos(str,substr,start)
-          case "position" =>
-            val pos =
-              if (children.length == 2) 1
-              else children.apply(2).asInstanceOf[Int]
-            new Column(StringLocate(k_lit(children.head).expr, k_lit(children.apply(1)).expr, lit(pos).expr)) //position(substr,str,start)
-          case "concat" =>
-            concat(children.map(k_lit): _*)
-          case "concat_ws" =>
-            concat_ws(children.head.toString, k_lit(children.apply(1)))
-          case "split_part" =>
-            val args = Seq(k_lit(children.head), lit(children.apply(1)), lit(children.apply(2).asInstanceOf[Int])).toArray
-            callUDF("split_part", args: _*)
-          // time_funcs
-          case "current_date" =>
-            current_date()
-          case "current_timestamp" =>
-            current_timestamp()
-          case "unix_timestamp" =>
-            if (children.isEmpty) {
-              unix_timestamp
-            } else if (children.length == 1) {
-              unix_timestamp(k_lit(children.head))
-            } else if (children.length == 2) {
-              unix_timestamp(k_lit(children.head), k_lit(children.apply(1)).toString())
-            } else {
-              throw new UnsupportedOperationException(
-                s"unix_timestamp only supports two or fewer parameters")
-            }
+          // datetime functions
           case "to_char" | "date_format" =>
-            var part = k_lit(children.apply(1)).toString().toUpperCase match {
-              case "YEAR" =>
-                "y"
-              case "MONTH" =>
-                "M"
-              case "DAY" =>
-                "d"
-              case "HOUR" =>
-                "h"
-              case "MINUTE" =>
-                "m"
-              case "MINUTES" =>
-                "m"
-              case "SECOND" =>
-                "s"
-              case "SECONDS" =>
-                "s"
-              case _ =>
-                k_lit(children.apply(1)).toString()
+            val part = k_lit(children.apply(1)).toString().toUpperCase match {
+              case "YEAR" => "y"
+              case "MONTH" => "M"
+              case "DAY" => "d"
+              case "HOUR" => "h"
+              case "MINUTE" => "m"
+              case "MINUTES" => "m"
+              case "SECOND" => "s"
+              case "SECONDS" => "s"
+              case _ => k_lit(children.apply(1)).toString()
             }
             date_format(k_lit(children.head), part)
-          case "power" =>
-            pow(k_lit(children.head), k_lit(children.apply(1)))
-          case "log10" =>
-            log10(k_lit(children.head))
-          case "ln" =>
-            log(k_lit(children.head))
-          case "exp" =>
-            exp(k_lit(children.head))
-          case "acos" =>
-            acos(k_lit(children.head))
-          case "asin" =>
-            asin(k_lit(children.head))
-          case "atan" =>
-            atan(k_lit(children.head))
-          case "atan2" =>
-            assert(children.size == 2)
-            atan2(k_lit(children.head), k_lit(children.last))
-          case "cos" =>
-            cos(k_lit(children.head))
-          case "degrees" =>
-            degrees(k_lit(children.head))
-          case "radians" =>
-            radians(k_lit(children.head))
-          case "sign" =>
-            signum(k_lit(children.head))
-          case "tan" =>
-            tan(k_lit(children.head))
-          case "sin" =>
-            sin(k_lit(children.head))
-          case func if (noParameterFunc.contains(func)) =>
-            call_udf(func)
-          case func if (unaryParameterFunc.contains(func)) =>
-            call_udf(func, k_lit(children.head))
-          case func if (binaryParameterFunc.contains(func)) =>
-            call_udf(func, k_lit(children.head), k_lit(children.apply(1)))
-          case func if (ternaryParameterFunc.contains(func)) =>
-            call_udf(func, k_lit(children.head), k_lit(children.apply(1)), k_lit(children.apply(2)))
-          case func if (varArgsFunc.contains(func)) => {
-            call_udf(func, children.map(k_lit(_)): _*)
-          }
-          case "date_part" =>
-            var part = k_lit(children.head).toString().toUpperCase match {
-              case "YEAR" =>
-                "y"
-              case "MONTH" =>
-                "M"
-              case "DAY" =>
-                "d"
-              case "HOUR" =>
-                "h"
-              case "MINUTE" =>
-                "m"
-              case "MINUTES" =>
-                "m"
-              case "SECOND" =>
-                "s"
-              case "SECONDS" =>
-                "s"
-              case _ =>
-                k_lit(children.head).toString()
-            }
-            date_format(k_lit(children.apply(1)), part)
-          case "date_trunc" =>
-            date_trunc(children.head.toString, k_lit(children.apply(1)))
-          case "datediff" =>
-            datediff(k_lit(children.head), k_lit(children.apply(1)))
-          case "initcap" =>
-            initcap(k_lit(children.head))
-          case "pi" =>
-            k_lit(Math.PI)
-          case "regexp_like" | "rlike" =>
-            k_lit(children.head).rlike(children.apply(1).toString)
-          case "if" =>
-            new Column(new If(k_lit(children.head).expr, k_lit(children.apply(1)).expr, k_lit(children.apply(2)).expr))
-          case "overlay" =>
-            if (children.length == 3) {
-              concat(substring(k_lit(children.head), 0, children.apply(2).asInstanceOf[Int] - 1), k_lit(children.apply(1)),
-                substring(k_lit(children.head), children.apply(2).asInstanceOf[Int] + children.apply(1).toString.length, Integer.MAX_VALUE))
-            } else if (children.length == 4) {
-              concat(substring(k_lit(children.head), 0, children.apply(2).asInstanceOf[Int] - 1), k_lit(children.apply(1)),
-                substring(k_lit(children.head), (children.apply(2).asInstanceOf[Int] + children.apply(3).asInstanceOf[Int]), Integer.MAX_VALUE))
-            } else {
-              throw new UnsupportedOperationException(
-                s"overlay must provide three or four parameters under sparder")
-            }
+          case func if sparkUdfSet.contains(func) =>
+            call_udf(func, children.map(k_lit): _*)
           case func if bitmapUDF.contains(func) =>
             func match {
               case "intersect_count_by_col" =>
-                new Column(IntersectCountByCol(children.head.asInstanceOf[Column].expr.children.toSeq))
-              case "subtract_bitmap_value" =>
-                new Column(SubtractBitmapValue(children.head.asInstanceOf[Column].expr, children.last.asInstanceOf[Column].expr, KylinConfig.getInstanceFromEnv.getBitmapValuesUpperBound))
-              case "subtract_bitmap_uuid" =>
-                new Column(SubtractBitmapUUID(children.head.asInstanceOf[Column].expr, children.last.asInstanceOf[Column].expr))
+                new Column(IntersectCountByCol(children.head.asInstanceOf[Column].expr.children))
+              case "subtract_bitmap_value" | "subtract_bitmap_uuid_value_all" =>
+                new Column(SubtractBitmapAllValues(children.head.asInstanceOf[Column].expr,
+                  children.last.asInstanceOf[Column].expr,
+                  KylinConfig.getInstanceFromEnv.getBitmapValuesUpperBound))
+              case "subtract_bitmap_uuid" | "subtract_bitmap_uuid_distinct" =>
+                new Column(SubtractBitmapUUID(children.head.asInstanceOf[Column].expr,
+                  children.last.asInstanceOf[Column].expr))
+              case "subtract_bitmap_uuid_count" =>
+                new Column(SubtractBitmapCount(children.head.asInstanceOf[Column].expr,
+                  children.last.asInstanceOf[Column].expr))
+              case "subtract_bitmap_uuid_value" =>
+                val left = children.head.asInstanceOf[Column].expr
+                val right = children.get(1).asInstanceOf[Column].expr
+                val limitArg = children.get(2)
+                val offsetArg = children.get(3)
+                val limit = limitArg.toString.toInt
+                val offset = offsetArg.toString.toInt
+                if (limit < 0 || offset < 0) {
+                  throw new UnsupportedOperationException(s"both limit and offset must be >= 0")
+                }
+                new Column(SubtractBitmapValue(left, right, limit, offset,
+                  KylinConfig.getInstanceFromEnv.getBitmapValuesUpperBound))
+              case "bitmap_uuid_to_array" =>
+                new Column(BitmapUuidToArray(children.head.asInstanceOf[Column].expr))
             }
-          case "ascii" =>
-            ascii(k_lit(children.head))
-          case "chr" =>
-            new Column(expressions.Chr(k_lit(children.head).expr))
-          case "space" =>
-            new Column(StringRepeat(k_lit(" ").expr, k_lit(children.head).expr))
-          case "item" =>
-            element_at(k_lit(children.head), k_lit(children.apply(1).asInstanceOf[Int] + 1))
           case _ =>
             throw new UnsupportedOperationException(
               s"Unsupported function $funcName")
@@ -438,10 +310,42 @@ object ExpressionConverter {
         }
       case ARRAY_VALUE_CONSTRUCTOR =>
         array(children.map(child => k_lit(child)): _*)
-      case (IS_FALSE | IS_NOT_TRUE) =>
-        not(k_lit(children.head))
-      case (IS_TRUE | IS_NOT_FALSE) =>
-        k_lit(children.head)
+      case ROW =>
+        call_udf("named_struct", children.zipWithIndex.flatMap { case (child, i) =>
+          Seq(lit(s"col${i + 1}"), k_lit(child))
+        }: _*)
+      case IS_NOT_DISTINCT_FROM =>
+        k_lit(children.head).eqNullSafe(k_lit(children.apply(1)))
+      // TDVT SQL626 - null compare with true/false is special
+      case IS_TRUE =>
+        // false and null => false
+        val col = k_lit(children.head)
+        col.isNotNull && col
+      case IS_NOT_TRUE =>
+        // true or not null => true or null => true
+        val col = k_lit(children.head)
+        col.isNull || !col
+      case IS_FALSE =>
+        // false and not null => false and null => false
+        val col = k_lit(children.head)
+        col.isNotNull && !col
+      case IS_NOT_FALSE =>
+        // true or null => true
+        val col = k_lit(children.head)
+        col.isNull || col
+      // see https://olapio.atlassian.net/browse/KE-42036
+      // Calcite 1.30 changed SqlKind.OTHER_FUNCTION with SqlKind.POSITION in SqlPositionFunction
+      case POSITION => //position(substr,str,start)
+        call_udf("position", children.map(k_lit): _*)
+      // see https://olapio.atlassian.net/browse/KE-42354
+      // Calcite 1.30 changed SqlKind.OTHER_FUNCTION with SqlKind.ITEM in SqlItemOperator
+      case ITEM =>
+        element_at(k_lit(children.head), k_lit(children.apply(1).asInstanceOf[Int] + 1))
+      // Calcite 1.30 changed the if operator to case, eliminate this change
+      case IF =>
+        call_udf("if", children.map(k_lit): _*)
+      case NVL =>
+        call_udf("ifnull", children.map(k_lit): _*)
       case unsupportedFunc =>
         throw new UnsupportedOperationException(unsupportedFunc.toString)
     }

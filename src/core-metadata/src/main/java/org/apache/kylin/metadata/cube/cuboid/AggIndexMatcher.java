@@ -65,13 +65,13 @@ public class AggIndexMatcher extends IndexMatcher {
     @Override
     protected boolean fastValidCheckBeforeMatch() {
         // cols may have null values as the CC col in query may not present in the model
-        sqlColumns = Stream.concat(sqlDigest.filterColumns.stream(), sqlDigest.groupbyColumns.stream())
+        sqlColumns = Stream.concat(sqlDigest.getFilterColumns().stream(), sqlDigest.getGroupByColumns().stream())
                 .map(tblColMap::get).collect(Collectors.toSet());
         if (sqlColumns.contains(null)) {
             return false;
         }
 
-        for (FunctionDesc agg : sqlDigest.aggregations) {
+        for (FunctionDesc agg : sqlDigest.getAggregations()) {
             List<Integer> cols = agg.getSourceColRefs().stream().map(tblColMap::get).collect(Collectors.toList());
             for (Integer col : cols) {
                 if (col == null) {
@@ -89,7 +89,7 @@ public class AggIndexMatcher extends IndexMatcher {
             return new MatchResult();
         }
         log.trace("Matching agg index");
-        Collection<FunctionDesc> unmatchedMetrics = Lists.newArrayList(sqlDigest.aggregations);
+        Collection<FunctionDesc> unmatchedMetrics = Lists.newArrayList(sqlDigest.getAggregations());
         Set<Integer> unmatchedCols = initUnmatchedColumnIds(layout);
         final Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);

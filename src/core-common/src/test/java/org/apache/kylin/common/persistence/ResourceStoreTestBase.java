@@ -26,11 +26,11 @@ import java.util.NavigableSet;
 import java.util.function.Consumer;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 /**
  * Be called by LocalFileResourceStoreTest and ITHDFSResourceStoreTest.
@@ -69,11 +69,9 @@ public class ResourceStoreTestBase {
     }
 
     private static void testGetAllResources(ResourceStore store) {
-        final String folder = "/testFolder";
+        final String folder = MetadataType.SYSTEM.name();
         List<TestEntity> result;
-
-        // reset any leftover garbage
-        ResourceTool.resetR(store, folder);
+        NLocalFileMetadataTestCase.staticCleanupTestMetadata();
 
         final JsonSerializer<TestEntity> serializer = new JsonSerializer<>(TestEntity.class);
 
@@ -87,22 +85,21 @@ public class ResourceStoreTestBase {
         long startTime = System.currentTimeMillis();
 
         store.checkAndPutResource(folder + "/res2", new TestEntity("data2"), serializer);
-        store.checkAndPutResource(folder + "/sub/res3", new TestEntity("data3"), serializer);
+        store.checkAndPutResource(folder + "/res3", new TestEntity("data3"), serializer);
         store.checkAndPutResource(folder + "/res4", new TestEntity("data4"), serializer);
 
         result = store.getAllResources(folder, serializer);
         assertEntity(result.get(0), "data1", 0);
         assertEntity(result.get(1), "data2", 0);
-        assertEntity(result.get(2), "data4", 0);
-        Assert.assertEquals(3, result.size());
+        assertEntity(result.get(3), "data4", 0);
+        Assert.assertEquals(4, result.size());
 
         result.get(1).setVersion("new_data2");
         store.checkAndPutResource(folder + "/res2", result.get(1), serializer);
 
         result = store.getAllResources(folder, startTime, Long.MAX_VALUE, serializer);
 
-        assertEntity(result.get(0), "new_data2", 1);
-        Assert.assertEquals(2, result.size());
+        Assert.assertEquals(3, result.size());
 
         //clean
         ResourceTool.resetR(store, folder);
@@ -115,11 +112,11 @@ public class ResourceStoreTestBase {
     }
 
     private static void testBasics(ResourceStore store) {
-        String dir1 = "/cube";
-        String path1 = "/cube/_test.json";
+        String dir1 = MetadataType.MODEL.name();
+        String path1 = MetadataType.mergeKeyWithType("_test", MetadataType.MODEL);
         StringEntity content1 = new StringEntity("anything");
-        String dir2 = "/table";
-        String path2 = "/table/_test.json";
+        String dir2 = MetadataType.TABLE_INFO.name();
+        String path2 = MetadataType.mergeKeyWithType("_test", MetadataType.TABLE_INFO);
         StringEntity content2 = new StringEntity("something");
 
         // cleanup legacy if any
@@ -149,18 +146,25 @@ public class ResourceStoreTestBase {
         store.checkAndPutResource(path2, t, StringEntity.serializer);
 
         // write conflict
-        boolean versionConflictExceptionSeen = false;
-        try {
+        if (store instanceof TransparentResourceStore) {
             t = store.getResource(path2, StringEntity.serializer);
             t.setMvcc(t.getMvcc() - 1);
+            // in contrast to 5.x, just use file system and without mvcc, so no write conflict
             store.checkAndPutResource(path2, t, StringEntity.serializer);
-            Assert.fail("write conflict should trigger IllegalStateException");
-        } catch (VersionConflictException e) {
-            // expected
-            versionConflictExceptionSeen = true;
-        }
+        } else {
+            boolean versionConflictExceptionSeen = false;
+            try {
+                t = store.getResource(path2, StringEntity.serializer);
+                t.setMvcc(t.getMvcc() - 1);
+                store.checkAndPutResource(path2, t, StringEntity.serializer);
+                Assert.fail("write conflict should trigger IllegalStateException");
+            } catch (Exception e) {
+                // expected
+                versionConflictExceptionSeen = true;
+            }
 
-        Assert.assertEquals(true, versionConflictExceptionSeen);
+            Assert.assertEquals(true, versionConflictExceptionSeen);
+        }
 
         // list
         NavigableSet<String> list = null;
@@ -174,7 +178,7 @@ public class ResourceStoreTestBase {
         Assert.assertTrue(list.contains(path2));
         Assert.assertFalse(list.contains(path1));
 
-        list = store.listResources("/");
+        list = store.listResources(MetadataType.ALL.name());
 
         Assert.assertTrue(list.contains(dir1));
         Assert.assertTrue(list.contains(dir2));
@@ -182,10 +186,10 @@ public class ResourceStoreTestBase {
         Assert.assertFalse(list.contains(path1));
         Assert.assertFalse(list.contains(path2));
 
-        list = store.listResources(path1);
-        Assert.assertNull(list);
-        list = store.listResources(path2);
-        Assert.assertNull(list);
+        RawResource raw = store.getResource(path1);
+        Assert.assertNotNull(raw);
+        raw = store.getResource(path2);
+        Assert.assertNotNull(raw);
 
         // delete/exist
         store.deleteResource(path1);

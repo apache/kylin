@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 class CreateTableFromJsonTest {
 
-    String path = "src/test/resources/table_cc_cleanup/metadata/AL_4144/table/";
+    String path = "src/test/resources/table_cc_cleanup/metadata/TABLE_INFO";
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private PrintStream originPrintStream;
     private static final String REGEX = "util.CreateTableFromJson :";

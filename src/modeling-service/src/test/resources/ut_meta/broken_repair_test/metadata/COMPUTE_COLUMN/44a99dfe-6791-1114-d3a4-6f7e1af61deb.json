@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC2",
+  "expression" : "CUSTOMER_1.C_CUSTKEY_TEST * 2",
+  "innerExpression" : "`CUSTOMER_1`.`C_CUSTKEY_TEST` * 2",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "44a99dfe-6791-1114-d3a4-6f7e1af61deb",
+  "project" : "ssb"
+}

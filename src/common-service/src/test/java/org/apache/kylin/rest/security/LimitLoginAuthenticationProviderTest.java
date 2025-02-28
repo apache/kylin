@@ -157,6 +157,21 @@ public class LimitLoginAuthenticationProviderTest extends NLocalFileMetadataTest
     }
 
     @Test
+    public void testAuthenticate_Unlocked() {
+        userAdmin.setLocked(true);
+        userAdmin.setLockedTime(System.currentTimeMillis() - 60 * 1000);
+        userAdmin.setWrongTime(3);
+        kylinUserService.updateUser(userAdmin);
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("ADMIN", "KYLIN",
+                userAdmin.getAuthorities());
+        try {
+            limitLoginAuthenticationProvider.authenticate(token);
+        } catch (Exception e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
     public void testAuthenticate_Disabled_Exception() {
         userAdmin.setDisabled(true);
         kylinUserService.updateUser(userAdmin);

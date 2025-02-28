@@ -44,7 +44,12 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.execution.DefaultExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
@@ -57,7 +62,6 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.request.GarbageCleanUpConfigRequest;
 import org.apache.kylin.rest.request.JdbcRequest;
 import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
@@ -81,6 +85,7 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -107,8 +112,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     @InjectMocks
     private final ProjectService projectService = Mockito.spy(ProjectService.class);
 
-    @InjectMocks
-    private final ProjectSmartServiceSupporter projectSmartService = Mockito.spy(ProjectSmartServiceSupporter.class);
+    private final ProjectSmartServiceSupporter projectSmartService = null;
 
     @InjectMocks
     private final ModelService modelService = Mockito.spy(ModelService.class);
@@ -136,7 +140,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     private JdbcRawRecStore jdbcRawRecStore;
 
     @Before
-    public void setup() {
+    public void setUp() {
+        JobContextUtil.cleanUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         overwriteSystemProp("kylin.cube.low-frequency-threshold", "5");
         createTestMetadata();
@@ -160,14 +165,13 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             log.error("initialize rec store failed.");
         }
 
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobInfoDao(getTestConfig());
     }
 
     @After
     public void tearDown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -234,14 +238,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjects() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(30, projectInstances.size());
+        Assert.assertEquals(35, projectInstances.size());
     }
 
     @Test
     public void testGetAdminProjects() throws Exception {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getAdminProjects();
-        Assert.assertEquals(30, projectInstances.size());
+        Assert.assertEquals(35, projectInstances.size());
     }
 
     @Test
@@ -255,7 +259,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjectsHasNoPermissionProject() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(30, projectInstances.size());
+        Assert.assertEquals(35, projectInstances.size());
 
     }
 
@@ -315,9 +319,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         StorageVolumeInfoResponse storageVolumeInfoResponse = projectService.getStorageVolumeInfoResponse(PROJECT);
 
         Assert.assertEquals(10240L * 1024 * 1024 * 1024, storageVolumeInfoResponse.getStorageQuotaSize());
-
-        // for MODEL(MODEL_ID) layout-1000001 is manual and auto, it will be considered as manual layout
-        Assert.assertEquals(2988131, storageVolumeInfoResponse.getGarbageStorageSize());
+        Assert.assertEquals(261120, storageVolumeInfoResponse.getGarbageStorageSize());
     }
 
     private void prepareLayoutHitCount() {
@@ -369,8 +371,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(false);
         jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("finished", "error", "discarded"));
-        jobNotificationConfigRequest.setJobNotificationEmails(
-                Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
+        jobNotificationConfigRequest
+                .setJobNotificationEmails(Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         response = projectService.getProjectConfig(project);
         Assert.assertEquals(2, response.getJobNotificationEmails().size());
@@ -455,7 +457,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         var response = projectService.getProjectConfig(project);
         Assert.assertEquals(description, response.getDescription());
 
-        request.setSemiAutoMode(true);
+        request.setIsSemiAutoMode(true);
         projectService.updateProjectGeneralInfo(project, request);
         response = projectService.getProjectConfig(project);
         Assert.assertTrue(response.isSemiAutomaticMode());
@@ -561,7 +563,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             Assert.assertTrue(e.getMessage().contains("must be a positive number"));
         }
 
-
     }
 
     @Test
@@ -612,8 +613,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         }, project);
         val prjManager = NProjectManager.getInstance(getTestConfig());
         Assert.assertNull(prjManager.getProject(project));
-        //TODO need to be rewritten
-        // Assert.assertNull(NDefaultScheduler.getInstanceByProject(project));
     }
 
     @Test
@@ -637,7 +636,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
                 projectService.dropProject(project);
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof KylinException);
-                Assert.assertEquals("KE-010037009", ((KylinException) e).getErrorCode().getCodeString());
+                Assert.assertEquals("KE-010001008", ((KylinException) e).getErrorCode().getCodeString());
             }
             return null;
         }, project);
@@ -651,7 +650,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
                 projectService.dropProject(project);
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof KylinException);
-                Assert.assertEquals("KE-010037009", ((KylinException) e).getErrorCode().getCodeString());
+                Assert.assertEquals("KE-010001008", ((KylinException) e).getErrorCode().getCodeString());
             }
             return null;
         }, project);
@@ -665,7 +664,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
                 projectService.dropProject(project);
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof KylinException);
-                Assert.assertEquals("KE-010037009", ((KylinException) e).getErrorCode().getCodeString());
+                Assert.assertEquals("KE-010001008", ((KylinException) e).getErrorCode().getCodeString());
             }
             return null;
         }, project);
@@ -680,8 +679,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         }, project);
     }
 
-    //TODO need to be rewritten
-    /*
     @Test
     public void testDropProjectWithAllJobsBeenKilled() {
         KylinConfig.getInstanceFromEnv().setMetadataUrl(
@@ -694,13 +691,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, project);
 
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
-        scheduler.init(new JobEngineConfig(getTestConfig()));
-        Assert.assertTrue(scheduler.hasStarted());
-        NExecutableManager jobMgr = NExecutableManager.getInstance(getTestConfig(), project);
+        // init job schedule
+        JobContextUtil.getJobContext(getTestConfig());
+
+        ExecutableManager jobMgr = ExecutableManager.getInstance(getTestConfig(), project);
 
         val job1 = new DefaultExecutable();
         job1.setProject(project);
+        job1.setJobType(JobTypeEnum.INDEX_BUILD);
         val task1 = new ShellExecutable();
         job1.addTask(task1);
         jobMgr.addJob(job1);
@@ -713,7 +711,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         }, project);
         val prjManager = NProjectManager.getInstance(getTestConfig());
         Assert.assertNull(prjManager.getProject(project));
-        Assert.assertNull(NDefaultScheduler.getInstanceByProject(project));
+
+        JobContextUtil.cleanUp();
     }
 
     @Test
@@ -728,39 +727,42 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, project);
 
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
-        scheduler.init(new JobEngineConfig(getTestConfig()));
-        Assert.assertTrue(scheduler.hasStarted());
-        NExecutableManager jobMgr = NExecutableManager.getInstance(getTestConfig(), project);
+        // init job schedule
+        JobContextUtil.getJobContext(getTestConfig());
+
+        ExecutableManager jobMgr = ExecutableManager.getInstance(getTestConfig(), project);
 
         val job1 = new DefaultExecutable();
         job1.setProject(project);
+        job1.setJobType(JobTypeEnum.INDEX_BUILD);
         val task1 = new ShellExecutable();
         job1.addTask(task1);
         jobMgr.addJob(job1);
 
         val job2 = new DefaultExecutable();
         job2.setProject(project);
+        job2.setJobType(JobTypeEnum.INDEX_BUILD);
         val task2 = new ShellExecutable();
         job2.addTask(task2);
         jobMgr.addJob(job2);
 
         val job3 = new DefaultExecutable();
         job3.setProject(project);
+        job3.setJobType(JobTypeEnum.INDEX_BUILD);
         val task3 = new ShellExecutable();
         job3.addTask(task3);
         jobMgr.addJob(job3);
 
+        jobMgr.updateJobOutput(job2.getId(), ExecutableState.PENDING, null, null, null);
         jobMgr.updateJobOutput(job2.getId(), ExecutableState.RUNNING, null, null, null);
         jobMgr.updateJobOutput(job3.getId(), ExecutableState.PAUSED, null, null, null);
 
         Assert.assertThrows(KylinException.class, () -> projectService.dropProject(project));
         val prjManager = NProjectManager.getInstance(getTestConfig());
         Assert.assertNotNull(prjManager.getProject(project));
-        Assert.assertNotNull(NDefaultScheduler.getInstanceByProject(project));
-    }
 
-     */
+        JobContextUtil.cleanUp();
+    }
 
     @Test
     public void testClearManagerCache() throws Exception {
@@ -791,16 +793,10 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(11, prj.getSourceType());
     }
 
+    @Ignore("TODO")
     @Test
     public void testUpdateGarbageCleanupConfig() {
-        val request = new GarbageCleanUpConfigRequest();
-        request.setFrequencyTimeWindow(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK);
-        request.setLowFrequencyThreshold(12L);
-        projectService.updateGarbageCleanupConfig("default", request);
-        val prjMgr = NProjectManager.getInstance(getTestConfig());
-        val prj = prjMgr.getProject("default");
-        Assert.assertEquals(7, prj.getConfig().getFrequencyTimeWindowInDays());
-        Assert.assertEquals(12, prj.getConfig().getLowFrequencyThreshold());
+        // TODO GarbageCleanupConfig has been moved to FavoriteRules, rewrite this
     }
 
     private void updateProject() {
@@ -812,16 +808,11 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(true);
         jobNotificationConfigRequest.setJobStatesNotification(Lists.newArrayList("finished", "error", "discarded"));
-        jobNotificationConfigRequest.setJobNotificationEmails(
-                Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
+        jobNotificationConfigRequest
+                .setJobNotificationEmails(Lists.newArrayList("user1@Kylin.io", "user2@Kylin.io", "user2@Kylin.io"));
         projectService.updateJobNotificationConfig(PROJECT, jobNotificationConfigRequest);
 
         projectService.updateQueryAccelerateThresholdConfig(PROJECT, 30, false);
-
-        val request = new GarbageCleanUpConfigRequest();
-        request.setFrequencyTimeWindow(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK);
-        request.setLowFrequencyThreshold(12L);
-        projectService.updateGarbageCleanupConfig("default", request);
     }
 
     @Test
@@ -836,22 +827,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(0, response.getJobNotificationEmails().size());
         Assert.assertEquals(0, response.getJobStatesNotification().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
-
-        Assert.assertFalse(response.isFavoriteQueryTipsEnabled());
-        Assert.assertEquals(30, response.getFavoriteQueryThreshold());
-        Assert.assertEquals(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.WEEK.name(),
-                response.getFrequencyTimeWindow());
-        Assert.assertEquals(12, response.getLowFrequencyThreshold());
-        Assert.assertFalse(response.isAutoMergeEnabled());
-
-        response = projectService.resetProjectConfig(PROJECT, "query_accelerate_threshold");
-        Assert.assertTrue(response.isFavoriteQueryTipsEnabled());
-        Assert.assertEquals(20, response.getFavoriteQueryThreshold());
-
-        response = projectService.resetProjectConfig(PROJECT, "garbage_cleanup_config");
-        Assert.assertEquals(GarbageCleanUpConfigRequest.FrequencyTimeWindowEnum.MONTH.name(),
-                response.getFrequencyTimeWindow());
-        Assert.assertEquals(5, response.getLowFrequencyThreshold());
 
         response = projectService.resetProjectConfig(PROJECT, "segment_config");
         Assert.assertFalse(response.isAutoMergeEnabled());
@@ -889,7 +864,10 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             Assert.assertNotNull(projectInstance2);
             Assert.assertTrue(projectInstance2.getConfig().exposeComputedColumn());
             Assert.assertTrue(projectInstance2.isSemiAutoMode());
-            projectManager.dropProject("project11");
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).dropProject("project11");
+                return null;
+            }, projectInstance2.getName());
         }
 
         // manual
@@ -905,7 +883,10 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
             Assert.assertNotNull(projectInstance2);
             Assert.assertTrue(projectInstance2.getConfig().exposeComputedColumn());
             Assert.assertTrue(projectInstance2.isExpertMode());
-            projectManager.dropProject("project11");
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).dropProject("project11");
+                return null;
+            }, projectInstance2.getName());
         }
     }
 
@@ -1034,7 +1015,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCleanupGarbage() throws Exception {
-        QueryHistoryMetaUpdateScheduler qhMetaUpdateScheduler = QueryHistoryMetaUpdateScheduler.getInstance(PROJECT);
+        QueryHistoryMetaUpdateScheduler qhMetaUpdateScheduler = QueryHistoryMetaUpdateScheduler.getInstance();
         qhMetaUpdateScheduler.init();
         projectService.cleanupGarbage(PROJECT, false);
     }

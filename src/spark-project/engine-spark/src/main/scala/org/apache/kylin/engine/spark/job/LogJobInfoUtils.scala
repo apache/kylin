@@ -47,12 +47,16 @@ object LogJobInfoUtils {
        |wait time: ${infos.waitTime}
        |build time: ${infos.buildTime}
        |build from layouts :
-       |${infos.getParent2Children.asScala.filter(_._1 != null)
+       |${
+      infos.getParent2Children.asScala.filter(_._1 != null)
         .map(entry => s"[layoutId: ${entry._1.getLayoutId}, layoutSize: ${entry._1.getByteSize} bytes," +
-          s" children: ${entry._2}]").mkString("\n")}
+          s" children: ${entry._2}]").mkString("\n")
+    }
        |build from flat table :
-       |${infos.getParent2Children.asScala.filter(_._1 == null)
-        .map(entry => s"[${entry._2}]").mkString("\n")}
+       |${
+      infos.getParent2Children.asScala.filter(_._1 == null)
+        .map(entry => s"[${entry._2}]").mkString("\n")
+    }
        |cuboids num per segment : ${infos.getSeg2cuboidsNumPerLayer}
        |abnormal layouts : ${infos.getAbnormalLayouts}
        |retry times : ${infos.getRetryTimes}
@@ -70,6 +74,16 @@ object LogJobInfoUtils {
        |  ${infos.getSparkPlans.asScala.map(_.toString).mkString("\n")}
        |==========================[RESOURCE DETECT BEFORE MERGE]===============================
      """.stripMargin
+  }
+
+  def resourceDetectBeforeOptimizeJob: String = {
+    s"""
+       |==========================[RESOURCE DETECT BEFORE OPTIMIZE]=============================
+       |optimize layouts : ${infos.getOptimizeLayoutIds}
+       |spark plans :
+       |  ${infos.getSparkPlans.asScala.map(_.toString).mkString("\n")}
+       |==========================[RESOURCE DETECT BEFORE OPTIMIZE]=============================
+       |""".stripMargin
   }
 
   def dfMergeJobInfo: String = {

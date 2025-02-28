@@ -20,11 +20,10 @@ package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.rest.util.PagingUtil;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class PagingUtilTest {
     @Test

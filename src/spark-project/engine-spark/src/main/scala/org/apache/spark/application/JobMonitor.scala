@@ -18,11 +18,11 @@
 
 package org.apache.spark.application
 
-import org.apache.kylin.engine.spark.job.KylinBuildEnv
-import org.apache.kylin.engine.spark.scheduler._
 import io.netty.util.internal.ThrowableUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.Unsafe
+import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.autoheal.ExceptionTerminator
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop

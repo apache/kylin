@@ -25,13 +25,13 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.CUSTOM_PARS
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.CUSTOM_PARSER_TABLES_USE_PARSER;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
@@ -63,8 +63,7 @@ public class DataParserManager {
     private DataParserManager(KylinConfig kylinConfig, String project) {
         this.project = project;
         this.kylinConfig = kylinConfig;
-        String resourceRootPath = String.format(Locale.ROOT, "/%s%s", project, ResourceStore.DATA_PARSER_RESOURCE_ROOT);
-        this.crud = new CachedCrudAssist<DataParserInfo>(getStore(), resourceRootPath, DataParserInfo.class) {
+        this.crud = new CachedCrudAssist<DataParserInfo>(getStore(), MetadataType.DATA_PARSER, project, DataParserInfo.class) {
             @Override
             protected DataParserInfo initEntityAfterReload(DataParserInfo entity, String resourceName) {
                 return entity;
@@ -81,14 +80,14 @@ public class DataParserManager {
     }
 
     public boolean isInitialized() {
-        return crud.contains(DEFAULT_PARSER_NAME);
+        return crud.contains(DataParserInfo.generateResourcePath(project, DEFAULT_PARSER_NAME));
     }
 
     public DataParserInfo getDataParserInfo(String className) {
         if (StringUtils.isEmpty(className)) {
             return null;
         }
-        return crud.get(className);
+        return crud.get(DataParserInfo.generateResourcePath(project, className));
     }
 
     public DataParserInfo createDataParserInfo(DataParserInfo parserInfo) {

@@ -24,12 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.job.JobContext;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.JobContext;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,8 +36,8 @@ import lombok.Setter;
  */
 public class TestWithStageExecutable extends BaseTestExecutable implements ChainedStageExecutable {
 
-    private transient final List<StageBase> stages = Lists.newCopyOnWriteArrayList();
-    private final Map<String, List<StageBase>> stagesMap = Maps.newConcurrentMap();
+    private final transient List<StageExecutable> stages = Lists.newCopyOnWriteArrayList();
+    private final Map<String, List<StageExecutable>> stagesMap = Maps.newConcurrentMap();
 
     @Setter
     @Getter
@@ -64,7 +63,7 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
     }
 
     @Override
-    public Map<String, List<StageBase>> getStagesMap() {
+    public Map<String, List<StageExecutable>> getStagesMap() {
         return stagesMap;
     }
 
@@ -84,8 +83,8 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
     }
 
     @Override
-    public void setStageMapWithSegment(String id, List<StageBase> steps) {
-        final List<StageBase> old = stagesMap.getOrDefault(id, Lists.newCopyOnWriteArrayList());
+    public void setStageMapWithSegment(String id, List<StageExecutable> steps) {
+        final List<StageExecutable> old = stagesMap.getOrDefault(id, Lists.newCopyOnWriteArrayList());
         old.addAll(steps);
         stagesMap.put(id, steps);
     }
@@ -97,7 +96,7 @@ public class TestWithStageExecutable extends BaseTestExecutable implements Chain
         step.setId(getId() + "_" + String.format(Locale.ROOT, "%02d", stepId));
         step.setParent(this);
         step.setStepId(stepId);
-        this.stages.add(((StageBase) step));
+        this.stages.add(((StageExecutable) step));
         return step;
     }
 }

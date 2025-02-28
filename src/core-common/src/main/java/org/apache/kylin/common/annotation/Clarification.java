@@ -24,8 +24,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER,
-        ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE, ElementType.PACKAGE})
+@Target({ ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR,
+        ElementType.LOCAL_VARIABLE, ElementType.PACKAGE })
 public @interface Clarification {
     Priority priority() default Priority.MINOR;
 
@@ -34,8 +34,6 @@ public @interface Clarification {
     boolean deprecated() default false; // Please remove deprecated key when Kylin4 GA
 
     enum Priority {
-        MINOR,
-        MAJOR,
-        CRITICAL
+        MINOR, MAJOR, CRITICAL
     }
 }

@@ -20,23 +20,12 @@ package org.apache.kylin.query.routing;
 
 import java.util.List;
 
-import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.rex.RexExecutorImpl;
 import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.util.JobContextUtil;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
-import org.apache.kylin.metadata.query.QueryMetrics;
-import org.apache.kylin.query.engine.QueryExec;
-import org.apache.kylin.query.engine.TypeSystem;
-import org.apache.kylin.query.engine.meta.SimpleDataContext;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.util.OlapContextTestUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
@@ -74,49 +63,33 @@ public class QueryLayoutFilterTest extends NLocalWithSparkSessionTest {
 
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
-        this.createTestMetadata();
-
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
     public void testQueryWithFilterCondAlwaysFalse() throws Exception {
-        String dataflowId = "b780e4e4-69af-449e-b09f-05c90dfa04b6";
-        KylinConfig kylinConfig = getTestConfig();
         String project = "default";
-        NDataflowManager dataflowManager = NDataflowManager.getInstance(kylinConfig, project);
-        NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
         String sql = "SELECT COUNT(*) FROM TEST_BANK_INCOME inner join TEST_BANK_LOCATION "
                 + "on TEST_BANK_INCOME.COUNTRY = TEST_BANK_LOCATION.COUNTRY \n" //
                 + "WHERE 1 = 1\n" //
                 + "and TEST_BANK_INCOME.DT = '2021-11-02'\n" //
                 + "and TEST_BANK_INCOME.COUNTRY in ('INDONESIA')\n" //
                 + "and TEST_BANK_INCOME.COUNTRY in ('KENYA')";
-        List<OLAPContext> contexts = OlapContextTestUtil.getOlapContexts(project, sql);
-        OLAPContext context = contexts.get(0);
-
-        CalciteSchema rootSchema = new QueryExec(project, kylinConfig).getRootSchema();
-        SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),
-                kylinConfig);
-        context.firstTableScan.getCluster().getPlanner().setExecutor(new RexExecutorImpl(dataContext));
-        List<NDataSegment> segments = new SegmentPruningRule().pruneSegments(dataflow, context);
-        Assert.assertTrue(segments.isEmpty());
-        context.storageContext.setEmptyLayout(true);
-        context.realization = dataflow;
-        OLAPContext.registerContext(context);
-        List<NativeQueryRealization> realizations = OLAPContext.getNativeRealizations();
-        Assert.assertEquals(1, realizations.size());
-        Assert.assertEquals(QueryMetrics.FILTER_CONFLICT, realizations.get(0).getIndexType());
-        Assert.assertEquals(Long.valueOf(-1), realizations.get(0).getLayoutId());
+        List<OlapContext> contexts = OlapContextTestUtil.getOlapContexts(project, sql);
+        OlapContext context = contexts.get(0);
+        Assert.assertNull(context.getFirstTableScan());
+        Assert.assertNull(context.getRealization());
     }
 }

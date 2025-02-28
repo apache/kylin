@@ -34,9 +34,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.request.BuildIndexPlannerIndexRequest;
 import org.apache.kylin.rest.request.BuildIndexRequest;
 import org.apache.kylin.rest.request.BuildSegmentsRequest;
 import org.apache.kylin.rest.request.IncrementBuildSegmentsRequest;
@@ -45,6 +45,7 @@ import org.apache.kylin.rest.request.PartitionsBuildRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentFixRequest;
 import org.apache.kylin.rest.request.SegmentsRequest;
+import org.apache.kylin.rest.response.BuildIndexPlannerIndexResponse;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -55,12 +56,13 @@ import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentCheckResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.service.FusionModelService;
+import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.ModelBuildService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
+import org.apache.kylin.rest.service.params.IndexBuildParams;
 import org.apache.kylin.rest.service.params.MergeSegmentParams;
 import org.apache.kylin.rest.service.params.RefreshSegmentParams;
-import org.apache.kylin.rest.util.ModelUtils;
 import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -96,6 +98,8 @@ public class SegmentController extends NBasicController {
     @Autowired
     @Qualifier("modelBuildService")
     private ModelBuildService modelBuildService;
+    @Autowired
+    private JobInfoService jobInfoService;
 
     @ApiOperation(value = "buildIndicesManually", tags = { "DW" }, notes = "Update URL: {model}")
     @PostMapping(value = "/{model:.+}/indices")
@@ -113,6 +117,34 @@ public class SegmentController extends NBasicController {
         val response = modelBuildService.buildIndicesManually(modelId, request.getProject(), request.getPriority(),
                 request.getYarnQueue(), request.getTag());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+    }
+
+    @ApiOperation(value = "buildIndicesManually", tags = { "DW" }, notes = "Update URL: {model}")
+    @PostMapping(value = "/index_planner_indices")
+    @ResponseBody
+    public EnvelopeResponse<BuildIndexPlannerIndexResponse> buildIndexPlannerIndicesManually(
+            @RequestBody BuildIndexPlannerIndexRequest request) {
+        checkProjectName(request.getProject());
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
+
+        BuildIndexPlannerIndexResponse buildIndexPlannerIndexResponse = new BuildIndexPlannerIndexResponse();
+        List<BuildIndexResponse> jobs = new ArrayList<>();
+        if (!request.isAllModels()) {
+            String modelId = modelService.getModel(request.getModelName(), request.getProject()).getId();
+            checkRequiredArg(MODEL_ID, modelId);
+            modelService.validateCCType(modelId, request.getProject());
+            val response = modelBuildService.buildIndexPlannerIndicesManually(modelId, request.getProject(),
+                    request.getPriority(), request.getYarnQueue(), request.getTag());
+            jobs.add(response);
+        } else {
+            jobs = modelBuildService.buildAllIndexPlannerIndicesManually(request.getProject(), request.getPriority(),
+                    request.getYarnQueue(), request.getTag());
+        }
+
+        buildIndexPlannerIndexResponse.setJobs(jobs);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, buildIndexPlannerIndexResponse, "");
     }
 
     /* Segments */
@@ -133,14 +165,11 @@ public class SegmentController extends NBasicController {
             @RequestParam(value = "all_to_complement", required = false, defaultValue = "false") Boolean allToComplement,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modified_time") String sortBy,
             @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse,
-            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses,
-            @RequestParam(value = "statuses_second_storage", required = false, defaultValue = "") List<String> statusesSecondStorage) {
+            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses) {
         checkProjectName(project);
         DataRangeUtils.validateRange(start, end);
-        modelService.checkSegmentStatus(statuses);
-        modelService.checkSegmentSecondStorageStatus(statusesSecondStorage);
         List<NDataSegmentResponse> segments = modelService.getSegmentsResponse(dataflowId, project, start, end, status,
-                withAllIndexes, withoutAnyIndexes, allToComplement, sortBy, reverse, statuses, statusesSecondStorage);
+                withAllIndexes, withoutAnyIndexes, allToComplement, sortBy, reverse, statuses);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(segments, offset, limit), "");
     }
 
@@ -167,7 +196,8 @@ public class SegmentController extends NBasicController {
         checkProjectName(buildSegmentsRequest.getProject());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(buildSegmentsRequest.getProject(),
                 modelId);
-        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
+                partitionColumnFormat);
         val res = modelService.checkSegHoleExistIfNewRangeBuild(buildSegmentsRequest.getProject(), modelId,
                 buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
                 buildSegmentsRequest.isBuildAllIndexes(), buildSegmentsRequest.getBatchIndexIds());
@@ -205,11 +235,11 @@ public class SegmentController extends NBasicController {
             }
             modelService.deleteSegmentById(dataflowId, project, idsDeleted, force);
         }
+
         try {
-            ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).checkSuicideJobOfModel(project,
-                    dataflowId);
+            jobInfoService.checkSuicideJobOfModel(project, dataflowId);
         } catch (Exception e) {
-            log.warn("Failed to check if there's a job that need to suicide", e);
+            log.warn("Failed to check suicide job", e);
         }
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -283,7 +313,9 @@ public class SegmentController extends NBasicController {
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(buildSegmentsRequest.getProject(),
                 modelId);
-        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
+                partitionColumnFormat);
+
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
         JobInfoResponse response = modelBuildService.buildSegmentsManually(buildSegmentsRequest.getProject(), modelId,
                 buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
@@ -305,20 +337,19 @@ public class SegmentController extends NBasicController {
                 .getProject(buildSegmentsRequest.getProject());
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = buildSegmentsRequest.getPartitionDesc().getPartitionDateFormat();
-        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
+                partitionColumnFormat);
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
-        ModelUtils.checkSecondStoragePartition(buildSegmentsRequest.getProject(), modelId,
-                buildSegmentsRequest.getPartitionDesc(), ModelUtils.MessageType.SEGMENT);
 
         IncrementBuildSegmentParams incrParams = new IncrementBuildSegmentParams(buildSegmentsRequest.getProject(),
                 modelId, buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
                 buildSegmentsRequest.getPartitionDesc(), buildSegmentsRequest.getMultiPartitionDesc(),
                 buildSegmentsRequest.getSegmentHoles(), buildSegmentsRequest.isBuildAllIndexes(),
                 buildSegmentsRequest.getSubPartitionValues())
-                        .withIgnoredSnapshotTables(buildSegmentsRequest.getIgnoredSnapshotTables())
-                        .withPriority(buildSegmentsRequest.getPriority())
-                        .withBuildAllSubPartitions(buildSegmentsRequest.isBuildAllSubPartitions())
-                        .withYarnQueue(buildSegmentsRequest.getYarnQueue()).withTag(buildSegmentsRequest.getTag());
+                .withIgnoredSnapshotTables(buildSegmentsRequest.getIgnoredSnapshotTables())
+                .withPriority(buildSegmentsRequest.getPriority())
+                .withBuildAllSubPartitions(buildSegmentsRequest.isBuildAllSubPartitions())
+                .withYarnQueue(buildSegmentsRequest.getYarnQueue()).withTag(buildSegmentsRequest.getTag());
 
         JobInfoResponse response = fusionModelService.incrementBuildSegmentsManually(incrParams);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
@@ -350,9 +381,14 @@ public class SegmentController extends NBasicController {
         ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(buildSegmentsRequest.getProject());
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
-        JobInfoResponseWithFailure response = modelBuildService.addIndexesToSegments(buildSegmentsRequest.getProject(),
-                modelId, buildSegmentsRequest.getSegmentIds(), null, buildSegmentsRequest.isParallelBuildBySegment(),
-                buildSegmentsRequest.getPriority());
+        JobInfoResponseWithFailure response = modelBuildService.addIndexesToSegments(IndexBuildParams.builder()
+                        .project(buildSegmentsRequest.getProject())
+                        .modelId(modelId)
+                        .segmentIds(buildSegmentsRequest.getSegmentIds())
+                        .layoutIds(null)
+                        .parallelBuildBySegment(buildSegmentsRequest.isParallelBuildBySegment())
+                        .priority(buildSegmentsRequest.getPriority())
+                        .build());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
 

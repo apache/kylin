@@ -41,7 +41,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-
 public class ComputedColumnEvalUtilTest extends NLocalWithSparkSessionTestBase {
 
     @After
@@ -79,11 +78,13 @@ public class ComputedColumnEvalUtilTest extends NLocalWithSparkSessionTestBase {
                 .getDataModelDesc("abe3bf1a-c4bc-458d-8278-7ea8b00f5e96");
 
         ComputedColumnEvalUtil.evaluateExprAndTypeBatch(nDataModel, computedColumns);
-        Assert.assertEquals(2, computedColumns.size());
+        Assert.assertEquals(3, computedColumns.size());
         Assert.assertEquals("CONCAT(TEST_KYLIN_FACT.LSTG_FORMAT_NAME, TEST_KYLIN_FACT.LSTG_FORMAT_NAME)",
                 computedColumns.get(0).getInnerExpression().trim());
-        Assert.assertEquals("SUBSTR(TEST_KYLIN_FACT.LSTG_FORMAT_NAME, 2)",
+        Assert.assertEquals("INITCAPB(TEST_KYLIN_FACT.LSTG_FORMAT_NAME)",
                 computedColumns.get(1).getInnerExpression().trim());
+        Assert.assertEquals("SUBSTR(TEST_KYLIN_FACT.LSTG_FORMAT_NAME, 2)",
+                computedColumns.get(2).getInnerExpression().trim());
     }
 
     @Test

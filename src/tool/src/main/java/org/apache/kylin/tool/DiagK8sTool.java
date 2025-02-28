@@ -26,7 +26,7 @@ import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
-public class DiagK8sTool extends AbstractInfoExtractorTool{
+public class DiagK8sTool extends AbstractInfoExtractorTool {
     private static final Logger logger = LoggerFactory.getLogger("diag");
     HttpHeaders headers;
 
@@ -47,8 +47,8 @@ public class DiagK8sTool extends AbstractInfoExtractorTool{
             .isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
     // Job Parameters
-    private static final Option OPTION_JOB_ID = OptionBuilder.getInstance().withArgName("job").hasArg().isRequired(false)
-            .withDescription("specify the Job ID to extract information. ").create("job");
+    private static final Option OPTION_JOB_ID = OptionBuilder.getInstance().withArgName("job").hasArg()
+            .isRequired(false).withDescription("specify the Job ID to extract information. ").create("job");
 
     public DiagK8sTool(HttpHeaders headers, String diagPackageType) {
         super();
@@ -72,7 +72,7 @@ public class DiagK8sTool extends AbstractInfoExtractorTool{
 
         if (queryId != null) {
             extractQueryDiag(exportDir, recordTime, queryId, project);
-        } else if(jobId != null) {
+        } else if (jobId != null) {
             extractJobDiag(exportDir, recordTime, jobId);
         } else {
             extractSysDiag(exportDir, recordTime, startTime, endTime);
@@ -86,6 +86,7 @@ public class DiagK8sTool extends AbstractInfoExtractorTool{
     private void dumpMetadata(File exportDir, File recordTime) throws IOException {
         dumpMetadata(exportDir, recordTime, "");
     }
+
     private void dumpMetadata(File exportDir, File recordTime, String project) throws IOException {
         File metaDir = new File(exportDir, "metadata");
         FileUtils.forceMkdir(metaDir);

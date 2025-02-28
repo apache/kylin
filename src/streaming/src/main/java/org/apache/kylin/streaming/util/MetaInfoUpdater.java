@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -36,7 +37,6 @@ import org.apache.kylin.metadata.streaming.StreamingJobRecordManager;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 
 public class MetaInfoUpdater {

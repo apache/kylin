@@ -447,7 +447,7 @@ export default class ModelPartitionModal extends Vue {
   async changeColumn (type, val) {
     this.formatedDate = ''
     this.errorFormat = ''
-    this.isNotBatchModel && (this.partitionMeta.format = this.dateFormatsOptions[0].value)
+    this.isNotBatchModel && type === 'column' && (this.partitionMeta.format = this.dateFormatsOptions[0].value) // 非批数据模型在选分区列时，默认选中第一个分区列格式
     if (type === 'format' && val || this.isNotBatchModel && type === 'column') { // 非批数据模型分区列默认选中第一个分区列格式，并且调用一下预览
       try {
         const res = await this.validateDateFormat({partition_date_column: this.partitionMeta.column, partition_date_format: this.partitionMeta.format})
@@ -546,7 +546,7 @@ export default class ModelPartitionModal extends Vue {
   }
   get isStreamModel () {
     const factTable = this.modelInstance.getFactTable()
-    return factTable.source_type ? (factTable.source_type === 1 && !factTable.batch_table_identity) : this.modelInstance.model_type === 'STREAMING'
+    return this.modelInstance.mode !== 'edit' && factTable.source_type ? (factTable.source_type === 1 && !factTable.batch_table_identity) : this.modelInstance.model_type === 'STREAMING'
   }
   get isNotBatchModel () {
     const factTable = this.modelInstance.getFactTable()

@@ -1,0 +1,64 @@
+{
+  "uuid" : "fcd32752-17a7-d754-5f41-3ee6fe303007",
+  "last_modified" : 0,
+  "create_time" : 1657768982538,
+  "version" : "4.0.0.0",
+  "name" : "SUPPLIER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "S_SUPPKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "s_suppkey"
+  }, {
+    "id" : "2",
+    "name" : "S_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_name"
+  }, {
+    "id" : "3",
+    "name" : "S_ADDRESS",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_address"
+  }, {
+    "id" : "4",
+    "name" : "S_CITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_city"
+  }, {
+    "id" : "5",
+    "name" : "S_NATION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_nation"
+  }, {
+    "id" : "6",
+    "name" : "S_REGION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_region"
+  }, {
+    "id" : "7",
+    "name" : "S_PHONE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "s_phone"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "ssb"
+}

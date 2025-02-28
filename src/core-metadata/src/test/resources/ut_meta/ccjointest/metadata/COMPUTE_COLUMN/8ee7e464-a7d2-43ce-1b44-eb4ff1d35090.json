@@ -1,0 +1,8 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_ORDER",
+  "columnName" : "ID_PLUS_1",
+  "expression" : "TEST_ORDER.ORDER_ID + 1",
+  "datatype" : "bigint",
+  "uuid" : "8ee7e464-a7d2-43ce-1b44-eb4ff1d35090",
+  "project" : "default"
+}

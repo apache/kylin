@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_KYLIN_FACT",
+  "model_uuid" : "747f864b-9721-4b97-acde-0aa8e8656cba",
+  "project" : "multi_level_partition",
+  "uuid" : "99927374-d0ec-06ff-a4cf-f32a81a3432b"
+}

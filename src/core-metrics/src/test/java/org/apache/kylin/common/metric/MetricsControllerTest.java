@@ -25,6 +25,7 @@ import org.apache.kylin.common.metrics.MetricsInfluxdbReporter;
 import org.apache.kylin.common.metrics.service.InfluxDBInstance;
 import org.apache.kylin.common.util.InfluxDBUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,14 +40,13 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
-
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({ "javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*",
-        "javax.script.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ InfluxDBInstance.class, InfluxDBUtils.class, UserGroupInformation.class })
 public class MetricsControllerTest extends NLocalFileMetadataTestCase {
-    public final static String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", ROLE_ADMIN);
 
     @Before

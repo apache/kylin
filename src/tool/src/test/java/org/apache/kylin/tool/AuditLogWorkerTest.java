@@ -27,14 +27,19 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceTool;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.metadata.jdbc.RawResourceRowMapper;
 import org.apache.kylin.common.persistence.transaction.AuditLogBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.tool.restclient.RestClient;
 import org.junit.After;
 import org.junit.Before;
@@ -45,10 +50,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 @Ignore("Only for Developer")
@@ -95,7 +96,7 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
     @After
     public void destroy() throws Exception {
         //        val jdbcTemplate = getJdbcTemplate();
-        //        jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+        //        jdbcTemplate.batchUpdate("SHUTDOWN;");
         //        cleanupTestMetadata();
     }
 
@@ -110,10 +111,10 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
         val raws = jdbcTemplate.query("select * from " + table, ps -> {
         }, RAW_RESOURCE_ROW_MAPPER);
         for (RawResource raw : raws) {
-            if (systemStore.exists(raw.getResPath())) {
+            if (systemStore.exists(raw.getMetaKey())) {
                 continue;
             }
-            systemStore.putResourceWithoutCheck(raw.getResPath(), raw.getByteSource(), raw.getTimestamp(),
+            systemStore.putResourceWithoutCheck(raw.getMetaKey(), raw.getByteSource(), raw.getTs(),
                     raw.getMvcc());
         }
 
@@ -128,7 +129,7 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
                 val store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
                 val path = "/0p1/abc-" + System.currentTimeMillis();
                 val originAbc = store.getResource(path);
-                store.checkAndPutResource(path, ByteSource.wrap("abc".getBytes(Charset.defaultCharset())),
+                store.checkAndPutResource(path, RawResourceTool.createByteSource(path),
                         System.currentTimeMillis(), originAbc == null ? -1 : originAbc.getMvcc());
                 return 0;
             }, "0p1");
@@ -163,7 +164,8 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
                     ps.setString(4, path);
                 });
             }
-            jdbcTemplate.update(String.format(Locale.ROOT, INSERT_AUDIT_LOG_SQL, table + "_audit_log"), ps -> {
+            jdbcTemplate.update(String.format(Locale.ROOT, INSERT_AUDIT_LOG_SQL,
+                    table + JdbcAuditLogStore.AUDIT_LOG_SUFFIX), ps -> {
                 ps.setString(1, path);
                 ps.setBytes(2, path.getBytes(Charset.defaultCharset()));
                 ps.setLong(3, ts);
@@ -204,7 +206,7 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
                 String path = "/p2/abc" + id;
                 val originAbc = store.getResource(path);
                 store.checkAndPutResource(path,
-                        ByteSource.wrap((path + "-version2").getBytes(Charset.defaultCharset())),
+                        RawResourceTool.createByteSourceByPath(path + "-version2"),
                         System.currentTimeMillis(), originAbc == null ? -1 : originAbc.getMvcc());
             });
             return 0;
@@ -217,7 +219,7 @@ public class AuditLogWorkerTest extends NLocalFileMetadataTestCase {
 
         Thread.sleep(10000);
 
-        systemStore.listResourcesRecursively("/");
+        systemStore.listResourcesRecursively(MetadataType.ALL.name());
     }
 
     JdbcTemplate getJdbcTemplate() throws Exception {

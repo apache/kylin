@@ -1,0 +1,177 @@
+{
+  "uuid" : "9797bf2c-d1b1-4d83-b2b5-bc61de4948c2",
+  "last_modified" : 1497840152229,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.ITEM",
+  "last_build_job_id" : "d891df37-5d25-4d80-abb5-bb77dd99c37d",
+  "columns_stats" : [ {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 26057
+  }, {
+    "max_value" : "AAAAAAAAPPPEAAAA",
+    "min_value" : "AAAAAAAAAAABAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 13303
+  }, {
+    "max_value" : "2001-10-27",
+    "min_value" : "",
+    "max_length_value" : "1997-10-27",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "2001-10-26",
+    "min_value" : "",
+    "max_length_value" : "2000-10-26",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "Youngsters go to a questions. Domestic figures ask; centuries enjoy ago; overall months design. ",
+    "min_value" : "",
+    "max_length_value" : "Deep, various children convince already. Good, pregnant boys gain so girls. Long-term, large industries might pay much difficult approaches. Strategic, christian crimes serve uniformly new, strong mil",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 20011
+  }, {
+    "max_value" : "99.99",
+    "min_value" : "0.09",
+    "max_length_value" : "27.02",
+    "min_length_value" : "4.0",
+    "null_count" : 66,
+    "cardinality" : 3188
+  }, {
+    "max_value" : "87.36",
+    "min_value" : "0.02",
+    "max_length_value" : "23.23",
+    "min_length_value" : "3.3",
+    "null_count" : 69,
+    "cardinality" : 2424
+  }, {
+    "max_value" : "10016017",
+    "min_value" : "1001001",
+    "max_length_value" : "10008011",
+    "min_length_value" : "5003002",
+    "null_count" : 65,
+    "cardinality" : 950
+  }, {
+    "max_value" : "univunivamalg #9",
+    "min_value" : "",
+    "max_length_value" : "edu packamalgamalg #10",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 718
+  }, {
+    "max_value" : "16",
+    "min_value" : "1",
+    "max_length_value" : "14",
+    "min_length_value" : "3",
+    "null_count" : 57,
+    "cardinality" : 16
+  }, {
+    "max_value" : "womens watch",
+    "min_value" : "",
+    "max_length_value" : "curtains/drapes",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 96
+  }, {
+    "max_value" : "10",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "5",
+    "null_count" : 62,
+    "cardinality" : 10
+  }, {
+    "max_value" : "Women",
+    "min_value" : "",
+    "max_length_value" : "Electronics",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "1000",
+    "min_value" : "1",
+    "max_length_value" : "1000",
+    "min_length_value" : "9",
+    "null_count" : 59,
+    "cardinality" : 1010
+  }, {
+    "max_value" : "pripripri",
+    "min_value" : "",
+    "max_length_value" : "ationcallyought",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 1020
+  }, {
+    "max_value" : "small",
+    "min_value" : "",
+    "max_length_value" : "extra large",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "max_value" : "yellow98410245588091",
+    "min_value" : "",
+    "max_length_value" : "3663peru009490160959",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 18154
+  }, {
+    "max_value" : "yellow",
+    "min_value" : "",
+    "max_length_value" : "cornflower",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 94
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 22
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "100",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "6",
+    "null_count" : 68,
+    "cardinality" : 100
+  }, {
+    "max_value" : "pripripripriought",
+    "min_value" : "",
+    "max_length_value" : "oughtoughtoughtoughtought",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 25820
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAACAAAAAAA", "AAAAAAAAEAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAIAAAAAAA", "AAAAAAAAKAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAOAAAAAAA", "AAAAAAAAABAAAAAA", "AAAAAAAADBAAAAAA" ], [ "1997-10-27", "2000-10-27", "1999-10-28", "1997-10-27", "2000-10-27", "1999-10-28", "1997-10-27", "2000-10-27", "1999-10-28", "1997-10-27" ], [ "", "", "2001-10-26", "", "", "2001-10-26", "", "", "2001-10-26", "" ], [ "Powers will not get influences. Electoral ports should show low, annual chains. Now young visitors may pose now however final pages. Bitterly right children suit increasing, leading el", "False opportunities would run alone with a views. Early approaches would show inc, european intentions; important, main passages shall know urban, ", "Normal systems would join simply different theories. Full, new clothes may eat instead achievements. D", "Anxious accounts must catch also years. Revolutionary, large directors used to embrace then mo", "F", "Correct, fo", "Hard, private departments spoil more quickly possible members; clear troops fail only needs. ", "Teachers carry by the children; old democrats enco", "Dominant, christian pp. may not raise", "Political parents know right; perfec" ], [ "27.02", "7.11", "4.0", "9.94", "4.46", "54.87", "8.76", "2.57", "6.49", "10.61" ], [ "23.23", "0.38", "1.76", "6.75", "0.85", "4.11", "7.62", "0.59", "0.14", "4.77" ], [ "5003002", "1001001", "2002002", "3001002", "1004002", "10008011", "6012006", "5002002", "1002001", "2004002" ], [ "exportischolar #2", "brandbrand #4", "importoimporto #2", "amalgexporti #2", "edu packamalg #2", "edu packbrand #4", "importobrand #6", "importoscholar #2", "amalgimporto #2", "edu packimporto #2" ], [ "3", "7", "2", "1", "3", "14", "12", "2", "1", "4" ], [ "pop", "decor", "shirts", "newborn", "swimwear", "estate", "costume", "country", "accessories", "sports-apparel" ], [ "5", "7", "2", "3", "1", "6", "6", "5", "2", "2" ], [ "Music", "Home", "Men", "Children", "Women", "Jewelry", "Jewelry", "Music", "Men", "Men" ], [ "52", "294", "220", "214", "630", "625", "167", "86", "117", "364" ], [ "ableanti", "esen stable", "barableable", "eseoughtable", "barprically", "antiablecally", "ationcallyought", "barcallyese", "ationoughtought", "esecallypri" ], [ "N/A", "N/A", "petite", "petite", "medium", "N/A", "N/A", "N/A", "extra large", "large" ], [ "3663peru009490160959", "516steel060826230906", "42214rosy28066558020", "6moccasin24027188872", "35123wheat3256343398", "snow1543775706017405", "883208731996blue7862", "1144670162goldenrod2", "452645olive281530722", "85seashell1303417084" ], [ "spring", "sienna", "pink", "spring", "wheat", "yellow", "olive", "royal", "snow", "smoke" ], [ "Tsp", "Cup", "Cup", "Tsp", "Tbl", "Bunch", "Bundle", "Pound", "Dram", "Ton" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "6", "18", "27", "64", "3", "26", "51", "11", "41", "13" ], [ "ought", "pri", "anti", "ation", "n st", "oughtought", "priought", "antiought", "ationought", "n stought" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "26000",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "1702665",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/item",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

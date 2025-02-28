@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.common.exception;
 
+import static org.apache.kylin.common.exception.QueryErrorCode.TARGET_SEGMENT_NOT_FOUND;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.msg.MsgPicker;
-
-import static org.apache.kylin.common.exception.QueryErrorCode.TARGET_SEGMENT_NOT_FOUND;
 
 public class TargetSegmentNotFoundException extends KylinException {
 

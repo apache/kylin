@@ -1,0 +1,35 @@
+{
+  "uuid" : "e81041be-184b-419d-aedd-427daa38105d",
+  "last_modified" : 1480841307534,
+  "version" : "1.6.1",
+  "name" : "V_PARTSUPP",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "PS_PARTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "PS_SUPPKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "PS_AVAILQTY",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "PS_SUPPLYCOST",
+    "datatype" : "double"
+  }, {
+    "id" : "5",
+    "name" : "PS_COMMENT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "PS_PARTVALUE",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "VIRTUAL_VIEW",
+  "database" : "TPCH_FLAT_ORC_2",
+  "project" : "tpch"
+}

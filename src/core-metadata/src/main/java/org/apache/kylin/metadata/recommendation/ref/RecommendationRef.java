@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AccessLevel;

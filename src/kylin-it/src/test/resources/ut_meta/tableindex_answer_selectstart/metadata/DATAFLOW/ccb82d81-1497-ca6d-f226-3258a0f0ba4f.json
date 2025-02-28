@@ -1,0 +1,17 @@
+{
+  "uuid" : "ccb82d81-1497-ca6d-f226-3258a0f0ba4f",
+  "last_modified" : 1664533323120,
+  "create_time" : 1664530454406,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 1,
+  "last_query_time" : 1664533232073,
+  "layout_query_hit_count" : {
+    "20000000001" : {
+      "1664467200000" : 1
+    }
+  },
+  "project" : "tableindex_answer_selectstart",
+  "segment_uuids" : [ "81b6caa7-50b4-81e9-4d46-0f5f11bfc8a2" ]
+}

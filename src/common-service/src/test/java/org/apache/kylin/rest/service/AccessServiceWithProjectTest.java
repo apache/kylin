@@ -42,10 +42,12 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.user.ManagedUser;
@@ -75,6 +77,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.context.ApplicationContext;
@@ -96,6 +99,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class, KylinConfig.class, NProjectManager.class })
 public class AccessServiceWithProjectTest extends NLocalFileMetadataTestCase {
 
@@ -103,10 +109,10 @@ public class AccessServiceWithProjectTest extends NLocalFileMetadataTestCase {
     AccessService accessService = Mockito.spy(AccessService.class);
 
     @InjectMocks
-    ProjectService projectService = Mockito.spy(ProjectService.class);;
+    ProjectService projectService = Mockito.spy(ProjectService.class);
 
     @InjectMocks
-    private IUserGroupService userGroupService = Mockito.spy(IUserGroupService.class);;
+    private IUserGroupService userGroupService = Mockito.spy(IUserGroupService.class);
 
     @Mock
     AclService aclService = Mockito.spy(AclService.class);
@@ -301,7 +307,10 @@ public class AccessServiceWithProjectTest extends NLocalFileMetadataTestCase {
         sidToPerm.put(new PrincipalSid("ANALYST"), AclPermission.ADMINISTRATION);
         sidToPerm.put(new GrantedAuthoritySid("ROLE_ADMIN"), AclPermission.ADMINISTRATION);
         sidToPerm.put(new GrantedAuthoritySid("role_ADMIN"), AclPermission.ADMINISTRATION);
-        accessService.batchGrant(project, ae, sidToPerm);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            accessService.batchGrant(project, ae, sidToPerm);
+            return null;
+        }, UnitOfWork.GLOBAL_UNIT);
         projectService.cleanupAcl();
         List<AccessEntryResponse> result = accessService.generateAceResponsesByFuzzMatching(ae, "", false);
         assertEquals(0, result.size());

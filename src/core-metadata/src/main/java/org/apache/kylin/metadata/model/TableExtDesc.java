@@ -29,16 +29,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.ObsConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -97,9 +97,6 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
     private Map<String, String> dataSourceProps = new HashMap<>();
 
     @Getter
-    private String project;
-
-    @Getter
     @Setter
     @JsonProperty("row_count_status")
     private TableExtDesc.RowCountStatus rowCountStatus;
@@ -150,18 +147,16 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
 
     @Override
     public String resourceName() {
-        return getIdentity();
+        return generateResourceName(getProject(), getIdentity());
+    }
+
+    public static String generateResourceName(String project, String identity) {
+        return project + "." + identity;
     }
 
     @Override
-    public String getResourcePath() {
-        return SEPARATOR + getProject() + ResourceStore.TABLE_EXD_RESOURCE_ROOT + SEPARATOR + getIdentity()
-                + MetadataConstants.FILE_SURFIX;
-    }
-
-    @Override
-    public List<String> getLockPaths(String ignored) {
-        return getTableDesc().getLockPaths();
+    public MetadataType resourceType() {
+        return MetadataType.TABLE_EXD;
     }
 
     public void addDataSourceProp(String key, String value) {

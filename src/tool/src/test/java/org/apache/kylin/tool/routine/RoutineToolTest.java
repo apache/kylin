@@ -17,7 +17,6 @@
  */
 package org.apache.kylin.tool.routine;
 
-import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.Assert;
@@ -27,7 +26,6 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 
 public class RoutineToolTest extends NLocalFileMetadataTestCase {
@@ -46,35 +44,6 @@ public class RoutineToolTest extends NLocalFileMetadataTestCase {
         routineTool.execute(new String[] { "-t=10", "-r=100" });
         Assert.assertEquals(10, routineTool.getRetryTimes());
         Assert.assertEquals(100, routineTool.getRequestFSRate(), 0.1);
-    }
-
-    @Test
-    public void testFastRoutineToolMaintenanceMode() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, false);
-
-        FastRoutineTool routineTool = new FastRoutineTool();
-        routineTool.execute(new String[] { "--cleanup" });
-        Assert.assertFalse(epochManager.isMaintenanceMode());
-
-        routineTool.execute(new String[] { "--metadata" });
-        Assert.assertTrue(epochManager.isMaintenanceMode());
-    }
-
-    @Test
-    public void testFastRoutineToolMaintenanceMode2() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, false);
-
-        FastRoutineTool routineTool = new FastRoutineTool();
-        routineTool.execute(new String[] { "-c" });
-        Assert.assertFalse(epochManager.isMaintenanceMode());
-
-        routineTool.execute(new String[] { "--projects=ssb,default" });
-        Assert.assertFalse(epochManager.isMaintenanceMode());
-
-        routineTool.execute(new String[] { "-m" });
-        Assert.assertTrue(epochManager.isMaintenanceMode());
     }
 
     @Test
@@ -166,28 +135,9 @@ public class RoutineToolTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testExecuteRoutineReleaseEpochs1() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, false);
-
-        RoutineTool routineTool = new RoutineTool();
-        Epoch epoch = epochManager.getGlobalEpoch();
-        Assert.assertEquals(1, epoch.getMvcc());
-        Assert.assertFalse(epochManager.isMaintenanceMode());
-
-        routineTool.execute(new String[] { "--cleanup" });
-
-        epoch = epochManager.getGlobalEpoch();
-        Assert.assertTrue(epochManager.isMaintenanceMode());
-        Assert.assertEquals(2, epoch.getMvcc());
-    }
-
-    @Test
     public void testCleanStreamingStats() throws Exception {
         val threadName = "executor";
-        val executor = new Thread(() -> {
-            RoutineTool.cleanStreamingStats();
-        });
+        val executor = new Thread(RoutineTool::cleanStreamingStats);
         executor.setName(threadName);
         executor.start();
         executor.join();

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
@@ -38,18 +37,26 @@ import org.sparkproject.guava.collect.Sets;
 import lombok.val;
 
 public class NMultipleColumnsInTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/multiple_columns_in");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/multiple_columns_in" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Override
@@ -63,8 +70,8 @@ public class NMultipleColumnsInTest extends NLocalWithSparkSessionTest {
         NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
         NDataflow df = dsMgr.getDataflow(dfName);
         val layouts = df.getIndexPlan().getAllLayouts();
-        indexDataConstructor.buildIndex(dfName, SegmentRange.TimePartitionedSegmentRange.createInfinite(), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfName, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
+                Sets.newLinkedHashSet(layouts), true);
 
         overwriteSystemProp("calcite.keep-in-clause", "true");
         overwriteSystemProp("calcite.convert-multiple-columns-in-to-or", "true");

@@ -65,7 +65,7 @@ public class NSparkUpdateMetadataStep extends AbstractExecutable {
             cleanExpiredSnapshot();
             return ExecuteResult.createSucceed();
         } catch (Throwable throwable) {
-            logger.warn("");
+            logger.warn("update metadata failed.", throwable);
             return ExecuteResult.createError(throwable);
         }
     }
@@ -75,9 +75,7 @@ public class NSparkUpdateMetadataStep extends AbstractExecutable {
             long startDelete = System.currentTimeMillis();
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             String workingDir = KapConfig.wrap(config).getMetadataWorkingDirectory();
-            long survivalTimeThreshold = config.getTimeMachineEnabled()
-                    ? config.getStorageResourceSurvivalTimeThreshold()
-                    : config.getSnapshotVersionTTL();
+            long survivalTimeThreshold = config.getSnapshotVersionTTL();
             String dfId = ExecutableUtils.getDataflowId(this);
             NDataflow dataflow = NDataflowManager.getInstance(config, getProject()).getDataflow(dfId);
             Set<TableRef> tables = dataflow.getModel().getLookupTables();

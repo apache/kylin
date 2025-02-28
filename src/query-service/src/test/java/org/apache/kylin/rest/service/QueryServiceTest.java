@@ -34,6 +34,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -58,14 +60,15 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
+import org.apache.kylin.common.exception.BigQueryException;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.exception.KylinTimeoutException;
-import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.exception.ResourceLimitExceededException;
 import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.msg.Message;
@@ -79,9 +82,11 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -97,13 +102,14 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
+import org.apache.kylin.metadata.query.QueryRecord;
 import org.apache.kylin.metadata.querymeta.ColumnMeta;
 import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
 import org.apache.kylin.metadata.querymeta.TableMeta;
@@ -111,6 +117,8 @@ import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.table.InternalTableDesc;
+import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.query.blacklist.SQLBlacklistManager;
@@ -118,8 +126,11 @@ import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.QueryRoutingEngine;
 import org.apache.kylin.query.engine.data.QueryResult;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.DateNumberFilterTransformer;
+import org.apache.kylin.query.util.QueryHelper;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RawSqlParser;
@@ -133,6 +144,7 @@ import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.QueryDetectRequest;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.response.BigQueryResponse;
 import org.apache.kylin.rest.response.QueryDetectResponse;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
@@ -177,7 +189,9 @@ import lombok.val;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class, SparkSession.class, QueryService.class,
         NIndexPlanManager.class, QueryContext.class })
-@PowerMockIgnore({ "javax.management.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.w3c.dom.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
     private final QueryCacheManager queryCacheManager = new QueryCacheManager();
@@ -197,7 +211,6 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     protected IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
 
     @Mock
-
     protected UserAclService userAclService = Mockito.spy(UserAclService.class);
 
     @Mock
@@ -213,7 +226,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     protected AclTCRService aclTCRService = Mockito.spy(AclTCRService.class);
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
         PowerMockito.mockStatic(SpringContext.class);
         PowerMockito.mockStatic(UserGroupInformation.class);
         UserGroupInformation userGroupInformation = Mockito.mock(UserGroupInformation.class);
@@ -225,6 +239,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         createTestMetadata();
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
         queryService = Mockito.spy(new QueryService());
         queryService.queryRoutingEngine = Mockito.spy(QueryRoutingEngine.class);
         Mockito.when(SpringContext.getBean(CacheSignatureQuerySupporter.class)).thenReturn(queryService);
@@ -253,7 +268,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @After
-    public void cleanup() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
@@ -308,30 +323,6 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testQueryPushDownWhenForceToTieredStorageEqualsOne() throws Throwable {
-        final String sql = "select * from abc";
-        final String project = "default";
-        final QueryExec queryExec = Mockito.mock(QueryExec.class);
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql(sql);
-        sqlRequest.setProject(project);
-        sqlRequest.setForcedToPushDown(false);
-        sqlRequest.setForcedToTieredStorage(1);
-
-        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
-                sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
-                queryExec.getDefaultSchemaName(), true);
-        QueryUtil.massageSql(queryParams);
-
-        overwriteSystemProp("kylin.query.pushdown-enabled", "false");
-        Mockito.doThrow(new SQLException(new SQLException(QueryContext.ROUTE_USE_FORCEDTOTIEREDSTORAGE)))
-                .when(queryService.queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
-
-        final SQLResponse response = queryService.queryWithCache(sqlRequest);
-        Assert.assertEquals(MsgPicker.getMsg().getDisablePushDownPrompt(), response.getExceptionMessage());
-    }
-
-    @Test
     public void testQueryPushDownWhenNormalDisable() throws Throwable {
         final String sql = "select * from abc";
         final String project = "default";
@@ -339,15 +330,14 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setSql(sql);
         sqlRequest.setProject(project);
-        sqlRequest.setForcedToTieredStorage(1);
 
         QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
                 sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
                 queryExec.getDefaultSchemaName(), true);
-        String correctedSql = QueryUtil.massageSql(queryParams);
+        QueryUtil.massageSql(queryParams);
 
         overwriteSystemProp("kylin.query.pushdown-enabled", "false");
-        Mockito.doThrow(new SQLException(new SQLException("No model found for OLAPContex")))
+        Mockito.doThrow(new SQLException(new SQLException("No model found for OlapContext")))
                 .when(queryService.queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
 
         final SQLResponse response = queryService.queryWithCache(sqlRequest);
@@ -458,7 +448,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final String sql = "select * from success_table";
         final String project = "default";
         stubQueryConnection(sql, project);
-        mockOLAPContext();
+        mockOlapContext();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -472,9 +462,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final SQLResponse firstSuccess = queryService.queryWithCache(request);
         Assert.assertEquals(expectedQueryID, firstSuccess.getQueryId());
         Assert.assertEquals(2, firstSuccess.getNativeRealizations().size());
-        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, firstSuccess.getNativeRealizations().get(0).getIndexType());
-        Assert.assertEquals(QueryMetricsContext.TABLE_INDEX,
-                firstSuccess.getNativeRealizations().get(1).getIndexType());
+        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, firstSuccess.getNativeRealizations().get(0).getType());
+        Assert.assertEquals(QueryMetricsContext.TABLE_INDEX, firstSuccess.getNativeRealizations().get(1).getType());
         Assert.assertEquals(Lists.newArrayList("mock_model_alias1", "mock_model_alias2"),
                 firstSuccess.getNativeRealizations().stream().map(NativeQueryRealization::getModelAlias)
                         .collect(Collectors.toList()));
@@ -489,9 +478,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(secondSuccess.isStorageCacheUsed());
         Assert.assertEquals(expectedQueryID, secondSuccess.getQueryId());
         Assert.assertEquals(2, secondSuccess.getNativeRealizations().size());
-        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, secondSuccess.getNativeRealizations().get(0).getIndexType());
-        Assert.assertEquals(QueryMetricsContext.TABLE_INDEX,
-                secondSuccess.getNativeRealizations().get(1).getIndexType());
+        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, secondSuccess.getNativeRealizations().get(0).getType());
+        Assert.assertEquals(QueryMetricsContext.TABLE_INDEX, secondSuccess.getNativeRealizations().get(1).getType());
         // mock realization, return true model name by model id
         Assert.assertEquals("nmodel_basic", secondSuccess.getNativeRealizations().get(0).getModelAlias());
         // assert log info
@@ -500,80 +488,85 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(log.contains("nmodel_basic_inner"));
     }
 
-    private void mockOLAPContextForEmptyLayout() throws Exception {
+    private void mockOlapContextForSnapshot() throws Exception {
         val modelManager = Mockito.spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default"));
 
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "default");
-        // mock empty index realization
-        OLAPContext mock = new OLAPContext(1);
-        NDataModel mockModel1 = Mockito.spy(new NDataModel());
-        Mockito.when(mockModel1.getUuid()).thenReturn("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        Mockito.when(mockModel1.getAlias()).thenReturn("mock_model_alias1");
-        Mockito.doReturn(mockModel1).when(modelManager).getDataModelDesc("mock_model1");
-        IRealization mockRealization1 = Mockito.mock(IRealization.class);
-        Mockito.when(mockRealization1.getModel()).thenReturn(mockModel1);
-        mock.realization = mockRealization1;
-        mock.storageContext.setEmptyLayout(true);
-        mock.storageContext.setCandidate(NLayoutCandidate.EMPTY);
-        mock.storageContext.setLayoutId(null);
-        mock.storageContext.setPrunedSegments(Lists.newArrayList());
-        OLAPContext.registerContext(mock);
-
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
+        Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
+        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT",
+                NLookupCandidate.Policy.SNAPSHOT);
+        mockOlapCtx.getStorageContext().setDataSkipped(false);
+        mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
+        ContextUtil.registerContext(mockOlapCtx);
         mockQueryWithSqlMassage();
     }
 
-    private void mockOLAPContext() throws Exception {
+    private void mockOlapContextForInternalTable() throws Exception {
+        val modelManager = Mockito.spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default"));
+
+        Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "default");
+        OlapContext mockOlapCtx = Mockito.spy(new OlapContext(1));
+        Mockito.doReturn("DEFAULT.TEST_KYLIN_FACT").when(mockOlapCtx).getFirstTableIdentity();
+        NLookupCandidate lookupCandidate = new NLookupCandidate("DEFAULT.TEST_KYLIN_FACT",
+                NLookupCandidate.Policy.INTERNAL_TABLE);
+        mockOlapCtx.getStorageContext().setDataSkipped(false);
+        mockOlapCtx.getStorageContext().setLookupCandidate(lookupCandidate);
+        ContextUtil.registerContext(mockOlapCtx);
+        mockQueryWithSqlMassage();
+    }
+
+    private void mockOlapContext() throws Exception {
         val modelManager = Mockito.spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default"));
 
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "default");
         // mock agg index realization
-        OLAPContext aggMock = new OLAPContext(1);
+        OlapContext aggMock = new OlapContext(1);
         NDataModel mockModel1 = Mockito.spy(new NDataModel());
         Mockito.when(mockModel1.getUuid()).thenReturn("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         Mockito.when(mockModel1.getAlias()).thenReturn("mock_model_alias1");
         Mockito.doReturn(mockModel1).when(modelManager).getDataModelDesc("mock_model1");
         IRealization mockRealization1 = Mockito.mock(IRealization.class);
         Mockito.when(mockRealization1.getModel()).thenReturn(mockModel1);
-        aggMock.realization = mockRealization1;
-        IndexEntity mockIndexEntity1 = new IndexEntity();
-        mockIndexEntity1.setId(1);
-        LayoutEntity mockLayout1 = new LayoutEntity();
-        mockLayout1.setIndex(mockIndexEntity1);
-        aggMock.storageContext.setCandidate(new NLayoutCandidate(mockLayout1));
-        aggMock.storageContext.setLayoutId(1L);
-        aggMock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
-        OLAPContext.registerContext(aggMock);
+        aggMock.setRealization(mockRealization1);
+        IndexEntity mockAggIndex = new IndexEntity();
+        mockAggIndex.setId(0L);
+        LayoutEntity mockAggLayout = new LayoutEntity();
+        mockAggLayout.setId(1L);
+        mockAggLayout.setIndex(mockAggIndex);
+        NLayoutCandidate layoutCandidate = new NLayoutCandidate(mockAggLayout);
+        layoutCandidate.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        aggMock.getStorageContext().setBatchCandidate(layoutCandidate);
+        ContextUtil.registerContext(aggMock);
 
         // mock table index realization
-        OLAPContext tableMock = new OLAPContext(2);
+        OlapContext tableMock = new OlapContext(2);
         NDataModel mockModel2 = Mockito.spy(new NDataModel());
         Mockito.when(mockModel2.getUuid()).thenReturn("741ca86a-1f13-46da-a59f-95fb68615e3a");
         Mockito.when(mockModel2.getAlias()).thenReturn("mock_model_alias2");
         Mockito.doReturn(mockModel2).when(modelManager).getDataModelDesc("mock_model2");
         IRealization mockRealization2 = Mockito.mock(IRealization.class);
         Mockito.when(mockRealization2.getModel()).thenReturn(mockModel2);
-        tableMock.realization = mockRealization2;
-        IndexEntity mockIndexEntity2 = new IndexEntity();
-        mockIndexEntity2.setId(IndexEntity.TABLE_INDEX_START_ID + 1);
-        LayoutEntity mockLayout2 = new LayoutEntity();
-        mockLayout2.setIndex(mockIndexEntity2);
-        tableMock.storageContext.setCandidate(new NLayoutCandidate(mockLayout2));
-        tableMock.storageContext.setLayoutId(1L);
-        tableMock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
-        OLAPContext.registerContext(tableMock);
-
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        tableMock.setRealization(mockRealization2);
+        IndexEntity mockTableIndex = new IndexEntity();
+        mockTableIndex.setId(IndexEntity.TABLE_INDEX_START_ID);
+        LayoutEntity mockTableIndexLayout = new LayoutEntity();
+        mockTableIndexLayout.setId(mockTableIndex.getId() + 1);
+        mockTableIndexLayout.setIndex(mockTableIndex);
+        NLayoutCandidate layoutCandidate2 = new NLayoutCandidate(mockTableIndexLayout);
+        layoutCandidate2.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        tableMock.getStorageContext().setBatchCandidate(layoutCandidate2);
+        ContextUtil.registerContext(tableMock);
         mockQueryWithSqlMassage();
     }
 
-    private void mockOLAPContextWithHybrid() throws Exception {
+    private void mockOlapContextWithHybrid() throws Exception {
         val modelManager = Mockito
                 .spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test"));
 
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "streaming_test");
         // mock agg index realization
-        OLAPContext aggMock = new OLAPContext(1);
+        OlapContext aggMock = new OlapContext(1);
         NDataModel mockModel1 = Mockito.spy(new NDataModel());
         Mockito.when(mockModel1.getUuid()).thenReturn("4965c827-fbb4-4ea1-a744-3f341a3b030d");
         Mockito.when(mockModel1.getAlias()).thenReturn("model_streaming");
@@ -586,28 +579,36 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(hybridRealization.getModel()).thenReturn(mockModel1);
         Mockito.when(hybridRealization.getBatchRealization()).thenReturn(batchRealization);
 
-        aggMock.realization = hybridRealization;
-        IndexEntity mockIndexEntity1 = new IndexEntity();
-        mockIndexEntity1.setId(1);
-        LayoutEntity mockLayout1 = new LayoutEntity();
-        mockLayout1.setIndex(mockIndexEntity1);
-        aggMock.storageContext.setCandidate(new NLayoutCandidate(mockLayout1));
-        aggMock.storageContext.setLayoutId(20001L);
-        aggMock.storageContext.setStreamingLayoutId(10001L);
-        aggMock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
-        OLAPContext.registerContext(aggMock);
+        aggMock.setRealization(hybridRealization);
 
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        IndexEntity mockBatchIndex = new IndexEntity();
+        mockBatchIndex.setId(20000L);
+        LayoutEntity mockBatchLayout = new LayoutEntity();
+        mockBatchLayout.setId(20001L);
+        mockBatchLayout.setIndex(mockBatchIndex);
+        NLayoutCandidate batchCandidate = new NLayoutCandidate(mockBatchLayout);
+        batchCandidate.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        aggMock.getStorageContext().setBatchCandidate(batchCandidate);
+
+        IndexEntity mockStreamingIndex = new IndexEntity();
+        mockStreamingIndex.setId(10000L);
+        LayoutEntity mockStreamingLayout = new LayoutEntity();
+        mockStreamingLayout.setIndex(mockStreamingIndex);
+        mockStreamingLayout.setId(10001L);
+        NLayoutCandidate streamCandidate = new NLayoutCandidate(mockStreamingLayout);
+        streamCandidate.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        aggMock.getStorageContext().setStreamCandidate(streamCandidate);
+        ContextUtil.registerContext(aggMock);
         mockQueryWithSqlMassage();
     }
 
-    private void mockOLAPContextWithBatchPart() throws Exception {
+    private void mockOlapContextWithBatchPart() throws Exception {
         val modelManager = Mockito
                 .spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test"));
 
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "streaming_test");
         // mock agg index realization
-        OLAPContext aggMock = new OLAPContext(1);
+        OlapContext aggMock = new OlapContext(1);
         NDataModel mockModel1 = Mockito.spy(new NDataModel());
         Mockito.when(mockModel1.getUuid()).thenReturn("4965c827-fbb4-4ea1-a744-3f341a3b030d");
         Mockito.when(mockModel1.getAlias()).thenReturn("model_streaming");
@@ -620,72 +621,70 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(hybridRealization.getModel()).thenReturn(mockModel1);
         Mockito.when(hybridRealization.getBatchRealization()).thenReturn(batchRealization);
 
-        aggMock.realization = hybridRealization;
+        aggMock.setRealization(hybridRealization);
         IndexEntity mockIndexEntity1 = new IndexEntity();
         mockIndexEntity1.setId(1);
         LayoutEntity mockLayout1 = new LayoutEntity();
+        mockLayout1.setId(20001L);
         mockLayout1.setIndex(mockIndexEntity1);
-        aggMock.storageContext.setCandidate(new NLayoutCandidate(mockLayout1));
-        aggMock.storageContext.setLayoutId(20001L);
-        aggMock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
-        OLAPContext.registerContext(aggMock);
-
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        NLayoutCandidate layoutCandidate1 = new NLayoutCandidate(mockLayout1);
+        layoutCandidate1.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        aggMock.getStorageContext().setBatchCandidate(layoutCandidate1);
+        ContextUtil.registerContext(aggMock);
         mockQueryWithSqlMassage();
     }
 
-    private void mockOLAPContextWithStreaming() throws Exception {
+    private void mockOlapContextWithStreaming() throws Exception {
         val modelManager = Mockito.spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "demo"));
 
         Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "demo");
         // mock agg index realization
-        OLAPContext aggMock = new OLAPContext(1);
+        OlapContext aggMock = new OlapContext(1);
         NDataModel mockModel1 = Mockito.spy(new NDataModel());
-        Mockito.when(mockModel1.getUuid()).thenReturn("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+        Mockito.when(mockModel1.getUuid()).thenReturn("4965c827-fbb4-4ea1-a744-3f341a3b030e");
         Mockito.when(mockModel1.getAlias()).thenReturn("model_streaming");
-        Mockito.doReturn(mockModel1).when(modelManager).getDataModelDesc("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+        Mockito.doReturn(mockModel1).when(modelManager).getDataModelDesc("4965c827-fbb4-4ea1-a744-3f341a3b030e");
         IRealization realization = Mockito.mock(IRealization.class);
         Mockito.when(realization.getModel()).thenReturn(mockModel1);
-        aggMock.realization = realization;
-        IndexEntity mockIndexEntity1 = new IndexEntity();
-        mockIndexEntity1.setId(1);
-        LayoutEntity mockLayout1 = new LayoutEntity();
-        mockLayout1.setIndex(mockIndexEntity1);
-        aggMock.storageContext.setStreamingCandidate(new NLayoutCandidate(mockLayout1));
-        aggMock.storageContext.setStreamingLayoutId(10001L);
-        aggMock.storageContext.setPrunedStreamingSegments(Lists.newArrayList(new NDataSegment()));
-        OLAPContext.registerContext(aggMock);
-
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        aggMock.setRealization(realization);
+        IndexEntity mockIndex = new IndexEntity();
+        mockIndex.setId(0L);
+        LayoutEntity mockLayout = new LayoutEntity();
+        mockLayout.setId(1L);
+        mockLayout.setIndex(mockIndex);
+        NLayoutCandidate streamingCandidate = new NLayoutCandidate(mockLayout);
+        streamingCandidate.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        aggMock.getStorageContext().setStreamCandidate(streamingCandidate);
+        ContextUtil.registerContext(aggMock);
         mockQueryWithSqlMassage();
     }
 
     private void mockQueryWithSqlMassage() throws Exception {
-        Mockito.doAnswer(invocation -> new QueryResult()).when(queryService.queryRoutingEngine)
-                .queryWithSqlMassage(Mockito.any());
+        Mockito.doAnswer(invocation -> {
+            QueryContext.current().setQueryRealizations(ContextUtil.getNativeRealizations());
+            return new QueryResult();
+        }).when(queryService.queryRoutingEngine).queryWithSqlMassage(Mockito.any());
     }
 
-    private void mockOLAPContextWithOneModelInfo(String modelId, String modelAlias, long layoutId) throws Exception {
-        final OLAPContext mock = new OLAPContext(1);
+    private void mockOlapContextWithOneModelInfo(String modelId, String modelAlias, long layoutId) throws Exception {
+        final OlapContext mock = new OlapContext(1);
 
         final NDataModel mockModel = Mockito.spy(new NDataModel());
         Mockito.when(mockModel.getUuid()).thenReturn(modelId);
         Mockito.when(mockModel.getAlias()).thenReturn(modelAlias);
         final IRealization mockRealization = Mockito.mock(IRealization.class);
         Mockito.when(mockRealization.getModel()).thenReturn(mockModel);
-        mock.realization = mockRealization;
+        mock.setRealization(mockRealization);
 
         final IndexEntity mockIndexEntity = new IndexEntity();
         mockIndexEntity.setId(layoutId);
         final LayoutEntity mockLayout = new LayoutEntity();
         mockLayout.setIndex(mockIndexEntity);
-        mock.storageContext.setCandidate(new NLayoutCandidate(mockLayout));
-        mock.storageContext.setLayoutId(layoutId);
-        mock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        NLayoutCandidate layoutCandidate = new NLayoutCandidate(mockLayout);
+        layoutCandidate.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        mock.getStorageContext().setBatchCandidate(layoutCandidate);
 
-        OLAPContext.registerContext(mock);
-
-        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        ContextUtil.registerContext(mock);
 
         mockQueryWithSqlMassage();
     }
@@ -722,8 +721,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         try {
             final String expectedQueryID = QueryContext.current().getQueryId();
             final SQLResponse response = queryService.queryWithCache(request);
-            Assert.assertEquals(false, response.isHitExceptionCache());
-            Assert.assertEquals(true, response.isException());
+            Assert.assertFalse(response.isHitExceptionCache());
+            Assert.assertTrue(response.isException());
             Assert.assertEquals(expectedQueryID, response.getQueryId());
         } catch (InternalErrorException ex) {
             // ignore
@@ -732,8 +731,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         try {
             final String expectedQueryID = QueryContext.current().getQueryId();
             final SQLResponse response = queryService.queryWithCache(request);
-            Assert.assertEquals(true, response.isHitExceptionCache());
-            Assert.assertEquals(true, response.isException());
+            Assert.assertTrue(response.isHitExceptionCache());
+            Assert.assertTrue(response.isException());
             Assert.assertEquals(expectedQueryID, response.getQueryId());
         } catch (InternalErrorException ex) {
             // ignore
@@ -741,35 +740,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCreateTableToWith() throws IOException {
-        String create_table1 = " create table tableId as select * from some_table1;";
-        String create_table2 = "CREATE TABLE tableId2 AS select * FROM some_table2;";
-        String select_table = "select * from tableId join tableId2 on tableId.a = tableId2.b;";
-
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        config.setProperty("kylin.query.convert-create-table-to-with", "true");
-        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
-
-            SQLRequest request = new SQLRequest();
-            request.setProject("default");
-            request.setSql(create_table1);
-            queryService.queryWithCache(request);
-
-            request.setSql(create_table2);
-            queryService.queryWithCache(request);
-
-            request.setSql(select_table);
-            SQLResponse response = queryService.queryWithCache(request);
-
-            Assert.assertEquals("From line 1, column 32 to line 1, column 42: Object 'SOME_TABLE1' not found\n"
-                    + "while executing SQL: \"WITH tableId as (select * from some_table1), tableId2 AS (select * FROM some_table2) select * from tableId join tableId2 on tableId.a = tableId2.b\"",
-                    response.getExceptionMessage());
-        }
-    }
-
-    @Test
-    public void testExposedColumnsProjectConfig() throws Exception {
-        NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), "default");
+    public void testExposedColumnsProjectConfig() {
         NProjectManager projectManager = NProjectManager.getInstance(getTestConfig());
 
         // expose computed column
@@ -779,7 +750,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
 
             List<ColumnMeta> factColumns;
-            ColumnDesc[] columnDescs = findColumnDescs();
+            findColumnDescs();
             factColumns = getFactColumns(tableMetas);
             Assert.assertTrue(getColumnNames(factColumns).containsAll(Arrays.asList("DEAL_YEAR", "DEAL_AMOUNT",
                     "LEFTJOIN_BUYER_ID_AND_COUNTRY_NAME", "LEFTJOIN_SELLER_ID_AND_COUNTRY_NAME",
@@ -844,7 +815,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testExposedColumnsProjectConfigByModel() throws Exception {
+    public void testExposedColumnsProjectConfigByModel() {
         NProjectManager projectManager = NProjectManager.getInstance(getTestConfig());
 
         // expose computed column
@@ -854,7 +825,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", "nmodel_basic_inner");
 
             List<ColumnMeta> factColumns;
-            ColumnDesc[] columnDescs = findColumnDescs();
+            findColumnDescs();
             factColumns = getFactColumns(tableMetas);
             Assert.assertTrue(getColumnNames(factColumns)
                     .containsAll(Arrays.asList("DEAL_YEAR", "DEAL_AMOUNT", "NEST1", "NEST2", "NEST3", "NEST4")));
@@ -917,7 +888,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             nDataflowUpdate.setStatus(RealizationStatusEnum.OFFLINE);
             dataflowManager.updateDataflow(nDataflowUpdate);
 
-            await().atLeast(1000, TimeUnit.MILLISECONDS);
+            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
 
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
 
@@ -944,7 +915,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             nDataflowUpdate.setStatus(RealizationStatusEnum.ONLINE);
             dataflowManager.updateDataflow(nDataflowUpdate);
 
-            await().atLeast(1000, TimeUnit.MILLISECONDS);
+            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
 
             //check the default project
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
@@ -986,7 +957,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             Assert.assertEquals(2, tableSchemas.size());
             //make sure the schema "metadata" is not exposed
-            Assert.assertTrue(!tableSchemas.contains("metadata"));
+            Assert.assertFalse(tableSchemas.contains("metadata"));
             Assert.assertEquals(8, tableNames.size());
             Assert.assertTrue(tableNames.contains("TEST_KYLIN_FACT"));
 
@@ -1007,7 +978,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             nDataflowUpdate.setStatus(RealizationStatusEnum.OFFLINE);
             dataflowManager.updateDataflow(nDataflowUpdate);
 
-            await().atLeast(1000, TimeUnit.MILLISECONDS);
+            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
 
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", "nmodel_basic_inner");
 
@@ -1017,7 +988,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             Assert.assertEquals(2, tableSchemas.size());
             //make sure the schema "metadata" is not exposed
-            Assert.assertTrue(!tableSchemas.contains("metadata"));
+            Assert.assertFalse(tableSchemas.contains("metadata"));
             Assert.assertEquals(8, tableNames.size());
         }
 
@@ -1033,7 +1004,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             nDataflowUpdate.setStatus(RealizationStatusEnum.ONLINE);
             dataflowManager.updateDataflow(nDataflowUpdate);
 
-            await().atLeast(1000, TimeUnit.MILLISECONDS);
+            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
 
             //check the default project
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", "nmodel_basic_inner");
@@ -1044,7 +1015,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             Assert.assertEquals(2, tableSchemas.size());
             //make sure the schema "metadata" is not exposed
-            Assert.assertTrue(!tableSchemas.contains("metadata"));
+            Assert.assertFalse(tableSchemas.contains("metadata"));
             Assert.assertEquals(8, tableNames.size());
             Assert.assertTrue(tableNames.contains("TEST_KYLIN_FACT"));
 
@@ -1075,7 +1046,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             Assert.assertEquals(3, tableSchemas.size());
             //make sure the schema "metadata" is not exposed
-            Assert.assertTrue(!tableSchemas.contains("metadata"));
+            Assert.assertFalse(tableSchemas.contains("metadata"));
             Assert.assertEquals(21, tableNames.size());
             Assert.assertTrue(tableNames.contains("TEST_KYLIN_FACT"));
 
@@ -1094,7 +1065,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
 
-            ColumnDesc[] columnDescs = findColumnDescs();
+            findColumnDescs();
             factColumns = getFactColumns(tableMetas);
             Assert.assertEquals(12, factColumns.size());
             Assert.assertFalse(getColumnNames(factColumns).containsAll(Arrays.asList("_CC_DEAL_YEAR", "_CC_DEAL_AMOUNT",
@@ -1108,7 +1079,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             modelManager.updateDataModelDesc(dKapModel);
 
             final List<TableMetaWithType> tableMetas4default = queryService.getMetadataV2("default", null);
-            ColumnDesc[] columnDescs = findColumnDescs();
+            findColumnDescs();
             factColumns = getFactColumns(tableMetas4default);
             Assert.assertEquals(12, factColumns.size());
             Assert.assertFalse(getColumnNames(factColumns).containsAll(Arrays.asList("_CC_DEAL_YEAR", "_CC_DEAL_AMOUNT",
@@ -1136,8 +1107,11 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         NDataModel dKapModel = dataModelSerializer.deserialize(new DataInputStream(bais));
         dKapModel.setProject("default");
-
+        dKapModel.getComputedColumnDescs().addAll(model.getComputedColumnDescs());
+        ComputedColumnDesc computedColumnDesc = dKapModel.getComputedColumnDescs()
+                .get(dKapModel.getComputedColumnDescs().size() - 1);
         dKapModel.getComputedColumnDescs().remove(dKapModel.getComputedColumnDescs().size() - 1);
+        dKapModel.getComputedColumnUuids().removeIf(uuid -> uuid.equals(computedColumnDesc.getUuid()));
         dKapModel.setMvcc(model.getMvcc());
         return dKapModel;
     }
@@ -1154,12 +1128,18 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         NDataModel dKapModel = dataModelSerializer.deserialize(new DataInputStream(bais));
         dKapModel.setProject("default");
 
-        String newCCStr = " {\n" + "      \"tableIdentity\": \"DEFAULT.TEST_KYLIN_FACT\",\n"
-                + "      \"tableAlias\": \"TEST_KYLIN_FACT\",\n" + "      \"columnName\": \"DEAL_YEAR_PLUS_ONE\",\n"
-                + "      \"expression\": \"year(TEST_KYLIN_FACT.CAL_DT)+1\",\n" + "      \"datatype\": \"integer\",\n"
-                + "      \"comment\": \"test use\"\n" + "    }";
+        String newCCStr = " {\n" //
+                + "      \"tableIdentity\": \"DEFAULT.TEST_KYLIN_FACT\",\n" //
+                + "      \"tableAlias\": \"TEST_KYLIN_FACT\",\n" //
+                + "      \"columnName\": \"DEAL_YEAR_PLUS_ONE\",\n" //
+                + "      \"expression\": \"year(TEST_KYLIN_FACT.CAL_DT)+1\",\n" //
+                + "      \"datatype\": \"integer\",\n" //
+                + "      \"comment\": \"test use\"\n" //
+                + "    }";
         ComputedColumnDesc computedColumnDesc = JsonUtil.readValue(newCCStr, ComputedColumnDesc.class);
+        dKapModel.getComputedColumnDescs().addAll(model.getComputedColumnDescs());
         dKapModel.getComputedColumnDescs().add(computedColumnDesc);
+        dKapModel.getComputedColumnUuids().add(computedColumnDesc.getUuid());
         dKapModel.setMvcc(model.getMvcc());
         return dKapModel;
     }
@@ -1202,25 +1182,71 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     public void testQueryWithEmptyLayout() throws Exception {
         String sql = "select price*item_count from test_kylin_fact where cal_dt = '2020-01-01' limit 100";
         stubQueryConnection(sql, "default");
-        mockOLAPContextForEmptyLayout();
+        mockOlapContextForSnapshot();
 
         SQLRequest request = new SQLRequest();
         request.setProject("default");
         request.setSql(sql);
         Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
-        SQLResponse response = queryService.queryWithCache(request);
-        Assert.assertEquals(1, response.getNativeRealizations().size());
-        NativeQueryRealization realization = response.getNativeRealizations().get(0);
-        Assert.assertEquals("mock_model_alias1", realization.getModelAlias());
+        SQLResponse response1 = queryService.queryWithCache(request);
+        Assert.assertEquals(1, response1.getNativeRealizations().size());
+        NativeQueryRealization realization = response1.getNativeRealizations().get(0);
+        Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", realization.getModelAlias());
         Assert.assertNull(realization.getLayoutId());
-        Assert.assertNull(realization.getIndexType());
+        Assert.assertEquals(QueryMetrics.TABLE_SNAPSHOT, realization.getType());
+        // test cache
+        SQLResponse response2 = queryService.queryWithCache(request);
+        Assert.assertEquals(1, response2.getNativeRealizations().size());
+        NativeQueryRealization realization2 = response2.getNativeRealizations().get(0);
+        Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", realization2.getModelAlias());
+        Assert.assertNull(realization2.getLayoutId());
+        Assert.assertEquals(QueryMetrics.TABLE_SNAPSHOT, realization2.getType());
+        Assert.assertTrue(response2.isStorageCacheUsed());
     }
 
     @Test
-    public void testSaveQuery() throws IOException {
+    public void testQueryWithEmptyLayoutWithInternalTable() throws Exception {
+        String project = "default";
+        KylinConfig config = getTestConfig();
+        String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
+        NTableMetadataManager tblMgr = NTableMetadataManager.getInstance(config, project);
+        InternalTableManager internalTblMgr = InternalTableManager.getInstance(getTestConfig(), "default");
+        TableDesc table = tblMgr.getTableDesc(tableIdentity);
+        val internalTable = new InternalTableDesc(table);
+        internalTable.setStorageType(InternalTableDesc.StorageType.PARQUET.name());
+        internalTable.setTblProperties(Maps.newHashMap());
+        internalTable.setLocation(internalTable.generateInternalTableLocation());
+        internalTblMgr.createInternalTable(internalTable);
+
+        String sql1 = "select price*item_count from test_kylin_fact where cal_dt = '2020-01-02' limit 100";
+        stubQueryConnection(sql1, "default");
+        mockOlapContextForInternalTable();
+
+        SQLRequest request = new SQLRequest();
+        request.setProject("default");
+        request.setSql(sql1);
+        Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
+        SQLResponse response1 = queryService.queryWithCache(request);
+        Assert.assertEquals(1, response1.getNativeRealizations().size());
+        NativeQueryRealization realization = response1.getNativeRealizations().get(0);
+        Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", realization.getModelAlias());
+        Assert.assertNull(realization.getLayoutId());
+        Assert.assertEquals(QueryMetrics.INTERNAL_TABLE, realization.getType());
+        // test cache
+        SQLResponse response2 = queryService.queryWithCache(request);
+        Assert.assertEquals(1, response2.getNativeRealizations().size());
+        NativeQueryRealization realization2 = response2.getNativeRealizations().get(0);
+        Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", realization2.getModelAlias());
+        Assert.assertNull(realization2.getLayoutId());
+        Assert.assertEquals(QueryMetrics.INTERNAL_TABLE, realization2.getType());
+        Assert.assertTrue(response2.isStorageCacheUsed());
+    }
+
+    @Test
+    public void testSaveQuery() {
         Query query = new Query("test", "default", "test_sql", "test_description");
         queryService.saveQuery("admin", "default", query);
-        QueryService.QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
+        QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
         Assert.assertEquals(1, queryRecord.getQueries().size());
         Assert.assertEquals("test", queryRecord.getQueries().get(0).getName());
 
@@ -1239,12 +1265,12 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSaveLargeQuery() throws IOException {
+    public void testSaveLargeQuery() {
         for (int i = 0; i < 10; i++) {
             Query query = new Query("test-" + i, "default", StringUtils.repeat("abc", 10000), "test_description");
             queryService.saveQuery("admin", "default", query);
         }
-        QueryService.QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
+        QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
         Assert.assertEquals(10, queryRecord.getQueries().size());
         for (Query query : queryRecord.getQueries()) {
             Assert.assertEquals(StringUtils.repeat("abc", 10000), query.getSql());
@@ -1252,14 +1278,14 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSaveAndRemoveQueryWithTransaction() throws IOException {
+    public void testSaveAndRemoveQueryWithTransaction() {
         Query query = new Query("test", "default", "test_sql", "test_description");
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             queryService.saveQuery("admin", "default", query);
             return null;
         }, "default", 1);
 
-        QueryService.QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
+        QueryRecord queryRecord = queryService.getSavedQueries("admin", "default");
         Assert.assertEquals(1, queryRecord.getQueries().size());
         Assert.assertEquals("test", queryRecord.getQueries().get(0).getName());
 
@@ -1284,13 +1310,12 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
                 new NativeQueryRealization(modelId, layoutId, QueryMetricsContext.AGG_INDEX, Lists.newArrayList())));
         Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
         String signature = QueryCacheSignatureUtil.createCacheSignature(response, project);
-        Assert.assertEquals(
-                String.valueOf(
-                        dataflowManager.getDataflow(modelId).getLastSegment().getLayout(layoutId).getCreateTime()),
-                signature.split(",")[1].split(";")[0]);
+        String expected = String
+                .valueOf(dataflowManager.getDataflow(modelId).getLastSegment().getLayout(layoutId).getCreateTime());
+        Assert.assertEquals(expected, signature.split(",")[1].split(";")[1]);
         response.setSignature(signature);
         dataflowManager.updateDataflow(modelId, copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
         Assert.assertTrue(QueryCacheSignatureUtil.checkCacheExpired(response, project));
     }
@@ -1353,11 +1378,10 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         val modelAlias = "nmodel_basic";
         long layoutId = 1000001L;
         final String project = "default";
-        val dataflowManager = NDataflowManager.getInstance(getTestConfig(), project);
 
         final String sql = "select * from success_table_1";
         stubQueryConnection(sql, project);
-        mockOLAPContextWithOneModelInfo(modelId, modelAlias, layoutId);
+        mockOlapContextWithOneModelInfo(modelId, modelAlias, layoutId);
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -1365,13 +1389,13 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
         // case of not hitting cache
         Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
-        final SQLResponse firstSuccess = queryService.queryWithCache(request);
+        queryService.queryWithCache(request);
 
         // case of hitting cache
         final SQLResponse secondSuccess = queryService.queryWithCache(request);
         Assert.assertTrue(secondSuccess.isStorageCacheUsed());
         Assert.assertEquals(1, secondSuccess.getNativeRealizations().size());
-        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, secondSuccess.getNativeRealizations().get(0).getIndexType());
+        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, secondSuccess.getNativeRealizations().get(0).getType());
         Assert.assertEquals("nmodel_basic", secondSuccess.getNativeRealizations().get(0).getModelAlias());
 
         // modify model name
@@ -1380,8 +1404,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final SQLResponse secondSuccess1 = queryService.queryWithCache(request);
         Assert.assertTrue(secondSuccess1.isStorageCacheUsed());
         Assert.assertEquals(1, secondSuccess1.getNativeRealizations().size());
-        Assert.assertEquals(QueryMetricsContext.AGG_INDEX,
-                secondSuccess1.getNativeRealizations().get(0).getIndexType());
+        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, secondSuccess1.getNativeRealizations().get(0).getType());
         Assert.assertEquals("model_new", secondSuccess1.getNativeRealizations().get(0).getModelAlias());
     }
 
@@ -1396,7 +1419,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
         final String sql = "select * from success_table_2";
         stubQueryConnection(sql, project);
-        mockOLAPContextWithOneModelInfo(modelId, modelAlias, layoutId);
+        mockOlapContextWithOneModelInfo(modelId, modelAlias, layoutId);
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -1404,16 +1427,16 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
         // case of not hitting cache
         Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
-        final SQLResponse firstSuccess = queryService.queryWithCache(request);
+        queryService.queryWithCache(request);
 
         dataflowManager.updateDataflow(modelId, copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
         // case of cache expired
         final SQLResponse thirdSuccess = queryService.queryWithCache(request);
         Assert.assertFalse(thirdSuccess.isStorageCacheUsed());
         Assert.assertEquals(1, thirdSuccess.getNativeRealizations().size());
-        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, thirdSuccess.getNativeRealizations().get(0).getIndexType());
+        Assert.assertEquals(QueryMetricsContext.AGG_INDEX, thirdSuccess.getNativeRealizations().get(0).getType());
         Assert.assertEquals(modelAlias, thirdSuccess.getNativeRealizations().get(0).getModelAlias());
     }
 
@@ -1423,7 +1446,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final String sql = "select * from success_table_3";
 
         stubQueryConnection(sql, project);
-        mockOLAPContext();
+        mockOlapContext();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -1450,7 +1473,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAnswerByWhenQueryFailed() throws Exception {
+    public void testAnswerByWhenQueryFailed() {
         final String project = "default";
         final String constantQueryFailSql = "select * from success_table_3";
 
@@ -1505,7 +1528,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testQueryWithSpecificQueryId() throws Exception {
+    public void testQueryWithSpecificQueryId() {
         final String sql = "select * from test";
         final String project = "default";
         final String queryId = RandomUtil.randomUUIDStr();
@@ -1574,7 +1597,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
                 + "Message:\\s(.*?)" + matchNewLine + "User Defined Tag:\\s(.*?)" + matchNewLine
                 + "Is forced to Push-Down:\\s(.*?)" + matchNewLine + "User Agent:\\s(.*?)" + matchNewLine
                 + "Back door toggles:\\s(.*?)" + matchNewLine + "Scan Segment Count:\\s(.*?)" + matchNewLine
-                + "Scan File Count:\\s(.*?)" + matchNewLine + "[=]+\\[QUERY\\][=]+.*";
+                + "Scan File Count:\\s(.*?)" + matchNewLine + "=+\\[QUERY\\]=+.*";
         Pattern pattern = Pattern.compile(s);
         Matcher matcher = pattern.matcher(log);
 
@@ -1656,10 +1679,11 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final List<TableMeta> tableMetas = queryService.getMetadata("default");
         // TEST_MEASURE table has basically all possible column types
         String metaString = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst().get().toString();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).toString();
 
         File expectedMetaFile = new File("src/test/resources/ut_table_meta/defaultTableMetas");
-        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile);
+        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile, Charset.defaultCharset());
         Assert.assertEquals(expectedMetaString, metaString);
     }
 
@@ -1669,54 +1693,63 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final List<TableMeta> tableMetas = queryService.getMetadata("default");
         // TEST_MEASURE table has basically all possible column types
         String metaString = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst().get().toString();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).toString();
 
         File expectedMetaFile = new File("src/test/resources/ut_table_meta/defaultTableMetas");
-        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile);
+        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile, Charset.defaultCharset());
         Assert.assertEquals(expectedMetaString, metaString);
     }
 
     @Test
-    public void testMetaDataColumnCaseSensitive() throws IOException {
+    public void testMetaDataColumnCaseSensitive() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.source.name-case-sensitive-enabled", "true");
         final List<TableMeta> tableMetas = queryService.getMetadata("default");
         TableMeta tableToCheck = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst().get();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         ColumnMeta columnToCheck = tableToCheck.getColumns().stream()
-                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst().get();
+                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         Assert.assertEquals("account_id", columnToCheck.getCOLUMN_NAME());
     }
 
     @Test
-    public void testMetaDataColumnCaseNotSensitive() throws IOException {
+    public void testMetaDataColumnCaseNotSensitive() {
         final List<TableMeta> tableMetas = queryService.getMetadata("default");
         TableMeta tableToCheck = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst().get();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         ColumnMeta columnToCheck = tableToCheck.getColumns().stream()
-                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst().get();
+                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         Assert.assertEquals("ACCOUNT_ID", columnToCheck.getCOLUMN_NAME());
     }
 
     @Test
-    public void testMetaDataV2ColumnCaseSensitive() throws IOException {
+    public void testMetaDataV2ColumnCaseSensitive() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.source.name-case-sensitive-enabled", "true");
         final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
         TableMeta tableToCheck = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst().get();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         ColumnMeta columnToCheck = tableToCheck.getColumns().stream()
-                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst().get();
+                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         Assert.assertEquals("account_id", columnToCheck.getCOLUMN_NAME());
     }
 
     @Test
-    public void testMetaDataV2ColumnCaseNotSensitive() throws IOException {
+    public void testMetaDataV2ColumnCaseNotSensitive() {
         final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
         TableMeta tableToCheck = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst().get();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         ColumnMeta columnToCheck = tableToCheck.getColumns().stream()
-                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst().get();
+                .filter(c -> c.getCOLUMN_NAME().equalsIgnoreCase("ACCOUNT_ID")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
         Assert.assertEquals("ACCOUNT_ID", columnToCheck.getCOLUMN_NAME());
     }
 
@@ -1725,24 +1758,63 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
         // TEST_MEASURE table has basically all possible column types
         String metaString = tableMetas.stream().filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("DEFAULT"))
-                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst().get().toString();
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("TEST_MEASURE")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).toString();
 
         File expectedMetaFile = new File("src/test/resources/ut_table_meta/defaultTableMetasV2");
-        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile);
+        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile, Charset.defaultCharset());
         Assert.assertEquals(expectedMetaString, metaString);
+    }
+
+    @Test
+    public void testMetaDataV2WithModelDescAsTableAlias() throws IOException {
+        overwriteSystemProp("kylin.query.auto-model-view-enabled", "true");
+        final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("test_jdbc", null);
+        String metaString = tableMetas.toString();
+        File expectedMetaFile = new File("src/test/resources/ut_table_meta/testJdbcTableMetaV2");
+        String expectedMetaString = FileUtils.readFileToString(expectedMetaFile, Charset.defaultCharset());
+        Assert.assertEquals(expectedMetaString, metaString);
+        TableMetaWithType tableMetaWithType = tableMetas.stream()
+                .filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("test_jdbc"))
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("model_name_alias")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
+        String modelRemarks = tableMetaWithType.getREMARKS();
+        Assert.assertEquals("无名模型", modelRemarks);
+        ColumnMetaWithType fullQualifiedName = (ColumnMetaWithType) tableMetaWithType.getColumns().stream()
+                .filter(c -> c.getCOLUMN_NAME().equals("C_NAME")).findFirst().orElseThrow(KylinRuntimeException::new);
+        Assert.assertEquals("SSB.CUSTOMER.C_NAME", fullQualifiedName.getFULLY_QUALIFIED_COLUMN_NAME());
+
+        TableMetaWithType tableMetaWithNoAlias = tableMetas.stream()
+                .filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("test_jdbc"))
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("test")).findFirst()
+                .orElseThrow(KylinRuntimeException::new);
+        String modelWithNullRemarks = tableMetaWithNoAlias.getREMARKS();
+        Assert.assertNull(modelWithNullRemarks);
+
+        overwriteSystemProp("kylin.query.auto-model-view-enabled", "false");
+        final List<TableMetaWithType> tableMetasUabledModelView = queryService.getMetadataV2("test_jdbc", null);
+        List<TableMetaWithType> tableMetaWithType1 = tableMetasUabledModelView.stream()
+                .filter(t -> t.getTABLE_SCHEM().equalsIgnoreCase("test_jdbc"))
+                .filter(t -> t.getTABLE_NAME().equalsIgnoreCase("model_name_alias")).collect(Collectors.toList());
+        Assert.assertEquals(0, tableMetaWithType1.size());
+
+        updateProjectConfig("test_jdbc", "kylin.query.schema-cache-enabled", "true");
+        List<TableMetaWithType> metaWithTypeList = queryService.getMetadataV2("test_jdbc", null);
+        Assert.assertFalse(metaWithTypeList.isEmpty());
     }
 
     @Test
     public void testDeepCopy() {
         final List<TableMetaWithType> tableMetas = queryService.getMetadataV2("default", null);
-        tableMetas.stream()
+        List<TableMetaWithType> collect = tableMetas.stream()
                 .map(tableMetaWithType -> JsonUtil.deepCopyQuietly(tableMetaWithType, TableMetaWithType.class))
                 .collect(Collectors.toList());
+        Assert.assertFalse(collect.isEmpty());
     }
 
     @Test
     //reference KE-8052
-    public void testQueryWithConstant() throws SQLException {
+    public void testQueryWithConstant() {
         doTestQueryWithConstant("select current_timestamp");
         doTestQueryWithConstant("select 1,2,3,4,5");
         doTestQueryWithConstant("select max(1) from TEST_ACCOUNT inner join TEST_MEASURE "
@@ -1794,8 +1866,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         String modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         List<TableMetaWithType> metaWithTypeList = queryService.getMetadataV2("default", null);
         boolean noFactTableType = metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst().get()
-                .getTYPE().isEmpty();
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getTYPE().isEmpty();
         Assert.assertFalse(noFactTableType);
 
         // fact table is broken
@@ -1807,8 +1879,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
         metaWithTypeList = queryService.getMetadataV2("default", null);
         noFactTableType = metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst().get()
-                .getTYPE().isEmpty();
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getTYPE().isEmpty();
         Assert.assertTrue(noFactTableType);
     }
 
@@ -1816,15 +1888,15 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     public void testGetMetadataV2WhenSchemaCacheEnable() {
         updateProjectConfig("default", "kylin.query.schema-cache-enabled", "true");
         List<TableMetaWithType> metaWithTypeList = queryService.getMetadataV2("default", null);
+        Assert.assertFalse(metaWithTypeList.isEmpty());
     }
 
     @Test
     public void testGetMetadataV2ByModelWithProjectContainBrokenModels() {
         String modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         List<TableMetaWithType> metaWithTypeList = queryService.getMetadataV2("default", "nmodel_basic_inner");
-        Assert.assertTrue(metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME()))
-                .collect(Collectors.toList()).isEmpty());
+        Assert.assertEquals(0, metaWithTypeList.stream()
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).count());
 
         // fact table is broken
         NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), "default");
@@ -1834,9 +1906,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         modelManager.updateDataBrokenModelDesc(brokenModel);
 
         metaWithTypeList = queryService.getMetadataV2("default", "nmodel_basic_inner");
-        Assert.assertTrue(metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME()))
-                .collect(Collectors.toList()).isEmpty());
+        Assert.assertEquals(0, metaWithTypeList.stream()
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).count());
     }
 
     @Test
@@ -1844,8 +1915,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         String modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         List<TableMetaWithType> metaWithTypeList = queryService.getMetadataV2("default", "nmodel_full_measure_test");
         boolean noFactTableType = metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst().get()
-                .getTYPE().isEmpty();
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getTYPE().isEmpty();
         Assert.assertFalse(noFactTableType);
 
         // fact table is broken
@@ -1856,9 +1927,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         modelManager.updateDataBrokenModelDesc(brokenModel);
 
         metaWithTypeList = queryService.getMetadataV2("default", "nmodel_full_measure_test");
-        Assert.assertTrue(metaWithTypeList.stream()
-                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME()))
-                .collect(Collectors.toList()).isEmpty());
+        Assert.assertEquals(0, metaWithTypeList.stream()
+                .filter(tableMetaWithType -> "TEST_MEASURE".equals(tableMetaWithType.getTABLE_NAME())).count());
     }
 
     @Test
@@ -1965,7 +2035,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         request.setSql("select 2");
         getTestConfig().setProperty("kylin.query.query-with-execute-as", "true");
         request.setQueryId(RandomUtil.randomUUIDStr());
-        userService.createUser(new ManagedUser("testuser", "KYLIN", false, Arrays.asList()));
+        userService.createUser(new ManagedUser("testuser", "KYLIN", false, Collections.emptyList()));
         userService.userExists("testuser");
         request.setExecuteAs("testuser");
         thrown.expect(KylinException.class);
@@ -2035,14 +2105,14 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testTableauIntercept() throws Exception {
         List<String> sqlList = Files.walk(Paths.get("./src/test/resources/query/tableau_probing"))
-                .filter(file -> Files.isRegularFile(file)).map(path -> {
+                .filter(Files::isRegularFile).map(path -> {
                     try {
                         String sql = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
                         return new RawSqlParser(sql).parse().getStatementString();
                     } catch (Exception e) {
                         return null;
                     }
-                }).filter(sql -> sql != null || sql.startsWith("SELECT")).collect(Collectors.toList());
+                }).filter(Objects::nonNull).collect(Collectors.toList());
 
         for (String sql : sqlList) {
             SQLRequest request = new SQLRequest();
@@ -2052,7 +2122,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             final SQLResponse response = queryService.query(request);
             Assert.assertNotNull(response);
-            Assert.assertEquals(SPARK_JOB_EXECUTION, QueryContext.currentTrace().getLastSpan().get().getName());
+            Assert.assertEquals(SPARK_JOB_EXECUTION,
+                    QueryContext.currentTrace().getLastSpan().orElseThrow(KylinRuntimeException::new).getName());
         }
     }
 
@@ -2064,7 +2135,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             final String sql = "select count(*) from SSB_STREAMING";
 
             stubQueryConnection(sql, project);
-            mockOLAPContextWithHybrid();
+            mockOlapContextWithHybrid();
 
             final SQLRequest request = new SQLRequest();
             request.setProject(project);
@@ -2088,7 +2159,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             final String sql = "select count(1) from SSB_STREAMING";
 
             stubQueryConnection(sql, project);
-            mockOLAPContextWithBatchPart();
+            mockOlapContextWithBatchPart();
 
             final SQLRequest request = new SQLRequest();
             request.setProject(project);
@@ -2107,29 +2178,29 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     public void testQueryContextWithStreamingModel() throws Exception {
         final String project = "demo";
         final String sql = "select count(*) from SSB_STREAMING";
+        final String modelId = "4965c827-fbb4-4ea1-a744-3f341a3b030e";
 
         stubQueryConnection(sql, project);
-        mockOLAPContextWithStreaming();
+        // mock a non-existent model 4965c827-fbb4-4ea1-a744-3f341a3b030e
+        mockOlapContextWithStreaming();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
         request.setSql(sql);
         Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
+        //It will log an NPE exception because the model of project "demo" does not exist
         SQLResponse sqlResponse = queryService.doQueryWithCache(request);
 
         Assert.assertEquals(1, sqlResponse.getNativeRealizations().size());
-
-        Assert.assertEquals("4965c827-fbb4-4ea1-a744-3f341a3b030d",
-                sqlResponse.getNativeRealizations().get(0).getModelId());
-        Assert.assertEquals((Long) 10001L, sqlResponse.getNativeRealizations().get(0).getLayoutId());
-
+        Assert.assertEquals(modelId, sqlResponse.getNativeRealizations().get(0).getModelId());
+        Assert.assertEquals(1L, sqlResponse.getNativeRealizations().get(0).getLayoutId().longValue());
         Assert.assertTrue(sqlResponse.getNativeRealizations().get(0).isStreamingLayout());
     }
 
     @Test
     public void testQueryWithParamWhenTransformWithToSubQuery() {
         overwriteSystemProp("kylin.query.transformers",
-                "io.kyligence.kap.query.util.ReplaceStringWithVarchar,org.apache.kylin.query.util.PowerBIConverter,org.apache.kylin.query.util.DefaultQueryTransformer,org.apache.kylin.query.util.EscapeTransformer,org.apache.kylin.query.util.ConvertToComputedColumn,org.apache.kylin.query.util.KeywordDefaultDirtyHack,org.apache.kylin.query.security.RowFilter,org.apache.kylin.query.util.WithToSubQueryTransformer");
+                "org.apache.kylin.query.util.ReplaceStringWithVarchar,org.apache.kylin.query.util.PowerBIConverter,org.apache.kylin.query.util.DefaultQueryTransformer,org.apache.kylin.query.util.EscapeTransformer,org.apache.kylin.query.util.ConvertToComputedColumn,org.apache.kylin.query.util.KeywordDefaultDirtyHack,org.apache.kylin.query.security.RowFilter,org.apache.kylin.query.util.WithToSubQueryTransformer");
         PrepareSqlStateParam[] params1 = new PrepareSqlStateParam[2];
         params1[0] = new PrepareSqlStateParam(Double.class.getCanonicalName(), "123.1");
         params1[1] = new PrepareSqlStateParam(Integer.class.getCanonicalName(), "123");
@@ -2243,7 +2314,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(queryContext.getUserSQL(), originSql);
         // sql after massage will transformed and filled params
         Assert.assertTrue(queryContext.getMetrics().getOlapCause().getMessage().contains(transformedFilledSql));
-        // validate sql Metrics for query history(pushdown). sql reset to filledSql after pushdown(on tryPushDownSelectQuery).
+        // validate sql Metrics for query history(pushdown).
+        // sql reset to filledSql after pushdown(on tryPushDownSelectQuery).
         QueryMetricsContext.start(queryContext.getQueryId(), "");
         Assert.assertTrue(QueryMetricsContext.isStarted());
         if (params != null) {
@@ -2288,7 +2360,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final String sql = "select count(*) from test_kylin_fact";
 
         stubQueryConnection(sql, project);
-        mockOLAPContext();
+        mockOlapContext();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -2298,6 +2370,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         SQLResponse sqlResponse = spiedQueryService.doQueryWithCache(request);
         Assert.assertFalse(sqlResponse.isException());
 
+        // add blacklist item
         SQLBlacklistManager sqlBlacklistManager = SQLBlacklistManager.getInstance(KylinConfig.getInstanceFromEnv());
         SQLBlacklistItem sqlBlacklistItem = new SQLBlacklistItem();
         sqlBlacklistItem.setId("1");
@@ -2317,7 +2390,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final String sql = "select count(*) from test_kylin_fact";
 
         stubQueryConnection(sql, project);
-        mockOLAPContext();
+        mockOlapContext();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -2355,7 +2428,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         final String sql = "select count(*) from test_kylin_fact";
 
         stubQueryConnection(sql, project);
-        mockOLAPContext();
+        mockOlapContext();
 
         final SQLRequest request = new SQLRequest();
         request.setProject(project);
@@ -2380,166 +2453,6 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetForcedToTieredStorageValueInvalid() {
-        try {
-            ForceToTieredStorage f = ForceToTieredStorage.values()[-1];
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof ArrayIndexOutOfBoundsException);
-        }
-        ForceToTieredStorage f = ForceToTieredStorage.values()[0];
-        assert ForceToTieredStorage.CH_FAIL_TO_DFS == f;
-        f = ForceToTieredStorage.values()[1];
-        assert ForceToTieredStorage.CH_FAIL_TO_PUSH_DOWN == f;
-        f = ForceToTieredStorage.values()[2];
-        assert ForceToTieredStorage.CH_FAIL_TO_RETURN == f;
-        f = ForceToTieredStorage.values()[3];
-        assert ForceToTieredStorage.CH_FAIL_TAIL == f;
-    }
-
-    @Test
-    public void testGetForcedToTieredStorageForProject() {
-        for (ForceToTieredStorage j : ForceToTieredStorage.values()) {
-            String project = Integer.toString(j.ordinal());
-            overwriteSystemProp("kylin.second-storage.route-when-ch-fail", project);
-            ForceToTieredStorage ret = queryService.getForcedToTieredStorage("default", j);
-            if (j != ForceToTieredStorage.CH_FAIL_TAIL) {
-                assert j == ret;
-            } else {
-                assert ForceToTieredStorage.CH_FAIL_TO_DFS == ret;
-            }
-        }
-    }
-
-    @Test
-    public void testGetForcedToTieredStorageForSystem() {
-        for (ForceToTieredStorage j : ForceToTieredStorage.values()) {
-            String project = Integer.toString(j.ordinal());
-            overwriteSystemProp("kylin.second-storage.route-when-ch-fail", project);
-            ForceToTieredStorage ret = queryService.getForcedToTieredStorage("default", j);
-            if (j != ForceToTieredStorage.CH_FAIL_TAIL) {
-                assert j == ret;
-            } else {
-                assert ForceToTieredStorage.CH_FAIL_TO_DFS == ret;
-            }
-        }
-    }
-
-    @Test
-    public void testGetForcedToTieredStorageForMismatch() {
-        overwriteSystemProp("kylin.second-storage.route-when-ch-fail", "1");
-        ForceToTieredStorage ret = queryService.getForcedToTieredStorage("default", ForceToTieredStorage.CH_FAIL_TAIL);
-        assert ForceToTieredStorage.CH_FAIL_TO_PUSH_DOWN == ret;
-        ret = queryService.getForcedToTieredStorage("default", ForceToTieredStorage.CH_FAIL_TO_DFS);
-        assert ForceToTieredStorage.CH_FAIL_TO_DFS == ret;
-    }
-
-    @Test
-    public void testForceToTieredStorageOK() throws Throwable {
-        final String sql = "select * from abc";
-        final String project = "default";
-        final QueryExec queryExec = Mockito.mock(QueryExec.class);
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql(sql);
-        sqlRequest.setProject(project);
-        sqlRequest.setForcedToTieredStorage(0);
-
-        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
-                sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
-                queryExec.getDefaultSchemaName(), true);
-        queryParams.setForcedToTieredStorage(ForceToTieredStorage.CH_FAIL_TO_DFS);
-        String correctedSql = QueryUtil.massageSql(queryParams);
-
-        Mockito.when(queryExec.executeQuery(correctedSql)).thenReturn(new QueryResult());
-        Mockito.doReturn(new QueryResult()).when(queryService.queryRoutingEngine).execute(Mockito.any(), Mockito.any());
-
-        final SQLResponse response = queryService.queryWithCache(sqlRequest);
-        Assert.assertNull(response.getExceptionMessage());
-    }
-
-    @Test
-    public void testForceToTieredStoragePushDown() throws Throwable {
-        final String sql = "select * from abc";
-        final String project = "default";
-        final QueryExec queryExec = Mockito.mock(QueryExec.class);
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql(sql);
-        sqlRequest.setProject(project);
-        sqlRequest.setForcedToTieredStorage(1);
-
-        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
-                sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
-                queryExec.getDefaultSchemaName(), true);
-        String correctedSql = QueryUtil.massageSql(queryParams);
-
-        Throwable cause = new SQLException(QueryContext.ROUTE_USE_FORCEDTOTIEREDSTORAGE);
-        Mockito.doThrow(
-                new SQLException("Error while executing SQL \"" + correctedSql + "\": " + cause.getMessage(), cause))
-                .when(queryService.queryRoutingEngine).execute(Mockito.any(), Mockito.any());
-
-        Mockito.doAnswer(invocation -> PushdownResult.emptyResult()).when(queryService.queryRoutingEngine)
-                .tryPushDownSelectQuery(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
-
-        final SQLResponse response = queryService.queryWithCache(sqlRequest);
-        Assert.assertTrue(response.isQueryPushDown());
-    }
-
-    @Test
-    public void testForceToTieredStorageInvalidParameters() throws Throwable {
-        final String sql = "select * from abc";
-        final String project = "default";
-        final QueryExec queryExec = Mockito.mock(QueryExec.class);
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql(sql);
-        sqlRequest.setProject(project);
-        sqlRequest.setForcedToTieredStorage(1);
-        sqlRequest.setForcedToIndex(true);
-        sqlRequest.setForcedToPushDown(false);
-
-        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
-                sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
-                queryExec.getDefaultSchemaName(), true);
-        String correctedSql = QueryUtil.massageSql(queryParams);
-
-        Throwable cause = new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_AND_FORCE_TO_INDEX,
-                MsgPicker.getMsg().getForcedToTieredstorageAndForceToIndex());
-        Mockito.doThrow(
-                new SQLException("Error while executing SQL \"" + correctedSql + "\": " + cause.getMessage(), cause))
-                .when(queryService.queryRoutingEngine).execute(Mockito.any(), Mockito.any());
-
-        final SQLResponse response = queryService.queryWithCache(sqlRequest);
-        Assert.assertTrue(
-                response.getExceptionMessage().contains(MsgPicker.getMsg().getForcedToTieredstorageAndForceToIndex()));
-    }
-
-    @Test
-    public void testForceToTieredStorageReturnError() throws Throwable {
-        final String sql = "select * from abc";
-        final String project = "default";
-        final QueryExec queryExec = PowerMockito.mock(QueryExec.class);
-        PowerMockito.whenNew(QueryExec.class).withAnyArguments().thenReturn(queryExec);
-
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql(sql);
-        sqlRequest.setProject(project);
-        sqlRequest.setForcedToTieredStorage(2);
-
-        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
-                sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(),
-                "queryExec.getDefaultSchemaName()", true);
-        String correctedSql = QueryUtil.massageSql(queryParams);
-
-        Throwable cause = new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_RETURN_ERROR,
-                MsgPicker.getMsg().getForcedToTieredstorageReturnError());
-        Mockito.doThrow(
-                new SQLException("Error while executing SQL \"" + correctedSql + "\": " + cause.getMessage(), cause))
-                .when(queryService.queryRoutingEngine).execute(Mockito.any(), Mockito.any());
-
-        final SQLResponse response = queryService.queryWithCache(sqlRequest);
-        Assert.assertTrue(
-                response.getExceptionMessage().contains(MsgPicker.getMsg().getForcedToTieredstorageReturnError()));
-    }
-
-    @Test
     public void testCheckSqlRequestProject() {
         SQLRequest sqlRequest = new SQLRequest();
         Message msg = MsgPicker.getMsg();
@@ -2554,8 +2467,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         overwriteSystemProp("kylin.query.metadata.expose-computed-column", "true");
         List<TableMeta> tableMetas = queryService.getMetadata(project, cube);
         List<ColumnMeta> columnMetas = tableMetas.stream()
-                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_KYLIN_FACT")).findFirst().get()
-                .getColumns();
+                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_KYLIN_FACT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getColumns();
         Assert.assertEquals(12, columnMetas.size());
         Assert.assertFalse(columnMetas.stream()
                 .anyMatch(columnMeta -> columnMeta.getCOLUMN_NAME().equals("LEFTJOIN_SELLER_COUNTRY_ABBR")));
@@ -2569,8 +2482,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
             calendarSet.add((Calendar) mockCalendar.clone());
         }
         PowerMockito.mockStatic(Calendar.class);
-        PowerMockito.when(Calendar.getInstance()).thenReturn(mockCalendar,
-                calendarSet.toArray(new Calendar[calendarSet.size()]));
+        PowerMockito.when(Calendar.getInstance()).thenReturn(mockCalendar, calendarSet.toArray(new Calendar[0]));
     }
 
     @Test
@@ -2671,26 +2583,28 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMetaDataReturnOnlyIndexPlanColsAndJoinKey() throws Exception {
+    public void testMetaDataReturnOnlyIndexPlanColsAndJoinKey() {
         String project = "default";
         String modelName = "nmodel_basic_inner";
         overwriteSystemProp("kylin.model.tds-expose-all-model-related-columns", "false");
         List<TableMeta> tableMetas = queryService.getMetadata(project, modelName);
         List<ColumnMeta> columnMetas = tableMetas.stream()
-                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_ACCOUNT")).findFirst().get().getColumns();
+                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getColumns();
         Assert.assertEquals(8, tableMetas.size());
         Assert.assertEquals(4, columnMetas.size());
     }
 
     @Test
-    public void testMetadataReturnOnlyIndexPlanCols() throws Exception {
+    public void testMetadataReturnOnlyIndexPlanCols() {
         String project = "default";
         String modelName = "nmodel_basic_inner";
         overwriteSystemProp("kylin.model.tds-expose-all-model-related-columns", "false");
         overwriteSystemProp("kylin.model.tds-expose-model-join-key", "false");
         List<TableMeta> tableMetas = queryService.getMetadata(project, modelName);
         List<ColumnMeta> columnMetas = tableMetas.stream()
-                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_ACCOUNT")).findFirst().get().getColumns();
+                .filter(tableMeta -> tableMeta.getTABLE_NAME().equals("TEST_ACCOUNT")).findFirst()
+                .orElseThrow(KylinRuntimeException::new).getColumns();
         Assert.assertEquals(3, columnMetas.size());
     }
 
@@ -2701,10 +2615,10 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         List<NDataModel> dataModels = dataModelManager.listAllModels();
         overwriteSystemProp("kylin.model.tds-expose-all-model-related-columns", "true");
         List<String> modelColumns1 = queryService.getTargetModelColumns("nmodel_basic", dataModels, project);
-        Assert.assertEquals(861, modelColumns1.size());
+        Assert.assertEquals(201, modelColumns1.size());
         overwriteSystemProp("kylin.model.tds-expose-all-model-related-columns", "false");
         List<String> modelColumns2 = queryService.getTargetModelColumns("nmodel_basic", dataModels, project);
-        Assert.assertEquals(172, modelColumns2.size());
+        Assert.assertEquals(48, modelColumns2.size());
     }
 
     @Test
@@ -2714,7 +2628,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
                 + "1 = 1\n" + "and TEST_BANK_INCOME.DT = '2021-11-02'\n"
                 + "and TEST_BANK_INCOME.COUNTRY = 'INDONESIA'\n" + "and TEST_BANK_INCOME.COUNTRY = 'KENYA'";
         QueryExec queryExec = new QueryExec(project, getTestConfig());
-        Class<? extends QueryExec> clazz = queryExec.getClass();
+        Class<? extends QueryHelper> clazz = QueryHelper.class;
         Method isCalciteEngineCapable = clazz.getDeclaredMethod("isCalciteEngineCapable", RelNode.class);
         isCalciteEngineCapable.setAccessible(true);
         RelNode rel1 = queryExec.parseAndOptimize(sql1);
@@ -2826,7 +2740,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         realization.setModelId("modelId1");
         realization.setLayoutId(1L);
         realization.setModelAlias("modelAlias1");
-        realization.setIndexType(QueryMetrics.AGG_INDEX);
+        realization.setType(QueryMetrics.AGG_INDEX);
         realization.setPartialMatchModel(false);
         realization.setValid(true);
         List<NativeQueryRealization> nativeRealizations = Lists.newArrayList(realization);
@@ -2906,7 +2820,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         realization.setModelId("modelId1");
         realization.setLayoutId(-1L);
         realization.setModelAlias("modelAlias1");
-        realization.setIndexType(QueryMetrics.AGG_INDEX);
+        realization.setType(QueryMetrics.AGG_INDEX);
         realization.setPartialMatchModel(false);
         realization.setValid(true);
         List<NativeQueryRealization> nativeRealizations = Lists.newArrayList(realization);
@@ -2952,7 +2866,7 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         realization.setModelId("modelId1");
         realization.setLayoutId(-1L);
         realization.setModelAlias("modelAlias1");
-        realization.setIndexType(QueryMetrics.AGG_INDEX);
+        realization.setType(QueryMetrics.AGG_INDEX);
         realization.setPartialMatchModel(false);
         realization.setValid(true);
         List<NativeQueryRealization> nativeRealizations = Lists.newArrayList(realization);
@@ -3000,5 +2914,99 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
 
             Assert.assertFalse(isQueryCacheEnabled);
         }
+    }
+
+    @Test
+    public void testNotHitCacheWhenIsAsyncQuery() {
+        try (QueryContext queryContext = QueryContext.current()) {
+            queryContext.getQueryTagInfo().setAsyncQuery(true);
+            String project = "default";
+            String sql = "select * from table";
+            SQLRequest sqlRequest = new SQLRequest();
+            sqlRequest.setProject(project);
+            sqlRequest.setSql(sql);
+
+            queryService.doQueryWithCache(sqlRequest);
+
+            // async query API can not search cache
+            Assert.assertFalse(queryContext.getQueryTagInfo().isStorageCacheUsed());
+            Assert.assertFalse(queryContext.getQueryTagInfo().isHitExceptionCache());
+            Assert.assertTrue(queryContext.getQueryTagInfo().isAsyncQuery());
+        }
+    }
+
+    @Test
+    public void testIfBigQuery() throws Exception {
+        final String sql = "select count(1) from KYLIN_SALES";
+        final String project = "default";
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql(sql);
+        sqlRequest.setProject(project);
+        sqlRequest.setForcedToIndex(true);
+        sqlRequest.setIfBigQuery(true);
+        Mockito.doThrow(new SQLException(new BigQueryException("is nonBigQuery"))).when(queryService)
+                .query(Mockito.any(SQLRequest.class));
+        final BigQueryResponse response = queryService.ifBigQuery(sqlRequest);
+        Assert.assertFalse(response.isException());
+    }
+
+    @Test
+    public void testPushDownIfBigQuery() {
+        final String sql = "select count(1) from KYLIN_SALES";
+        final String project = "default";
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql(sql);
+        sqlRequest.setProject(project);
+        sqlRequest.setForcedToIndex(true);
+        sqlRequest.setIfBigQuery(true);
+        sqlRequest.setForcedToPushDown(true);
+        final BigQueryResponse response = queryService.ifBigQuery(sqlRequest);
+        Assert.assertTrue(response.isException());
+    }
+
+    @Test
+    public void testIfBigQueryException() {
+        final String sql = "select aa from KYLIN_SALES";
+        final String project = "default";
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql(sql);
+        sqlRequest.setProject(project);
+        sqlRequest.setForcedToIndex(true);
+        sqlRequest.setIfBigQuery(true);
+        Mockito.doThrow(new RuntimeException(new KylinTimeoutException(""))).when(queryService)
+                .queryAndUpdateCache(Mockito.any(SQLRequest.class), Mockito.any(KylinConfig.class));
+        BigQueryResponse bigQueryResponse = queryService.ifBigQuery(sqlRequest);
+        Assert.assertTrue(bigQueryResponse.isException());
+    }
+
+    @Test
+    public void testQueryDetectWhenIndexPlanIsNullIfBigQuery() {
+        QueryDetectRequest queryDetectRequest = new QueryDetectRequest("sql", "default", 0, 500);
+        // build sqlRequest
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql(queryDetectRequest.getSql());
+        String project = queryDetectRequest.getProject();
+        sqlRequest.setLimit(queryDetectRequest.getLimit());
+        sqlRequest.setOffset(queryDetectRequest.getOffset());
+        sqlRequest.setProject(project);
+
+        // build sqlResponse
+        SQLResponse sqlResponse = new SQLResponse();
+        sqlResponse.setException(false);
+        sqlResponse.setQueryId("queryId");
+        sqlResponse.setQueryPushDown(true);
+        List<NativeQueryRealization> nativeRealizations = Lists.newArrayList();
+        sqlResponse.setNativeRealizations(nativeRealizations);
+
+        // mock NIndexPlanManager and IndexPlan
+        PowerMockito.mockStatic(NIndexPlanManager.class);
+        NIndexPlanManager nIndexPlanManager = Mockito.mock(NIndexPlanManager.class);
+
+        // mock method return value
+        Mockito.doReturn(sqlResponse).when(queryService).queryWithCache(sqlRequest);
+
+        BigQueryResponse bigQueryResponse = queryService.ifBigQuery(sqlRequest);
+
+        Assert.assertEquals("others", bigQueryResponse.getIfBigQuery());
     }
 }

@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -81,8 +82,11 @@ public class RoutineToolHelper {
                 TimeUnit.MILLISECONDS);
     }
 
-    public static CompletableFuture<Void> cleanEventLog(boolean cleanUp, boolean cleanCurrentSparder,
-            boolean cleanAll) {
+    public enum CleanType {
+        ALL, SPARDER, SPARK, DRY_RUN
+    }
+
+    public static CompletableFuture<Void> cleanEventLog(CleanType type, String project) {
         tryInitCleanTaskExecutorService();
         return CleanTaskExecutorService.getInstance().submit(new AbstractComparableCleanTask() {
             @Override
@@ -92,14 +96,16 @@ public class RoutineToolHelper {
 
             @Override
             protected void doRun() {
-                StorageCleaner.EventLogCleaner eventLogCleaner = new StorageCleaner.EventLogCleaner(cleanUp);
-                if (cleanAll) {
+                StorageCleaner.EventLogCleaner eventLogCleaner = new StorageCleaner.EventLogCleaner();
+                if (type == CleanType.ALL) {
                     eventLogCleaner.cleanAllEventLog();
-                } else if (cleanCurrentSparder) {
+                } else if (type == CleanType.SPARDER) {
                     eventLogCleaner.cleanCurrentSparderEventLog();
+                } else if (type == CleanType.SPARK) {
+                    Preconditions.checkArgument(StringUtils.isNotEmpty(project));
+                    eventLogCleaner.cleanSparkEventLogs(project);
                 } else {
-                    // clean current sparder event log and spark event log
-                    eventLogCleaner.execute();
+                    throw new IllegalArgumentException("unknown clean type: " + type);
                 }
             }
 

@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.SUMLC_CC_TEST",
+  "tableAlias" : "SUMLC_CC_TEST",
+  "columnName" : "INT_DATA_CC",
+  "expression" : "SUMLC_CC_TEST.INT_DATA * 2",
+  "innerExpression" : "`SUMLC_CC_TEST`.`INT_DATA` * 2",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "90d9f466-9168-f843-c246-64d90e10884a",
+  "project" : "sum_lc"
+}

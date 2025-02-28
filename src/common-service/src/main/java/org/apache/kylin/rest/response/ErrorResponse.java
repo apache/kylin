@@ -21,7 +21,7 @@ package org.apache.kylin.rest.response;
 import static org.apache.kylin.common.exception.CommonErrorCode.FAILED_PARSE_JSON;
 import static org.apache.kylin.common.exception.CommonErrorCode.UNKNOWN_ERROR_CODE;
 
-import lombok.NoArgsConstructor;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
@@ -29,10 +29,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * response to client when the return HTTP code is not 200
  */
+@Slf4j
 @Data
 @NoArgsConstructor
 public class ErrorResponse extends EnvelopeResponse<Object> {
@@ -51,12 +54,16 @@ public class ErrorResponse extends EnvelopeResponse<Object> {
     @JsonProperty("error_code")
     public String errorCode;
 
+    public static final String STACK_MSG = "Kylin Service Intercept Stack Feature Enabled.";
+
     public ErrorResponse(String url, Throwable exception) {
         super();
         this.url = url;
         this.exception = exception.getLocalizedMessage();
         this.data = null;
 
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String stackTraceAsString = Throwables.getStackTraceAsString(exception);
         if (exception instanceof KylinException) {
             this.msg = exception.getLocalizedMessage();
             KylinException kylinException = (KylinException) exception;
@@ -64,7 +71,12 @@ public class ErrorResponse extends EnvelopeResponse<Object> {
             this.suggestion = kylinException.getSuggestionString();
             this.errorCode = kylinException.getErrorCodeString();
             if (kylinException.isThrowTrace()) {
-                this.stacktrace = Throwables.getStackTraceAsString(exception);
+                if (config.isGlobalStackInterceptionEnabled()) {
+                    this.stacktrace = STACK_MSG;
+                    log.error(stackTraceAsString);
+                } else {
+                    this.stacktrace = stackTraceAsString;
+                }
             }
             this.data = kylinException.getData();
         } else {
@@ -75,7 +87,12 @@ public class ErrorResponse extends EnvelopeResponse<Object> {
 
             this.msg = errorCodeString + " " + exception.getLocalizedMessage();
             this.code = KylinException.CODE_UNDEFINED;
-            this.stacktrace = Throwables.getStackTraceAsString(exception);
+            if (config.isGlobalStackInterceptionEnabled()) {
+                this.stacktrace = STACK_MSG;
+                log.error(stackTraceAsString);
+            } else {
+                this.stacktrace = Throwables.getStackTraceAsString(exception);
+            }
         }
     }
 

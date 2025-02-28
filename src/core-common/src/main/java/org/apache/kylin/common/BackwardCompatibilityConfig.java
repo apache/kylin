@@ -23,48 +23,46 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Stack;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.OrderedProperties;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class BackwardCompatibilityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(BackwardCompatibilityConfig.class);
 
     private static final String KYLIN_BACKWARD_COMPATIBILITY = "kylin-backward-compatibility";
+    private static final String PROP_FILE_POSTFIX = ".properties";
 
     private final Map<String, String> old2new = Maps.newConcurrentMap();
     private final Map<String, String> old2newPrefix = Maps.newConcurrentMap();
 
     public BackwardCompatibilityConfig() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + ".properties"));
+        init(KYLIN_BACKWARD_COMPATIBILITY + PROP_FILE_POSTFIX, loader);
         for (int i = 0; i < 10; i++) {
-            init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + (i) + ".properties"));
+            init(KYLIN_BACKWARD_COMPATIBILITY + (i) + PROP_FILE_POSTFIX, loader);
         }
     }
 
-    private void init(InputStream is) {
-        if (is == null)
-            return;
-
+    private void init(String fileName, ClassLoader loader) {
         Properties props = new Properties();
-        try {
+        try (InputStream is = loader.getResourceAsStream(fileName)) {
+            if (is == null) {
+                return;
+            }
             props.load(is);
         } catch (IOException e) {
-            logger.error("", e);
-        } finally {
-            IOUtils.closeQuietly(is);
+            logger.error("Failed to get resource file<{}> ", fileName, e);
         }
 
         for (Entry<Object, Object> kv : props.entrySet()) {
@@ -92,9 +90,10 @@ public class BackwardCompatibilityConfig {
             return newKey;
         }
 
-        for (String oldPrefix : old2newPrefix.keySet()) {
+        for (Entry<String, String> oldToNewPrefix : old2newPrefix.entrySet()) {
+            String oldPrefix = oldToNewPrefix.getKey();
             if (key.startsWith(oldPrefix)) {
-                String newPrefix = old2newPrefix.get(oldPrefix);
+                String newPrefix = oldToNewPrefix.getValue();
                 newKey = newPrefix + key.substring(oldPrefix.length());
                 logger.warn("Config '{}' is deprecated, use '{}' instead", key, newKey);
                 return newKey;
@@ -140,43 +139,32 @@ public class BackwardCompatibilityConfig {
         BackwardCompatibilityConfig bcc = new BackwardCompatibilityConfig();
         File repoDir = new File(kylinRepoPath).getCanonicalFile();
         File outputDir = new File(outputPath).getCanonicalFile();
-        PrintWriter out = null;
 
         // generate sed file
         File sedFile = new File(outputDir, "upgrade-old-config.sed");
-        try {
-            out = new PrintWriter(sedFile, Charset.defaultCharset().name());
-            for (Entry<String, String> e : bcc.old2new.entrySet()) {
-                out.println("s/" + quote(e.getKey()) + "/" + e.getValue() + "/g");
-            }
-            for (Entry<String, String> e : bcc.old2newPrefix.entrySet()) {
-                out.println("s/" + quote(e.getKey()) + "/" + e.getValue() + "/g");
-            }
-        } finally {
-            IOUtils.closeQuietly(out);
+        try (PrintWriter out = new PrintWriter(sedFile, Charset.defaultCharset().name())) {
+            bcc.old2new.forEach((key, value) -> out.println("s/" + quote(key) + "/" + value + "/g"));
+            bcc.old2newPrefix.forEach((key, value) -> out.println("s/" + quote(key) + "/" + value + "/g"));
         }
 
         // generate sh file
         File shFile = new File(outputDir, "upgrade-old-config.sh");
-        try {
-            out = new PrintWriter(shFile, Charset.defaultCharset().name());
+        try (PrintWriter out = new PrintWriter(shFile, Charset.defaultCharset().name())) {
             out.println("#!/bin/bash");
-            Stack<File> stack = new Stack<>();
-            stack.push(repoDir);
+            Deque<File> stack = new ArrayDeque<>();
+            stack.offerLast(repoDir);
             while (!stack.isEmpty()) {
-                File dir = stack.pop();
+                File dir = stack.pollLast();
                 for (File f : Objects.requireNonNull(dir.listFiles())) {
                     if (f.getName().startsWith("."))
                         continue;
                     if (f.isDirectory()) {
                         if (acceptSourceDir(f))
-                            stack.push(f);
+                            stack.offerLast(f);
                     } else if (acceptSourceFile(f))
                         out.println("sed -i -f upgrade-old-config.sed " + f.getAbsolutePath());
                 }
             }
-        } finally {
-            IOUtils.closeQuietly(out);
         }
 
         System.out.println("Files generated:");
@@ -208,6 +196,6 @@ public class BackwardCompatibilityConfig {
             return false;
         else
             return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh")
-                    || name.endsWith(".properties") || name.endsWith(".xml");
+                    || name.endsWith(PROP_FILE_POSTFIX) || name.endsWith(".xml");
     }
 }

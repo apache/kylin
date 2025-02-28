@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.kylin.common.util.Unsafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class ReflectionUtil {
      */
     public static void makeAccessible(Field field) {
         if (!Modifier.isPublic(field.getModifiers())) {
-            field.setAccessible(true);
+            Unsafe.changeAccessibleObject(field, true);
         }
     }
 

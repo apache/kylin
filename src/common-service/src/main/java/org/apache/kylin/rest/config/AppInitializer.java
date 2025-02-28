@@ -27,10 +27,9 @@ import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.Constant;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.TransactionDeadLockHandler;
-import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -39,16 +38,16 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HostInfoFetcher;
 import org.apache.kylin.engine.spark.filter.QueryFiltersCollector;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.epoch.EpochOrchestrator;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.streaming.JdbcStreamingJobStatsStore;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.rest.config.initialize.AclTCRListener;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.apache.kylin.rest.config.initialize.CacheCleanListener;
-import org.apache.kylin.rest.config.initialize.EpochChangedListener;
 import org.apache.kylin.rest.config.initialize.JobSchedulerListener;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.config.initialize.ProcessStatusListener;
@@ -57,10 +56,13 @@ import org.apache.kylin.rest.config.initialize.SparderStartEvent;
 import org.apache.kylin.rest.config.initialize.TableSchemaChangeListener;
 import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
+import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler;
 import org.apache.kylin.rest.util.GCLogUploadTask;
+import org.apache.kylin.rest.util.InitResourceGroupUtils;
 import org.apache.kylin.rest.util.JStackDumpTask;
 import org.apache.kylin.rest.util.QueryHistoryOffsetUtil;
 import org.apache.kylin.streaming.jobs.StreamingJobListener;
+import org.apache.kylin.streaming.jobs.scheduler.StreamingScheduler;
 import org.apache.kylin.tool.daemon.KapGuardianHATask;
 import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.garbage.PriorityExecutor;
@@ -92,9 +94,6 @@ public class AppInitializer {
 
     @Autowired(required = false)
     CommonQueryCacheSupporter queryCacheManager;
-
-    @Autowired(required = false)
-    EpochChangedListener epochChangedListener;
 
     @Autowired(required = false)
     HostInfoFetcher hostInfoFetcher;
@@ -131,34 +130,32 @@ public class AppInitializer {
         if (!isQueryOnly) {
             // restore from metadata, should not delete
             val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-            resourceStore.setChecker(e -> {
-                String instance = e.getInstance();
-                String localIdentify = EpochOrchestrator.getOwnerIdentity().split("\\|")[0];
-                return localIdentify.equalsIgnoreCase(instance);
-            });
+            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+                ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).createMetaStoreUuidIfNotExist();
+                return true;
+            }, ResourceStore.GLOBAL_PROJECT);
             if (!isResource) {
                 resourceStore.catchup();
             }
+            InitResourceGroupUtils.initResourceGroup();
             if (isJob || isDataLoading) {
                 // register scheduler listener
                 EventBusFactory.getInstance().register(new JobSchedulerListener(), false);
-                if (kylinConfig.streamingEnabled())
+                if (kylinConfig.isStreamingConfigEnabled())
                     streamingJobStatsStore = new JdbcStreamingJobStatsStore(kylinConfig);
                 // register scheduler listener
                 EventBusFactory.getInstance().register(new StreamingJobListener(), true);
             }
             if (isJob || isMetadata) {
                 EventBusFactory.getInstance().register(new ModelBrokenListener(), false);
-                EventBusFactory.getInstance().register(epochChangedListener, false);
             }
-            EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
 
             SparkJobFactoryUtils.initJobFactory();
-            TransactionDeadLockHandler.getInstance().start();
+            ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
         } else {
             val auditLogStore = new JdbcAuditLogStore(kylinConfig);
-            val epochStore = EpochStore.getEpochStore(kylinConfig);
             kylinConfig.setQueryHistoryUrl(kylinConfig.getQueryHistoryUrl().toString());
+            kylinConfig.setJDBCQueryHistoryURL(kylinConfig.getQueryHistoryUrl().toString());
             kylinConfig.setStreamingStatsUrl(kylinConfig.getStreamingStatsUrl().toString());
             kylinConfig.setJdbcShareStateUrl(kylinConfig.getJdbcShareStateUrl().toString());
             if (kylinConfig.getMetadataStoreType().equals("hdfs")) {
@@ -169,12 +166,13 @@ public class AppInitializer {
             val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
             resourceStore.getMetadataStore().setAuditLogStore(auditLogStore);
             resourceStore.catchup();
-            resourceStore.getMetadataStore().setEpochStore(epochStore);
         }
 
+        kylinConfig.setQueryHistoryUrl(kylinConfig.getQueryHistoryUrl().toString());
         kylinConfig.getDistributedLockFactory().initialize();
         if (!isResource) {
             warmUpSystemCache();
+            cacheCcRexNode();
         }
         context.publishEvent(new AfterMetadataReadyEvent(context));
 
@@ -194,7 +192,7 @@ public class AppInitializer {
                 QueryFiltersCollector.initScheduler();
             }
         }
-        EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
+        EventBusFactory.getInstance().register(ProcessStatusListener.getInstance(), true);
         // register for clean cache when delete
         EventListenerRegistry.getInstance(kylinConfig).register(new CacheCleanListener(), "cacheInManager");
 
@@ -202,8 +200,10 @@ public class AppInitializer {
 
         if (kylinConfig.isAllowNonAsciiCharInUrl()) {
             // Note: DefaultHttpFirewall vs StrictHttpFirewall
-            // In order to allow Chinese chars on URL like "/{cubeName}/segments", we have to use DefaultHttpFirewall.
-            // If later we have to use StrictHttpFirewall, then StrictHttpFirewall.rejectNonPrintableAsciiCharactersInFieldName()
+            // In order to allow Chinese chars on URL like "/{cubeName}/segments",
+            // we have to use DefaultHttpFirewall.
+            // If later we have to use StrictHttpFirewall,
+            // then StrictHttpFirewall.rejectNonPrintableAsciiCharactersInFieldName()
             // must be overridden to allow Chinese chars on URL.
             FilterChainProxy filterChainProxy = context.getBean(FilterChainProxy.class);
             filterChainProxy.setFirewall(this.getHttpFirewall());
@@ -217,9 +217,8 @@ public class AppInitializer {
         log.info("KylinConfig in env, working dir is {}", kylinConfig.getHdfsWorkingDirectory());
 
         // Init global static instances
-        CleanTaskExecutorService.getInstance().bindWorkingPool(
-            () -> PriorityExecutor.newWorkingThreadPool(
-                "clean-storages-pool", kylinConfig.getStorageCleanTaskConcurrency()));
+        CleanTaskExecutorService.getInstance().bindWorkingPool(() -> PriorityExecutor
+                .newWorkingThreadPool("clean-storages-pool", kylinConfig.getStorageCleanTaskConcurrency()));
     }
 
     private void warmUpSystemCache() {
@@ -232,15 +231,21 @@ public class AppInitializer {
         log.info("The system cache is warmed up.");
     }
 
+    private void cacheCcRexNode() {
+        Thread thread = new Thread(() -> {
+            log.info("cache ComputedColumn RexNode cache.");
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            List<ProjectInstance> projects = NProjectManager.getInstance(kylinConfig).listAllProjects();
+            projects.forEach(prjInstance -> ComputedColumnRewriter.cacheCcRexNode(kylinConfig, prjInstance.getName()));
+        });
+        thread.setName("CacheComputedColumnRexNodeThread");
+        thread.start();
+    }
+
     private void resetProjectOffsetId() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         List<ProjectInstance> prjInstances = NProjectManager.getInstance(kylinConfig).listAllProjects();
-        EpochManager epochManager = EpochManager.getInstance();
-        prjInstances.forEach(project -> {
-            if (epochManager.checkEpochOwner(project.getName())) {
-                QueryHistoryOffsetUtil.resetOffsetId(project.getName());
-            }
-        });
+        prjInstances.forEach(project -> QueryHistoryOffsetUtil.resetOffsetId(project.getName()));
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -248,7 +253,6 @@ public class AppInitializer {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         setFsUrlStreamHandlerFactory();
         if (kylinConfig.isJobNode() || kylinConfig.isMetadataNode()) {
-            new EpochOrchestrator(kylinConfig);
             resetProjectOffsetId();
         }
         if (kylinConfig.getJStackDumpTaskEnabled()) {
@@ -269,6 +273,27 @@ public class AppInitializer {
         taskScheduler.scheduleAtFixedRate(new ProjectSerialEventBus.TimingDispatcher(),
                 ProjectSerialEventBus.TimingDispatcher.INTERVAL);
 
+        initSchedule();
+
+    }
+
+    private void initSchedule() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.isJobNode() || kylinConfig.isDataLoadingNode()) {
+            StreamingScheduler ss = StreamingScheduler.getInstance();
+            ss.init();
+            if (!ss.getHasStarted().get()) {
+                throw new KylinRuntimeException("Streaming Scheduler has not been started");
+            }
+        }
+
+        if (kylinConfig.getQueryHistoryAccelerateInterval() > 0) {
+            QueryHistoryMetaUpdateScheduler qhMetaUpdateScheduler = QueryHistoryMetaUpdateScheduler.getInstance();
+            qhMetaUpdateScheduler.init();
+            if (!qhMetaUpdateScheduler.hasStarted()) {
+                throw new KylinRuntimeException("Query history accelerate scheduler has not been started");
+            }
+        }
     }
 
     private void postInit() {
@@ -287,5 +312,4 @@ public class AppInitializer {
     public HttpFirewall getHttpFirewall() {
         return new DefaultHttpFirewall();
     }
-
 }

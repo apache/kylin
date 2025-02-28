@@ -21,12 +21,12 @@ package org.apache.kylin.rest.response;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.RetentionRange;
 import org.apache.kylin.metadata.model.VolatileRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;

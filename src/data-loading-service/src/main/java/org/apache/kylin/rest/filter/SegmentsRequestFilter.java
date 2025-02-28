@@ -42,6 +42,7 @@ import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -50,7 +51,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -83,8 +83,7 @@ public class SegmentsRequestFilter implements Filter {
                 MsgPicker.setMsg(httpServletRequest.getHeader(HttpHeaders.ACCEPT_LANGUAGE));
                 ErrorCode.setMsg(httpServletRequest.getHeader(HttpHeaders.ACCEPT_LANGUAGE));
 
-                ErrorResponse errorResponse = new ErrorResponse(httpServletRequest.getRequestURL().toString(),
-                        e);
+                ErrorResponse errorResponse = new ErrorResponse(httpServletRequest.getRequestURL().toString(), e);
                 byte[] responseBody = JsonUtil.writeValueAsBytes(errorResponse);
 
                 HttpServletResponse httpServletResponse = (HttpServletResponse) response;

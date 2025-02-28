@@ -1,0 +1,114 @@
+{
+  "uuid" : "3c7c2930-73b1-4058-867f-b10ec8afaa17",
+  "last_modified" : 1497949795863,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CUSTOMER_ADDRESS",
+  "last_build_job_id" : "1e70a165-681e-4a0c-8db1-aca7ea98c889",
+  "columns_stats" : [ {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 70150
+  }, {
+    "max_value" : "AAAAAAAAPPPPAAAA",
+    "min_value" : "AAAAAAAAAAAABAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 73155
+  }, {
+    "max_value" : "999",
+    "min_value" : "",
+    "max_length_value" : "1000",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 1010
+  }, {
+    "max_value" : "Woodland Woodland",
+    "min_value" : "",
+    "max_length_value" : "Washington Washington",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 7339
+  }, {
+    "max_value" : "Wy",
+    "min_value" : "",
+    "max_length_value" : "Boulevard",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 21
+  }, {
+    "max_value" : "Suite Y",
+    "min_value" : "",
+    "max_length_value" : "Suite 280",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 75
+  }, {
+    "max_value" : "Youngstown",
+    "min_value" : "",
+    "max_length_value" : "Country Club Estates",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 789
+  }, {
+    "max_value" : "Ziebach County",
+    "min_value" : "",
+    "max_length_value" : "Fairbanks North Star Borough",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 1863
+  }, {
+    "max_value" : "WY",
+    "min_value" : "",
+    "max_length_value" : "AZ",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "99981",
+    "min_value" : "",
+    "max_length_value" : "86192",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4176
+  }, {
+    "max_value" : "United States",
+    "min_value" : "",
+    "max_length_value" : "United States",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "-5.0",
+    "min_value" : "-10.0",
+    "max_length_value" : "-10.0",
+    "min_length_value" : "-7.0",
+    "null_count" : 2209,
+    "cardinality" : 6
+  }, {
+    "max_value" : "single family",
+    "min_value" : "",
+    "max_length_value" : "single family",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAADAAAAAAA", "AAAAAAAAFAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAJAAAAAAA", "AAAAAAAALAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAPAAAAAAA", "AAAAAAAABBAAAAAA", "AAAAAAAADBAAAAAA" ], [ "18", "585", "31", "", "819", "189", "424", "314", "801", "611" ], [ "Jackson ", "Dogwood Washington", "College ", "Hill 7th", "1st Laurel", "13th 2nd", "Main Second", "Spring ", "Green ", "Wilson " ], [ "Parkway", "Circle", "Blvd", "Road", "Ave", "Street", "Ln", "Ct.", "Dr.", "Way" ], [ "Suite 280", "Suite Q", "Suite 180", "Suite U", "Suite 70", "Suite 470", "Suite 130", "Suite B", "Suite 0", "Suite O" ], [ "Fairfield", "Pleasant Valley", "Glendale", "Farmington", "New Hope", "Maple Grove", "Greenville", "Oakland", "Montpelier", "Oakdale" ], [ "Maricopa County", "York County", "Barry County", "", "Perry County", "Madison County", "Noxubee County", "Washington County", "Richland County", "Tangipahoa Parish" ], [ "AZ", "PA", "MO", "", "AL", "MT", "MS", "OH", "OH", "LA" ], [ "86192", "12477", "63951", "39145", "39431", "68252", "51387", "49843", "48930", "79584" ], [ "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States" ], [ "-7.0", "-5.0", "-6.0", "", "-6.0", "-7.0", "-6.0", "-5.0", "-5.0", "-6.0" ], [ "condo", "single family", "single family", "", "condo", "single family", "single family", "apartment", "single family", "apartment" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "72000",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "940874",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/customer_address",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

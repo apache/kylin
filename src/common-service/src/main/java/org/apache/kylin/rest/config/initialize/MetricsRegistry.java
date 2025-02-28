@@ -42,6 +42,8 @@ import org.apache.kylin.common.metrics.MetricsTag;
 import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -59,6 +61,8 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.query.util.LoadCounter;
 import org.apache.kylin.query.util.LoadDesc;
 import org.apache.kylin.rest.service.ProjectService;
@@ -69,11 +73,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.RatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -116,7 +116,7 @@ public class MetricsRegistry {
         projectPendingJobMap = tempProjectPendingJobMap;
         projectRunningJobMap = tempProjectRunningJobMap;
     }
-    
+
     private static Map<Integer, Long> collectTimeoutToPendingJobsMap(ExecutableManager executableManager) {
         Map<Integer, Long> timeoutToPendingJobsMap = Maps.newHashMap();
         List<AbstractExecutable> pendingJobs = executableManager.getAllJobs().stream()
@@ -198,30 +198,28 @@ public class MetricsRegistry {
                                     }
                                 }
                                 return count;
-                            }).tags(MetricsTag.STATE.getVal(), state, MetricsTag.POOL.getVal(), "dbcp2",
+                            })
+                            .tags(MetricsTag.STATE.getVal(), state, MetricsTag.POOL.getVal(), "dbcp2",
                                     MetricsTag.TYPE.getVal(), driver)
-                            .description("Number of Metastore(RDBMS) connections")
-                            .strongReference(true).register(meterRegistry));
+                            .description("Number of Metastore(RDBMS) connections").strongReference(true)
+                            .register(meterRegistry));
         }
 
         Gauge.builder(PrometheusMetrics.SPARDER_UP.getValue(), () -> SparderEnv.isSparkAvailable() ? 1 : 0)
-                .description("Health status of spark context(query engine)")
-                .strongReference(true).register(meterRegistry);
+                .description("Health status of spark context(query engine)").strongReference(true)
+                .register(meterRegistry);
 
         Gauge.builder(PrometheusMetrics.SPARK_TASKS.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getPendingTaskCount() : 0)
                 .tags(MetricsTag.STATE.getVal(), MetricsTag.PENDING.getVal()).strongReference(true)
-                .description("Number of pending spark tasks of query engine")
-                .register(meterRegistry);
+                .description("Number of pending spark tasks of query engine").register(meterRegistry);
         Gauge.builder(PrometheusMetrics.SPARK_TASKS.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getRunningTaskCount() : 0)
                 .tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal()).strongReference(true)
-                .description("Number of running spark tasks of query engine")
-                .register(meterRegistry);
+                .description("Number of running spark tasks of query engine").register(meterRegistry);
         Gauge.builder(PrometheusMetrics.SPARK_TASK_UTILIZATION.getValue(), LoadCounter.getInstance(),
                 e -> SparderEnv.isSparkAvailable() ? e.getRunningTaskCount() * 1.0 / e.getSlotCount() : 0)
-                .description("Ratio of spark cores utilization.")
-                .strongReference(true).register(meterRegistry);
+                .description("Ratio of spark cores utilization.").strongReference(true).register(meterRegistry);
     }
 
     public static void registerProjectPrometheusMetrics(KylinConfig kylinConfig, String project) {
@@ -235,28 +233,29 @@ public class MetricsRegistry {
                 JobContext jobContext = JobContextUtil.getJobContext(kylinConfig);
                 return Objects.isNull(jobContext) ? 0
                         : jobContext.getJobScheduler().getRunningJob().values().stream().map(pair -> pair.getFirst())
-                        .filter(jobExecutable -> project.equals(jobExecutable.getProject())).count();
+                                .filter(jobExecutable -> project.equals(jobExecutable.getProject())).count();
             }).tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal())
-            .description("Number of spark job by build engine").register(meterRegistry);
+                    .description("Number of spark job by build engine").register(meterRegistry);
         }
+        Gauge.builder(PrometheusMetrics.PROJECT_LIST.getValue(), () -> 0).tags(projectTag).register(meterRegistry);
         for (double runningTimeoutHour : RUNNING_JOB_TIMEOUT_HOUR) {
             Gauge.builder(PrometheusMetrics.JOB_LONG_RUNNING.getValue(),
-                    () -> MetricsRegistry.projectRunningJobMap.getOrDefault(project, Maps.newHashMap())
-                            .getOrDefault(runningTimeoutHour, 0L))
-                    .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal(),
-                            MetricsTag.TIMEOUT.getVal(), runningTimeoutHour + "h")
-                    .description("Number of spark job by query engine")
-                    .register(meterRegistry);
+                    () -> MetricsRegistry.projectRunningJobMap
+                            .getOrDefault(project, Maps.newHashMap()).getOrDefault(runningTimeoutHour, 0L))
+                    .tags(projectTag)
+                    .tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal(), MetricsTag.TIMEOUT.getVal(),
+                            runningTimeoutHour + "h")
+                    .description("Number of spark job by query engine").register(meterRegistry);
         }
 
         for (int waitTimeoutMin : PENDING_JOB_TIMEOUT_MINUTE) {
             Gauge.builder(PrometheusMetrics.JOB_LONG_RUNNING.getValue(),
                     () -> MetricsRegistry.projectPendingJobMap.getOrDefault(project, Maps.newHashMap())
                             .getOrDefault(waitTimeoutMin, 0L))
-                    .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.WAITING.getVal(),
-                            MetricsTag.TIMEOUT.getVal(), waitTimeoutMin + "m")
-                    .description("Number of spark job by build engine which ")
-                    .register(meterRegistry);
+                    .tags(projectTag)
+                    .tags(MetricsTag.STATE.getVal(), MetricsTag.WAITING.getVal(), MetricsTag.TIMEOUT.getVal(),
+                            waitTimeoutMin + "m")
+                    .description("Number of spark job by build engine which ").register(meterRegistry);
         }
     }
 
@@ -341,7 +340,7 @@ public class MetricsRegistry {
             return list == null ? 0 : list.size();
         });
 
-        boolean streamingEnabled = config.streamingEnabled();
+        boolean streamingEnabled = config.isStreamingEnabled();
         final NDataflowManager dataflowManager = NDataflowManager.getInstance(config, project);
         MetricsGroup.newGauge(MetricsName.HEALTHY_MODEL_GAUGE, MetricsCategory.PROJECT, project, () -> {
             List<NDataModel> list = dataflowManager.listUnderliningDataModels().stream()
@@ -371,7 +370,7 @@ public class MetricsRegistry {
 
     static void registerModelMetrics(KylinConfig config, String project) {
         NDataModelManager modelManager = NDataModelManager.getInstance(config, project);
-        boolean streamingEnabled = config.streamingEnabled();
+        boolean streamingEnabled = config.isStreamingEnabled();
         modelManager.listAllModels().stream().filter(model -> model.isAccessible(streamingEnabled))
                 .forEach(model -> registerModelMetrics(project, model.getId(), model.getAlias()));
     }

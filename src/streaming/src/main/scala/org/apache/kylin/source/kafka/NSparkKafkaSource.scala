@@ -17,10 +17,7 @@
  */
 package org.apache.kylin.source.kafka
 
-import java.util.Map
-import java.util.concurrent.ArrayBlockingQueue
-
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.metadata.model.{IBuildable, SegmentRange, TableDesc}
@@ -30,6 +27,8 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.types.{StringType, StructType}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
+import java.util.Map
+import java.util.concurrent.ArrayBlockingQueue
 import scala.io.Source
 
 

@@ -31,6 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
@@ -81,7 +82,7 @@ public class AclManager {
     public AclManager(KylinConfig config) {
         this.config = config;
         ResourceStore aclStore = ResourceStore.getKylinMetaStore(config);
-        this.crud = new CachedCrudAssist<AclRecord>(aclStore, ResourceStore.ACL_ROOT, "", AclRecord.class) {
+        this.crud = new CachedCrudAssist<AclRecord>(aclStore, MetadataType.OBJECT_ACL, null, AclRecord.class) {
             @Override
             protected AclRecord initEntityAfterReload(AclRecord acl, String resourceName) {
                 acl.init(null, SpringContext.getBean(PermissionFactory.class),
@@ -96,7 +97,7 @@ public class AclManager {
             PermissionGrantingStrategy permissionGrantingStrategy) {
         this.config = config;
         ResourceStore aclStore = ResourceStore.getKylinMetaStore(config);
-        this.crud = new CachedCrudAssist<AclRecord>(aclStore, ResourceStore.ACL_ROOT, "", AclRecord.class) {
+        this.crud = new CachedCrudAssist<AclRecord>(aclStore, MetadataType.ACL, null, AclRecord.class) {
             @Override
             protected AclRecord initEntityAfterReload(AclRecord acl, String resourceName) {
                 acl.init(null, permissionFactory, permissionGrantingStrategy);

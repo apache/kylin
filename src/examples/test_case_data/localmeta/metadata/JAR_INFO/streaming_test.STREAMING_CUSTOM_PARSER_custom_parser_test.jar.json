@@ -1,0 +1,10 @@
+{
+  "uuid" : "ac3fd5e4-999a-4ca4-aefb-307c3c957f37",
+  "last_modified" : -1,
+  "create_time" : 1622187328509,
+  "version" : "4.0.0.0",
+  "project" : "streaming_test",
+  "jar_name" : "custom_parser_test.jar",
+  "jar_path" : "/streaming_test/jar/custom_parser_test.jar",
+  "jar_type" : "STREAMING_CUSTOM_PARSER"
+}

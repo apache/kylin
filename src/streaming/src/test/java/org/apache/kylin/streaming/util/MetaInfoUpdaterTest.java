@@ -19,9 +19,10 @@ package org.apache.kylin.streaming.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -102,11 +103,12 @@ public class MetaInfoUpdaterTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(jobMeta.getLastEndTime());
         Assert.assertNotNull(jobMeta.getLastUpdateTime());
 
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            copyForWrite.setYarnAppId("application_1626786933603_1752");
-            copyForWrite
-                    .setYarnAppUrl("http://sandbox.hortonworks.com:8088/cluster/app/application_1626786933603_1752");
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> StreamingJobManager.getInstance(getTestConfig(), PROJECT)
+                .updateStreamingJob(jobId, copyForWrite -> {
+                    copyForWrite.setYarnAppId("application_1626786933603_1752");
+                    copyForWrite.setYarnAppUrl(
+                            "http://sandbox.hortonworks.com:8088/cluster/app/application_1626786933603_1752");
+                }), PROJECT);
         MetaInfoUpdater.updateJobState(PROJECT, jobId, JobStatusEnum.STARTING);
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(StringUtils.EMPTY, jobMeta.getYarnAppId());

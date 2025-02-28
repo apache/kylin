@@ -17,11 +17,14 @@
  */
 package org.apache.kylin.rest;
 
+import static org.apache.kylin.common.util.TestUtils.getTestConfig;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.rest.config.KylinPropertySourceConfiguration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Profiles;
 
+import lombok.val;
+
+@MetadataInfo(onlyProps = true)
 class KylinPrepareEnvListenerTest {
 
     private SpringApplication application;
@@ -84,6 +90,11 @@ class KylinPrepareEnvListenerTest {
         configuration.setSystemProperty(properties);
         String property = System.getProperty("org.springframework.ldap.core.keyCaseFold");
         Assertions.assertEquals("none", property);
+        val kylinConfig = getTestConfig();
+        kylinConfig.setProperty("spring.session.store-type", "jdbc");
+        configuration.discardJDBCCleanSessionProperties(kylinConfig);
+        String storeType = System.getProperty("spring.session.jdbc.cleanup-cron");
+        Assertions.assertEquals("-", storeType);
     }
 
     @Configuration

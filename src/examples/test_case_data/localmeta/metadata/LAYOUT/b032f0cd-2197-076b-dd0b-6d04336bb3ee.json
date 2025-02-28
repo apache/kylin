@@ -1,0 +1,37 @@
+{
+  "uuid" : "b032f0cd-2197-076b-dd0b-6d04336bb3ee",
+  "last_modified" : 1699339041425,
+  "create_time" : 1699339041424,
+  "version" : "4.0.0.0",
+  "dataflow" : "360d312b-6a74-1688-626d-4f2d99fd23a8",
+  "layout_instances" : [ {
+    "layout_id" : 1,
+    "build_job_id" : "3ba82cc3-ae6e-bb0d-55c5-f9689b435df4-360d312b-6a74-1688-626d-4f2d99fd23a8",
+    "rows" : 20,
+    "byte_size" : 1342,
+    "file_count" : 1,
+    "source_rows" : 60175,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "is_ready" : false,
+    "create_time" : 1699339252957,
+    "multi_partition" : [ ],
+    "abnormal_type" : null
+  }, {
+    "layout_id" : 20000000001,
+    "build_job_id" : "3ba82cc3-ae6e-bb0d-55c5-f9689b435df4-360d312b-6a74-1688-626d-4f2d99fd23a8",
+    "rows" : 60175,
+    "byte_size" : 13091,
+    "file_count" : 1,
+    "source_rows" : 60175,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "is_ready" : false,
+    "create_time" : 1699339252957,
+    "multi_partition" : [ ],
+    "abnormal_type" : null
+  } ],
+  "project" : "test_jdbc"
+}

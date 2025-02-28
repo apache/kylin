@@ -20,9 +20,9 @@ package org.apache.kylin.tool;
 import java.util.Arrays;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

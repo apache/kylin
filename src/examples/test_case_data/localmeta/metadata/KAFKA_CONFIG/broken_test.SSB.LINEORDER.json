@@ -1,0 +1,14 @@
+{
+  "uuid" : "459a3ef2-b4f1-488c-96cc-bc87aef3dc9a",
+  "last_modified" : 0,
+  "create_time" : 1625111866168,
+  "version" : "4.0.0.0",
+  "database" : "SSB",
+  "name" : "LINEORDER",
+  "project" : "broken_test",
+  "kafka_bootstrap_servers" : "10.1.2.210:9092",
+  "subscribe" : "ssb_topic",
+  "starting_offsets" : "latest",
+  "batch_table_identity" : "",
+  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
+}

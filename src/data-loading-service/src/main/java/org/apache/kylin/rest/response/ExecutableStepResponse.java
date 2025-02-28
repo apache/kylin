@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepCmdTypeEnum;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -31,7 +32,6 @@ import org.apache.kylin.job.execution.ExecutableState;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 

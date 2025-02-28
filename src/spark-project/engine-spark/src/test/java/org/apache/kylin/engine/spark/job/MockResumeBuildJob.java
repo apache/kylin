@@ -24,9 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
 public class MockResumeBuildJob extends DFBuildJob {
     // for ut only

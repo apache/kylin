@@ -1,0 +1,58 @@
+{
+  "name" : "19980101000000_19990101000000",
+  "create_time_utc" : 1699500797946,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 883583000000,
+    "date_range_end" : 915120000000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "11" : {
+      "min" : "1-URGENT",
+      "max" : "5-LOW"
+    },
+    "1" : {
+      "min" : "1",
+      "max" : "20000"
+    },
+    "16" : {
+      "min" : "1",
+      "max" : "2999"
+    },
+    "7" : {
+      "min" : "1",
+      "max" : "200"
+    },
+    "10" : {
+      "min" : "19980101",
+      "max" : "19980802"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1699501443515,
+  "source_count" : 54521,
+  "source_bytes_size" : 57003296,
+  "column_source_bytes" : {
+    "SSB.LINEORDER.LO_ORDERPRIOTITY" : 416704,
+    "SSB.LINEORDER.LO_ORDERDATE" : 436168,
+    "SSB.LINEORDER.LO_SUPPKEY" : 133794,
+    "SSB.LINEORDER.LO_PARTKEY" : 243381,
+    "SSB.LINEORDER.LO_CUSTKEY" : 198183
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "19d129a3-0070-d228-9cc5-acafe78179f5",
+  "model_uuid" : "d0bbfa51-9c16-b6e5-1d33-76b47d8853eb",
+  "project" : "segment_overlap_test"
+}

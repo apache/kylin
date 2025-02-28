@@ -17,17 +17,32 @@
 
 package org.apache.spark.sql.execution
 
+import java.io.File
+import java.util.concurrent.TimeUnit
+
+import org.apache.commons.lang3.StringUtils
+import org.apache.gluten.extension.columnar.heuristic.HeuristicTransform
+import org.apache.hadoop.fs.Path
 import org.apache.kylin.cache.softaffinity.SoftAffinityConstants
-import org.apache.spark.{SparkConf, SparkFunSuite}
+import org.apache.spark.SparkFunSuite
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.plans.SQLHelper
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.util.stackTraceToString
+import org.apache.spark.sql.common.LocalMetadata
+import org.apache.spark.sql.delta.KylinDeltaLogFileIndex
+import org.apache.spark.sql.delta.actions.AddFile
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
-import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, LayoutFileSourceStrategy}
-import org.apache.spark.sql.execution.datasources.{CacheFileScanRDD, FileScanRDD}
+import org.apache.spark.sql.execution.datasource._
+import org.apache.spark.sql.execution.datasources._
+import org.apache.spark.sql.execution.gluten.KylinStorageScanExecTransformer
+import org.mockito.{ArgumentMatchers, Mockito}
+
+import com.google.common.cache.CacheBuilder
 
 class KylinFileSourceScanExecSuite extends SparkFunSuite
-  with SQLHelper with AdaptiveSparkPlanHelper {
+  with SQLHelper with AdaptiveSparkPlanHelper with LocalMetadata {
 
   override def beforeEach(): Unit = {
     clearSparkSession()
@@ -38,21 +53,74 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
   }
 
   test("Create sharding read RDD with Soft affinity - CacheFileScanRDD") {
+    SparkSession.cleanupAnyExistingSession()
+    val spark = SparkSession.builder()
+      .master("local[1]")
+      .config(SoftAffinityConstants.PARAMS_KEY_SOFT_AFFINITY_ENABLED, "true")
+      .withExtensions { ext =>
+        ext.injectPlannerStrategy(_ => KylinSourceStrategy)
+        ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
+        ext.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
+      }
+      .getOrCreate()
+
     withTempPath { path =>
-      SparkSession.cleanupAnyExistingSession()
       val tempDir = path.getCanonicalPath
+
+      val df = createSimpleFilePrunnerDF(spark, tempDir)
+      assert(getFileSourceScanExec(df).isInstanceOf[KylinFileSourceScanExec])
+      assert(getFileSourceScanExec(df).asInstanceOf[KylinFileSourceScanExec].inputRDD.isInstanceOf[CacheFileScanRDD])
+
+    }
+
+    withTempPath { path =>
+      val tempDir = path.getCanonicalPath
+
+      val df = createSimpleFileDeltaDF(spark, tempDir)
+      assert(getFileSourceScanExec(df).isInstanceOf[KylinStorageScanExec])
+      assert(getFileSourceScanExec(df).asInstanceOf[KylinStorageScanExec].inputRDD.isInstanceOf[CacheFileScanRDD])
+    }
+
+    spark.sparkContext.stop()
+  }
+
+  test("[Gluten] Create sharding read RDD with Soft affinity - CacheFileScanRDD") {
+    val chLibPath = System.getProperty("clickhouse.lib.path")
+    if (StringUtils.isEmpty(chLibPath) || !new File(chLibPath).exists) {
+      log.warn("-Dclickhouse.lib.path is not set or path not exists, skip gluten config")
+    } else {
+      SparkSession.cleanupAnyExistingSession()
       val spark = SparkSession.builder()
         .master("local[1]")
         .config(SoftAffinityConstants.PARAMS_KEY_SOFT_AFFINITY_ENABLED, "true")
+        .config("spark.sql.shuffle.partitions", "1")
+        .config("spark.sql.adaptive.enabled", "false")
+        .config("spark.plugins", "org.apache.gluten.GlutenPlugin")
+        .config("spark.shuffle.manager", "org.apache.spark.shuffle.sort.ColumnarShuffleManager")
+        .config("spark.io.compression.codec", "LZ4")
+        .config("spark.gluten.sql.columnar.libpath", chLibPath)
+        .config("spark.gluten.sql.enable.native.validation", "false")
+        .config("spark.memory.offHeap.enabled", "true")
+        .config("spark.memory.offHeap.size", "2G")
+        .config("spark.gluten.sql.columnar.extended.columnar.pre.rules",
+          "org.apache.spark.sql.execution.gluten.ConvertKylinFileSourceToGlutenRule")
         .withExtensions { ext =>
           ext.injectPlannerStrategy(_ => KylinSourceStrategy)
           ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
+          ext.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
         }
         .getOrCreate()
 
-      val df = createSimpleDF(spark, tempDir)
+      withTempPath { path =>
+        val tempDir = path.getCanonicalPath
+        val df = createSimpleFileDeltaDF(spark, tempDir)
+        val transformed = HeuristicTransform.static()(df.queryExecution.executedPlan)
+        val res = transformed.collect {
+          case p: KylinStorageScanExecTransformer => p
+        }
+        assertResult(1)(res.size)
+      }
 
-      assert(getFileSourceScanExec(df).inputRDD.isInstanceOf[CacheFileScanRDD])
       spark.sparkContext.stop()
     }
   }
@@ -70,9 +138,9 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
         }
         .getOrCreate()
 
-      val df = createSimpleDF(spark, tempDir)
+      val df = createSimpleFilePrunnerDF(spark, tempDir)
 
-      assert(getFileSourceScanExec(df).inputRDD.isInstanceOf[FileScanRDD])
+      assert(getFileSourceScanExec(df).asInstanceOf[KylinFileSourceScanExec].inputRDD.isInstanceOf[FileScanRDD])
       spark.sparkContext.stop()
     }
   }
@@ -129,6 +197,30 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
     }
   }
 
+  private def createSimpleFilePrunnerDF(spark: SparkSession, tempDir: String) = {
+    val df = createSimpleDF(spark, tempDir)
+    val plan = df.queryExecution.logical
+    val fp = Mockito.mock(classOf[FilePruner])
+    Mockito.when(fp.listFilesInternal(ArgumentMatchers.any(),
+      ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(Seq.empty[PartitionDirectory])
+    Mockito.when(fp.metadataOpsTimeNs).thenReturn(Some(0L))
+    Mockito.when(fp.rootPaths).thenReturn(Seq.empty[Path])
+    Dataset.ofRows(spark, replaceFileIndex(plan, fp))
+  }
+
+  private def createSimpleFileDeltaDF(spark: SparkSession, tempDir: String) = {
+    val df = createSimpleDF(spark, tempDir)
+    val plan = df.queryExecution.logical
+    val fp = Mockito.mock(classOf[KylinDeltaLogFileIndex])
+    Mockito.when(fp.listFiles(ArgumentMatchers.any(),
+      ArgumentMatchers.any())).thenReturn(Seq.empty[PartitionDirectory])
+    Mockito.when(fp.metadataOpsTimeNs).thenReturn(Some(0L))
+    Mockito.when(fp.rootPaths).thenReturn(Seq.empty[Path])
+    Mockito.when(fp.DeltaExpressionCache).thenReturn(CacheBuilder.newBuilder()
+      .expireAfterAccess(12, TimeUnit.HOURS).build[(Seq[Expression], Seq[Expression]), (Seq[AddFile], Long)]())
+    Dataset.ofRows(spark, replaceFileIndex(plan, fp))
+  }
+
   private def createSimpleDF(spark: SparkSession, tempDir: String) = {
     spark.range(10)
       .selectExpr("id % 2 as a", "id % 3 as b", "id as c")
@@ -141,9 +233,19 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
       .agg("c" -> "sum")
   }
 
+  def replaceFileIndex(
+                        target: LogicalPlan,
+                        fileIndex: FileIndex): LogicalPlan = {
+    target transform {
+      case l@LogicalRelation(hfsr: HadoopFsRelation, _, _, _) =>
+        l.copy(relation = hfsr.copy(location = fileIndex)(hfsr.sparkSession))
+    }
+  }
+
   private def getFileSourceScanExec(df: DataFrame) = {
     collectFirst(df.queryExecution.executedPlan) {
       case p: KylinFileSourceScanExec => p
+      case p: KylinStorageScanExec => p
       case p: LayoutFileSourceScanExec => p
     }.get
   }

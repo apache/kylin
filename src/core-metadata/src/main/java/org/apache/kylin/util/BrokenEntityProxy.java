@@ -71,5 +71,4 @@ public class BrokenEntityProxy implements MethodInterceptor {
 
         throw new RuntimeException("call on Broken Entity's " + method.getName() + " method");
     }
-
 }

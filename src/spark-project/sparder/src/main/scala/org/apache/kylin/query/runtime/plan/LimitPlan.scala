@@ -18,22 +18,22 @@
 package org.apache.kylin.query.runtime.plan
 
 import org.apache.calcite.DataContext
-import org.apache.kylin.query.relnode.KapLimitRel
+import org.apache.kylin.query.relnode.OlapLimitRel
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.catalyst.plans.logical.{Limit, LogicalPlan, Offset}
 
 object LimitPlan {
   def limit(plan: LogicalPlan,
-            rel: KapLimitRel,
+            rel: OlapLimitRel,
             dataContext: DataContext): LogicalPlan = {
     val visitor = new SparderRexVisitor(plan,
       rel.getInput.getRowType,
       dataContext)
-    val limit = BigDecimal(rel.localFetch.accept(visitor).toString).toInt
+    val limit = BigDecimal(rel.getLocalFetch.accept(visitor).toString).toInt
 
-    if (rel.localOffset != null) {
-      val offset = BigDecimal(rel.localOffset.accept(visitor).toString).toInt
+    if (rel.getLocalOffset != null) {
+      val offset = BigDecimal(rel.getLocalOffset.accept(visitor).toString).toInt
       val offsetPlan = Offset(Literal(offset), plan)
       Limit(Literal(limit), offsetPlan)
     } else {

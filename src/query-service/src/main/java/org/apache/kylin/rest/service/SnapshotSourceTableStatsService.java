@@ -90,8 +90,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
                     val sourceTables = Sets.<String> newHashSet();
                     for (String sourceTable : sourceTablesTmp) {
                         val split = StringUtils.split(sourceTable, ".");
-                        String source = split.length < 2 ? "default." + sourceTable
-                                : sourceTable;
+                        String source = split.length < 2 ? "default." + sourceTable : sourceTable;
                         sourceTables.add(source);
                     }
                     viewMapping.put(tableDesc.getIdentity(), sourceTables);
@@ -116,8 +115,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
         try {
             viewSourceTables = SparkSqlUtil
                     .getViewOrignalTables(tableMetadata.qualifiedName(), SparderEnv.getSparkSession()) //
-                    .stream().filter(StringUtils::isNotBlank)
-                    .collect(Collectors.toSet());
+                    .stream().filter(StringUtils::isNotBlank).collect(Collectors.toSet());
             log.info("snapshot[{}] view original tables: [{}]", tableMetadata.qualifiedName(), viewSourceTables);
         } catch (Exception e) {
             log.error("snapshot[{}] get view original tables error", tableMetadata.qualifiedName(), e);
@@ -205,7 +203,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
             val table = tableCatalog.loadTable(identifier);
             var location = table.properties().get("location");
             if (tableCatalog.getClass().toString().contains("iceberg"))
-                location = location + "/data";
+                location = location + "/metadata";
             return checkTableLocation(project, location, projectConfig, catalogName + "." + identifier.toString());
         }
         throw new KylinRuntimeException("unsupported catalog:" + catalog);
@@ -282,7 +280,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
     public boolean checkLocation(String location, List<FileStatus> filesStatus,
             Map<String, SnapshotSourceTableStats> snapshotSourceTableStatsJson, KylinConfig config) throws IOException {
         log.info("check table/partition location: {}", location);
-        filesStatus.addAll(getLocationFileStatus(location));
+        filesStatus.addAll(getLocationFileStatus(location, config));
         // check file count
         val sourceTableStats = snapshotSourceTableStatsJson.get(location);
         if (sourceTableStats == null) {
@@ -388,7 +386,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
         val needCheckPartitions = partitions.stream()
                 .sorted((ctp1, ctp2) -> Long.compare(ctp2.createTime(), ctp1.createTime()))
                 .limit(config.getSnapshotAutoRefreshFetchPartitionsCount()).collect(Collectors.toList());
-        putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus);
+        putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus, config);
 
         // check partition count
         if (partitions.size() != snapshotSourceTableStatsJson.size()) {
@@ -423,16 +421,23 @@ public class SnapshotSourceTableStatsService extends BasicService {
     }
 
     public void putNeedSavePartitionsFilesStatus(List<CatalogTablePartition> partitions,
-            Map<String, List<FileStatus>> locationsFileStatusMap) throws IOException {
+            Map<String, List<FileStatus>> locationsFileStatusMap, KylinConfig config) throws IOException {
         for (CatalogTablePartition partition : partitions) {
-            val filesStatus = getLocationFileStatus(partition.location().getPath());
+            val filesStatus = getLocationFileStatus(partition.location().getPath(), config);
             locationsFileStatusMap.put(partition.location().getPath(), filesStatus);
         }
     }
 
-    public List<FileStatus> getLocationFileStatus(String location) throws IOException {
+    public List<FileStatus> getLocationFileStatus(String location, KylinConfig config) throws IOException {
+        var fileSystem = StringUtils.isBlank(config.getWriteClusterWorkingDir()) ? HadoopUtil.getWorkingFileSystem()
+                : HadoopUtil.getWriteClusterFileSystem();
+
         val sourceTableStatsPath = new Path(location);
-        val fileSystem = sourceTableStatsPath.getFileSystem(SparderEnv.getHadoopConfiguration());
+        val pathSchema = sourceTableStatsPath.toUri().getScheme();
+        val fileSchema = fileSystem.getUri().getScheme();
+        if (pathSchema != null && !pathSchema.equalsIgnoreCase(fileSchema)) {
+            fileSystem = sourceTableStatsPath.getFileSystem(SparderEnv.getHadoopConfiguration());
+        }
         if (!fileSystem.exists(sourceTableStatsPath)) {
             return Collections.emptyList();
         }

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CONNECT_CATALOG;
@@ -33,6 +32,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_CONFLICT_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_PARAMETER;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,17 +55,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.exception.FeignErrorResponse;
-import org.apache.kylin.common.exception.FeignRpcException;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -97,8 +96,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -251,16 +248,6 @@ public class BaseController {
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(FeignRpcException.class)
-    @ResponseBody
-    FeignErrorResponse handleFeignRpcException(HttpServletRequest req, Throwable ex) {
-        getLogger().error("", ex);
-        FeignRpcException cause = (FeignRpcException) ex;
-        String msg = "Exception happened when using feign rpc: " + req.getRequestURL().toString();
-        return new FeignErrorResponse(msg, cause.getExceptionSerialized());
-    }
-
     protected void checkRequiredArg(String fieldName, Object fieldValue) {
         if (fieldValue == null || StringUtils.isEmpty(String.valueOf(fieldValue))) {
             throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, fieldName);
@@ -411,10 +398,8 @@ public class BaseController {
         }
     }
 
-    protected boolean needRouteToOtherInstance(Map<String, List<String>> nodeWithJobs, String action,
-            HttpHeaders headers) {
-        if ("true".equals(headers.getFirst(RestClient.ROUTED))
-                || JobActionEnum.RESUME.name().equalsIgnoreCase(action)) {
+    protected boolean needRouteToOtherInstance(Map<String, List<String>> nodeWithJobs, String action) {
+        if (JobActionEnum.RESUME.name().equalsIgnoreCase(action)) {
             return false;
         }
         Set<String> targetNodes = nodeWithJobs.keySet();

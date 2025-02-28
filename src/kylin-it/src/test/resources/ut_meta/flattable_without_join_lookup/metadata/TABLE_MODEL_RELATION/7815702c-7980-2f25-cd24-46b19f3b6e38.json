@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_ORDER_STRING",
+  "model_uuid" : "9cde9d25-9334-4b92-b229-a00f49453757",
+  "project" : "flattable_without_join_lookup",
+  "uuid" : "7815702c-7980-2f25-cd24-46b19f3b6e38"
+}

@@ -1,0 +1,18 @@
+{
+  "uuid" : "cdf17c7b-18e3-9a09-23d1-4e82b7bc9123",
+  "last_modified" : 1641894914498,
+  "create_time" : 1641870189320,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 9,
+  "last_query_time" : 1641894396638,
+  "layout_query_hit_count" : {
+    "20000000001" : {
+      "1641830400000" : 5,
+      "1641880800000" : 4
+    }
+  },
+  "project" : "multi_partition_date_type",
+  "segment_uuids" : [ "268f656f-f871-7b72-10b3-1a0748cc3549", "5d445dd1-998e-984a-970b-f1c7ce131537", "fbf343e5-17be-6e93-a41f-b543fda34ac5", "7dad6b7d-026c-1a93-5940-e5edb3e3d276", "f8912bad-a9ee-5ac4-2a4f-c34d1934b7e8", "06b35178-f2a2-979b-904b-d36d6f79e188", "45d8f70e-ee03-eea1-db12-2fab60dd7e6b", "6b653fac-5e0c-d10f-8bac-328bf17d34e4", "3041b192-5799-0a91-6bd6-04e1b1bc1638", "80410820-57c8-e38e-bda8-8b22a3bbc881", "3a2f54d5-d2b2-edbd-10a4-21aa474118be", "beb22a61-3591-fad7-531c-c13334767cda", "dbddd2c9-7887-f8aa-5940-a1b8761a47c5", "d08111c0-f31d-804b-ba89-ab5f5642dfe6", "93bbe0f6-af87-c8b2-03fb-ff10cb385423", "4584408c-c104-e8fb-95e9-2b7ae7a96f1a", "70bad4ca-bfa4-5dae-b1b1-315e06cd4920", "6cd41988-d15b-b80e-57d7-9dbe877bd108" ]
+}

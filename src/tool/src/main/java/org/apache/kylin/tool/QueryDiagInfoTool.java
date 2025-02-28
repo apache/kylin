@@ -24,8 +24,8 @@ import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.tool.util.DiagnosticFilesChecker;

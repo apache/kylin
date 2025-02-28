@@ -18,8 +18,18 @@
 
 package org.apache.kylin.tool.kerberos;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.security.InvalidParameterException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,22 +43,11 @@ import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.utils.ThreadUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.security.InvalidParameterException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class DelegationTokenManager {
 
@@ -207,15 +206,20 @@ public class DelegationTokenManager {
         // not all hadoop versions do have private-token.
         return getTokens(current.getCredentials()) // Public tokens.
                 .stream().anyMatch(token -> //
-                        getDelegationTokenIdentifier(token).map(AbstractDelegationTokenIdentifier::getSequenceNumber)
-                                .filter(dtSeq -> //
-                                        getTokens(ugi.getCredentials()) // Public tokens.
-                                                .stream().filter(otk -> Objects.equals(token.getKind(), otk.getKind()) && Objects.equals(token.getService(), otk.getService()))
-                                                .anyMatch(otk -> getDelegationTokenIdentifier(otk).map(AbstractDelegationTokenIdentifier::getSequenceNumber)
-                                                        .filter(odtSeq -> odtSeq < dtSeq).isPresent())).isPresent());
+                getDelegationTokenIdentifier(token).map(AbstractDelegationTokenIdentifier::getSequenceNumber)
+                        .filter(dtSeq -> //
+                        getTokens(ugi.getCredentials()) // Public tokens.
+                                .stream()
+                                .filter(otk -> Objects.equals(token.getKind(), otk.getKind())
+                                        && Objects.equals(token.getService(), otk.getService()))
+                                .anyMatch(otk -> getDelegationTokenIdentifier(otk)
+                                        .map(AbstractDelegationTokenIdentifier::getSequenceNumber)
+                                        .filter(odtSeq -> odtSeq < dtSeq).isPresent()))
+                        .isPresent());
     }
 
-    private Optional<AbstractDelegationTokenIdentifier> getDelegationTokenIdentifier(Token<? extends TokenIdentifier> token) {
+    private Optional<AbstractDelegationTokenIdentifier> getDelegationTokenIdentifier(
+            Token<? extends TokenIdentifier> token) {
         try {
             TokenIdentifier ti = token.decodeIdentifier();
             if (ti instanceof AbstractDelegationTokenIdentifier) {
@@ -228,7 +232,7 @@ public class DelegationTokenManager {
     }
 
     private void updateTokens(UserGroupInformation ugi, //
-                              Collection<Token<? extends TokenIdentifier>> tokens) throws NoSuchMethodException, NoSuchFieldException {
+            Collection<Token<? extends TokenIdentifier>> tokens) throws NoSuchMethodException, NoSuchFieldException {
         Credentials creds = getCredentialsInternal(ugi);
         if (Objects.isNull(creds)) {
             return;
@@ -239,8 +243,8 @@ public class DelegationTokenManager {
     }
 
     private void updateTokensInternal(Token<? extends TokenIdentifier> token, // token backport to old UGI
-                                      UserGroupInformation ugi, // old UGI
-                                      Map<Text, Token<? extends TokenIdentifier>> oldInternalTokens /* old UGI tokens */) {
+            UserGroupInformation ugi, // old UGI
+            Map<Text, Token<? extends TokenIdentifier>> oldInternalTokens /* old UGI tokens */) {
 
         getDelegationTokenIdentifier(token).map(AbstractDelegationTokenIdentifier::getSequenceNumber)
                 .ifPresent(dtSeq -> oldInternalTokens.forEach((key, otk) -> {
@@ -272,7 +276,8 @@ public class DelegationTokenManager {
         return false;
     }
 
-    private Optional<Token<? extends TokenIdentifier>> privateClone(Token<? extends TokenIdentifier> token, Text service) {
+    private Optional<Token<? extends TokenIdentifier>> privateClone(Token<? extends TokenIdentifier> token,
+            Text service) {
         try {
             Method cloneMethod = token.getClass().getDeclaredMethod("privateClone");
             ReflectionUtils.makeAccessible(cloneMethod);
@@ -293,7 +298,8 @@ public class DelegationTokenManager {
         return (Credentials) ReflectionUtils.invokeMethod(credsMethod, ugi);
     }
 
-    private Map<Text, Token<? extends TokenIdentifier>> getTokenMapInternal(Credentials creds) throws NoSuchFieldException {
+    private Map<Text, Token<? extends TokenIdentifier>> getTokenMapInternal(Credentials creds)
+            throws NoSuchFieldException {
         Field mapFiled = Credentials.class.getDeclaredField("tokenMap");
         ReflectionUtils.makeAccessible(mapFiled);
         Map<Text, Token<? extends TokenIdentifier>> internalTokenMap = //
@@ -319,16 +325,16 @@ public class DelegationTokenManager {
         logger.info("Login kerberos from principal: {}, keytab: {}.", principal, keytab);
         final String platform = kapConf.getKerberosPlatform();
         switch (platform) {
-            case "Standard":
-                loginStandardPlatform();
-                break;
-            case KapConfig.FI_PLATFORM:
-            case KapConfig.TDH_PLATFORM:
-                loginNonStandardPlatform();
-                break;
-            default:
-                throw new InvalidParameterException("Unknown platform: " + platform //
-                        + ", please check 'kylin.kerberos.platform'.");
+        case "Standard":
+            loginStandardPlatform();
+            break;
+        case KapConfig.FI_PLATFORM:
+        case KapConfig.TDH_PLATFORM:
+            loginNonStandardPlatform();
+            break;
+        default:
+            throw new InvalidParameterException("Unknown platform: " + platform //
+                    + ", please check 'kylin.kerberos.platform'.");
         }
     }
 

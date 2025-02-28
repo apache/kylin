@@ -67,14 +67,14 @@ public class IntegerDimEnc extends DimensionEncoding implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new IntegerDimEnc(Integer.parseInt(args[0]));
         }
-    };
+    }
 
     // ============================================================================
 
     private int fixedLen;
 
-    transient private int avoidVerbose = 0;
-    transient private int avoidVerbose2 = 0;
+    private transient int avoidVerbose = 0;
+    private transient int avoidVerbose2 = 0;
 
     //no-arg constructor is required for Externalizable
     public IntegerDimEnc() {
@@ -112,8 +112,8 @@ public class IntegerDimEnc extends DimensionEncoding implements Serializable {
                 logger.warn("Value " + valueStr + " does not fit into " + fixedLen + " bytes ");
             }
         }
-
-        BytesUtil.writeLong(integer + CAP[fixedLen], output, outputOffset, fixedLen);//apply an offset to preserve binary order, overflow is okay
+        //apply an offset to preserve binary order, overflow is okay
+        BytesUtil.writeLong(integer + CAP[fixedLen], output, outputOffset, fixedLen);
     }
 
     @Override

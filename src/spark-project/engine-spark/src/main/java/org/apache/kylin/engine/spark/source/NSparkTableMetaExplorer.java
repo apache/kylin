@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.kylin.common.constant.ObsConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.catalyst.TableIdentifier;
 import org.apache.spark.sql.catalyst.catalog.CatalogTable;
@@ -81,7 +82,7 @@ public class NSparkTableMetaExplorer implements Serializable {
                 Option.apply(database.isEmpty() ? null : database));
         CatalogTable tableMetadata = catalog.getTempViewOrPermanentTableMetadata(tableIdentifier);
         checkTableIsValid(tableMetadata, tableIdentifier, tableName);
-        return getSparkTableMeta(tableName, tableMetadata);
+        return buildSparkTableMeta(tableName, tableMetadata);
     }
 
     public Set<String> checkAndGetTablePartitions(String database, String tableName, String partitionCol) {
@@ -107,58 +108,59 @@ public class NSparkTableMetaExplorer implements Serializable {
                 .filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private NSparkTableMeta getSparkTableMeta(String tableName, CatalogTable tableMetadata) {
-        NSparkTableMetaBuilder builder = new NSparkTableMetaBuilder();
-        builder.setTableName(tableName);
+    protected NSparkTableMeta buildSparkTableMeta(String tableName, CatalogTable tableMetadata) {
+        NSparkTableMeta.NSparkTableMetaBuilder builder = NSparkTableMeta.builder();
+        builder.tableName(tableName);
         StructType allColSchema = tableMetadata.schema();
         if (DeltaTableUtils.isDeltaTable(tableMetadata)) {
             allColSchema = SparderEnv.getSparkSession().table(tableMetadata.identifier()).schema();
         }
-        builder.setAllColumns(getColumns(tableMetadata, allColSchema));
-        builder.setOwner(tableMetadata.owner());
-        builder.setCreateTime(tableMetadata.createTime() + "");
-        builder.setLastAccessTime(tableMetadata.lastAccessTime() + "");
-        builder.setTableType(tableMetadata.tableType().name());
-        builder.setPartitionColumns(getColumns(tableMetadata, tableMetadata.partitionSchema()));
-        builder.setIsRangePartition(isRangePartition(tableMetadata));
+        builder.allColumns(getColumns(tableMetadata, allColSchema));
+        builder.owner(tableMetadata.owner());
+        builder.createTime(tableMetadata.createTime() + "");
+        builder.lastAccessTime(tableMetadata.lastAccessTime() + "");
+        builder.tableType(tableMetadata.tableType().name());
+        builder.partitionColumns(getColumns(tableMetadata, tableMetadata.partitionSchema()));
+        builder.isRangePartition(isRangePartition(tableMetadata));
 
         if (tableMetadata.comment().isDefined()) {
-            builder.setTableComment(tableMetadata.comment().get());
+            builder.tableComment(tableMetadata.comment().get());
         }
         if (tableMetadata.storage().inputFormat().isDefined()) {
-            builder.setSdInputFormat(tableMetadata.storage().inputFormat().get());
+            builder.sdInputFormat(tableMetadata.storage().inputFormat().get());
         }
         if (tableMetadata.storage().outputFormat().isDefined()) {
-            builder.setSdOutputFormat(tableMetadata.storage().outputFormat().get());
+            builder.sdOutputFormat(tableMetadata.storage().outputFormat().get());
         }
         Option<URI> uriOption = tableMetadata.storage().locationUri();
         ObsConfig obsConfig = ObsConfig.S3;
         if (uriOption.isDefined()) {
-            builder.setSdLocation(uriOption.get().toString());
+            builder.sdLocation(uriOption.get().toString());
             obsConfig = ObsConfig.getByLocation(uriOption.get().toString()).orElse(ObsConfig.S3);
         }
         if (tableMetadata.provider().isDefined()) {
-            builder.setProvider(tableMetadata.provider().get());
+            builder.provider(tableMetadata.provider().get());
         }
         if (tableMetadata.properties().contains("totalSize")) {
-            builder.setFileSize(Long.parseLong(tableMetadata.properties().get("totalSize").get()));
+            builder.fileSize(Long.parseLong(tableMetadata.properties().get("totalSize").get()));
         }
         if (tableMetadata.properties().contains("numFiles")) {
-            builder.setFileNum(Long.parseLong(tableMetadata.properties().get("numFiles").get()));
+            builder.fileNum(Long.parseLong(tableMetadata.properties().get("numFiles").get()));
         }
         if (tableMetadata.properties().contains("transactional")) {
-            builder.setIsTransactional(Boolean.parseBoolean(tableMetadata.properties().get("transactional").get()));
+            builder.isTransactional(Boolean.parseBoolean(tableMetadata.properties().get("transactional").get()));
         }
         if (tableMetadata.properties().contains(obsConfig.getRolePropertiesKey())) {
-            builder.setRoleArn(tableMetadata.properties().get(obsConfig.getRolePropertiesKey()).get());
+            builder.roleArn(tableMetadata.properties().get(obsConfig.getRolePropertiesKey()).get());
         }
         if (tableMetadata.properties().contains(obsConfig.getEndpointPropertiesKey())) {
-            builder.setEndpoint(tableMetadata.properties().get(obsConfig.getEndpointPropertiesKey()).get());
+            builder.endpoint(tableMetadata.properties().get(obsConfig.getEndpointPropertiesKey()).get());
         }
         if (tableMetadata.properties().contains(obsConfig.getRegionPropertiesKey())) {
-            builder.setRegion(tableMetadata.properties().get(obsConfig.getRegionPropertiesKey()).get());
+            builder.region(tableMetadata.properties().get(obsConfig.getRegionPropertiesKey()).get());
         }
-        return builder.createSparkTableMeta();
+        builder.sourceType(ISourceAware.ID_SPARK);
+        return builder.build();
     }
 
     private List<NSparkTableMeta.SparkTableColumnMeta> getColumns(CatalogTable tableMetadata, StructType schema) {
@@ -197,8 +199,7 @@ public class NSparkTableMetaExplorer implements Serializable {
             try {
                 Installer.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
                 SparderEnv.getSparkSession().table(tableIdentifier).queryExecution().analyzed();
-            } catch (Throwable e) {
-                logger.error("Error for parser view: " + tableName, e);
+            } catch (Exception e) {
                 throw new RuntimeException("Error for parser view: " + tableName + ", " + e.getMessage()
                         + "(There are maybe syntactic differences between HIVE and SparkSQL)", e);
             }

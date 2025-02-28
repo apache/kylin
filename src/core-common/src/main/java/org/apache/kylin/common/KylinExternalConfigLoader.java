@@ -40,12 +40,11 @@ import javax.annotation.Nonnull;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.OrderedProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 

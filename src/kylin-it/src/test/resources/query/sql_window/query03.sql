@@ -17,8 +17,9 @@
 --
 
 select lstg_format_name,
-sum(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name),
-max(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name),
-min(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name)
+sum(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name) sp,
+max(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name) mp,
+min(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name) mnp
 from test_kylin_fact
 group by cal_dt, lstg_format_name
+order by lstg_format_name,sp,mp,mnp

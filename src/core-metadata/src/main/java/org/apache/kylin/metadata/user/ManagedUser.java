@@ -23,12 +23,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.kylin.common.annotation.ThirdPartyDependencies;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.insensitive.UserInsensitiveRequest;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
-import org.apache.kylin.common.annotation.ThirdPartyDependencies;
-import org.apache.kylin.metadata.insensitive.UserInsensitiveRequest;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,13 +48,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import static org.apache.kylin.common.persistence.ResourceStore.USER_ROOT;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -146,13 +145,13 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails, Us
     }
 
     @Override
-    public String getResourcePath() {
-        return USER_ROOT + "/" + username;
+    public String resourceName() {
+        return username;
     }
 
     @Override
-    public String resourceName() {
-        return username;
+    public MetadataType resourceType() {
+        return MetadataType.USER_INFO;
     }
 
     private void caterLegacy() {
@@ -189,12 +188,11 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails, Us
     }
 
     public void increaseWrongTime() {
-        int wrongTime = this.getWrongTime();
-        if (wrongTime >= 2) {
+        if (getWrongTime() >= 2) {
             this.setLocked(true);
             this.lockedTime = System.currentTimeMillis();
         }
-        this.wrongTime = wrongTime + 1;
+        this.wrongTime += 1;
     }
 
     public void authenticateFail() {

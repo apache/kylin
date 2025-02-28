@@ -20,11 +20,13 @@ package org.apache.kylin.rest.response;
 
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -57,6 +59,12 @@ public class SuggestionResponse {
         private List<LayoutRecDetailResponse> indexes = Lists.newArrayList();
         @JsonProperty("index_plan")
         private IndexPlan indexPlan;
+
+        @Override
+        @JsonGetter("computed_columns")
+        public List<ComputedColumnDesc> getComputedColumnDescs() {
+            return this.computedColumnDescs;
+        }
 
         public ModelRecResponse(NDataModel dataModel) {
             super(dataModel);

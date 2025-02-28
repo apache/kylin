@@ -1,0 +1,243 @@
+{
+  "uuid" : "5b6cb121-faf6-43ef-a098-72c78e55899e",
+  "last_modified" : 1509548179773,
+  "version" : "2.3.0.20500",
+  "name" : "XC_UM_MEMBER_MONTHS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "PAYER",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "2",
+    "name" : "LOB",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "3",
+    "name" : "MEMBER_ID",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "4",
+    "name" : "EFFYEAR",
+    "datatype" : "decimal(20,0)"
+  }, {
+    "id" : "5",
+    "name" : "EFFPER",
+    "datatype" : "varchar(10)"
+  }, {
+    "id" : "6",
+    "name" : "EFFMONTH",
+    "datatype" : "varchar(5)"
+  }, {
+    "id" : "7",
+    "name" : "NPI",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "8",
+    "name" : "TIN",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "9",
+    "name" : "MEMBER_MONTHS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "10",
+    "name" : "TOT_MED_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "11",
+    "name" : "TOT_IP_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "12",
+    "name" : "IP_ADMITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "13",
+    "name" : "IP_HOS_ADMITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "14",
+    "name" : "IP_HOS_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "15",
+    "name" : "TOT_ED_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "16",
+    "name" : "ED_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "17",
+    "name" : "PCP_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "18",
+    "name" : "SPECIALTY_CONSULT_VISITS",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "19",
+    "name" : "TOT_LAB_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "20",
+    "name" : "TOT_RAD_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "21",
+    "name" : "TOT_RX_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "22",
+    "name" : "TOT_RX_LINES",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "23",
+    "name" : "TOT_OUT_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "24",
+    "name" : "TOT_PROF_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "25",
+    "name" : "TOT_OTHER_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "26",
+    "name" : "MARA_CONCURRENT_RISK",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "27",
+    "name" : "MARA_PROSPECTIVE_RISK",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "28",
+    "name" : "MARA_MEDICARE_RISK_SCORE",
+    "datatype" : "decimal(5,2)"
+  }, {
+    "id" : "29",
+    "name" : "DIABETES",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "30",
+    "name" : "VASCULAR_DISEASE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "31",
+    "name" : "COPD",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "32",
+    "name" : "CHF",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "33",
+    "name" : "AMI",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "34",
+    "name" : "STROKE",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "35",
+    "name" : "HIV",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "36",
+    "name" : "CHRONIC_CONDITIONS_CNT",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "37",
+    "name" : "CLAIM_COUNT",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "38",
+    "name" : "PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "39",
+    "name" : "NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "40",
+    "name" : "PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "41",
+    "name" : "NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "42",
+    "name" : "PAR_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "43",
+    "name" : "NON_PAR_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "44",
+    "name" : "PAR_NON_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "45",
+    "name" : "NON_PAR_NON_DOMESTIC_SPEND",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "46",
+    "name" : "PCP_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "47",
+    "name" : "PCP_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "48",
+    "name" : "PCP_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "49",
+    "name" : "PCP_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "50",
+    "name" : "SPEC_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "51",
+    "name" : "SPEC_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "52",
+    "name" : "SPEC_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "53",
+    "name" : "SPEC_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "54",
+    "name" : "OP_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "55",
+    "name" : "OP_NON_PAR_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "56",
+    "name" : "OP_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "57",
+    "name" : "OP_NON_PAR_NON_DOMESTIC",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "58",
+    "name" : "LOAD_DT",
+    "datatype" : "date"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

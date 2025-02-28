@@ -1,0 +1,23 @@
+{
+  "uuid" : "b01610fd-fa93-4fa5-b6e8-1077062490ea",
+  "last_modified" : 1497607294748,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CATALOG_PAGE",
+  "last_build_job_id" : null,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : null,
+  "total_rows" : null,
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "403485",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/catalog_page",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

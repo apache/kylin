@@ -1,9 +1,0 @@
-{
-  "uuid" : "31e8a260-e44f-0e40-aae9-0634b7d6324c",
-  "last_modified" : 1632743943319,
-  "create_time" : 1632742741438,
-  "version" : "4.0.0.0",
-  "task_type" : "async_acceleration_task",
-  "already_running" : false,
-  "user_refreshed_Tag" : { }
-}

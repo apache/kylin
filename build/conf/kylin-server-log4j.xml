@@ -114,7 +114,7 @@
         <!-- Other log -->
         <Logger name="org.apache.kylin.metadata.cube.storage.TotalStorageCollector" level="INFO" />
         <Logger name="org.apache.kylin.common.metrics.MetricsInfluxdbReporter" level="INFO" />
-        <Logger name="io.kyligence.kap.metadata.recommendation.ref.OptRecV2" level="INFO" />
+        <Logger name="org.apache.kylin.metadata.recommendation.ref.OptRecV2" level="INFO" />
         <Logger name="org.apache.kylin.rest.security.LdapAuthenticationProvider" level="INFO" />
         <Logger name="org.apache.kylin.rest.aspect.SchedulerEnhancer" level="INFO" />
     </Loggers>

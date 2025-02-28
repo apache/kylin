@@ -18,11 +18,12 @@
 package org.apache.kylin.streaming.jobs;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.util.StreamingTestCase;
 import org.apache.spark.sql.SparkSession;
 import org.junit.After;
@@ -58,7 +59,8 @@ public class StreamingSegmentManagerTest extends StreamingTestCase {
         NDataflow df = mgr.getDataflow(DATAFLOW_ID);
         NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        mgr.updateDataflow(update);
+        UnitOfWork.doInTransactionWithRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), PROJECT).updateDataflow(update), PROJECT);
         df = mgr.getDataflow(df.getId());
         Assert.assertEquals(0, df.getSegments().size());
 

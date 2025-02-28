@@ -1,0 +1,16 @@
+{
+  "uuid" : "1a6cbab9-4e3e-e31b-7dc3-abf21a0f75c1",
+  "version" : "3.0.0.0",
+  "owner" : null,
+  "status" : null,
+  "create_time_utc" : 0,
+  "last_update_time" : null,
+  "description" : null,
+  "ext_filters" : [ ],
+  "override_kylin_properties" : {
+    "kylin.metadata.semi-automatic-mode" : "false",
+    "kylin.query.metadata.expose-computed-column" : "true",
+    "kylin.source.default" : "9"
+  },
+  "project" : "_global"
+}

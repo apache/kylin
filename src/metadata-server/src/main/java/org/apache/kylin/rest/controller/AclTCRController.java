@@ -18,10 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,15 +31,16 @@ import java.util.Optional;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.rest.request.AclTCRRequest;
+import org.apache.kylin.rest.response.AclTCRResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.AclTCRService;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.rest.request.AclTCRRequest;
-import org.apache.kylin.rest.response.AclTCRResponse;
-import org.apache.kylin.rest.service.AclTCRService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -50,8 +51,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.swagger.annotations.ApiOperation;
 

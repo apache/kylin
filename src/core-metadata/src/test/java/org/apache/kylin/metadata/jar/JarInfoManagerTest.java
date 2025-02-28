@@ -37,7 +37,7 @@ public class JarInfoManagerTest extends NLocalFileMetadataTestCase {
     private static final String project = "streaming_test";
     private static final String jarName = "custom_parser_test.jar";
     private static final String jarPath = "/streaming_test/jar/custom_parser_test.jar";
-    private static final String jarTypeName = "STREAMING_CUSTOM_PARSER_custom_parser_test.jar";
+    private static final String jarTypeName = "streaming_test.STREAMING_CUSTOM_PARSER_custom_parser_test.jar";
     private static final String jarType = "STREAMING_CUSTOM_PARSER";
     private static final String test = "test";
 
@@ -95,14 +95,16 @@ public class JarInfoManagerTest extends NLocalFileMetadataTestCase {
     public void testUpdateJarInfoNotContains() {
         JarInfo jarInfo = new JarInfo(project, test + "1", jarPath, STREAMING_CUSTOM_PARSER);
         Assert.assertThrows(CUSTOM_PARSER_NOT_EXISTS_JAR.getMsg(jarInfo.getJarName()), KylinException.class,
-                () -> manager.updateJarInfo(jarInfo));
+                () -> manager.updateJarInfo(jarInfo.getJarType(), jarInfo.getJarName(),
+                        jarInfo::copyPropertiesTo));
     }
 
     @Test
     public void testUpdateJarInfo() {
         JarInfo jarInfo1 = manager.createJarInfo(new JarInfo(project, jarName + "1", jarPath, STREAMING_CUSTOM_PARSER));
         jarInfo1.setJarPath(test);
-        JarInfo jarInfo2 = manager.updateJarInfo(jarInfo1);
+        JarInfo jarInfo2 = manager.updateJarInfo(jarInfo1.getJarType(), jarInfo1.getJarName(),
+                jarInfo1::copyPropertiesTo);
         manager.removeJarInfo(STREAMING_CUSTOM_PARSER, jarName);
         Assert.assertEquals(test, jarInfo2.getJarPath());
     }

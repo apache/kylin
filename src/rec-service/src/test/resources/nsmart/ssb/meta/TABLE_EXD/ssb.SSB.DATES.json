@@ -1,0 +1,137 @@
+{
+  "uuid" : "cefe66ec-36f3-44a1-b169-4fbc21a495ac",
+  "last_modified" : 1483156073261,
+  "version" : "1.6.1",
+  "table_name" : "SSB.DATES",
+  "last_build_job_id" : "bdfbd473-210c-495f-a303-82ae5e6b1206",
+  "columns_stats" : [ {
+    "max_value" : "19981230",
+    "min_value" : "19920101",
+    "max_length_value" : "19920101",
+    "min_length_value" : "19920101",
+    "null_count" : 0,
+    "cardinality" : 2663
+  }, {
+    "max_value" : "September 9, 1998",
+    "min_value" : "April 1, 1992",
+    "max_length_value" : "September 10, 1992",
+    "min_length_value" : "May 1, 1992",
+    "null_count" : 0,
+    "cardinality" : 2403
+  }, {
+    "max_value" : "Wednesday",
+    "min_value" : "Friday",
+    "max_length_value" : "Wednesday",
+    "min_length_value" : "Friday",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "September",
+    "min_value" : "April",
+    "max_length_value" : "September",
+    "min_length_value" : "May",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "1998",
+    "min_value" : "1992",
+    "max_length_value" : "1992",
+    "min_length_value" : "1992",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "199812",
+    "min_value" : "199201",
+    "max_length_value" : "199201",
+    "min_length_value" : "199201",
+    "null_count" : 0,
+    "cardinality" : 85
+  }, {
+    "max_value" : "Sep1998",
+    "min_value" : "Apr1992",
+    "max_length_value" : "Jan1992",
+    "min_length_value" : "Jan1992",
+    "null_count" : 0,
+    "cardinality" : 82
+  }, {
+    "max_value" : "7",
+    "min_value" : "1",
+    "max_length_value" : "5",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "31",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 31
+  }, {
+    "max_value" : "366",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 371
+  }, {
+    "max_value" : "12",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "53",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 54
+  }, {
+    "max_value" : "Winter",
+    "min_value" : "Christmas",
+    "max_length_value" : "Christmas",
+    "min_length_value" : "Fall",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  } ],
+  "sample_rows" : [ [ "19920101", "19920103", "19920105", "19920107", "19920109", "19920111", "19920113", "19920115", "19920117", "19920119" ], [ "January 1, 1992", "January 3, 1992", "January 5, 1992", "January 7, 1992", "January 9, 1992", "January 11, 1992", "January 13, 1992", "January 15, 1992", "January 17, 1992", "January 19, 1992" ], [ "Thursday", "Saturday", "Monday", "Wednesday", "Friday", "Sunday", "Tuesday", "Thursday", "Saturday", "Monday" ], [ "January", "January", "January", "January", "January", "January", "January", "January", "January", "January" ], [ "1992", "1992", "1992", "1992", "1992", "1992", "1992", "1992", "1992", "1992" ], [ "199201", "199201", "199201", "199201", "199201", "199201", "199201", "199201", "199201", "199201" ], [ "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992", "Jan1992" ], [ "5", "7", "2", "4", "6", "1", "3", "5", "7", "2" ], [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "1", "1", "2", "2", "2", "2", "3", "3", "3" ], [ "Winter", "Winter", "Winter", "Winter", "Winter", "Winter", "Winter", "Winter", "Winter", "Winter" ], [ "0", "1", "0", "0", "0", "0", "0", "0", "1", "0" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "1", "0", "1", "1", "1", "0", "1", "1", "0", "1" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "2556",
+  "data_source_properties" : { },
+  "project" : "ssb"
+}

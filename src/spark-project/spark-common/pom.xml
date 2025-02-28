@@ -19,7 +19,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Spark Common</name>
-    <url>http://kylin.apache.org</url>
+    <url>https://kylin.apache.org</url>
     <description>Kylin Job Engine - SPARK</description>
 
     <artifactId>kylin-spark-common</artifactId>
@@ -27,7 +27,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
@@ -94,6 +94,18 @@
             <groupId>io.delta</groupId>
             <artifactId>delta-core_2.12</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-standalone_2.12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-spark-runtime-3.3_2.12</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.github.hipjim</groupId>
@@ -120,6 +132,99 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-unsafe_2.12</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-substrait</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark32</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark33</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark34</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark35</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-substrait</artifactId>
+            <version>${gluten.version}</version>
+            <type>test-jar</type>
+            <scope>${gluten.deps.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark32</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark33</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark34</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.gluten</groupId>
+                    <artifactId>spark-sql-columnar-shims-spark35</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-ui</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>backends-clickhouse</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>gluten-iceberg</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>spark-sql-columnar-shims-kyspark</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gluten</groupId>
+            <artifactId>spark-sql-columnar-shims-common</artifactId>
+            <version>${gluten.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protobuf-java.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.celeborn</groupId>
+            <artifactId>celeborn-client-spark-3-shaded_2.12</artifactId>
+            <version>${celeborn.version}</version>
+            <scope>${gluten.deps.scope}</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -129,6 +234,11 @@
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

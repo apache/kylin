@@ -65,8 +65,7 @@ public class OpenSystemControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetProjectAccessPermissions() throws Exception {
-        Mockito.when(systemService.getReadOnlyConfig(Mockito.any(), Mockito.any()))
-                .thenReturn(new HashMap<>());
+        Mockito.when(systemService.getReadOnlyConfig(Mockito.any(), Mockito.any())).thenReturn(new HashMap<>());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/config").contentType(MediaType.APPLICATION_JSON)
                 .param("project", "default").param("model", "test")

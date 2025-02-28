@@ -1,0 +1,30 @@
+{
+  "uuid" : "b65cca60-df21-45fe-8a0f-0e949c562420",
+  "last_modified" : 1594879775561,
+  "create_time" : 1594879775556,
+  "version" : "4.0.0.0",
+  "table_name" : "SSB.CUSTOMER",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "root",
+    "create_time" : "1579003261000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/ssb.db/customer",
+    "partition_column" : "",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null,
+  "row_count_status" : null,
+  "original_size" : 22251,
+  "project" : "cc_test"
+}

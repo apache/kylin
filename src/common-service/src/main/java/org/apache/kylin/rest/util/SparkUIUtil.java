@@ -19,7 +19,7 @@ package org.apache.kylin.rest.util;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -58,14 +58,14 @@ public class SparkUIUtil {
         final HttpMethod method = HttpMethod.resolve(servletRequest.getMethod());
 
         try (ClientHttpResponse response = execute(target, method, proxyLocationBase)) {
-            rewrite(response, servletResponse, method, servletRequest.getRequestURL().toString(),
-                    REDIRECT_THRESHOLD, proxyLocationBase);
+            rewrite(response, servletResponse, method, servletRequest.getRequestURL().toString(), REDIRECT_THRESHOLD,
+                    proxyLocationBase);
         }
     }
 
     public static ClientHttpResponse execute(URI uri, HttpMethod method, String proxyLocationBase) throws IOException {
         ClientHttpRequest clientHttpRequest = factory.createRequest(uri, method);
-        clientHttpRequest.getHeaders().put(SPARK_UI_PROXY_HEADER, Arrays.asList(proxyLocationBase));
+        clientHttpRequest.getHeaders().put(SPARK_UI_PROXY_HEADER, Collections.singletonList(proxyLocationBase));
         return clientHttpRequest.execute();
     }
 

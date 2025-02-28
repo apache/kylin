@@ -24,12 +24,13 @@ import static org.mockito.Mockito.when;
 import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.blacklist.SQLBlacklist;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.SQLBlacklistItemRequest;
 import org.apache.kylin.rest.request.SQLBlacklistRequest;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.service.QuerySQLBlacklistService;
 import org.junit.After;
 import org.junit.Assert;
@@ -48,8 +49,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QuerySQLBlacklistControllerTest extends NLocalFileMetadataTestCase {
 

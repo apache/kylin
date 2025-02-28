@@ -32,5 +32,5 @@ public abstract class AbstractTimeParser {
      * @param time
      * @return
      */
-    abstract public long parseTime(String time) throws IllegalArgumentException;
+    public abstract long parseTime(String time) throws IllegalArgumentException;
 }

@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.common.exception.code;
 
+import org.apache.commons.lang3.StringUtils;
+
 public enum ErrorCodeServer implements ErrorCodeProducer {
 
     // 100012XX project
@@ -38,8 +40,6 @@ public enum ErrorCodeServer implements ErrorCodeProducer {
     MODEL_SUM_LC_INVALID_DATA_TYPE("KE-010002303"),
     MODEL_SUM_LC_INVALID_TIMESTAMP_TYPE("KE-010002304"),
     MODEL_NAME_TOO_LONG("KE-010002305"),
-    MODEL_SECOND_STORAGE_PARTITION_INVALID("KE-010002306"),
-    PARTITION_SECOND_STORAGE_PARTITION_INVALID("KE-010002307"),
     SCD2_MODEL_CAN_ONLY_CONNECT_BY_AND("KE-010002401"),
     SCD2_MODEL_CONTAINS_ILLEGAL_EXPRESSIONS("KE-010002402"),
     SCD2_CONDITION_MUST_APPEAR_IN_PAIRS("KE-010002403"),
@@ -75,7 +75,6 @@ public enum ErrorCodeServer implements ErrorCodeProducer {
     SEGMENT_INDEX_CONFLICT_PARAMETER("KE-010022220"),
     SEGMENT_INDEX_STATUS_INVALID("KE-010022221"),
     SEGMENT_SINGLE_JOB_THRESHOLD("KE-010022222"),
-    SEGMENT_SECOND_STORAGE_PARTITION_INVALID("KE-010022223"),
 
     // 100072XX table
     TABLE_RELOAD_MODEL_RETRY("KE-010007204"),
@@ -105,6 +104,7 @@ public enum ErrorCodeServer implements ErrorCodeProducer {
     JOB_NOT_EXIST("KE-010032219"),
     JOB_RESTART_CHECK_SEGMENT_STATUS("KE-010032220"),
     JOB_STOP_CHECK_SERVERLESS_JOB_STATUS_FAILED("KE-010032221"),
+    JOB_TYPE_ILLEGAL("KE-010032222"),
 
     // 100032XX user
     USER_UNAUTHORIZED("KE-010003207"),
@@ -165,6 +165,7 @@ public enum ErrorCodeServer implements ErrorCodeProducer {
     ASYNC_QUERY_PROJECT_NAME_EMPTY("KE-010031302"),
     ASYNC_QUERY_TIME_FORMAT_ERROR("KE-010031303"),
     ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY("KE-010031304"),
+    ASYNC_QUERY_OUT_OF_DATA_RANGE("KE-010031305"),
 
     // 400272XX resource group
     RESOURCE_GROUP_DISABLE_FAILED("KE-040027201"),
@@ -201,6 +202,18 @@ public enum ErrorCodeServer implements ErrorCodeProducer {
     CUSTOM_PARSER_NOT_EXISTS_JAR("KE-010042214"),
     CUSTOM_PARSER_ALREADY_EXISTS_PARSER("KE-010042215"),
     CUSTOM_PARSER_ALREADY_EXISTS_JAR("KE-010042216");
+
+    public static ErrorCodeServer of(String keCode) {
+        if (StringUtils.isBlank(keCode)) {
+            return null;
+        }
+        for (ErrorCodeServer value : values()) {
+            if (value.getErrorCode().getCode().equals(keCode)) {
+                return value;
+            }
+        }
+        return null;
+    }
 
     private final ErrorCode errorCode;
     private final ErrorMsg errorMsg;

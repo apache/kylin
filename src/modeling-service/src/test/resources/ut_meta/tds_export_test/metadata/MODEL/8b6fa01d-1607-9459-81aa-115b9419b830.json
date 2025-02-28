@@ -1,0 +1,263 @@
+{
+  "uuid" : "8b6fa01d-1607-9459-81aa-115b9419b830",
+  "last_modified" : 1670816130232,
+  "create_time" : 1670816130091,
+  "version" : "4.0.0.0",
+  "alias" : "model1",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : null,
+  "fact_table" : "SSB.LINEORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "SSB.P_LINEORDER",
+    "kind" : "LOOKUP",
+    "alias" : "P_LINEORDER",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "P_LINEORDER.LO_ORDERKEY" ],
+      "foreign_key" : [ "LINEORDER.LO_ORDERKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_ORDERKEY_LINEORDER",
+    "column" : "LINEORDER.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LO_PARTKEY_LINEORDER",
+    "column" : "LINEORDER.LO_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "LO_DISCOUNT_LINEORDER_1",
+    "column" : "LINEORDER.LO_DISCOUNT"
+  }, {
+    "id" : 3,
+    "name" : "LO_SUPPLYCOST_LINEORDER_1",
+    "column" : "LINEORDER.LO_SUPPLYCOST"
+  }, {
+    "id" : 4,
+    "name" : "LO_COMMITDATE_LINEORDER_1",
+    "column" : "LINEORDER.LO_COMMITDATE"
+  }, {
+    "id" : 5,
+    "name" : "LO_EXTENDEDPRICE_LINEORDER_1",
+    "column" : "LINEORDER.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 6,
+    "name" : "LO_TAX_LINEORDER_1",
+    "column" : "LINEORDER.LO_TAX"
+  }, {
+    "id" : 7,
+    "name" : "LO_SUPPKEY_LINEORDER_1",
+    "column" : "LINEORDER.LO_SUPPKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "LO_ORDTOTALPRICE_LINEORDER_1",
+    "column" : "LINEORDER.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 9,
+    "name" : "LO_REVENUE_LINEORDER_1",
+    "column" : "LINEORDER.LO_REVENUE"
+  }, {
+    "id" : 10,
+    "name" : "LO_ORDERDATE_LINEORDER_1",
+    "column" : "LINEORDER.LO_ORDERDATE"
+  }, {
+    "id" : 11,
+    "name" : "LO_ORDERPRIOTITY_LINEORDER_1",
+    "column" : "LINEORDER.LO_ORDERPRIOTITY"
+  }, {
+    "id" : 12,
+    "name" : "LO_SHIPPRIOTITY_LINEORDER_1",
+    "column" : "LINEORDER.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 13,
+    "name" : "LO_QUANTITY_LINEORDER_1",
+    "column" : "LINEORDER.LO_QUANTITY"
+  }, {
+    "id" : 14,
+    "name" : "LO_SHIPMODE_LINEORDER_1",
+    "column" : "LINEORDER.LO_SHIPMODE"
+  }, {
+    "id" : 15,
+    "name" : "LO_LINENUMBER_LINEORDER",
+    "column" : "LINEORDER.LO_LINENUMBER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "LO_CUSTKEY_LINEORDER",
+    "column" : "LINEORDER.LO_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "LO_SHIPMODE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_SHIPMODE"
+  }, {
+    "id" : 18,
+    "name" : "LO_LINENUMBER_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_LINENUMBER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "LO_ORDTOTALPRICE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 20,
+    "name" : "LO_SUPPLYCOST_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_SUPPLYCOST"
+  }, {
+    "id" : 21,
+    "name" : "LO_SUPPKEY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_SUPPKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "LO_QUANTITY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_QUANTITY"
+  }, {
+    "id" : 23,
+    "name" : "LO_PARTKEY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "LO_ORDERKEY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "LO_CUSTKEY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "LO_SHIPPRIOTITY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 27,
+    "name" : "LO_DISCOUNT_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_DISCOUNT"
+  }, {
+    "id" : 28,
+    "name" : "LO_ORDERPRIOTITY_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_ORDERPRIOTITY"
+  }, {
+    "id" : 29,
+    "name" : "LO_ORDERDATE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_ORDERDATE"
+  }, {
+    "id" : 30,
+    "name" : "LO_REVENUE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_REVENUE"
+  }, {
+    "id" : 31,
+    "name" : "V_REVENUE",
+    "column" : "P_LINEORDER.V_REVENUE"
+  }, {
+    "id" : 32,
+    "name" : "LO_COMMITDATE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_COMMITDATE"
+  }, {
+    "id" : 33,
+    "name" : "LO_EXTENDEDPRICE_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 34,
+    "name" : "LO_TAX_P_LINEORDER_1",
+    "column" : "P_LINEORDER.LO_TAX"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum11",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "LINEORDER.LO_LINENUMBER"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "P_LINEORDER.LO_LINENUMBER"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "LINEORDER" : {
+        "x" : 739.9444580078124,
+        "y" : 82.94443766276042,
+        "width" : 200.0,
+        "height" : 230.0
+      },
+      "P_LINEORDER" : {
+        "x" : 346.61112467447913,
+        "y" : 220.72221544053812,
+        "width" : 200.0,
+        "height" : 230.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "test_tds_export"
+}

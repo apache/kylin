@@ -50,8 +50,8 @@ public class KylinResultSet extends AvaticaResultSet {
     private long resultRowCount;
     private long duration;
 
-    public KylinResultSet(AvaticaStatement statement, QueryState state, Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame)
-            throws SQLException {
+    public KylinResultSet(AvaticaStatement statement, QueryState state, Signature signature,
+            ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame) throws SQLException {
         super(statement, state, signature, resultSetMetaData, timeZone, firstFrame);
         entry(logger);
         exit(logger);
@@ -64,7 +64,6 @@ public class KylinResultSet extends AvaticaResultSet {
     public String getQueryId() {
         return this.queryId;
     }
-
 
     public long getResultRowCount() {
         return resultRowCount;
@@ -131,7 +130,7 @@ public class KylinResultSet extends AvaticaResultSet {
             cursor = new KylinDelegateCursor((AbstractCursor) cursor);
         }
         AvaticaResultSet resultSet = super.execute2(cursor, columnMetaDataList);
-        KylinResultSet kylinResultSet = (KylinResultSet)resultSet;
+        KylinResultSet kylinResultSet = (KylinResultSet) resultSet;
         kylinResultSet.setQueryId(result.queryId);
         kylinResultSet.setDuration(result.duration);
         kylinResultSet.setResultRowCount(result.resultRowCount);

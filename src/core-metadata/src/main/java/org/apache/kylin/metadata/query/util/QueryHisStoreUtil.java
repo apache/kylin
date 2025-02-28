@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.query.util;
 
+import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isIndexExists;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,8 +49,7 @@ import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.QueryHistoryDAO;
@@ -59,6 +60,7 @@ import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -66,21 +68,26 @@ public class QueryHisStoreUtil {
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     private static final String CREATE_QUERY_HISTORY_TABLE = "create.queryhistory.store.table";
-    private static final String CREATE_QUERY_HISTORY_INDEX1 = "create.queryhistory.store.tableindex1";
-    private static final String CREATE_QUERY_HISTORY_INDEX2 = "create.queryhistory.store.tableindex2";
-    private static final String CREATE_QUERY_HISTORY_INDEX3 = "create.queryhistory.store.tableindex3";
-    private static final String CREATE_QUERY_HISTORY_INDEX4 = "create.queryhistory.store.tableindex4";
-    private static final String CREATE_QUERY_HISTORY_INDEX5 = "create.queryhistory.store.tableindex5";
+    private static final String CREATE_QUERY_HISTORY_INDEX_PREFIX = "create.queryhistory.store.tableindex";
+    private static final int CREATE_QUERY_HISTORY_INDEX_SIZE = 12;
+    static final String[] QUERY_HISTORY_INDEX_NAMES = new String[CREATE_QUERY_HISTORY_INDEX_SIZE];
+    static {
+        for (int i = 0; i < CREATE_QUERY_HISTORY_INDEX_SIZE; i++) {
+            QUERY_HISTORY_INDEX_NAMES[i] = CREATE_QUERY_HISTORY_INDEX_PREFIX + (i + 1);
+        }
+    }
 
     private static final String CREATE_QUERY_HISTORY_REALIZATION_TABLE = "create.queryhistoryrealization.store.table";
     private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX1 = "create.queryhistoryrealization.store.tableindex1";
     private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX2 = "create.queryhistoryrealization.store.tableindex2";
-
     private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX3 = "create.queryhistoryrealization.store.tableindex3";
-
     private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX4 = "create.queryhistoryrealization.store.tableindex4";
-
     private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX5 = "create.queryhistoryrealization.store.tableindex5";
+    private static final String CREATE_QUERY_HISTORY_REALIZATION_INDEX6 = "create.queryhistoryrealization.store.tableindex6";
+    static final String[] QUERY_HISTORY_REALIZATION_INDEX_NAMES = { CREATE_QUERY_HISTORY_REALIZATION_INDEX1,
+            CREATE_QUERY_HISTORY_REALIZATION_INDEX2, CREATE_QUERY_HISTORY_REALIZATION_INDEX3,
+            CREATE_QUERY_HISTORY_REALIZATION_INDEX4, CREATE_QUERY_HISTORY_REALIZATION_INDEX5,
+            CREATE_QUERY_HISTORY_REALIZATION_INDEX6 };
 
     private QueryHisStoreUtil() {
     }
@@ -104,81 +111,61 @@ public class QueryHisStoreUtil {
 
     private static void createQueryHistoryIfNotExist(BasicDataSource dataSource, String qhTableName)
             throws SQLException, IOException {
-        if (JdbcTableUtil.isTableExist(dataSource, qhTableName)) {
-            return;
-        }
         try (Connection connection = dataSource.getConnection()) {
             Properties properties = JdbcUtil.getProperties(dataSource);
+            if (!JdbcUtil.isTableExists(connection, qhTableName, false)) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
+                sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
+                        String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_TABLE), qhTableName)
+                                .getBytes(DEFAULT_CHARSET)),
+                        DEFAULT_CHARSET));
+                log.info("Succeed to create query history table: {}", qhTableName);
+            }
+        }
+        // create index for query history table
+        createIndexIfNotExist(dataSource, qhTableName, QUERY_HISTORY_INDEX_NAMES);
+    }
 
-            ScriptRunner sr = new ScriptRunner(connection);
-            sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_TABLE), qhTableName)
-                            .getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_INDEX1), qhTableName,
-                            qhTableName).getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_INDEX2), qhTableName,
-                            qhTableName).getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_INDEX3), qhTableName,
-                            qhTableName).getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_INDEX4), qhTableName,
-                            qhTableName).getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_INDEX5), qhTableName,
-                            qhTableName).getBytes(DEFAULT_CHARSET)),
-                    DEFAULT_CHARSET));
+    private static void createIndexIfNotExist(BasicDataSource dataSource, String tableName, String[] indexNames) {
+        try (Connection connection = dataSource.getConnection()) {
+            for (int i = 0; i < indexNames.length; i++) {
+                String indexConfig = indexNames[i];
+                // index name format is %s_ix%s
+                String indexName = tableName + "_ix" + (i + 1);
+                Properties properties = JdbcUtil.getProperties(dataSource);
+                var sql = properties.getProperty(indexConfig);
+                if (Strings.isNullOrEmpty(sql) || isIndexExists(connection, tableName, indexName, false)) {
+                    continue;
+                }
+                ScriptRunner sr = new ScriptRunner(connection);
+                sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
+                        String.format(Locale.ROOT, properties.getProperty(indexConfig), tableName, tableName)
+                                .getBytes(DEFAULT_CHARSET)),
+                        DEFAULT_CHARSET));
+                log.info("Succeed to create table {} index: {}", tableName, indexName);
+            }
+        } catch (Exception e) {
+            // Failure to build an index is not a fatal error, so there is no need to throw an exception
+            log.warn("Failed create index on table {}", tableName, e);
         }
     }
 
     private static void createQueryHistoryRealizationIfNotExist(BasicDataSource dataSource,
             String qhRealizationTableName) throws SQLException, IOException {
         try (Connection connection = dataSource.getConnection()) {
-            if (JdbcUtil.isTableExists(connection, qhRealizationTableName)) {
-                return;
-            }
-        } catch (Exception e) {
-            log.error("Fail to know if table {} exists", qhRealizationTableName, e);
-            return;
-        }
-        try (Connection connection = dataSource.getConnection()) {
             Properties properties = JdbcUtil.getProperties(dataSource);
-
-            ScriptRunner sr = new ScriptRunner(connection);
-            sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_TABLE),
-                            qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_INDEX1),
-                            qhRealizationTableName, qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_INDEX2),
-                            qhRealizationTableName, qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_INDEX3),
-                            qhRealizationTableName, qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_INDEX4),
-                            qhRealizationTableName, qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
-            sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
-                    String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_INDEX5),
-                            qhRealizationTableName, qhRealizationTableName).getBytes(Charset.defaultCharset())),
-                    Charset.defaultCharset()));
+            if (!JdbcUtil.isTableExists(connection, qhRealizationTableName, false)) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
+                sr.runScript(new InputStreamReader(new ByteArrayInputStream(//
+                        String.format(Locale.ROOT, properties.getProperty(CREATE_QUERY_HISTORY_REALIZATION_TABLE),
+                                qhRealizationTableName).getBytes(DEFAULT_CHARSET)),
+                        DEFAULT_CHARSET));
+            }
         }
+        // create index for query history realization table
+        createIndexIfNotExist(dataSource, qhRealizationTableName, QUERY_HISTORY_REALIZATION_INDEX_NAMES);
     }
 
     @SneakyThrows

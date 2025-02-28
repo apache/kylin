@@ -106,7 +106,7 @@ public class QueryResultComparator {
                     try {
                         normalizedRow.append(new BigDecimal(row.get(i)).setScale(2, RoundingMode.HALF_UP));
                     } catch (Exception e) {
-                        log.warn("try to cast to decimal failed", e);
+                        log.debug("Illegal number format: {}", row.get(i));
                         normalizedRow.append(row.get(i));
                     }
                 } else {
@@ -129,7 +129,7 @@ public class QueryResultComparator {
 
     private static void printRows(String source, List<String> rows) {
         log.info("***********" + source + " start, only show top 100 result**********");
-        rows.stream().limit(100).forEach(log::info);
+        rows.stream().limit(11000).forEach(log::info);
         log.info("***********" + source + " end**********");
     }
 }

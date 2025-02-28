@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
 import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
@@ -79,7 +79,8 @@ public class StorageURL {
                 int cut = split.lastIndexOf('@');
                 if (cut < 0) {
                     n = split.trim();
-                    s = "";
+                    // Set default scheme to file
+                    s = FileSystemMetadataStore.FILE_SCHEME;
                 } else {
                     n = split.substring(0, cut).trim();
                     s = split.substring(cut + 1).trim();

@@ -1,0 +1,15 @@
+{
+  "uuid" : "77610b89-6b74-4598-8951-ac14c60447e8",
+  "last_modified" : 1514535897735,
+  "version" : "2.3.0.20500",
+  "name" : "Z_PROV_DASH_ATTRIBPROV",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ATTRIBUTED_PCP_NPI",
+    "datatype" : "varchar(26)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

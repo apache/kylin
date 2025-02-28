@@ -1,0 +1,38 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1699338958474,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "5" : {
+      "min" : "Customer#000000001",
+      "max" : "Customer#000000300"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1699339167842,
+  "source_count" : 300,
+  "source_bytes_size" : 27359,
+  "column_source_bytes" : {
+    "SSB.CUSTOMER.C_NAME" : 5400
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "f1b656b9-1795-5b4e-fe29-7649684bb9ba",
+  "model_uuid" : "c4bb7f53-e8d1-ed0a-06d0-b7cff21634f7",
+  "project" : "test_jdbc"
+}

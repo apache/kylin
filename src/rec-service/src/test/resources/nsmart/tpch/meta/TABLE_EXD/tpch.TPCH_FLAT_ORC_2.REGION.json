@@ -1,0 +1,34 @@
+{
+  "uuid" : "b378a94b-5b97-4d23-87c1-51226537f742",
+  "last_modified" : 1493191051029,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.REGION",
+  "last_build_job_id" : "4395fe04-8b0a-44d7-a069-cbb5bf74305e",
+  "columns_stats" : [ {
+    "max_value" : "4",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "MIDDLE EAST",
+    "min_value" : "AFRICA",
+    "max_length_value" : "MIDDLE EAST",
+    "min_length_value" : "ASIA",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl",
+    "min_value" : "ges. thinly even pinto beans ca",
+    "max_length_value" : "lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to ",
+    "min_length_value" : "hs use ironic, even requests. s",
+    "null_count" : 0,
+    "cardinality" : 5
+  } ],
+  "sample_rows" : [ [ "0", "2", "4", "", "", "", "", "", "", "" ], [ "AFRICA", "ASIA", "MIDDLE EAST", "", "", "", "", "", "", "" ], [ "lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to ", "ges. thinly even pinto beans ca", "uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl", "", "", "", "", "", "", "" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "5",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

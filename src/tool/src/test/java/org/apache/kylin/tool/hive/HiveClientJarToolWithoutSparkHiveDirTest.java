@@ -28,10 +28,8 @@ import java.nio.file.Paths;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-//import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
 
 import lombok.val;
 import lombok.var;

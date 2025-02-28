@@ -30,11 +30,16 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler.ColOrder;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity.IndexIdentifier;
-import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.springframework.beans.BeanUtils;
@@ -43,12 +48,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.BiMap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -328,15 +327,15 @@ public class RuleBasedIndex implements Serializable {
         Map<IndexIdentifier, IndexEntity> identifierIndexMap = existLayouts.keySet().stream()
                 .map(LayoutEntity::getIndex).collect(Collectors.groupingBy(IndexEntity::createIndexIdentifier,
                         Collectors.reducing(null, (l, r) -> r)));
+        val colOrders = getCuboidScheduler().getAllColOrders();
         boolean needAllocationId = layoutIdMapping.isEmpty();
         boolean isBaseCuboidValid = getIndexPlan().getConfig().isBaseCuboidAlwaysValid();
         val baseColOrder = new ColOrder(getDimensions(), getMeasures());
         long proposalId = indexStartId + 1;
-        val colOrders = getCuboidScheduler().getAllColOrders();
         for (int i = 0; i < colOrders.size(); i++) {
             val colOrder = colOrders.get(i);
 
-            val layout = createLayout(colOrder);
+            val layout = createLayout(colOrder, getModel().getStorageTypeValue());
 
             val dimensionsInLayout = colOrder.getDimensions();
             val measuresInLayout = colOrder.getMeasures();
@@ -391,8 +390,11 @@ public class RuleBasedIndex implements Serializable {
         if (excludeDel) {
             genLayouts.removeIf(layout -> layoutBlackList.contains(layout.getId()));
         }
+        return tryLayoutsOfCostBasedPlanner(useCostBasedList, genLayouts);
+    }
 
-        // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+    // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+    private Set<LayoutEntity> tryLayoutsOfCostBasedPlanner(boolean useCostBasedList, Set<LayoutEntity> genLayouts) {
         if (useCostBasedList && layoutsOfCostBasedList != null) {
             // use the recommend white list id
             Set<LayoutEntity> result = Sets.newHashSet();
@@ -401,7 +403,7 @@ public class RuleBasedIndex implements Serializable {
                     result.add(layout);
                 }
             });
-            genLayouts = result;
+            return result;
         }
         return genLayouts;
     }
@@ -433,19 +435,17 @@ public class RuleBasedIndex implements Serializable {
         return id;
     }
 
-    private LayoutEntity createLayout(ColOrder colOrder) {
+    private LayoutEntity createLayout(ColOrder colOrder, int storageType) {
         LayoutEntity layout = new LayoutEntity();
         layout.setManual(true);
         layout.setColOrder(colOrder.toList());
         if (colOrder.getDimensions().containsAll(indexPlan.getAggShardByColumns())) {
             layout.setShardByColumns(indexPlan.getAggShardByColumns());
         }
-        if (colOrder.getDimensions().containsAll(indexPlan.getExtendPartitionColumns())
-                && getModel().getStorageType() == 2) {
-            layout.setPartitionByColumns(indexPlan.getExtendPartitionColumns());
-        }
         layout.setUpdateTime(lastModifiedTime);
-        layout.setStorageType(IStorageAware.ID_NDATA_STORAGE);
+        if (NDataModel.DataStorageType.fromValue(storageType).isV3Storage()) {
+            layout.setStorageType(storageType);
+        }
         return layout;
     }
 

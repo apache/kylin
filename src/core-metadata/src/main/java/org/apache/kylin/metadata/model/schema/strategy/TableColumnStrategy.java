@@ -28,13 +28,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.graph.Graphs;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.metadata.model.schema.SchemaNode;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 
-import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
-import org.apache.kylin.guava30.shaded.common.graph.Graphs;
 import lombok.val;
 
 public class TableColumnStrategy implements SchemaChangeStrategy {

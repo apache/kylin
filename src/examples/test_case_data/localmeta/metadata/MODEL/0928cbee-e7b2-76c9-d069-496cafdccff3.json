@@ -1,0 +1,95 @@
+{
+  "uuid" : "0928cbee-e7b2-76c9-d069-496cafdccff3",
+  "last_modified" : 1699346015063,
+  "create_time" : 1699346014212,
+  "version" : "4.0.0.0",
+  "alias" : "test_emp",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "员工model_view视图表",
+  "fact_table" : "CNDB.EMPLOYEE",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : {
+    "check_options" : 0,
+    "fault_threshold" : 0,
+    "fault_actions" : 0
+  },
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "EMP_DEPT",
+    "column" : "EMPLOYEE.EMP_DEPT"
+  }, {
+    "id" : 1,
+    "name" : "EMP_ID",
+    "column" : "EMPLOYEE.EMP_ID"
+  }, {
+    "id" : 2,
+    "name" : "EMP_NAME",
+    "column" : "EMPLOYEE.EMP_NAME",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "EMP_DEPT",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "EMPLOYEE.EMP_DEPT"
+      } ],
+      "returntype" : "varchar(4096)"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "EMPLOYEE" : {
+        "x" : 475.7777235243056,
+        "y" : 224.6111043294271,
+        "width" : 220.0,
+        "height" : 426.6666666666667
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "test_jdbc"
+}

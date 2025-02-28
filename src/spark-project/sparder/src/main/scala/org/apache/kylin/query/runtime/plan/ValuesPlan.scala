@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import org.apache.kylin.query.relnode.KapValuesRel
+import org.apache.kylin.query.relnode.OlapValuesRel
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.AttributeReference
 import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
@@ -27,7 +27,7 @@ import org.apache.spark.sql.util.SparderTypeUtil
 import scala.collection.JavaConverters._
 
 object ValuesPlan {
-  def values(rel: KapValuesRel): LogicalPlan = {
+  def values(rel: OlapValuesRel): LogicalPlan = {
 
     val schema = StructType(rel.getRowType.getFieldList.asScala.map { field =>
       StructField(

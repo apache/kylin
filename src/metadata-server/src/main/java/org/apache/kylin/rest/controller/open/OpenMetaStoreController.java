@@ -18,10 +18,10 @@
 
 package org.apache.kylin.rest.controller.open;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_BROKEN;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,15 +35,17 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
+import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.controller.NMetaStoreController;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelPreviewRequest;
 import org.apache.kylin.rest.request.OpenModelPreviewRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ModelPreviewResponse;
+import org.apache.kylin.rest.service.MetaStoreService;
 import org.apache.kylin.rest.service.ModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -55,9 +57,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
-import org.apache.kylin.rest.service.MetaStoreService;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;

@@ -1,0 +1,39 @@
+{
+  "uuid" : "08a037e9-d2e1-43c9-badb-ff32c4093c7b",
+  "last_modified" : 1480841307820,
+  "version" : "1.6.1",
+  "name" : "SUPPLIER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "S_SUPPKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "S_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "S_ADDRESS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "S_NATIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "S_PHONE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "S_ACCTBAL",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "S_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH_FLAT_ORC_2",
+  "project" : "tpch"
+}

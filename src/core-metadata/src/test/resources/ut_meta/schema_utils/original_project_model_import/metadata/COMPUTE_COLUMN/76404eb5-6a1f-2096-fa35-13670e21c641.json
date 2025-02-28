@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC123",
+  "expression" : "(case when LINEORDER.LO_ORDERKEY=P_LINEORDER.LO_ORDERKEY and \nP_LINEORDER.LO_SUPPKEY=P_LINEORDER.LO_SHIPPRIOTITY \nTHEN 1 ELSE 0 END)",
+  "innerExpression" : "(case when `LINEORDER`.`LO_ORDERKEY` = `P_LINEORDER`.`LO_ORDERKEY` and\n`P_LINEORDER`.`LO_SUPPKEY` = `P_LINEORDER`.`LO_SHIPPRIOTITY`\nTHEN 1 ELSE 0 END)",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "76404eb5-6a1f-2096-fa35-13670e21c641",
+  "project" : "original_project_model_import_2"
+}

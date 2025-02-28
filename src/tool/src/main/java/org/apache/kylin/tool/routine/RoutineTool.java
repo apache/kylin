@@ -17,13 +17,16 @@
  */
 package org.apache.kylin.tool.routine;
 
+import static org.apache.kylin.helper.RoutineToolHelper.CleanType.ALL;
+import static org.apache.kylin.helper.RoutineToolHelper.CleanType.DRY_RUN;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -33,11 +36,9 @@ import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.constant.StringConstant;
 import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.util.ToolMainWrapper;
-import org.apache.kylin.metadata.epoch.EpochManager;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +108,6 @@ public class RoutineTool extends ExecutableApplication {
         }
     }
 
-
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         if (printUsage(optionsHelper)) {
@@ -117,12 +117,6 @@ public class RoutineTool extends ExecutableApplication {
 
         System.out.println("Start to cleanup metadata");
         List<String> projectsToCleanup = getProjectsToCleanup();
-        MaintainModeTool maintainModeTool = new MaintainModeTool("routine tool");
-        maintainModeTool.init();
-        maintainModeTool.markEpochs();
-        if (EpochManager.getInstance().isMaintenanceMode()) {
-            Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
-        }
 
         doCleanup(projectsToCleanup);
     }
@@ -161,7 +155,7 @@ public class RoutineTool extends ExecutableApplication {
             }
 
             System.out.println("Start to clean all event logs");
-            RoutineToolHelper.cleanEventLog(storageCleanup, true, true);
+            RoutineToolHelper.cleanEventLog(storageCleanup ? ALL : DRY_RUN, null);
             System.out.println("Clean all event logs finished");
         } catch (Exception e) {
             System.out.println(StringConstant.ANSI_RED
@@ -200,6 +194,5 @@ public class RoutineTool extends ExecutableApplication {
                         + (projects.length > 0 ? " projects: " + optionsHelper.getOptionValue(OPTION_PROJECTS) : "")
                         + " Request FileSystem rate: " + requestFSRate + " Retry Times: " + retryTimes);
     }
-
 
 }

@@ -18,10 +18,8 @@
 
 package org.apache.spark.sql.execution.datasource
 
-import java.sql.{Date, Timestamp}
-import java.util
-
 import org.apache.hadoop.fs.{FileStatus, Path}
+import org.apache.hadoop.mapred.FileOutputCommitter
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
@@ -38,10 +36,12 @@ import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, Empty
 import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow, expressions}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{BooleanType, StructType}
 import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.util.collection.BitSet
 
+import java.sql.{Date, Timestamp}
+import java.util
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -76,9 +76,9 @@ case class ShardSpec(numShards: Int,
   }
 }
 
-class FilePruner(val session: SparkSession,
-                 val options: Map[String, String],
-                 val dataSchema: StructType)
+case class FilePruner(val session: SparkSession,
+                      val options: Map[String, String],
+                      val dataSchema: StructType)
   extends FileIndex with ResetShufflePartition with LogEx {
 
   private val dataflow: NDataflow = {
@@ -117,11 +117,11 @@ class FilePruner(val session: SparkSession,
   private lazy val prunedSegmentDirs: Seq[SegmentDirectory] = {
     val prunedSegmentInfo = options.getOrElse("pruningInfo", sys.error("pruningInfo option is required")).split(",")
     prunedSegmentInfo.map(segInfo => {
-      if (segInfo.contains(":")) {
-        val segmentPartitions = segInfo.split(":")
-        SegmentDirectory(segmentPartitions(0), segmentPartitions(1).split("\\|").map(id => id.toLong).toList, null)
-      } else {
-        SegmentDirectory(segInfo, List.empty[Long], null)
+      segInfo.split(":") match {
+        case Array(segmentId, partitions) =>
+          SegmentDirectory(segmentId, partitions.split("\\|").map(_.toLong).toList, null)
+        case _ =>
+          SegmentDirectory(segInfo, List.empty[Long], null)
       }
     })
   }
@@ -217,11 +217,11 @@ class FilePruner(val session: SparkSession,
   var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression], Seq[Expression]), (Seq[PartitionDirectory], Long)]()
 
   override def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression]): Seq[PartitionDirectory] = {
-    listFiles(partitionFilters, dataFilters, Seq.empty[Expression]);
+    listFilesInternal(partitionFilters, dataFilters, Seq.empty[Expression]);
   }
 
-  def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression],
-                derivedFilters: Seq[Expression]): Seq[PartitionDirectory] = {
+  def listFilesInternal(partitionFilters: Seq[Expression], dataFilters: Seq[Expression],
+                        derivedFilters: Seq[Expression]): Seq[PartitionDirectory] = {
     if (cached.containsKey((partitionFilters, dataFilters, derivedFilters))) {
       return cached.get((partitionFilters, dataFilters, derivedFilters))._1
     }
@@ -304,6 +304,7 @@ class FilePruner(val session: SparkSession,
       layoutRows
     }).sum
     setShufflePartitions(totalFileSize, sourceRows, session)
+    setFilesMaxPartitionBytes(totalFileSize, sourceRows, session)
     if (selected.isEmpty) {
       val value = Seq.empty[PartitionDirectory]
       cached.put((partitionFilters, dataFilters, derivedFilters), (value, sourceRows))
@@ -330,6 +331,7 @@ class FilePruner(val session: SparkSession,
       maybeStatuses.get
     } else {
       val statuses = path.getFileSystem(session.sparkContext.hadoopConfiguration).listStatus(path)
+        .filter(fileStatus => !FilePruner.isHadoopMakeFile(fileStatus))
       fsc.putLeafFiles(path, statuses)
       ShardFileStatusCache.refreshSegmentBuildTimeCache(segmentId, lastBuildTime)
       statuses
@@ -439,16 +441,16 @@ class FilePruner(val session: SparkSession,
     filters.map(filter => convertCastFilter(filter))
       .flatMap(f => {
         DataSourceStrategy.translateFilter(f, true) match {
-          case v @ Some(_) => v
+          case v@Some(_) => v
           case None =>
             // special cases which are forced pushed down by Kylin
             f match {
-              case expressions.In(e @ expressions.Cast(a: Attribute, _, _, _), list)
+              case expressions.In(e@expressions.Cast(a: Attribute, _, _, _), list)
                 if list.forall(_.isInstanceOf[Literal]) =>
                 val hSet = list.map(_.eval(EmptyRow))
                 val toScala = CatalystTypeConverters.createToScalaConverter(e.dataType)
                 Some(In(a.name, hSet.toArray.map(toScala)))
-              case expressions.InSet(e @ expressions.Cast(a: Attribute, _, _, _), set) =>
+              case expressions.InSet(e@expressions.Cast(a: Attribute, _, _, _), set) =>
                 val toScala = CatalystTypeConverters.createToScalaConverter(e.dataType)
                 Some(In(a.name, set.toArray.map(toScala)))
               case _ => None
@@ -533,6 +535,8 @@ class FilePruner(val session: SparkSession,
           getExpressionShards(right, shardColumnName, numShards)
       case attr: expressions.AttributeReference =>
         getShardSetFromValue(attr, true)
+      case a: Attribute if a.dataType == BooleanType && a.name == shardColumnName =>
+        getShardSetFromValue(a, true)
       case _ =>
         val matchedShards = new BitSet(numShards)
         matchedShards.setUntil(numShards)
@@ -616,6 +620,15 @@ object FilePruner {
         }
       })
       throw new TargetSegmentNotFoundException(missSegId.toString)
+    }
+  }
+
+  def isHadoopMakeFile(fileStatus: FileStatus): Boolean = {
+    try {
+      fileStatus.getPath.getName.equals(FileOutputCommitter.SUCCEEDED_FILE_NAME) ||
+        fileStatus.getPath.getName.equals(FileOutputCommitter.TEMP_DIR_NAME)
+    } catch {
+      case _: Exception => false
     }
   }
 }

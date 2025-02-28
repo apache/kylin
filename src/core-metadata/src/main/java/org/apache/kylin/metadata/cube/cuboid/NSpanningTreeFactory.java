@@ -24,12 +24,11 @@ import java.util.Set;
 
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 @Deprecated
 public class NSpanningTreeFactory {

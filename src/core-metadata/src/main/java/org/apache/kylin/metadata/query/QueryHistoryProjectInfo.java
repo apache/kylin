@@ -18,6 +18,7 @@
 package org.apache.kylin.metadata.query;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

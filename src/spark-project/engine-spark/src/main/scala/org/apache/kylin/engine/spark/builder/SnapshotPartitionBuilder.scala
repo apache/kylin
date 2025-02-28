@@ -21,9 +21,8 @@ package org.apache.kylin.engine.spark.builder
 import org.apache.kylin.common.persistence.transaction.{UnitOfWork, UnitOfWorkParams}
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.utils.LogUtils
-import org.apache.kylin.metadata.model.NTableMetadataManager
 import org.apache.kylin.metadata.datatype.DataType
-import org.apache.kylin.metadata.model.TableDesc
+import org.apache.kylin.metadata.model.{NTableMetadataManager, TableDesc, TableExtDesc}
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.utils.ProxyThreadUtils
 
@@ -40,32 +39,44 @@ class SnapshotPartitionBuilder extends SnapshotBuilder {
     executeBuildSnapshot(ss, table, partitionCol, partitions.asScala.toSet)
   }
 
-  def checkPointForPartition(project: String, tableName: String, partition: String, result: Result): Unit = {
+  def checkPointForPartition(project: String, tableName: String, results: List[(String, Result)]): Unit = {
     // define the updating operations
     class TableUpdateOps extends UnitOfWork.Callback[TableDesc] {
       override def process(): TableDesc = {
         val tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv, project)
-        val copyTable = tableMetadataManager.copyForWrite(tableMetadataManager.getTableDesc(tableName))
-        val copyExt = tableMetadataManager.copyForWrite(tableMetadataManager.getOrCreateTableExt(tableName))
-        if (result.totalRows != -1) {
-          copyExt.setTotalRows(copyExt.getTotalRows + result.totalRows - copyTable.getPartitionRow(partition))
-          copyTable.putPartitionSize(partition, result.originalSize)
-          copyTable.setSnapshotTotalRows(copyTable.getSnapshotTotalRows + result.totalRows - copyTable.getPartitionRow(partition))
-          copyTable.putPartitionRow(partition, result.totalRows)
-        } else {
-          // -1 in partitionSize means not build
-          copyTable.putPartitionSize(partition, 0)
-          copyTable.putPartitionRow(partition, 0)
-        }
-        tableMetadataManager.updateTableDesc(copyTable)
-        tableMetadataManager.saveTableExt(copyExt)
-        copyTable
+        val originTable = tableMetadataManager.getTableDesc(tableName)
+        tableMetadataManager.updateTableExt(tableName, (copyForWrite: TableExtDesc) => {
+          results.foreach(item => {
+            val partition = item._1
+            val result = item._2
+            if (result.totalRows != -1) {
+              copyForWrite.setTotalRows(copyForWrite.getTotalRows + result.totalRows - originTable.getPartitionRow(partition))
+            }
+          })
+        })
+        tableMetadataManager.updateTableDesc(tableName, (copyForWrite: TableDesc) => {
+          results.foreach(item => {
+            val partition = item._1
+            val result = item._2
+            if (result.totalRows != -1) {
+              copyForWrite.putPartitionSize(partition, result.originalSize)
+              copyForWrite.setSnapshotTotalRows(copyForWrite.getSnapshotTotalRows + result.totalRows -
+                copyForWrite.getPartitionRow(partition))
+              copyForWrite.putPartitionRow(partition, result.totalRows)
+            } else {
+              // -1 in partitionSize means not build
+              copyForWrite.putPartitionSize(partition, 0)
+              copyForWrite.putPartitionRow(partition, 0)
+            }
+          })
+        })
+        tableMetadataManager.getTableDesc(tableName)
       }
     }
     val params = UnitOfWorkParams.builder.unitName(project).maxRetry(3).useProjectLock(true)
       .processor((new TableUpdateOps).asInstanceOf[UnitOfWork.Callback[Nothing]]).build()
     UnitOfWork.doInTransactionWithRetry(params)
-    log.info(s"check point partitions for $tableName , partition $partition")
+    log.info(s"check point partitions for $tableName , partition size: ${results.size}")
   }
 
   def executeBuildSnapshot(ss: SparkSession, table: TableDesc, partitionCol: String, partitions: Set[String]): Unit = {
@@ -81,9 +92,8 @@ class SnapshotPartitionBuilder extends SnapshotBuilder {
 
     val futures = partitions.map { partition =>
       Future {
-        wrapConfigExecute[Unit](() => {
-          val result = buildSingleSnapshotWithoutMd5(ss, table, partitionCol, partition, snapshotTablePath)
-          checkPointForPartition(table.getProject, table.getIdentity, partition, result)
+        wrapConfigExecute[(String, Result)](() => {
+          (partition, buildSingleSnapshotWithoutMd5(ss, table, partitionCol, partition, snapshotTablePath))
         }, table.getIdentity + ":" + partition)
       }
     }
@@ -91,8 +101,8 @@ class SnapshotPartitionBuilder extends SnapshotBuilder {
     try {
       val eventualTuples = Future.sequence(futures.toList)
       // only throw the first exception
-      ProxyThreadUtils.awaitResult(eventualTuples, snapshotParallelBuildTimeoutSeconds seconds)
-
+      val results = ProxyThreadUtils.awaitResult(eventualTuples, snapshotParallelBuildTimeoutSeconds seconds)
+      checkPointForPartition(table.getProject, table.getIdentity, results)
     } finally {
       ProxyThreadUtils.shutdown(service)
     }

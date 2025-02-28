@@ -18,11 +18,11 @@
 
 package org.apache.kylin.rest.response;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.Map;
 import java.util.Set;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Setter
 @Getter

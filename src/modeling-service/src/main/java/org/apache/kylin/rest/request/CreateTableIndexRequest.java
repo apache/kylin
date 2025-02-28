@@ -22,12 +22,12 @@ import static org.apache.kylin.metadata.cube.model.IndexEntity.Range.HYBRID;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
+import org.apache.kylin.metadata.model.IStorageAware;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

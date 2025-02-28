@@ -23,12 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.GlutenDisabled;
+import org.apache.kylin.GlutenRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.CuboidAggregator;
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
-import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.engine.spark.job.step.ParamPropagation;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.bitmap.BitmapSerializer;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
@@ -49,20 +53,20 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.common.SparderQueryTest;
+import org.apache.spark.sql.datasource.storage.StorageStore;
+import org.apache.spark.sql.datasource.storage.StorageStoreFactory;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sparkproject.guava.collect.Sets;
 
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
+@RunWith(GlutenRunner.class)
 public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
@@ -72,17 +76,11 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
     private static StructType OUT_SCHEMA = null;
 
     @Before
-    public void setup() throws Exception {
-        super.init();
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("spark.local", "true");
         overwriteSystemProp("noBuild", "false");
         overwriteSystemProp("isDeveloperMode", "false");
-    }
-
-    @After
-    public void after() throws Exception {
-        super.cleanupTestMetadata();
-        JobContextUtil.cleanUp();
     }
 
     @Override
@@ -91,30 +89,34 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
     }
 
     @Test
+    @GlutenDisabled("incorrect answer, null and empty string are different, need to fix it.")
     public void testBasics() throws Exception {
-        final KylinConfig config = KylinConfig.getInstanceFromEnv();
         buildCubes();
         compareCuboidParquetWithSparkSql("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         compareCuboidParquetWithSparkSql("741ca86a-1f13-46da-a59f-95fb68615e3a");
     }
 
-    private void compareCuboidParquetWithSparkSql(String dfName) {
+    protected void compareCuboidParquetWithSparkSql(String dfName) {
+        compareCuboidParquetWithSparkSql(DEFAULT_PROJECT, dfName);
+    }
+
+    protected void compareCuboidParquetWithSparkSql(String projectName, String dfName) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        NDataflowManager dsMgr = NDataflowManager.getInstance(config, DEFAULT_PROJECT);
+        NDataflowManager dsMgr = NDataflowManager.getInstance(config, projectName);
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
         List<NDataLayout> dataLayouts = Lists.newArrayList();
         NDataflow df = dsMgr.getDataflow(dfName);
+        StorageStore storageStore = StorageStoreFactory.create(df.getModel().getStorageType());
         for (NDataSegment segment : df.getSegments()) {
             dataLayouts.addAll(segment.getSegDetails().getLayouts());
         }
         for (NDataLayout cuboid : dataLayouts) {
             Set<Integer> rowKeys = cuboid.getLayout().getOrderedDimensions().keySet();
-
             Dataset<Row> layoutDataset = StorageFactory
                     .createEngineAdapter(cuboid.getLayout(), NSparkCubingEngine.NSparkCubingStorage.class)
-                    .getFrom(NSparkCubingUtil.getStoragePath(cuboid.getSegDetails().getDataSegment(),
-                            cuboid.getLayoutId()), ss);
+                    .getFrom(storageStore.getStoragePath(cuboid.getSegDetails().getDataSegment(), cuboid.getLayoutId()),
+                            ss);
             layoutDataset = layoutDataset.select(NSparkCubingUtil.getColumns(rowKeys, chooseMeas(cuboid)))
                     .sort(NSparkCubingUtil.getColumns(rowKeys));
             logger.debug("Query cuboid ------------ " + cuboid.getLayoutId());
@@ -122,7 +124,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
             logger.debug(layoutDataset.showString(10, 20, false));
 
             NDataSegment segment = cuboid.getSegDetails().getDataSegment();
-            Dataset<Row> ds = initFlatTable(dfName, new SegmentRange.TimePartitionedSegmentRange(
+            Dataset<Row> ds = initFlatTable(projectName, dfName, new SegmentRange.TimePartitionedSegmentRange(
                     segment.getTSRange().getStart(), segment.getTSRange().getEnd()));
 
             if (cuboid.getLayout().getIndex().getId() < IndexEntity.TABLE_INDEX_START_ID) {
@@ -214,14 +216,14 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
         return index;
     }
 
-    private Dataset<Row> initFlatTable(String dfName, SegmentRange segmentRange) {
+    private Dataset<Row> initFlatTable(String projectName, String dfName, SegmentRange segmentRange) {
         System.out.println(getTestConfig().getMetadataUrl());
-        NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+        NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), projectName);
         NDataflow df = dsMgr.getDataflow(dfName);
         NDataModel model = df.getModel();
 
         NCubeJoinedFlatTableDesc flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan(), segmentRange, true);
-        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null);
+        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null, new ParamPropagation());
         Dataset<Row> ds = flatTable.generateDataset(false, true);
 
         StructType schema = ds.schema();

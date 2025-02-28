@@ -84,8 +84,8 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
 
     @After
     public void teardown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -108,13 +108,34 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testDeltaStorageCleaner() throws Exception {
+        val cleaner = new StorageCleaner();
+        val config = getTestConfig();
+        FileUtils.copyDirectory(new File("src/test/resources/ut_storage/delta_storage_cleaner_test"),
+                new File(config.getHdfsWorkingDirectory().replace("file://", "")));
+        val baseDir = new File(getTestConfig().getMetadataUrl().getIdentifier()).getParentFile();
+        val files = FileUtils.listFiles(new File(baseDir, "working-dir"), null, true);
+        val garbageFiles = files.stream().filter(f -> f.getAbsolutePath().contains("invalid")
+                        && f.getAbsolutePath().contains("storage_v3_test"))
+                .map(f -> FilenameUtils.normalize(f.getParentFile().getAbsolutePath())).collect(Collectors.toSet());
+        cleaner.execute();
+        val outDateItem = cleaner.getOutdatedItems().stream()
+                .filter(out -> out.getPath().contains("storage_v3_test"))
+                .collect(Collectors.toSet());
+        Assert.assertEquals(garbageFiles.size(), outDateItem.size());
+        for (String outdatedItem : normalizeGarbages(outDateItem)) {
+            Assert.assertTrue(outdatedItem + " not in garbageFiles", garbageFiles.contains(outdatedItem));
+        }
+    }
+
+    @Test
     public void testEventLogClean() throws IOException {
         prepareForEventLogClean();
         String allSparderEventLogDir = (KapConfig.wrap(getTestConfig()).getSparkConf().get("spark.eventLog.dir"))
                 .replace("file:", "");
         String currentSparderEventLogDir = (KapConfig.wrap(getTestConfig()).getSparkConf().get("spark.eventLog.dir")
                 + "/" + AddressUtil.getLocalServerInfo() + "/eventlog_v2_application_1677899901295_4823#1690192675042")
-                        .replace("file:", "");
+                .replace("file:", "");
         String sparkEventLogDir = getTestConfig().getSparkConfigOverride().get("spark.eventLog.dir").replace("file:",
                 "");
 
@@ -123,7 +144,7 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
 
             int fileSize = new File(currentSparderEventLogDir).listFiles().length;
             Assert.assertEquals(3, fileSize);
-            var cleaner = new StorageCleaner.EventLogCleaner(false);
+            var cleaner = new StorageCleaner.EventLogCleaner();
             cleaner.cleanCurrentSparderEventLog();
             fileSize = new File(currentSparderEventLogDir).listFiles().length;
             Assert.assertEquals(2, fileSize);
@@ -133,11 +154,8 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
 
             int sparkEventLogFileSize = new File(sparkEventLogDir).listFiles().length;
             Assert.assertEquals(5, sparkEventLogFileSize);
-            cleaner.execute();
-            Assert.assertEquals(5, sparkEventLogFileSize);
 
-            cleaner = new StorageCleaner.EventLogCleaner(true);
-            cleaner.execute();
+            cleaner.cleanSparkEventLogs("default");
             sparkEventLogFileSize = new File(sparkEventLogDir).listFiles().length;
             Assert.assertEquals(4, sparkEventLogFileSize);
             Assert.assertFalse(new File(sparkEventLogDir + "/application_1677899901295_8243").exists());
@@ -183,36 +201,6 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
                 + "/default" + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT), null, true);
         Assert.assertEquals(0, files.size());
 
-    }
-
-    @Test
-    public void testTrashRecord() throws Exception {
-        val config = getTestConfig();
-        val kapConfig = KapConfig.getInstanceFromEnv();
-        config.setProperty("kylin.storage.time-machine-enabled", "true");
-        val cleaner = new StorageCleaner();
-        val workingDir = config.getHdfsWorkingDirectory();
-        val beforeProtectionTime = System.currentTimeMillis() - config.getStorageResourceSurvivalTimeThreshold();
-        val keys = cleaner.getTrashRecord().keySet().stream().collect(Collectors.toSet());
-
-        keys.forEach(k -> {
-            cleaner.getTrashRecord().remove(k);
-            // default/dict/global_dict/DEFAULT.TEST_KYLIN_FACT -> 1584689333538
-            if (k.equals("default/dict/global_dict/DEFAULT.TEST_KYLIN_FACT/invalid")) {
-                cleaner.getTrashRecord().put(new Path(workingDir, k).toString(), String.valueOf(beforeProtectionTime));
-            } else {
-                cleaner.getTrashRecord().put(new Path(workingDir, k).toString(),
-                        String.valueOf(System.currentTimeMillis()));
-            }
-        });
-        NTableMetadataManager.getInstance(config, "default").removeSourceTable("DEFAULT.TEST_KYLIN_FACT");
-        for (NDataflow dataflow : NDataflowManager.getInstance(config, "default").listAllDataflows()) {
-            NDataflowManager.getInstance(config, "default").dropDataflow(dataflow.getId());
-        }
-        cleaner.execute();
-        val files = FileUtils.listFiles(new File(config.getHdfsWorkingDirectory().replace("file://", "") + "/default"
-                + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT), null, true);
-        Assert.assertEquals(2, files.size());
     }
 
     @Test
@@ -440,6 +428,9 @@ public class StorageCleanerTest extends NLocalFileMetadataTestCase {
 
         // Not expired 
         updateLastModified(sparkEventLogDir + "/application_1677899901295_0989", notExpired);
+        updateLastModified(sparkEventLogDir + "/application_1554187389076_9294", notExpired);
+        updateLastModified(sparkEventLogDir + "/application_1554187389076_9295", notExpired);
+        updateLastModified(sparkEventLogDir + "/application_1554187389076_9296", notExpired);
     }
 
     public void updateLastModified(String file, long timeStamp) throws IOException {

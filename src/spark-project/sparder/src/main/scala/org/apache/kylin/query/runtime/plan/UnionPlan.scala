@@ -18,14 +18,14 @@
 package org.apache.kylin.query.runtime.plan
 
 import org.apache.calcite.DataContext
-import org.apache.kylin.query.relnode.KapUnionRel
+import org.apache.kylin.query.relnode.OlapUnionRel
 import org.apache.spark.sql.SparkOperation
 import org.apache.spark.sql.catalyst.plans.logical.{Deduplicate, LogicalPlan, Union}
 import org.apache.spark.sql.functions.col
 
 object UnionPlan {
   def union(plans: Seq[LogicalPlan],
-            rel: KapUnionRel,
+            rel: OlapUnionRel,
             dataContext: DataContext): LogicalPlan = {
     val unionPlan = if (rel.all) {
       Union(plans)

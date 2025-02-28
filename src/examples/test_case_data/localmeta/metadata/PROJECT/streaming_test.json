@@ -1,0 +1,14 @@
+{
+  "uuid" : "511a9163-7888-4a60-aa24-ae735937cc87",
+  "name" : "streaming_test",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1614674541809,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.query.slowquery-detect-interval" : "4"
+  },
+  "project" : "_global"
+}

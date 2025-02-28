@@ -26,11 +26,12 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.NacosClusterManager;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -41,8 +42,6 @@ import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ConfTool {
     private static final Logger logger = LoggerFactory.getLogger("diag");

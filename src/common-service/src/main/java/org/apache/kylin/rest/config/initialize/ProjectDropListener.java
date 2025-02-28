@@ -29,7 +29,6 @@ import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
@@ -62,8 +61,6 @@ public class ProjectDropListener {
             if (KylinConfig.getInstanceFromEnv().isPrometheusMetricsEnabled()) {
                 MetricsRegistry.deletePrometheusProjectMetrics(project);
             }
-            EpochManager epochManager = EpochManager.getInstance();
-            epochManager.deleteEpoch(project);
             deleteStorage(kylinConfig, project.split("\\.")[0]);
         } catch (Exception e) {
             log.warn("error when delete " + project + " storage", e);

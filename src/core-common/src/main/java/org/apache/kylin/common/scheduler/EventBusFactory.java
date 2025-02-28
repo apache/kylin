@@ -29,16 +29,16 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
-import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.eventbus.AsyncEventBus;
 import org.apache.kylin.guava30.shaded.common.eventbus.EventBus;
 import org.apache.kylin.guava30.shaded.common.eventbus.SyncThrowExceptionEventBus;
 import org.apache.kylin.guava30.shaded.common.util.concurrent.RateLimiter;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

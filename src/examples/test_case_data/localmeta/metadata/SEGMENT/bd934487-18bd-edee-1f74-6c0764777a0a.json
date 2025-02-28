@@ -1,0 +1,47 @@
+{
+  "name" : "20120102000000_20120103000000",
+  "create_time_utc" : 1591847559830,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1325433600000,
+    "date_range_end" : 1325520000000
+  },
+  "timeRange" : null,
+  "parameters" : null,
+  "dictionaries" : null,
+  "last_build_time" : 1591847585656,
+  "source_count" : 10,
+  "source_bytes_size" : 773349,
+  "column_source_bytes" : {
+    "DEFAULT.TEST_ACCOUNT.ACCOUNT_COUNTRY" : 20,
+    "DEFAULT.TEST_KYLIN_FACT.ORDER_ID" : 37,
+    "DEFAULT.TEST_KYLIN_FACT.LEAF_CATEG_ID" : 50,
+    "DEFAULT.TEST_KYLIN_FACT.TRANS_ID" : 20,
+    "DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID" : 13,
+    "DEFAULT.TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL" : 10,
+    "DEFAULT.TEST_ACCOUNT.ACCOUNT_CONTACT" : 70,
+    "DEFAULT.TEST_KYLIN_FACT.CAL_DT" : 100,
+    "DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT" : 29,
+    "DEFAULT.TEST_KYLIN_FACT.LSTG_FORMAT_NAME" : 59,
+    "DEFAULT.TEST_KYLIN_FACT.SELLER_ID" : 80,
+    "DEFAULT.TEST_ACCOUNT.ACCOUNT_ID" : 80,
+    "DEFAULT.TEST_KYLIN_FACT.PRICE" : 78,
+    "DEFAULT.TEST_KYLIN_FACT.IS_EFFECTUAL" : 46,
+    "DEFAULT.TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP" : 69,
+    "DEFAULT.TEST_KYLIN_FACT.SLR_SEGMENT_CD" : 20
+  },
+  "ori_snapshot_size" : {
+    "DEFAULT.TEST_ACCOUNT" : 24000
+  },
+  "additionalInfo" : { },
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "selected_columns" : [ ],
+  "uuid" : "bd934487-18bd-edee-1f74-6c0764777a0a",
+  "model_uuid" : "24b720ff-8701-d141-3c03-3f60377418a5",
+  "project" : "heterogeneous_segment"
+}

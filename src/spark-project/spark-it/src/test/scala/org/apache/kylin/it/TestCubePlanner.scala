@@ -21,6 +21,7 @@ import java.util
 import java.util.TimeZone
 
 import org.apache.kylin.common._
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.metadata.cube.model.NDataflowManager.NDataflowUpdater
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.realization.RealizationStatusEnum
@@ -34,12 +35,12 @@ class TestCubePlanner extends SparderBaseFunSuite
   with LocalMetadata
   with JobSupport
   with QuerySupport
-  with CompareSupport
   with SSSource
   with AdaptiveSparkPlanHelper
   with Logging {
 
   override val DEFAULT_PROJECT = "default"
+
   override protected def getProject: String = DEFAULT_PROJECT
 
   private val DF_NAME = "d863b37c-e1a9-717f-7df7-74991815b1eb"
@@ -77,7 +78,7 @@ class TestCubePlanner extends SparderBaseFunSuite
 
   def build(): Unit = {
     // build one segment
-    buildOneSegementForCubePlanner(DF_NAME)
+    buildOneSegmentForCubePlanner(DF_NAME)
     // replace metadata with new one after build
     dumpMetadata()
     SchemaProcessor.checkSchema(spark, DF_NAME, DEFAULT_PROJECT)
@@ -86,7 +87,7 @@ class TestCubePlanner extends SparderBaseFunSuite
 
   def rebuild(): Unit = {
     // build one segment
-    buildOneSegementForCubePlanner(DF_NAME)
+    buildOneSegmentForCubePlanner(DF_NAME)
     // replace metadata with new one after build
     dumpMetadata()
   }
@@ -120,9 +121,9 @@ class TestCubePlanner extends SparderBaseFunSuite
     // layout2
     // delete the one of the dimension
     // rebuild the segment
-    val indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(config, DEFAULT_PROJECT)
-    indexMgr.updateIndexPlan(DF_NAME, new NIndexPlanManager.NIndexPlanUpdater {
-      override def modify(copyForWrite: IndexPlan): Unit = {
+    UnitOfWork.doInTransactionWithRetry(() => {
+      val indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv, DEFAULT_PROJECT)
+      indexMgr.updateIndexPlan(DF_NAME, (copyForWrite: IndexPlan) => {
         val ruleIndex = copyForWrite.getRuleBasedIndex
         // edit the aggregation group
         val aggGroups = ruleIndex.getAggregationGroups
@@ -136,8 +137,8 @@ class TestCubePlanner extends SparderBaseFunSuite
         ruleIndex.setAggregationGroups(aggGroups)
         ruleIndex.init()
         copyForWrite.setRuleBasedIndex(ruleIndex)
-      }
-    });
+      })
+    }, DEFAULT_PROJECT)
 
     // after update the new index, we need to rebuild the segment
     rebuild()

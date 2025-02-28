@@ -17,8 +17,6 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import java.util.Locale
-
 import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.rex.RexLiteral
 import org.apache.calcite.sql.SqlKind
@@ -26,7 +24,8 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.measure.percentile.PercentileCounter
 import org.apache.kylin.metadata.model.FunctionDesc
-import org.apache.kylin.query.relnode.{KapAggregateRel, KapProjectRel, KylinAggregateCall, OLAPAggregateRel}
+import org.apache.kylin.query.calcite.KylinRelDataTypeSystem
+import org.apache.kylin.query.relnode.{KylinAggregateCall, OlapAggregateRel, OlapProjectRel}
 import org.apache.kylin.query.util.RuntimeHelper
 import org.apache.spark.sql.KapFunctions.{k_lit, sum0}
 import org.apache.spark.sql._
@@ -37,19 +36,21 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.udaf.SingleValueAgg
+import org.apache.spark.sql.udaf.{BitmapFuncType, SingleValueAgg}
 import org.apache.spark.sql.util.SparderTypeUtil
 
+import java.util.Locale
 import scala.collection.JavaConverters._
 
 // scalastyle:off
 object AggregatePlan extends LogEx {
+  val unSupportedOperationEp = s"limit / offset must be of constant literal"
   val binaryMeasureType =
     List("PERCENTILE", "PERCENTILE_APPROX", "INTERSECT_COUNT", "COUNT_DISTINCT", "BITMAP_UUID",
       FunctionDesc.FUNC_BITMAP_BUILD, FunctionDesc.FUNC_SUM_LC)
 
   def agg(plan: LogicalPlan,
-          rel: KapAggregateRel): LogicalPlan = logTime("aggregate", debug = true) {
+          rel: OlapAggregateRel): LogicalPlan = logTime("aggregate", debug = true) {
 
     val schemaNames = plan.output
 
@@ -59,7 +60,7 @@ object AggregatePlan extends LogEx {
       // exactly match, skip agg, direct project.
       val aggCols = rel.getRewriteAggCalls.asScala.zipWithIndex.map {
         case (call: KylinAggregateCall, index: Int) =>
-          val funcName = OLAPAggregateRel.getAggrFuncName(call);
+          val funcName = OlapAggregateRel.getAggrFuncName(call);
           val dataType = call.getFunc.getReturnDataType
           val argNames = call.getArgList.asScala.map(schemaNames.apply(_).name)
           val columnName = argNames.map(name => col(name))
@@ -109,14 +110,14 @@ object AggregatePlan extends LogEx {
     }
   }
 
-  private def genFiltersWhenIntersectCount(rel: KapAggregateRel, plan: LogicalPlan): LogicalPlan = {
+  private def genFiltersWhenIntersectCount(rel: OlapAggregateRel, plan: LogicalPlan): LogicalPlan = {
     try {
       val names = plan.output
 
       val intersects = rel.getRewriteAggCalls.asScala.filter(_.isInstanceOf[KylinAggregateCall])
         .filter(!_.asInstanceOf[KylinAggregateCall].getFunc.isCount)
         .map(_.asInstanceOf[KylinAggregateCall])
-        .filter(call => !call.getFunc.isCount && OLAPAggregateRel.getAggrFuncName(call).equals(FunctionDesc.FUNC_INTERSECT_COUNT))
+        .filter(call => !call.getFunc.isCount && OlapAggregateRel.getAggrFuncName(call).equals(FunctionDesc.FUNC_INTERSECT_COUNT))
       val children = plan
       if (intersects.nonEmpty && intersects.size == rel.getRewriteAggCalls.size() && children.isInstanceOf[Project]) {
         // only exists intersect count function in agg
@@ -150,17 +151,17 @@ object AggregatePlan extends LogEx {
 
   // S53 Fix https://olapio.atlassian.net/browse/KE-42473
   def buildAgg(schema: Seq[Attribute],
-               rel: KapAggregateRel,
+               rel: OlapAggregateRel,
                plan: LogicalPlan): List[Column] = {
     val hash = System.identityHashCode(rel).toString
 
     rel.getRewriteAggCalls.asScala.zipWithIndex.map {
       case (call: KylinAggregateCall, index: Int)
-        if binaryMeasureType.contains(OLAPAggregateRel.getAggrFuncName(call)) =>
+        if binaryMeasureType.contains(OlapAggregateRel.getAggrFuncName(call)) =>
         val dataType = call.getFunc.getReturnDataType
         val isCount = call.getFunc.isCount
         val funcName =
-          if (isCount) FunctionDesc.FUNC_COUNT else OLAPAggregateRel.getAggrFuncName(call)
+          if (isCount) FunctionDesc.FUNC_COUNT else OlapAggregateRel.getAggrFuncName(call)
         val argNames = call.getArgList.asScala.map(schema.apply(_).name)
         val columnName = argNames.map(name => col(name))
         val registeredFuncName = RuntimeHelper.registerSingleByColName(funcName, dataType)
@@ -204,7 +205,7 @@ object AggregatePlan extends LogEx {
           callUDF(registeredFuncName, columnName.toList: _*).alias(aggName)
         }
       case (call: Any, index: Int) =>
-        val funcName = OLAPAggregateRel.getAggrFuncName(call)
+        val funcName = OlapAggregateRel.getAggrFuncName(call)
         val argNames = call.getArgList.asScala.map(id => schema.apply(id).name)
         val columnName = argNames.map(name => col(name))
         val inputType = call.getType
@@ -215,12 +216,12 @@ object AggregatePlan extends LogEx {
         funcName match {
           case FunctionDesc.FUNC_PERCENTILE =>
             rel.getInput match {
-              case projectRel: KapProjectRel =>
-                val percentageArg = projectRel.getChildExps.get(call.getArgList.get(1))
+              case projectRel: OlapProjectRel =>
+                val percentageArg = projectRel.getProjects.get(call.getArgList.get(1))
                 val accuracyArg = if (call.getArgList.size() < 3) {
                   None
                 } else {
-                  Some(projectRel.getChildExps.get(call.getArgList.get(2)))
+                  Some(projectRel.getProjects.get(call.getArgList.get(2)))
                 }
                 (percentageArg, accuracyArg) match {
                   case (percentageLitRex: RexLiteral, accuracyArgLitRex: Option[RexLiteral]) =>
@@ -237,16 +238,29 @@ object AggregatePlan extends LogEx {
                   s"expecting approx_percentile(col, percentage [, accuracy]), percentage/accuracy must be of constant literal")
             }
           case FunctionDesc.FUNC_SUM =>
-            if (isSum0(call)) {
-              sum0(
-                col(argNames.head).cast(
-                  SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
-                .alias(aggName)
+            // TODO Use improved sum decimal precision by default in future
+            if (KylinRelDataTypeSystem.getProjectConfig.isImprovedSumDecimalPrecisionEnabled) {
+              if (isSum0(call)) {
+                sum0(col(argNames.head))
+                  .cast(SparderTypeUtil.convertSqlTypeToSparkType(inputType))
+                  .alias(aggName)
+              } else {
+                sum(col(argNames.head))
+                  .cast(SparderTypeUtil.convertSqlTypeToSparkType(inputType))
+                  .alias(aggName)
+              }
             } else {
-              sum(
-                col(argNames.head).cast(
-                  SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
-                .alias(aggName)
+              if (isSum0(call)) {
+                sum0(
+                  col(argNames.head).cast(
+                    SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
+                  .alias(aggName)
+              } else {
+                sum(
+                  col(argNames.head).cast(
+                    SparderTypeUtil.convertSqlTypeToSparkType(inputType)))
+                  .alias(aggName)
+              }
             }
           case FunctionDesc.FUNC_COUNT =>
             count(if (argNames.isEmpty) k_lit(1) else col(argNames.head))
@@ -290,6 +304,52 @@ object AggregatePlan extends LogEx {
               case _ =>
                 collect_set(col(argNames.head)).alias(aggName)
             }
+          case FunctionDesc.FUNC_INTERSECT_BITMAP_UUID_DISTINCT =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), BinaryType, BitmapFuncType.INTERSECT).alias(aggName)
+          case FunctionDesc.FUNC_INTERSECT_BITMAP_UUID_COUNT =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), IntegerType, BitmapFuncType.INTERSECT).alias(aggName)
+          case FunctionDesc.FUNC_INTERSECT_BITMAP_UUID_VALUE =>
+            rel.getInput match {
+              case projectRel: OlapProjectRel =>
+                val limitArg = projectRel.getProjects.get(call.getArgList.get(1))
+                val offsetArg = projectRel.getProjects.get(call.getArgList.get(2))
+                (limitArg, offsetArg) match {
+                  case (limitLit: RexLiteral, offsetLit: RexLiteral) =>
+                    val limit = limitLit.getValue.toString.toInt
+                    val offset = offsetLit.getValue.toString.toInt
+                    KapFunctions.bitmap_uuid_page_func(col(argNames.head), limit, offset, ArrayType(LongType, false),
+                      BitmapFuncType.INTERSECT).alias(aggName)
+                  case _ =>
+                    throw new UnsupportedOperationException()
+                }
+              case _ =>
+                throw new UnsupportedOperationException(unSupportedOperationEp)
+            }
+          case FunctionDesc.FUNC_INTERSECT_BITMAP_UUID_VALUE_ALL =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), ArrayType(LongType, false), BitmapFuncType.INTERSECT).alias(aggName)
+          case FunctionDesc.FUNC_UNION_BITMAP_UUID_DISTINCT =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), BinaryType, BitmapFuncType.UNION).alias(aggName)
+          case FunctionDesc.FUNC_UNION_BITMAP_UUID_COUNT =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), IntegerType, BitmapFuncType.UNION).alias(aggName)
+          case FunctionDesc.FUNC_UNION_BITMAP_UUID_VALUE =>
+            rel.getInput match {
+              case projectRel: OlapProjectRel =>
+                val limitArg = projectRel.getProjects.get(call.getArgList.get(1))
+                val offsetArg = projectRel.getProjects.get(call.getArgList.get(2))
+                (limitArg, offsetArg) match {
+                  case (limitLit: RexLiteral, offsetLit: RexLiteral) =>
+                    val limit = limitLit.getValue.toString.toInt
+                    val offset = offsetLit.getValue.toString.toInt
+                    KapFunctions.bitmap_uuid_page_func(col(argNames.head), limit, offset, ArrayType(LongType, false),
+                      BitmapFuncType.UNION).alias(aggName)
+                  case _ =>
+                    throw new UnsupportedOperationException(unSupportedOperationEp)
+                }
+              case _ =>
+                throw new UnsupportedOperationException(unSupportedOperationEp)
+            }
+          case FunctionDesc.FUNC_UNION_BITMAP_UUID_VALUE_ALL =>
+            KapFunctions.bitmap_uuid_func(col(argNames.head), ArrayType(LongType, false), BitmapFuncType.UNION).alias(aggName)
           case _ =>
             throw new IllegalArgumentException(
               s"""Unsupported function name $funcName""")

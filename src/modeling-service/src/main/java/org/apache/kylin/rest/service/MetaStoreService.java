@@ -26,17 +26,15 @@ import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_F
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
-import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
-import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
+import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE_META_KEY_TAG;
+import static org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore.JSON_SUFFIX;
 import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
 import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,38 +51,45 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.InMemResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.StringEntity;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.helper.RoutineToolHelper;
+import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
+import org.apache.kylin.metadata.model.CcModelRelationDesc;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnManager;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -104,6 +109,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
+import org.apache.kylin.metadata.recommendation.entity.RecItemSet;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
@@ -128,6 +134,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import lombok.Setter;
 import lombok.val;
 import lombok.var;
@@ -135,8 +143,6 @@ import lombok.var;
 @Component("metaStoreService")
 public class MetaStoreService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(MetaStoreService.class);
-    private static final String META_ROOT_PATH = "/";
-
     private static final String BASE_CUBOID_ALWAYS_VALID_KEY = "kylin.cube.aggrgroup.is-base-cuboid-always-valid";
     private static final Pattern MD5_PATTERN = Pattern.compile(".*([a-fA-F\\d]{32})\\.zip");
     private static final String RULE_SCHEDULER_DATA_KEY = "kylin.index.rule-scheduler-data";
@@ -252,6 +258,7 @@ public class MetaStoreService extends BasicService {
             ResourceStore newResourceStore = new InMemResourceStore(newConfig);
             ResourceStore.setRS(newConfig, newResourceStore);
 
+            RawResourceFilter projectFilter = RawResourceFilter.equalFilter("project", project);
             for (String modelId : modelList) {
                 NDataModel dataModelDesc = modelManager.getDataModelDesc(modelId);
                 if (Objects.isNull(dataModelDesc)) {
@@ -296,7 +303,9 @@ public class MetaStoreService extends BasicService {
                 // Broken model can't use getAllTables method, will be intercepted in BrokenEntityProxy
                 Set<String> tables = modelDesc.getAllTables().stream().map(TableRef::getTableDesc)
                         .map(TableDesc::getResourcePath)
-                        .filter(resPath -> !newResourceStore.listResourcesRecursively(META_ROOT_PATH).contains(resPath))
+                        .filter(resPath -> !newResourceStore
+                                .listResourcesRecursively(MetadataType.TABLE_INFO.name(), projectFilter)
+                                .contains(resPath))
                         .collect(Collectors.toSet());
                 tables.forEach(resourcePath -> oldResourceStore.copy(resourcePath, newResourceStore));
 
@@ -304,19 +313,38 @@ public class MetaStoreService extends BasicService {
                     exportRecommendations(project, modelId, newResourceStore);
                 }
             }
-            if (CollectionUtils.isEmpty(newResourceStore.listResourcesRecursively(META_ROOT_PATH))) {
+            if (CollectionUtils.isEmpty(newResourceStore.listResourcesRecursively(MetadataType.MODEL.name()))) {
                 throw new KylinException(MODEL_METADATA_FILE_ERROR, MsgPicker.getMsg().getExportAtLeastOneModel());
             }
 
+            addComputedColumns(project, modelList, newResourceStore);
+
             // add version file
             String version = System.getProperty(KE_VERSION) == null ? "unknown" : System.getProperty(KE_VERSION);
+            StringEntity versionEntity = new StringEntity(VERSION_FILE_META_KEY_TAG, version);
             newResourceStore.putResourceWithoutCheck(VERSION_FILE,
-                    ByteSource.wrap(version.getBytes(Charset.defaultCharset())), System.currentTimeMillis(), -1);
+                    ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(versionEntity)), System.currentTimeMillis(), -1);
 
             oldResourceStore.copy(ResourceStore.METASTORE_UUID_TAG, newResourceStore);
             writeMetadataToZipOutputStream(zipOutputStream, newResourceStore);
         }
         return byteArrayOutputStream;
+    }
+
+    private void addComputedColumns(String project, List<String> modelList, ResourceStore newResourceStore)
+            throws JsonProcessingException {
+        ComputedColumnManager ccManager = modelService.getManager(ComputedColumnManager.class, project);
+        Manager<CcModelRelationDesc> relationManager = Manager.getInstance(getConfig(), project,
+                CcModelRelationDesc.class);
+        List<CcModelRelationDesc> relations = relationManager.listByFilter(new RawResourceFilter()
+                .addConditions("modelUuid", new ArrayList<>(modelList), RawResourceFilter.Operator.IN));
+        List<ComputedColumnDesc> usedCcs = ccManager.listByFilter(new RawResourceFilter().addConditions("metaKey",
+                relations.stream().map(CcModelRelationDesc::getCcUuid).collect(Collectors.toList()),
+                RawResourceFilter.Operator.IN));
+        for (ComputedColumnDesc cc : usedCcs) {
+            newResourceStore.putResourceWithoutCheck(cc.getResourcePath(),
+                    ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(cc)), cc.getLastModified(), cc.getMvcc());
+        }
     }
 
     private void exportRecommendations(String project, String modelId, ResourceStore resourceStore) throws Exception {
@@ -345,40 +373,33 @@ public class MetaStoreService extends BasicService {
 
         List<RawRecItem> rawRecItems = jdbcRawRecStore.list(rawRecIds).stream()
                 .sorted(Comparator.comparingInt(RawRecItem::getId)).collect(Collectors.toList());
+        RecItemSet recEntity = new RecItemSet(modelId, project, rawRecItems);
 
-        resourceStore.putResourceWithoutCheck(String.format(Locale.ROOT, MODEL_REC_PATH, project, modelId),
-                ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(rawRecItems)), System.currentTimeMillis(), -1);
+        resourceStore.putResourceWithoutCheck(recEntity.getResourcePath(),
+                ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(recEntity)), System.currentTimeMillis(), -1);
     }
 
     private void writeMetadataToZipOutputStream(ZipOutputStream zipOutputStream, ResourceStore resourceStore)
             throws IOException {
-        for (String resPath : resourceStore.listResourcesRecursively(META_ROOT_PATH)) {
-            zipOutputStream.putNextEntry(new ZipEntry(resPath));
+        for (String resPath : resourceStore.listResourcesRecursively(MetadataType.ALL.name())) {
+            zipOutputStream.putNextEntry(new ZipEntry(resPath + JSON_SUFFIX));
             zipOutputStream.write(resourceStore.getResource(resPath).getByteSource().read());
         }
     }
 
-    private Map<String, RawResource> getRawResourceFromUploadFile(MultipartFile uploadFile) throws IOException {
-        Map<String, RawResource> rawResourceMap = Maps.newHashMap();
-        try (ZipInputStream zipInputStream = new ZipInputStream(uploadFile.getInputStream())) {
-            ZipEntry zipEntry;
-            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                val bs = ByteSource.wrap(IOUtils.toByteArray(zipInputStream));
-                long t = zipEntry.getTime();
-                String resPath = StringUtils.prependIfMissing(zipEntry.getName(), "/");
-                if (!resPath.startsWith(METASTORE_UUID_TAG) && !resPath.equals(VERSION_FILE)
-                        && !resPath.endsWith(".json")) {
-                    continue;
-                }
-                rawResourceMap.put(resPath, new RawResource(resPath, bs, t, 0));
-            }
-            return rawResourceMap;
-        }
+    @VisibleForTesting
+    protected static Map<String, RawResource> getRawResourceFromUploadFile(MultipartFile uploadFile)
+            throws IOException {
+        val resourceMap = FileSystemMetadataStore.getFilesFromCompressedFileByStream(uploadFile.getInputStream(),
+                new FileSystemMetadataStore.CompressHandler());
+        val filesFromCompressedFile = Maps.<String, RawResource> newHashMap();
+        resourceMap.forEach((k, v) -> filesFromCompressedFile.put(k.replaceAll(".json", ""), v));
+        return filesFromCompressedFile;
     }
 
     private ImportModelContext getImportModelContext(String targetProject, Map<String, RawResource> rawResourceMap,
             ModelImportRequest request) {
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
 
         if (request != null) {
             val newModels = request.getModels().stream()
@@ -479,14 +500,15 @@ public class MetaStoreService extends BasicService {
         }
     }
 
-    private String getModelMetadataProjectName(Set<String> rawResourceList) {
-        String anyPath = rawResourceList.stream().filter(
-                resourcePath -> resourcePath.indexOf(File.separator) != resourcePath.lastIndexOf(File.separator))
-                .findAny().orElse(null);
-        if (StringUtils.isBlank(anyPath)) {
+    @VisibleForTesting
+    public static String getModelMetadataProjectName(Map<String, RawResource> rawResourceMap) {
+        RawResource raw = rawResourceMap.values().stream()
+                .filter(rawResource -> rawResource != null && rawResource.getProject() != null
+                        && rawResource.getMetaType() == MetadataType.MODEL).findAny().orElse(null);
+        if (raw == null) {
             throw new KylinException(MODEL_METADATA_FILE_ERROR, MsgPicker.getMsg().getModelMetadataPackageInvalid());
         }
-        return anyPath.split(File.separator)[1];
+        return raw.getProject();
     }
 
     private void createNewModel(NDataModel nDataModel, ModelImportRequest.ModelImport modelImport, String project,
@@ -507,8 +529,10 @@ public class MetaStoreService extends BasicService {
         indexPlan = indexPlanManager.copy(indexPlan);
         indexPlan.setLastModified(System.currentTimeMillis());
         indexPlan.setMvcc(-1);
+
         indexPlanManager.createIndexPlan(indexPlan);
         dataflowManager.createDataflow(indexPlan, nDataModel.getOwner(), RealizationStatusEnum.OFFLINE);
+        indexPlanService.checkPartitionDimensionForV3Storage(project, nDataModel.getId(), getConfig());
     }
 
     private void updateModel(String project, NDataModel nDataModel, ModelImportRequest.ModelImport modelImport,
@@ -564,6 +588,7 @@ public class MetaStoreService extends BasicService {
             }
 
             if (targetIndexPlan.getAggShardByColumns() != null) {
+                copyForWrite.setRuleBasedIndex(targetIndexPlan.getRuleBasedIndex());
                 copyForWrite.setAggShardByColumns(targetIndexPlan.getAggShardByColumns());
             }
         });
@@ -572,18 +597,48 @@ public class MetaStoreService extends BasicService {
     private void removeIndexes(String project, SchemaChangeCheckResult.ModelSchemaChange modelSchemaChange,
             IndexPlan targetIndexPlan) {
         if (modelSchemaChange != null) {
+            val newLockedItems = modelSchemaChange.getNewItems().stream()
+                    .filter(item -> item.getType() == SchemaNodeType.TO_BE_DELETED_INDEX).collect(Collectors.toSet());
+            val newLockedItemKeyAttrMap = Maps.newHashMap();
+            newLockedItems.forEach(newLockedItem -> newLockedItemKeyAttrMap.put(newLockedItem.getSchemaNode().getKey(),
+                    newLockedItem.getAttributes()));
+
+            // filter indexes which should be removed form dataflow
             val toBeRemovedIndexes = Stream
                     .concat(modelSchemaChange.getReduceItems().stream()
-                            .filter(schemaChange -> schemaChange.getType() == SchemaNodeType.WHITE_LIST_INDEX)
-                            .map(SchemaChangeCheckResult.ChangedItem::getDetail),
+                            .filter(schemaChange -> schemaChange.getType() == SchemaNodeType.WHITE_LIST_INDEX
+                                    || schemaChange.getType() == SchemaNodeType.RULE_BASED_INDEX)
+                            .filter(schemaChange -> {
+                                val reduceItemKey = schemaChange.getSchemaNode().getKey();
+                                val reduceItemAttr = schemaChange.getAttributes();
+                                // 'toBeRemovedIndexes' should not contain locked indexes
+                                return !reduceItemAttr.equals(newLockedItemKeyAttrMap.get(reduceItemKey));
+                            }).map(SchemaChangeCheckResult.ChangedItem::getDetail),
                             modelSchemaChange.getUpdateItems().stream()
-                                    .filter(schemaUpdate -> schemaUpdate.getType() == SchemaNodeType.WHITE_LIST_INDEX)
+                                    .filter(schemaUpdate -> schemaUpdate.getType() == SchemaNodeType.WHITE_LIST_INDEX
+                                            || schemaUpdate.getType() == SchemaNodeType.RULE_BASED_INDEX)
                                     .map(SchemaChangeCheckResult.UpdatedItem::getFirstDetail))
                     .map(Long::parseLong).collect(Collectors.toSet());
             if (!toBeRemovedIndexes.isEmpty()) {
                 indexPlanService.removeIndexes(project, targetIndexPlan.getId(), toBeRemovedIndexes);
             }
+
+            // for locked layout, just remove from 'indexes' json fields, keep in dataflow
+            Set<Long> newLockedIndexIds = newLockedItems.stream().map(SchemaChangeCheckResult.ChangedItem::getDetail)
+                    .map(Long::parseLong).collect(Collectors.toSet());
+            removeLockedLayoutFromIndexes(newLockedIndexIds, targetIndexPlan, project);
         }
+    }
+
+    private void removeLockedLayoutFromIndexes(Set<Long> newLockedIndexIds, IndexPlan targetIndexPlan, String project) {
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getConfig(), project);
+        indexPlanManager.updateIndexPlan(targetIndexPlan.getId(), copyForWrite -> {
+            copyForWrite.removeLayouts(newLockedIndexIds, true, true);
+            // set locked indexes, to be avoided from deleting in dataflow
+            List<IndexEntity> toBeDeletedIndexes = copyForWrite.getToBeDeletedIndexes();
+            toBeDeletedIndexes.clear();
+            toBeDeletedIndexes.addAll(targetIndexPlan.getToBeDeletedIndexes());
+        });
     }
 
     private void addWhiteListIndex(String project, SchemaChangeCheckResult.ModelSchemaChange modelSchemaChange,
@@ -602,6 +657,27 @@ public class MetaStoreService extends BasicService {
             indexPlanManager.updateIndexPlan(targetIndexPlan.getUuid(), copyForWrite -> {
                 IndexPlan.IndexPlanUpdateHandler updateHandler = copyForWrite.createUpdateHandler();
                 targetIndexPlan.getWhitelistLayouts().stream().filter(layout -> newIndexes.contains(layout.getId()))
+                        .forEach(layout -> updateHandler.add(layout, IndexEntity.isAggIndex(layout.getId())));
+                updateHandler.complete();
+            });
+        }
+    }
+
+    private void addRuleBasedIndex(String project, SchemaChangeCheckResult.ModelSchemaChange modelSchemaChange,
+            IndexPlan targetIndexPlan) {
+        if (modelSchemaChange != null) {
+            val newIndexes = Stream
+                    .concat(modelSchemaChange.getNewItems().stream()
+                            .filter(schemaChange -> schemaChange.getType() == SchemaNodeType.RULE_BASED_INDEX)
+                            .map(SchemaChangeCheckResult.ChangedItem::getDetail),
+                            modelSchemaChange.getUpdateItems().stream()
+                                    .filter(schemaUpdate -> schemaUpdate.getType() == SchemaNodeType.RULE_BASED_INDEX)
+                                    .map(SchemaChangeCheckResult.UpdatedItem::getSecondDetail))
+                    .map(Long::parseLong).collect(Collectors.toList());
+            val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            indexPlanManager.updateIndexPlan(targetIndexPlan.getUuid(), copyForWrite -> {
+                IndexPlan.IndexPlanUpdateHandler updateHandler = copyForWrite.createUpdateHandler();
+                targetIndexPlan.getRuleBaseLayouts().stream().filter(layout -> newIndexes.contains(layout.getId()))
                         .forEach(layout -> updateHandler.add(layout, IndexEntity.isAggIndex(layout.getId())));
                 updateHandler.complete();
             });
@@ -649,8 +725,8 @@ public class MetaStoreService extends BasicService {
             }
             Set<String> modelTables = Sets.newHashSet();
             change.getNewItems().stream()//
-                    .filter(item -> item.getSchemaNode().getType().equals(MODEL_DIM)
-                            || item.getSchemaNode().getType().equals(MODEL_FACT))
+                    .filter(item -> item.getSchemaNode().getType() == MODEL_DIM
+                            || item.getSchemaNode().getType() == MODEL_FACT)
                     .map(SchemaChangeCheckResult.ChangedItem::getDetail).filter(existTableList::contains)
                     .forEach(table -> {
                         needLoadTableSet.add(table);
@@ -707,6 +783,8 @@ public class MetaStoreService extends BasicService {
                     val nDataModel = importDataModelManager.copyForWrite(importDataModel);
 
                     // delete index, then remove dimension or measure
+                    indexPlanService.checkPartitionDimensionForV3Storage(project, importDataModel.getId(),
+                            targetKylinConfig);
                     val targetIndexPlan = importIndexPlanManager.getIndexPlanByModelAlias(modelImport.getOriginalName())
                             .copy();
 
@@ -721,6 +799,7 @@ public class MetaStoreService extends BasicService {
                     updateModel(project, nDataModel, modelImport, hasModelOverrideProps);
                     updateIndexPlan(project, nDataModel, targetIndexPlan, hasModelOverrideProps);
                     addWhiteListIndex(project, modelSchemaChange, targetIndexPlan);
+                    addRuleBasedIndex(project, modelSchemaChange, targetIndexPlan);
 
                     importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(), targetKylinConfig);
                 }
@@ -758,8 +837,7 @@ public class MetaStoreService extends BasicService {
             }
         } else if (modelImport.getImportType() == ImportType.NEW) {
 
-            if (!org.apache.commons.lang.StringUtils.containsOnly(modelImport.getTargetName(),
-                    ModelService.VALID_NAME_FOR_MODEL)) {
+            if (!StringUtils.containsOnly(modelImport.getTargetName(), ModelService.VALID_NAME_FOR_MODEL)) {
                 throw new KylinException(MODEL_NAME_INVALID, modelImport.getTargetName());
             }
 

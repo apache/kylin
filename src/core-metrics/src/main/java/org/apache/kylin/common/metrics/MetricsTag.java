@@ -38,8 +38,7 @@ public enum MetricsTag {
     HOST("host"), //
     TIMEOUT("timeout"), //
     WAITING("waiting"), //
-    CONSTANTS("constants"), //
-    HIT_SECOND_STORAGE("hit_second_storage");
+    CONSTANTS("constants");
 
     private final String value;
 

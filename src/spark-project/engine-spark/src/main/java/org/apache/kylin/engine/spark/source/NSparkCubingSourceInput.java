@@ -17,6 +17,18 @@
  */
 package org.apache.kylin.engine.spark.source;
 
+import static org.apache.calcite.avatica.util.Quoting.BACK_TICK;
+import static org.apache.kylin.engine.spark.utils.HiveTableRefChecker.isNeedCreateHiveTemporaryTable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
@@ -31,24 +43,18 @@ import org.apache.spark.sql.util.SparderTypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.apache.calcite.avatica.util.Quoting.BACK_TICK;
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCreateHiveTemporaryTable;
-
 public class NSparkCubingSourceInput implements NSparkCubingEngine.NSparkCubingSource {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingSourceInput.class);
 
     @Override
     public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> params) {
-        KylinConfig kylinConfig = KylinBuildEnv.get().kylinConfig();
+        KylinConfig kylinConfig = null;
+        if (null == KylinBuildEnv.get()) {
+            kylinConfig = KylinConfig.getInstanceFromEnv();
+        } else {
+            kylinConfig = KylinBuildEnv.get().kylinConfig();
+        }
         logger.info("isRangePartition:{};isTransactional:{};isReadTransactionalTableEnabled:{}",
                 table.isRangePartition(), table.isTransactional(), kylinConfig.isReadTransactionalTableEnabled());
 
@@ -67,10 +73,10 @@ public class NSparkCubingSourceInput implements NSparkCubingEngine.NSparkCubingS
         return df.select(SparderTypeUtil.alignDataTypeAndName(sparkSchema, kylinSchema));
     }
 
-    private List<ColumnDesc> extractEffectiveColumns(TableDesc table, SparkSession ss) {
+    protected List<ColumnDesc> extractEffectiveColumns(TableDesc table, SparkSession ss) {
         List<ColumnDesc> ret = new ArrayList<>();
         Dataset<Row> sourceTableDS = ss.table(table.getBackTickIdentity());
-        Set<String> sourceTableColumns = Arrays.stream(sourceTableDS.columns()).map(String::toUpperCase)
+        Set<String> sourceTableColumns = Arrays.stream(sourceTableDS.columns()).map(StringUtils::upperCase)
                 .collect(Collectors.toSet());
         for (ColumnDesc col : table.getColumns()) {
             if (!col.isComputedColumn()) {
@@ -84,7 +90,8 @@ public class NSparkCubingSourceInput implements NSparkCubingEngine.NSparkCubingS
         return ret;
     }
 
-    private String generateSelectSql(TableDesc table, List<ColumnDesc> effectiveColumns, Map<String, String> params, KylinConfig kylinConfig) {
+    protected String generateSelectSql(TableDesc table, List<ColumnDesc> effectiveColumns, Map<String, String> params,
+            KylinConfig kylinConfig) {
         String colString = generateColString(effectiveColumns);
         String sql;
         if (isNeedCreateHiveTemporaryTable(table.isRangePartition(), table.isTransactional(),
@@ -97,12 +104,12 @@ public class NSparkCubingSourceInput implements NSparkCubingEngine.NSparkCubingS
         return sql;
     }
 
-    private String generateColString(List<ColumnDesc> effectiveColumns) {
+    protected String generateColString(List<ColumnDesc> effectiveColumns) {
         return effectiveColumns.stream().map(col -> BACK_TICK.string + col.getName() + BACK_TICK.string)
                 .collect(Collectors.joining(","));
     }
 
-    private StructType generateKylinSchema(List<ColumnDesc> effectiveColumns) {
+    protected StructType generateKylinSchema(List<ColumnDesc> effectiveColumns) {
         StructType kylinSchema = new StructType();
         for (ColumnDesc columnDesc : effectiveColumns) {
             if (!columnDesc.isComputedColumn()) {

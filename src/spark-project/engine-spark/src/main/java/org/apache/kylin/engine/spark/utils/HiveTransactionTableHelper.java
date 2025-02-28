@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,13 +38,12 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.hive.HiveCmdBuilder;
-
-import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,8 +63,9 @@ public class HiveTransactionTableHelper {
         // jobId: 80c95c04-4291-9f95-3c0f-0b014f7f14af-ad53bba1-e9f2-cee2-5b21-21f2e3a73312
         // tableSuffix: 80c95c04-4291 => 80c95c044291
         String tableSuffix = StringUtils.replace(StringUtils.substring(jobId, 0, 13), "-", "");
-        String tempTableName = table.getTransactionalTableIdentity().concat(tableSuffix);
-        String tempBackTickTableName = table.getBackTickTransactionalTableIdentity(tableSuffix);
+        String tempWritableDB = kylinBuildEnv.kylinConfig().getBuildResourceTemporaryWritableDB();
+        String tempTableName = table.getTransactionalTableIdentity(tempWritableDB).concat(tableSuffix);
+        String tempBackTickTableName = table.getBackTickTransactionalTableIdentity(tempWritableDB, tableSuffix);
         String tableDir = getTableDir(tempTableName, dir);
         checkInterTableExistFirst(table, params, kylinBuildEnv, jobId, dir, tableSuffix, tempTableName, tableDir);
         sql = checkInterTableExistSecondAndGetSql(table, params, colString, jobId, tempBackTickTableName, tableDir);
@@ -117,8 +117,8 @@ public class HiveTransactionTableHelper {
         return "USE " + doQuote(flatTableDatabase) + ";\n";
     }
 
-    public static String generateInsertDataStatement(ColumnDesc[] columnDescs, String originTable, String interTable,
-            String queryCondition) {
+    public static String generateInsertDataStatement(ColumnDesc[] columnDescs, String originDB, String originTable,
+            String interTable, String queryCondition) {
         final String sep = "\n";
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + sep);
@@ -129,15 +129,18 @@ public class HiveTransactionTableHelper {
             }
             sql.append(doQuote(col.getName())).append(sep);
         }
-        sql.append("FROM ").append(doQuote(originTable)).append(" ").append(queryCondition).append(sep);
+        sql.append("FROM ").append(doQuote(originDB)).append(".").append(doQuote(originTable)).append(" ")
+                .append(queryCondition).append(sep);
         return "INSERT OVERWRITE TABLE " + doQuote(interTable) + " " + sql.toString() + ";\n";
     }
 
-    public static String getCreateTableStatement(String originTable, String interTable, ColumnDesc[] columnDescs,
+    public static String getCreateTableStatement(TableDesc tableDesc, String interTable, ColumnDesc[] columnDescs,
             String tableDir, String storageFormat, String fieldDelimiter, String queryCondition) {
+        String originDB = tableDesc.getDatabase();
+        String originTable = tableDesc.getName();
         return generateDropTableStatement(interTable)
                 + generateCreateTableStatement(interTable, tableDir, columnDescs, storageFormat, fieldDelimiter)
-                + generateInsertDataStatement(columnDescs, originTable, interTable, queryCondition);
+                + generateInsertDataStatement(columnDescs, originDB, originTable, interTable, queryCondition);
     }
 
     public static String generateDropTableStatement(String interTable) {
@@ -209,8 +212,8 @@ public class HiveTransactionTableHelper {
         String jobId = kylinBuildEnv.buildJobInfos().getJobId();
         log.info("job wait for generate intermediate table, job id : {}", jobId);
         KylinConfig config = kylinBuildEnv.kylinConfig();
-        String database = table.getCaseSensitiveDatabase().endsWith("null") ? "default"
-                : table.getCaseSensitiveDatabase();
+        String database = determineDBUsed(kylinBuildEnv, table);
+
         ColumnDesc[] filtered = Arrays.stream(table.getColumns()).filter(t -> !t.isComputedColumn())
                 .toArray(ColumnDesc[]::new);
 
@@ -218,7 +221,7 @@ public class HiveTransactionTableHelper {
 
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(config);
         hiveCmdBuilder.addStatement(generateHiveInitStatements(database));
-        String createTableStatement = getCreateTableStatement(table.getName(),
+        String createTableStatement = getCreateTableStatement(table,
                 table.getTransactionalTableName().concat(tableSuffix), filtered, tableDir,
                 config.getFlatTableStorageFormat(), config.getFlatTableFieldDelimiter(), queryCondition);
         hiveCmdBuilder.addStatement(createTableStatement);
@@ -236,9 +239,20 @@ public class HiveTransactionTableHelper {
         }
     }
 
+    static String determineDBUsed(KylinBuildEnv kylinBuildEnv, TableDesc table) {
+        String database = table.getCaseSensitiveDatabase().endsWith("null") ? "default"
+                : table.getCaseSensitiveDatabase();
+        String temporaryWritableDB = kylinBuildEnv.kylinConfig().getBuildResourceTemporaryWritableDB();
+        if (StringUtils.isNotBlank(temporaryWritableDB)) {
+            database = temporaryWritableDB;
+        }
+        return database.toUpperCase(Locale.ROOT);
+    }
+
     /**
      * generate transaction table query condition
-     * @param table the table description
+     *
+     * @param table  the table description
      * @param params the param map
      * @return table query condition string
      */
@@ -275,14 +289,14 @@ public class HiveTransactionTableHelper {
             if (intDataTypeFlag || dateDataTypeFlag || strDataTypeFlag) {
                 String partitionDateFormat = partitionDesc.getPartitionDateFormat();
                 log.info("table partition data format is :{}", partitionDateFormat);
-                String beginDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentStart", "0")), partitionDateFormat);
-                String endDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentEnd", "0")), partitionDateFormat);
+                String beginDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentStart", "0")),
+                        partitionDateFormat);
+                String endDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentEnd", "0")),
+                        partitionDateFormat);
                 log.info("segment range is :[{},{}]", beginDate, endDate);
-                if(intDataTypeFlag) {
-                    sql = String.format(Locale.ROOT,
-                            "WHERE %s BETWEEN %d AND %d", doQuote(partitionDataColumn),
-                            Integer.parseInt(beginDate),
-                            Integer.parseInt(endDate));
+                if (intDataTypeFlag) {
+                    sql = String.format(Locale.ROOT, "WHERE %s BETWEEN %d AND %d", doQuote(partitionDataColumn),
+                            Integer.parseInt(beginDate), Integer.parseInt(endDate));
                 } else {
                     sql = String.format(Locale.ROOT, "WHERE %s BETWEEN '%s' AND '%s'", doQuote(partitionDataColumn),
                             beginDate, endDate);

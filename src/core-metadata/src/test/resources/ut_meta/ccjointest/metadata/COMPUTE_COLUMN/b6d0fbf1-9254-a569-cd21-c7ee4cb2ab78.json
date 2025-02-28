@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_4",
+  "expression" : "(CALCS.INT1 - CALCS.INT2) / (CALCS.INT1 + CALCS.INT2)",
+  "innerExpression" : "(CALCS.INT1 - CALCS.INT2) / (CALCS.INT1 + CALCS.INT2)",
+  "datatype" : "DOUBLE",
+  "comment" : "Auto suggested from: (CALCS.INT1 - CALCS.INT2) / (CALCS.INT1 + CALCS.INT2)",
+  "uuid" : "b6d0fbf1-9254-a569-cd21-c7ee4cb2ab78",
+  "project" : "tdvt"
+}

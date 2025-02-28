@@ -20,12 +20,11 @@ package org.apache.spark.sql
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
-import org.apache.spark.sql.catalyst.expressions.codegen.Block.BlockHelper
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
-import org.apache.spark.sql.catalyst.expressions.{ApproxCountDistinctDecode, CeilDateTime, DictEncode, DictEncodeV3, EmptyRow, Expression, ExpressionInfo, ExpressionUtils, FloorDateTime, ImplicitCastInputTypes, In, KapAddMonths, KapSubtractMonths, KylinTimestampAdd, KylinTimestampDiff, Like, Literal, PercentileDecode, PreciseCountDistinctDecode, RLike, RoundBase, KylinSplitPart, Sum0, Truncate, SumLCDecode}
-import org.apache.spark.sql.types.{ArrayType, BinaryType, ByteType, DataType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType}
-import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, Percentile, PreciseBitmapBuildBase64Decode, PreciseBitmapBuildBase64WithIndex, PreciseBitmapBuildPushDown, PreciseCardinality, PreciseCountDistinct, PreciseCountDistinctAndArray, PreciseCountDistinctAndValue, ReusePreciseCountDistinct, ReuseSumLC}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.udaf.BitmapFuncType.BitmapFuncType
+import org.apache.spark.sql.udaf._
 
 object KapFunctions {
 
@@ -90,20 +89,31 @@ object KapFunctions {
   def precise_bitmap_build_pushdown(column: Column): Column =
     Column(PreciseBitmapBuildPushDown(column.expr).toAggregateExpression())
 
+  def bitmap_uuid_func(column: Column, returnDataType: DataType, funcType: BitmapFuncType): Column =
+    Column(BitmapUuidFunc(column.expr, -1, 0, returnDataType, funcType).toAggregateExpression())
+
+  def bitmap_uuid_page_func(column: Column, limit: Int, offset: Int,
+                            returnDataType: DataType, funcType: BitmapFuncType): Column = {
+    if (limit < 0 || offset < 0) {
+      throw new UnsupportedOperationException(s"both limit and offset must be >= 0")
+    }
+    Column(BitmapUuidFunc(column.expr, limit, offset, returnDataType, funcType).toAggregateExpression())
+  }
+
   def approx_count_distinct(column: Column, precision: Int): Column =
     Column(ApproxCountDistinct(column.expr, precision).toAggregateExpression())
 
   def approx_count_distinct_decode(column: Column, precision: Int): Column =
     Column(ApproxCountDistinctDecode(column.expr, Literal(precision)))
 
-  def k_truncate(column: Column, scale: Int): Column = {
-    Column(TRUNCATE(column.expr, Literal(scale)))
+  def k_truncate(column: Column, scale: Column): Column = {
+    Column(Truncate(column.expr, scale.expr))
   }
 
   def intersect_count(separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       k_lit(IntersectCount.RAW_STRING).expr, LongType, separator, upperBound).toAggregateExpression()
     )
   }
@@ -111,7 +121,7 @@ object KapFunctions {
   def intersect_value(separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       k_lit(IntersectCount.RAW_STRING).expr, ArrayType(LongType, containsNull = false), separator, upperBound).toAggregateExpression()
     )
   }
@@ -119,7 +129,7 @@ object KapFunctions {
   def intersect_bitmap(separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       k_lit(IntersectCount.RAW_STRING).expr, BinaryType, separator, upperBound).toAggregateExpression()
     )
   }
@@ -128,7 +138,7 @@ object KapFunctions {
   def intersect_count_v2(filterType: Column, separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       filterType.expr, LongType, separator, upperBound
     ).toAggregateExpression())
   }
@@ -136,7 +146,7 @@ object KapFunctions {
   def intersect_value_v2(filterType: Column, separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       filterType.expr, ArrayType(LongType, containsNull = false), separator, upperBound
     ).toAggregateExpression())
   }
@@ -144,108 +154,9 @@ object KapFunctions {
   def intersect_bitmap_v2(filterType: Column, separator: String, upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+    Column(IntersectCount(expressions.head, expressions.apply(1), expressions.apply(2),
       filterType.expr, BinaryType, separator, upperBound
     ).toAggregateExpression())
-  }
-
-  case class TRUNCATE(child: Expression, scale: Expression)
-    extends RoundBase(child, scale, BigDecimal.RoundingMode.DOWN, "ROUND_DOWN")
-      with Serializable with ImplicitCastInputTypes {
-    def this(child: Expression) = this(child, Literal(0))
-
-    private lazy val scaleV: Any = scale.eval(EmptyRow)
-
-    override protected lazy val _scale: Int = scaleV.asInstanceOf[Int]
-
-    override lazy val dataType: DataType = child.dataType match {
-      // if the new scale is bigger which means we are scaling up,
-      // keep the original scale as `Decimal` does
-      case DecimalType.Fixed(p, s) => DecimalType(p, scala.math.max(if (_scale > s) s else _scale, 0))
-      case t => t
-    }
-
-    override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-      val ce = child.genCode(ctx)
-      val modeStr = "ROUND_DOWN"
-      val evaluationCode = dataType match {
-        case DecimalType.Fixed(_, s) =>
-          s"""
-             |java.math.BigDecimal dec1 = ${ce.value}.toJavaBigDecimal().movePointRight(${_scale})
-             |          .setScale(0, java.math.BigDecimal.${modeStr}).movePointLeft(${_scale});
-             |        ${ev.value} = new Decimal().set(scala.math.BigDecimal.exact(dec1));
-             |        ${ev.isNull} = ${ev.value} == null;
-         """.stripMargin
-        case ByteType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.${modeStr}).byteValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case ShortType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.${modeStr}).shortValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case IntegerType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.${modeStr}).intValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case LongType =>
-          if (_scale < 0) {
-            s"""
-          ${ev.value} = new java.math.BigDecimal(${ce.value}).
-            setScale(${_scale}, java.math.BigDecimal.${modeStr}).longValue();"""
-          } else {
-            s"${ev.value} = ${ce.value};"
-          }
-        case FloatType => // if child eval to NaN or Infinity, just return it.
-          s"""
-          if (Float.isNaN(${ce.value}) || Float.isInfinite(${ce.value})) {
-            ${ev.value} = ${ce.value};
-          } else {
-            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
-              setScale(${_scale}, java.math.BigDecimal.${modeStr}).floatValue();
-          }"""
-        case DoubleType => // if child eval to NaN or Infinity, just return it.
-          s"""
-          if (Double.isNaN(${ce.value}) || Double.isInfinite(${ce.value})) {
-            ${ev.value} = ${ce.value};
-          } else {
-            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
-              setScale(${_scale}, java.math.BigDecimal.${modeStr}).doubleValue();
-          }"""
-      }
-      if (scaleV == null) { // if scale is null, no need to eval its child at all
-        ev.copy(code =
-          code"""
-        boolean ${ev.isNull} = true;
-        ${CodeGenerator.javaType(dataType)} ${ev.value} = ${CodeGenerator.defaultValue(dataType)};""")
-      } else {
-        ev.copy(code =
-          code"""
-        ${ce.code}
-        boolean ${ev.isNull} = ${ce.isNull};
-        ${CodeGenerator.javaType(dataType)} ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
-        if (!${ev.isNull}) {
-          $evaluationCode
-        }""")
-      }
-    }
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-      val newChildren = Seq(newLeft, newRight)
-      super.legacyWithNewChildren(newChildren)
-    }
   }
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column, buildVersion: Column): Column = {
@@ -257,24 +168,35 @@ object KapFunctions {
   }
 
   val builtin: Seq[FunctionEntity] = Seq(
-    FunctionEntity(expression[KylinTimestampAdd]("TIMESTAMPADD")),
-    FunctionEntity(expression[KylinTimestampDiff]("TIMESTAMPDIFF")),
-    FunctionEntity(expression[Truncate]("TRUNCATE")),
-    FunctionEntity(expression[DictEncode]("DICTENCODE")),
+    // string functions
     FunctionEntity(expression[KylinSplitPart]("split_part")),
-    FunctionEntity(expression[FloorDateTime]("floor_datetime")),
-    FunctionEntity(expression[CeilDateTime]("ceil_datetime")),
+    FunctionEntity(expression[InitCap]("initcapb")),
+    FunctionEntity(expression[StringInstr](name = "strpos")),
+    FunctionEntity(expression[KylinInstr](name = "instr")),
+    // arithmetic functions
+    FunctionEntity(expression[Truncate]("TRUNCATE")),
+    // bitmap functions
     FunctionEntity(expression[ReusePreciseCountDistinct]("bitmap_or")),
     FunctionEntity(expression[PreciseCardinality]("bitmap_cardinality")),
     FunctionEntity(expression[PreciseCountDistinctAndValue]("bitmap_and_value")),
     FunctionEntity(expression[PreciseCountDistinctAndArray]("bitmap_and_ids")),
+    FunctionEntity(expression[PreciseBitmapBuildPushDown]("bitmap_build")),
+    // decode & encode functions
     FunctionEntity(expression[PreciseCountDistinctDecode]("precise_count_distinct_decode")),
     FunctionEntity(expression[ApproxCountDistinctDecode]("approx_count_distinct_decode")),
     FunctionEntity(expression[PercentileDecode]("percentile_decode")),
-    FunctionEntity(expression[PreciseBitmapBuildPushDown]("bitmap_build"))
+    FunctionEntity(expression[DictEncode]("DICTENCODE")),
+    // datetime functions
+    FunctionEntity(expression[KylinTimestampAdd]("TIMESTAMPADD")),
+    FunctionEntity(expression[KylinTimestampDiff]("TIMESTAMPDIFF")),
+    FunctionEntity(expression[FloorDateTime]("floor_datetime")),
+    FunctionEntity(expression[CeilDateTime]("ceil_datetime")),
+    FunctionEntity(expression[YMDintBetween]("_ymdint_between"))
   )
 
-  val percentileFunction: FunctionEntity = FunctionEntity(ExpressionUtils.expression[Percentile]("percentile_approx"))
+  val percentileFunction: FunctionEntity = FunctionEntity(
+    ExpressionUtils.expression[Percentile]("percentile_approx")
+  )
 }
 
 case class FunctionEntity(name: FunctionIdentifier,

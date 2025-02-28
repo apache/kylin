@@ -75,13 +75,13 @@ public class LdapUserService implements UserService {
             new ArrayBlockingQueue<>(1), Executors.defaultThreadFactory(), (r, e) -> {
             });
 
-    private static final Cache<String, Map<String, ManagedUser>> ldapUsersCache = CacheBuilder
-            .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
+    private static final Cache<String, Map<String, ManagedUser>> ldapUsersCache = CacheBuilder.newBuilder()
+            .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final Cache<String, Map<String, String>> LDAP_VALID_DN_MAP_CACHE = CacheBuilder
-            .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
+    private static final Cache<String, Map<String, String>> LDAP_VALID_DN_MAP_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 

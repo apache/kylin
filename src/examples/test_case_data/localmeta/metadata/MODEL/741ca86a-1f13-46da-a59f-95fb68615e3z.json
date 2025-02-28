@@ -1,0 +1,80 @@
+{
+  "uuid" : "741ca86a-1f13-46da-a59f-95fb68615e3z",
+  "alias" : "test_intersect_count_join",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "owner" : "ADMIN",
+  "join_tables" : [ {
+    "table" : "EDW.TEST_CAL_DT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_CAL_DT.CAL_DT" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.CAL_DT" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "CAL_DT2",
+    "column" : "TEST_CAL_DT.CAL_DT"
+  }, {
+    "id" : 5,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 6,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 7,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "TEST_COUNT_DISTINCT",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : { },
+  "computed_column_uuids" : [ ],
+  "project" : "intersect_count"
+}

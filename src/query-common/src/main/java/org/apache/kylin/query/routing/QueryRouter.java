@@ -31,10 +31,10 @@ import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.project.NProjectManager;
-
-import lombok.Getter;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
+
+import lombok.Getter;
 
 public class QueryRouter {
 
@@ -60,7 +60,7 @@ public class QueryRouter {
     }
 
     public static void applyRules(Candidate candidate) {
-        Strategy pruningStrategy = getStrategy(candidate.getCtx().olapSchema.getProjectName());
+        Strategy pruningStrategy = getStrategy(candidate.getCtx().getOlapSchema().getProject());
         for (PruningRule r : pruningStrategy.getRules()) {
             r.apply(candidate);
         }
@@ -80,6 +80,8 @@ public class QueryRouter {
         private static final PruningRule PARTITION_PRUNING = new PartitionPruningRule();
         private static final PruningRule REMOVE_INCAPABLE_REALIZATIONS = new RemoveIncapableRealizationsRule();
         private static final PruningRule VACANT_INDEX_PRUNING = new VacantIndexPruningRule();
+
+        private static final PruningRule KYLIN_TABLE_PRUNING = new KylinTableChooserRule();
 
         @Getter
         List<PruningRule> rules = Lists.newArrayList();
@@ -112,10 +114,16 @@ public class QueryRouter {
                             candidate.setCapability(capability);
                         }
                     }
+
+                    @Override
+                    public boolean isStorageMatch(Candidate candidate) {
+                        return false;
+                    }
                 });
             }
 
             // add all rules
+            rules.add(KYLIN_TABLE_PRUNING); // add V1 rules
             rules.add(SEGMENT_PRUNING);
             rules.add(PARTITION_PRUNING);
             rules.add(REMOVE_INCAPABLE_REALIZATIONS);

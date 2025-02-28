@@ -1,2248 +1,1086 @@
-[
-  {
-    "meta_table_key": "/_global/project/calories.json",
-    "meta_table_content": {
-      "uuid": "30063cfd-7ad1-4e7d-b94e-3f2d5fe88532",
-      "last_modified": 1560837213236,
-      "create_time": 1560837213235,
-      "version": "3.0.0.0",
-      "mvcc": 1,
-      "name": "calories",
-      "owner": "ADMIN",
-      "status": "ENABLED",
-      "create_time_utc": 1560837213235,
-      "description": "",
-      "ext_filters": [],
-      "maintain_model_type": "MANUAL_MAINTAIN",
-      "override_kylin_properties": {
-        "kylin.source.default": "9"
+[ {
+  "meta_table_key" : "PROJECT/calories",
+  "meta_table_content" : {
+    "uuid" : "30063cfd-7ad1-4e7d-b94e-3f2d5fe88532",
+    "last_modified" : 1560837213236,
+    "create_time" : 1560837213235,
+    "version" : "3.0.0.0",
+    "mvcc" : 1,
+    "name" : "calories",
+    "owner" : "ADMIN",
+    "status" : "ENABLED",
+    "create_time_utc" : 1560837213235,
+    "description" : "",
+    "ext_filters" : [ ],
+    "maintain_model_type" : "MANUAL_MAINTAIN",
+    "override_kylin_properties" : {
+      "kylin.source.default" : "9"
+    },
+    "push_down_range_limited" : true,
+    "segment_config" : {
+      "auto_merge_enabled" : true,
+      "auto_merge_time_ranges" : [ "WEEK", "MONTH", "YEAR" ],
+      "volatile_range" : {
+        "volatile_range_number" : 0,
+        "volatile_range_enabled" : false,
+        "volatile_range_type" : "DAY"
       },
-      "push_down_range_limited": true,
-      "segment_config": {
-        "auto_merge_enabled": true,
-        "auto_merge_time_ranges": [
-          "WEEK",
-          "MONTH",
-          "YEAR"
-        ],
-        "volatile_range": {
-          "volatile_range_number": 0,
-          "volatile_range_enabled": false,
-          "volatile_range_type": "DAY"
-        },
-        "retention_range": {
-          "retention_range_number": 1,
-          "retention_range_enabled": false,
-          "retention_range_type": "MONTH"
-        }
+      "retention_range" : {
+        "retention_range_number" : 1,
+        "retention_range_enabled" : false,
+        "retention_range_type" : "MONTH"
+      }
+    }
+  },
+  "meta_table_ts" : 1562845984668,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.SUPPLIER",
+  "meta_table_content" : {
+    "uuid" : "49a99e0e-0542-484d-a8c0-29f775d96415",
+    "last_modified" : 0,
+    "create_time" : 1560837223538,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "SUPPLIER",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "S_SUPPKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "2",
+      "name" : "S_NAME",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "3",
+      "name" : "S_ADDRESS",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "4",
+      "name" : "S_CITY",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "5",
+      "name" : "S_NATION",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "6",
+      "name" : "S_REGION",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "7",
+      "name" : "S_PHONE",
+      "datatype" : "varchar(256)"
+    } ],
+    "source_type" : 9,
+    "table_type" : "MANAGED",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984768,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.CUSTOMER",
+  "meta_table_content" : {
+    "uuid" : "92350177-5c3c-4cab-a233-79b3b3c98931",
+    "last_modified" : 0,
+    "create_time" : 1560837223535,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "CUSTOMER",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "C_CUSTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "2",
+      "name" : "C_NAME",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "3",
+      "name" : "C_ADDRESS",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "4",
+      "name" : "C_CITY",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "5",
+      "name" : "C_NATION",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "6",
+      "name" : "C_REGION",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "7",
+      "name" : "C_PHONE",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "8",
+      "name" : "C_MKTSEGMENT",
+      "datatype" : "varchar(256)"
+    } ],
+    "source_type" : 9,
+    "table_type" : "MANAGED",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984768,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.DATES",
+  "meta_table_content" : {
+    "uuid" : "50cf14ab-9164-4722-8bdf-c6e5a582bc0f",
+    "last_modified" : 0,
+    "create_time" : 1560837223536,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "DATES",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "D_DATEKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "2",
+      "name" : "D_DATE",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "3",
+      "name" : "D_DAYOFWEEK",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "4",
+      "name" : "D_MONTH",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "5",
+      "name" : "D_YEAR",
+      "datatype" : "integer"
+    }, {
+      "id" : "6",
+      "name" : "D_YEARMONTHNUM",
+      "datatype" : "integer"
+    }, {
+      "id" : "7",
+      "name" : "D_YEARMONTH",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "8",
+      "name" : "D_DAYNUMINWEEK",
+      "datatype" : "integer"
+    }, {
+      "id" : "9",
+      "name" : "D_DAYNUMINMONTH",
+      "datatype" : "integer"
+    }, {
+      "id" : "10",
+      "name" : "D_DAYNUMINYEAR",
+      "datatype" : "integer"
+    }, {
+      "id" : "11",
+      "name" : "D_MONTHNUMINYEAR",
+      "datatype" : "integer"
+    }, {
+      "id" : "12",
+      "name" : "D_WEEKNUMINYEAR",
+      "datatype" : "integer"
+    }, {
+      "id" : "13",
+      "name" : "D_SELLINGSEASON",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "14",
+      "name" : "D_LASTDAYINWEEKFL",
+      "datatype" : "integer"
+    }, {
+      "id" : "15",
+      "name" : "D_LASTDAYINMONTHFL",
+      "datatype" : "integer"
+    }, {
+      "id" : "16",
+      "name" : "D_HOLIDAYFL",
+      "datatype" : "integer"
+    }, {
+      "id" : "17",
+      "name" : "D_WEEKDAYFL",
+      "datatype" : "integer"
+    } ],
+    "source_type" : 9,
+    "table_type" : "MANAGED",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984768,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.P_LINEORDER",
+  "meta_table_content" : {
+    "uuid" : "af17b26c-5bb1-4e92-a7d7-0bcc4e6e8893",
+    "last_modified" : 0,
+    "create_time" : 1560837223537,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.P_LINEORDER",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122904000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : null,
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
+    },
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984768,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.DATES",
+  "meta_table_content" : {
+    "uuid" : "903eedc0-554d-4b90-8225-194ec0def7a7",
+    "last_modified" : 0,
+    "create_time" : 1560837223536,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.DATES",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122902000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : "hdfs://nameservice1/user/hive/warehouse/ssb.db/dates",
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
+    },
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984768,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.PART",
+  "meta_table_content" : {
+    "uuid" : "769f28fc-af6c-4d92-b297-777effc6110b",
+    "last_modified" : 0,
+    "create_time" : 1560837223537,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "PART",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "P_PARTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "2",
+      "name" : "P_NAME",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "3",
+      "name" : "P_MFGR",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "4",
+      "name" : "P_CATEGORY",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "5",
+      "name" : "P_BRAND",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "6",
+      "name" : "P_COLOR",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "7",
+      "name" : "P_TYPE",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "8",
+      "name" : "P_SIZE",
+      "datatype" : "integer"
+    }, {
+      "id" : "9",
+      "name" : "P_CONTAINER",
+      "datatype" : "varchar(256)"
+    } ],
+    "source_type" : 9,
+    "table_type" : "MANAGED",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.LINEORDER",
+  "meta_table_content" : {
+    "uuid" : "273ab31a-77c4-4e04-b757-7f9015e681d3",
+    "last_modified" : 0,
+    "create_time" : 1560837223536,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "LINEORDER",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "LO_ORDERKEY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "2",
+      "name" : "LO_LINENUMBER",
+      "datatype" : "bigint"
+    }, {
+      "id" : "3",
+      "name" : "LO_CUSTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "4",
+      "name" : "LO_PARTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "5",
+      "name" : "LO_SUPPKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "6",
+      "name" : "LO_ORDERDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "7",
+      "name" : "LO_ORDERPRIOTITY",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "8",
+      "name" : "LO_SHIPPRIOTITY",
+      "datatype" : "integer"
+    }, {
+      "id" : "9",
+      "name" : "LO_QUANTITY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "10",
+      "name" : "LO_EXTENDEDPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "11",
+      "name" : "LO_ORDTOTALPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "12",
+      "name" : "LO_DISCOUNT",
+      "datatype" : "bigint"
+    }, {
+      "id" : "13",
+      "name" : "LO_REVENUE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "14",
+      "name" : "LO_SUPPLYCOST",
+      "datatype" : "bigint"
+    }, {
+      "id" : "15",
+      "name" : "LO_TAX",
+      "datatype" : "bigint"
+    }, {
+      "id" : "16",
+      "name" : "LO_COMMITDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "17",
+      "name" : "LO_SHIPMODE",
+      "datatype" : "varchar(256)"
+    } ],
+    "source_type" : 9,
+    "table_type" : "MANAGED",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.CUSTOMER",
+  "meta_table_content" : {
+    "uuid" : "33c979bb-ead3-4c86-a947-5002eb2a3f38",
+    "last_modified" : 0,
+    "create_time" : 1560837223536,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.CUSTOMER",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122902000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : "hdfs://nameservice1/user/hive/warehouse/ssb.db/customer",
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
+    },
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "JOB_STATS/1560787200000",
+  "meta_table_content" : {
+    "uuid" : "6746a44e-bec7-4ffb-8acc-76279692894e",
+    "last_modified" : 1560838129095,
+    "create_time" : 1560838129095,
+    "version" : "3.0.0.0",
+    "mvcc" : 1,
+    "count" : 2,
+    "total_duration" : 171556,
+    "total_byte_size" : 234427,
+    "date" : 1560787200000,
+    "model_stats" : {
+      "ed51468b-619b-4ccb-8279-8d888597b66f" : {
+        "uuid" : "fe69cc34-350d-4701-80a4-b55aa8ed4d83",
+        "last_modified" : 0,
+        "create_time" : 1560838129095,
+        "version" : "3.0.0.0",
+        "mvcc" : -1,
+        "count" : 2,
+        "total_duration" : 171556,
+        "total_byte_size" : 234427
       }
     },
-    "meta_table_ts": 1562845984668,
-    "meta_table_mvcc": 0
+    "project" : "calories"
   },
-  {
-    "meta_table_key": "/calories/table/SSB.SUPPLIER.json",
-    "meta_table_content": {
-      "uuid": "49a99e0e-0542-484d-a8c0-29f775d96415",
-      "last_modified": 0,
-      "create_time": 1560837223538,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "SUPPLIER",
-      "columns": [
-        {
-          "id": "1",
-          "name": "S_SUPPKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "2",
-          "name": "S_NAME",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "3",
-          "name": "S_ADDRESS",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "4",
-          "name": "S_CITY",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "5",
-          "name": "S_NATION",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "6",
-          "name": "S_REGION",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "7",
-          "name": "S_PHONE",
-          "datatype": "varchar(256)"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "MANAGED",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "MODEL/ed51468b-619b-4ccb-8279-8d888597b66f",
+  "meta_table_content" : {
+    "uuid" : "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "last_modified" : 0,
+    "create_time" : 1560837998694,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "alias" : "mm1",
+    "owner" : "ADMIN",
+    "config_last_modifier" : null,
+    "config_last_modified" : 0,
+    "is_draft" : false,
+    "description" : "",
+    "fact_table" : "SSB.LINEORDER",
+    "fact_table_alias" : null,
+    "management_type" : "MODEL_BASED",
+    "join_tables" : [ {
+      "table" : "SSB.CUSTOMER",
+      "kind" : "LOOKUP",
+      "alias" : "CUSTOMER",
+      "join" : {
+        "type" : "INNER",
+        "primary_key" : [ "CUSTOMER.C_CUSTKEY" ],
+        "foreign_key" : [ "LINEORDER.LO_CUSTKEY" ]
+      }
+    }, {
+      "table" : "SSB.SUPPLIER",
+      "kind" : "LOOKUP",
+      "alias" : "SUPPLIER",
+      "join" : {
+        "type" : "INNER",
+        "primary_key" : [ "SUPPLIER.S_SUPPKEY" ],
+        "foreign_key" : [ "LINEORDER.LO_SUPPKEY" ]
+      }
+    } ],
+    "filter_condition" : "",
+    "partition_desc" : null,
+    "capacity" : "MEDIUM",
+    "segment_config" : {
+      "auto_merge_enabled" : null,
+      "auto_merge_time_ranges" : null,
+      "volatile_range" : null,
+      "retention_range" : null
     },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/execute/f8b637da-33ef-40e1-b08e-ce549c53f87b",
-    "meta_table_content": {
-      "uuid": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-      "last_modified": 1562741386695,
-      "create_time": 1562741194999,
-      "version": "4.0.0.0",
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "f8b637da-33ef-40e1-b08e-ce549c53f87b_00",
-          "last_modified": 0,
-          "create_time": 1562741195000,
-          "version": "4.0.0.0",
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-            "jobId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/00/meta_output",
-            "layoutIds": "20000020001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {},
-            "last_modified": 0,
-            "createTime": 1562741285318,
-            "start_time": 1562741285885,
-            "end_time": 1562741298823,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "f8b637da-33ef-40e1-b08e-ce549c53f87b_01",
-          "last_modified": 0,
-          "create_time": 1562741195000,
-          "version": "4.0.0.0",
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-            "jobId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/01/meta_output",
-            "layoutIds": "20000020001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_2474/"
-            },
-            "last_modified": 0,
-            "createTime": 1562741285318,
-            "start_time": 1562741299078,
-            "end_time": 1562741386413,
-            "wait_time": 0
-          }
-        }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "20000020001",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
+    "data_check_desc" : null,
+    "semantic_version" : 0,
+    "all_named_columns" : [ {
+      "id" : 0,
+      "name" : "LINEORDER_LO_ORDERKEY",
+      "column" : "LINEORDER.LO_ORDERKEY",
+      "status" : "DIMENSION"
+    }, {
+      "id" : 1,
+      "name" : "LO_PARTKEY",
+      "column" : "LINEORDER.LO_PARTKEY"
+    }, {
+      "id" : 2,
+      "name" : "LO_DISCOUNT",
+      "column" : "LINEORDER.LO_DISCOUNT"
+    }, {
+      "id" : 3,
+      "name" : "LO_SUPPLYCOST",
+      "column" : "LINEORDER.LO_SUPPLYCOST"
+    }, {
+      "id" : 4,
+      "name" : "LO_COMMITDATE",
+      "column" : "LINEORDER.LO_COMMITDATE"
+    }, {
+      "id" : 5,
+      "name" : "LO_EXTENDEDPRICE",
+      "column" : "LINEORDER.LO_EXTENDEDPRICE"
+    }, {
+      "id" : 6,
+      "name" : "LO_TAX",
+      "column" : "LINEORDER.LO_TAX"
+    }, {
+      "id" : 7,
+      "name" : "LINEORDER_LO_SUPPKEY",
+      "column" : "LINEORDER.LO_SUPPKEY",
+      "status" : "DIMENSION"
+    }, {
+      "id" : 8,
+      "name" : "LO_ORDTOTALPRICE",
+      "column" : "LINEORDER.LO_ORDTOTALPRICE"
+    }, {
+      "id" : 9,
+      "name" : "LO_REVENUE",
+      "column" : "LINEORDER.LO_REVENUE"
+    }, {
+      "id" : 10,
+      "name" : "LO_ORDERDATE",
+      "column" : "LINEORDER.LO_ORDERDATE"
+    }, {
+      "id" : 11,
+      "name" : "LO_ORDERPRIOTITY",
+      "column" : "LINEORDER.LO_ORDERPRIOTITY"
+    }, {
+      "id" : 12,
+      "name" : "LO_SHIPPRIOTITY",
+      "column" : "LINEORDER.LO_SHIPPRIOTITY"
+    }, {
+      "id" : 13,
+      "name" : "LO_QUANTITY",
+      "column" : "LINEORDER.LO_QUANTITY"
+    }, {
+      "id" : 14,
+      "name" : "LO_SHIPMODE",
+      "column" : "LINEORDER.LO_SHIPMODE"
+    }, {
+      "id" : 15,
+      "name" : "LINEORDER_LO_LINENUMBER",
+      "column" : "LINEORDER.LO_LINENUMBER",
+      "status" : "DIMENSION"
+    }, {
+      "id" : 16,
+      "name" : "LINEORDER_LO_CUSTKEY",
+      "column" : "LINEORDER.LO_CUSTKEY",
+      "status" : "DIMENSION"
+    }, {
+      "id" : 17,
+      "name" : "C_ADDRESS",
+      "column" : "CUSTOMER.C_ADDRESS"
+    }, {
+      "id" : 18,
+      "name" : "C_NATION",
+      "column" : "CUSTOMER.C_NATION"
+    }, {
+      "id" : 19,
+      "name" : "C_CITY",
+      "column" : "CUSTOMER.C_CITY"
+    }, {
+      "id" : 20,
+      "name" : "CUSTOMER_C_PHONE",
+      "column" : "CUSTOMER.C_PHONE",
+      "status" : "DIMENSION"
+    }, {
+      "id" : 21,
+      "name" : "C_REGION",
+      "column" : "CUSTOMER.C_REGION"
+    }, {
+      "id" : 22,
+      "name" : "C_NAME",
+      "column" : "CUSTOMER.C_NAME"
+    }, {
+      "id" : 23,
+      "name" : "C_MKTSEGMENT",
+      "column" : "CUSTOMER.C_MKTSEGMENT"
+    }, {
+      "id" : 24,
+      "name" : "C_CUSTKEY",
+      "column" : "CUSTOMER.C_CUSTKEY"
+    }, {
+      "id" : 25,
+      "name" : "S_ADDRESS",
+      "column" : "SUPPLIER.S_ADDRESS"
+    }, {
+      "id" : 26,
+      "name" : "S_NAME",
+      "column" : "SUPPLIER.S_NAME"
+    }, {
+      "id" : 27,
+      "name" : "S_NATION",
+      "column" : "SUPPLIER.S_NATION"
+    }, {
+      "id" : 28,
+      "name" : "S_SUPPKEY",
+      "column" : "SUPPLIER.S_SUPPKEY"
+    }, {
+      "id" : 29,
+      "name" : "S_REGION",
+      "column" : "SUPPLIER.S_REGION"
+    }, {
+      "id" : 30,
+      "name" : "S_PHONE",
+      "column" : "SUPPLIER.S_PHONE"
+    }, {
+      "id" : 31,
+      "name" : "S_CITY",
+      "column" : "SUPPLIER.S_CITY"
+    } ],
+    "all_measures" : [ {
+      "name" : "SSS",
+      "function" : {
+        "expression" : "SUM",
+        "parameters" : [ {
+          "type" : "column",
+          "value" : "LINEORDER.LO_REVENUE"
+        } ],
+        "returntype" : "bigint"
       },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000020001_temp,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000020001"
+      "id" : 100000
+    }, {
+      "name" : "COUNT_ALL",
+      "function" : {
+        "expression" : "COUNT",
+        "parameters" : [ {
+          "type" : "constant",
+          "value" : "1"
+        } ],
+        "returntype" : "bigint"
+      },
+      "id" : 100001
+    } ],
+    "column_correlations" : [ ],
+    "multilevel_partition_cols" : [ ],
+    "canvas" : {
+      "coordinate" : {
+        "LINEORDER" : {
+          "x" : 359.8888821072047,
+          "y" : 312.2777811686195,
+          "width" : 220,
+          "height" : 180
         },
-        "last_modified": 0,
-        "createTime": 1562741285318,
-        "start_time": 1562741285659,
-        "end_time": 1562741386696,
-        "wait_time": 0
+        "CUSTOMER" : {
+          "x" : 335.44443766276044,
+          "y" : 85.61111450195312,
+          "width" : 220,
+          "height" : 180
+        },
+        "SUPPLIER" : {
+          "x" : 539.8888821072047,
+          "y" : 486.7222256130644,
+          "width" : 220,
+          "height" : 180
+        }
+      },
+      "zoom" : 9
+    },
+    "computed_column_uuids" : [ ],
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "JOB_STATS/1562688000000",
+  "meta_table_content" : {
+    "uuid" : "f9ab7ede-d3f5-48f1-869a-4146d6950c38",
+    "last_modified" : 1562741388275,
+    "create_time" : 1562740921896,
+    "version" : "4.0.0.0",
+    "count" : 3,
+    "total_duration" : 256152,
+    "total_byte_size" : 1646422,
+    "date" : 1562688000000,
+    "model_stats" : {
+      "ed51468b-619b-4ccb-8279-8d888597b66f" : {
+        "uuid" : "20393123-219c-42b1-a7e7-9e98b8232778",
+        "last_modified" : 0,
+        "create_time" : 1562740921896,
+        "version" : "4.0.0.0",
+        "count" : 3,
+        "total_duration" : 256152,
+        "total_byte_size" : 1646422
       }
     },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
+    "project" : "calories"
   },
-  {
-    "meta_table_key": "/calories/table/SSB.CUSTOMER.json",
-    "meta_table_content": {
-      "uuid": "92350177-5c3c-4cab-a233-79b3b3c98931",
-      "last_modified": 0,
-      "create_time": 1560837223535,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "CUSTOMER",
-      "columns": [
-        {
-          "id": "1",
-          "name": "C_CUSTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "2",
-          "name": "C_NAME",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "3",
-          "name": "C_ADDRESS",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "4",
-          "name": "C_CITY",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "5",
-          "name": "C_NATION",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "6",
-          "name": "C_REGION",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "7",
-          "name": "C_PHONE",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "8",
-          "name": "C_MKTSEGMENT",
-          "datatype": "varchar(256)"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "MANAGED",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.PART",
+  "meta_table_content" : {
+    "uuid" : "f07b4960-9680-4453-bfa0-6d800379da3f",
+    "last_modified" : 0,
+    "create_time" : 1560837223538,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.PART",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122903000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : "hdfs://nameservice1/user/hive/warehouse/ssb.db/part",
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
     },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
   },
-  {
-    "meta_table_key": "/calories/accelerate_ratio/8dfed1c9-70eb-4ee9-9656-2f17ab541760.json",
-    "meta_table_content": {
-      "uuid": "8dfed1c9-70eb-4ee9-9656-2f17ab541760",
-      "last_modified": 0,
-      "create_time": 1560840832540,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "num_of_query_hit_index": 6,
-      "overall_query_num": 26
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.LINEORDER",
+  "meta_table_content" : {
+    "uuid" : "3ed6f87b-1684-4638-8668-622bd82c39f8",
+    "last_modified" : 0,
+    "create_time" : 1560837223537,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.LINEORDER",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122903000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : "hdfs://nameservice1/user/hive/warehouse/ssb.db/lineorder",
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
     },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
   },
-  {
-    "meta_table_key": "/calories/execute/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-    "meta_table_content": {
-      "uuid": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-      "last_modified": 1560838127800,
-      "create_time": 1560838019717,
-      "version": "3.0.0.0",
-      "mvcc": 7,
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd_00",
-          "last_modified": 0,
-          "create_time": 1560838019717,
-          "version": "3.0.0.0",
-          "mvcc": -1,
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-            "jobId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/00/meta_output",
-            "layoutIds": "1",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {},
-            "last_modified": 0,
-            "createTime": 1560838019717,
-            "start_time": 1560838020971,
-            "end_time": 1560838033980,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd_01",
-          "last_modified": 0,
-          "create_time": 1560838019717,
-          "version": "3.0.0.0",
-          "mvcc": -1,
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-            "jobId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/01/meta_output",
-            "layoutIds": "1",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_1969/"
-            },
-            "last_modified": 0,
-            "createTime": 1560838019717,
-            "start_time": 1560838034154,
-            "end_time": 1560838127793,
-            "wait_time": 0
-          }
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_INFO/calories.SSB.P_LINEORDER",
+  "meta_table_content" : {
+    "uuid" : "22e3f71a-ae10-4b71-88e9-1b87f6462ea0",
+    "last_modified" : 0,
+    "create_time" : 1560837223537,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "name" : "P_LINEORDER",
+    "columns" : [ {
+      "id" : "1",
+      "name" : "LO_ORDERKEY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "2",
+      "name" : "LO_LINENUMBER",
+      "datatype" : "bigint"
+    }, {
+      "id" : "3",
+      "name" : "LO_CUSTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "4",
+      "name" : "LO_PARTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "5",
+      "name" : "LO_SUPPKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "6",
+      "name" : "LO_ORDERDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "7",
+      "name" : "LO_ORDERPRIOTITY",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "8",
+      "name" : "LO_SHIPPRIOTITY",
+      "datatype" : "integer"
+    }, {
+      "id" : "9",
+      "name" : "LO_QUANTITY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "10",
+      "name" : "LO_EXTENDEDPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "11",
+      "name" : "LO_ORDTOTALPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "12",
+      "name" : "LO_DISCOUNT",
+      "datatype" : "bigint"
+    }, {
+      "id" : "13",
+      "name" : "LO_REVENUE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "14",
+      "name" : "LO_SUPPLYCOST",
+      "datatype" : "bigint"
+    }, {
+      "id" : "15",
+      "name" : "LO_TAX",
+      "datatype" : "bigint"
+    }, {
+      "id" : "16",
+      "name" : "LO_COMMITDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "17",
+      "name" : "LO_SHIPMODE",
+      "datatype" : "varchar(256)"
+    }, {
+      "id" : "18",
+      "name" : "V_REVENUE",
+      "datatype" : "bigint"
+    } ],
+    "source_type" : 9,
+    "table_type" : "VIEW",
+    "top" : false,
+    "increment_loading" : false,
+    "last_snapshot_path" : null,
+    "database" : "SSB",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "TABLE_EXD/calories.SSB.SUPPLIER",
+  "meta_table_content" : {
+    "uuid" : "f158d4cf-5698-43d9-a0e3-31315a4681ea",
+    "last_modified" : 0,
+    "create_time" : 1560837223538,
+    "version" : "3.0.0.0",
+    "mvcc" : 0,
+    "table_name" : "SSB.SUPPLIER",
+    "last_build_job_id" : null,
+    "frequency" : 0,
+    "columns_stats" : [ ],
+    "sample_rows" : [ ],
+    "last_modified_time" : 0,
+    "total_rows" : 0,
+    "mapper_rows" : [ ],
+    "data_source_properties" : {
+      "owner" : "root",
+      "create_time" : "1554122903000",
+      "total_file_size" : "0",
+      "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+      "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+      "location" : "hdfs://nameservice1/user/hive/warehouse/ssb.db/supplier",
+      "partition_column" : "",
+      "total_file_number" : "0",
+      "last_access_time" : "0"
+    },
+    "loading_range" : [ ],
+    "col_stats_path" : null,
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562845984769,
+  "meta_table_mvcc" : 0
+}, {
+  "meta_table_key" : "INDEX_PLAN/ed51468b-619b-4ccb-8279-8d888597b66f",
+  "meta_table_content" : {
+    "uuid" : "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "last_modified" : 1562933689113,
+    "create_time" : 1560837998718,
+    "version" : "3.0.0.0",
+    "description" : null,
+    "rule_based_index" : {
+      "dimensions" : [ 16 ],
+      "measures" : [ 100000, 100001 ],
+      "aggregation_groups" : [ {
+        "includes" : [ 16 ],
+        "select_rule" : {
+          "hierarchy_dims" : [ ],
+          "mandatory_dims" : [ 16 ],
+          "joint_dims" : [ ]
         }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "1",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-      },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1"
-        },
-        "last_modified": 0,
-        "createTime": 1560838019717,
-        "start_time": 1560838020795,
-        "end_time": 1560838127959,
-        "wait_time": 0
+      } ],
+      "layout_id_mapping" : [ 1 ],
+      "parent_forward" : 3,
+      "index_start_id" : 0,
+      "last_modify_time" : 1560838018574
+    },
+    "indexes" : [ {
+      "id" : 20000040000,
+      "dimensions" : [ 0, 15, 16, 1, 7, 11, 13, 8, 2, 9, 20 ],
+      "measures" : [ ],
+      "layouts" : [ {
+        "id" : 20000040001,
+        "name" : "TableIndex_5",
+        "owner" : "ADMIN",
+        "col_order" : [ 0, 15, 16, 1, 7, 11, 13, 8, 2, 9, 20 ],
+        "shard_by_columns" : [ ],
+        "sort_by_columns" : [ ],
+        "storage_type" : 20,
+        "update_time" : 1562933713239,
+        "manual" : true,
+        "auto" : false,
+        "draft_version" : null
+      } ],
+      "next_layout_offset" : 2
+    } ],
+    "override_properties" : { },
+    "segment_range_start" : 0,
+    "segment_range_end" : 9223372036854775807,
+    "auto_merge_time_ranges" : null,
+    "retention_range" : 0,
+    "notify_list" : [ ],
+    "status_need_notify" : [ ],
+    "engine_type" : 80,
+    "next_aggregation_index_id" : 10000,
+    "next_table_index_id" : 20000050000,
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562933713249,
+  "meta_table_mvcc" : 3
+}, {
+  "meta_table_key" : "DATAFLOW/ed51468b-619b-4ccb-8279-8d888597b66f",
+  "meta_table_content" : {
+    "uuid" : "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "last_modified" : 1562933689113,
+    "create_time" : 1560837998719,
+    "version" : "3.0.0.0",
+    "description" : null,
+    "owner" : "ADMIN",
+    "mp_values" : [ ],
+    "create_time_utc" : 1560837998719,
+    "status" : "ONLINE",
+    "cost" : 50,
+    "query_hit_count" : 6,
+    "layout_query_hit_count" : { },
+    "event_error" : false,
+    "storage_location_identifier" : null,
+    "project" : "calories",
+    "segment_uuids" : [ "23b28641-7550-48e9-8234-08366d8684da" ]
+  },
+  "meta_table_ts" : 1562934105028,
+  "meta_table_mvcc" : 2
+}, {
+  "meta_table_key" : "LAYOUT/23b28641-7550-48e9-8234-08366d8684da",
+  "meta_table_content" : {
+    "uuid" : "23b28641-7550-48e9-8234-08366d8684da",
+    "last_modified" : 1562933689113,
+    "create_time" : 1560837998719,
+    "version" : "3.0.0.0",
+    "dataflow" : "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "layout_instances" : [ {
+      "layout_id" : 1,
+      "build_job_id" : "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
+      "rows" : 200,
+      "byte_size" : 3936,
+      "file_count" : 1,
+      "source_rows" : 60175,
+      "source_byte_size" : 0,
+      "partition_num" : 1,
+      "create_time" : 1560838123683
+    }, {
+      "layout_id" : 20000040001,
+      "build_job_id" : "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+      "rows" : 59986052,
+      "byte_size" : 2405536516,
+      "file_count" : 17,
+      "source_rows" : 59986052,
+      "source_byte_size" : 0,
+      "partition_num" : 17,
+      "create_time" : 1562933962843
+    } ],
+    "dataflow_id" : "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "project" : "calories"
+  },
+  "meta_table_ts" : 1562934105028,
+  "meta_table_mvcc" : 2
+}, {
+  "meta_table_key" : "JOB_STATS/1562860800000",
+  "meta_table_content" : {
+    "uuid" : "8009e4a9-0776-465e-acb5-bf61c31366f1",
+    "last_modified" : 0,
+    "create_time" : 1562934105029,
+    "version" : "4.0.0.0",
+    "count" : 1,
+    "total_duration" : 325737,
+    "total_byte_size" : 2405536516,
+    "date" : 1562860800000,
+    "model_stats" : {
+      "ed51468b-619b-4ccb-8279-8d888597b66f" : {
+        "uuid" : "e556202d-44cf-49be-9c0b-38d6ef785bb7",
+        "last_modified" : 0,
+        "create_time" : 1562934105029,
+        "version" : "4.0.0.0",
+        "count" : 1,
+        "total_duration" : 325737,
+        "total_byte_size" : 2405536516
       }
     },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
+    "project" : "calories"
   },
-  {
-    "meta_table_key": "/calories/rule/75aa9dca-508d-480b-8cb8-09c71b7be952.json",
-    "meta_table_content": {
-      "uuid": "75aa9dca-508d-480b-8cb8-09c71b7be952",
-      "last_modified": 0,
-      "create_time": 1560837222496,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "conds": [
-        {
-          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
-          "leftThreshold": null,
-          "rightThreshold": "ADMIN"
-        }
-      ],
-      "name": "submitter",
-      "enabled": true
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/favorite/0cd8beef-5609-4d7c-a4dc-f4dfdac2f15a.json",
-    "meta_table_content": {
-      "uuid": "0cd8beef-5609-4d7c-a4dc-f4dfdac2f15a",
-      "last_modified": 1560840832539,
-      "create_time": 1560840832532,
-      "version": "3.0.0.0",
-      "mvcc": 1,
-      "sql_pattern": "SELECT MAX(\"LO_ORDERDATE\")\nFROM \"LINEORDER\"\nINNER JOIN \"CUSTOMER\" ON \"LINEORDER\".\"LO_CUSTKEY\" = \"CUSTOMER\".\"C_CUSTKEY\"\nINNER JOIN \"SUPPLIER\" ON \"LINEORDER\".\"LO_SUPPKEY\" = \"SUPPLIER\".\"S_SUPPKEY\"\nLIMIT 1",
-      "last_query_time": 1560838214846,
-      "total_count": 7,
-      "status": "TO_BE_ACCELERATED",
-      "total_duration": 4009,
-      "comment": null,
-      "channel": "Rule-based",
-      "average_duration": 572.7143,
-      "frequency_map": {
-        "1560787200000": 7
-      },
-      "realization": []
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/rule/6e92f201-95c3-4c6b-b6be-ca6e9d58fcc4.json",
-    "meta_table_content": {
-      "uuid": "6e92f201-95c3-4c6b-b6be-ca6e9d58fcc4",
-      "last_modified": 0,
-      "create_time": 1560837222496,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "conds": [
-        {
-          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
-          "leftThreshold": null,
-          "rightThreshold": "ROLE_ADMIN"
-        }
-      ],
-      "name": "submitter_group",
-      "enabled": true
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/rule/f952f487-8dc2-4d8f-b5fd-484c988ead1c.json",
-    "meta_table_content": {
-      "uuid": "f952f487-8dc2-4d8f-b5fd-484c988ead1c",
-      "last_modified": 0,
-      "create_time": 1560837222495,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "conds": [
-        {
-          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
-          "leftThreshold": null,
-          "rightThreshold": "0.1"
-        }
-      ],
-      "name": "frequency",
-      "enabled": true
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table/SSB.DATES.json",
-    "meta_table_content": {
-      "uuid": "50cf14ab-9164-4722-8bdf-c6e5a582bc0f",
-      "last_modified": 0,
-      "create_time": 1560837223536,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "DATES",
-      "columns": [
-        {
-          "id": "1",
-          "name": "D_DATEKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "2",
-          "name": "D_DATE",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "3",
-          "name": "D_DAYOFWEEK",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "4",
-          "name": "D_MONTH",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "5",
-          "name": "D_YEAR",
-          "datatype": "integer"
-        },
-        {
-          "id": "6",
-          "name": "D_YEARMONTHNUM",
-          "datatype": "integer"
-        },
-        {
-          "id": "7",
-          "name": "D_YEARMONTH",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "8",
-          "name": "D_DAYNUMINWEEK",
-          "datatype": "integer"
-        },
-        {
-          "id": "9",
-          "name": "D_DAYNUMINMONTH",
-          "datatype": "integer"
-        },
-        {
-          "id": "10",
-          "name": "D_DAYNUMINYEAR",
-          "datatype": "integer"
-        },
-        {
-          "id": "11",
-          "name": "D_MONTHNUMINYEAR",
-          "datatype": "integer"
-        },
-        {
-          "id": "12",
-          "name": "D_WEEKNUMINYEAR",
-          "datatype": "integer"
-        },
-        {
-          "id": "13",
-          "name": "D_SELLINGSEASON",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "14",
-          "name": "D_LASTDAYINWEEKFL",
-          "datatype": "integer"
-        },
-        {
-          "id": "15",
-          "name": "D_LASTDAYINMONTHFL",
-          "datatype": "integer"
-        },
-        {
-          "id": "16",
-          "name": "D_HOLIDAYFL",
-          "datatype": "integer"
-        },
-        {
-          "id": "17",
-          "name": "D_WEEKDAYFL",
-          "datatype": "integer"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "MANAGED",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.P_LINEORDER.json",
-    "meta_table_content": {
-      "uuid": "af17b26c-5bb1-4e92-a7d7-0bcc4e6e8893",
-      "last_modified": 0,
-      "create_time": 1560837223537,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.P_LINEORDER",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122904000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": null,
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.DATES.json",
-    "meta_table_content": {
-      "uuid": "903eedc0-554d-4b90-8225-194ec0def7a7",
-      "last_modified": 0,
-      "create_time": 1560837223536,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.DATES",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122902000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": "hdfs://nameservice1/user/hive/warehouse/ssb.db/dates",
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984768,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table/SSB.PART.json",
-    "meta_table_content": {
-      "uuid": "769f28fc-af6c-4d92-b297-777effc6110b",
-      "last_modified": 0,
-      "create_time": 1560837223537,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "PART",
-      "columns": [
-        {
-          "id": "1",
-          "name": "P_PARTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "2",
-          "name": "P_NAME",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "3",
-          "name": "P_MFGR",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "4",
-          "name": "P_CATEGORY",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "5",
-          "name": "P_BRAND",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "6",
-          "name": "P_COLOR",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "7",
-          "name": "P_TYPE",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "8",
-          "name": "P_SIZE",
-          "datatype": "integer"
-        },
-        {
-          "id": "9",
-          "name": "P_CONTAINER",
-          "datatype": "varchar(256)"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "MANAGED",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table/SSB.LINEORDER.json",
-    "meta_table_content": {
-      "uuid": "273ab31a-77c4-4e04-b757-7f9015e681d3",
-      "last_modified": 0,
-      "create_time": 1560837223536,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "LINEORDER",
-      "columns": [
-        {
-          "id": "1",
-          "name": "LO_ORDERKEY",
-          "datatype": "bigint"
-        },
-        {
-          "id": "2",
-          "name": "LO_LINENUMBER",
-          "datatype": "bigint"
-        },
-        {
-          "id": "3",
-          "name": "LO_CUSTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "4",
-          "name": "LO_PARTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "5",
-          "name": "LO_SUPPKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "6",
-          "name": "LO_ORDERDATE",
-          "datatype": "integer"
-        },
-        {
-          "id": "7",
-          "name": "LO_ORDERPRIOTITY",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "8",
-          "name": "LO_SHIPPRIOTITY",
-          "datatype": "integer"
-        },
-        {
-          "id": "9",
-          "name": "LO_QUANTITY",
-          "datatype": "bigint"
-        },
-        {
-          "id": "10",
-          "name": "LO_EXTENDEDPRICE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "11",
-          "name": "LO_ORDTOTALPRICE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "12",
-          "name": "LO_DISCOUNT",
-          "datatype": "bigint"
-        },
-        {
-          "id": "13",
-          "name": "LO_REVENUE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "14",
-          "name": "LO_SUPPLYCOST",
-          "datatype": "bigint"
-        },
-        {
-          "id": "15",
-          "name": "LO_TAX",
-          "datatype": "bigint"
-        },
-        {
-          "id": "16",
-          "name": "LO_COMMITDATE",
-          "datatype": "integer"
-        },
-        {
-          "id": "17",
-          "name": "LO_SHIPMODE",
-          "datatype": "varchar(256)"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "MANAGED",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/execute/f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-    "meta_table_content": {
-      "uuid": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-      "last_modified": 1562740920132,
-      "create_time": 1562740800103,
-      "version": "4.0.0.0",
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "f9bb1d79-6e88-4e93-86e0-b6fe26856072_00",
-          "last_modified": 0,
-          "create_time": 1562740800103,
-          "version": "4.0.0.0",
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-            "jobId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/00/meta_output",
-            "layoutIds": "20000010001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {},
-            "last_modified": 0,
-            "createTime": 1562740857865,
-            "start_time": 1562740858738,
-            "end_time": 1562740874007,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "f9bb1d79-6e88-4e93-86e0-b6fe26856072_01",
-          "last_modified": 0,
-          "create_time": 1562740800103,
-          "version": "4.0.0.0",
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-            "jobId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/01/meta_output",
-            "layoutIds": "20000010001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_2473/"
-            },
-            "last_modified": 0,
-            "createTime": 1562740857865,
-            "start_time": 1562740874513,
-            "end_time": 1562740919874,
-            "wait_time": 0
-          }
-        }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "20000010001",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-      },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000010001_temp,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000010001"
-        },
-        "last_modified": 0,
-        "createTime": 1562740857865,
-        "start_time": 1562740858415,
-        "end_time": 1562740920135,
-        "wait_time": 0
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.CUSTOMER.json",
-    "meta_table_content": {
-      "uuid": "33c979bb-ead3-4c86-a947-5002eb2a3f38",
-      "last_modified": 0,
-      "create_time": 1560837223536,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.CUSTOMER",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122902000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": "hdfs://nameservice1/user/hive/warehouse/ssb.db/customer",
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/job_stats/1560787200000.json",
-    "meta_table_content": {
-      "uuid": "6746a44e-bec7-4ffb-8acc-76279692894e",
-      "last_modified": 1560838129095,
-      "create_time": 1560838129095,
-      "version": "3.0.0.0",
-      "mvcc": 1,
-      "count": 2,
-      "total_duration": 171556,
-      "total_byte_size": 234427,
-      "date": 1560787200000,
-      "model_stats": {
-        "ed51468b-619b-4ccb-8279-8d888597b66f": {
-          "uuid": "fe69cc34-350d-4701-80a4-b55aa8ed4d83",
-          "last_modified": 0,
-          "create_time": 1560838129095,
-          "version": "3.0.0.0",
-          "mvcc": -1,
-          "count": 2,
-          "total_duration": 171556,
-          "total_byte_size": 234427
-        }
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/model_desc/ed51468b-619b-4ccb-8279-8d888597b66f.json",
-    "meta_table_content": {
-      "uuid": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "last_modified": 0,
-      "create_time": 1560837998694,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "alias": "mm1",
-      "owner": "ADMIN",
-      "config_last_modifier": null,
-      "config_last_modified": 0,
-      "is_draft": false,
-      "description": "",
-      "fact_table": "SSB.LINEORDER",
-      "fact_table_alias": null,
-      "management_type": "MODEL_BASED",
-      "join_tables": [
-        {
-          "table": "SSB.CUSTOMER",
-          "kind": "LOOKUP",
-          "alias": "CUSTOMER",
-          "join": {
-            "type": "INNER",
-            "primary_key": [
-              "CUSTOMER.C_CUSTKEY"
-            ],
-            "foreign_key": [
-              "LINEORDER.LO_CUSTKEY"
-            ]
-          }
-        },
-        {
-          "table": "SSB.SUPPLIER",
-          "kind": "LOOKUP",
-          "alias": "SUPPLIER",
-          "join": {
-            "type": "INNER",
-            "primary_key": [
-              "SUPPLIER.S_SUPPKEY"
-            ],
-            "foreign_key": [
-              "LINEORDER.LO_SUPPKEY"
-            ]
-          }
-        }
-      ],
-      "filter_condition": "",
-      "partition_desc": null,
-      "capacity": "MEDIUM",
-      "segment_config": {
-        "auto_merge_enabled": null,
-        "auto_merge_time_ranges": null,
-        "volatile_range": null,
-        "retention_range": null
-      },
-      "data_check_desc": null,
-      "semantic_version": 0,
-      "all_named_columns": [
-        {
-          "id": 0,
-          "name": "LINEORDER_LO_ORDERKEY",
-          "column": "LINEORDER.LO_ORDERKEY",
-          "status": "DIMENSION"
-        },
-        {
-          "id": 1,
-          "name": "LO_PARTKEY",
-          "column": "LINEORDER.LO_PARTKEY"
-        },
-        {
-          "id": 2,
-          "name": "LO_DISCOUNT",
-          "column": "LINEORDER.LO_DISCOUNT"
-        },
-        {
-          "id": 3,
-          "name": "LO_SUPPLYCOST",
-          "column": "LINEORDER.LO_SUPPLYCOST"
-        },
-        {
-          "id": 4,
-          "name": "LO_COMMITDATE",
-          "column": "LINEORDER.LO_COMMITDATE"
-        },
-        {
-          "id": 5,
-          "name": "LO_EXTENDEDPRICE",
-          "column": "LINEORDER.LO_EXTENDEDPRICE"
-        },
-        {
-          "id": 6,
-          "name": "LO_TAX",
-          "column": "LINEORDER.LO_TAX"
-        },
-        {
-          "id": 7,
-          "name": "LINEORDER_LO_SUPPKEY",
-          "column": "LINEORDER.LO_SUPPKEY",
-          "status": "DIMENSION"
-        },
-        {
-          "id": 8,
-          "name": "LO_ORDTOTALPRICE",
-          "column": "LINEORDER.LO_ORDTOTALPRICE"
-        },
-        {
-          "id": 9,
-          "name": "LO_REVENUE",
-          "column": "LINEORDER.LO_REVENUE"
-        },
-        {
-          "id": 10,
-          "name": "LO_ORDERDATE",
-          "column": "LINEORDER.LO_ORDERDATE"
-        },
-        {
-          "id": 11,
-          "name": "LO_ORDERPRIOTITY",
-          "column": "LINEORDER.LO_ORDERPRIOTITY"
-        },
-        {
-          "id": 12,
-          "name": "LO_SHIPPRIOTITY",
-          "column": "LINEORDER.LO_SHIPPRIOTITY"
-        },
-        {
-          "id": 13,
-          "name": "LO_QUANTITY",
-          "column": "LINEORDER.LO_QUANTITY"
-        },
-        {
-          "id": 14,
-          "name": "LO_SHIPMODE",
-          "column": "LINEORDER.LO_SHIPMODE"
-        },
-        {
-          "id": 15,
-          "name": "LINEORDER_LO_LINENUMBER",
-          "column": "LINEORDER.LO_LINENUMBER",
-          "status": "DIMENSION"
-        },
-        {
-          "id": 16,
-          "name": "LINEORDER_LO_CUSTKEY",
-          "column": "LINEORDER.LO_CUSTKEY",
-          "status": "DIMENSION"
-        },
-        {
-          "id": 17,
-          "name": "C_ADDRESS",
-          "column": "CUSTOMER.C_ADDRESS"
-        },
-        {
-          "id": 18,
-          "name": "C_NATION",
-          "column": "CUSTOMER.C_NATION"
-        },
-        {
-          "id": 19,
-          "name": "C_CITY",
-          "column": "CUSTOMER.C_CITY"
-        },
-        {
-          "id": 20,
-          "name": "CUSTOMER_C_PHONE",
-          "column": "CUSTOMER.C_PHONE",
-          "status": "DIMENSION"
-        },
-        {
-          "id": 21,
-          "name": "C_REGION",
-          "column": "CUSTOMER.C_REGION"
-        },
-        {
-          "id": 22,
-          "name": "C_NAME",
-          "column": "CUSTOMER.C_NAME"
-        },
-        {
-          "id": 23,
-          "name": "C_MKTSEGMENT",
-          "column": "CUSTOMER.C_MKTSEGMENT"
-        },
-        {
-          "id": 24,
-          "name": "C_CUSTKEY",
-          "column": "CUSTOMER.C_CUSTKEY"
-        },
-        {
-          "id": 25,
-          "name": "S_ADDRESS",
-          "column": "SUPPLIER.S_ADDRESS"
-        },
-        {
-          "id": 26,
-          "name": "S_NAME",
-          "column": "SUPPLIER.S_NAME"
-        },
-        {
-          "id": 27,
-          "name": "S_NATION",
-          "column": "SUPPLIER.S_NATION"
-        },
-        {
-          "id": 28,
-          "name": "S_SUPPKEY",
-          "column": "SUPPLIER.S_SUPPKEY"
-        },
-        {
-          "id": 29,
-          "name": "S_REGION",
-          "column": "SUPPLIER.S_REGION"
-        },
-        {
-          "id": 30,
-          "name": "S_PHONE",
-          "column": "SUPPLIER.S_PHONE"
-        },
-        {
-          "id": 31,
-          "name": "S_CITY",
-          "column": "SUPPLIER.S_CITY"
-        }
-      ],
-      "all_measures": [
-        {
-          "name": "SSS",
-          "function": {
-            "expression": "SUM",
-            "parameters": [
-              {
-                "type": "column",
-                "value": "LINEORDER.LO_REVENUE"
-              }
-            ],
-            "returntype": "bigint"
-          },
-          "id": 100000
-        },
-        {
-          "name": "COUNT_ALL",
-          "function": {
-            "expression": "COUNT",
-            "parameters": [
-              {
-                "type": "constant",
-                "value": "1"
-              }
-            ],
-            "returntype": "bigint"
-          },
-          "id": 100001
-        }
-      ],
-      "column_correlations": [],
-      "multilevel_partition_cols": [],
-      "computed_columns": [],
-      "canvas": {
-        "coordinate": {
-          "LINEORDER": {
-            "x": 359.8888821072047,
-            "y": 312.2777811686195,
-            "width": 220,
-            "height": 180
-          },
-          "CUSTOMER": {
-            "x": 335.44443766276044,
-            "y": 85.61111450195312,
-            "width": 220,
-            "height": 180
-          },
-          "SUPPLIER": {
-            "x": 539.8888821072047,
-            "y": 486.7222256130644,
-            "width": 220,
-            "height": 180
-          }
-        },
-        "zoom": 9
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/job_stats/1562688000000.json",
-    "meta_table_content": {
-      "uuid": "f9ab7ede-d3f5-48f1-869a-4146d6950c38",
-      "last_modified": 1562741388275,
-      "create_time": 1562740921896,
-      "version": "4.0.0.0",
-      "count": 3,
-      "total_duration": 256152,
-      "total_byte_size": 1646422,
-      "date": 1562688000000,
-      "model_stats": {
-        "ed51468b-619b-4ccb-8279-8d888597b66f": {
-          "uuid": "20393123-219c-42b1-a7e7-9e98b8232778",
-          "last_modified": 0,
-          "create_time": 1562740921896,
-          "version": "4.0.0.0",
-          "count": 3,
-          "total_duration": 256152,
-          "total_byte_size": 1646422
-        }
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.PART.json",
-    "meta_table_content": {
-      "uuid": "f07b4960-9680-4453-bfa0-6d800379da3f",
-      "last_modified": 0,
-      "create_time": 1560837223538,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.PART",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122903000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": "hdfs://nameservice1/user/hive/warehouse/ssb.db/part",
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/execute/0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-    "meta_table_content": {
-      "uuid": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-      "last_modified": 1560838195436,
-      "create_time": 1560838130187,
-      "version": "3.0.0.0",
-      "mvcc": 7,
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071_00",
-          "last_modified": 0,
-          "create_time": 1560838130187,
-          "version": "3.0.0.0",
-          "mvcc": -1,
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-            "jobId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/00/meta_output",
-            "layoutIds": "20000000001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {},
-            "last_modified": 0,
-            "createTime": 1560838130187,
-            "start_time": 1560838131436,
-            "end_time": 1560838145889,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071_01",
-          "last_modified": 0,
-          "create_time": 1560838130187,
-          "version": "3.0.0.0",
-          "mvcc": -1,
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-            "jobId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/01/meta_output",
-            "layoutIds": "20000000001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_1970/"
-            },
-            "last_modified": 0,
-            "createTime": 1560838130187,
-            "start_time": 1560838146054,
-            "end_time": 1560838195410,
-            "wait_time": 0
-          }
-        }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "20000000001",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-      },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000000001_temp,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000000001"
-        },
-        "last_modified": 0,
-        "createTime": 1560838130187,
-        "start_time": 1560838131252,
-        "end_time": 1560838195644,
-        "wait_time": 0
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.LINEORDER.json",
-    "meta_table_content": {
-      "uuid": "3ed6f87b-1684-4638-8668-622bd82c39f8",
-      "last_modified": 0,
-      "create_time": 1560837223537,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.LINEORDER",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122903000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": "hdfs://nameservice1/user/hive/warehouse/ssb.db/lineorder",
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/favorite/ff6d7ba2-3da0-42ce-9004-595025b171ca.json",
-    "meta_table_content": {
-      "uuid": "ff6d7ba2-3da0-42ce-9004-595025b171ca",
-      "last_modified": 1560840832540,
-      "create_time": 1560840832532,
-      "version": "3.0.0.0",
-      "mvcc": 1,
-      "sql_pattern": "SELECT \"LINEORDER\".\"LO_ORDERKEY\", \"LINEORDER\".\"LO_CUSTKEY\", \"CUSTOMER\".\"C_PHONE\"\nFROM \"LINEORDER\"\nINNER JOIN \"CUSTOMER\" ON \"LINEORDER\".\"LO_CUSTKEY\" = \"CUSTOMER\".\"C_CUSTKEY\"\nINNER JOIN \"SUPPLIER\" ON \"LINEORDER\".\"LO_SUPPKEY\" = \"SUPPLIER\".\"S_SUPPKEY\"\nLIMIT 1",
-      "last_query_time": 1560838205423,
-      "total_count": 19,
-      "status": "TO_BE_ACCELERATED",
-      "total_duration": 9480,
-      "comment": null,
-      "channel": "Rule-based",
-      "average_duration": 498.94736,
-      "frequency_map": {
-        "1560787200000": 19
-      },
-      "realization": []
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/rule/01c536ba-3480-4f23-8241-c090aa2488e6.json",
-    "meta_table_content": {
-      "uuid": "01c536ba-3480-4f23-8241-c090aa2488e6",
-      "last_modified": 0,
-      "create_time": 1560837222496,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "conds": [],
-      "name": "blacklist",
-      "enabled": false
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table/SSB.P_LINEORDER.json",
-    "meta_table_content": {
-      "uuid": "22e3f71a-ae10-4b71-88e9-1b87f6462ea0",
-      "last_modified": 0,
-      "create_time": 1560837223537,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "name": "P_LINEORDER",
-      "columns": [
-        {
-          "id": "1",
-          "name": "LO_ORDERKEY",
-          "datatype": "bigint"
-        },
-        {
-          "id": "2",
-          "name": "LO_LINENUMBER",
-          "datatype": "bigint"
-        },
-        {
-          "id": "3",
-          "name": "LO_CUSTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "4",
-          "name": "LO_PARTKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "5",
-          "name": "LO_SUPPKEY",
-          "datatype": "integer"
-        },
-        {
-          "id": "6",
-          "name": "LO_ORDERDATE",
-          "datatype": "integer"
-        },
-        {
-          "id": "7",
-          "name": "LO_ORDERPRIOTITY",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "8",
-          "name": "LO_SHIPPRIOTITY",
-          "datatype": "integer"
-        },
-        {
-          "id": "9",
-          "name": "LO_QUANTITY",
-          "datatype": "bigint"
-        },
-        {
-          "id": "10",
-          "name": "LO_EXTENDEDPRICE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "11",
-          "name": "LO_ORDTOTALPRICE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "12",
-          "name": "LO_DISCOUNT",
-          "datatype": "bigint"
-        },
-        {
-          "id": "13",
-          "name": "LO_REVENUE",
-          "datatype": "bigint"
-        },
-        {
-          "id": "14",
-          "name": "LO_SUPPLYCOST",
-          "datatype": "bigint"
-        },
-        {
-          "id": "15",
-          "name": "LO_TAX",
-          "datatype": "bigint"
-        },
-        {
-          "id": "16",
-          "name": "LO_COMMITDATE",
-          "datatype": "integer"
-        },
-        {
-          "id": "17",
-          "name": "LO_SHIPMODE",
-          "datatype": "varchar(256)"
-        },
-        {
-          "id": "18",
-          "name": "V_REVENUE",
-          "datatype": "bigint"
-        }
-      ],
-      "source_type": 9,
-      "table_type": "VIEW",
-      "top": false,
-      "increment_loading": false,
-      "last_snapshot_path": null,
-      "database": "SSB"
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/table_exd/SSB.SUPPLIER.json",
-    "meta_table_content": {
-      "uuid": "f158d4cf-5698-43d9-a0e3-31315a4681ea",
-      "last_modified": 0,
-      "create_time": 1560837223538,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "table_name": "SSB.SUPPLIER",
-      "last_build_job_id": null,
-      "frequency": 0,
-      "columns_stats": [],
-      "sample_rows": [],
-      "last_modified_time": 0,
-      "total_rows": 0,
-      "mapper_rows": [],
-      "data_source_properties": {
-        "owner": "root",
-        "create_time": "1554122903000",
-        "total_file_size": "0",
-        "hive_inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
-        "hive_outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
-        "location": "hdfs://nameservice1/user/hive/warehouse/ssb.db/supplier",
-        "partition_column": "",
-        "total_file_number": "0",
-        "last_access_time": "0"
-      },
-      "loading_range": [],
-      "col_stats_path": null
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/rule/934c424b-f3d6-4c99-a9b2-12aeaf02e00c.json",
-    "meta_table_content": {
-      "uuid": "934c424b-f3d6-4c99-a9b2-12aeaf02e00c",
-      "last_modified": 0,
-      "create_time": 1560837222496,
-      "version": "3.0.0.0",
-      "mvcc": 0,
-      "conds": [
-        {
-          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
-          "leftThreshold": "0",
-          "rightThreshold": "180"
-        }
-      ],
-      "name": "duration",
-      "enabled": false
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/execute/d533bd3d-a81f-47bd-850a-149fede4636f",
-    "meta_table_content": {
-      "uuid": "d533bd3d-a81f-47bd-850a-149fede4636f",
-      "last_modified": 1562741532753,
-      "create_time": 1562741438267,
-      "version": "4.0.0.0",
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "d533bd3d-a81f-47bd-850a-149fede4636f_00",
-          "last_modified": 0,
-          "create_time": 1562741438267,
-          "version": "4.0.0.0",
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "d533bd3d-a81f-47bd-850a-149fede4636f",
-            "jobId": "d533bd3d-a81f-47bd-850a-149fede4636f",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/00/meta_output",
-            "layoutIds": "20000030001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {},
-            "last_modified": 0,
-            "createTime": 1562741438267,
-            "start_time": 1562741439645,
-            "end_time": 1562741452905,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "d533bd3d-a81f-47bd-850a-149fede4636f_01",
-          "last_modified": 0,
-          "create_time": 1562741438267,
-          "version": "4.0.0.0",
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "d533bd3d-a81f-47bd-850a-149fede4636f",
-            "jobId": "d533bd3d-a81f-47bd-850a-149fede4636f",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/01/meta_output",
-            "layoutIds": "20000030001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_2475/"
-            },
-            "last_modified": 0,
-            "createTime": 1562741438267,
-            "start_time": 1562741453223,
-            "end_time": 1562741532514,
-            "wait_time": 0
-          }
-        }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "d533bd3d-a81f-47bd-850a-149fede4636f",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "20000030001",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-      },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000030001_temp,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000030001"
-        },
-        "last_modified": 0,
-        "createTime": 1562741438267,
-        "start_time": 1562741439360,
-        "end_time": 1562741532755,
-        "wait_time": 0
-      }
-    },
-    "meta_table_ts": 1562845984769,
-    "meta_table_mvcc": 0
-  },
-  {
-    "meta_table_key": "/calories/query_history_time_offset/7ef8eef0-ba80-4d72-af30-8b8218dbf26a.json",
-    "meta_table_content": {
-      "uuid": "7ef8eef0-ba80-4d72-af30-8b8218dbf26a",
-      "last_modified": 1563185938285,
-      "create_time": 1560837222497,
-      "version": "3.0.0.0",
-      "auto_mark_time_offset": 1563185932261,
-      "favorite_query_update_time_offset": 1563185942263
-    },
-    "meta_table_ts": 1563185948270,
-    "meta_table_mvcc": 210
-  },
-  {
-    "meta_table_key": "/calories/index_plan/ed51468b-619b-4ccb-8279-8d888597b66f.json",
-    "meta_table_content": {
-      "uuid": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "last_modified": 1562933689113,
-      "create_time": 1560837998718,
-      "version": "3.0.0.0",
-      "description": null,
-      "rule_based_index": {
-        "dimensions": [
-          16
-        ],
-        "measures": [
-          100000,
-          100001
-        ],
-        "aggregation_groups": [
-          {
-            "includes": [
-              16
-            ],
-            "select_rule": {
-              "hierarchy_dims": [],
-              "mandatory_dims": [
-                16
-              ],
-              "joint_dims": []
-            }
-          }
-        ],
-        "layout_id_mapping": [
-          1
-        ],
-        "parent_forward": 3,
-        "index_start_id": 0,
-        "last_modify_time": 1560838018574
-      },
-      "indexes": [
-        {
-          "id": 20000040000,
-          "dimensions": [
-            0,
-            15,
-            16,
-            1,
-            7,
-            11,
-            13,
-            8,
-            2,
-            9,
-            20
-          ],
-          "measures": [],
-          "layouts": [
-            {
-              "id": 20000040001,
-              "name": "TableIndex_5",
-              "owner": "ADMIN",
-              "col_order": [
-                0,
-                15,
-                16,
-                1,
-                7,
-                11,
-                13,
-                8,
-                2,
-                9,
-                20
-              ],
-              "shard_by_columns": [],
-              "sort_by_columns": [],
-              "storage_type": 20,
-              "update_time": 1562933713239,
-              "manual": true,
-              "auto": false,
-              "draft_version": null
-            }
-          ],
-          "next_layout_offset": 2
-        }
-      ],
-      "override_properties": {},
-      "segment_range_start": 0,
-      "segment_range_end": 9223372036854775807,
-      "auto_merge_time_ranges": null,
-      "retention_range": 0,
-      "notify_list": [],
-      "status_need_notify": [],
-      "engine_type": 80,
-      "next_aggregation_index_id": 10000,
-      "next_table_index_id": 20000050000
-    },
-    "meta_table_ts": 1562933713249,
-    "meta_table_mvcc": 3
-  },
-  {
-    "meta_table_key": "/calories/dataflow/ed51468b-619b-4ccb-8279-8d888597b66f.json",
-    "meta_table_content": {
-      "uuid": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "last_modified": 1562933689113,
-      "create_time": 1560837998719,
-      "version": "3.0.0.0",
-      "description": null,
-      "owner": "ADMIN",
-      "mp_values": [],
-      "create_time_utc": 1560837998719,
-      "status": "ONLINE",
-      "cost": 50,
-      "query_hit_count": 6,
-      "layout_query_hit_count": {},
-      "event_error": false,
-      "segments": [
-        {
-          "id": "23b28641-7550-48e9-8234-08366d8684da",
-          "name": "FULL_BUILD",
-          "create_time_utc": 1560837998719,
-          "status": "READY",
-          "segRange": {
-            "@class": "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
-            "date_range_start": 0,
-            "date_range_end": 9223372036854775807
-          },
-          "timeRange": null,
-          "parameters": null,
-          "dictionaries": null,
-          "snapshots": {
-            "SSB.CUSTOMER": "calories/table_snapshot/CUSTOMER/efbaa456-d012-4a38-a12f-f6059b58e34c",
-            "SSB.SUPPLIER": "calories/table_snapshot/SUPPLIER/334a95d1-b725-41a9-9ced-9969fc4d77cb"
-          },
-          "last_build_time": 0,
-          "source_count": -1,
-          "additionalInfo": {}
-        }
-      ],
-      "storage_location_identifier": null
-    },
-    "meta_table_ts": 1562934105028,
-    "meta_table_mvcc": 2
-  },
-  {
-    "meta_table_key": "/calories/execute/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-    "meta_table_content": {
-      "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-      "last_modified": 1562934103376,
-      "create_time": 1562933714381,
-      "version": "4.0.0.0",
-      "name": "INDEX_BUILD",
-      "tasks": [
-        {
-          "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5_00",
-          "last_modified": 0,
-          "create_time": 1562933714381,
-          "version": "4.0.0.0",
-          "name": "Detect Resource",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/00/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
-            "parentId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-            "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/00/meta_output",
-            "layoutIds": "20000040001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_9294/"
-            },
-            "last_modified": 0,
-            "createTime": 1562933776999,
-            "start_time": 1562933777841,
-            "end_time": 1562933791039,
-            "wait_time": 0
-          }
-        },
-        {
-          "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5_01",
-          "last_modified": 0,
-          "create_time": 1562933714381,
-          "version": "4.0.0.0",
-          "name": "Load Data To Index",
-          "tasks": null,
-          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
-          "params": {
-            "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/01/meta",
-            "submitter": "ADMIN",
-            "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeEnd": "9223372036854775807",
-            "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-            "dataRangeStart": "0",
-            "project": "calories",
-            "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
-            "parentId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-            "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-            "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/01/meta_output",
-            "layoutIds": "20000040001",
-            "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-          },
-          "segments": [],
-          "job_type": "INDEX_BUILD",
-          "data_range_start": 0,
-          "data_range_end": 0,
-          "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-          "target_segments": [],
-          "output": {
-            "content": null,
-            "status": "SUCCEED",
-            "info": {
-              "yarn_application_id": "application_1554187389076_9295",
-              "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_9295/"
-            },
-            "last_modified": 0,
-            "createTime": 1562933776999,
-            "start_time": 1562933791281,
-            "end_time": 1562934103054,
-            "wait_time": 0
-          }
-        }
-      ],
-      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
-      "params": {
-        "submitter": "ADMIN",
-        "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-        "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeEnd": "9223372036854775807",
-        "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
-        "dataRangeStart": "0",
-        "project": "calories",
-        "layoutIds": "20000040001",
-        "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
-      },
-      "segments": [],
-      "job_type": "INDEX_BUILD",
-      "data_range_start": 0,
-      "data_range_end": 0,
-      "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "target_segments": [
-        "23b28641-7550-48e9-8234-08366d8684da"
-      ],
-      "output": {
-        "content": null,
-        "status": "SUCCEED",
-        "info": {
-          "yarn_application_ids": "application_1554187389076_9294,application_1554187389076_9295,application_1554187389076_9296",
-          "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000040001,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000040001_temp,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1"
-        },
-        "last_modified": 0,
-        "createTime": 1562933776999,
-        "start_time": 1562933777641,
-        "end_time": 1562934103378,
-        "wait_time": 0
-      }
-    },
-    "meta_table_ts": 1562934103378,
-    "meta_table_mvcc": 16
-  },
-  {
-    "meta_table_key": "/calories/dataflow_details/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da.json",
-    "meta_table_content": {
-      "uuid": "23b28641-7550-48e9-8234-08366d8684da",
-      "last_modified": 1562933689113,
-      "create_time": 1560837998719,
-      "version": "3.0.0.0",
-      "dataflow": "ed51468b-619b-4ccb-8279-8d888597b66f",
-      "layout_instances": [
-        {
-          "layout_id": 1,
-          "build_job_id": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
-          "rows": 200,
-          "byte_size": 3936,
-          "file_count": 1,
-          "source_rows": 60175,
-          "source_byte_size": 0,
-          "partition_num": 1,
-          "create_time": 1560838123683
-        },
-        {
-          "layout_id": 20000040001,
-          "build_job_id": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
-          "rows": 59986052,
-          "byte_size": 2405536516,
-          "file_count": 17,
-          "source_rows": 59986052,
-          "source_byte_size": 0,
-          "partition_num": 17,
-          "create_time": 1562933962843
-        }
-      ]
-    },
-    "meta_table_ts": 1562934105028,
-    "meta_table_mvcc": 2
-  },
-  {
-    "meta_table_key": "/calories/job_stats/1562860800000.json",
-    "meta_table_content": {
-      "uuid": "8009e4a9-0776-465e-acb5-bf61c31366f1",
-      "last_modified": 0,
-      "create_time": 1562934105029,
-      "version": "4.0.0.0",
-      "count": 1,
-      "total_duration": 325737,
-      "total_byte_size": 2405536516,
-      "date": 1562860800000,
-      "model_stats": {
-        "ed51468b-619b-4ccb-8279-8d888597b66f": {
-          "uuid": "e556202d-44cf-49be-9c0b-38d6ef785bb7",
-          "last_modified": 0,
-          "create_time": 1562934105029,
-          "version": "4.0.0.0",
-          "count": 1,
-          "total_duration": 325737,
-          "total_byte_size": 2405536516
-        }
-      }
-    },
-    "meta_table_ts": 1562934105034,
-    "meta_table_mvcc": 0
-  }
-]
+  "meta_table_ts" : 1562934105034,
+  "meta_table_mvcc" : 0
+} ]

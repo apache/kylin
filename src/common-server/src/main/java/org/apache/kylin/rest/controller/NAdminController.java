@@ -78,12 +78,6 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.table.load-threshold-enabled");
         propertyKeys.add("kylin.index.enable-operator-design");
 
-        // add second storage
-        if (StringUtils.isNotEmpty(KylinConfig.getInstanceFromEnv().getSecondStorage())) {
-            propertyKeys.add("kylin.second-storage.class");
-            propertyKeys.add("kylin.second-storage.query-metric-collect");
-        }
-
         if (!KylinConfig.getInstanceFromEnv().isAllowedNonAdminGenerateQueryDiagPackage()) {
             propertyKeys.add("kylin.security.allow-non-admin-generate-query-diag-package");
         }
@@ -124,7 +118,7 @@ public class NAdminController extends NBasicController {
 
     private String addPropertyWithKylinInfoCheck() {
         Properties properties = new Properties();
-        properties.put("kylin.streaming.enabled", KylinConfig.getInstanceFromEnv().streamingEnabled());
+        properties.put("kylin.streaming.enabled", KylinConfig.getInstanceFromEnv().isStreamingEnabled());
         return getPropertyString(properties);
     }
 }

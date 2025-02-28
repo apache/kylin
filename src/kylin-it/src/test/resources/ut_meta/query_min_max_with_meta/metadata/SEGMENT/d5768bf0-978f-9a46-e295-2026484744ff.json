@@ -1,0 +1,73 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1678693307908,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "1",
+      "max" : "60000"
+    },
+    "1" : {
+      "min" : "1",
+      "max" : "2000"
+    },
+    "3" : {
+      "min" : "54060",
+      "max" : "114059"
+    },
+    "15" : {
+      "min" : "1",
+      "max" : "7"
+    },
+    "16" : {
+      "min" : "1",
+      "max" : "299"
+    },
+    "7" : {
+      "min" : "1",
+      "max" : "20"
+    },
+    "9" : {
+      "min" : "82530",
+      "max" : "9479950"
+    },
+    "10" : {
+      "min" : "1992-01-01",
+      "max" : "1998-08-02"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1679586425865,
+  "source_count" : 60175,
+  "source_bytes_size" : 5897747,
+  "column_source_bytes" : {
+    "SSB.LINEORDER.LO_LINENUMBER" : 60175,
+    "SSB.LINEORDER.LO_ORDERKEY" : 172702,
+    "SSB.LINEORDER.LO_ORDERDATE" : 601750,
+    "SSB.LINEORDER.LO_REVENUE" : 412258,
+    "SSB.LINEORDER.LO_SUPPKEY" : 94173,
+    "SSB.LINEORDER.LO_PARTKEY" : 207663,
+    "SSB.LINEORDER.LO_CUSTKEY" : 155432,
+    "SSB.LINEORDER.LO_SUPPLYCOST" : 316159
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "d5768bf0-978f-9a46-e295-2026484744ff",
+  "model_uuid" : "8a21c1db-f6b3-36cc-e454-84135de78352",
+  "project" : "min_max"
+}

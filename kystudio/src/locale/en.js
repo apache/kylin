@@ -236,6 +236,7 @@ exports.default = {
     formatTips: 'It is recommended to copying the SQL using the default format. The current format may cause query errors.'
   },
   model: {
+    generateModel: 'From SQL',
     draft: 'Draft',
     modelName: 'Model Name',
     computedColumn: 'Computed Column',
@@ -488,6 +489,7 @@ exports.default = {
     acceleration: 'Acceleration',
     design: 'Studio',
     job: 'Batch Job',
+    streamingjob: 'Streaming Job',
     cluster: 'Cluster',
     admin: 'Admin',
     user: 'User',
@@ -495,6 +497,7 @@ exports.default = {
     datasource: 'Data Source',
     source: 'Data Source',
     modelList: 'Model',
+    internalTable: 'Internal Table',
     index: 'Index',
     modeledit: 'Model Edit',
     snapshot: 'Snapshot',

@@ -1,6 +1,7 @@
 export const viewTypes = {
   BASIC: 'basicSetting',
   ADVANCED: 'advanceSetting',
+  INTERNAL_TABLE: 'internalTable',
   MODEL: 'model'
 }
 

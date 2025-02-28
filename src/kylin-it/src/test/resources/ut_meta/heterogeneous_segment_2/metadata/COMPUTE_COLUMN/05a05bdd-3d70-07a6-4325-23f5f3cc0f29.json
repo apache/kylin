@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_LTAX_NEST",
+  "expression" : "LINEORDER.CC_LTAX * 2 ",
+  "innerExpression" : "(`LINEORDER`.`LO_TAX` +1) * 2",
+  "datatype" : "BIGINT",
+  "comment" : null,
+  "uuid" : "05a05bdd-3d70-07a6-4325-23f5f3cc0f29",
+  "project" : "cc_test"
+}

@@ -1,0 +1,54 @@
+{
+  "uuid" : "68bb3e5b-a431-4b89-830b-714a0ac2b836",
+  "last_modified" : 1605746556552,
+  "create_time" : 1604288097071,
+  "version" : "4.0.0.0",
+  "name" : "SUPPLIER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "S_SUPPKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "S_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "S_ADDRESS",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "S_CITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "S_NATION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "S_REGION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "S_PHONE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "query_hit_count" : 0,
+  "database" : "SSB",
+  "project" : "original_project"
+}

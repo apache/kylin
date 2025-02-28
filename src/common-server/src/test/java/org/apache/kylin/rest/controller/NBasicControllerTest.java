@@ -18,11 +18,29 @@
 
 package org.apache.kylin.rest.controller;
 
-import lombok.val;
+import static org.apache.kylin.common.exception.CommonErrorCode.UNKNOWN_ERROR_CODE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_PARSE_ERROR;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_NON_NEGATIVE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_LESS_THAN_ZERO;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_CONSISTENT;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_FORMAT_MS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_AUTH_INFO_NOTFOUND;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.extension.KylinInfoExtension;
-import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -42,7 +60,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -52,31 +69,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import static org.apache.kylin.common.exception.CommonErrorCode.UNKNOWN_ERROR_CODE;
-import static org.apache.kylin.common.exception.ServerErrorCode.LOW_LEVEL_LICENSE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_PARSE_ERROR;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_NON_NEGATIVE_CHECK;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_LESS_THAN_ZERO;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_CONSISTENT;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_FORMAT_MS;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_AUTH_INFO_NOTFOUND;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({ "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*",
-        "javax.crypto.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ KylinInfoExtension.class })
 public class NBasicControllerTest extends NLocalFileMetadataTestCase {
 
@@ -337,31 +333,4 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("ip", nBasicController.decodeHost("ip"));
     }
 
-    @Test
-    public void testCheckLicenseLevel() throws Exception {
-        nBasicController.checkKylinInfo(false);
-
-        PowerMockito.mockStatic(KylinInfoExtension.class);
-        val factory = Mockito.mock(KylinInfoExtension.Factory.class);
-        Mockito.when(factory.checkKylinInfo()).thenReturn(true);
-        PowerMockito.when(KylinInfoExtension.getFactory()).thenReturn(factory);
-        nBasicController.checkKylinInfo(true);
-
-        checkErrorMessage(factory, "en", Message.getInstance());
-        // checkErrorMessage(factory, "cn", CnMessage.getInstance());
-    }
-
-    private void checkErrorMessage(KylinInfoExtension.Factory factory, String lang, Message message) {
-        try {
-            MsgPicker.setMsg(lang);
-            Mockito.when(factory.checkKylinInfo()).thenReturn(false);
-            nBasicController.checkKylinInfo(true);
-            fail();
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof KylinException);
-            val kylinException = (KylinException) e;
-            Assert.assertEquals(LOW_LEVEL_LICENSE.toErrorCode(), kylinException.getErrorCode());
-            Assert.assertEquals(message.getLowLevelLicenseMessage(), kylinException.getMessage());
-        }
-    }
 }

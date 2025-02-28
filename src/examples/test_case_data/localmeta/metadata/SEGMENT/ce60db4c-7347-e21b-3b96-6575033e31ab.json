@@ -1,0 +1,48 @@
+{
+  "name" : "20220701000000_20220702000000",
+  "create_time_utc" : 1658777648978,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1656604800000,
+    "date_range_end" : 1656691200000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : { },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1658831218615,
+  "source_count" : 6,
+  "source_bytes_size" : 169,
+  "column_source_bytes" : {
+    "TEST1.AAA.DATE" : 60,
+    "TEST1.AAA.USER" : 29,
+    "TEST1.AAA.REGION" : 48,
+    "TEST1.AAA.ID" : 8
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ {
+    "partition_id" : 0,
+    "create_time_utc" : 1658777648989,
+    "status" : "REFRESH",
+    "last_build_time" : 1658831218615,
+    "source_count" : 6,
+    "column_source_bytes" : {
+      "TEST1.AAA.REGION" : 48,
+      "TEST1.AAA.DATE" : 60,
+      "TEST1.AAA.ID" : 8,
+      "TEST1.AAA.USER" : 29
+    }
+  } ],
+  "max_bucket_id" : 14,
+  "uuid" : "ce60db4c-7347-e21b-3b96-6575033e31ab",
+  "model_uuid" : "53abfc64-e4f3-b284-8c65-aac59c9c54c5",
+  "project" : "multi_level_partition"
+}

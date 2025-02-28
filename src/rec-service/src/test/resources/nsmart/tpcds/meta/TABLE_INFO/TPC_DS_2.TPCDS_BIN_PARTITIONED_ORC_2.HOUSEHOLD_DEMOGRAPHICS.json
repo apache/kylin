@@ -1,0 +1,31 @@
+{
+  "uuid" : "672e7fee-ad2d-450a-b00d-0dd40f610161",
+  "last_modified" : 1497607294967,
+  "version" : "2.0.0",
+  "name" : "HOUSEHOLD_DEMOGRAPHICS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "HD_DEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "HD_INCOME_BAND_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "HD_BUY_POTENTIAL",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "HD_DEP_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "HD_VEHICLE_COUNT",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

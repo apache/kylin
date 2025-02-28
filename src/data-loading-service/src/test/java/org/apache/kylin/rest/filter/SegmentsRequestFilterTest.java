@@ -30,7 +30,9 @@ import javax.ws.rs.HttpMethod;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockFilterChain;
@@ -41,7 +43,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-class SegmentsRequestFilterTest {
+class SegmentsRequestFilterTest extends NLocalFileMetadataTestCase {
+
+    @BeforeEach
+    void setUp() {
+        createTestMetadata();
+    }
+
     private final SegmentsRequestFilter filter = Mockito.spy(new SegmentsRequestFilter());
 
     @Test
@@ -84,8 +92,7 @@ class SegmentsRequestFilterTest {
         JsonNode jsonNode = JsonUtil.readValueAsTree(response.getContentAsString());
         Assertions.assertEquals("999", jsonNode.get("code").asText());
         Assertions.assertEquals(ARGS_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
-        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("null", "Boolean"),
-                jsonNode.get("msg").asText());
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("null", "Boolean"), jsonNode.get("msg").asText());
 
         chain = new MockFilterChain();
         request = new MockHttpServletRequest();
@@ -115,8 +122,7 @@ class SegmentsRequestFilterTest {
         jsonNode = JsonUtil.readValueAsTree(response.getContentAsString());
         Assertions.assertEquals("999", jsonNode.get("code").asText());
         Assertions.assertEquals(ARGS_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
-        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("123", "Boolean"),
-                jsonNode.get("msg").asText());
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("123", "Boolean"), jsonNode.get("msg").asText());
 
         chain = new MockFilterChain();
         request = new MockHttpServletRequest();

@@ -318,7 +318,7 @@ public class EscapeTransformerTest {
                 + " \"--won't remove in quote, /*test*/\", /* will remove multi line comment*/ { fn count(*) } from tbl";
         String transformedSQL = (new RawSqlParser(originalSQL)).parse().getStatementString();
 
-        String expectedSQL = "select /*+*//*+ some hint */\n\"--won't remove in quote, /*test*/\", { fn count(*) } from tbl";
+        String expectedSQL = "select /*+*/ /*+ some hint */\n\"--won't remove in quote, /*test*/\", { fn count(*) } from tbl";
         Assert.assertEquals(expectedSQL, transformedSQL);
     }
 
@@ -328,8 +328,8 @@ public class EscapeTransformerTest {
                 + " \"--won't remove in quote, /*test*/\",  { fn count(*) } from tbl";
         String transformedSQL = transformer.transform(originalSQL);
 
-        String expectedSQL = "select /*+*//*+ some hint */\n"
-                + " \"--won't remove in quote, /*test*/\", count(*) from tbl";
+        String expectedSQL = "select /*+*/ /*+ some hint */\n"
+                + "\"--won't remove in quote, /*test*/\", count(*) from tbl";
         Assert.assertEquals(expectedSQL, transformedSQL);
     }
 

@@ -29,6 +29,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -43,10 +46,6 @@ import org.apache.kylin.tool.bisync.model.ColumnDef;
 import org.apache.kylin.tool.bisync.model.JoinTreeNode;
 import org.apache.kylin.tool.bisync.model.MeasureDef;
 import org.apache.kylin.tool.bisync.model.SyncModel;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class SyncModelBuilder {
 

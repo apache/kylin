@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC456",
+  "expression" : "'ABC' || lineorder.lo_shipmode || 'aBC' || lineorder.lo_orderpriotity",
+  "innerExpression" : "'ABC' || `LINEORDER`.`LO_SHIPMODE` || 'aBC' || `LINEORDER`.`LO_ORDERPRIOTITY`",
+  "datatype" : "VARCHAR",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "8faaf808-eb30-20d9-7415-01fa356edc83",
+  "project" : "original_project_model_import_2"
+}

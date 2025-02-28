@@ -22,3 +22,4 @@ last_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt 
 from test_kylin_fact
 where cal_dt < '2012-02-01'
 group by cal_dt, lstg_format_name
+order by cal_dt, lstg_format_name, GMV, "prev 3 days", "next 3 days"

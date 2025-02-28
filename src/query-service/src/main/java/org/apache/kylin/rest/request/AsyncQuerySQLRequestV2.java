@@ -18,13 +18,15 @@
 
 package org.apache.kylin.rest.request;
 
+import java.io.Serializable;
+
+import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
-
-import java.io.Serializable;
 
 @Getter
 @Setter

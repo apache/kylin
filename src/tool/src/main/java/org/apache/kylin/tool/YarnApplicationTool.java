@@ -112,7 +112,7 @@ public class YarnApplicationTool extends ExecutableApplication {
                     : new TreeSet<>(Arrays.asList(appIds.split(YARN_APP_IDS_DELIMITER)));
         } else {
             throw new IllegalArgumentException(
-                    String.format("Job id {%s} found executable list size not equals 1.", jobId));
+                    String.format(Locale.ROOT, "Job id {%s} found executable list size not equals 1.", jobId));
         }
     }
 

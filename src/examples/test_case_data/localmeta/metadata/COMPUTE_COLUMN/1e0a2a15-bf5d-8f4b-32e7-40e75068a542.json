@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_TOTAL_TAX",
+  "expression" : "LINEORDER.LO_QUANTITY*LINEORDER.LO_TAX",
+  "innerExpression" : null,
+  "datatype" : "BIGINT",
+  "comment" : null,
+  "uuid" : "1e0a2a15-bf5d-8f4b-32e7-40e75068a542",
+  "project" : "cc_test"
+}

@@ -1,0 +1,102 @@
+{
+  "uuid" : "7e880e97-76be-cf1e-b6ab-6d48bd78b302",
+  "last_modified" : 1632744118990,
+  "create_time" : 1632742902489,
+  "version" : "4.0.0.0",
+  "alias" : "model_1",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "CAP.ST",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "ST.DT",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "DT",
+    "column" : "ST.DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "SID",
+    "column" : "ST.SID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "S_DATE",
+    "column" : "ST.S_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "TID",
+    "column" : "ST.TID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "CID",
+    "column" : "ST.CID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "S_NAME",
+    "column" : "ST.S_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "CC1",
+    "column" : "ST.CC1",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "ST" : {
+        "x" : 781.3333468967014,
+        "y" : 109.94444105360243,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ "af7c91f0-b65d-ecb4-f52c-28802d2a5d06" ],
+  "project" : "AL_4144"
+}

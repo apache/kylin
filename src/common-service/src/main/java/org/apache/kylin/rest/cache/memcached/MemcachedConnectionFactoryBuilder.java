@@ -45,7 +45,7 @@ public class MemcachedConnectionFactoryBuilder extends ConnectionFactoryBuilder 
      * Get the ConnectionFactory set up with the provided parameters.
      */
     @Override
-    @SuppressWarnings({"squid:S3776"})
+    @SuppressWarnings({ "squid:S3776" })
     public ConnectionFactory build() {
         return new DefaultConnectionFactory() {
 
@@ -67,12 +67,12 @@ public class MemcachedConnectionFactoryBuilder extends ConnectionFactoryBuilder 
             @Override
             public NodeLocator createLocator(List<MemcachedNode> nodes) {
                 switch (locator) {
-                    case ARRAY_MOD:
-                        return new ArrayModNodeLocator(nodes, getHashAlg());
-                    case CONSISTENT:
-                        return new RefinedKetamaNodeLocator(nodes, getHashAlg());
-                    default:
-                        throw new IllegalStateException("Unhandled locator type: " + locator);
+                case ARRAY_MOD:
+                    return new ArrayModNodeLocator(nodes, getHashAlg());
+                case CONSISTENT:
+                    return new RefinedKetamaNodeLocator(nodes, getHashAlg());
+                default:
+                    throw new IllegalStateException("Unhandled locator type: " + locator);
                 }
             }
 

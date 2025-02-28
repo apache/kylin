@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.P_LINEORDER",
+  "tableAlias" : "P_LINEORDER",
+  "columnName" : "CC1",
+  "expression" : "P_LINEORDER.LO_CUSTKEY + 1",
+  "innerExpression" : "`P_LINEORDER`.`LO_CUSTKEY` + 1",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "uuid" : "7f897648-2006-8686-db95-ffe007c39faa",
+  "project" : "original_project"
+}

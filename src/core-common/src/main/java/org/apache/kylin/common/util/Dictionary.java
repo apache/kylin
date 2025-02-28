@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author yangli9
  */
-abstract public class Dictionary<T> implements Serializable {
+public abstract class Dictionary<T> implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(Dictionary.class);
 
     private static final long serialVersionUID = 1L;
@@ -52,9 +52,9 @@ abstract public class Dictionary<T> implements Serializable {
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
     public static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
-    abstract public int getMinId();
+    public abstract int getMinId();
 
-    abstract public int getMaxId();
+    public abstract int getMaxId();
 
     public int getSize() {
         return getMaxId() - getMinId() + 1;
@@ -63,22 +63,22 @@ abstract public class Dictionary<T> implements Serializable {
     /**
      * @return the size of an ID in bytes, determined by the cardinality of column
      */
-    abstract public int getSizeOfId();
+    public abstract int getSizeOfId();
 
     /**
      * @return the (maximum) size of value in bytes, determined by the longest value
      */
-    abstract public int getSizeOfValue();
+    public abstract int getSizeOfValue();
 
     /**
      * @return true if each entry of this dict is contained by the dict in param
      */
-    abstract public boolean contains(Dictionary<?> another);
+    public abstract boolean contains(Dictionary<?> another);
 
     /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
      */
-    final public int getIdFromValue(T value) throws IllegalArgumentException {
+    public final int getIdFromValue(T value) throws IllegalArgumentException {
         return getIdFromValue(value, 0);
     }
 
@@ -106,7 +106,7 @@ abstract public class Dictionary<T> implements Serializable {
         return id;
     }
 
-    final public boolean containsValue(T value) throws IllegalArgumentException {
+    public final boolean containsValue(T value) throws IllegalArgumentException {
         if (isNullObjectForm(value)) {
             return true;
         } else {
@@ -124,7 +124,7 @@ abstract public class Dictionary<T> implements Serializable {
         return value == null;
     }
 
-    abstract protected int getIdFromValueImpl(T value, int roundingFlag);
+    protected abstract int getIdFromValueImpl(T value, int roundingFlag);
 
     /**
      * @return the value corresponds to the given ID
@@ -143,7 +143,7 @@ abstract public class Dictionary<T> implements Serializable {
      * @throws IllegalArgumentException
      *             if ID is not found in dictionary
      */
-    final public byte[] getValueByteFromId(int id) throws IllegalArgumentException {
+    public final byte[] getValueByteFromId(int id) throws IllegalArgumentException {
         if (isNullId(id))
             return null;
         else
@@ -166,9 +166,9 @@ abstract public class Dictionary<T> implements Serializable {
         cacheMissCount = 0;
     }
 
-    abstract protected T getValueFromIdImpl(int id);
+    protected abstract T getValueFromIdImpl(int id);
 
-    abstract public void dump(PrintStream out);
+    public abstract void dump(PrintStream out);
 
     public int nullId() {
         return NULL_ID[getSizeOfId()];

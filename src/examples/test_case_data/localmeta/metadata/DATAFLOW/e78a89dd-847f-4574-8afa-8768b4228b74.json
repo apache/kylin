@@ -1,0 +1,19 @@
+{
+  "uuid" : "e78a89dd-847f-4574-8afa-8768b4228b74",
+  "last_modified" : 1614065794005,
+  "create_time" : 1612690025916,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1612690025916,
+  "status" : "OFFLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "streaming_test",
+  "segment_uuids" : [ "ac772568-e1f0-b097-135c-e05a6f5e2215", "9107d749-93af-a626-2757-2aef0f951f73", "c0311781-b0a9-dd01-225e-7cd498e7cb45", "b97f8030-d7ca-3cd8-5ea0-93d94d868ef1", "34285ce6-32d0-1251-e1a3-d8bfc013d174" ]
+}

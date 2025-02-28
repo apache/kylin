@@ -1,0 +1,149 @@
+{
+  "uuid" : "82b1305e-1605-4f8b-b1d8-108bb2567b16",
+  "last_modified" : 1497949772905,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CUSTOMER",
+  "last_build_job_id" : "d695252a-459a-40b8-9369-dc3816cde31b",
+  "columns_stats" : [ {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "100000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 148437
+  }, {
+    "max_value" : "AAAAAAAAPPPPBAAA",
+    "min_value" : "AAAAAAAAAAAABAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 144756
+  }, {
+    "max_value" : "1920788",
+    "min_value" : "17",
+    "max_length_value" : "1473522",
+    "min_length_value" : "44",
+    "null_count" : 4941,
+    "cardinality" : 134197
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "7135",
+    "min_length_value" : "1",
+    "null_count" : 4976,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "26946",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 60304
+  }, {
+    "max_value" : "2452678",
+    "min_value" : "2449028",
+    "max_length_value" : "2452238",
+    "min_length_value" : "2452238",
+    "null_count" : 4958,
+    "cardinality" : 3727
+  }, {
+    "max_value" : "2452648",
+    "min_value" : "2448998",
+    "max_length_value" : "2452208",
+    "min_length_value" : "2452208",
+    "null_count" : 5027,
+    "cardinality" : 3738
+  }, {
+    "max_value" : "Sir",
+    "min_value" : "",
+    "max_length_value" : "Miss",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "Zulma",
+    "min_value" : "",
+    "max_length_value" : "Christopher",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4486
+  }, {
+    "max_value" : "Zuniga",
+    "min_value" : "",
+    "max_length_value" : "Hollingsworth",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4993
+  }, {
+    "max_value" : "Y",
+    "min_value" : "",
+    "max_length_value" : "Y",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "31",
+    "min_value" : "1",
+    "max_length_value" : "18",
+    "min_length_value" : "9",
+    "null_count" : 4984,
+    "cardinality" : 31
+  }, {
+    "max_value" : "12",
+    "min_value" : "1",
+    "max_length_value" : "12",
+    "min_length_value" : "4",
+    "null_count" : 4945,
+    "cardinality" : 12
+  }, {
+    "max_value" : "1992",
+    "min_value" : "1924",
+    "max_length_value" : "1936",
+    "min_length_value" : "1936",
+    "null_count" : 5010,
+    "cardinality" : 68
+  }, {
+    "max_value" : "ZIMBABWE",
+    "min_value" : "",
+    "max_length_value" : "NETHERLANDS ANTILLES",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 213
+  }, {
+    "max_value" : "",
+    "min_value" : "",
+    "max_length_value" : "",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "Zulma.Thomas@49I0qaUrqjTuU.com",
+    "min_value" : "",
+    "max_length_value" : "Christopher.Kirkpatrick@DdaLn44E2q4mFnf3pa.org",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 139248
+  }, {
+    "max_value" : "2452648",
+    "min_value" : "",
+    "max_length_value" : "2452508",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 379
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAADAAAAAAA", "AAAAAAAAFAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAJAAAAAAA", "AAAAAAAALAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAPAAAAAAA", "AAAAAAAABBAAAAAA", "AAAAAAAADBAAAAAA" ], [ "980124", "1473522", "953372", "68377", "1168667", "1114415", "1128748", "", "707524", "1161742" ], [ "7135", "6247", "4470", "3219", "1404", "6807", "2777", "134", "3876", "4238" ], [ "26946", "44572", "40368", "48814", "31388", "11999", "6", "48469", "8228", "57581" ], [ "2452238", "2449130", "2449438", "2451438", "2452275", "2452288", "2449658", "", "2451068", "2449580" ], [ "2452208", "2449100", "2449408", "2451408", "2452245", "2452258", "2449628", "2449010", "2451038", "2449550" ], [ "Mr.", "Miss", "Sir", "Ms.", "Sir", "Ms.", "Mrs.", "Ms.", "Dr.", "Dr." ], [ "Javier", "Latisha", "Robert", "Fonda", "Karl", "Betty", "Rosalinda", "Tonya", "Lee", "Andre" ], [ "Lewis", "Hamilton", "Moran", "Wiles", "Gilbert", "Williams", "Grimes", "", "Stovall", "Moore" ], [ "Y", "N", "N", "Y", "N", "N", "N", "", "N", "N" ], [ "9", "18", "8", "24", "26", "18", "1", "", "23", "20" ], [ "12", "9", "5", "4", "10", "12", "3", "12", "12", "10" ], [ "1936", "1979", "1956", "1985", "1966", "1963", "1970", "1969", "1972", "1978" ], [ "CHILE", "NIUE", "FIJI", "GAMBIA", "MONTSERRAT", "BURKINA FASO", "UKRAINE", "", "PHILIPPINES", "NICARAGUA" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "Javier.Lewis@VFAxlnZEvOx.org", "Latisha.Hamilton@V.com", "Robert.Moran@Hh.edu", "Fonda.Wiles@S9KnyEtz9hv.org", "Karl.Gilbert@Crg5KyP2IxX9C4d6.edu", "Betty.Williams@xRtDqM1eLBVQNoYAJ.com", "Rosalinda.Grimes@tC8pcU7Lt.edu", "", "Lee.Stovall@fqKC83UU0f.org", "Andre.Moore@cTZLGYi1ZJi.org" ], [ "2452508", "2452313", "2452469", "2452360", "2452454", "2452398", "2452616", "2452376", "2452454", "2452576" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "144000",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "5436621",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/customer",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

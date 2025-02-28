@@ -24,7 +24,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
-import org.apache.kylin.metadata.query.QueryMetrics;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -99,7 +99,9 @@ public class SQLResponseV2 implements Serializable {
      *         fetched from source and the cache is built.</li>
      *     <li>If multiple datasets and multiple data caches are involved in a query, the LATEST data fetch time
      *         among them is returned.</li>
-     *     TODO: As of March 2023, only the spark-sql pushdown engine reports its alluxio local cache time (soft affinity);
+     *     TODO:
+     *     As of March 2023, only the spark-sql pushdown engine reports
+     *     its alluxio local cache time (soft affinity);
      *           The cache time of query cache and cube cache is yet to be implemented.
      * </ul>
      */
@@ -205,10 +207,10 @@ public class SQLResponseV2 implements Serializable {
             return "";
         }
         List<String> relatedModelAlias = realizations.stream()
-                .filter(e -> !QueryMetrics.TABLE_INDEX.equals(e.getIndexType()))
+                .filter(e -> !QueryMetrics.TABLE_INDEX.equals(e.getType()))
                 .map(e -> "CUBE[name=" + e.getModelAlias() + "]").distinct().collect(Collectors.toList());
         List<String> relateIndexModelAlias = realizations.stream()
-                .filter(e -> QueryMetrics.TABLE_INDEX.equals(e.getIndexType()))
+                .filter(e -> QueryMetrics.TABLE_INDEX.equals(e.getType()))
                 .map(e -> "INVERTED_INDEX[name=" + e.getModelAlias() + "]").distinct().collect(Collectors.toList());
         StringBuilder stringBuilder = new StringBuilder();
         String join1 = String.join(",", relatedModelAlias);

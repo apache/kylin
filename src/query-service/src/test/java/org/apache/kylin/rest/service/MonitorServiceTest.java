@@ -28,6 +28,7 @@ import org.apache.kylin.common.metrics.service.MonitorDao;
 import org.apache.kylin.common.metrics.service.QueryMonitorMetric;
 import org.apache.kylin.common.state.StateSwitchConstant;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.state.QueryShareStateManager;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.MockClusterManager;
@@ -42,8 +43,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -60,13 +59,12 @@ public class MonitorServiceTest extends SourceTestCase {
     private MonitorDao monitorDao = Mockito.mock(MonitorDao.class);
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         getTestConfig().setProperty("kylin.monitor.interval", "1");
         getTestConfig().setProperty("kylin.monitor.job-statistic-interval", "10");
         getTestConfig().setMetadataUrl(
-                "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password="
-        );
+                "test@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MYSQL,username=sa,password=");
         getTestConfig().setProperty("kylin.query.share-state-switch-implement", "jdbc");
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         ReflectionTestUtils.setField(monitorService, "clusterManager", clusterManager);

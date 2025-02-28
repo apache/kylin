@@ -20,9 +20,8 @@ package org.apache.kylin.job.dao;
 
 import java.util.Map;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -42,7 +41,16 @@ public class JobStatistics extends JobStatisticsBasic {
 
     @Override
     public String resourceName() {
-        return String.valueOf(date);
+        return generateResourceName(getProject(), date);
+    }
+
+    public static String generateResourceName(String project, long date) {
+        return project + "." + date;
+    }
+
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.JOB_STATS;
     }
 
     public JobStatistics(long date, String model, long duration, long byteSize) {
@@ -76,10 +84,5 @@ public class JobStatistics extends JobStatisticsBasic {
         }
 
         jobStatisticsByModels.put(model, jobStatisticsByModel);
-    }
-
-    @Override
-    public String getResourcePath() {
-        return "/" + getProject() + ResourceStore.JOB_STATISTICS + "/" + date + MetadataConstants.FILE_SURFIX;
     }
 }

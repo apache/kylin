@@ -19,14 +19,14 @@ package org.apache.kylin.query.runtime.plan
 
 import org.apache.calcite.DataContext
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.kylin.query.relnode.KapFilterRel
+import org.apache.kylin.query.relnode.OlapFilterRel
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan}
 
 object FilterPlan extends LogEx {
   def filter(plan: LogicalPlan,
-            rel: KapFilterRel,
+            rel: OlapFilterRel,
             dataContext: DataContext): LogicalPlan = logTime("filter", debug = true) {
 
     val visitor = new SparderRexVisitor(plan.output.map(_.name),

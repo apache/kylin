@@ -21,31 +21,43 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_ID_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_TYPE_ILLEGAL;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobFilter;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.request.JobErrorRequest;
 import org.apache.kylin.rest.request.JobUpdateRequest;
+import org.apache.kylin.rest.request.LoadGlutenCacheRequest;
+import org.apache.kylin.rest.request.ReplaceMetaRequest;
 import org.apache.kylin.rest.request.SparkJobTimeRequest;
 import org.apache.kylin.rest.request.SparkJobUpdateRequest;
 import org.apache.kylin.rest.request.StageRequest;
@@ -55,7 +67,11 @@ import org.apache.kylin.rest.response.EventResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
+import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.RouteService;
+import org.apache.kylin.util.DumpInfo;
+import org.apache.kylin.util.MetadataDumpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +91,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import lombok.val;
 
 @Controller
 @RequestMapping(value = "/api/jobs", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
@@ -89,6 +106,9 @@ public class JobController extends BaseController {
 
     @Autowired
     private JobInfoService jobInfoService;
+
+    @Autowired
+    private RouteService routeService;
 
     @Override
     protected Logger getLogger() {
@@ -110,9 +130,19 @@ public class JobController extends BaseController {
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modified") String sortBy,
-            @RequestParam(value = "reverse", required = false, defaultValue = "true") boolean reverse) {
+            @RequestParam(value = "reverse", required = false, defaultValue = "true") boolean reverse,
+            @RequestParam(value = "type", required = false) List<String> types) {
         jobInfoService.checkJobStatus(statuses);
+        jobNames = CollectionUtils.isEmpty(jobNames) ? Lists.newArrayList() : jobNames;
+        types = CollectionUtils.isEmpty(types) ? Lists.newArrayList() : types;
+        jobNames.addAll(types);
+        if (jobNames.stream().anyMatch(type -> Objects.isNull(JobTypeEnum.getEnumByName(type)))) {
+            throw new KylinException(JOB_TYPE_ILLEGAL);
+        }
         checkRequiredArg("time_filter", timeFilter);
+        if (jobNames.isEmpty()) {
+            jobNames = JobTypeEnum.BUILD_JOB_TYPES;
+        }
         JobFilter jobFilter = new JobFilter(jobInfoService.parseJobStatus(statuses), jobNames, timeFilter, subject, key,
                 exactMatch, project, sortBy, reverse);
         // pageOffset is 1,2,3.... means pageNo
@@ -152,7 +182,7 @@ public class JobController extends BaseController {
         jobInfoService.checkJobStatusAndAction(jobUpdateRequest);
         Map<String, List<String>> nodeWithJobs = JobContextUtil
                 .splitJobIdsByScheduleInstance(jobUpdateRequest.getJobIds());
-        if (needRouteToOtherInstance(nodeWithJobs, jobUpdateRequest.getAction(), headers)) {
+        if (needRouteToOtherInstance(nodeWithJobs, jobUpdateRequest.getAction())) {
             return remoteUpdateJobStatus(jobUpdateRequest, headers, nodeWithJobs);
         }
         if (StringUtils.isBlank(jobUpdateRequest.getProject())
@@ -356,12 +386,13 @@ public class JobController extends BaseController {
         String jobId = ExecutableManager.extractJobId(jobOrTaskId);
         AbstractExecutable job = execMgr.getJob(jobId);
         if (job.getOutput().getState() != ExecutableState.RUNNING) {
-            throw new IllegalStateException(String.format("Job's state is : %s instead of %s !",
+            throw new IllegalStateException(String.format(Locale.ROOT, "Job's state is : %s instead of %s !",
                     job.getOutput().getState(), ExecutableState.RUNNING));
         }
         if (!String.valueOf(job.getOutput().getLastRunningStartTime()).equals(jobLastRunningStartTime)) {
-            throw new IllegalStateException(String.format("Job's lastRunningStartTime is : %s instead of %s !",
-                    job.getOutput().getLastRunningStartTime(), jobLastRunningStartTime));
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "Job's lastRunningStartTime is : %s instead of %s !",
+                            job.getOutput().getLastRunningStartTime(), jobLastRunningStartTime));
         }
     }
 
@@ -392,6 +423,47 @@ public class JobController extends BaseController {
     @ResponseBody
     public void destroyJobProcess(@RequestParam("project") String project) {
         ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).destroyAllProcess();
+    }
+
+    @PostMapping(value = "/replace_metadata")
+    @ApiOperation(value = "replace_metadata", tags = { "DW" })
+    @ResponseBody
+    public EnvelopeResponse<String> updateDumpedMetadata(@RequestBody ReplaceMetaRequest request) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Set<String> dumpList = new LinkedHashSet<>();
+        String project = request.getProject();
+        String modelId = request.getModelId();
+        String viewTable = request.getViewTable();
+        String distMetaUrl = request.getDistMetaUrl();
+
+        NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(modelId);
+        dumpList.addAll(df.collectPrecalculationResource());
+        dumpList.addAll(getLogicalViewMetaDumpList(config, project, viewTable, modelId));
+
+        DumpInfo dumpInfo = new DumpInfo(project, distMetaUrl, dumpList, DumpInfo.DumpType.DATA_LOADING);
+        MetadataDumpUtil.dumpMetadata(dumpInfo);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    private Set<String> getLogicalViewMetaDumpList(KylinConfig config, String project, String viewTable,
+                                                   String modelId) {
+        Set<String> dumpList = new LinkedHashSet<>();
+        if (!config.isDDLLogicalViewEnabled()) {
+            return dumpList;
+        }
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+        if (StringUtils.isNotBlank(modelId)) {
+            Set<String> viewsMeta = viewManager.findLogicalViewsInModel(project, modelId).stream()
+                    .map(LogicalView::getResourcePath).collect(Collectors.toSet());
+            dumpList.addAll(viewsMeta);
+        }
+        if (StringUtils.isNotBlank(viewTable)) {
+            LogicalView logicalView = viewManager.findLogicalViewInProject(project, viewTable);
+            if (logicalView != null) {
+                dumpList.add(logicalView.getResourcePath());
+            }
+        }
+        return dumpList;
     }
 
     @ApiOperation(value = "startProfile", tags = { "DW" }, notes = "")
@@ -452,5 +524,20 @@ public class JobController extends BaseController {
         setDownloadResponse(jobOutputAndDownloadFile.getFirst(), jobOutputAndDownloadFile.getSecond(),
                 MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    /**
+     * RPC Call
+     */
+    @PostMapping(value = "/gluten_cache")
+    @ApiOperation(value = "routeGlutenCache", tags = { "Gluten" })
+    @ResponseBody
+    public EnvelopeResponse<Boolean> routeGlutenCache(@RequestBody LoadGlutenCacheRequest request,
+            HttpServletRequest servletRequest) throws Exception {
+        logger.info("routeGlutenCache request is [{}]", request);
+        checkProjectName(request.getProject());
+        checkCollectionRequiredArg("cache_commands", request.getCacheCommands());
+        val result = routeService.routeGlutenCache(request.getCacheCommands(), servletRequest);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }
 }

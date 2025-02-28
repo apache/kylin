@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @MetadataInfo(onlyProps = true)
-public class InitResourceGroupUtilsTest {
-    
+class InitResourceGroupUtilsTest {
+
     @Test
     void testInitResourceGroup() {
         ResourceGroupManager manager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());

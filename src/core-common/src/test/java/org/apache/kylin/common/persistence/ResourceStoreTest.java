@@ -32,10 +32,12 @@ public class ResourceStoreTest {
         ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).createMetaStoreUuidIfNotExist();
         ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv())
                 .deleteResource(ResourceStore.METASTORE_UUID_TAG);
-        Set<String> res = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).listResources("/");
+        Set<String> res = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv())
+                .listResources(MetadataType.SYSTEM.name());
         Assert.assertFalse("failed", res.contains(ResourceStore.METASTORE_UUID_TAG));
         ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).createMetaStoreUuidIfNotExist();
-        res = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).listResources("/");
+        res = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv())
+                .listResources(MetadataType.SYSTEM.name());
         Assert.assertTrue("failed", res.contains(ResourceStore.METASTORE_UUID_TAG));
     }
 
@@ -45,22 +47,22 @@ public class ResourceStoreTest {
         ResourceStore AStore = ResourceStore.getKylinMetaStore(A);//system store
         KylinConfig B = KylinConfig.createKylinConfig(A);
         ResourceStore BStore = ResourceStore.getKylinMetaStore(B);//new store
-
         //delete AStore,BStore uuid
         ResourceStore.getKylinMetaStore(A).createMetaStoreUuidIfNotExist();
         ResourceStore.getKylinMetaStore(A).deleteResource(ResourceStore.METASTORE_UUID_TAG);
         ResourceStore.getKylinMetaStore(B).createMetaStoreUuidIfNotExist();
         ResourceStore.getKylinMetaStore(B).deleteResource(ResourceStore.METASTORE_UUID_TAG);
-        Set<String> res = AStore.listResources("/");
+        Set<String> res = AStore.listResources(MetadataType.SYSTEM.name());
         Assert.assertFalse(res.contains(ResourceStore.METASTORE_UUID_TAG));
-        res = BStore.listResources("/");
+        res = BStore.listResources(MetadataType.SYSTEM.name());
         Assert.assertFalse(res.contains(ResourceStore.METASTORE_UUID_TAG));
 
         //create BStore uuid
         BStore.createMetaStoreUuidIfNotExist();
-        res = BStore.listResources("/");
+
+        res = BStore.listResources(MetadataType.SYSTEM.name());
         Assert.assertTrue(res.contains(ResourceStore.METASTORE_UUID_TAG));//B have uuid
-        res = AStore.listResources("/");
+        res = AStore.listResources(MetadataType.SYSTEM.name());
         Assert.assertFalse(res.contains(ResourceStore.METASTORE_UUID_TAG));//A did not
 
         //try create again

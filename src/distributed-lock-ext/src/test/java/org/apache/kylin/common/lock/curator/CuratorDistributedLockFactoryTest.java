@@ -28,18 +28,17 @@ import org.apache.kylin.common.lock.DistributedLockFactoryTest;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TestUtils;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionState;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
 import org.awaitility.Awaitility;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionState;
-import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
 
 @Disabled("TODO: re-run to check.")
 @MetadataInfo(onlyProps = true)
@@ -50,28 +49,28 @@ class CuratorDistributedLockFactoryTest extends DistributedLockFactoryTest {
     private volatile boolean isInterrupted = false;
 
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         zkTestServer = new TestingServer(true);
     }
 
     @AfterEach
-    public void after() throws Exception {
+    void after() throws Exception {
         zkTestServer.close();
     }
 
     @Test
-    public void testBasic() throws Exception {
+    void testBasic() {
         String path = "/test/distributed_lock_factory_test/test_basic/" + RandomUtil.randomUUIDStr();
 
         TestUtils.getTestConfig().setProperty("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
         CuratorDistributedLock lock = (CuratorDistributedLock) TestUtils.getTestConfig().getDistributedLockFactory()
                 .getLockForCurrentThread(path);
 
-        Assert.assertFalse(lock.isAcquiredInThisThread());
+        Assertions.assertFalse(lock.isAcquiredInThisThread());
         lock.lock();
-        Assert.assertTrue(lock.isAcquiredInThisThread());
+        Assertions.assertTrue(lock.isAcquiredInThisThread());
         lock.unlock();
-        Assert.assertFalse(lock.isAcquiredInThisThread());
+        Assertions.assertFalse(lock.isAcquiredInThisThread());
     }
 
     @RetryingTest(3)
@@ -105,7 +104,7 @@ class CuratorDistributedLockFactoryTest extends DistributedLockFactoryTest {
         });
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> locked);
-        Assert.assertFalse(isInterrupted);
+        Assertions.assertFalse(isInterrupted);
 
         locked = false;
         zkTestServer.stop();
@@ -114,7 +113,7 @@ class CuratorDistributedLockFactoryTest extends DistributedLockFactoryTest {
         // thread1 will be interrupted
         Awaitility.await().atMost(20, TimeUnit.SECONDS).until(() -> isInterrupted);
 
-        Assert.assertFalse(locked);
+        Assertions.assertFalse(locked);
 
         TestUtils.getTestConfig().setProperty("kylin.env.zookeeper-connect-string", zkTestServer2.getConnectString());
         executorService.submit(() -> {
@@ -161,7 +160,7 @@ class CuratorDistributedLockFactoryTest extends DistributedLockFactoryTest {
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> locked);
 
-        Assert.assertFalse(isInterrupted);
+        Assertions.assertFalse(isInterrupted);
 
         ConnectionStateListener listener = (ConnectionStateListener) ReflectionTestUtils.getField(lockFactory,
                 "listener");

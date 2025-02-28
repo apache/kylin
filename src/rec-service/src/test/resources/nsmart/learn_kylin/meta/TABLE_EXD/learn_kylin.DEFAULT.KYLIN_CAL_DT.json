@@ -1,0 +1,718 @@
+{
+  "uuid" : "cb2aeaea-3a08-48e7-ba7d-b3c74bb5cf1d",
+  "last_modified" : 1483516357289,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_CAL_DT",
+  "last_build_job_id" : "e3979c23-7f85-4ae3-9ac6-c58295168d77",
+  "columns_stats" : [ {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-16",
+    "min_length_value" : "2012-08-16",
+    "null_count" : 0,
+    "cardinality" : 736
+  }, {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-01-01",
+    "min_length_value" : "2012-01-01",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-07-01",
+    "min_length_value" : "2012-07-01",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-01",
+    "min_length_value" : "2012-08-01",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-11",
+    "min_length_value" : "2012-08-11",
+    "null_count" : 0,
+    "cardinality" : 104
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "-3",
+    "max_length_value" : "-1",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "2",
+    "min_value" : "-10",
+    "max_length_value" : "-10",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 13
+  }, {
+    "max_value" : "6",
+    "min_value" : "-47",
+    "max_length_value" : "-15",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "35",
+    "min_value" : "-330",
+    "max_length_value" : "-103",
+    "min_length_value" : "8",
+    "null_count" : 0,
+    "cardinality" : 362
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "-3",
+    "max_length_value" : "-1",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "1",
+    "min_value" : "-11",
+    "max_length_value" : "-11",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 13
+  }, {
+    "max_value" : "5",
+    "min_value" : "-47",
+    "max_length_value" : "-15",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 52
+  }, {
+    "max_value" : "5",
+    "min_value" : "-47",
+    "max_length_value" : "-15",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 52
+  }, {
+    "max_value" : "41639",
+    "min_value" : "41274",
+    "max_length_value" : "41501",
+    "min_length_value" : "41501",
+    "null_count" : 0,
+    "cardinality" : 372
+  }, {
+    "max_value" : "365",
+    "min_value" : "1",
+    "max_length_value" : "228",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 369
+  }, {
+    "max_value" : "92",
+    "min_value" : "1",
+    "max_length_value" : "47",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 92
+  }, {
+    "max_value" : "31",
+    "min_value" : "1",
+    "max_length_value" : "16",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 31
+  }, {
+    "max_value" : "7",
+    "min_value" : "1",
+    "max_length_value" : "6",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "53",
+    "min_value" : "1",
+    "max_length_value" : "33",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 54
+  }, {
+    "max_value" : "5948",
+    "min_value" : "5896",
+    "max_length_value" : "5928",
+    "min_length_value" : "5928",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "3",
+    "min_value" : "1",
+    "max_length_value" : "2",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "12",
+    "min_value" : "1",
+    "max_length_value" : "11",
+    "min_length_value" : "8",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "1369",
+    "min_value" : "1357",
+    "max_length_value" : "1364",
+    "min_length_value" : "1364",
+    "null_count" : 0,
+    "cardinality" : 13
+  }, {
+    "max_value" : "4",
+    "min_value" : "1",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "457",
+    "min_value" : "453",
+    "max_length_value" : "455",
+    "min_length_value" : "455",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "115",
+    "min_value" : "114",
+    "max_length_value" : "114",
+    "min_length_value" : "114",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2014-12-31",
+    "min_value" : "2012-12-31",
+    "max_length_value" : "2012-12-31",
+    "min_length_value" : "2012-12-31",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "2014-03-31",
+    "min_value" : "2012-03-31",
+    "max_length_value" : "2012-09-30",
+    "min_length_value" : "2012-09-30",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "2014-01-31",
+    "min_value" : "2012-01-31",
+    "max_length_value" : "2012-08-31",
+    "min_length_value" : "2012-08-31",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "2014-01-04",
+    "min_value" : "2012-01-05",
+    "max_length_value" : "2012-08-17",
+    "min_length_value" : "2012-08-17",
+    "null_count" : 0,
+    "cardinality" : 107
+  }, {
+    "max_value" : "31-Oct-2013",
+    "min_value" : "01-Apr-2012",
+    "max_length_value" : "16-Aug-2012",
+    "min_length_value" : "16-Aug-2012",
+    "null_count" : 0,
+    "cardinality" : 744
+  }, {
+    "max_value" : "Sep 9th 2013",
+    "min_value" : "Apr 10th 2012",
+    "max_length_value" : "Aug 16th 2012",
+    "min_length_value" : "Jan 3rd 2012",
+    "null_count" : 0,
+    "cardinality" : 724
+  }, {
+    "max_value" : "Wed 12-25-13",
+    "min_value" : "Fri 01-04-13",
+    "max_length_value" : "Fri 08-16-13",
+    "min_length_value" : "Fri 08-16-13",
+    "null_count" : 0,
+    "cardinality" : 368
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2013-12-21",
+    "min_value" : "2012-03-21",
+    "max_length_value" : "2012-06-21",
+    "min_length_value" : "2012-06-21",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "max_value" : "365",
+    "min_value" : "365",
+    "max_length_value" : "365",
+    "min_length_value" : "365",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "92",
+    "min_value" : "90",
+    "max_length_value" : "92",
+    "min_length_value" : "92",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "31",
+    "min_value" : "28",
+    "max_length_value" : "31",
+    "min_length_value" : "31",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "7",
+    "min_value" : "3",
+    "max_length_value" : "7",
+    "min_length_value" : "7",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2013-12-29",
+    "min_value" : "2012-12-29",
+    "max_length_value" : "2012-12-30",
+    "min_length_value" : "2012-12-30",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "2013-12-29",
+    "min_value" : "2012-03-31",
+    "max_length_value" : "2012-06-30",
+    "min_length_value" : "2012-06-30",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "2013-12-29",
+    "min_value" : "2012-01-27",
+    "max_length_value" : "2012-07-28",
+    "min_length_value" : "2012-07-28",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "2013-12-29",
+    "min_value" : "2012-01-06",
+    "max_length_value" : "2012-08-11",
+    "min_length_value" : "2012-08-11",
+    "null_count" : 0,
+    "cardinality" : 102
+  }, {
+    "max_value" : "2013-12-30",
+    "min_value" : "2012-01-07",
+    "max_length_value" : "2012-08-12",
+    "min_length_value" : "2012-08-12",
+    "null_count" : 0,
+    "cardinality" : 103
+  }, {
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-16",
+    "min_length_value" : "2012-08-16",
+    "null_count" : 0,
+    "cardinality" : 736
+  }, {
+    "max_value" : "Wed       ",
+    "min_value" : "Fri       ",
+    "max_length_value" : "Fri       ",
+    "min_length_value" : "Fri       ",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "2014M01",
+    "min_value" : "2012M01",
+    "max_length_value" : "2012M08",
+    "min_length_value" : "2012M08",
+    "null_count" : 0,
+    "cardinality" : 24
+  }, {
+    "max_value" : "Sep-2013",
+    "min_value" : "Apr-2012",
+    "max_length_value" : "Aug-2012",
+    "min_length_value" : "Aug-2012",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2014M01   ",
+    "min_value" : "2012M01   ",
+    "max_length_value" : "2012M08   ",
+    "min_length_value" : "2012M08   ",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Year 2014 - Quarter 01",
+    "min_value" : "Year 2012 - Quarter 01",
+    "max_length_value" : "Year 2012 - Quarter 03",
+    "min_length_value" : "Year 2012 - Quarter 03",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "2014Q01   ",
+    "min_value" : "2012Q01   ",
+    "max_length_value" : "2012Q03   ",
+    "min_length_value" : "2012Q03   ",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "9",
+    "min_value" : "1",
+    "max_length_value" : "33",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "2014",
+    "min_value" : "2012",
+    "max_length_value" : "2012",
+    "min_length_value" : "2012",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "2013-12-29",
+    "min_value" : "2012-01-06",
+    "max_length_value" : "2012-08-11",
+    "min_length_value" : "2012-08-11",
+    "null_count" : 0,
+    "cardinality" : 102
+  }, {
+    "max_value" : "2014-01-04",
+    "min_value" : "2012-01-05",
+    "max_length_value" : "2012-08-17",
+    "min_length_value" : "2012-08-17",
+    "null_count" : 0,
+    "cardinality" : 105
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Wk.53 - 13",
+    "min_value" : "Wk.01 - 13",
+    "max_length_value" : "Wk.33 - 13",
+    "min_length_value" : "Wk.33 - 13",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "2014-01-01 00:00:00",
+    "min_value" : "2012-01-01 00:00:00",
+    "max_length_value" : "2012-08-11 00:00:00",
+    "min_length_value" : "2012-08-11 00:00:00",
+    "null_count" : 0,
+    "cardinality" : 104
+  }, {
+    "max_value" : "2014-01-04 00:00:00",
+    "min_value" : "2012-01-05 00:00:00",
+    "max_length_value" : "2012-08-17 00:00:00",
+    "min_length_value" : "2012-08-17 00:00:00",
+    "null_count" : 0,
+    "cardinality" : 105
+  }, {
+    "max_value" : "2014W01   ",
+    "min_value" : "2012W01   ",
+    "max_length_value" : "2012W33   ",
+    "min_length_value" : "2012W33   ",
+    "null_count" : 0,
+    "cardinality" : 105
+  }, {
+    "max_value" : "2014W01   ",
+    "min_value" : "2012W01   ",
+    "max_length_value" : "2012W33   ",
+    "min_length_value" : "2012W33   ",
+    "null_count" : 0,
+    "cardinality" : 105
+  }, {
+    "max_value" : "12/29/13 - 12/31/13",
+    "min_value" : "01/01/13 - 01/05/13",
+    "max_length_value" : "08/11/13 - 08/17/13",
+    "min_length_value" : "08/11/13 - 08/17/13",
+    "null_count" : 0,
+    "cardinality" : 51
+  }, {
+    "max_value" : "12/29 - 12/31",
+    "min_value" : "01/01 - 01/04",
+    "max_length_value" : "08/11 - 08/17",
+    "min_length_value" : "08/11 - 08/17",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "2014",
+    "min_value" : "2012",
+    "max_length_value" : "2012",
+    "min_length_value" : "2012",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2013-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-16",
+    "min_length_value" : "2012-08-16",
+    "null_count" : 0,
+    "cardinality" : 374
+  }, {
+    "max_value" : "2012-01-01",
+    "min_value" : "2011-01-01",
+    "max_length_value" : "2011-08-16",
+    "min_length_value" : "2011-08-16",
+    "null_count" : 0,
+    "cardinality" : 368
+  }, {
+    "max_value" : "2013-10-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-05-16",
+    "min_length_value" : "2012-05-16",
+    "null_count" : 0,
+    "cardinality" : 642
+  }, {
+    "max_value" : "2013-07-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-02-16",
+    "min_length_value" : "2012-02-16",
+    "null_count" : 0,
+    "cardinality" : 553
+  }, {
+    "max_value" : "2013-12-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-07-16",
+    "min_length_value" : "2012-07-16",
+    "null_count" : 0,
+    "cardinality" : 700
+  }, {
+    "max_value" : "2013-11-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-06-16",
+    "min_length_value" : "2012-06-16",
+    "null_count" : 0,
+    "cardinality" : 672
+  }, {
+    "max_value" : "2013-12-25",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-09",
+    "min_length_value" : "2012-08-09",
+    "null_count" : 0,
+    "cardinality" : 734
+  }, {
+    "max_value" : "2013-12-18",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-08-02",
+    "min_length_value" : "2012-08-02",
+    "null_count" : 0,
+    "cardinality" : 728
+  }, {
+    "max_value" : "0",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "0",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "9",
+    "min_value" : "1",
+    "max_length_value" : "11",
+    "min_length_value" : "8",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "4",
+    "min_value" : "1",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "52",
+    "min_value" : "1",
+    "max_length_value" : "33",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 53
+  }, {
+    "max_value" : "4",
+    "min_value" : "1",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2005-09-07",
+    "min_value" : "2005-09-07",
+    "max_length_value" : "2005-09-07",
+    "min_length_value" : "2005-09-07",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "USER_X  ",
+    "min_value" : "USER_X  ",
+    "max_length_value" : "USER_X  ",
+    "min_length_value" : "USER_X  ",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "2013-11-27 00:16:56",
+    "min_value" : "2012-11-27 00:16:56",
+    "max_length_value" : "2012-11-27 00:16:56",
+    "min_length_value" : "2012-11-27 00:16:56",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "USER_X",
+    "min_value" : "USER_X",
+    "max_length_value" : "USER_X",
+    "min_length_value" : "USER_X",
+    "null_count" : 0,
+    "cardinality" : 1
+  } ],
+  "sample_rows" : [ [ "2012-08-16", "2012-04-10", "2012-04-27", "2012-03-07", "2012-11-23", "2012-11-21", "2012-01-24", "2012-04-29", "2012-10-01", "2012-03-05" ], [ "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01", "2012-01-01" ], [ "2012-07-01", "2012-04-01", "2012-04-01", "2012-01-01", "2012-10-01", "2012-10-01", "2012-01-01", "2012-04-01", "2012-10-01", "2012-01-01" ], [ "2012-08-01", "2012-04-01", "2012-04-01", "2012-03-01", "2012-11-01", "2012-11-01", "2012-01-01", "2012-04-01", "2012-10-01", "2012-03-01" ], [ "2012-08-11", "2012-04-07", "2012-04-21", "2012-03-03", "2012-11-17", "2012-11-17", "2012-01-20", "2012-04-28", "2012-09-29", "2012-03-03" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "-1", "-2", "-2", "-3", "0", "0", "-3", "-2", "0", "-3" ], [ "-3", "-7", "-7", "-8", "0", "0", "-10", "-7", "-1", "-8" ], [ "-15", "-33", "-31", "-38", "-1", "-1", "-44", "-30", "-8", "-38" ], [ "-103", "-231", "-214", "-265", "-4", "-6", "-307", "-212", "-57", "-267" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "-1", "-2", "-2", "-3", "0", "0", "-3", "-2", "0", "-3" ], [ "-4", "-8", "-8", "-9", "-1", "-1", "-11", "-7", "-2", "-9" ], [ "-15", "-33", "-31", "-38", "-1", "-1", "-44", "-30", "-8", "-38" ], [ "-15", "-33", "-31", "-38", "-1", "-1", "-44", "-30", "-8", "-38" ], [ "41501", "41373", "41390", "41339", "41600", "41598", "41297", "41392", "41547", "41337" ], [ "228", "100", "117", "66", "327", "325", "24", "119", "274", "64" ], [ "47", "10", "27", "66", "54", "52", "24", "29", "1", "64" ], [ "16", "10", "27", "7", "23", "21", "24", "29", "1", "5" ], [ "6", "4", "7", "5", "7", "5", "5", "2", "3", "3" ], [ "33", "15", "17", "10", "47", "47", "4", "18", "40", "10" ], [ "5928", "5910", "5912", "5905", "5942", "5942", "5899", "5913", "5935", "5905" ], [ "2", "1", "1", "3", "2", "2", "1", "1", "1", "3" ], [ "8", "4", "4", "3", "11", "11", "1", "4", "10", "3" ], [ "1364", "1360", "1360", "1359", "1367", "1367", "1357", "1360", "1366", "1359" ], [ "3", "2", "2", "1", "4", "4", "1", "2", "4", "1" ], [ "455", "454", "454", "453", "456", "456", "453", "454", "456", "453" ], [ "114", "114", "114", "114", "114", "114", "114", "114", "114", "114" ], [ "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31", "2012-12-31" ], [ "2012-09-30", "2012-06-30", "2012-06-30", "2012-03-31", "2012-12-31", "2012-12-31", "2012-03-31", "2012-06-30", "2012-12-31", "2012-03-31" ], [ "2012-08-31", "2012-04-30", "2012-04-30", "2012-03-31", "2012-11-30", "2012-11-30", "2012-01-31", "2012-04-30", "2012-10-31", "2012-03-31" ], [ "2012-08-17", "2012-04-13", "2012-04-27", "2012-03-09", "2012-11-23", "2012-11-23", "2012-01-26", "2012-05-04", "2012-10-05", "2012-03-09" ], [ "16-Aug-2012", "10-Apr-2012", "27-Apr-2012", "07-Mar-2012", "23-Nov-2012", "21-Nov-2012", "24-Jan-2012", "29-Apr-2012", "01-Oct-2012", "05-Mar-2012" ], [ "Aug 16th 2012", "Apr 10th 2012", "Apr 27th 2012", "Mar 7th 2012", "Nov 23rd 2012", "Nov 21st 2012", "Jan 24th 2012", "Apr 29th 2012", "Oct 1st 2012", "Mar 5th 2012" ], [ "Fri 08-16-13", "Wed 04-10-13", "Sat 04-27-13", "Thu 03-07-13", "Sat 11-23-13", "Thu 11-21-13", "Thu 01-24-13", "Mon 04-29-13", "Tue 10-01-13", "Tue 03-05-13" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "0", "0", "0", "0", "1", "1", "0", "0", "1", "0" ], [ "0", "0", "0", "0", "1", "1", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "2012-06-21", "2012-03-21", "2012-03-21", "2012-12-21", "2012-09-21", "2012-09-21", "2012-12-21", "2012-03-21", "2012-09-21", "2012-12-21" ], [ "365", "365", "365", "365", "365", "365", "365", "365", "365", "365" ], [ "92", "91", "91", "90", "92", "92", "90", "91", "92", "90" ], [ "31", "30", "30", "31", "30", "30", "31", "30", "31", "31" ], [ "7", "7", "7", "7", "7", "7", "7", "7", "7", "7" ], [ "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30", "2012-12-30" ], [ "2012-06-30", "2012-03-31", "2012-03-31", "2012-12-30", "2012-09-29", "2012-09-29", "2012-12-30", "2012-03-31", "2012-09-29", "2012-12-30" ], [ "2012-07-28", "2012-03-31", "2012-03-31", "2012-02-24", "2012-10-27", "2012-10-27", "2012-12-30", "2012-04-28", "2012-09-29", "2012-02-24" ], [ "2012-08-11", "2012-04-07", "2012-04-21", "2012-03-03", "2012-11-17", "2012-11-17", "2012-01-20", "2012-04-28", "2012-09-29", "2012-03-03" ], [ "2012-08-12", "2012-04-08", "2012-04-22", "2012-03-04", "2012-11-18", "2012-11-18", "2012-01-21", "2012-04-29", "2012-09-30", "2012-03-04" ], [ "2012-08-16", "2012-04-10", "2012-04-27", "2012-03-07", "2012-11-23", "2012-11-21", "2012-01-24", "2012-04-29", "2012-10-01", "2012-03-05" ], [ "Fri       ", "Wed       ", "Sat       ", "Thu       ", "Sat       ", "Thu       ", "Thu       ", "Mon       ", "Tue       ", "Tue       " ], [ "2012M08", "2012M04", "2012M04", "2012M03", "2012M11", "2012M11", "2012M01", "2012M04", "2012M10", "2012M03" ], [ "Aug-2012", "Apr-2012", "Apr-2012", "Mar-2012", "Nov-2012", "Nov-2012", "Jan-2012", "Apr-2012", "Oct-2012", "Mar-2012" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "Y", "N" ], [ "2012M08   ", "2012M04   ", "2012M04   ", "2012M03   ", "2012M11   ", "2012M11   ", "2012M01   ", "2012M04   ", "2012M10   ", "2012M03   " ], [ "N", "N", "N", "N", "N", "N", "N", "N", "Y", "N" ], [ "Year 2012 - Quarter 03", "Year 2012 - Quarter 02", "Year 2012 - Quarter 02", "Year 2012 - Quarter 01", "Year 2012 - Quarter 04", "Year 2012 - Quarter 04", "Year 2012 - Quarter 01", "Year 2012 - Quarter 02", "Year 2012 - Quarter 04", "Year 2012 - Quarter 01" ], [ "2012Q03   ", "2012Q02   ", "2012Q02   ", "2012Q01   ", "2012Q04   ", "2012Q04   ", "2012Q01   ", "2012Q02   ", "2012Q04   ", "2012Q01   " ], [ "N", "N", "N", "N", "N", "N", "N", "N", "Y", "N" ], [ "33", "15", "17", "10", "47", "47", "4", "18", "40", "10" ], [ "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012" ], [ "2012-08-11", "2012-04-07", "2012-04-21", "2012-03-03", "2012-11-17", "2012-11-17", "2012-01-20", "2012-04-28", "2012-09-29", "2012-03-03" ], [ "2012-08-17", "2012-04-13", "2012-04-27", "2012-03-09", "2012-11-23", "2012-11-23", "2012-01-26", "2012-05-04", "2012-10-05", "2012-03-09" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "Wk.33 - 13", "Wk.15 - 13", "Wk.17 - 13", "Wk.10 - 13", "Wk.47 - 13", "Wk.47 - 13", "Wk.04 - 13", "Wk.18 - 13", "Wk.40 - 13", "Wk.10 - 13" ], [ "2012-08-11 00:00:00", "2012-04-07 00:00:00", "2012-04-21 00:00:00", "2012-03-03 00:00:00", "2012-11-17 00:00:00", "2012-11-17 00:00:00", "2012-01-20 00:00:00", "2012-04-28 00:00:00", "2012-09-29 00:00:00", "2012-03-03 00:00:00" ], [ "2012-08-17 00:00:00", "2012-04-13 00:00:00", "2012-04-27 00:00:00", "2012-03-09 00:00:00", "2012-11-23 00:00:00", "2012-11-23 00:00:00", "2012-01-26 00:00:00", "2012-05-04 00:00:00", "2012-10-05 00:00:00", "2012-03-09 00:00:00" ], [ "2012W33   ", "2012W15   ", "2012W17   ", "2012W10   ", "2012W47   ", "2012W47   ", "2012W04   ", "2012W18   ", "2012W40   ", "2012W10   " ], [ "2012W33   ", "2012W15   ", "2012W17   ", "2012W10   ", "2012W47   ", "2012W47   ", "2012W04   ", "2012W18   ", "2012W40   ", "2012W10   " ], [ "08/11/13 - 08/17/13", "04/07/13 - 04/13/13", "04/21/13 - 04/27/13", "03/03/13 - 03/09/13", "11/17/13 - 11/23/13", "11/17/13 - 11/23/13", "01/20/13 - 01/26/13", "04/28/13 - 05/04/13", "09/29/13 - 10/05/13", "03/03/13 - 03/09/13" ], [ "08/11 - 08/17", "04/07 - 04/13", "04/21 - 04/27", "03/03 - 03/09", "11/17 - 11/23", "11/17 - 11/23", "01/20 - 01/26", "04/28 - 05/04", "09/29 - 10/05", "03/03 - 03/09" ], [ "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012", "2012" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "2012-08-16", "2012-04-10", "2012-04-27", "2012-03-07", "2012-11-23", "2012-11-21", "2012-01-24", "2012-04-29", "2012-10-01", "2012-03-05" ], [ "2011-08-16", "2011-04-10", "2011-04-27", "2011-03-07", "2011-11-23", "2011-11-21", "2011-01-24", "2011-04-29", "2011-10-01", "2011-03-05" ], [ "2012-05-16", "2012-01-10", "2012-01-27", "2012-12-07", "2012-08-23", "2012-08-21", "2012-10-24", "2012-01-29", "2012-07-01", "2012-12-05" ], [ "2012-02-16", "2012-10-10", "2012-10-27", "2012-09-07", "2012-05-23", "2012-05-21", "2012-07-24", "2012-10-29", "2012-04-01", "2012-09-05" ], [ "2012-07-16", "2012-03-10", "2012-03-27", "2012-02-07", "2012-10-23", "2012-10-21", "2012-12-24", "2012-03-29", "2012-09-01", "2012-02-05" ], [ "2012-06-16", "2012-02-10", "2012-02-27", "2012-01-07", "2012-09-23", "2012-09-21", "2012-11-24", "2012-02-28", "2012-08-01", "2012-01-05" ], [ "2012-08-09", "2012-04-03", "2012-04-20", "2012-02-28", "2012-11-16", "2012-11-14", "2012-01-17", "2012-04-22", "2012-09-24", "2012-02-26" ], [ "2012-08-02", "2012-03-27", "2012-04-13", "2012-02-21", "2012-11-09", "2012-11-07", "2012-01-10", "2012-04-15", "2012-09-17", "2012-02-19" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "8", "4", "4", "3", "11", "11", "1", "5", "10", "3" ], [ "3", "2", "2", "1", "4", "4", "1", "2", "4", "1" ], [ "33", "15", "17", "10", "47", "47", "4", "18", "40", "10" ], [ "3", "2", "2", "1", "4", "4", "1", "2", "4", "1" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07", "2005-09-07" ], [ "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  ", "USER_X  " ], [ "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56", "2012-11-27 00:16:56" ], [ "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X", "USER_X" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "731",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

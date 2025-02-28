@@ -21,6 +21,7 @@ package org.apache.kylin.query.routing;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,8 +51,8 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.query.exception.UserStopQueryException;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapTableScan;
 import org.apache.kylin.query.util.QueryInterruptChecker;
 import org.apache.kylin.query.util.RexUtils;
 
@@ -64,6 +65,10 @@ public class PartitionPruningRule extends PruningRule {
 
     @Override
     public void apply(Candidate candidate) {
+        if (!isStorageMatch(candidate)) {
+            return;
+        }
+
         if (nonBatchRealizationSkipPartitionsPruning(candidate)) {
             log.info("{}({}/{}): only batch model support multi-partitions pruning.", this.getClass().getName(),
                     candidate.getRealization().getProject(), candidate.getRealization().getCanonicalName());
@@ -106,11 +111,16 @@ public class PartitionPruningRule extends PruningRule {
             log.info("there is no sub-partitions to answer sql");
             CapabilityResult capability = new CapabilityResult();
             capability.setCapable(true);
-            capability.setSelectedCandidate(NLayoutCandidate.EMPTY);
+            capability.setSelectedCandidate(NLayoutCandidate.ofEmptyCandidate());
             candidate.setCapability(capability);
             return;
         }
         candidate.setPrunedPartitions(matchedPartitions);
+    }
+
+    @Override
+    public boolean isStorageMatch(Candidate candidate) {
+        return candidate.getRealization().getModel().getStorageType().isV1Storage();
     }
 
     private boolean needPushDown(Map<String, List<Long>> matchedPartitions) {
@@ -133,15 +143,15 @@ public class PartitionPruningRule extends PruningRule {
 
     private Map<String, List<Long>> matchPartitions(Candidate candidate) {
         NDataModel model = candidate.getRealization().getModel();
-        OLAPContext olapContext = candidate.getCtx();
+        OlapContext olapContext = candidate.getCtx();
 
         Map<String, List<Long>> segPartitionMap = candidate.getQueryableSeg().getBatchSegments().stream()
                 .collect(Collectors.toMap(NDataSegment::getId, NDataSegment::getMultiPartitionIds));
-        if (filtersContainPartOfMultiPartitionKeyMappingCols(model, olapContext.filterColumns)) {
+        if (filtersContainPartOfMultiPartitionKeyMappingCols(model, olapContext.getFilterColumns())) {
             return segPartitionMap;
         }
 
-        RelOptCluster relOptCluster = olapContext.firstTableScan.getCluster();
+        RelOptCluster relOptCluster = olapContext.getFirstTableScan().getCluster();
         RexBuilder rexBuilder = relOptCluster.getRexBuilder();
         RexSimplify rexSimplify = new RexSimplify(relOptCluster.getRexBuilder(), RelOptPredicateList.EMPTY, true,
                 relOptCluster.getPlanner().getExecutor());
@@ -160,14 +170,13 @@ public class PartitionPruningRule extends PruningRule {
         List<TblColRef> partitionColRefs = model.getMultiPartitionDesc().getColumnRefs();
         for (MultiPartitionDesc.PartitionInfo partition : model.getMultiPartitionDesc().getPartitions()) {
             try {
-                QueryInterruptChecker.checkQueryCanceledOrThreadInterrupted(
-                    "Interrupted during pruning partitions!",
-                    "pruning partitions");
+                QueryInterruptChecker.checkQueryCanceledOrThreadInterrupted("Interrupted during pruning partitions!",
+                        "pruning partitions");
 
                 RexNode partitionRex = partitionToRexCall(partitionColRefs, partition.getValues(), rexBuilder,
-                        olapContext.allTableScans);
+                        olapContext.getAllTableScans());
                 RexNode mappingColRex = multiPartitionKeyMappingToRex(rexBuilder, partition.getValues(),
-                        model.getMultiPartitionKeyMapping(), olapContext.allTableScans);
+                        model.getMultiPartitionKeyMapping(), olapContext.getAllTableScans());
 
                 // simplifyAnds method can handle NOT_EQUAL operation
                 List<RexNode> nodes = Lists.newArrayList(simplifiedFilters, partitionRex, mappingColRex);
@@ -184,11 +193,13 @@ public class PartitionPruningRule extends PruningRule {
                     continue;
                 }
             } catch (InterruptedException ie) {
-                log.error(String.format("Interrupted on pruning partitions from %s!", partition.toString()), ie);
+                log.error(
+                        String.format(Locale.ROOT, "Interrupted on pruning partitions from %s!", partition.toString()),
+                        ie);
                 Thread.currentThread().interrupt();
                 throw new KylinRuntimeException(ie);
             } catch (UserStopQueryException | KylinTimeoutException e) {
-                log.error(String.format("Stop pruning partitions from %s!", partition.toString()), e);
+                log.error(String.format(Locale.ROOT, "Stop pruning partitions from %s!", partition.toString()), e);
                 throw e;
             } catch (Exception ex) {
                 log.warn("Multi-partition pruning error: ", ex);
@@ -209,13 +220,13 @@ public class PartitionPruningRule extends PruningRule {
     }
 
     private RexNode partitionToRexCall(List<TblColRef> partitionCols, String[] partitionValues, RexBuilder rexBuilder,
-            Set<OLAPTableScan> tableScans) {
+            Set<OlapTableScan> tableScans) {
         return transformColumns2RexCall(partitionCols, Collections.singletonList(Lists.newArrayList(partitionValues)),
                 rexBuilder, tableScans);
     }
 
     private RexNode multiPartitionKeyMappingToRex(RexBuilder rexBuilder, String[] partitionValues,
-            MultiPartitionKeyMapping multiPartitionKeyMapping, Set<OLAPTableScan> tableScans) {
+            MultiPartitionKeyMapping multiPartitionKeyMapping, Set<OlapTableScan> tableScans) {
         if (multiPartitionKeyMapping == null) {
             return rexBuilder.makeLiteral(true);
         }
@@ -229,7 +240,7 @@ public class PartitionPruningRule extends PruningRule {
     }
 
     private RexNode transformColumns2RexCall(List<TblColRef> columns, Collection<List<String>> values,
-            RexBuilder rexBuilder, Set<OLAPTableScan> tableScans) {
+            RexBuilder rexBuilder, Set<OlapTableScan> tableScans) {
         List<RexNode> orRexCalls = Lists.newArrayList();
         for (List<String> columnValue : values) {
             int size = columns.size();

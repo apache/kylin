@@ -43,8 +43,7 @@ public class EscapeTransformer implements IQueryTransformer {
             // remove the comment
             sql = new RawSqlParser(sql).parse().getStatementString();
         } catch (Throwable ex) {
-            logger.error("Something unexpected while CommentParser transforming the query, return original query", ex);
-            logger.error(sql);
+            logger.info("Something unexpected error in CommentParser when removing comments");
         }
         try {
             EscapeParser parser = new EscapeParser(dialect, sql);
@@ -52,9 +51,8 @@ public class EscapeTransformer implements IQueryTransformer {
             logger.debug("EscapeParser done parsing");
             return result;
         } catch (Throwable ex) {
-            logger.error("Something unexpected while EscapeTransformer transforming the query, return original query",
-                    ex);
-            logger.error(sql);
+            logger.info("Something unexpected error in EscapeTransformer, return the original query\n{}", sql);
+            logger.warn(ex.getMessage());
             return sql;
         }
     }

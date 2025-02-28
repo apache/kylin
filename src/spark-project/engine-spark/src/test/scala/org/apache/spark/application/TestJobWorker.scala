@@ -19,15 +19,16 @@
 package org.apache.spark.application
 
 import org.apache.hadoop.security.AccessControlException
-
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.SparkException
+import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.scheduler.KylinJobEventLoop
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.scalatest.BeforeAndAfter
+
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 class TestJobWorker extends SparderBaseFunSuite with BeforeAndAfter {
 
@@ -365,6 +366,54 @@ class TestJobWorker extends SparderBaseFunSuite with BeforeAndAfter {
     worker.stop()
     eventLoop.stop()
   }
+
+  test("post dict encode error event") {
+    val eventLoop = new KylinJobEventLoop
+    eventLoop.start()
+    val worker = new JobWorker(new HandleDictEncodeException(), Array.empty, eventLoop)
+    val latch = new CountDownLatch(2)
+    val receivePermissionDenied = new AtomicBoolean(false)
+    val listener = new KylinJobListener {
+      override def onReceive(event: KylinJobEvent): Unit = {
+        if (event.isInstanceOf[ResourceLack]) {
+          receivePermissionDenied.getAndSet(true)
+        }
+        latch.countDown()
+      }
+    }
+    eventLoop.registerListener(listener)
+    eventLoop.post(RunJob())
+    // receive RunJob and PermissionDenied
+    latch.await(60, TimeUnit.SECONDS)
+    assert(receivePermissionDenied.get())
+    eventLoop.unregisterListener(listener)
+    worker.stop()
+    eventLoop.stop()
+  }
+
+  test("post dict encode with runtime exception error event") {
+    val eventLoop = new KylinJobEventLoop
+    eventLoop.start()
+    val worker = new JobWorker(new HandleDictEncodeExceptionWarpWithRuntimeException(), Array.empty, eventLoop)
+    val latch = new CountDownLatch(2)
+    val receivePermissionDenied = new AtomicBoolean(false)
+    val listener = new KylinJobListener {
+      override def onReceive(event: KylinJobEvent): Unit = {
+        if (event.isInstanceOf[ResourceLack]) {
+          receivePermissionDenied.getAndSet(true)
+        }
+        latch.countDown()
+      }
+    }
+    eventLoop.registerListener(listener)
+    eventLoop.post(RunJob())
+    // receive RunJob and PermissionDenied
+    latch.await(30, TimeUnit.SECONDS)
+    assert(receivePermissionDenied.get())
+    eventLoop.unregisterListener(listener)
+    worker.stop()
+    eventLoop.stop()
+  }
 }
 
 
@@ -395,6 +444,29 @@ class HandlePermissionDeniedJobWithAccessControlException extends SparkApplicati
       throw new AccessControlException()
     } catch {
       case e: Exception => handleException(e)
+    }
+  }
+  override protected def doExecute(): Unit = {}
+}
+
+class HandleDictEncodeException extends SparkApplication {
+  override def execute(args: Array[String]): Unit = {
+    try {
+      throw new IllegalDictEncodeValueException("DFTable encode key:HelloWorld with error value:0")
+    } catch {
+      case e: Exception => handleException(e)
+    }
+  }
+  override protected def doExecute(): Unit = {}
+}
+
+
+class HandleDictEncodeExceptionWarpWithRuntimeException extends SparkApplication {
+  override def execute(args: Array[String]): Unit = {
+    try {
+      throw new IllegalDictEncodeValueException("DFTable encode key:HelloWorld with error value:0")
+    } catch {
+      case e: Exception => throw new RuntimeException(e)
     }
   }
   override protected def doExecute(): Unit = {}

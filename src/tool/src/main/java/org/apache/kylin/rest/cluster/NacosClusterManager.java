@@ -42,10 +42,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
-@ConditionalOnProperty(
-        value = {"spring.cloud.nacos.discovery.enabled"},
-        matchIfMissing = true
-)
+@ConditionalOnProperty(value = { "spring.cloud.nacos.discovery.enabled" }, matchIfMissing = true)
 @Component
 @Slf4j
 public class NacosClusterManager implements ClusterManager {
@@ -89,7 +86,7 @@ public class NacosClusterManager implements ClusterManager {
         }
         return servers;
     }
-    
+
     public ServerInfoResponse getServerById(String serverId) {
         List<ServerInfoResponse> servers = getServersByServerId(serverId);
         if (servers.isEmpty()) {
@@ -101,7 +98,7 @@ public class NacosClusterManager implements ClusterManager {
 
     public List<ServerInfoResponse> getServersByServerId(String serverId) {
         if (!SERVER_IDS.contains(serverId)) {
-            throw new KylinRuntimeException(String.format("Unexpected serverId: {%s}", serverId));
+            throw new KylinRuntimeException("Unexpected serverId: " + serverId);
         }
 
         List<ServerInfoResponse> servers = new ArrayList<>();

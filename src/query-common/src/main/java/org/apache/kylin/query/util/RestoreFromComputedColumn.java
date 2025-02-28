@@ -351,9 +351,9 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
 
             //skip the part after AS
             if (call instanceof SqlBasicCall && call.getOperator() instanceof SqlAsOperator) {
-                SqlNode[] operands = ((SqlBasicCall) call).getOperands();
-                if (operands != null && operands.length == 2) {
-                    operands[0].accept(this);
+                List<SqlNode> operands = call.getOperandList();
+                if (operands != null && operands.size() == 2) {
+                    operands.get(0).accept(this);
                 }
             } else {
                 List<SqlNode> operands = call.getOperandList();

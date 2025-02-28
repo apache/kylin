@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.routing;
 
+import static org.awaitility.Awaitility.await;
+
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +51,7 @@ import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.TypeSystem;
 import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.exception.UserStopQueryException;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.util.OlapContextTestUtil;
 import org.apache.spark.SparkConf;
@@ -64,8 +66,6 @@ import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
-
-import static org.awaitility.Awaitility.await;
 
 public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
 
@@ -95,8 +95,10 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
 
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         this.createTestMetadata("src/test/resources/ut_meta/multi_partition_date_type");
 
@@ -104,16 +106,21 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/multi_partition_date_type" };
+    }
+
     private List<NDataSegment> startRealizationPruner(NDataflowManager dataflowManager, String dataflowId, String sql,
-                                                      String project, KylinConfig kylinConfig) throws Exception {
+            String project, KylinConfig kylinConfig) throws Exception {
         NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext context = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext context = olapContexts.get(0);
         CalciteSchema rootSchema = new QueryExec(project, kylinConfig).getRootSchema();
         SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),
                 kylinConfig);
-        context.firstTableScan.getCluster().getPlanner().setExecutor(new RexExecutorImpl(dataContext));
-        Map<String, String> map = RealizationChooser.matchJoins(dataflow.getModel(), context, false, false);
+        context.getFirstTableScan().getCluster().getPlanner().setExecutor(new RexExecutorImpl(dataContext));
+        Map<String, String> map = context.matchJoins(dataflow.getModel(), false, false);
         context.fixModel(dataflow.getModel(), map);
         return new SegmentPruningRule().pruneSegments(dataflow, context);
     }
@@ -232,6 +239,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
     public void testCancelAndInterruptPruning() throws SqlParseException {
         val dataflowId = "3718b614-5191-2254-77e9-f4c5ca64e312";
         KylinConfig kylinConfig = getTestConfig();
+        overwriteSystemProp("kylin.query.filter-condition-count", "99999");
 
         String sql = "SELECT * FROM TEST_DB.DATE_TIMESTAMP_TABLE WHERE id = '121' AND (\n"
                 + "(TIMESTAMP_10 >= '2021-11-03')\n" + "AND (TIMESTAMP_10 <= '2021-11-04')\n" + ")\n" + "OR (\n"
@@ -250,20 +258,21 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
 
         String project = getProject();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(kylinConfig, project);
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext context = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext context = olapContexts.get(0);
 
         // append new segments
         Calendar calendar = Calendar.getInstance();
         calendar.set(2021, Calendar.DECEMBER, 6);
 
+        NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
         final int newSegmentCount = 100_000;
         NDataSegment[] newSegments = new NDataSegment[newSegmentCount];
         for (int i = 0; i < newSegmentCount; i++) {
             long startTime = calendar.getTimeInMillis();
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             long endTime = calendar.getTimeInMillis();
-            NDataSegment newSegment = new NDataSegment(null,
+            NDataSegment newSegment = new NDataSegment(dataflow,
                     new SegmentRange.TimePartitionedSegmentRange(startTime, endTime));
             newSegment.setStatus(SegmentStatusEnum.READY);
             newSegments[i] = newSegment;
@@ -273,13 +282,13 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         update.setToAddSegs(newSegments);
         dataflowManager.updateDataflowWithoutIndex(update);
 
-        NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
+        dataflow = dataflowManager.getDataflow(dataflowId);
 
         CalciteSchema rootSchema = new QueryExec(project, kylinConfig).getRootSchema();
         SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),
                 kylinConfig);
-        context.firstTableScan.getCluster().getPlanner().setExecutor(new RexExecutorImpl(dataContext));
-        Map<String, String> map = RealizationChooser.matchJoins(dataflow.getModel(), context, false, false);
+        context.getFirstTableScan().getCluster().getPlanner().setExecutor(new RexExecutorImpl(dataContext));
+        Map<String, String> map = context.matchJoins(dataflow.getModel(), false, false);
         context.fixModel(dataflow.getModel(), map);
 
         Assert.assertTrue("Unexpected size " + dataflow.getQueryableSegments().size(),
@@ -293,7 +302,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         testTimeout(dataflow, context);
     }
 
-    private void testCancelQuery(NDataflow dataflow, OLAPContext context) {
+    private void testCancelQuery(NDataflow dataflow, OlapContext context) {
         AtomicReference<Exception> exp = new AtomicReference<>(null);
         AtomicReference<Segments<NDataSegment>> res = new AtomicReference<>(null);
         AtomicReference<SlowQueryDetector> slowQueryDetector = new AtomicReference<>(null);
@@ -318,8 +327,8 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         slowQueryDetector.get().stopQuery("pruning");
 
         Assert.assertFalse(queryEntry.get().isAsyncQuery());
-        Assert.assertTrue(queryEntry.get().isStopByUser()
-                && queryEntry.get().getPlannerCancelFlag().isCancelRequested());
+        Assert.assertTrue(
+                queryEntry.get().isStopByUser() && queryEntry.get().getPlannerCancelFlag().isCancelRequested());
 
         try {
             t.join();
@@ -334,7 +343,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
                 exp.get() instanceof UserStopQueryException);
     }
 
-    private void testCancelQuery(NDataflow dataflow, OLAPContext context,
+    private void testCancelQuery(NDataflow dataflow, OlapContext context,
             Consumer<SlowQueryDetector.QueryEntry> updater) {
 
         AtomicReference<Exception> exp = new AtomicReference<>(null);
@@ -376,7 +385,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         Assert.assertTrue(exp.get().getMessage().contains("inconsistent states"));
     }
 
-    private void testCancelAsyncQuery(NDataflow dataflow, OLAPContext context) {
+    private void testCancelAsyncQuery(NDataflow dataflow, OlapContext context) {
         AtomicReference<Exception> exp = new AtomicReference<>(null);
         AtomicReference<Segments<NDataSegment>> res = new AtomicReference<>(null);
         AtomicReference<SlowQueryDetector> slowQueryDetector = new AtomicReference<>(null);
@@ -404,8 +413,8 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         slowQueryDetector.get().stopQuery(queryId);
 
         Assert.assertTrue(queryEntry.get().isAsyncQuery());
-        Assert.assertTrue(queryEntry.get().isStopByUser()
-                && queryEntry.get().getPlannerCancelFlag().isCancelRequested());
+        Assert.assertTrue(
+                queryEntry.get().isStopByUser() && queryEntry.get().getPlannerCancelFlag().isCancelRequested());
         try {
             t.join();
         } catch (InterruptedException e) {
@@ -419,7 +428,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
                 exp.get() instanceof UserStopQueryException);
     }
 
-    private void testInterrupt(NDataflow dataflow, OLAPContext context) {
+    private void testInterrupt(NDataflow dataflow, OlapContext context) {
         AtomicReference<Exception> exp = new AtomicReference<>(null);
         AtomicReference<Segments<NDataSegment>> res = new AtomicReference<>(null);
 
@@ -449,7 +458,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         Assert.assertTrue(exp.get().getCause() instanceof InterruptedException);
     }
 
-    private void testTimeout(NDataflow dataflow, OLAPContext context) {
+    private void testTimeout(NDataflow dataflow, OlapContext context) {
         AtomicReference<Exception> exp = new AtomicReference<>(null);
         AtomicReference<Segments<NDataSegment>> res = new AtomicReference<>(null);
         AtomicReference<SlowQueryDetector> slowQueryDetector = new AtomicReference<>(null);
@@ -620,6 +629,69 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
         List<NDataSegment> selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project,
                 kylinConfig);
         Assert.assertEquals(0, selectSegmentList.size());
+    }
+
+    @Test
+    public void testPruningByDimRange() throws Exception {
+        KylinConfig kylinConfig = getTestConfig();
+        String project = getProject();
+        val dataflowId = "1e12e297-ae63-4019-5e05-f571174ea157";
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+
+        // happy pass
+        String sql = "SELECT ID2 from TEST_DB.TEST_MEASURE WHERE ID2 = 332342343";
+        List<NDataSegment> selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project,
+                kylinConfig);
+        Assert.assertEquals(5, selectSegmentList.size());
+
+        overwriteSystemProp("kylin.query.dimension-range-filter-enabled", "true");
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        // because dimension_range_info_map is empty, its segments will not be pruned
+        Assert.assertEquals(2, selectSegmentList.size());
+
+        // test filter column is empty
+        sql = "SELECT * from TEST_DB.TEST_MEASURE";
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        Assert.assertEquals(5, selectSegmentList.size());
+
+        // test min max is null, the condition {FLAG = 'TRUE'} will be ignored
+        // Since the min and max of the FLAG column in the specified segment are null
+        sql = "SELECT * from TEST_DB.TEST_MEASURE WHERE TIME1 = '2012-03-31' AND FLAG = 'TRUE'";
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        Assert.assertEquals(1, selectSegmentList.size());
+
+        // test time partition filter is always false
+        sql = "SELECT * from TEST_DB.TEST_MEASURE WHERE time1 > '2014-04-04'";
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        Assert.assertEquals(0, selectSegmentList.size());
+
+        sql = "SELECT * from TEST_DB.TEST_MEASURE WHERE ID1 = 10000000172 AND ID2 = 332342344 AND ID3 = 1243 AND "
+                + "ID4 = 19 AND PRICE1 = 31.336 AND PRICE2 = 123424.246 AND PRICE3 = 1436.24222343 AND PRICE5 = 7 AND "
+                + "PRICE6 = 13 AND PRICE7 = 5 AND NAME1 = 'China' AND NAME2 = '中国深圳' AND NAME3 = '中国北京' AND "
+                + "NAME4 = 14 AND TIME1 = '2014-04-03' AND TIME2 = '2012-04-02' AND FLAG = FALSE";
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        Assert.assertEquals(0, selectSegmentList.size());
+    }
+
+    @Test
+    public void testPruningWithDifferentConjunctions() throws Exception {
+        KylinConfig kylinConfig = getTestConfig();
+        String project = getProject();
+        val dataflowId = "1e12e297-ae63-4019-5e05-f571174ea157";
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+
+        // < MaxFilterConditionCnt
+        overwriteSystemProp("kylin.query.filter-condition-count", "15");
+        String sql = "SELECT NAME1 from TEST_DB.TEST_MEASURE where NAME1 in ('1137', '1153', '1173')";
+        List<NDataSegment> selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project,
+                kylinConfig);
+        Assert.assertEquals(5, selectSegmentList.size());
+
+        // > MaxFilterConditionCnt
+        overwriteSystemProp("kylin.query.filter-condition-count", "5");
+        sql = "SELECT NAME1 from TEST_DB.TEST_MEASURE where NAME1 in ('1137', '1153', '1173', '999999902') and NAME2 in ('Anhui', 'Jiangsu', 'Shanghai')";
+        selectSegmentList = startRealizationPruner(dataflowManager, dataflowId, sql, project, kylinConfig);
+        Assert.assertEquals(5, selectSegmentList.size());
     }
 
     @Override

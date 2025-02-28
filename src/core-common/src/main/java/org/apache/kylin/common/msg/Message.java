@@ -24,15 +24,6 @@ import java.util.Locale;
 import org.apache.kylin.common.Singletons;
 
 public class Message {
-    private static final String UNKNOWN_ERROR = "UNKNOWN ERROR";
-    private static final String SECOND_STORAGE_PROJECT_ENABLED = "The project %s does not have tiered storage enabled.";
-    private static final String SECOND_STORAGE_MODEL_ENABLED = "The model %s does not have tiered storage enabled.";
-    private static final String SECOND_STORAGE_SEGMENT_WITHOUT_BASE_INDEX = "The base table index is missing in the segments, please add and try again.";
-    private static final String SECOND_STORAGE_DELETE_NODE_FAILED = "Node %s has data, size is %d bytes";
-    private static final String SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID = "The datatype is invalid. Only support LowCardinality(Nullable(String)) or Nullable(String) at the moment.";
-    private static final String FORCED_TO_TIEREDSTORAGE_AND_FORCETO_INDEX = "When force_to_index=ture, the query cannot pushdown when using tiered storage fails, forcedToTieredStorage=1 or conf=1 is invalid, please modify and try again";
-    private static final String FORCED_TO_TIEREDSTORAGE_RETURN_ERROR = "Query failed. Tiered storage is unavailable, please fix and try again.";
-    private static final String FORCED_TO_TIEREDSTORAGE_INVALID_PRARAMETER = "invalid parameters, please fix and try again.";
     private static final String DISABLE_PUSHDOWN_PROMPT = "You should turn on pushdown button if you want to pushdown.";
     private static final String NON_EXISTEN_MODEL = "Model %s doesn't exist. Please confirm and try again later.";
     private static final String LACK_PROJECT = "Please fill in the project parameters.";
@@ -55,15 +46,16 @@ public class Message {
     private static final String DDL_DROP_ERROR = "Only support drop view";
     private static final String DDL_TABLE_NOT_LOADED = "Table '%s' is not loaded into the data source ";
     private static final String DDL_TABLE_NOT_SUPPORT = "Only support hive table, but '%s' is not hive table";
-    private static final String DDL_DATABASE_ACCESSN_DENIED = "The user does not have the database permission to "
-        + "which the view belongs.";
-    private static final String DDL_LOGICAL_VIEW_HAS_USED = "Table %s has already been loaded in project %s, please "
-        + "unload it before deleting this table.";
-    private static final String DDL_LOGICAL_VIEW_SOURCETABLE_ERROR = "Source table %s is a logical view and is not "
-        + "allowed to be used in SQL";
+    private static final String DDL_DATABASE_ACCESSN_DENIED = "The user does not have the database permission to which the view belongs.";
+    private static final String DDL_LOGICAL_VIEW_HAS_USED = "Table %s has already been loaded in project %s, please unload it before deleting this table.";
+    private static final String DDL_LOGICAL_VIEW_SOURCETABLE_ERROR = "Source table %s is a logical view and is not allowed to be used in SQL";
     private static final String DDL_RESTRICT = "Only support %s syntax";
-    private static final String LOAD_LOGICAL_VIEW_ERROR = "Can't load table %s, table can only be loaded in "
-        + "project %s";
+    private static final String LOAD_LOGICAL_VIEW_ERROR = "Can't load table %s, table can only be loaded in project %s";
+
+    public static final String LOAD_GLUTEN_CACHE_EXECUTE_ERROR = "Load gluten cache execute has error. %s";
+    public static final String LOAD_GLUTEN_CACHE_ROUTE_ERROR = "route cache request has error, message is [%s]";
+    public static final String LOAD_GLUTEN_CACHE_ROUTE_EXECUTE_ERROR = "route cache has error, some query node cache failed";
+    public static final String LOAD_GLUTEN_CACHE_ROUTE_RESPONSE_EMPTY = "route cache request has error, response body is empty";
 
     protected Message() {
 
@@ -182,6 +174,30 @@ public class Message {
             return "Can’t select ImportType \"%s\" for the model \"%s\". Please select \"UN_IMPORT\" (or \""
                     + optionalType + "\").";
         }
+    }
+
+    public String getCreateInternalTableFailed() {
+        return "Failed to create internal table for table \"%s\". ";
+    }
+
+    public String getInvalidInternalTableParameters() {
+        return "Invalid internal table parameters.";
+    }
+
+    public String getGlutenDisabled() {
+        return "Gluten is disabled in query function, please enable it and try again.";
+    }
+
+    public String getDatePartitionColumnNotFound() {
+        return "Date format partition column must be set in an incremental load table.";
+    }
+
+    public String getIncorrectDateformat() {
+        return "Date partition format \"%s\" is not correct.";
+    }
+
+    public String getPartitionColumnIgnored_WARNING() {
+        return "Partition columns are ignored when converting multiple tables to internal tables";
     }
 
     public String getCanNotOverwriteModel() {
@@ -355,7 +371,7 @@ public class Message {
         long remainingHour = ((seconds - remainingSeconds - remainingMinutes * 60) / 3600) % 24;
         long remainingDay = (seconds - remainingSeconds - remainingMinutes * 60 - remainingHour * 3600) / (3600 * 24);
         String formatTimeMessage = formatTime(remainingDay, remainingHour, remainingMinutes, remainingSeconds);
-        return formatTimeMessage.length() > 0 ? formatTimeMessage.substring(0, formatTimeMessage.length() - 1)
+        return !formatTimeMessage.isEmpty() ? formatTimeMessage.substring(0, formatTimeMessage.length() - 1)
                 : formatTimeMessage;
     }
 
@@ -397,10 +413,6 @@ public class Message {
         return "The project name \"%s\" already exists. Please rename it.";
     }
 
-    public String getProjectDropFailedSecondStorageEnabled() {
-        return "Can't delete project \"%s\", please disable tiered storage firstly.";
-    }
-
     public String getProjectDropFailedJobsNotKilled() {
         return "Can't delete project \"%s\", please discard the related job and try again.";
     }
@@ -430,6 +442,66 @@ public class Message {
         return "Can’t find table \"%s\". Please check and try again.";
     }
 
+    public String getInternalTableNotFound() {
+        return "Can’t find internal table \"%s\". Please check and try again.";
+    }
+
+    public String getInternalTableEmpty() {
+        return "Can't update non empty internal table \"%s\", Please check and try again.";
+    }
+
+    public String getSameInternalTableNameExist() {
+        return "Internal table %s already exists, please choose a different name.";
+    }
+
+    public String getInternalTablePath() {
+        return "Failed to create internal table location.";
+    }
+
+    public String getInternalTableUnpartitioned() {
+        return "Incremental build is not supported for unPartitioned table.";
+    }
+
+    public String getNonTimeInternalTableIncrementalBuild() {
+        return "Non-time partition table do not support incremental partition refresh. Please specify partitions to refresh.";
+    }
+
+    public String getTimeOutOfRange() {
+        return "current time range is out of data range, please check again.";
+    }
+
+    public String getTimeRangeOverlap() {
+        return "Unable to submit task, time range overlaps with the task currently being built, please check again.";
+    }
+
+    public String getInternalTableNullPartitionFormat() {
+        return "date_partition_format can not be null, please check again.";
+    }
+
+    public String getInternalTableNoDataCol() {
+        return "couldn't find date_col present in partition_cols, please check again. ";
+    }
+
+    public String getTimeExceedPartitionRange() {
+        return "Refresh time exceed loaded range :\"%s\" ~ \"%s\", Please check and try again. ";
+    }
+
+    public String getInternalTablePartitionNotFound() {
+        return "Can't find internal table partitions: %s. Please check and try again.";
+    }
+
+    public String getFailedReloadNoneEmptyInternalTable() {
+        return "Can't reload none empty internal table \"%s\". Please truncate table first and try again.";
+    }
+
+    public String getNotInternalTable() {
+        return "Table \"%s\" is not an internal table. Please check and try again.";
+    }
+
+    public String getInternalTableDisabled() {
+        return "InternalTable is disabled, please enable it and try again.";
+    }
+
     public String getSamplingFailedForIllegalTableName() {
         return "The name of table for sampling is invalid. Please enter a table name like “database.table”. ";
     }
@@ -452,6 +524,10 @@ public class Message {
 
     public String getQueryTooManyRunning() {
         return "Can’t submit query at the moment as there are too many ongoing queries. Please try again later, or contact project admin to adjust configuration.";
+    }
+
+    public String getGlutenCacheTooManyRunning() {
+        return "Can’t submit cache command at the moment as there are too many ongoing commands. Please try again later, or contact project admin to adjust configuration.";
     }
 
     public String getAsyncQueryTooManyRunning() {
@@ -565,6 +641,46 @@ public class Message {
         return "The recommendation frequency cannot be empty";
     }
 
+    public String getAutoCompleteModeNotValid() {
+        return "ABSOLUTE or RELATIVE should be selected for auto-completion.";
+    }
+
+    public String getSemiAutoNotEnabled() {
+        return "You need to enable semi-auto-mode first to enable auto-index-plan";
+    }
+
+    public String getAutoIndexPlanNotEnabled() {
+        return "You need to enable auto-index-plan before job submission";
+    }
+
+    public String getInvalidDateUnit() {
+        return "The expected date unit is YEAR/WEEK/MONTH/DAY while the input is %s.";
+    }
+
+    public String getWhiteListNotInExistingIndex() {
+        return "The indexes %s to be whitelisted is not in the list of existing indexes.";
+    }
+
+    public String getIndexesNotInWhiteList() {
+        return "The indexes %s to be deleted from the whitelist is not in the whitelist.";
+    }
+
+    public String getNotAllowedMultipleAutoIndexPlanJob() {
+        return "Multiple auto-index-plan job at the same time.";
+    }
+
+    public String getInstantInitNotAllowed() {
+        return "The model already has data and is not allowed to set instant-init-index-num.";
+    }
+
+    public String getInstantInitTooMuch() {
+        return "Quickly create up to %d indexes.";
+    }
+
+    public String getInstantInitTooLittle() {
+        return "Can't be less than the current index number %d.";
+    }
+
     public String getSqlNumberExceedsLimit() {
         return "Up to %s SQLs could be imported at a time";
     }
@@ -579,77 +695,8 @@ public class Message {
 
     // Query statistics
 
-    // License
-    public String getLicenseErrorPre() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseErrorSuff() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseOverdueTrial() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseNodesExceed() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseNodesNotMatch() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseOverVolume() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseNoLicense() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getlicenseWrongCategory() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseInvalidLicense() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseMismatchLicense() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseNotEffective() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseExpired() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseSourceOverCapacity() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseProjectSourceOverCapacity() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseNodesOverCapacity() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getLicenseSourceNodesOverCapacity() {
-        return UNKNOWN_ERROR;
-    }
-
-    public String getlicenseProjectSourceNodesOverCapacity() {
-        return UNKNOWN_ERROR;
-    }
-
     public String getLowLevelLicenseMessage() {
-        return "Tiered Storage cannot be used. Please upgrade to Kyligence Premium version if you want to use the function.";
+        return "Please upgrade to Kyligence Premium version if you want to use the function.";
     }
 
     public String getRestartNoticeMessage() {
@@ -886,6 +933,10 @@ public class Message {
         return "Can’t find the partition column. Please check and try again.";
     }
 
+    public String getDatePartitionFormatEmpty() {
+        return "Date_partition_format can't be empty when partition columns is not empty. Please check and try again.";
+    }
+
     public String getPartitionColumnStartError() {
         return "Can’t start. Please ensure the time partition column is a timestamp column and the time format is valid.";
     }
@@ -908,6 +959,10 @@ public class Message {
 
     public String getTableNameCannotEmpty() {
         return "Table name can’t be empty. Please check and try again.";
+    }
+
+    public String getTableOrDatabaseNameCannotEmpty() {
+        return "Table or database can not be null, please check again.";
     }
 
     public String getFileNotExist() {
@@ -1272,50 +1327,6 @@ public class Message {
         return "Start Time,Duration,Query ID,SQL Statement,Answered by,Query Status,Query Node,Submitter,Query Message\n";
     }
 
-    public String getSecondStorageJobExists() {
-        return "Can’t turn off the tiered storage at the moment. Model “%s” has an ongoing job, Please try again later.\\n";
-    }
-
-    public String getSecondStorageConcurrentOperate() {
-        return "Another tiered storage task is running. Please try again later.";
-    }
-
-    public String getSecondStorageProjectJobExists() {
-        return "Can’t turn off the tiered storage at the moment. Project “%s” has an ongoing job, Please try again later.\\n";
-    }
-
-    public String getSecondStorageProjectEnabled() {
-        return SECOND_STORAGE_PROJECT_ENABLED;
-    }
-
-    public String getSecondStorageModelEnabled() {
-        return SECOND_STORAGE_MODEL_ENABLED;
-    }
-
-    public String getSecondStorageSegmentWithoutBaseIndex() {
-        return SECOND_STORAGE_SEGMENT_WITHOUT_BASE_INDEX;
-    }
-
-    public String getSecondStorageDeleteNodeFailed() {
-        return SECOND_STORAGE_DELETE_NODE_FAILED;
-    }
-
-    public String getInvalidLowCardinalityDataType() {
-        return SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID;
-    }
-
-    public String getJobRestartFailed() {
-        return "Tiered storage task doesn't support restart.\n";
-    }
-
-    public String getSegmentDropFailed() {
-        return "Segment can't remove. There is an ongoing load data job of tiered storage. Please try again later.\n";
-    }
-
-    public String getJobResumeFailed() {
-        return "Tiered storage task can't resume. Please try again later.\n";
-    }
-
     public String getJobPauseFailed() {
         return "This type of task does not support pause operation.";
     }
@@ -1376,36 +1387,8 @@ public class Message {
         return "Cannot force the query to pushdown and index at the same time. Only one of the parameter “forcedToPushDown“ and “forced_to_index” could be used. Please check and try again.";
     }
 
-    public String getForcedToTieredstorageAndForceToIndex() {
-        return FORCED_TO_TIEREDSTORAGE_AND_FORCETO_INDEX;
-    }
-
-    public String getForcedToTieredstorageReturnError() {
-        return FORCED_TO_TIEREDSTORAGE_RETURN_ERROR;
-    }
-
-    public String getForcedToTieredstorageInvalidParameter() {
-        return FORCED_TO_TIEREDSTORAGE_INVALID_PRARAMETER;
-    }
-
     public String getParameterEmpty() {
         return PARAMETER_EMPTY;
-    }
-
-    public String getSecondStorageNodeNotAvailable() {
-        return "Can't add node. The node does not exist or has been used by other project, please modify and try again.";
-    }
-
-    public String getBaseTableIndexNotAvailable() {
-        return "Can’t turn on the tiered storage at the moment. Please add base table index first.";
-    }
-
-    public String getPartitionColumnNotAvailable() {
-        return "Can’t turn on the tiered storage at the moment. Please add the time partition column as dimension, and update the base table index.";
-    }
-
-    public String getProjectLocked() {
-        return "Data migration is in progress in the current project's tiered storage, please try again later.";
     }
 
     public String getFixStreamingSegment() {
@@ -1492,6 +1475,10 @@ public class Message {
         return "%s is not integer in range [%s - %s] ";
     }
 
+    public String getInvalidDateFormat() {
+        return "The expected date format is %s while the input is %s";
+    }
+
     public String getlDapUserDataSourceConnectionFailed() {
         return "The LDAP server is abnormal. Please check the user data source and try again.";
     }
@@ -1556,34 +1543,6 @@ public class Message {
         return String.format(Locale.ROOT, "Cannot find target segment, and missing segment id: %s", missingSegIds);
     }
 
-    public String getSecondStorageIndexNotSupport() {
-        return "Partitioning columns are not supported for Order by and Skipping Index columns";
-    }
-
-    public String getSecondStorageIndexNotAllowNullable() {
-        return "Order by / Skipping Index doesn't support nullable column type.";
-    }
-
-    public String getSecondStorageOrderByHasData() {
-        return "The index has already loaded the tiered storage data, and does not support modifying the Order by column. If the change is necessary ,please clear the tiered storage data first.";
-    }
-
-    public String getSecondStorageLayoutNotExist() {
-        return "Layout id %s is not exist";
-    }
-
-    public String getSecondStorageLayoutNotBaseTableIndex() {
-        return "Layout id %s is not base table index which is equal to tiered storage.";
-    }
-
-    public String getSecondStorageNotSupportType(String dataType) {
-        return String.format(Locale.ROOT, "Skipping Index doesn‘t support column type '%s'.", dataType);
-    }
-
-    public String getSecondStorageNodeNotAvailable(String nodeName) {
-        return String.format(Locale.ROOT, "Tiered storage node '%s' not available.", nodeName);
-    }
-
     public String getDDLUnSupported() {
         return DDL_UNSUPPORTED;
     }
@@ -1638,7 +1597,7 @@ public class Message {
     }
 
     public String getIllegalNegative(String parameter) {
-        return String.format(PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
+        return String.format(Locale.ROOT, PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
 
     }
 
@@ -1649,5 +1608,21 @@ public class Message {
 
     public String getRedisInitFailed() {
         return "Redis init failed";
+    }
+
+    public String getModelConfigExist() {
+        return "'%s' model config not exist, please check model type.";
+    }
+
+    public String getModelConfigKeyNotExist() {
+        return "{%s} is not set, please add and try again.";
+    }
+
+    public String getModelConfigKeyExist() {
+        return "The parameter {%s} already exists, please modify and try again.";
+    }
+
+    public String getModelStorageUpdateFailed() {
+        return "Update model storage failed, please make sure model not contain segment.";
     }
 }

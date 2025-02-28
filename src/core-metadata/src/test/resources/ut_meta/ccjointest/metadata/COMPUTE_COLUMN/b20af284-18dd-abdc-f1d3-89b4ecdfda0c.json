@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_9",
+  "expression" : "TIMESTAMPDIFF(MINUTE, CALCS.TIME1, CALCS.TIME0)",
+  "innerExpression" : "TIMESTAMPDIFF('MINUTE', CALCS.TIME1, CALCS.TIME0)",
+  "datatype" : "BIGINT",
+  "comment" : "Auto suggested from: TIMESTAMPDIFF(MINUTE, CALCS.TIME1, CALCS.TIME0)",
+  "uuid" : "b20af284-18dd-abdc-f1d3-89b4ecdfda0c",
+  "project" : "tdvt"
+}

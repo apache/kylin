@@ -1,0 +1,53 @@
+{
+ 
+  "uuid" : "338a3325-a947-46d1-9ece-e079b3b8d4a6",
+  "name" : "TEST_SITES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SITE_ID",
+    "datatype" : "int",
+    "index": "T"
+  }, {
+    "id" : "2",
+    "name" : "SITE_NAME",
+    "datatype" : "string",
+    "index": "T"
+  }, {
+    "id" : "3",
+    "name" : "SITE_DOMAIN_CODE",
+    "datatype" : "string"
+  }, {
+    "id" : "4",
+    "name" : "DFAULT_LSTG_CURNCY",
+    "datatype" : "int"
+  }, {
+    "id" : "5",
+    "name" : "EOA_EMAIL_CSTMZBL_SITE_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "6",
+    "name" : "SITE_CNTRY_ID",
+    "datatype" : "int",
+    "index": "T"
+  }, {
+    "id" : "7",
+    "name" : "CRE_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "8",
+    "name" : "SITES_UPD_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "9",
+    "name" : "CRE_USER",
+    "datatype" : "string"
+  }, {
+    "id" : "10",
+    "name" : "SITES_UPD_USER",
+    "datatype" : "string"
+  } ],
+  "database" : "edw",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "storage_v3_test"
+}

@@ -1,0 +1,127 @@
+{
+  "uuid" : "fd344a56-297e-459a-a15d-7ed180a56d37",
+  "last_modified" : 1497607294843,
+  "version" : "2.0.0",
+  "name" : "STORE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "S_STORE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "S_STORE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "S_REC_START_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "S_REC_END_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "S_CLOSED_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "S_STORE_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "S_NUMBER_EMPLOYEES",
+    "datatype" : "integer"
+  }, {
+    "id" : "8",
+    "name" : "S_FLOOR_SPACE",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "S_HOURS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "S_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "S_MARKET_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "12",
+    "name" : "S_GEOGRAPHY_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "S_MARKET_DESC",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "S_MARKET_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "S_DIVISION_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "16",
+    "name" : "S_DIVISION_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "S_COMPANY_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "18",
+    "name" : "S_COMPANY_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "S_STREET_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "20",
+    "name" : "S_STREET_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "21",
+    "name" : "S_STREET_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "22",
+    "name" : "S_SUITE_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "23",
+    "name" : "S_CITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "24",
+    "name" : "S_COUNTY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "25",
+    "name" : "S_STATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "26",
+    "name" : "S_ZIP",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "27",
+    "name" : "S_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "28",
+    "name" : "S_GMT_OFFSET",
+    "datatype" : "double"
+  }, {
+    "id" : "29",
+    "name" : "S_TAX_PRECENTAGE",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

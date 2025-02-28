@@ -1,0 +1,205 @@
+{
+  "uuid" : "009799c1-7964-43af-b732-441bd3a201f6",
+  "last_modified" : 1497950019318,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.WEB_SITE",
+  "last_build_job_id" : "4a6f920c-bf9c-454b-97bf-b5359b49bd79",
+  "columns_stats" : [ {
+    "max_value" : "30",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 30
+  }, {
+    "max_value" : "AAAAAAAAOAAAAAAA",
+    "min_value" : "AAAAAAAAABAAAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 15
+  }, {
+    "max_value" : "2001-08-16",
+    "min_value" : "1997-08-16",
+    "max_length_value" : "1997-08-16",
+    "min_length_value" : "1997-08-16",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2001-08-15",
+    "min_value" : "",
+    "max_length_value" : "2000-08-15",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "site_4",
+    "min_value" : "site_0",
+    "max_length_value" : "site_0",
+    "min_length_value" : "site_0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "2450807",
+    "min_value" : "2450577",
+    "max_length_value" : "2450807",
+    "min_length_value" : "2450807",
+    "null_count" : 0,
+    "cardinality" : 14
+  }, {
+    "max_value" : "2448956",
+    "min_value" : "2446944",
+    "max_length_value" : "2447148",
+    "min_length_value" : "2447148",
+    "null_count" : 5,
+    "cardinality" : 10
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Unknown",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "Unknown",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "William Carter",
+    "min_value" : "Adam Stonge",
+    "max_length_value" : "Charles Castillo",
+    "min_length_value" : "John Ward",
+    "null_count" : 0,
+    "cardinality" : 22
+  }, {
+    "max_value" : "6",
+    "min_value" : "1",
+    "max_length_value" : "4",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "Wide, final representat",
+    "min_value" : "About rural reasons shall no",
+    "max_length_value" : "Also difficult women relax. Raw solutions exclude",
+    "min_length_value" : "New, important system",
+    "null_count" : 0,
+    "cardinality" : 22
+  }, {
+    "max_value" : "Well similar decisions used to keep hardly democratic, personal priorities.",
+    "min_value" : "Acres see else children. Mutual too",
+    "max_length_value" : "Often well-known police can hand acres. Healthy, sensible problems make more silent recordings",
+    "min_length_value" : "Political affairs ought to",
+    "null_count" : 0,
+    "cardinality" : 18
+  }, {
+    "max_value" : "Zachery Oneil",
+    "min_value" : "Albert Leung",
+    "max_length_value" : "Jeffrey Campbell",
+    "min_length_value" : "Joe George",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "6",
+    "min_value" : "1",
+    "max_length_value" : "6",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "pri",
+    "min_value" : "able",
+    "max_length_value" : "cally",
+    "min_length_value" : "ese",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "973",
+    "min_value" : "184",
+    "max_length_value" : "358",
+    "min_length_value" : "51",
+    "null_count" : 0,
+    "cardinality" : 18
+  }, {
+    "max_value" : "Wilson Ridge",
+    "min_value" : "11th ",
+    "max_length_value" : "Dogwood Sunset",
+    "min_length_value" : "7th ",
+    "null_count" : 0,
+    "cardinality" : 30
+  }, {
+    "max_value" : "Wy",
+    "min_value" : "Avenue",
+    "max_length_value" : "Boulevard",
+    "min_length_value" : "Ln",
+    "null_count" : 0,
+    "cardinality" : 15
+  }, {
+    "max_value" : "Suite U",
+    "min_value" : "Suite 100",
+    "max_length_value" : "Suite 330",
+    "min_length_value" : "Suite R",
+    "null_count" : 0,
+    "cardinality" : 23
+  }, {
+    "max_value" : "Midway",
+    "min_value" : "Fairview",
+    "max_length_value" : "Fairview",
+    "min_length_value" : "Midway",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Williamson County",
+    "min_value" : "Williamson County",
+    "max_length_value" : "Williamson County",
+    "min_length_value" : "Williamson County",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "TN",
+    "min_value" : "TN",
+    "max_length_value" : "TN",
+    "min_length_value" : "TN",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "35709",
+    "min_value" : "31904",
+    "max_length_value" : "31904",
+    "min_length_value" : "31904",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "United States",
+    "min_value" : "United States",
+    "max_length_value" : "United States",
+    "min_length_value" : "United States",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "-5.0",
+    "min_value" : "-5.0",
+    "max_length_value" : "-5.0",
+    "min_length_value" : "-5.0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "0.12",
+    "min_value" : "0.0",
+    "max_length_value" : "0.02",
+    "min_length_value" : "0.1",
+    "null_count" : 0,
+    "cardinality" : 10
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAACAAAAAAA", "AAAAAAAAEAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAIAAAAAAA", "AAAAAAAAKAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAOAAAAAAA", "AAAAAAAAABAAAAAA", "AAAAAAAADBAAAAAA" ], [ "1997-08-16", "2000-08-16", "1999-08-17", "1997-08-16", "2000-08-16", "1999-08-17", "1997-08-16", "2000-08-16", "1999-08-17", "1997-08-16" ], [ "", "", "2001-08-15", "", "", "2001-08-15", "", "", "2001-08-15", "" ], [ "site_0", "site_0", "site_0", "site_1", "site_1", "site_1", "site_2", "site_2", "site_2", "site_3" ], [ "2450807", "2450798", "2450781", "2450756", "2450747", "2450730", "2450705", "2450696", "2450679", "2450654" ], [ "", "2447148", "2448956", "", "2448922", "2447080", "", "2447046", "2448854", "" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "Ronald Shaffer", "Tommy Jones", "Harold Wilson", "Moses Hicks", "Marshall Conner", "Dwight Aaron", "John Thomas", "James Austin", "Charles Castillo", "Jimmy Pope" ], [ "4", "3", "5", "4", "6", "3", "2", "5", "5", "2" ], [ "Grey lines ought to result indeed centres. Tod", "Completely excellent things ought to pro", "Wide, final representat", "New homes comment great. Possibilities re", "Labour cars withdraw big, full issues", "Right efforts must no", "About rural reasons shall no", "Necessary, intermediat", "New, different roads know standa", "Leaders make as yet particular, desperate machi" ], [ "Well similar decisions used to keep hardly democratic, personal priorities.", "Particular, common seasons shall not indicate fully more single decisions; ", "Deeply small books cannot extend all similar, clear historians. Free, new camp", "Enough small animals emerge at a holidays. Managers expect only.", "Physical witnesses might not agree really already existing prayers. Loyal, possible m", "Companies grow cells. Apart true eyes u", "Political affairs ought to", "Associations may kill sole parents. Red, pink results rise nearly", "Basic others will not appreciate so late, potential chil", "Home new thoughts must get however thoughts; technical, oth" ], [ "Joe George", "David Myers", "Edward George", "William Reyes", "Scott Bryant", "Casey Banks", "James Brewer", "Zachery Oneil", "Keith Frazier", "Eldon Snow" ], [ "6", "4", "1", "4", "1", "2", "5", "5", "6", "5" ], [ "cally", "ese", "ought", "ese", "anti", "able", "anti", "anti", "cally", "anti" ], [ "51", "753", "805", "784", "835", "409", "973", "887", "841", "184" ], [ "Dogwood Sunset", "7th ", "2nd 3rd", "Central ", "11th ", "Cedar ", "Cherry Main", "Broadway South", "Wilson Ridge", "Hill 5th" ], [ "Ln", "Pkwy", "Road", "Dr.", "Cir.", "Parkway", "Boulevard", "Road", "Way", "Parkway" ], [ "Suite 330", "Suite 210", "Suite R", "Suite Q", "Suite R", "Suite 350", "Suite D", "Suite 260", "Suite 20", "Suite 280" ], [ "Midway", "Midway", "Fairview", "Fairview", "Midway", "Fairview", "Midway", "Midway", "Midway", "Midway" ], [ "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County" ], [ "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN" ], [ "31904", "31904", "31904", "35709", "31904", "35709", "31904", "31904", "31904", "31904" ], [ "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States" ], [ "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0" ], [ "0.1", "0.02", "0.08", "0.12", "0.07", "0.07", "0.07", "0.08", "0.04", "0.04" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "30",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "5946",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/web_site",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

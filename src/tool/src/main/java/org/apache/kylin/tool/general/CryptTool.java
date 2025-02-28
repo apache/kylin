@@ -20,10 +20,10 @@ package org.apache.kylin.tool.general;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.kylin.common.util.ExecutableApplication;
-import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.EncryptUtil;
+import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 

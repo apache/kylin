@@ -18,10 +18,9 @@
 package org.apache.kylin.streaming.app;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public abstract class StreamingBuildApplication extends StreamingApplication {
 

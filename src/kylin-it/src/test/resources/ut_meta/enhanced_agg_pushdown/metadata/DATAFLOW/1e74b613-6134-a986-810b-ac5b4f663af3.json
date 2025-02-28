@@ -1,0 +1,22 @@
+{
+  "uuid" : "1e74b613-6134-a986-810b-ac5b4f663af3",
+  "last_modified" : 1667301334650,
+  "create_time" : 1665388271300,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 71,
+  "last_query_time" : 1667299463282,
+  "layout_query_hit_count" : {
+    "1" : {
+      "1666454400000" : 4,
+      "1666540800000" : 2,
+      "1666627200000" : 15,
+      "1666713600000" : 23,
+      "1667232000000" : 27
+    }
+  },
+  "project" : "test_agg_pushdown",
+  "segment_uuids" : [ "12e442b5-eee2-ca6d-90e2-bcf02406a223" ]
+}

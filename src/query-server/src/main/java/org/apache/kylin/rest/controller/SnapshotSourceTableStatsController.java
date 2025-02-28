@@ -18,9 +18,11 @@
 
 package org.apache.kylin.rest.controller;
 
-import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+
+import javax.validation.Valid;
+
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.request.SnapshotSourceTableStatsRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -34,10 +36,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import io.swagger.annotations.ApiOperation;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -48,7 +49,7 @@ public class SnapshotSourceTableStatsController extends NBasicController {
     @Qualifier("snapshotSourceTableStatsService")
     private SnapshotSourceTableStatsService snapshotSourceTableStatsService;
 
-    @ApiOperation(value = "check source table stats", tags = {"Apollo" })
+    @ApiOperation(value = "check source table stats", tags = { "Apollo" })
     @PostMapping(value = "source_table_stats")
     @ResponseBody
     public EnvelopeResponse<SnapshotSourceTableStatsResponse> sourceTableStats(

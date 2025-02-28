@@ -52,7 +52,8 @@ public class KylinConfigExt extends KylinConfig {
         this.base = base;
         this.overrides = BCC.check(overrides);
         // overrides > env > properties
-        this.strSubstitutor = new StrSubstitutor(new CompositeMapView(this.properties, STATIC_SYSTEM_ENV, this.overrides));
+        this.strSubstitutor = new StrSubstitutor(
+                new CompositeMapView(this.properties, STATIC_SYSTEM_ENV, this.overrides));
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {

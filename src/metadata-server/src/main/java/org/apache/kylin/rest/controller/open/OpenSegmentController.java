@@ -113,14 +113,13 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "end", required = false, defaultValue = "" + (Long.MAX_VALUE - 1)) String end,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modified_time") String sortBy,
             @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse,
-            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses,
-            @RequestParam(value = "statuses_second_storage", required = false, defaultValue = "") List<String> statusesSecondStorage) {
+            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses) {
         checkNonNegativeIntegerArg("page_offset", offset);
         checkNonNegativeIntegerArg("page_size", limit);
         String projectName = checkProjectName(project);
         String modelId = modelService.getModel(modelAlias, projectName).getUuid();
         return segmentController.getSegments(modelId, projectName, status, offset, limit, start, end, null, null, false,
-                sortBy, reverse, statuses, statusesSecondStorage);
+                sortBy, reverse, statuses);
     }
 
     @ApiOperation(value = "getMultiPartitions", tags = { "DW" })
@@ -197,7 +196,8 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "priority", required = false, defaultValue = "3") Integer priority,
             @RequestParam(value = "yarn_queue", required = false) String yarnQueue,
             @RequestParam(value = "tag", required = false) Object tag,
-            @RequestParam(value = "index_status", required = false) List<String> indexStatusStr) {
+            @RequestParam(value = "index_status", required = false) List<String> indexStatusStr,
+            @RequestParam(value = "auto_index_plan_enable", required = false) boolean isAutoIndexPlanEnable) {
         String projectName = checkProjectName(project);
         checkParams(ids, names, batchIndexIds, indexStatusStr);
         String modelId = modelService.getModel(modelAlias, projectName).getUuid();
@@ -226,6 +226,7 @@ public class OpenSegmentController extends BaseController {
         req.setPriority(priority);
         req.setYarnQueue(yarnQueue);
         req.setTag(tag);
+        req.setAutoIndexPlanEnable(isAutoIndexPlanEnable);
         return segmentController.addIndexesToSegments(pair.getFirst(), req);
     }
 

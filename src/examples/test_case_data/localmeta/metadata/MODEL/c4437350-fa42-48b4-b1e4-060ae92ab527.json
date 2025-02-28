@@ -1,0 +1,526 @@
+{
+  "uuid" : "c4437350-fa42-48b4-b1e4-060ae92ab527",
+  "alias" : "nmodel_basic",
+  "fact_table" : "EDW.TEST_CAL_DT",
+  "owner" : "ADMIN",
+  "join_tables" : [ ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "CAL_DT",
+    "column" : "TEST_CAL_DT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.YEAR_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.QTR_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.MONTH_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "AGE_FOR_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "AGE_FOR_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_QTR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "AGE_FOR_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_MONTH_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "AGE_FOR_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_WEEK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "AGE_FOR_DT_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_DT_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "AGE_FOR_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "AGE_FOR_RTL_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_QTR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "AGE_FOR_RTL_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_MONTH_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "AGE_FOR_RTL_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_WEEK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "AGE_FOR_CS_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_CS_WEEK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "DAY_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_CAL_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "DAY_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "DAY_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_QTR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "DAY_OF_MONTH_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_MONTH_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "DAY_OF_WEEK_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "WEEK_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "WEEK_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_CAL_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "MONTH_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_QTR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "MONTH_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "MONTH_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_CAL_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "QTR_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "QTR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_CAL_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "YEAR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.YEAR_OF_CAL_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 28,
+    "name" : "YEAR_END_DT",
+    "column" : "TEST_CAL_DT.YEAR_END_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 29,
+    "name" : "QTR_END_DT",
+    "column" : "TEST_CAL_DT.QTR_END_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 30,
+    "name" : "MONTH_END_DT",
+    "column" : "TEST_CAL_DT.MONTH_END_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 31,
+    "name" : "WEEK_END_DT",
+    "column" : "TEST_CAL_DT.WEEK_END_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 32,
+    "name" : "CAL_DT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "CAL_DT_DESC",
+    "column" : "TEST_CAL_DT.CAL_DT_DESC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 34,
+    "name" : "CAL_DT_SHORT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_SHORT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 35,
+    "name" : "YTD_YN_ID",
+    "column" : "TEST_CAL_DT.YTD_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 36,
+    "name" : "QTD_YN_ID",
+    "column" : "TEST_CAL_DT.QTD_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 37,
+    "name" : "MTD_YN_ID",
+    "column" : "TEST_CAL_DT.MTD_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 38,
+    "name" : "WTD_YN_ID",
+    "column" : "TEST_CAL_DT.WTD_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 39,
+    "name" : "SEASON_BEG_DT",
+    "column" : "TEST_CAL_DT.SEASON_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 40,
+    "name" : "DAY_IN_YEAR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_YEAR_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 41,
+    "name" : "DAY_IN_QTR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_QTR_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 42,
+    "name" : "DAY_IN_MONTH_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_MONTH_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 43,
+    "name" : "DAY_IN_WEEK_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_WEEK_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 44,
+    "name" : "RTL_YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_YEAR_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 45,
+    "name" : "RTL_QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_QTR_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 46,
+    "name" : "RTL_MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_MONTH_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 47,
+    "name" : "RTL_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_WEEK_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 48,
+    "name" : "CS_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.CS_WEEK_BEG_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 49,
+    "name" : "CAL_DATE",
+    "column" : "TEST_CAL_DT.CAL_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 50,
+    "name" : "DAY_OF_WEEK",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 51,
+    "name" : "MONTH_ID",
+    "column" : "TEST_CAL_DT.MONTH_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 52,
+    "name" : "PRD_DESC",
+    "column" : "TEST_CAL_DT.PRD_DESC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 53,
+    "name" : "PRD_FLAG",
+    "column" : "TEST_CAL_DT.PRD_FLAG",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 54,
+    "name" : "PRD_ID",
+    "column" : "TEST_CAL_DT.PRD_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 55,
+    "name" : "PRD_IND",
+    "column" : "TEST_CAL_DT.PRD_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 56,
+    "name" : "QTR_DESC",
+    "column" : "TEST_CAL_DT.QTR_DESC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 57,
+    "name" : "QTR_ID",
+    "column" : "TEST_CAL_DT.QTR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 58,
+    "name" : "QTR_IND",
+    "column" : "TEST_CAL_DT.QTR_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 59,
+    "name" : "RETAIL_WEEK",
+    "column" : "TEST_CAL_DT.RETAIL_WEEK",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 60,
+    "name" : "RETAIL_YEAR",
+    "column" : "TEST_CAL_DT.RETAIL_YEAR",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 61,
+    "name" : "RETAIL_START_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_START_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 62,
+    "name" : "RETAIL_WK_END_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_WK_END_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 63,
+    "name" : "WEEK_IND",
+    "column" : "TEST_CAL_DT.WEEK_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 64,
+    "name" : "WEEK_NUM_DESC",
+    "column" : "TEST_CAL_DT.WEEK_NUM_DESC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 65,
+    "name" : "WEEK_BEG_DATE",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 66,
+    "name" : "WEEK_END_DATE",
+    "column" : "TEST_CAL_DT.WEEK_END_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 67,
+    "name" : "WEEK_IN_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_IN_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 68,
+    "name" : "WEEK_ID",
+    "column" : "TEST_CAL_DT.WEEK_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 69,
+    "name" : "WEEK_BEG_END_DESC_MDY",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MDY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 70,
+    "name" : "WEEK_BEG_END_DESC_MD",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 71,
+    "name" : "YEAR_ID",
+    "column" : "TEST_CAL_DT.YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 72,
+    "name" : "YEAR_IND",
+    "column" : "TEST_CAL_DT.YEAR_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 73,
+    "name" : "CAL_DT_MNS_1YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1YEAR_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 74,
+    "name" : "CAL_DT_MNS_2YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2YEAR_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 75,
+    "name" : "CAL_DT_MNS_1QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1QTR_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 76,
+    "name" : "CAL_DT_MNS_2QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2QTR_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 77,
+    "name" : "CAL_DT_MNS_1MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1MONTH_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 78,
+    "name" : "CAL_DT_MNS_2MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2MONTH_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 79,
+    "name" : "CAL_DT_MNS_1WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1WEEK_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 80,
+    "name" : "CAL_DT_MNS_2WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2WEEK_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 81,
+    "name" : "CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 82,
+    "name" : "CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 83,
+    "name" : "CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 84,
+    "name" : "CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 85,
+    "name" : "CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 86,
+    "name" : "CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 87,
+    "name" : "CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 88,
+    "name" : "CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 89,
+    "name" : "RTL_MONTH_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_MONTH_OF_RTL_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 90,
+    "name" : "RTL_QTR_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_QTR_OF_RTL_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 91,
+    "name" : "RTL_WEEK_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_WEEK_OF_RTL_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 92,
+    "name" : "SEASON_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.SEASON_OF_YEAR_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 93,
+    "name" : "YTM_YN_ID",
+    "column" : "TEST_CAL_DT.YTM_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 94,
+    "name" : "YTQ_YN_ID",
+    "column" : "TEST_CAL_DT.YTQ_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 95,
+    "name" : "YTW_YN_ID",
+    "column" : "TEST_CAL_DT.YTW_YN_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 96,
+    "name" : "CAL_DT_CRE_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 97,
+    "name" : "CAL_DT_CRE_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_USER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 98,
+    "name" : "CAL_DT_UPD_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 99,
+    "name" : "CAL_DT_UPD_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_USER",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "enormous_cuboids_test"
+}

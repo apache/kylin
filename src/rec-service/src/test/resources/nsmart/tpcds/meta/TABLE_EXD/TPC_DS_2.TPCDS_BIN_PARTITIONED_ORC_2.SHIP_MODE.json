@@ -1,0 +1,65 @@
+{
+  "uuid" : "383a4842-4123-4ec8-a0ea-4aecef4421ff",
+  "last_modified" : 1497949982524,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.SHIP_MODE",
+  "last_build_job_id" : "fee2a47f-c882-45b3-a1aa-b225ffbcb6d3",
+  "columns_stats" : [ {
+    "max_value" : "20",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "max_value" : "AAAAAAAAPAAAAAAA",
+    "min_value" : "AAAAAAAAABAAAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 19
+  }, {
+    "max_value" : "TWO DAY",
+    "min_value" : "EXPRESS",
+    "max_length_value" : "OVERNIGHT",
+    "min_length_value" : "EXPRESS",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "SURFACE",
+    "min_value" : "AIR",
+    "max_length_value" : "SURFACE",
+    "min_length_value" : "AIR",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "ZOUROS",
+    "min_value" : "AIRBORNE",
+    "max_length_value" : "PRIVATECARRIER",
+    "min_length_value" : "UPS",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "max_value" : "yVfotg7Tio3MVhBg6Bkn",
+    "min_value" : "2mM8l",
+    "max_length_value" : "6Hzzp4JkzjqD8MGXLCDa",
+    "min_length_value" : "Ek",
+    "null_count" : 0,
+    "cardinality" : 20
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAADAAAAAAA", "AAAAAAAAFAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAJAAAAAAA", "AAAAAAAALAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAPAAAAAAA", "AAAAAAAABBAAAAAA", "AAAAAAAADBAAAAAA" ], [ "EXPRESS", "OVERNIGHT", "LIBRARY", "EXPRESS", "OVERNIGHT", "LIBRARY", "EXPRESS", "OVERNIGHT", "LIBRARY", "EXPRESS" ], [ "AIR", "AIR", "AIR", "SURFACE", "SURFACE", "SURFACE", "SEA", "SEA", "SEA", "BIKE" ], [ "UPS", "AIRBORNE", "DHL", "ZHOU", "MSC", "ALLIANCE", "BARIAN", "GREAT EASTERN", "RUPEKSA", "HARMSTORF" ], [ "YvxVaJI10", "6Hzzp4JkzjqD8MGXLCDa", "HVDFCcQ", "hGoF18SLDDPBj", "Xjy3ZPuiDjzHlRx14Z3", "OrDuVy2H", "qENFQ", "uukTktPYycct8", "5FKNB0j8aaqTB", "fop0bcSd91J26IVpR" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "20",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "1287",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/ship_mode",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

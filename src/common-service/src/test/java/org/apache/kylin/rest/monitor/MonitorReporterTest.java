@@ -23,14 +23,13 @@ import org.apache.kylin.common.metrics.service.MonitorMetric;
 import org.apache.kylin.common.metrics.service.QueryMonitorMetric;
 import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Ignore("TODO: Expected to remove this MonitorReporter.")
 public class MonitorReporterTest extends NLocalFileMetadataTestCase {

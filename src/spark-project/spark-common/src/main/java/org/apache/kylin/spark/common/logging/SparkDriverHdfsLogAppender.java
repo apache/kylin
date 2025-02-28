@@ -34,10 +34,10 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.status.StatusLogger;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.spark.utils.SparkHadoopUtils;
 
 @Plugin(name = "DriverHdfsAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class SparkDriverHdfsLogAppender extends AbstractHdfsLogAppender {
@@ -63,7 +63,7 @@ public class SparkDriverHdfsLogAppender extends AbstractHdfsLogAppender {
     }
 
     @PluginFactory
-    public synchronized static SparkDriverHdfsLogAppender createAppender(@PluginAttribute("name") String name,
+    public static synchronized SparkDriverHdfsLogAppender createAppender(@PluginAttribute("name") String name,
             @PluginAttribute("kerberosEnabled") boolean kerberosEnabled,
             @PluginAttribute("kerberosPrincipal") String kerberosPrincipal,
             @PluginAttribute("kerberosKeytab") String kerberosKeytab,

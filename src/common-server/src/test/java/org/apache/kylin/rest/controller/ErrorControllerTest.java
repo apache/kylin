@@ -21,6 +21,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-public class ErrorControllerTest {
+public class ErrorControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;
 
     @InjectMocks
@@ -48,6 +49,7 @@ public class ErrorControllerTest {
 
     @Before
     public void setup() throws IOException {
+        createTestMetadata();
         MockitoAnnotations.initMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(errorController).defaultRequest(MockMvcRequestBuilders.get("/"))
                 .build();

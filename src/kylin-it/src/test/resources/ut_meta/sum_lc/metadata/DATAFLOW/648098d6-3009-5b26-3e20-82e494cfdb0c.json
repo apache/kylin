@@ -1,0 +1,18 @@
+{
+  "uuid" : "648098d6-3009-5b26-3e20-82e494cfdb0c",
+  "last_modified" : 1667836716050,
+  "create_time" : 1667828178652,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 6,
+  "last_query_time" : 1667835303109,
+  "layout_query_hit_count" : {
+    "1" : {
+      "1667750400000" : 6
+    }
+  },
+  "project" : "sum_lc",
+  "segment_uuids" : [ ]
+}

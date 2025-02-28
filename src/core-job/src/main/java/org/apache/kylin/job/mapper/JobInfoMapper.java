@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.mapper;
 
-import java.util.Date;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -51,6 +50,6 @@ public interface JobInfoMapper {
 
     long countByJobFilter(JobMapperFilter jobMapperFilter);
 
-    Date getEarliestCreateTime(@Param("project") String project);
+    long getEarliestCreateTime(@Param("project") String project);
 
 }

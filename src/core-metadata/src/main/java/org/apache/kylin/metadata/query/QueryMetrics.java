@@ -22,10 +22,9 @@ import java.util.List;
 
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -43,9 +42,11 @@ public class QueryMetrics extends SchedulerEventNotifier {
     public static final String AGG_INDEX = "Agg Index";
     public static final String TABLE_INDEX = "Table Index";
     public static final String TABLE_SNAPSHOT = "Table Snapshot";
+    public static final String INTERNAL_TABLE = "Internal Table";
     public static final String TOTAL_SCAN_COUNT = "totalScanCount";
     public static final String TOTAL_SCAN_BYTES = "totalScanBytes";
     public static final String SOURCE_RESULT_COUNT = "sourceResultCount";
+    public static final String QUERY_RESPONSE_TIME = "QUERY_RESPONSE_TIME";
 
     // fields below are columns in InfluxDB table which records down query history
     protected long id;
@@ -66,6 +67,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     protected long queryJobCount;
     protected long queryStageCount;
     protected long queryTaskCount;
+    protected long cpuTime;
 
     protected boolean isPushdown;
     protected String engineType;
@@ -92,6 +94,8 @@ public class QueryMetrics extends SchedulerEventNotifier {
 
     protected QueryHistoryInfo queryHistoryInfo;
 
+    protected boolean isUpdateMetrics = false;
+
     public QueryMetrics(String queryId) {
         this.queryId = queryId;
     }
@@ -107,14 +111,6 @@ public class QueryMetrics extends SchedulerEventNotifier {
 
     public boolean isSucceed() {
         return QueryHistory.QUERY_HISTORY_SUCCEEDED.equals(queryStatus);
-    }
-
-    public boolean isSecondStorage() {
-        for (RealizationMetrics metrics : getRealizationMetrics()) {
-            if (metrics.isSecondStorage)
-                return true;
-        }
-        return false;
     }
 
     @Getter
@@ -136,8 +132,6 @@ public class QueryMetrics extends SchedulerEventNotifier {
 
         protected String projectName;
 
-        protected boolean isSecondStorage;
-
         protected boolean isStreamingLayout;
 
         protected List<String> snapshots;
@@ -157,6 +151,24 @@ public class QueryMetrics extends SchedulerEventNotifier {
             this.indexType = indexType;
             this.modelId = modelId;
             this.snapshots = snapshots;
+        }
+    }
+
+    @Getter
+    @Setter
+    // for query metric extensions
+    public static class QueryMetric implements Serializable {
+
+        protected String name;
+
+        protected Serializable value;
+
+        public QueryMetric() {
+        }
+
+        public QueryMetric(String name, Serializable value) {
+            this.name = name;
+            this.value = value;
         }
     }
 }

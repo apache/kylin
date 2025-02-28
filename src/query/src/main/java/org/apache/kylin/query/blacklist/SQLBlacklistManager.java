@@ -21,6 +21,7 @@ package org.apache.kylin.query.blacklist;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ClassUtil;
@@ -43,7 +44,7 @@ public class SQLBlacklistManager {
         }
         logger.info("Initializing SQLBlacklistManager with config {}", config);
         this.config = config;
-        this.crud = new CachedCrudAssist<SQLBlacklist>(getStore(), SQLBlacklist.SQL_BLACKLIST_RESOURCE_ROOT,
+        this.crud = new CachedCrudAssist<SQLBlacklist>(getStore(), MetadataType.SQL_BLACKLIST, null,
                 SQLBlacklist.class) {
             @Override
             public SQLBlacklist initEntityAfterReload(SQLBlacklist sqlBlacklist, String resourceName) {

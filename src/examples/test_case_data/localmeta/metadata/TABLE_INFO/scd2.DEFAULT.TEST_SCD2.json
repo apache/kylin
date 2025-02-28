@@ -1,0 +1,51 @@
+{
+  "uuid" : "0296d7f9-00aa-4ade-9566-45d9a0320cc2",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_SCD2",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000500|10001500",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "START_DATE",
+    "datatype" : "date",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "END_DATE",
+    "datatype" : "date",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "FLAG",
+    "datatype" : "varchar(4096)",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "0.5",
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_EXTRACT",
+  "expression" : "EXTRACT(minute FROM LINEORDER.LO_ORDERDATE)",
+  "innerExpression" : "MINUTE(`LINEORDER`.`LO_ORDERDATE`)",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "uuid" : "891fa68f-ed38-5ef4-4f04-726892670ae4",
+  "project" : "cc_test"
+}

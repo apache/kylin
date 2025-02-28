@@ -20,20 +20,21 @@ package org.apache.kylin.job.handler;
 import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
+import lombok.Getter;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,20 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class AddIndexHandler extends AbstractJobHandler {
+
+    @Getter
+    public static class AddIndexJobBuildParams extends JobFactory.JobBuildParams {
+
+        private final boolean layoutsDeletableAfterBuild;
+
+        public AddIndexJobBuildParams(Set<NDataSegment> readySegs, JobParam jobParam) {
+            super(readySegs, jobParam.getProcessLayouts(),
+                    jobParam.getOwner(), jobParam.getJobTypeEnum(), jobParam.getJobId(),
+                    jobParam.getDeleteLayouts(), jobParam.getIgnoredSnapshotTables(),
+                    jobParam.getTargetPartitions(), jobParam.getTargetBuckets(), jobParam.getExtParams());
+            layoutsDeletableAfterBuild = jobParam.isLayoutsDeletableAfterBuild();
+        }
+    }
 
     @Override
     protected AbstractExecutable createJob(JobParam jobParam) {
@@ -67,10 +82,7 @@ public class AddIndexHandler extends AbstractJobHandler {
             throw new IllegalArgumentException("No segment is ready in this job.");
         }
         return JobFactory.createJob(CUBE_JOB_FACTORY,
-                new JobFactory.JobBuildParams(Sets.newLinkedHashSet(readySegs), jobParam.getProcessLayouts(),
-                        jobParam.getOwner(), jobParam.getJobTypeEnum(), jobParam.getJobId(),
-                        jobParam.getDeleteLayouts(), jobParam.getIgnoredSnapshotTables(),
-                        jobParam.getTargetPartitions(), jobParam.getTargetBuckets(), jobParam.getExtParams()));
+                new AddIndexJobBuildParams(Sets.newLinkedHashSet(readySegs), jobParam));
     }
 
 }

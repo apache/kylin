@@ -28,7 +28,6 @@ import org.apache.calcite.sql.SqlOverOperator;
 import org.apache.calcite.sql.SqlWindow;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.kylin.common.util.Pair;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class SqlNodeConverter extends SqlShuttle {

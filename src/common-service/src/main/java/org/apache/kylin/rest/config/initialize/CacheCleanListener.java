@@ -18,36 +18,21 @@
 
 package org.apache.kylin.rest.config.initialize;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.table.InternalTableManager;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CacheCleanListener implements EventListenerRegistry.ResourceEventListener {
-
-    private static final List<Pattern> PROJECT_RESOURCE_PATTERN = Lists
-            .newArrayList(Pattern.compile(ResourceStore.PROJECT_ROOT + "/([^/]+)$"));
-
-    private static final List<Pattern> TABLE_RESOURCE_PATTERN = Lists.newArrayList(
-            Pattern.compile("/([^/]+)" + ResourceStore.TABLE_RESOURCE_ROOT + "/([^/]+)"),
-            Pattern.compile("/([^/]+)" + ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/([^/]+)"),
-            Pattern.compile("/([^/]+)" + ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT + "/([^/]+)"));
-
-    private static final List<Pattern> KAFKA_RESOURCE_PATTERN = Lists
-            .newArrayList(Pattern.compile("/([^/]+)" + ResourceStore.KAFKA_RESOURCE_ROOT + "/([^/]+)"));
 
     @Override
     public void onUpdate(KylinConfig config, RawResource rawResource) {
@@ -57,45 +42,44 @@ public class CacheCleanListener implements EventListenerRegistry.ResourceEventLi
     @Override
     public void onDelete(KylinConfig config, String resPath) {
         try {
-            PROJECT_RESOURCE_PATTERN.forEach(pattern -> {
-                String project = extractProject(resPath, pattern);
+            Pair<MetadataType, String> typeAndResourceName = MetadataType.splitKeyWithType(resPath);
+            String resourceName = typeAndResourceName.getSecond();
+            String project;
+            switch (typeAndResourceName.getFirst()) {
+            case PROJECT:
+                project = resourceName;
                 if (StringUtils.isNotBlank(project)) {
                     NProjectManager.getInstance(config).invalidCache(project);
                 }
-            });
-            TABLE_RESOURCE_PATTERN.forEach(pattern -> {
-                String project = extractProject(resPath, pattern);
-                String table = extractTable(resPath, pattern);
-                if (StringUtils.isNotBlank(project) && StringUtils.isNotBlank(table)) {
-                    NTableMetadataManager.getInstance(config, project).invalidCache(table);
+                break;
+            case TABLE_INFO:
+            case TABLE_EXD:
+                project = extractProject(resourceName);
+                if (StringUtils.isNotBlank(project)) {
+                    NTableMetadataManager.getInstance(config, project).invalidCache(resourceName);
                 }
-            });
-            KAFKA_RESOURCE_PATTERN.forEach(pattern -> {
-                String project = extractProject(resPath, pattern);
-                String kafkaTableName = extractTable(resPath, pattern);
-                if (StringUtils.isNotBlank(project) && StringUtils.isNotBlank(kafkaTableName)) {
-                    KafkaConfigManager.getInstance(config, project).invalidCache(kafkaTableName);
+                break;
+            case KAFKA_CONFIG:
+                project = extractProject(resourceName);
+                if (StringUtils.isNotBlank(project)) {
+                    KafkaConfigManager.getInstance(config, project).invalidCache(resourceName);
                 }
-            });
+                break;
+            case INTERNAL_TABLE:
+                project = extractProject(resourceName);
+                if (StringUtils.isNotBlank(project)) {
+                    InternalTableManager.getInstance(config, project).invalidCache(resourceName);
+                }
+                break;
+            default:
+            }
         } catch (Exception e) {
             log.error("Unexpected error happened! Clean resource {} cache failed.", resPath, e);
         }
 
     }
 
-    private String extractProject(String resPath, Pattern pattern) {
-        Matcher matcher = pattern.matcher(resPath);
-        if (matcher.find()) {
-            return matcher.group(1).replace(".json", "");
-        }
-        return null;
-    }
-
-    private String extractTable(String resPath, Pattern pattern) {
-        Matcher matcher = pattern.matcher(resPath);
-        if (matcher.find() && matcher.groupCount() == 2) {
-            return matcher.group(2).replace(".json", "");
-        }
-        return null;
+    private String extractProject(String resourceName) {
+        return resourceName.substring(0, resourceName.indexOf("."));
     }
 }

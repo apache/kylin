@@ -18,13 +18,19 @@
 package org.apache.kylin.rest.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -32,17 +38,13 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
+import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.CacheSignatureQuerySupporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.val;
@@ -78,6 +80,7 @@ public class QueryCacheSignatureUtil {
         for (NativeQueryRealization realization : realizations) {
             signature.add(generateSignature(realization, project, response.getDuration()));
         }
+        // i.e. root,layout1_layout2;table1_table2;snapshot1_snapshot2;seg1_seg2,...
         return Joiner.on(",").join(signature);
     }
 
@@ -136,7 +139,7 @@ public class QueryCacheSignatureUtil {
 
     // Schema Cache
     public static boolean checkCacheExpired(List<String> tables, String prevSignature, String project,
-            String modelAlias) {
+                                            String modelAlias) {
         if (StringUtils.isBlank(prevSignature)) {
             return true;
         }
@@ -149,53 +152,87 @@ public class QueryCacheSignatureUtil {
     }
 
     private static String generateSignature(NativeQueryRealization realization, String project, long sqlDuration) {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        val modelId = realization.getModelId();
-        Long layoutId = realization.getLayoutId();
         try {
-            val dataflow = NDataflowManager.getInstance(kylinConfig, project).getDataflow(modelId);
-            if (dataflow.getStatus().toString().equals("OFFLINE")) {
-                return "";
-            }
-            List<Long> allLayoutTimes = Lists.newLinkedList();
-            List<Long> allSnapshotTimes = Lists.newLinkedList();
-            List<Long> allSegmentTimes = Lists.newLinkedList();
-            List<Long> allTableTimes = Lists.newLinkedList();
-            NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(kylinConfig, project);
-            for (String snapshot : realization.getSnapshots()) {
-                long snapshotModificationTime = tableMetadataManager.getTableDesc(snapshot).getLastModified();
-                if (snapshotModificationTime == 0) {
-                    return "";
-                } else {
-                    allSnapshotTimes.add(snapshotModificationTime);
-                }
-            }
-            if (!QueryMetricsContext.TABLE_SNAPSHOT.equals(realization.getIndexType())) {
-                for (NDataSegment seg : dataflow.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING)) {
-                    long now = System.currentTimeMillis();
-                    long latestTime = seg.getSegDetails().getLastModified();
-                    if (latestTime <= now && latestTime >= (now - sqlDuration)) {
-                        return "";
-                    }
-                    allSegmentTimes.add(latestTime);
-                    if (seg.getLayoutIds().contains(layoutId)) {
-                        allLayoutTimes.add(seg.getLayout(layoutId).getCreateTime());
-                    }
-                }
-
-                Set<TableRef> allTableRefs = dataflow.getModel().getAllTableRefs();
-                for (TableRef tableRef : allTableRefs) {
-                    allTableTimes.add(tableRef.getTableDesc().getLastModified());
-                }
-            }
-            String allLayoutTimesSignature = Joiner.on("_").join(allLayoutTimes);
-            String allTableTimesSignature = Joiner.on("_").join(allTableTimes);
-            String allSnapshotTimesSignature = Joiner.on("_").join(allSnapshotTimes);
-            String allSegmentTimesSignature = Joiner.on("_").join(allSegmentTimes);
-            return Joiner.on(";").join(allLayoutTimesSignature, allTableTimesSignature, allSnapshotTimesSignature, allSegmentTimesSignature);
+            return signature(realization, project, sqlDuration);
         } catch (NullPointerException e) {
             logger.warn("NPE occurred because metadata changed during query.", e);
             return "";
         }
+    }
+
+    private static String signature(NativeQueryRealization realization, String project, long sqlDuration) {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
+        String realizationType = realization.getType();
+        if (QueryMetricsContext.TABLE_SNAPSHOT.equals(realizationType)) {
+            return processSnapshot(realization, project, kylinConfig);
+        } else if (QueryMetricsContext.INTERNAL_TABLE.equals(realizationType)) {
+            return processInternalTable(realization, project, kylinConfig);
+        } else {
+            return processIndex(realization, project, kylinConfig, sqlDuration);
+        }
+    }
+
+    private static String processSnapshot(NativeQueryRealization realization,
+                                          String project, KylinConfig kylinConfig) {
+        // case snapshot:
+        // type;snapshot1Time_snapshot2Time
+        List<Long> timeOfSnapshots = new ArrayList<>();
+        NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(kylinConfig, project);
+        for (String lookup : realization.getLookupTables()) {
+            long lastModified = tableMgr.getTableDesc(lookup).getLastModified();
+            if (lastModified == 0) {
+                timeOfSnapshots.clear();
+                break;
+            }
+            timeOfSnapshots.add(lastModified);
+        }
+        return timeOfSnapshots.isEmpty() ? "" : "0;" + Joiner.on("_").join(timeOfSnapshots);
+    }
+
+    private static String processInternalTable(NativeQueryRealization realization,
+                                               String project, KylinConfig kylinConfig) {
+        // case internalTable
+        // type:internalTable1Time_internalTable2Time
+        List<Long> timeOfInternalTable = new ArrayList<>();
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(kylinConfig, project);
+        for (String internalTable : realization.getLookupTables()) {
+            long lastModified = internalTableManager.getInternalTableDesc(internalTable).getLastModified();
+            if (lastModified == 0) {
+                timeOfInternalTable.clear();
+                break;
+            }
+            timeOfInternalTable.add(lastModified);
+        }
+        return timeOfInternalTable.isEmpty() ? "" : "1;" + Joiner.on("_").join(timeOfInternalTable);
+    }
+
+    private static String processIndex(NativeQueryRealization realization, String project,
+                                       KylinConfig kylinConfig, long sqlDuration) {
+        // case index:
+        // normal => type:layout1Time_layout2Time;table1Time_table2Time;seg1Time_seg2Time
+        List<Long> allLayoutTimes = Lists.newLinkedList();
+        List<Long> allSegmentTimes = Lists.newLinkedList();
+        NDataflow df = NDataflowManager.getInstance(kylinConfig, project).getDataflow(realization.getModelId());
+        if (df != null && !df.isOffline()) {
+            for (NDataSegment seg : df.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING)) {
+                long now = System.currentTimeMillis();
+                long latestTime = seg.getSegDetails().getLastModified();
+                if (latestTime <= now && latestTime >= (now - sqlDuration)) {
+                    return "";
+                }
+                allSegmentTimes.add(latestTime);
+                Long layoutId = realization.getLayoutId();
+                if (seg.getLayoutIds().contains(layoutId)) {
+                    allLayoutTimes.add(seg.getLayout(layoutId).getCreateTime());
+                }
+            }
+            String layoutSignatures = Joiner.on("_").join(allLayoutTimes);
+            String segSignatures = Joiner.on("_").join(allSegmentTimes);
+            String tableSignatures = df.getModel().getAllTableRefs().stream().map(TableRef::getTableDesc)
+                    .map(TableDesc::getLastModified).map(String::valueOf).collect(Collectors.joining("_"));
+            return "2;" + Joiner.on(";").join(layoutSignatures, tableSignatures, segSignatures);
+        }
+        return "";
     }
 }

@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
@@ -38,8 +39,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 public class SystemUsageToolTest extends NLocalFileMetadataTestCase {
 
     @Rule
@@ -52,18 +51,18 @@ public class SystemUsageToolTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         queryHistoryDAO = RDBMSQueryHistoryDAO.getInstance();
 
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobInfoDao(getTestConfig());
     }
 
     @After
     public void teardown() {
         queryHistoryDAO.deleteAllQueryHistory();
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -115,8 +114,7 @@ public class SystemUsageToolTest extends NLocalFileMetadataTestCase {
             realizationMetrics.setProjectName(project);
             realizationMetrics.setModelId("82fa7671-a935-45f5-8779-85703601f49a.json");
 
-            realizationMetrics.setSnapshots(
-                    Lists.newArrayList(new String[] { "DEFAULT.TEST_KYLIN_ACCOUNT", "DEFAULT.TEST_COUNTRY" }));
+            realizationMetrics.setSnapshots(Lists.newArrayList("DEFAULT.TEST_KYLIN_ACCOUNT", "DEFAULT.TEST_COUNTRY"));
 
             List<QueryMetrics.RealizationMetrics> realizationMetricsList = Lists.newArrayList();
             realizationMetricsList.add(realizationMetrics);

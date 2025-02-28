@@ -31,18 +31,16 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
+import org.apache.kylin.metadata.table.ATable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -60,7 +58,7 @@ import lombok.Setter;
  * Table Metadata from Source. All name should be uppercase.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class TableDesc extends RootPersistentEntity implements Serializable, ISourceAware {
+public class TableDesc extends ATable implements Serializable, ISourceAware {
 
     public static final String TABLE_TYPE_VIEW = "VIEW";
     public static final long NOT_READY = -1;
@@ -90,18 +88,15 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
 
     // ============================================================================
 
-    private String name;
-
-    @Getter
-    @Setter
-    @JsonProperty("columns")
-    private ColumnDesc[] columns;
-
     @JsonProperty("source_type")
     private int sourceType = ISourceAware.ID_HIVE;
 
     @JsonProperty("table_type")
     private String tableType;
+
+    private Boolean hasInternal;
+
+    private boolean hasInternalDeprecated = false;
 
     //Sticky table
     @Getter
@@ -179,9 +174,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     @JsonProperty("snapshot_has_broken")
     private boolean snapshotHasBroken;
 
-    protected String project;
-    private final DatabaseDesc database = new DatabaseDesc();
-    private String identity = null;
     private KafkaConfig kafkaConfig;
 
     @Setter
@@ -189,10 +181,9 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     @JsonProperty("transactional")
     private boolean isTransactional;
 
-    @Setter
-    @Getter
-    @JsonProperty("rangePartition")
-    private boolean isRangePartition;
+    private Boolean isRangePartition;
+
+    private boolean rangePartitionDeprecated;
 
     @Setter
     @Getter
@@ -212,6 +203,9 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         this.lastModified = other.lastModified;
         this.createTime = other.createTime;
         this.name = other.name;
+        this.hasInternal = other.hasInternal;
+        this.hasInternalDeprecated = other.hasInternalDeprecated;
+        this.rangePartitionDeprecated = other.rangePartitionDeprecated;
         this.sourceType = other.sourceType;
         this.tableType = other.tableType;
         this.dataGen = other.dataGen;
@@ -243,6 +237,48 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         setMvcc(other.getMvcc());
     }
 
+    @JsonGetter("range_partition")
+    public boolean isRangePartition() {
+        return isRangePartition == null ? rangePartitionDeprecated : isRangePartition;
+    }
+
+    @JsonSetter("range_partition")
+    public void setRangePartition(boolean isRangePartition) {
+        this.isRangePartition = isRangePartition;
+    }
+
+    @JsonGetter("has_internal")
+    public boolean isHasInternal() {
+        return hasInternal == null ? hasInternalDeprecated : hasInternal;
+    }
+
+    @JsonSetter("has_internal")
+    public void setHasInternal(boolean hasInternal) {
+        this.hasInternal = hasInternal;
+    }
+
+    /**
+     * This setter exists for compatibility with older data versions
+     * that utilize the has_Internal json field. Please use {@link TableDesc#setHasInternal} instead.
+     * @deprecated since 5.2.2
+     */
+    @JsonSetter("has_Internal")
+    @Deprecated
+    public void setHasInternalDeprecated(boolean hasInternalDeprecated) {
+        this.hasInternalDeprecated = hasInternalDeprecated;
+    }
+
+    /**
+     * This setter exists for compatibility with older data versions
+     * that utilize the rangePartition json field. Please use {@link TableDesc#setRangePartition} instead.
+     * @deprecated since 5.2.2
+     */
+    @JsonSetter("rangePartition")
+    @Deprecated
+    public void setRangePartitionDeprecated(boolean rangePartitionDeprecated) {
+        this.rangePartitionDeprecated = rangePartitionDeprecated;
+    }
+
     /**
      * Streaming table can't be accessed when streaming disabled
      */
@@ -251,8 +287,8 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     }
 
     @Override
-    public String resourceName() {
-        return getIdentity();
+    public MetadataType resourceType() {
+        return MetadataType.TABLE_INFO;
     }
 
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
@@ -312,22 +348,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return null;
     }
 
-    @Override
-    public String getResourcePath() {
-        return concatResourcePath(getIdentity(), project);
-
-    }
-
-    public static String concatResourcePath(String name, String project) {
-        return new StringBuilder().append("/").append(project).append(ResourceStore.TABLE_RESOURCE_ROOT).append("/")
-                .append(name).append(MetadataConstants.FILE_SURFIX).toString();
-    }
-
-    public String getIdentity() {
-        String originIdentity = getCaseSensitiveIdentity();
-        return originIdentity.toUpperCase(Locale.ROOT);
-    }
-
     public String getBackTickIdentity() {
         return getBackTickCaseSensitiveIdentity("");
     }
@@ -340,16 +360,13 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return getBackTickCaseSensitiveIdentity(TRANSACTIONAL_TABLE_NAME_SUFFIX.toUpperCase(Locale.ROOT) + suffix);
     }
 
-    public String getCaseSensitiveIdentity() {
-        if (identity == null) {
-            if (this.getCaseSensitiveDatabase().equals("null")) {
-                identity = String.format(Locale.ROOT, "%s", this.getCaseSensitiveName());
-            } else {
-                identity = String.format(Locale.ROOT, "%s.%s", this.getCaseSensitiveDatabase(),
-                        this.getCaseSensitiveName());
-            }
+    public String getBackTickTransactionalTableIdentity(String temporaryWritableDB, String suffix) {
+        String fullSuffix = TRANSACTIONAL_TABLE_NAME_SUFFIX.toUpperCase(Locale.ROOT) + suffix;
+        if (StringUtils.isNotBlank(temporaryWritableDB)) {
+            return String.format(Locale.ROOT, "`%s`.`%s`", temporaryWritableDB.toUpperCase(Locale.ROOT),
+                    getCaseSensitiveName() + fullSuffix);
         }
-        return identity;
+        return getBackTickTransactionalTableIdentity(suffix);
     }
 
     private String getBackTickCaseSensitiveIdentity(String suffix) {
@@ -368,53 +385,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
 
     public boolean isView() {
         return StringUtils.containsIgnoreCase(tableType, TABLE_TYPE_VIEW);
-    }
-
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
-    public String getName() {
-        return name == null ? null : name.toUpperCase(Locale.ROOT);
-    }
-
-    @JsonGetter("name")
-    public String getCaseSensitiveName() {
-        return this.name;
-    }
-
-    @JsonSetter("name")
-    public void setName(String name) {
-        if (name != null) {
-            String[] splits = StringSplitter.split(name, ".");
-            if (splits.length == 2) {
-                this.setDatabase(splits[0]);
-                this.name = splits[1];
-            } else if (splits.length == 1) {
-                this.name = splits[0];
-            }
-            identity = null;
-        } else {
-            this.name = null;
-        }
-    }
-
-    public String getDatabase() {
-        return database.getName().toUpperCase(Locale.ROOT);
-    }
-
-    @JsonGetter("database")
-    public String getCaseSensitiveDatabase() {
-        return database.getName();
-    }
-
-    @JsonSetter("database")
-    public void setDatabase(String database) {
-        this.database.setName(database);
     }
 
     public int getMaxColumnIndex() {
@@ -446,20 +416,9 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return snapshotLastModified;
     }
 
+    @Override
     public void init(String project) {
-        this.project = project;
-
-        if (columns != null) {
-            Arrays.sort(columns, (col1, col2) -> {
-                Integer id1 = Integer.parseInt(col1.getId());
-                Integer id2 = Integer.parseInt(col2.getId());
-                return id1.compareTo(id2);
-            });
-
-            for (ColumnDesc col : columns) {
-                col.init(this);
-            }
-        }
+        super.init(project);
         if (sourceType == ISourceAware.ID_STREAMING) {
             kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                     .getKafkaConfig(this.getIdentity());
@@ -493,6 +452,14 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
 
     public String getTransactionalTableIdentity() {
         return (getIdentity() + TRANSACTIONAL_TABLE_NAME_SUFFIX).toUpperCase(Locale.ROOT);
+    }
+
+    public String getTransactionalTableIdentity(String temporaryWritableDB) {
+        if (StringUtils.isNotBlank(temporaryWritableDB)) {
+            return (String.format(Locale.ROOT, "%s.%s", temporaryWritableDB, getCaseSensitiveName())
+                    + TRANSACTIONAL_TABLE_NAME_SUFFIX).toUpperCase(Locale.ROOT);
+        }
+        return getTransactionalTableIdentity();
     }
 
     public String getTransactionalTableName() {

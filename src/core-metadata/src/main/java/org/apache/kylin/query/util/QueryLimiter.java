@@ -21,11 +21,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.query.exception.BusyQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class QueryLimiter {
     private static final Logger logger = LoggerFactory.getLogger(QueryLimiter.class);

@@ -20,10 +20,10 @@ package org.apache.kylin.tool;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -38,7 +38,7 @@ public class KylinConfigCLITest extends NLocalFileMetadataTestCase {
     public void testGetProperty() throws IOException {
         PrintStream o = System.out;
         File f = File.createTempFile("cfg", ".tmp");
-        PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, Charset.defaultCharset().name());
+        PrintStream tmpOut = new PrintStream(Files.newOutputStream(f.toPath()), false, Charset.defaultCharset().name());
         System.setOut(tmpOut);
         KylinConfigCLI.execute(new String[] { "kylin.env" });
 
@@ -56,7 +56,7 @@ public class KylinConfigCLITest extends NLocalFileMetadataTestCase {
         config.setProperty(property, "ENC('YeqVr9MakSFbgxEec9sBwg==')");
         PrintStream o = System.out;
         File f = File.createTempFile("cfg", ".tmp");
-        PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, Charset.defaultCharset().name());
+        PrintStream tmpOut = new PrintStream(Files.newOutputStream(f.toPath()), false, Charset.defaultCharset().name());
         System.setOut(tmpOut);
         KylinConfigCLI.execute(new String[] { property, EncryptUtil.DEC_FLAG });
 
@@ -74,7 +74,7 @@ public class KylinConfigCLITest extends NLocalFileMetadataTestCase {
         config.setProperty(property, "kylin");
         PrintStream o = System.out;
         File f = File.createTempFile("cfg", ".tmp");
-        PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, Charset.defaultCharset().name());
+        PrintStream tmpOut = new PrintStream(Files.newOutputStream(f.toPath()), false, Charset.defaultCharset().name());
         System.setOut(tmpOut);
         KylinConfigCLI.execute(new String[] { property, EncryptUtil.DEC_FLAG });
 

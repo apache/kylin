@@ -1,0 +1,133 @@
+{
+  "meta_table_key": "/calories/execute/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+  "meta_table_content": {
+    "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+    "last_modified": 1562934103376,
+    "create_time": 1562933714381,
+    "version": "4.0.0.0",
+    "name": "INDEX_BUILD",
+    "tasks": [
+      {
+        "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5_00",
+        "last_modified": 0,
+        "create_time": 1562933714381,
+        "version": "4.0.0.0",
+        "name": "Detect Resource",
+        "tasks": null,
+        "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
+        "params": {
+          "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/00/meta",
+          "submitter": "ADMIN",
+          "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
+          "dataRangeEnd": "9223372036854775807",
+          "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
+          "dataRangeStart": "0",
+          "project": "calories",
+          "className": "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
+          "parentId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+          "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+          "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/00/meta_output",
+          "layoutIds": "20000040001",
+          "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
+        },
+        "segments": [],
+        "job_type": "INDEX_BUILD",
+        "data_range_start": 0,
+        "data_range_end": 0,
+        "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
+        "target_segments": [],
+        "output": {
+          "content": null,
+          "status": "SUCCEED",
+          "info": {
+            "yarn_application_id": "",
+            "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_9294/"
+          },
+          "last_modified": 0,
+          "createTime": 1562933776999,
+          "start_time": 1562933777841,
+          "end_time": 1562933791039,
+          "wait_time": 0
+        }
+      },
+      {
+        "uuid": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5_01",
+        "last_modified": 0,
+        "create_time": 1562933714381,
+        "version": "4.0.0.0",
+        "name": "Load Data To Index",
+        "tasks": null,
+        "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
+        "params": {
+          "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/01/meta",
+          "submitter": "ADMIN",
+          "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
+          "dataRangeEnd": "9223372036854775807",
+          "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
+          "dataRangeStart": "0",
+          "project": "calories",
+          "className": "org.apache.kylin.engine.spark.job.DFBuildJob",
+          "parentId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+          "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+          "outputMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/01/meta_output",
+          "layoutIds": "20000040001",
+          "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
+        },
+        "segments": [],
+        "job_type": "INDEX_BUILD",
+        "data_range_start": 0,
+        "data_range_end": 0,
+        "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
+        "target_segments": [],
+        "output": {
+          "content": null,
+          "status": "SUCCEED",
+          "info": {
+            "yarn_application_id": "application_1554187389076_9295",
+            "yarn_application_tracking_url": "http://master.kcluster:8088/proxy/application_1554187389076_9295/"
+          },
+          "last_modified": 0,
+          "createTime": 1562933776999,
+          "start_time": 1562933791281,
+          "end_time": 1562934103054,
+          "wait_time": 0
+        }
+      }
+    ],
+    "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
+    "params": {
+      "submitter": "ADMIN",
+      "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",
+      "dataflowId": "ed51468b-619b-4ccb-8279-8d888597b66f",
+      "dataRangeEnd": "9223372036854775807",
+      "targetModel": "ed51468b-619b-4ccb-8279-8d888597b66f",
+      "dataRangeStart": "0",
+      "project": "calories",
+      "layoutIds": "20000040001",
+      "segmentIds": "23b28641-7550-48e9-8234-08366d8684da"
+    },
+    "segments": [],
+    "job_type": "INDEX_BUILD",
+    "data_range_start": 0,
+    "data_range_end": 0,
+    "target_model": "ed51468b-619b-4ccb-8279-8d888597b66f",
+    "target_segments": [
+      "23b28641-7550-48e9-8234-08366d8684da"
+    ],
+    "output": {
+      "content": null,
+      "status": "SUCCEED",
+      "info": {
+        "yarn_application_ids": "application_1554187389076_9294,application_1554187389076_9295,application_1554187389076_9296",
+        "dependentFiles": "/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1_temp,/calories/table_snapshot/CUSTOMER,/calories/table_snapshot/SUPPLIER,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000040001,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/20000040001_temp,/calories/parquet/ed51468b-619b-4ccb-8279-8d888597b66f/23b28641-7550-48e9-8234-08366d8684da/1"
+      },
+      "last_modified": 0,
+      "createTime": 1562933776999,
+      "start_time": 1562933707641,
+      "end_time": 1562934103378,
+      "wait_time": 0
+    }
+  },
+  "meta_table_ts": 1562934103378,
+  "meta_table_mvcc": 16
+}

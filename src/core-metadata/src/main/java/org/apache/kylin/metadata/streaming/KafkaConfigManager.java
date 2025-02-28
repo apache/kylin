@@ -20,10 +20,10 @@ package org.apache.kylin.metadata.streaming;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
@@ -47,14 +47,15 @@ public class KafkaConfigManager {
     // ============================================================================
 
     private KylinConfig config;
+    private String project;
 
     // name ==> StreamingConfig
     private CachedCrudAssist<KafkaConfig> crud;
 
     private KafkaConfigManager(KylinConfig config, String project) {
         this.config = config;
-        String resourceRootPath = "/" + project + ResourceStore.KAFKA_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<KafkaConfig>(getStore(), resourceRootPath, KafkaConfig.class) {
+        this.project = project;
+        this.crud = new CachedCrudAssist<KafkaConfig>(getStore(), MetadataType.KAFKA_CONFIG, project, KafkaConfig.class) {
             @Override
             protected KafkaConfig initEntityAfterReload(KafkaConfig t, String resourceName) {
                 return t; // noop
@@ -69,11 +70,11 @@ public class KafkaConfigManager {
         return ResourceStore.getKylinMetaStore(this.config);
     }
 
-    public KafkaConfig getKafkaConfig(String id) {
-        if (StringUtils.isEmpty(id)) {
+    public KafkaConfig getKafkaConfig(String tableIdentity) {
+        if (StringUtils.isEmpty(tableIdentity)) {
             return null;
         }
-        return crud.get(id);
+        return crud.get(KafkaConfig.generateResourceName(project, tableIdentity));
     }
     
     private KafkaConfig copyForWrite(KafkaConfig kafkaConfig) {
@@ -113,7 +114,7 @@ public class KafkaConfigManager {
     }
 
     public List<KafkaConfig> listAllKafkaConfigs() {
-        return crud.listAll().stream().collect(Collectors.toList());
+        return new ArrayList<>(crud.listAll());
     }
 
     public List<KafkaConfig> getKafkaTablesUsingTable(String table) {

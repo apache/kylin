@@ -35,7 +35,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.kylin.common.KylinConfig;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class SecretKeyUtil {

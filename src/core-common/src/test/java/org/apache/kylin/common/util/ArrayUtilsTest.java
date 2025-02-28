@@ -18,14 +18,11 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
-
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ArrayUtilsTest {
     @Test
@@ -36,7 +33,7 @@ public class ArrayUtilsTest {
         input.add(Lists.newArrayList("3"));
         input.add(Lists.newArrayList("4", "5", "6"));
         input.add(null);
-        input.add(Lists.<String> newArrayList());
+        input.add(Lists.newArrayList());
 
         String[][] expected = new String[5][];
         expected[0] = new String[] { "1", "2" };
@@ -45,12 +42,12 @@ public class ArrayUtilsTest {
         expected[3] = null;
         expected[4] = new String[0];
 
-        assertArrayEquals(expected, ArrayUtils.to2DArray(input));
+        Assertions.assertArrayEquals(expected, ArrayUtils.to2DArray(input));
 
         // empty case
-        assertArrayEquals(new String[0][], ArrayUtils.to2DArray(Lists.<List<String>> newArrayList()));
+        Assertions.assertArrayEquals(new String[0][], ArrayUtils.to2DArray(Lists.newArrayList()));
 
         // null case
-        assertNull(ArrayUtils.to2DArray(null));
+        Assertions.assertNull(ArrayUtils.to2DArray(null));
     }
 }

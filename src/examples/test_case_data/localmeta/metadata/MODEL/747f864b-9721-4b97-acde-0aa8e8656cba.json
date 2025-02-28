@@ -1,0 +1,209 @@
+{
+  "uuid" : "747f864b-9721-4b97-acde-0aa8e8656cba",
+  "last_modified" : 1591846906425,
+  "create_time" : 1591846906425,
+  "version" : "4.0.0.0",
+  "alias" : "multi_level_partition",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_ACCOUNT",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_ACCOUNT",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "TEST_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SELLER_ID" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    }
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TEST_KYLIN_FACT_TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "TEST_KYLIN_FACT_LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "TEST_KYLIN_FACT_LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "TEST_KYLIN_FACT_ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "TEST_KYLIN_FACT_ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "TEST_KYLIN_FACT_CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "TEST_KYLIN_FACT_LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "TEST_KYLIN_FACT_IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "TEST_KYLIN_FACT_SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "TEST_KYLIN_FACT_SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "ACCOUNT_CONTACT",
+    "column" : "TEST_ACCOUNT.ACCOUNT_CONTACT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "column" : "TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "ACCOUNT_ID",
+    "column" : "TEST_ACCOUNT.ACCOUNT_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "ACCOUNT_COUNTRY",
+    "column" : "TEST_ACCOUNT.ACCOUNT_COUNTRY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "column" : "TEST_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "SUM_PRICE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(29,4)"
+    },
+    "id" : 100000
+  }, {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100001
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 325.4444376627606,
+        "y" : 43.611111111111114,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "TEST_ACCOUNT" : {
+        "x" : 767.6666598849827,
+        "y" : 285.83333333333337,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : {
+    "columns" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID" ],
+    "partitions" : [ {
+      "id" : 0,
+      "values" : [ "0" ]
+    }, {
+      "id" : 1,
+      "values" : [ "1" ]
+    }, {
+      "id" : 2,
+      "values" : [ "2" ]
+    }, {
+      "id" : 3,
+      "values" : [ "3" ]
+    } ],
+    "max_partition_id" : 3
+  },
+  "multi_partition_key_mapping" : {
+    "alias_columns" : [ "DEFAULT.TEST_KYLIN_FACT.LSTG_FORMAT_NAME" ],
+    "multi_partition_columns" : [ "DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID" ],
+    "value_mapping" : [ {
+      "first" : [ "0" ],
+      "second" : [ "FP-GTC" ]
+    }, {
+      "first" : [ "1" ],
+      "second" : [ "FP-non GTC" ]
+    }, {
+      "first" : [ "2" ],
+      "second" : [ "ABIN" ]
+    }, {
+      "first" : [ "3" ],
+      "second" : [ "Auction" ]
+    } ]
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "multi_level_partition"
+}

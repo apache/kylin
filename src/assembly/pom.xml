@@ -19,7 +19,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -56,6 +56,16 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-spark</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>delta-core_2.12</artifactId>
+                    <groupId>io.delta</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>delta-storage</artifactId>
+                    <groupId>io.delta</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -80,6 +90,12 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-sparder</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>delta-core_2.12</artifactId>
+                    <groupId>io.delta</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -247,6 +263,7 @@
                             <shadedClassifierName>job</shadedClassifierName>
                             <artifactSet>
                                 <excludes>
+                                    <exclude>org.apache.gluten:*</exclude>
                                     <exclude>io.netty:*</exclude>
                                     <exclude>org.apache.zookeeper:*</exclude>
                                     <exclude>org.apache.httpcomponents:*</exclude>
@@ -328,6 +345,7 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                         <exclude>META-INF/maven/**</exclude>
                                         <exclude>rest-management-private-classpath/**</exclude>
+                                        <exclude>org/slf4j/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

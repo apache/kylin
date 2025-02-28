@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
 import org.apache.kylin.rest.request.CreateTableIndexRequest;
+import org.apache.kylin.rest.request.IndexPlannerOptRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.AggIndexResponse;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
@@ -42,6 +43,7 @@ import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.FusionRuleDataResult;
 import org.apache.kylin.rest.response.IndexGraphResponse;
+import org.apache.kylin.rest.response.IndexPlannerOptResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.IndexStatResponse;
 import org.apache.kylin.rest.response.TableIndexResponse;
@@ -263,5 +265,19 @@ public class NIndexPlanController extends NBasicController {
         checkRequiredArg(MODEL_ID, modelId);
         val response = indexPlanService.getStat(project, modelId);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+    }
+
+    @ApiOperation(value = "opt index plan", tags = { "AI" })
+    @PutMapping(value = "/opt_index")
+    @ResponseBody
+    public EnvelopeResponse<IndexPlannerOptResponse> optTableIndex(@RequestBody IndexPlannerOptRequest request) {
+        checkProjectName(request.getProject());
+        checkRequiredArg("dataflowId", request.getModelName());
+        String modelId = modelService.getModel(request.getModelName(), request.getProject()).getId();
+        val jobIds = indexPlanService.optIndexPlan(modelId, request.getInstantInitIndexNum(), request.getProject(),
+                request.getPriority(), request.getYarnQueue(), request.getTag(), request.getStart(), request.getEnd());
+        IndexPlannerOptResponse recJobResponse = new IndexPlannerOptResponse();
+        recJobResponse.setJobIds(jobIds);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, recJobResponse, "");
     }
 }

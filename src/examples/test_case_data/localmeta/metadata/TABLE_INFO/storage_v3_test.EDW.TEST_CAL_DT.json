@@ -1,0 +1,415 @@
+{
+ 
+  "uuid" : "0ff420eb-79ad-40bd-bca9-12d8cd05c60a",
+  "name" : "TEST_CAL_DT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CAL_DT",
+    "datatype" : "date",
+    "index": "T"
+  }, {
+    "id" : "2",
+    "name" : "YEAR_BEG_DT",
+    "datatype" : "date",
+    "index": "T"
+  }, {
+    "id" : "3",
+    "name" : "QTR_BEG_DT",
+    "datatype" : "date",
+    "index": "T"
+  }, {
+    "id" : "4",
+    "name" : "MONTH_BEG_DT",
+    "datatype" : "date",
+    "index": "T"
+  }, {
+    "id" : "5",
+    "name" : "WEEK_BEG_DT",
+    "datatype" : "date",
+    "index": "T"
+  }, {
+    "id" : "6",
+    "name" : "AGE_FOR_YEAR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "7",
+    "name" : "AGE_FOR_QTR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "8",
+    "name" : "AGE_FOR_MONTH_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "9",
+    "name" : "AGE_FOR_WEEK_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "10",
+    "name" : "AGE_FOR_DT_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "11",
+    "name" : "AGE_FOR_RTL_YEAR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "12",
+    "name" : "AGE_FOR_RTL_QTR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "13",
+    "name" : "AGE_FOR_RTL_MONTH_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "14",
+    "name" : "AGE_FOR_RTL_WEEK_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "15",
+    "name" : "AGE_FOR_CS_WEEK_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "16",
+    "name" : "DAY_OF_CAL_ID",
+    "datatype" : "int"
+  }, {
+    "id" : "17",
+    "name" : "DAY_OF_YEAR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "18",
+    "name" : "DAY_OF_QTR_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "19",
+    "name" : "DAY_OF_MONTH_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "20",
+    "name" : "DAY_OF_WEEK_ID",
+    "datatype" : "int"
+  }, {
+    "id" : "21",
+    "name" : "WEEK_OF_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "22",
+    "name" : "WEEK_OF_CAL_ID",
+    "datatype" : "int"
+  }, {
+    "id" : "23",
+    "name" : "MONTH_OF_QTR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "24",
+    "name" : "MONTH_OF_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "25",
+    "name" : "MONTH_OF_CAL_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "26",
+    "name" : "QTR_OF_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "27",
+    "name" : "QTR_OF_CAL_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "28",
+    "name" : "YEAR_OF_CAL_ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "29",
+    "name" : "YEAR_END_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "30",
+    "name" : "QTR_END_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "31",
+    "name" : "MONTH_END_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "32",
+    "name" : "WEEK_END_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "33",
+    "name" : "CAL_DT_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "34",
+    "name" : "CAL_DT_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "35",
+    "name" : "CAL_DT_SHORT_NAME",
+    "datatype" : "string"
+  }, {
+    "id" : "36",
+    "name" : "YTD_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "37",
+    "name" : "QTD_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "38",
+    "name" : "MTD_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "39",
+    "name" : "WTD_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "40",
+    "name" : "SEASON_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "41",
+    "name" : "DAY_IN_YEAR_COUNT",
+    "datatype" : "smallint"
+  }, {
+    "id" : "42",
+    "name" : "DAY_IN_QTR_COUNT",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "43",
+    "name" : "DAY_IN_MONTH_COUNT",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "44",
+    "name" : "DAY_IN_WEEK_COUNT",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "45",
+    "name" : "RTL_YEAR_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "46",
+    "name" : "RTL_QTR_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "47",
+    "name" : "RTL_MONTH_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "48",
+    "name" : "RTL_WEEK_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "49",
+    "name" : "CS_WEEK_BEG_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "50",
+    "name" : "CAL_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "51",
+    "name" : "DAY_OF_WEEK",
+    "datatype" : "string"
+  }, {
+    "id" : "52",
+    "name" : "MONTH_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "53",
+    "name" : "PRD_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "54",
+    "name" : "PRD_FLAG",
+    "datatype" : "string"
+  }, {
+    "id" : "55",
+    "name" : "PRD_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "56",
+    "name" : "PRD_IND",
+    "datatype" : "string"
+  }, {
+    "id" : "57",
+    "name" : "QTR_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "58",
+    "name" : "QTR_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "59",
+    "name" : "QTR_IND",
+    "datatype" : "string"
+  }, {
+    "id" : "60",
+    "name" : "RETAIL_WEEK",
+    "datatype" : "string"
+  }, {
+    "id" : "61",
+    "name" : "RETAIL_YEAR",
+    "datatype" : "string"
+  }, {
+    "id" : "62",
+    "name" : "RETAIL_START_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "63",
+    "name" : "RETAIL_WK_END_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "64",
+    "name" : "WEEK_IND",
+    "datatype" : "string"
+  }, {
+    "id" : "65",
+    "name" : "WEEK_NUM_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "66",
+    "name" : "WEEK_BEG_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "67",
+    "name" : "WEEK_END_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "68",
+    "name" : "WEEK_IN_YEAR_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "69",
+    "name" : "WEEK_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "70",
+    "name" : "WEEK_BEG_END_DESC_MDY",
+    "datatype" : "string"
+  }, {
+    "id" : "71",
+    "name" : "WEEK_BEG_END_DESC_MD",
+    "datatype" : "string"
+  }, {
+    "id" : "72",
+    "name" : "YEAR_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "73",
+    "name" : "YEAR_IND",
+    "datatype" : "string"
+  }, {
+    "id" : "74",
+    "name" : "CAL_DT_MNS_1YEAR_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "75",
+    "name" : "CAL_DT_MNS_2YEAR_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "76",
+    "name" : "CAL_DT_MNS_1QTR_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "77",
+    "name" : "CAL_DT_MNS_2QTR_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "78",
+    "name" : "CAL_DT_MNS_1MONTH_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "79",
+    "name" : "CAL_DT_MNS_2MONTH_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "80",
+    "name" : "CAL_DT_MNS_1WEEK_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "81",
+    "name" : "CAL_DT_MNS_2WEEK_DT",
+    "datatype" : "string"
+  }, {
+    "id" : "82",
+    "name" : "CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "83",
+    "name" : "CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "84",
+    "name" : "CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "85",
+    "name" : "CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "86",
+    "name" : "CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "87",
+    "name" : "CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "88",
+    "name" : "CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "89",
+    "name" : "CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "90",
+    "name" : "RTL_MONTH_OF_RTL_YEAR_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "91",
+    "name" : "RTL_QTR_OF_RTL_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "92",
+    "name" : "RTL_WEEK_OF_RTL_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "93",
+    "name" : "SEASON_OF_YEAR_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "94",
+    "name" : "YTM_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "95",
+    "name" : "YTQ_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "96",
+    "name" : "YTW_YN_ID",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "97",
+    "name" : "CAL_DT_CRE_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "98",
+    "name" : "CAL_DT_CRE_USER",
+    "datatype" : "string"
+  }, {
+    "id" : "99",
+    "name" : "CAL_DT_UPD_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "100",
+    "name" : "CAL_DT_UPD_USER",
+    "datatype" : "string"
+  } ],
+  "database" : "edw",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "storage_v3_test"
+}

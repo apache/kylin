@@ -14,7 +14,7 @@ import java.util.List;
 public class RawSqlParser {
 
     public static void main(String[] args) throws Exception {
-        final String SQL = "select /*+ MODEL_PRIORITY(model1, model2) */ 'col1-;1', col2 -- comment1;\n"
+        final String SQL = "select /*+ MODEL_PRIORITY(model1, model2), ACCEPT_CACHE_TIME(123123) */ 'col1-;1', col2 -- comment1;\n"
             + "from table -- comment2\n"
             + "/* comment3\n"
             + "   comment4;\n"
@@ -59,7 +59,7 @@ public class RawSqlParser {
         StringBuilder fullText = new StringBuilder();
         for (RawSqlBlock block : allBlockList) {
             String text = block.getText();
-            if (block.getType().equals(RawSqlBlock.Type.STATEMENT) && block.equals(stmtBlockList.get(stmtBlockList.size() - 1))) {
+            if (block.getType() == RawSqlBlock.Type.STATEMENT && block.equals(stmtBlockList.get(stmtBlockList.size() - 1))) {
                 for (int i = text.length() - 1; i >= 0; i--) {
                     char c = text.charAt(i);
                     if (c == '\'' || c == '"') {
@@ -99,11 +99,11 @@ PARSER_END(RawSqlParser)
 
 <DEFAULT> TOKEN : {
     <SINGLE_LINE_COMMENT: "--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
-    | <REMAIN_TOKEN : [" ", "\t", "\n", "\r", ",", "/", "-"] >
-    | <ANY : (~[" ", ",", "\t", "\n", "\r", "/", "-", "'", "\""])+ >
+    | <REMAIN_TOKEN: [" ", "\t", "\n", "\r", ",", "/", "-"] >
+    | <ANY: (~[" ", ",", "\t", "\n", "\r", "/", "-", "'", "\""])+ >
     | <HINT_BEG: "/*+" >
     | <COMMENT_END: "*/" >
-    | <HINT: <HINT_BEG> (~["\n", "\r", "*", "/"])* <COMMENT_END> >
+    | <HINT: <HINT_BEG> (~["\n", "\r", "*", "/"])* <COMMENT_END> ([" "])* ("\n"|"\r"|"\r\n")? >
 }
 
 <DEFAULT> MORE : {
@@ -113,7 +113,7 @@ PARSER_END(RawSqlParser)
 }
 
 <IN_MULTI_LINE_COMMENT> MORE : { < ~[] > }
-<IN_MULTI_LINE_COMMENT> TOKEN : { <MULTI_LINE_COMMENT: "*/" ("\n"|"\r"|"\r\n")? > : DEFAULT }
+<IN_MULTI_LINE_COMMENT> TOKEN : { <MULTI_LINE_COMMENT: "*/" ([" "])* ("\n"|"\r"|"\r\n")? > : DEFAULT }
 
 <IN_QUOTE> MORE : { < ~["'"] > }
 <IN_QUOTE> TOKEN : { <QUOTE_STRING: "'" > : DEFAULT }
@@ -145,7 +145,10 @@ private void DoParse(List<RawSqlBlock> stmtBlockList, List<RawSqlBlock> allBlock
             }
             allBlockList.add(block);
         }
-        | block = Stmt()
+        | (
+            block = Hint()
+            | block = Stmt()
+        )
         {
             stmtBlockList.add(block);
             allBlockList.add(block);
@@ -166,6 +169,17 @@ private RawSqlBlock Comment():
     { return new RawSqlBlock(t.image, RawSqlBlock.Type.COMMENT, t.beginLine, t.beginColumn, t.endLine, t.endColumn); }
 }
 
+private RawSqlBlock Hint():
+{
+    Token t;
+}
+{
+    (
+        t = <HINT>
+    )
+    { return new RawSqlBlock(t.image, RawSqlBlock.Type.HINT, t.beginLine, t.beginColumn, t.endLine, t.endColumn); }
+}
+
 private RawSqlBlock Stmt():
 {
     Token t;
@@ -182,7 +196,6 @@ private RawSqlBlock Stmt():
             | t = <DOUBLE_QUOTE_STRING>
             | t = <REMAIN_TOKEN>
             | t = <ANY>
-            | t = <HINT>
         )
         {
             stmtBuilder.append(t.image);

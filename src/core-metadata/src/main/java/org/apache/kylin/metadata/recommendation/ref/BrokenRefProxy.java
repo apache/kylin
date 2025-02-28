@@ -20,11 +20,10 @@ package org.apache.kylin.metadata.recommendation.ref;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 

@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.kylin.util.OlapContextTestUtil;
@@ -48,13 +48,15 @@ import org.junit.jupiter.api.Test;
 @MetadataInfo
 class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @AfterEach
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 
@@ -73,10 +75,10 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
                 QueryRouter.USE_VACANT_INDEXES);
         try (QueryContext queryContext = QueryContext.current()) {
             String sql = "select max(LO_ORDERDATE) from ssb.lineorder";
-            List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-            OLAPContext olapContext = olapContexts.get(0);
-            StorageContext storageContext = olapContext.storageContext;
-            Assertions.assertTrue(storageContext.isEmptyLayout());
+            List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+            OlapContext olapContext = olapContexts.get(0);
+            StorageContext storageContext = olapContext.getStorageContext();
+            Assertions.assertTrue(storageContext.isDataSkipped());
             Assertions.assertTrue(queryContext.getQueryTagInfo().isVacant());
         }
     }
@@ -85,8 +87,8 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
     void testUnmatchedWithNullResult() throws SqlParseException {
         String modelId = "d67bf0e4-30f4-9248-2528-52daa80be91a";
         String sql = "select max(LO_ORDERPRIOTITY) from ssb.lineorder";
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext olapContext = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext olapContext = olapContexts.get(0);
         NDataflow df = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
         Map<String, String> matchedJoinGraphAliasMap = OlapContextTestUtil.matchJoins(df.getModel(), olapContext);
         olapContext.fixModel(df.getModel(), matchedJoinGraphAliasMap);
@@ -104,8 +106,8 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
         NDataModelManager modelMgr = NDataModelManager.getInstance(getTestConfig(), getProject());
         modelMgr.listAllModels().stream().filter(model -> !model.isBroken())
                 .forEach(model -> cleanAlreadyExistingLayoutsInSegments(model.getId()));
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext olapContext = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext olapContext = olapContexts.get(0);
         NDataflow df = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
         Map<String, String> matchedJoinGraphAliasMap = OlapContextTestUtil.matchJoins(df.getModel(), olapContext);
         olapContext.fixModel(df.getModel(), matchedJoinGraphAliasMap);
@@ -132,8 +134,8 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
     void testUnmatchedAggIndex() throws SqlParseException {
         String modelId = "d67bf0e4-30f4-9248-2528-52daa80be91a";
         String sql = "select max(LO_ORDERPRIOTITY) from ssb.lineorder";
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext olapContext = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext olapContext = olapContexts.get(0);
         NDataflow df = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
         Map<String, String> matchedJoinGraphAliasMap = OlapContextTestUtil.matchJoins(df.getModel(), olapContext);
         olapContext.fixModel(df.getModel(), matchedJoinGraphAliasMap);
@@ -152,8 +154,8 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
         NDataModelManager modelMgr = NDataModelManager.getInstance(getTestConfig(), getProject());
         modelMgr.listAllModels().stream().filter(model -> !model.isBroken())
                 .forEach(model -> cleanAlreadyExistingLayoutsInSegments(model.getId()));
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext olapContext = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext olapContext = olapContexts.get(0);
         NDataflow df = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
         Map<String, String> matchedJoinGraphAliasMap = OlapContextTestUtil.matchJoins(df.getModel(), olapContext);
         olapContext.fixModel(df.getModel(), matchedJoinGraphAliasMap);
@@ -175,8 +177,8 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
         NDataModelManager modelMgr = NDataModelManager.getInstance(getTestConfig(), getProject());
         modelMgr.listAllModels().stream().filter(model -> !model.isBroken())
                 .forEach(model -> cleanAlreadyExistingLayoutsInSegments(model.getId()));
-        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
-        OLAPContext olapContext = olapContexts.get(0);
+        List<OlapContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
+        OlapContext olapContext = olapContexts.get(0);
         NDataflow df = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
         Map<String, String> matchedJoinGraphAliasMap = OlapContextTestUtil.matchJoins(df.getModel(), olapContext);
         olapContext.fixModel(df.getModel(), matchedJoinGraphAliasMap);

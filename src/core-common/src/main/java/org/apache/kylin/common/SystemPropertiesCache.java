@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.common;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * It's a workaround to avoid lock in bottom hash table
@@ -31,7 +31,7 @@ public class SystemPropertiesCache {
     private static final ConcurrentHashMap<Object, Object> CACHED_SYSTEM_PROPERTY = new ConcurrentHashMap<>(
             System.getProperties());
 
-    protected static Map<Object, Object> getProperties(){
+    protected static Map<Object, Object> getProperties() {
         return CACHED_SYSTEM_PROPERTY;
     }
 

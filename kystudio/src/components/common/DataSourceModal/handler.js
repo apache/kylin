@@ -85,6 +85,8 @@ function _getLoadTableSubmitData (form) {
     tables: form.selectedTables,
     databases: form.selectedDatabases,
     need_sampling: form.needSampling,
+    load_as_internal: form.loadAsInternalTable,
+    storage_type: 'gluten',
     sampling_rows: form.samplingRows
   }
 }

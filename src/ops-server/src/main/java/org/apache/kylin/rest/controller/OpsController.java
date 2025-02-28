@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,8 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
-import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -55,7 +54,6 @@ import org.apache.kylin.rest.response.MaintenanceModeResponse;
 import org.apache.kylin.rest.response.ServerExtInfoResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.response.ServersResponse;
-import org.apache.kylin.rest.service.MaintenanceModeService;
 import org.apache.kylin.rest.service.MetadataBackupService;
 import org.apache.kylin.rest.service.OpsService;
 import org.apache.kylin.rest.service.ScheduleService;
@@ -82,14 +80,12 @@ import io.swagger.annotations.ApiOperation;
 @Controller
 @RequestMapping(value = "/api/system", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class OpsController extends NBasicController {
+    
+    private static String DEPRECATED_MAINTENANCE_MODE = "Maintenance mode has been deprecated.";
 
     @Autowired
     @Qualifier("systemService")
     private SystemService systemService;
-
-    @Autowired
-    @Qualifier("maintenanceModeService")
-    private MaintenanceModeService maintenanceModeService;
 
     @Autowired
     private ClusterManager clusterManager;
@@ -139,6 +135,7 @@ public class OpsController extends NBasicController {
             @RequestBody DiagPackageRequest diagPackageRequest, @RequestHeader HttpHeaders headers,
             final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isNotBlank(diagPackageRequest.getJobId())) {
             diagPackageRequest.setStart("");
             diagPackageRequest.setEnd("");
@@ -167,6 +164,7 @@ public class OpsController extends NBasicController {
             @RequestBody QueryDiagPackageRequest queryDiagPackageRequest, @RequestHeader HttpHeaders headers,
             final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             String uuid = systemService.dumpLocalQueryDiagPackage(queryDiagPackageRequest.getQueryId(),
                     queryDiagPackageRequest.getProject(), headers);
@@ -193,11 +191,12 @@ public class OpsController extends NBasicController {
             @RequestParam(value = "project", required = false) String project, final HttpServletRequest request)
             throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             return systemService.getExtractorStatus(id, project);
         } else {
             String url = host + "/kylin/api/system/diag/status?id=" + id;
-            if(StringUtils.isNotEmpty(project)){
+            if (StringUtils.isNotEmpty(project)) {
                 url = url + "&project=" + project;
             }
             return generateTaskForRemoteHost(request, url);
@@ -211,6 +210,7 @@ public class OpsController extends NBasicController {
             @RequestParam(value = "id") String id, @RequestParam(value = "project", required = false) String project,
             final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             setDownloadResponse(systemService.getDiagPackagePath(id, project), MediaType.APPLICATION_OCTET_STREAM_VALUE,
                     response);
@@ -229,6 +229,7 @@ public class OpsController extends NBasicController {
     public EnvelopeResponse<String> remoteStopPackage(@RequestParam(value = "host", required = false) String host,
             @RequestParam(value = "id") String id, final HttpServletRequest request) throws Exception {
         host = decodeHost(host);
+        AddressUtil.validateHost(host);
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             systemService.stopDiagTask(id);
             return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
@@ -242,24 +243,22 @@ public class OpsController extends NBasicController {
     @PostMapping(value = "/maintenance_mode", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
     public EnvelopeResponse<String> setMaintenanceMode(@RequestBody MaintenanceModeRequest maintenanceModeRequest) {
-        maintenanceModeService.setMaintenanceMode(maintenanceModeRequest.getReason());
-        return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
+        return new EnvelopeResponse<>(CODE_SUCCESS, "", DEPRECATED_MAINTENANCE_MODE);
     }
 
     @ApiOperation(value = "exitMaintenance", tags = { "DW" })
     @DeleteMapping(value = "/maintenance_mode", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
     public EnvelopeResponse<String> unsetReadMode(@RequestParam(value = "reason") String reason) {
-        maintenanceModeService.unsetMaintenanceMode(reason);
-        EventBusFactory.getInstance().postAsync(new EpochCheckBroadcastNotifier());
-        return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
+        return new EnvelopeResponse<>(CODE_SUCCESS, "", DEPRECATED_MAINTENANCE_MODE);
     }
 
     @ApiOperation(value = "getMaintenance", tags = { "DW" })
     @GetMapping(value = "/maintenance_mode", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
     public EnvelopeResponse<MaintenanceModeResponse> getMaintenanceMode() {
-        return new EnvelopeResponse<>(CODE_SUCCESS, maintenanceModeService.getMaintenanceMode(), "");
+        return new EnvelopeResponse<>(CODE_SUCCESS, new MaintenanceModeResponse(false, DEPRECATED_MAINTENANCE_MODE),
+                DEPRECATED_MAINTENANCE_MODE);
     }
 
     @ApiOperation(value = "servers", tags = { "DW" })
@@ -269,13 +268,11 @@ public class OpsController extends NBasicController {
             @RequestParam(value = "ext", required = false, defaultValue = "false") boolean ext) {
         ServersResponse response = new ServersResponse();
         List<ServerInfoResponse> servers = clusterManager.getServers();
-        response.setStatus(maintenanceModeService.getMaintenanceMode());
+        response.setStatus(new MaintenanceModeResponse(false, DEPRECATED_MAINTENANCE_MODE));
         if (ext) {
-            response.setServers(
-                    servers.stream().map(server ->
-                        new ServerExtInfoResponse()
-                                .setServer(server)
-                                .setSecretName(encodeHost(server.getHost()))).collect(Collectors.toList()));
+            response.setServers(servers.stream().map(
+                    server -> new ServerExtInfoResponse().setServer(server).setSecretName(encodeHost(server.getHost())))
+                    .collect(Collectors.toList()));
         } else {
             response.setServers(servers.stream().map(ServerInfoResponse::getHost).collect(Collectors.toList()));
         }
@@ -290,7 +287,7 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse<>(result.getFirst(), result.getSecond(), "");
     }
 
-    @ApiOperation(value = "backup metadata", tags = {"SM"})
+    @ApiOperation(value = "backup metadata", tags = { "SM" })
     @PostMapping(value = "/do_metadata_backup")
     @ResponseBody
     public EnvelopeResponse<String> backupMetadata(@RequestBody HashMap request) {
@@ -299,7 +296,7 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse<>(CODE_SUCCESS, resPath, "");
     }
 
-    @ApiOperation(value = "get metadata backup", tags = {"SM"})
+    @ApiOperation(value = "get metadata backup", tags = { "SM" })
     @GetMapping(value = "/get_metadata_backup_list")
     @ResponseBody
     public EnvelopeResponse<String> getMetadataBackupList(
@@ -314,18 +311,17 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse(CODE_SUCCESS, res, "");
     }
 
-    @ApiOperation(value = "cancel backup metadata", tags = {"SM"})
+    @ApiOperation(value = "cancel backup metadata", tags = { "SM" })
     @PostMapping(value = "/cancel_metadata_backup")
     @ResponseBody
-    public EnvelopeResponse<String> cancelBackupMetadata(@RequestBody HashMap request) throws IOException,
-            InterruptedException, ExecutionException {
+    public EnvelopeResponse<String> cancelBackupMetadata(@RequestBody HashMap request) throws IOException {
         String path = (String) request.get("path");
         String project = getProjectStrAndCheckPermission(request);
         opsService.cancelAndDeleteMetadataBackup(path, project);
         return new EnvelopeResponse<>(CODE_SUCCESS, null, "");
     }
 
-    @ApiOperation(value = "delete metadata backup", tags = {"SM"})
+    @ApiOperation(value = "delete metadata backup", tags = { "SM" })
     @PostMapping(value = "/delete_metadata_backup")
     @ResponseBody
     public EnvelopeResponse<String> deleteMetadataBackup(@RequestBody HashMap request) throws Exception {
@@ -335,20 +331,20 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse<>(CODE_SUCCESS, null, msg);
     }
 
-    @ApiOperation(value = "restore metadata", tags = {"SM"})
+    @ApiOperation(value = "restore metadata", tags = { "SM" })
     @PostMapping(value = "/do_restore_metadata")
     @ResponseBody
     public EnvelopeResponse<Map> restoreMetadata(@RequestBody HashMap request) {
         String path = (String) request.get("path");
         String project = getProjectStrAndCheckPermission(request);
         boolean is_truncate = (boolean) request.get("is_truncate");
-        String uuid = opsService.doMetadataRestore(path, project, is_truncate);
+        String uuid = opsService.restoreMetadata(path, project, is_truncate);
         Map<String, String> res = Maps.newHashMap();
         res.put("restore_task_id", uuid);
         return new EnvelopeResponse(CODE_SUCCESS, res, "");
     }
 
-    @ApiOperation(value = "get metadata backup store dir", tags = {"SM"})
+    @ApiOperation(value = "get metadata backup store dir", tags = { "SM" })
     @GetMapping(value = "/metadata_backup_store_dir")
     @ResponseBody
     public EnvelopeResponse<String> getMetadataBackupStoreDir(
@@ -360,7 +356,7 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse(CODE_SUCCESS, res, "");
     }
 
-    @ApiOperation(value = "get metadata restore task status", tags = {"SM"})
+    @ApiOperation(value = "get metadata restore task status", tags = { "SM" })
     @GetMapping(value = "/metadata_restore_task_status")
     @ResponseBody
     public EnvelopeResponse<String> getMetadataRestoreTaskStatus(
@@ -373,11 +369,11 @@ public class OpsController extends NBasicController {
         return new EnvelopeResponse(CODE_SUCCESS, res, "");
     }
 
-    @ApiOperation(value = "get has metadata restore task in progress", tags = {"SM"})
+    @ApiOperation(value = "get has metadata restore task in progress", tags = { "SM" })
     @GetMapping(value = "/has_metadata_restore_in_progress")
     @ResponseBody
     public EnvelopeResponse<String> getHasMetadataRestoreTaskInProgress() {
-        boolean running = opsService.hasMetadataRestoreRunning();
+        boolean running = OpsService.MetadataRestore.hasMetadataRestoreRunning();
         Map<String, Object> res = Maps.newHashMap();
         res.put("has_metadata_restore_in_progress", running);
         return new EnvelopeResponse(CODE_SUCCESS, res, "");
@@ -389,8 +385,8 @@ public class OpsController extends NBasicController {
     }
 
     public String getProjectStrAndCheckPermission(String project) {
-        if (project == null || project.equals(OpsService._GLOBAL)) {
-            project = OpsService._GLOBAL;
+        if (project == null || project.equals(UnitOfWork.GLOBAL_UNIT)) {
+            project = UnitOfWork.GLOBAL_UNIT;
             aclEvaluate.checkIsGlobalAdmin();
         } else {
             ProjectInstance projectInstance = getProject(project);

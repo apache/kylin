@@ -19,10 +19,13 @@ package org.apache.kylin.metadata.model.util;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_COMPUTED_COLUMN_EXPRESSION;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_COMPUTED_COLUMN_NAME;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_COMPUTED_COLUMN_EXPRESSION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT_ADJUST_INFO;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_EXPR_CONFLICT;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_NAME_CONFLICT;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,14 +40,23 @@ import java.util.stream.Collectors;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
@@ -59,24 +71,22 @@ import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.BiMap;
-import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.springframework.util.DigestUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.val;
 
 public class ComputedColumnUtil {
     private static final Logger logger = LoggerFactory.getLogger(ComputedColumnUtil.class);
     public static final String CC_NAME_PREFIX = "CC_AUTO_";
     public static final String DEFAULT_CC_NAME = "CC_AUTO_1";
+
+    @Setter
+    private static RexStrExtractor EXTRACTOR = null;
 
     public static String newAutoCCName(long ts, int index) {
         return String.format(Locale.ROOT, "%s_%s_%s", ComputedColumnUtil.CC_NAME_PREFIX, ts, index);
@@ -177,7 +187,8 @@ public class ComputedColumnUtil {
             final TableDesc tableDesc) {
         final MutableInt id = new MutableInt(tableDesc.getColumnCount());
         return computedColumnDescs.stream()
-                .filter(input -> tableDesc.getIdentity().equalsIgnoreCase(input.getTableIdentity())).map(input -> {
+                .filter(input -> tableDesc.getIdentity().equalsIgnoreCase(input.getTableIdentity())) //
+                .map(input -> {
                     id.increment();
                     ColumnDesc columnDesc = new ColumnDesc(id.toString(), input.getColumnName(), input.getDatatype(),
                             input.getComment(), null, null, input.getInnerExpression());
@@ -309,7 +320,7 @@ public class ComputedColumnUtil {
 
     // model X contains table f,a,b,c, and model Y contains table f,a,b,d
     // if two cc involve table a,b, they might still be treated equal regardless of the model difference on c,d
-    private static JoinsGraph getCCExprRelatedSubgraph(ComputedColumnDesc cc, NDataModel model) {
+    public static JoinsGraph getCCExprRelatedSubgraph(ComputedColumnDesc cc, NDataModel model) {
         Set<String> aliasSets = CalciteParser.getUsedAliasSet(cc.getExpression());
         if (cc.getTableAlias() != null) {
             aliasSets.add(cc.getTableAlias());
@@ -687,5 +698,35 @@ public class ComputedColumnUtil {
         for (String usedColumn : ccUsedColsMap.get(ccColName)) {
             collectCCUsedSourceCols(usedColumn, ccUsedColsMap, ccUsedSourceCols);
         }
+    }
+
+    public static List<ComputedColumnDesc> deepCopy(List<ComputedColumnDesc> ccList) {
+        List<ComputedColumnDesc> result = Lists.newArrayList();
+        try {
+            for (ComputedColumnDesc cc : ccList) {
+                result.add(JsonUtil.deepCopy(cc, ComputedColumnDesc.class));
+            }
+        } catch (IOException e) {
+            logger.error("failed to deep copy cc list", e);
+        }
+        return result;
+    }
+
+    public static void computeMd5(KylinConfig config, NDataModel model, ComputedColumnDesc cc) {
+        if (EXTRACTOR == null) {
+            throw new KylinRuntimeException("When update or insert CC, a RexStrExtractor must be Specified.");
+        }
+        try {
+            String rexStr = EXTRACTOR.extract(model, config, cc.getInnerExpression());
+            String subJoinGraphStr = ComputedColumnUtil.getCCExprRelatedSubgraph(cc, model).toString(true, true);
+            cc.setExpressionMD5(
+                    DigestUtils.md5DigestAsHex((subJoinGraphStr + rexStr).getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new KylinException(INVALID_COMPUTED_COLUMN_EXPRESSION, "Compute md5 for cc failed!", e);
+        }
+    }
+
+    public interface RexStrExtractor {
+        String extract(NDataModel model, KylinConfig config, String cc) throws SqlParseException;
     }
 }

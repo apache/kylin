@@ -18,22 +18,23 @@
 
 package org.apache.kylin.rest.cache.memcached;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.lang3.SerializationUtils;
-import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
-import org.slf4j.Logger;
-import org.apache.kylin.rest.cache.KylinCache;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.cache.support.SimpleValueWrapper;
-
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.kylin.common.Singletons;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.rest.cache.KylinCache;
+import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.support.SimpleValueWrapper;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * This is a cache manager for memcached which implements KylinCache.
@@ -49,19 +50,19 @@ public class CompositeMemcachedCache implements KylinCache {
 
     private static final MemcachedCacheConfig memcachedCacheConfig = Singletons.getInstance(MemcachedCacheConfig.class);
 
-    private static final Cache exceptionCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, 86400)));
+    private static final Cache exceptionCache = new MemCachedCacheAdaptor(new MemcachedChunkingCache(MemcachedCache
+            .create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, 86400)));
 
-    private static final Cache schemaCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, 86400)));
+    private static final Cache schemaCache = new MemCachedCacheAdaptor(new MemcachedChunkingCache(MemcachedCache
+            .create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, 86400)));
 
-    private static final Cache successCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName)));
+    private static final Cache successCache = new MemCachedCacheAdaptor(new MemcachedChunkingCache(MemcachedCache
+            .create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName)));
 
     static {
-         cacheMap.put(CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, exceptionCache);
-         cacheMap.put(CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, schemaCache);
-         cacheMap.put(CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName, successCache);
+        cacheMap.put(CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, exceptionCache);
+        cacheMap.put(CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, schemaCache);
+        cacheMap.put(CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName, successCache);
     }
 
     public static KylinCache getInstance() {
@@ -98,14 +99,14 @@ public class CompositeMemcachedCache implements KylinCache {
 
     @Override
     public void put(String type, String project, Object key, Object value) {
-         checkCacheType(type);
-         String keyS = serializeKey(key);
-         if (keyS == null) {
-             logger.warn("write to cash failed for key can not convert to String");
-             return;
-         }
-         keyS = getTypeProjectPrefix(type, project) + keyS;
-         cacheMap.get(type).put(keyS, value);
+        checkCacheType(type);
+        String keyS = serializeKey(key);
+        if (keyS == null) {
+            logger.warn("write to cash failed for key can not convert to String");
+            return;
+        }
+        keyS = getTypeProjectPrefix(type, project) + keyS;
+        cacheMap.get(type).put(keyS, value);
     }
 
     @Override
@@ -124,12 +125,12 @@ public class CompositeMemcachedCache implements KylinCache {
     public Object get(String type, String project, Object key) {
         checkCacheType(type);
         String keyS = serializeKey(key);
-        if (keyS == null){
+        if (keyS == null) {
             logger.warn("read from cache failed for key can not convert to String");
             return null;
         }
         keyS = getTypeProjectPrefix(type, project) + keyS;
-        SimpleValueWrapper valueWrapper = (SimpleValueWrapper)cacheMap.get(type).get(keyS);
+        SimpleValueWrapper valueWrapper = (SimpleValueWrapper) cacheMap.get(type).get(keyS);
         return valueWrapper == null ? null : valueWrapper.get();
     }
 

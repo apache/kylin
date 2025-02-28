@@ -29,17 +29,18 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.CubeTestUtils;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -404,9 +405,13 @@ public class RuleBasedCuboidDescTest extends NLocalFileMetadataTestCase {
         dataflowManager.createDataflow(newPlan, "ADMIN");
         NDataflow df = dataflowManager.getDataflow(newPlan.getId());
 
-        NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
-        update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, df.getLatestReadySegment().getId(), 30001L));
-        dataflowManager.updateDataflow(update);
+        val seg1 = dataflowManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
+        val update1 = new NDataflowUpdate(df.getUuid());
+        seg1.setStatus(SegmentStatusEnum.READY);
+        update1.setToUpdateSegs(seg1);
+        update1.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg1.getId(), 30001L));
+        dataflowManager.updateDataflow(update1);
 
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(0, 1, 2, 3, 4, 5, 6));
@@ -471,9 +476,13 @@ public class RuleBasedCuboidDescTest extends NLocalFileMetadataTestCase {
         dataflowManager.createDataflow(newPlan, "ADMIN");
         NDataflow df = dataflowManager.getDataflow(newPlan.getId());
 
-        NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
-        update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, df.getLatestReadySegment().getId(), 30001L));
-        dataflowManager.updateDataflow(update);
+        val seg1 = dataflowManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
+        val update1 = new NDataflowUpdate(df.getUuid());
+        seg1.setStatus(SegmentStatusEnum.READY);
+        update1.setToUpdateSegs(seg1);
+        update1.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg1.getId(), 30001L));
+        dataflowManager.updateDataflow(update1);
 
         logLayouts(newPlan.getAllLayouts());
         Assert.assertEquals(12, newPlan.getAllLayouts().size());

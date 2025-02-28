@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -42,63 +43,61 @@ public class MetadataStoreTest {
     public void testVerify(@TempDir File junitFolder) throws Exception {
         //copy an metadata image to junit folder
         ResourceTool.copy(getTestConfig(), KylinConfig.createInstanceFromUri(junitFolder.getAbsolutePath()),
-                "/_global/project/default.json");
-        ResourceTool.copy(getTestConfig(), KylinConfig.createInstanceFromUri(junitFolder.getAbsolutePath()),
-                "/default");
+                "ALL");
 
         getTestConfig().setMetadataUrl(junitFolder.getAbsolutePath());
         val metadataStore = MetadataStore.createMetadataStore(getTestConfig());
         MetadataChecker metadataChecker = new MetadataChecker(metadataStore);
 
         //add illegal file,the verify result is not qualified
-        Paths.get(junitFolder.getAbsolutePath(), "/IllegalFile").toFile().createNewFile();
+        Paths.get(junitFolder.getAbsolutePath(), "IllegalFile.json").toFile().createNewFile();
         val verifyResultWithIllegalFile = metadataChecker.verify();
-        Assertions.assertThat(verifyResultWithIllegalFile.getIllegalFiles()).hasSize(1).contains("/IllegalFile");
+        Assertions.assertThat(verifyResultWithIllegalFile.getIllegalFiles()).hasSize(1).contains("IllegalFile");
         assertFalse(verifyResultWithIllegalFile.isQualified());
-        Paths.get(junitFolder.getAbsolutePath(), "/IllegalFile").toFile().delete();
+        Paths.get(junitFolder.getAbsolutePath(), "/IllegalFile.json").toFile().delete();
 
         //add illegal project dir ,the verify result is not qualified
         Paths.get(junitFolder.getAbsolutePath(), "/IllegalProject").toFile().mkdir();
-        Paths.get(junitFolder.getAbsolutePath(), "/IllegalProject/test.json").toFile().createNewFile();
+        Paths.get(junitFolder.getAbsolutePath(), "IllegalProject/test.json").toFile().createNewFile();
         val verifyResultWithIllegalProject = metadataChecker.verify();
-        Assertions.assertThat(verifyResultWithIllegalProject.getIllegalProjects()).hasSize(1)
+        Assertions.assertThat(verifyResultWithIllegalProject.getIllegalTables()).hasSize(1)
                 .contains("IllegalProject");
         Assertions.assertThat(verifyResultWithIllegalProject.getIllegalFiles()).hasSize(1)
-                .contains("/IllegalProject/test.json");
+                .contains("IllegalProject/test");
         assertFalse(verifyResultWithIllegalProject.isQualified());
         Paths.get(junitFolder.getAbsolutePath(), "/IllegalProject/test.json").toFile().delete();
         Paths.get(junitFolder.getAbsolutePath(), "/IllegalProject").toFile().delete();
 
         //add legal project and file,the verify result is qualified
         Paths.get(junitFolder.getAbsolutePath(), "/legalProject").toFile().mkdir();
-        Paths.get(junitFolder.getAbsolutePath(), "/_global").toFile().mkdir();
-        Paths.get(junitFolder.getAbsolutePath(), "/_global/project").toFile().mkdir();
-        Paths.get(junitFolder.getAbsolutePath(), "/_global/project/legalProject.json").toFile().createNewFile();
+        Paths.get(junitFolder.getAbsolutePath(), "/PROJECT").toFile().mkdir();
+        Paths.get(junitFolder.getAbsolutePath(), "PROJECT/legalProject.json").toFile().createNewFile();
         val verifyResultWithLegalProject = metadataChecker.verify();
         Assertions.assertThat(verifyResultWithLegalProject.getIllegalFiles()).isEmpty();
-        Assertions.assertThat(verifyResultWithLegalProject.getIllegalProjects()).isEmpty();
+        Assertions.assertThat(verifyResultWithLegalProject.getIllegalTables()).isEmpty();
         assertTrue(verifyResultWithLegalProject.isQualified());
 
         //the metadata dir doesn't have uuid file
         assertFalse(metadataChecker.verify().isExistUUIDFile());
-        Paths.get(junitFolder.getAbsolutePath(), "/UUID").toFile().createNewFile();
+        Paths.get(junitFolder.getAbsolutePath(), "/SYSTEM").toFile().mkdir();
+        Paths.get(junitFolder.getAbsolutePath(), "SYSTEM/UUID.json").toFile().createNewFile();
         assertTrue(metadataChecker.verify().isExistUUIDFile());
 
         //the metadata dir doesn't have user group file
         assertFalse(metadataChecker.verify().isExistUserGroupFile());
-        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), "/_global/user_group"));
+        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), "/USER_GROUP"));
         assertTrue(metadataChecker.verify().isExistUserGroupFile());
 
         //the metadata dir doesn't have user dir
         assertFalse(metadataChecker.verify().isExistUserDir());
-        Paths.get(junitFolder.getAbsolutePath(), "/_global/user").toFile().mkdir();
-        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), "/_global/user/ADMIN"));
+        Paths.get(junitFolder.getAbsolutePath(), "/USER_INFO").toFile().mkdir();
+        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), "USER_INFO/ADMIN.json"));
         assertTrue(metadataChecker.verify().isExistUserDir());
 
         //the metadata dir doesn't have acl dir
         assertFalse(metadataChecker.verify().isExistACLDir());
-        Paths.get(junitFolder.getAbsolutePath(), "/_global/acl").toFile().mkdir();
-        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), "/_global/acl/test"));
+        Paths.get(junitFolder.getAbsolutePath(), MetadataType.OBJECT_ACL.name()).toFile().mkdir();
+        Files.createFile(Paths.get(junitFolder.getAbsolutePath(), MetadataType.OBJECT_ACL.name() + "/test.json"));
         assertTrue(metadataChecker.verify().isExistACLDir());
     }
 }

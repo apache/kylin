@@ -20,3 +20,4 @@ select cal_dt, lstg_format_name,
 sum(sum(price)) over(order by lstg_format_name) as "first" from test_kylin_fact
 where cal_dt < '2012-02-01'
 group by cal_dt, lstg_format_name
+order by lstg_format_name, cal_dt

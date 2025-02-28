@@ -109,8 +109,8 @@ public class ModelTdsServiceTest extends SourceTestCase {
     }
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(modelService, "aclEvaluate", aclEvaluate);

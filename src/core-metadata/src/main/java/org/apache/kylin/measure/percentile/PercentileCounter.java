@@ -90,12 +90,14 @@ public class PercentileCounter implements Serializable {
     }
 
     /**
-     * the Percentile is non-fixed length that is affected by the count and compression mainly. so we collect some statistics
-     * about it and do some analysis, which get from test and the T-digest Paper
-     *
+     * the Percentile is non-fixed length that is affected by the count and 
+     * compression mainly. so we collect some statistics
+     * about it and do some analysis, which get from test and the T-digest Paper.
+     *</p>
      * As a result, we conclude its regular pattern by Stata , a tool help construct function model.
      * 0 - 2 * compression it grows a linear function which is easily derived from T-digest Algorithm
-     * 2 * compression - 50000000 it grows roughly a log and the accuracy increases with the number of samples observed
+     * 2 * compression - 50000000 it grows roughly a log and the accuracy 
+     * increases with the number of samples observed
      *
      * @param count
      * @return

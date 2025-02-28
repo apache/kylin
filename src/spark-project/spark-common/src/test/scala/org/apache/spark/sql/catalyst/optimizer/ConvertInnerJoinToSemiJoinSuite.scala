@@ -19,8 +19,8 @@ package org.apache.spark.sql.catalyst.optimizer
 
 import org.apache.spark.sql.catalyst.dsl.expressions._
 import org.apache.spark.sql.catalyst.dsl.plans._
+import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.catalyst.plans.{Inner, LeftSemi, PlanTest}
-import org.apache.spark.sql.catalyst.plans.logical.{Aggregate, Intersect, Join, JoinHint, LocalRelation, LogicalPlan, Project}
 import org.apache.spark.sql.catalyst.rules.RuleExecutor
 
 class ConvertInnerJoinToSemiJoinSuite extends PlanTest {

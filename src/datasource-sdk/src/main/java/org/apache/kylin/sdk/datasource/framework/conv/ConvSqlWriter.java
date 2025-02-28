@@ -20,7 +20,6 @@ package org.apache.kylin.sdk.datasource.framework.conv;
 import java.util.Locale;
 
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -31,7 +30,6 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.pretty.SqlPrettyWriter;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class ConvSqlWriter extends SqlPrettyWriter {
@@ -91,7 +89,8 @@ public class ConvSqlWriter extends SqlPrettyWriter {
             offset = SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO);
 
         if (fetch != null && !configurer.allowNoOrderByWithFetch() && lastFrame != null
-                && lastFrame.getFrameType() != FrameTypeEnum.ORDER_BY_LIST) { // MSSQL requires ORDER_BY list for FETCH clause, so must append one here.
+                && lastFrame.frameType != FrameTypeEnum.ORDER_BY_LIST) {
+            // MSSQL requires ORDER_BY list for FETCH clause, so must append one here.
             DUMMY_ORDER_BY_NODE.unparse(this, 0, 0);
         }
 
@@ -139,12 +138,12 @@ public class ConvSqlWriter extends SqlPrettyWriter {
     }
 
     @Override
-    public void identifier(String name) {
+    public void identifier(String name, boolean isQuoted) {
         String convertName = name;
         if (configurer.isCaseSensitive()) {
             convertName = configurer.fixIdentifierCaseSensitive(name);
         }
-        if (configurer.enableQuote()) {
+        if (configurer.enableQuote() || isQuoted) {
             String quoted = getDialect().quoteIdentifier(convertName);
             print(quoted);
             setNeedWhitespace(true);
@@ -153,29 +152,9 @@ public class ConvSqlWriter extends SqlPrettyWriter {
                 String quoted = getDialect().quoteIdentifier(convertName);
                 print(quoted);
                 setNeedWhitespace(true);
-            } else if (!configurer.enableQuote()) {
-                super.identifierWithoutQuote(convertName);
             } else {
-                super.identifier(convertName);
+                super.identifier(convertName, configurer.enableQuote());
             }
-        }
-    }
-
-    @Override
-    public void userDefinedType(SqlDataTypeSpec typeSpec, int leftPrec, int rightPrec) {
-        keyword(typeSpec.getTypeName().getSimple());
-
-        // also print precision and scale for user-defined-type
-        int precision = typeSpec.getPrecision();
-        int scale = typeSpec.getScale();
-        if (precision >= 0) {
-            final SqlWriter.Frame frame = startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
-            this.print(precision);
-            if (scale >= 0) {
-                this.sep(",", true);
-                this.print(scale);
-            }
-            this.endList(frame);
         }
     }
 
@@ -193,9 +172,9 @@ public class ConvSqlWriter extends SqlPrettyWriter {
 
     @Override
     public boolean inQuery() {
-        return this.frame == null || this.frame.getFrameType() == FrameTypeEnum.ORDER_BY
-                || this.frame.getFrameType() == FrameTypeEnum.WITH || this.frame.getFrameType() == FrameTypeEnum.SETOP
-                || this.frame.getFrameType() == FrameTypeEnum.WITH_ITEM;
+        return this.frame == null || this.frame.frameType == FrameTypeEnum.ORDER_BY
+                || this.frame.frameType == FrameTypeEnum.WITH || this.frame.frameType == FrameTypeEnum.SETOP
+                || this.frame.frameType == FrameTypeEnum.WITH_ITEM;
     }
 
     @Override

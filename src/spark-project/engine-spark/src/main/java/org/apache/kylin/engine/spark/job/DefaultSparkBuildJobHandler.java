@@ -18,13 +18,14 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.job.execution.NSparkExecutable.SPARK_MASTER;
+import static org.apache.kylin.engine.spark.job.NSparkExecutable.SPARK_MASTER;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -42,15 +43,14 @@ import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
 public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
@@ -65,8 +65,8 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
     private static final String EQUALS = "=";
 
     @Override
-    public void killOrphanApplicationIfExists(String project, String jobStepId, KylinConfig config, Boolean isSubmitting,
-                                              Map<String, String> sparkConf) {
+    public void killOrphanApplicationIfExists(String project, String jobStepId, KylinConfig config,
+            Boolean isSubmitting, Map<String, String> sparkConf) {
         try {
             val sparkMaster = sparkConf.getOrDefault(SPARK_MASTER, "local");
             if (sparkMaster.startsWith("local")) {
@@ -189,9 +189,11 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
             return;
         }
 
-        String msg = String.format("Not allowed to specify injected command through "
-                + "java options (like: %s). Vulnerabilities would allow attackers to trigger "
-                + "such a crash or crippling of the service.", String.join(", ", illegals));
+        String msg = String.format(Locale.ROOT,
+                "Not allowed to specify injected command through "
+                        + "java options (like: %s). Vulnerabilities would allow attackers to trigger "
+                        + "such a crash or crippling of the service.",
+                String.join(", ", illegals));
         throw new IllegalArgumentException(msg);
     }
 

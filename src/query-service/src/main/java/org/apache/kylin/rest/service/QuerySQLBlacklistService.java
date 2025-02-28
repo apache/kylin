@@ -21,15 +21,14 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.blacklist.SQLBlacklist;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.query.blacklist.SQLBlacklistManager;
+import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.SQLBlacklistItemRequest;
 import org.apache.kylin.rest.request.SQLBlacklistRequest;
-import org.apache.kylin.rest.aspect.Transaction;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Component("querySQLBlacklistService")
 public class QuerySQLBlacklistService extends BasicService {

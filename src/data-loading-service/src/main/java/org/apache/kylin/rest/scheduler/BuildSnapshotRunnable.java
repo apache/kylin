@@ -127,7 +127,7 @@ public class BuildSnapshotRunnable extends AbstractSchedulerRunnable {
             if (null == autoRefreshJob) {
                 return false;
             }
-            return autoRefreshJob.getStatus().equals(ExecutableState.SUCCEED) || autoRefreshJob.getStatus().isRunning();
+            return autoRefreshJob.getStatus() == ExecutableState.SUCCEED || autoRefreshJob.getStatus().isRunning();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return false;

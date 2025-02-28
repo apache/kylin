@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.controller.NUserController;
 import org.apache.kylin.rest.exception.UnauthorizedException;
@@ -44,8 +45,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;

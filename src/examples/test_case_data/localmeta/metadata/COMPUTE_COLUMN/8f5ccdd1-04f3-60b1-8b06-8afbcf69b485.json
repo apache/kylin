@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "NEST1",
+  "expression" : "TEST_KYLIN_FACT.PRICE + 11",
+  "innerExpression" : "`TEST_KYLIN_FACT`.`PRICE` + 11",
+  "datatype" : "DECIMAL(20,4)",
+  "comment" : "test nest1",
+  "uuid" : "8f5ccdd1-04f3-60b1-8b06-8afbcf69b485",
+  "project" : "default"
+}

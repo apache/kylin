@@ -27,6 +27,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -38,7 +39,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 
 @MetadataInfo

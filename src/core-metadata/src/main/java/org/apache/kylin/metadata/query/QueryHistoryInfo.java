@@ -51,6 +51,8 @@ public class QueryHistoryInfo implements Serializable {
     private List<List<String>> querySnapshots = new ArrayList<>();
     @JsonProperty("realization_metrics")
     protected List<QueryMetrics.RealizationMetrics> realizationMetrics = new ArrayList<>();
+    @JsonProperty("query_metrics")
+    private List<QueryMetrics.QueryMetric> queryMetrics;
     @JsonProperty("traces")
     private List<QueryTraceSpan> traces = new ArrayList<>();
     @JsonProperty("cache_type")

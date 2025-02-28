@@ -18,8 +18,12 @@
 
 package org.apache.kylin.rest.service.task;
 
+import static org.apache.kylin.job.factory.JobFactoryConstant.META_JOB_FACTORY;
 import static org.apache.kylin.metadata.favorite.QueryHistoryIdOffset.OffsetType.META;
+import static org.apache.kylin.metadata.query.QueryMetrics.INTERNAL_TABLE;
+import static org.apache.kylin.metadata.query.QueryMetrics.TABLE_SNAPSHOT;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,30 +37,33 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
+import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.metadata.asynctask.AbstractAsyncTask;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
 import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
+import org.apache.kylin.metadata.table.InternalTableDesc;
+import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.util.SpringContext;
 
@@ -67,54 +74,54 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class QueryHistoryMetaUpdateScheduler {
+    static {
+        JobFactory.register(META_JOB_FACTORY, new MetaUpdateJob.MetaUpdateJobFactory());
+    }
     private ScheduledExecutorService taskScheduler;
     private boolean hasStarted;
     @VisibleForTesting
     RDBMSQueryHistoryDAO queryHistoryDAO;
     AccelerateRuleUtil accelerateRuleUtil;
     @Getter
-    private final String project;
-    private long epochId;
     private IUserGroupService userGroupService;
 
-    private final QueryHistoryMetaUpdateRunner queryHistoryMetaUpdateRunner;
-
-    private static final Map<String, QueryHistoryMetaUpdateScheduler> INSTANCE_MAP = Maps.newConcurrentMap();
-
-    public QueryHistoryMetaUpdateScheduler(String project) {
-        this.project = project;
+    public QueryHistoryMetaUpdateScheduler() {
         queryHistoryDAO = RDBMSQueryHistoryDAO.getInstance();
         accelerateRuleUtil = new AccelerateRuleUtil();
         if (userGroupService == null && SpringContext.getApplicationContext() != null) {
             userGroupService = (IUserGroupService) SpringContext.getApplicationContext().getBean("userGroupService");
         }
-        queryHistoryMetaUpdateRunner = new QueryHistoryMetaUpdateRunner();
         try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
-            log.debug("New QueryHistoryMetaUpdateScheduler created by project {}", project);
+            log.debug("New QueryHistoryMetaUpdateScheduler created.");
         }
     }
 
-    public static QueryHistoryMetaUpdateScheduler getInstance(String project) {
-        return INSTANCE_MAP.computeIfAbsent(project, QueryHistoryMetaUpdateScheduler::new);
+    public static QueryHistoryMetaUpdateScheduler getInstance() {
+        return Singletons.getInstance(QueryHistoryMetaUpdateScheduler.class);
     }
 
     public void init() {
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
-
-        EpochManager epochManager = EpochManager.getInstance();
-        if (!KylinConfig.getInstanceFromEnv().isUTEnv()) {
-            this.epochId = epochManager.getEpoch(projectInstance.getName()).getEpochId();
-        }
-
-        taskScheduler = Executors.newScheduledThreadPool(1,
-                new NamedThreadFactory("QueryHistoryMetaUpdateWorker(project:" + project + ")"));
-        taskScheduler.scheduleWithFixedDelay(queryHistoryMetaUpdateRunner, 0,
+        taskScheduler = Executors.newScheduledThreadPool(1, new NamedThreadFactory("QueryHistoryMetaUpdateWorker"));
+        taskScheduler.scheduleWithFixedDelay(this::checkAndSubmitJob, 0,
                 KylinConfig.getInstanceFromEnv().getQueryHistoryStatMetaUpdateInterval(), TimeUnit.MINUTES);
 
         hasStarted = true;
-        AsyncTaskManager.resetAccelerationTagMap(project);
-        log.info("Query history task scheduler is started for [{}] ", project);
+        log.info("Query history task scheduler is started.");
+    }
+
+    private void checkAndSubmitJob() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if (!JobContextUtil.getJobContext(config).getJobScheduler().isMaster()) {
+            log.info("Not master node, skip submitting meta job");
+            return;
+        }
+
+        List<ProjectInstance> prjList = NProjectManager.getInstance(config).listAllProjects();
+        prjList.forEach(projectInstance -> {
+            String project = projectInstance.getName();
+            ExecutableManager manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            manager.checkAndSubmitCronJob(META_JOB_FACTORY, JobTypeEnum.META);
+        });
     }
 
     public Future scheduleImmediately(QueryHistoryTask runner) {
@@ -125,32 +132,12 @@ public class QueryHistoryMetaUpdateScheduler {
         return this.hasStarted;
     }
 
-    private void shutdown() {
-        log.info("Shutting down QueryHistoryAccelerateScheduler for [{}] ....", project);
-        if (taskScheduler != null) {
-            ExecutorServiceUtil.forceShutdown(taskScheduler);
-        }
-    }
-
-    public static synchronized void shutdownByProject(String project) {
-        val instance = getInstanceByProject(project);
-        if (instance != null) {
-            INSTANCE_MAP.remove(project);
-            instance.shutdown();
-        }
-    }
-
-    public boolean isInterruptByUser() {
-        AsyncTaskManager instance = AsyncTaskManager.getInstance(getProject());
-        AbstractAsyncTask task = instance.get(AsyncTaskManager.ASYNC_ACCELERATION_TASK);
-        return ((AsyncAccelerationTask) task).isAlreadyRunning();
-    }
-
-    private static synchronized QueryHistoryMetaUpdateScheduler getInstanceByProject(String project) {
-        return INSTANCE_MAP.get(project);
-    }
-
     public class QueryHistoryMetaUpdateRunner extends QueryHistoryTask {
+        private long lastOffset = 0;
+
+        public QueryHistoryMetaUpdateRunner(String project) {
+            super(project);
+        }
 
         @Override
         protected String name() {
@@ -159,11 +146,9 @@ public class QueryHistoryMetaUpdateScheduler {
 
         @Override
         protected List<QueryHistory> getQueryHistories(int batchSize) {
-            QueryHistoryIdOffsetManager qhIdOffsetManager = QueryHistoryIdOffsetManager
-                    .getInstance(project);
-            List<QueryHistory> queryHistoryList = queryHistoryDAO.queryQueryHistoriesByIdOffset(
-                    qhIdOffsetManager.get(META).getOffset(), batchSize, project);
-            return queryHistoryList;
+            QueryHistoryIdOffsetManager qhIdOffsetManager = QueryHistoryIdOffsetManager.getInstance(project);
+            this.lastOffset = qhIdOffsetManager.get(META).getOffset();
+            return queryHistoryDAO.queryQueryHistoriesByIdOffset(lastOffset, batchSize, project);
         }
 
         @Override
@@ -184,38 +169,41 @@ public class QueryHistoryMetaUpdateScheduler {
                     maxId = queryHistory.getId();
                 }
             }
-            // count snapshot hit
-            val hitSnapshotCountMap = collectSnapshotHitCount(queryHistories);
+            // count snapshot && internalTable hit
+            val hitCountMap = collectHitCount(queryHistories);
 
             // update metadata
-            updateMetadata(dfHitCountMap, modelsLastQueryTime, maxId, hitSnapshotCountMap);
+            updateMetadata(dfHitCountMap, modelsLastQueryTime, maxId, hitCountMap);
         }
 
         private void updateMetadata(Map<String, DataflowHitCount> dfHitCountMap, Map<String, Long> modelsLastQueryTime,
-                Long maxId, Map<TableExtDesc, Integer> hitSnapshotCountMap) {
+                Long maxId, Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> hitCountMap) {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-                KylinConfig config = KylinConfig.getInstanceFromEnv();
-
                 // update model usage
                 incQueryHitCount(dfHitCountMap, project);
 
                 // update model last query time
                 updateLastQueryTime(modelsLastQueryTime, project);
 
-                UnitOfWork.get().doAfterUnit(() -> {
-                    QueryHistoryIdOffsetManager offsetManager = QueryHistoryIdOffsetManager.getInstance(project);
-                    // update id offset
-                    JdbcUtil.withTxAndRetry(offsetManager.getTransactionManager(), () -> {
-                        offsetManager.updateOffset(META, copyForWrite -> copyForWrite.setOffset(maxId));
-                        return null;
-                    });
+                // update snapshot hit count
+                incQueryHitSnapshotCount(hitCountMap.getFirst(), project);
+
+                // update internalTable hit count
+                incQueryHitInternalTableCount(hitCountMap.getSecond(), project);
+
+                // update offset in transaction, the retry times must be set as 1.
+                QueryHistoryIdOffsetManager offsetManager = QueryHistoryIdOffsetManager.getInstance(project);
+                if (offsetManager.get(META).getOffset() != lastOffset) {
+                    log.warn("Multiple QueryHistoryMetaUpdateRunners are executing concurrently, just exit this one.");
+                    throw new IllegalStateException(
+                            "Multiple QueryHistoryMetaUpdateRunners are executing concurrently, just exit this one.");
+                }
+                JdbcUtil.withTxAndRetry(offsetManager.getTransactionManager(), () -> {
+                    offsetManager.updateOffset(META, copyForWrite -> copyForWrite.setOffset(maxId));
+                    return null;
                 });
-
-                // update snpashot hit count
-                incQueryHitSnapshotCount(hitSnapshotCountMap, project);
-
                 return 0;
-            }, project);
+            }, project, 1);
         }
 
         private Map<String, DataflowHitCount> collectDataflowHitCount(List<QueryHistory> queryHistories) {
@@ -225,7 +213,7 @@ public class QueryHistoryMetaUpdateScheduler {
                 if (CollectionUtils.isEmpty(realizations)) {
                     continue;
                 }
-                val realizationList = realizations.stream().filter(this::isValidRealization)
+                val realizationList = realizations.stream().filter(this::isIndexRealization)
                         .collect(Collectors.toList());
                 for (val realization : realizationList) {
                     String modelId = realization.getModelId();
@@ -239,23 +227,42 @@ public class QueryHistoryMetaUpdateScheduler {
             return result;
         }
 
-        private boolean isValidRealization(NativeQueryRealization realization) {
+        private boolean isIndexRealization(NativeQueryRealization realization) {
             val config = KylinConfig.getInstanceFromEnv();
             val dfManager = NDataflowManager.getInstance(config, project);
             return dfManager.getDataflow(realization.getModelId()) != null && realization.getLayoutId() != null;
         }
 
-        private Map<TableExtDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
+        private Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> collectHitCount(
+                List<QueryHistory> queryHistories) {
             val tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-            val results = Maps.<TableExtDesc, Integer> newHashMap();
+            val internalTableManager = InternalTableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            Map<TableExtDesc, Integer> tableExtDescMap = new HashMap<>();
+            Map<InternalTableDesc, Integer> internalTableDescMap = new HashMap<>();
+
+            Pair<Map<TableExtDesc, Integer>, Map<InternalTableDesc, Integer>> results = new Pair<>(tableExtDescMap,
+                    internalTableDescMap);
+
             for (QueryHistory queryHistory : queryHistories) {
                 if (queryHistory.getQueryHistoryInfo() == null) {
                     continue;
                 }
-                val snapshotsInRealization = queryHistory.getQueryHistoryInfo().getQuerySnapshots();
-                for (val snapshots : snapshotsInRealization) {
-                    snapshots.forEach(tableIdentify -> {
-                        results.merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
+                List<QueryMetrics.RealizationMetrics> realizationMetrics = queryHistory.getQueryHistoryInfo()
+                        .getRealizationMetrics();
+                if (CollectionUtils.isEmpty(realizationMetrics)) {
+                    continue;
+                }
+                for (QueryMetrics.RealizationMetrics realizationMetric : realizationMetrics) {
+                    if (CollectionUtils.isEmpty(realizationMetric.getSnapshots())) {
+                        continue;
+                    }
+                    realizationMetric.getSnapshots().forEach(tableIdentify -> {
+                        if (TABLE_SNAPSHOT.equals(realizationMetric.getIndexType())) {
+                            results.getFirst().merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
+                        } else if (INTERNAL_TABLE.equals(realizationMetric.getIndexType())) {
+                            results.getSecond().merge(internalTableManager.getInternalTableDesc(tableIdentify), 1,
+                                    Integer::sum);
+                        }
                     });
                 }
             }
@@ -303,6 +310,20 @@ public class QueryHistoryMetaUpdateScheduler {
             }
         }
 
+        private void incQueryHitInternalTableCount(Map<InternalTableDesc, Integer> hitInternalTableCountMap,
+                String project) {
+            InternalTableManager internalTableManager = InternalTableManager
+                    .getInstance(KylinConfig.getInstanceFromEnv(), project);
+            for (val entry : hitInternalTableCountMap.entrySet()) {
+                if (internalTableManager.getInternalTableDesc(entry.getKey().getIdentity()) == null) {
+                    continue;
+                }
+                val internalTableCopy = internalTableManager.copyForWrite(entry.getKey());
+                internalTableCopy.setHitCount(internalTableCopy.getHitCount() + entry.getValue());
+                internalTableManager.saveOrUpdateInternalTable(internalTableCopy);
+            }
+        }
+
         private void updateLastQueryTime(Map<String, Long> modelsLastQueryTime, String project) {
             NDataflowManager dfManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             for (Map.Entry<String, Long> entry : modelsLastQueryTime.entrySet()) {
@@ -317,7 +338,12 @@ public class QueryHistoryMetaUpdateScheduler {
 
     }
 
-    private abstract class QueryHistoryTask implements Runnable {
+    private abstract static class QueryHistoryTask implements Runnable {
+        protected final String project;
+
+        public QueryHistoryTask(String project) {
+            this.project = project;
+        }
 
         protected abstract String name();
 
@@ -326,11 +352,7 @@ public class QueryHistoryMetaUpdateScheduler {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "%s task, batch size: %d , maxsize: %d is illegal", name(), batchSize, maxSize));
             }
-            if (!KylinConfig.getInstanceFromEnv().isUTEnv()
-                    && !EpochManager.getInstance().checkEpochId(epochId, project)) {
-                shutdownByProject(project);
-                return;
-            }
+
             int finishNum = 0;
             while (true) {
                 List<QueryHistory> queryHistories = getQueryHistories(batchSize);

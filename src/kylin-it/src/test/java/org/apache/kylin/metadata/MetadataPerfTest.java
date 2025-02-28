@@ -111,7 +111,7 @@ public class MetadataPerfTest extends NLocalFileMetadataTestCase {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         createTestMetadata();
         val config = getTestConfig();
         config.setProperty("kylin.metadata.url", "kylin2_" + projectSize + "_" + modelSize
@@ -119,7 +119,7 @@ public class MetadataPerfTest extends NLocalFileMetadataTestCase {
     }
 
     @After
-    public void cleanup() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
@@ -198,7 +198,7 @@ public class MetadataPerfTest extends NLocalFileMetadataTestCase {
             val projectFile = new File(new File(TEMPLATE_FOLDER).getParentFile(),
                     "tmp_" + i + "/project_" + i + "/project.json");
             try {
-                return new Object[] { "/_global/project/project_" + i,
+                return new Object[] { "PROJECT/project_" + i,
                         IOUtils.toByteArray(new FileInputStream(projectFile)), projectFile.lastModified(), 0L };
             } catch (IOException e) {
                 return null;
@@ -397,7 +397,7 @@ public class MetadataPerfTest extends NLocalFileMetadataTestCase {
             seg.setStatus(SegmentStatusEnum.READY);
             segments.add(seg);
         }
-        df.setSegments(segments);
+        df.setSegmentUuids(segments);
         JsonUtil.writeValueIndent(new FileOutputStream(dfFile), df);
 
         val detailJobMap = Maps.<String, String> newHashMap();

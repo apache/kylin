@@ -1,0 +1,18 @@
+{
+  "uuid" : "8824aa58-d6a4-76b3-f1ec-ef9534d9562e",
+  "last_modified" : 1683698110727,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_SALES_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG_LONG",
+  "last_build_job_id" : null,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "10000",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

@@ -29,7 +29,9 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.helper.UpdateUserAclToolHelper;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclPermission;
@@ -61,17 +63,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.val;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ServiceTestBase.SpringConfig.class)
 @WebAppConfiguration(value = "src/main/resources")
-@TestPropertySource(properties = {"spring.cloud.nacos.discovery.enabled = false"})
-@TestPropertySource(properties = {"spring.session.store-type = NONE"})
+@TestPropertySource(properties = { "spring.cloud.nacos.discovery.enabled = false" })
+@TestPropertySource(properties = { "spring.session.store-type = NONE" })
 @ActiveProfiles({ "custom", "test" })
 public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
@@ -127,8 +125,6 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testBasic() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         Assert.assertNotNull(userService);
 
         // test list users
@@ -276,8 +272,6 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testSyncAdminUser() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         userAclService.syncAdminUserAcl();
         Assert.assertTrue(userAclService.hasUserAclPermission("admin", AclPermission.DATA_QUERY));
     }

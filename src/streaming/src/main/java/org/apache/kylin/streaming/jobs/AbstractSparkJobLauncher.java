@@ -28,6 +28,8 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.streaming.constants.StreamingConstants;
@@ -35,9 +37,6 @@ import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;
 

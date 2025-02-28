@@ -18,12 +18,13 @@
 
 package org.apache.kylin.rest.request;
 
-import lombok.Data;
+import java.io.Serializable;
+import java.util.List;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class AlertMessageRequest implements Serializable {

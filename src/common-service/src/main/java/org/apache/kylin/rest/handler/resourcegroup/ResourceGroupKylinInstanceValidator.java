@@ -27,13 +27,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.resourcegroup.KylinInstance;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupEntity;
 import org.apache.kylin.rest.request.resourecegroup.ResourceGroupRequest;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 

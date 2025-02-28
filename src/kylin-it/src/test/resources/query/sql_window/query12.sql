@@ -24,3 +24,4 @@ select * from(
   group by cal_dt, lstg_format_name,SLR_SEGMENT_CD
 )t
 where cal_dt between '2013-01-06' and '2013-01-15'
+order by cal_dt, lstg_format_name, GMV, "last_day", "last_year"

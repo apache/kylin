@@ -30,7 +30,8 @@ public class KylinStatement extends AvaticaStatement {
 
     private String queryId;
 
-    protected KylinStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
+    protected KylinStatement(AvaticaConnection connection, StatementHandle h, int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability) {
         super(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 

@@ -18,13 +18,9 @@
 
 package org.apache.kylin.newten;
 
-import java.io.IOException;
-
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.TimeZoneTestRunner;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRange;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRangeManager;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -73,19 +69,9 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
         dataflowManager.handleRetention(df);
     }
 
-    private NDataLoadingRange createDataloadingRange() throws IOException {
-        NDataLoadingRange dataLoadingRange = new NDataLoadingRange();
-        dataLoadingRange.updateRandomUuid();
-        dataLoadingRange.setTableName("DEFAULT.TEST_KYLIN_FACT");
-        dataLoadingRange.setColumnName("TEST_KYLIN_FACT.CAL_DT");
-        return NDataLoadingRangeManager.getInstance(getTestConfig(), DEFAULT_PROJECT)
-                .createDataLoadingRange(dataLoadingRange);
-    }
-
     @Test
     public void testRetention_2Week() throws Exception {
         removeAllSegments();
-        createDataloadingRange();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         NDataModelManager dataModelManager = NDataModelManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val model = dataModelManager.getDataModelDescByAlias("nmodel_basic");
@@ -120,7 +106,6 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRetention_2Week_3WeekDataCornerCase() throws Exception {
         removeAllSegments();
-        val loadingRange = createDataloadingRange();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         NDataModelManager dataModelManager = NDataModelManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val model = dataModelManager.getDataModelDescByAlias("nmodel_basic");
@@ -145,12 +130,6 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
         modelUpdate.getSegmentConfig().setRetentionRange(retentionRange);
         dataModelManager.updateDataModelDesc(modelUpdate);
 
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
-        val dataLoadingRangeManager = NDataLoadingRangeManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val copy = dataLoadingRangeManager.copyForWrite(loadingRange);
-        copy.setCoveredRange(df.getCoveredRange());
-        dataLoadingRangeManager.updateDataLoadingRange(copy);
-
         mockAddSegmentSuccess();
         df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
         Assert.assertEquals(2, df.getSegments().size());
@@ -160,21 +139,11 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
         //01-18
         Assert.assertEquals(DateFormat.stringToMillis("2010-01-25 00:00:00"),
                 df.getSegments().get(1).getSegRange().getEnd());
-
-        val dataLoadingRange = dataLoadingRangeManager.getDataLoadingRange(loadingRange.getTableName());
-
-        Assert.assertEquals(DateFormat.stringToMillis("2010-01-11 00:00:00"),
-                dataLoadingRange.getCoveredRange().getStart());
-
-        Assert.assertEquals(DateFormat.stringToMillis("2010-01-25 00:00:00"),
-                dataLoadingRange.getCoveredRange().getEnd());
-
     }
 
     @Test
     public void testRetention_2Week_3WeekAndOneDayData() throws Exception {
         removeAllSegments();
-        createDataloadingRange();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         NDataModelManager dataModelManager = NDataModelManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val model = dataModelManager.getDataModelDescByAlias("nmodel_basic");
@@ -222,7 +191,6 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRetention_1Month_9WeekData() throws Exception {
         removeAllSegments();
-        createDataloadingRange();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         NDataModelManager dataModelManager = NDataModelManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val model = dataModelManager.getDataModelDescByAlias("nmodel_basic");
@@ -265,7 +233,6 @@ public class RetentionTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRetention_1Month_5WeekData() throws Exception {
         removeAllSegments();
-        createDataloadingRange();
         NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         NDataModelManager dataModelManager = NDataModelManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val model = dataModelManager.getDataModelDescByAlias("nmodel_basic");

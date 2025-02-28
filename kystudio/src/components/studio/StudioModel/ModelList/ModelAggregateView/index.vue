@@ -13,7 +13,7 @@
         <div class="icon-group ksd-fright" v-if="isShowEditAgg">
           <common-tip :content="!editOrAddIndex ? $t('refuseAddIndexTip') : $t('addAggGroup')">
             <el-button text type="primary" :disabled="!editOrAddIndex" icon-button icon="el-ksd-icon-add_with_border_22" size="small" @click="(e) => handleAggregateGroup(e)"></el-button>
-          </common-tip><common-tip :content="$t('aggAdvanced')" v-if="model.model_type === 'BATCH'">
+          </common-tip><common-tip :content="$t('aggAdvanced')" v-if="model.model_type === 'BATCH' && !isStorageV3">
             <el-button text type="primary" icon-button icon="el-ksd-icon-setting_old" size="small" @click="openAggAdvancedModal()"></el-button>
           </common-tip>
         </div>
@@ -213,6 +213,11 @@ export default class AggregateView extends Vue {
 
   get editOrAddIndex () {
     return !(!this.indexUpdateEnabled && this.model.model_type === 'STREAMING')
+  }
+
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
   }
 
   handleEditOrDelIndex (aggregate) {

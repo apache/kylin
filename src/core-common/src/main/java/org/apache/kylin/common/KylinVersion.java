@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Iterables;
@@ -98,15 +97,20 @@ public class KylinVersion implements Comparable {
 
     private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
-    /**
-     * 1.5.1 is actually compatible with 1.5.0's cube. However the "calculate signature" method in 1.5.1 code base somehow
-     * gives different signature values for 1.5.0 cubes. To prevent from users having to take care of this mess, as people
+    /*
+     * 1.5.1 is actually compatible with 1.5.0's cube. However, 
+     * the "calculate signature" method in 1.5.1 code base somehow
+     * gives different signature values for 1.5.0 cubes. 
+     * To prevent from users having to take care of this mess, as people
      * usually won't expect to take lots of efforts for small upgrade (from 1.5.0 to 1.5.1), a special list of
      * SIGNATURE_INCOMPATIBLE_REVISIONS is introduced to silently take care of such legacy cubes.
      *
-     * We should NEVER add new stuff to SIGNATURE_INCOMPATIBLE_REVISIONS. "calculate signature" should always return consistent values
-     * to compatible versions. If it's impossible to maintain consistent signatures between upgrade, we should increase the minor version,
-     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0, or even to use 2.0.0, as people tends to accept
+     * We should NEVER add new stuff to SIGNATURE_INCOMPATIBLE_REVISIONS. 
+     * "calculate signature" should always return consistent values
+     * to compatible versions. If it's impossible to maintain consistent signatures between upgrade, 
+     * we should increase the minor version,
+     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0, 
+     * or even to use 2.0.0, as people tends to accept
      * doing more (e.g. Having to use sth like a metastore upgrade tool when upgrading Kylin)
      */
     static {
@@ -159,7 +163,6 @@ public class KylinVersion implements Comparable {
 
         return !signatureIncompatible;
     }
-
 
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();

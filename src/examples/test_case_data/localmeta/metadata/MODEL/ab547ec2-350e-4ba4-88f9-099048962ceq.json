@@ -1,0 +1,61 @@
+{
+  "uuid" : "ab547ec2-350e-4ba4-88f9-099048962ceq",
+  "alias" : "m1",
+  "fact_table" : "ISSUES.TEST_TOP_N",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "ID",
+    "column" : "TEST_TOP_N.ID"
+  }, {
+    "id" : 1,
+    "name" : "SELLER_ID",
+    "column" : "TEST_TOP_N.SELLER_ID"
+  }, {
+    "id" : 2,
+    "name" : "PRICE",
+    "column" : "TEST_TOP_N.PRICE"
+  }, {
+    "id" : 3,
+    "name" : "TRANS_ID",
+    "column" : "TEST_TOP_N.TRANS_ID"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "TOP_SELLER",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_TOP_N.PRICE"
+      }, {
+        "type" : "column",
+        "value" : "TEST_TOP_N.SELLER_ID"
+      } ],
+      "returntype" : "topn(1, 4)",
+      "configuration" : {
+        "topn.encoding.TEST_KYLIN_FACT.SELLER_ID" : "int:4"
+      }
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : {
+    "partition_date_column" : null,
+    "partition_date_start" : 0,
+    "partition_type" : "APPEND"
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "top_n"
+}

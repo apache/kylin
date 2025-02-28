@@ -1,0 +1,19 @@
+{
+  "username" : "ADMIN",
+  "password" : "$2a$10$S5.j.H8K.6lx3pI855OpgOK13jIbYlO8wlKGLIdppor2uMt4vBdqi",
+  "authorities" : [ {
+    "authority" : "ROLE_ADMIN"
+  }, {
+    "authority" : "ALL_USERS"
+  } ],
+  "disabled" : false,
+  "defaultPassword" : true,
+  "locked" : false,
+  "uuid" : "324da449-899c-ab28-d4b2-efa4719156bc",
+  "last_modified" : 1674955045674,
+  "create_time" : 1673600301382,
+  "version" : "4.0.0.0",
+  "locked_time" : 0,
+  "wrong_time" : 0,
+  "first_login_failed_time" : 0
+}

@@ -20,8 +20,8 @@ package org.apache.kylin.rest.controller.v2;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.controller.NBasicController;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.NCubeDescResponse;
 import org.apache.kylin.rest.response.NCubeResponse;
 import org.apache.kylin.rest.service.ModelService;

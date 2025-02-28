@@ -29,10 +29,8 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 
-@ThirdPartyDependencies({
-        @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager",
-                classes = {"StaticUserGroupService", "StaticUserService"})
-})
+@ThirdPartyDependencies({ @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
+        "StaticUserGroupService", "StaticUserService" }) })
 public abstract class OpenUserGroupService extends NUserGroupService {
 
     public abstract List<ManagedUser> getGroupMembersByName(String name);
@@ -58,8 +56,8 @@ public abstract class OpenUserGroupService extends NUserGroupService {
 
     @Override
     public void modifyGroupUsers(String groupName, List<String> users) {
-        throw new UnsupportedOperationException(String.format(Locale.ROOT,
-                MsgPicker.getMsg().getGroupEditNotAllowedForCustom(), "modifyGroupUsers"));
+        throw new UnsupportedOperationException(
+                String.format(Locale.ROOT, MsgPicker.getMsg().getGroupEditNotAllowedForCustom(), "modifyGroupUsers"));
     }
 
     @Override
@@ -78,7 +76,7 @@ public abstract class OpenUserGroupService extends NUserGroupService {
         return StringUtils.isEmpty(userGroupName) ? getUserGroupSpecialUuid()
                 : getUserGroupSpecialUuid().stream().filter(userGroup -> userGroup.getGroupName()
                         .toUpperCase(Locale.ROOT).contains(userGroupName.toUpperCase(Locale.ROOT)))
-                .collect(Collectors.toList());
+                        .collect(Collectors.toList());
     }
 
     @Override

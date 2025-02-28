@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
@@ -44,7 +45,6 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryDAO;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
@@ -72,10 +72,9 @@ public class AsyncTaskService implements AsyncTaskServiceSupporter {
         long startAt = System.currentTimeMillis();
         try {
             CleanTaskExecutorService.getInstance()
-                .submit(
-                    new StorageCleaner().withTag(StorageCleaner.CleanerTag.SERVICE),
-                    KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS)
-                .get();
+                    .submit(new StorageCleaner().withTag(StorageCleaner.CleanerTag.SERVICE),
+                            KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS)
+                    .get();
         } catch (Exception e) {
             MetricsGroup.hostTagCounterInc(MetricsName.STORAGE_CLEAN_FAILED, MetricsCategory.GLOBAL, GLOBAL);
             throw e;
@@ -111,7 +110,8 @@ public class AsyncTaskService implements AsyncTaskServiceSupporter {
         int hadDownload = 0;
         while (hadDownload < needDownload) {
             int batchSize = Math.min(kylinConfig.getQueryHistoryDownloadBatchSize(), needDownload - hadDownload);
-            List<QueryHistory> queryHistories = queryHistoryDao.getQueryHistoriesByConditionsWithOffset(request, batchSize, hadDownload);
+            List<QueryHistory> queryHistories = queryHistoryDao.getQueryHistoriesByConditionsWithOffset(request,
+                    batchSize, hadDownload);
             for (QueryHistory queryHistory : queryHistories) {
                 fillingModelAlias(kylinConfig, request.getProject(), queryHistory);
                 if (onlySql) {
@@ -119,7 +119,9 @@ public class AsyncTaskService implements AsyncTaskServiceSupporter {
                     String sql = queryHistorySql.getNormalizedSql();
                     outputStream.write((sql.replaceAll("\n|\r", " ") + ";\n").getBytes(StandardCharsets.UTF_8));
                 } else {
-                    outputStream.write((QueryHistoryUtil.getDownloadData(queryHistory, zoneOffset, timeZoneOffsetHour) + "\n").getBytes(StandardCharsets.UTF_8));
+                    outputStream.write(
+                            (QueryHistoryUtil.getDownloadData(queryHistory, zoneOffset, timeZoneOffsetHour) + "\n")
+                                    .getBytes(StandardCharsets.UTF_8));
                 }
             }
             hadDownload = hadDownload + queryHistories.size();

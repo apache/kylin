@@ -17,9 +17,6 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import java.sql.Date
-import java.util.{Calendar, Locale}
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.RelCollationImpl
 import org.apache.calcite.rel.RelFieldCollation.Direction
@@ -27,7 +24,7 @@ import org.apache.calcite.rex.RexInputRef
 import org.apache.calcite.util.NlsString
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.kylin.query.relnode.{KapProjectRel, KapWindowRel}
+import org.apache.kylin.query.relnode.{OlapProjectRel, OlapWindowRel}
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.KapFunctions.k_lit
 import org.apache.spark.sql.catalyst.expressions.Literal
@@ -39,6 +36,8 @@ import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{Column, SparkOperation}
 
+import java.sql.Date
+import java.util.{Calendar, Locale}
 import scala.collection.JavaConverters._
 
 object WindowPlan extends LogEx {
@@ -57,7 +56,7 @@ object WindowPlan extends LogEx {
   )
 
   def window(plan: LogicalPlan,
-             rel: KapWindowRel,
+             rel: OlapWindowRel,
              datacontex: DataContext): LogicalPlan = {
     val start = System.currentTimeMillis()
 
@@ -246,7 +245,7 @@ object WindowPlan extends LogEx {
   }
 
   // scalastyle:off
-  def constantValue(rel: KapWindowRel, constantMap: Map[Int, Any], idx: Int, rexVisitor: SparderRexVisitor) = {
+  def constantValue(rel: OlapWindowRel, constantMap: Map[Int, Any], idx: Int, rexVisitor: SparderRexVisitor) = {
     if (constantMap.contains(idx)) {
       constantMap(idx) match {
         case v: NlsString => v.getValue
@@ -255,7 +254,7 @@ object WindowPlan extends LogEx {
       }
     } else {
       rel.getInput match {
-        case input: KapProjectRel => // the constant value might be functions like CURRENT_DATE
+        case input: OlapProjectRel => // the constant value might be functions like CURRENT_DATE
           input.getProjects.get(idx).accept(rexVisitor) match {
             case col: Column => {
               col.expr.prettyName.toUpperCase(Locale.ROOT) match {

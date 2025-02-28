@@ -18,9 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.ModelJoinRelationTypeEnum;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -24,10 +24,10 @@ import static org.apache.kylin.metadata.cube.model.IndexEntity.Range.STREAMING;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

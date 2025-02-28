@@ -22,23 +22,18 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.kylin.job.factory.JobFactoryConstant.MERGE_JOB_FACTORY;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableParams;
-import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.step.JobStepType;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
@@ -49,14 +44,8 @@ import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.rest.feign.MetadataInvoker;
-import org.apache.kylin.rest.request.DataFlowUpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
 
 public class NSparkMergingJob extends DefaultExecutableOnModel {
     @SuppressWarnings("unused")
@@ -91,7 +80,7 @@ public class NSparkMergingJob extends DefaultExecutableOnModel {
     }
 
     public static NSparkMergingJob merge(NDataSegment mergedSegment, Set<LayoutEntity> layouts, String submitter,
-                                         String jobId) {
+            String jobId) {
         return merge(mergedSegment, layouts, submitter, jobId, null, null);
     }
 
@@ -103,7 +92,7 @@ public class NSparkMergingJob extends DefaultExecutableOnModel {
      *                       the ready cuboids in the segments.
      */
     public static NSparkMergingJob merge(NDataSegment mergedSegment, Set<LayoutEntity> layouts, String submitter,
-                                         String jobId, Set<Long> partitions, Set<JobBucket> buckets) {
+            String jobId, Set<Long> partitions, Set<JobBucket> buckets) {
         Preconditions.checkArgument(mergedSegment != null);
         Preconditions.checkArgument(submitter != null);
 
@@ -139,47 +128,17 @@ public class NSparkMergingJob extends DefaultExecutableOnModel {
         job.setParam(NBatchConstants.P_DATA_RANGE_END, mergedSegment.getSegRange().getEnd().toString());
 
         KylinConfig config = df.getConfig();
-        AbstractExecutable resourceDetect = JobStepType.RESOURCE_DETECT.createStep(job, config);
-        AbstractExecutable merging = JobStepType.MERGING.createStep(job, config);
-        AbstractExecutable cleanStep = JobStepType.CLEAN_UP_AFTER_MERGE.createStep(job, config);
+        StepEnum.RESOURCE_DETECT.create(job, config);
+        StepEnum.MERGING.create(job, config);
+        AbstractExecutable cleanStep = StepEnum.CLEANUP_AFTER_MERGE.create(job, config);
         final Segments<NDataSegment> mergingSegments = df.getMergingSegments(mergedSegment);
         cleanStep.setParam(NBatchConstants.P_SEGMENT_IDS,
                 String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
-        AbstractExecutable mergeStep = initSecondMergeStep(mergedSegment, layouts, df, job, config, mergingSegments);
-        AbstractExecutable updateMetadata = JobStepType.UPDATE_METADATA.createStep(job, config);
-
-        if (SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())) {
-            setDAGRelations(job, config, resourceDetect, merging, cleanStep, mergeStep, updateMetadata);
+        StepEnum.UPDATE_METADATA.create(job, config);
+        if (config.isIndexPreloadCacheEnabled()) {
+            StepEnum.LOAD_GLUTEN_CACHE.create(job, config);
         }
         return job;
-    }
-
-    private static AbstractExecutable initSecondMergeStep(NDataSegment mergedSegment, Set<LayoutEntity> layouts,
-                                                          NDataflow df, NSparkMergingJob job, KylinConfig config, Segments<NDataSegment> mergingSegments) {
-        AbstractExecutable mergeStep = null;
-        if (SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())
-                && layouts.stream().anyMatch(SecondStorageUtil::isBaseTableIndex)) {
-            // can't merge segment when second storage do rebalanced
-            SecondStorageUtil.validateProjectLock(df.getProject(), Collections.singletonList(LockTypeEnum.LOAD.name()));
-            mergeStep = JobStepType.SECOND_STORAGE_MERGE.createStep(job, config);
-            mergeStep.setParam(SecondStorageConstants.P_MERGED_SEGMENT_ID, mergedSegment.getId());
-            mergeStep.setParam(NBatchConstants.P_SEGMENT_IDS,
-                    String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
-        }
-        return mergeStep;
-    }
-
-    public static void setDAGRelations(AbstractExecutable job, KylinConfig config, AbstractExecutable resourceDetect,
-                                       AbstractExecutable merging, AbstractExecutable clean, AbstractExecutable secondStorageMerge,
-                                       AbstractExecutable updateMetadata) {
-        if (!StringUtils.equalsIgnoreCase(config.getJobSchedulerMode(), JobSchedulerModeEnum.CHAIN.toString())) {
-            initResourceDetectDagNode(resourceDetect, merging, secondStorageMerge);
-            merging.setNextSteps(Sets.newHashSet(clean.getId()));
-            clean.setPreviousStep(merging.getId());
-            clean.setNextSteps(Sets.newHashSet(updateMetadata.getId()));
-            updateMetadata.setPreviousStep(clean.getId());
-            job.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
-        }
     }
 
     @Override
@@ -224,17 +183,6 @@ public class NSparkMergingJob extends DefaultExecutableOnModel {
         }
         NDataflowUpdate nDataflowUpdate = new NDataflowUpdate(dataflow.getUuid());
         nDataflowUpdate.setToRemoveSegs(toRemovedSegments.toArray(new NDataSegment[0]));
-        updateDataflow(nDataflowUpdate);
-    }
-
-    private void updateDataflow(NDataflowUpdate nDataflowUpdate) {
-        if (UnitOfWork.isAlreadyInTransaction()) {
-            NDataflowManager.getInstance(getConfig(), getProject()).updateDataflow(nDataflowUpdate);
-            return;
-        }
-        DataFlowUpdateRequest dataFlowUpdateRequest = new DataFlowUpdateRequest();
-        dataFlowUpdateRequest.setProject(project);
-        dataFlowUpdateRequest.setDataflowUpdate(nDataflowUpdate);
-        MetadataInvoker.getInstance().updateDataflow(dataFlowUpdateRequest);
+        NDataflowManager.getInstance(getConfig(), getProject()).updateDataflow(nDataflowUpdate);
     }
 }

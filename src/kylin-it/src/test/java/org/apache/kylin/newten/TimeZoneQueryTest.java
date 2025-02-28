@@ -89,18 +89,26 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
         SparderEnv.setSparkSession(ss);
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/timezone");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/timezone" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Override
@@ -116,7 +124,8 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
         populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
         List<Row> rows = ExecAndComp.queryModel(getProject(), sql).collectAsList();
         List<List<String>> calciteDf = transformToString(rows);
-        List<List<String>> pushDown = SparkSqlClient.executeSql(ss, sql, RandomUtil.randomUUID(), getProject()).getFirst();
+        List<List<String>> pushDown = SparkSqlClient.executeSql(ss, sql, RandomUtil.randomUUID(), getProject())
+                .getFirst();
         List<List<String>> jdbc = ExecAndComp.queryCubeWithJDBC(getProject(), sql);
         Assert.assertEquals(jdbc.size(), calciteDf.size());
         for (int i = 0; i < jdbc.size(); i++) {
@@ -150,22 +159,22 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
         String sqlWithPlaceholder = sqlOrign.replace("where TEST_ORDER.TEST_TIME_ENC='2013-01-01 12:02:11' ",
                 "where TEST_ORDER.TEST_TIME_ENC=? ");
         List<Row> rows = ExecAndComp.queryModel(getProject(), sqlWithPlaceholder,
-                Arrays.asList(new Timestamp[]{Timestamp.valueOf(paramString)})).collectAsList();
+                Arrays.asList(new Timestamp[] { Timestamp.valueOf(paramString) })).collectAsList();
         List<List<String>> setTimestampResults = transformToString(rows);
         // setTimestamp pushdown
-        PrepareSqlStateParam[] params = new PrepareSqlStateParam[]{
-                new PrepareSqlStateParam(Timestamp.class.getCanonicalName(), paramString)};
+        PrepareSqlStateParam[] params = new PrepareSqlStateParam[] {
+                new PrepareSqlStateParam(Timestamp.class.getCanonicalName(), paramString) };
         String sqlPushDown = PrepareSQLUtils.fillInParams(sqlWithPlaceholder, params);
         List<List<String>> setTimestampPushdownResults = SparkSqlClient
                 .executeSql(ss, sqlPushDown, RandomUtil.randomUUID(), getProject()).getFirst();
         // setString
         List<Row> rows2 = ExecAndComp
-                .queryModel(getProject(), sqlWithPlaceholder, Arrays.asList(new String[]{paramString}))
+                .queryModel(getProject(), sqlWithPlaceholder, Arrays.asList(new String[] { paramString }))
                 .collectAsList();
         List<List<String>> setStringResults = transformToString(rows2);
         // setString pushdown
-        PrepareSqlStateParam[] params2 = new PrepareSqlStateParam[]{
-                new PrepareSqlStateParam(String.class.getCanonicalName(), paramString)};
+        PrepareSqlStateParam[] params2 = new PrepareSqlStateParam[] {
+                new PrepareSqlStateParam(String.class.getCanonicalName(), paramString) };
         String sqlPushDown2 = PrepareSQLUtils.fillInParams(sqlWithPlaceholder, params2);
         List<List<String>> setStringPushdownResults = SparkSqlClient
                 .executeSql(ss, sqlPushDown2, RandomUtil.randomUUID(), getProject()).getFirst();
@@ -194,7 +203,8 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
     @Test
     public void testConstantDate() throws Exception {
         String sql = "select date'2020-01-01', current_date";
-        List<List<String>> pushDown = SparkSqlClient.executeSql(ss, sql, RandomUtil.randomUUID(), getProject()).getFirst();
+        List<List<String>> pushDown = SparkSqlClient.executeSql(ss, sql, RandomUtil.randomUUID(), getProject())
+                .getFirst();
         List<List<String>> jdbc = ExecAndComp.queryCubeWithJDBC(getProject(), sql);
         for (int i = 0; i < jdbc.size(); i++) {
             Assert.assertEquals("Date literal doesn't match", pushDown.get(i), jdbc.get(i));
@@ -204,14 +214,14 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
     @Test
     public void testConstantTimestamp() throws Exception {
         {
-            String[] sqls = {"select current_timestamp", "select timestamp'2020-03-30 11:03:37'",
-                    "select timestamp'2012-02-09 11:23:23.21'"};
+            String[] sqls = { "select current_timestamp", "select timestamp'2020-03-30 11:03:37'",
+                    "select timestamp'2012-02-09 11:23:23.21'" };
             for (String sql : sqls) {
                 // try matching timestamp to minutes mutilple times
                 int max_try = 10;
                 while (max_try-- > 0) {
-                    List<List<String>> pushDown = SparkSqlClient.executeSql(ss, sql, RandomUtil.randomUUID(), getProject())
-                            .getFirst();
+                    List<List<String>> pushDown = SparkSqlClient
+                            .executeSql(ss, sql, RandomUtil.randomUUID(), getProject()).getFirst();
                     List<List<String>> jdbc = ExecAndComp.queryCubeWithJDBC(getProject(), sql);
 
                     // match timestamp to minute
@@ -260,7 +270,7 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
         }
         long start = SegmentRange.dateToLong("2009-01-01 00:00:00");
         long end = SegmentRange.dateToLong("2015-01-01 00:00:00");
-        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end),
+                Sets.newLinkedHashSet(layouts), true);
     }
 }

@@ -65,13 +65,19 @@ export function loadingBox () {
 }
 // 确认弹窗
 export function kylinConfirm (content, para, title) {
-  var dialogTitle = title || window.kylinVm.$t('kylinLang.common.tip')
-  var dialogPara = para || {type: 'warning'}
+  const dialogTitle = title || window.kylinVm.$t('kylinLang.common.tip')
+  const dialogPara = para || {type: 'warning'}
   return MessageBox.confirm(content, dialogTitle, dialogPara)
 }
-
+export function kylinWarn (content, para) {
+  const dialogPara = para || {
+    type: 'warning',
+    showCancelButton: false
+  }
+  return MessageBox.confirm(content, window.kylinVm.$t('kylinLang.common.tip'), dialogPara)
+}
 export function kylinMessage (content, para) {
-  var messagePara = Object.assign({
+  const messagePara = Object.assign({
     type: 'success',
     message: content,
     duration: 3000,

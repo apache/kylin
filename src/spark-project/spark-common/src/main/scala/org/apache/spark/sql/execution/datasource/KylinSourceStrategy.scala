@@ -35,8 +35,8 @@ import org.apache.spark.sql.{Strategy, execution}
  * At a high level planning occurs in several phases:
  *  - Split filters by when they need to be evaluated.
  *  - Prune the schema of the data requested based on any projections present. Today this pruning
- * is only done on top level columns, but formats should support pruning of nested columns as
- * well.
+ *    is only done on top level columns, but formats should support pruning of nested columns as
+ *    well.
  *  - Construct a reader function by passing filters and the schema into the FileFormat.
  *  - Using a partition pruning predicates, enumerate the list of files that should be read.
  *  - Split the files into tasks and construct a FileScanRDD.
@@ -55,15 +55,15 @@ object KylinSourceStrategy extends Strategy with LogEx {
 
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case PhysicalOperation(projects, filters,
-        l @ LogicalRelation(
-        fsRelation @ HadoopFsRelation(
-        _: FilePruner,
-        _,
-        _,
-        _,
-        _,
-        _),
-        _, table, _)) =>
+    l@LogicalRelation(
+    fsRelation@HadoopFsRelation(
+    _: FilePruner,
+    _,
+    _,
+    _,
+    _,
+    _),
+    _, table, _)) =>
       // Filters on this relation fall into four categories based on where we can use them to avoid
       // reading unneeded data:
       //  - partition keys only - used to prune directories to read
@@ -122,8 +122,11 @@ object KylinSourceStrategy extends Strategy with LogEx {
       logTime("listFiles", debug = true) {
         filePruner.listFiles(partitionKeyFilters.iterator.toSeq, dataFilters.iterator.toSeq)
       }
-      val sourceScanRows = filePruner.cached.get((partitionKeyFilters.iterator.toSeq,
-        dataFilters.iterator.toSeq, Seq.empty[Expression]))._2
+      val cacheV = filePruner.cached.get((partitionKeyFilters.iterator.toSeq,
+        dataFilters.iterator.toSeq, Seq.empty[Expression]))
+      val sourceScanRows = if (cacheV != null) {
+        cacheV._2
+      } else 0L
       QueryContext.current().getMetrics.addAccumSourceScanRows(sourceScanRows)
       val scan =
         new KylinFileSourceScanExec(

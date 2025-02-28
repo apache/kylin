@@ -24,12 +24,12 @@ import java.util.List;
 
 import org.apache.kylin.common.persistence.MissingRootPersistentEntity;
 import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceTool;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,11 +38,11 @@ import org.mockito.Mockito;
 
 public class CacheReloadCheckerTest extends NLocalFileMetadataTestCase {
 
-    private final String resPath = "/mock/mock.json";
+    private final String resPath = "PROJECT/mock";
 
-    private final String depPath1 = "/mock/mock/dep1.json";
-    private final String depPath2 = "/mock/mock/dep2.json";
-    private final String depPath3 = "/mock/mock/dep3.json";
+    private final String depPath1 = "PROJECT/dep1";
+    private final String depPath2 = "PROJECT/dep2";
+    private final String depPath3 = "PROJECT/dep3";
     private final Charset charset = Charset.defaultCharset();
 
     @Before
@@ -73,13 +73,13 @@ public class CacheReloadCheckerTest extends NLocalFileMetadataTestCase {
 
         Mockito.when(cache.getIfPresent("mock")).thenReturn(entity);
         Mockito.when(store.getResource(resPath))
-                .thenReturn(new RawResource(resPath, ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
+                .thenReturn(new RawResource(resPath, RawResourceTool.createByteSourceByPath(resPath), 0L, 0));
         Mockito.when(store.getResource(depPath1))
-                .thenReturn(new RawResource(depPath1, ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
+                .thenReturn(new RawResource(depPath1, RawResourceTool.createByteSourceByPath(depPath1), 0L, 0));
         Mockito.when(store.getResource(depPath2))
-                .thenReturn(new RawResource(depPath2, ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
+                .thenReturn(new RawResource(depPath2, RawResourceTool.createByteSourceByPath(depPath2), 0L, 0));
         Mockito.when(store.getResource(depPath3))
-                .thenReturn(new RawResource(depPath3, ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
+                .thenReturn(new RawResource(depPath3, RawResourceTool.createByteSourceByPath(depPath3), 0L, 0));
 
         Assert.assertFalse(checker.needReload("mock"));
         Mockito.when(store.getResource(depPath3)).thenReturn(null);
@@ -90,7 +90,7 @@ public class CacheReloadCheckerTest extends NLocalFileMetadataTestCase {
         Assert.assertFalse(checker.needReload("mock"));
 
         Mockito.when(store.getResource(depPath3))
-                .thenReturn(new RawResource(depPath3, ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
+                .thenReturn(new RawResource(depPath3, RawResourceTool.createByteSourceByPath(depPath3), 0L, 0));
         Assert.assertTrue(checker.needReload("mock"));
     }
 

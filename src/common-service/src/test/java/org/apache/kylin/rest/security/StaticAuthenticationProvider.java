@@ -27,9 +27,6 @@ public class StaticAuthenticationProvider extends OpenAuthenticationProvider {
         String name = authentication.getName();
         Object credentials = authentication.getCredentials();
         ManagedUser user = (ManagedUser) getUserService().loadUserByUsername(name);
-        if (!credentials.equals(user.getPassword())) {
-            return false;
-        }
-        return true;
+        return credentials.equals(user.getPassword());
     }
 }

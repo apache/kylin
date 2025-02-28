@@ -20,13 +20,12 @@ package org.apache.kylin.rest.scheduler;
 
 import static org.apache.kylin.common.constant.Constants.MARK;
 import static org.apache.kylin.common.constant.Constants.SOURCE_TABLE_STATS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
@@ -35,17 +34,19 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.metadata.Epoch;
-import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.awaitility.Duration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -72,10 +73,14 @@ class AutoRefreshSnapshotSchedulerTest {
     private NProjectManager manager;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         manager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         ReflectionTestUtils.setField(snapshotScheduler, "projectScheduler", projectScheduler);
-        ReflectionTestUtils.setField(snapshotScheduler, "restTemplate", restTemplate);
+    }
+
+    @AfterEach
+    void tearDown() {
+        JobContextUtil.cleanUp();
     }
 
     @Test
@@ -281,45 +286,35 @@ class AutoRefreshSnapshotSchedulerTest {
             projectManager.updateProject(projectInstance, projectInstance.getName(), projectInstance.getDescription(),
                     overrideProps);
             projectInstance = projectManager.getProject(project);
-            try (val epochManagerMockedStatic = Mockito.mockStatic(EpochManager.class)) {
-                val epoch = mock(Epoch.class);
-                when(epoch.getCurrentEpochOwner()).thenReturn(AddressUtil.getLocalInstance().replace('0', '1'));
-                val epochManger = mock(EpochManager.class);
-                when(epochManger.getEpoch(project)).thenReturn(epoch);
-                epochManagerMockedStatic.when(EpochManager::getInstance).thenReturn(epochManger);
-                result = snapshotScheduler.autoRefreshSnapshot(projectInstance);
-                assertFalse(result);
 
-                when(epoch.getCurrentEpochOwner()).thenReturn(AddressUtil.getLocalInstance());
-                snapshotScheduler.getSchedulerProjectCount().incrementAndGet();
-                val taskFutures = snapshotScheduler.getTaskFutures();
-                val cron = KylinConfig.getInstanceFromEnv().getSnapshotAutoRefreshCron();
-                val schedule = projectScheduler.schedule(() -> {
-                }, triggerContext -> {
-                    CronTrigger trigger = new CronTrigger(cron);
-                    return trigger.nextExecutionTime(triggerContext);
-                });
-                val taskPair = new Pair<String, ScheduledFuture<?>>(cron, schedule);
-                taskFutures.put(project, taskPair);
-                result = snapshotScheduler.autoRefreshSnapshot(projectInstance);
-                assertFalse(result);
-                assertEquals(1, taskFutures.size());
-                assertFalse(taskFutures.get(project).getSecond().isDone());
-                assertEquals(cron, taskFutures.get(project).getFirst());
-                assertEquals(1, snapshotScheduler.getSchedulerProjectCount().get());
+            snapshotScheduler.getSchedulerProjectCount().incrementAndGet();
+            val taskFutures = snapshotScheduler.getTaskFutures();
+            val cron = KylinConfig.getInstanceFromEnv().getSnapshotAutoRefreshCron();
+            val schedule = projectScheduler.schedule(() -> {
+            }, triggerContext -> {
+                CronTrigger trigger = new CronTrigger(cron);
+                return trigger.nextExecutionTime(triggerContext);
+            });
+            val taskPair = new Pair<String, ScheduledFuture<?>>(cron, schedule);
+            taskFutures.put(project, taskPair);
+            result = snapshotScheduler.autoRefreshSnapshot(projectInstance);
+            assertFalse(result);
+            assertEquals(1, taskFutures.size());
+            assertFalse(taskFutures.get(project).getSecond().isDone());
+            assertEquals(cron, taskFutures.get(project).getFirst());
+            assertEquals(1, snapshotScheduler.getSchedulerProjectCount().get());
 
-                val cronNew = "1 1 1 */1 * ?";
-                overrideProps.put("kylin.snapshot.auto-refresh-cron", cronNew);
-                projectManager.updateProject(projectInstance, projectInstance.getName(),
-                        projectInstance.getDescription(), overrideProps);
-                projectInstance = projectManager.getProject(project);
-                result = snapshotScheduler.autoRefreshSnapshot(projectInstance);
-                assertTrue(result);
-                assertEquals(1, taskFutures.size());
-                assertFalse(taskFutures.get(project).getSecond().isDone());
-                assertEquals(cronNew, taskFutures.get(project).getFirst());
-                assertEquals(1, snapshotScheduler.getSchedulerProjectCount().get());
-            }
+            val cronNew = "1 1 1 */1 * ?";
+            overrideProps.put("kylin.snapshot.auto-refresh-cron", cronNew);
+            projectManager.updateProject(projectInstance, projectInstance.getName(), projectInstance.getDescription(),
+                    overrideProps);
+            projectInstance = projectManager.getProject(project);
+            result = snapshotScheduler.autoRefreshSnapshot(projectInstance);
+            assertTrue(result);
+            assertEquals(1, taskFutures.size());
+            assertFalse(taskFutures.get(project).getSecond().isDone());
+            assertEquals(cronNew, taskFutures.get(project).getFirst());
+            assertEquals(1, snapshotScheduler.getSchedulerProjectCount().get());
         } finally {
             projectThreadPoolScheduler.shutdown();
         }
@@ -331,9 +326,8 @@ class AutoRefreshSnapshotSchedulerTest {
         val projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         val overrideProps = Maps.<String, String> newLinkedHashMap();
         projectManager.createProject(project, "test", null, overrideProps);
-        AutoRefreshSnapshotRunner.getInstance(project);
-        snapshotScheduler.checkRefreshRunnerJobPool(KylinConfig.newKylinConfig(), project);
-        var snapshotRunner = AutoRefreshSnapshotRunner.getInstanceByProject(project);
+        var snapshotRunner = AutoRefreshSnapshotRunner.getInstance(project);
+        snapshotRunner.run();
         assertEquals(20, ((ThreadPoolExecutor) snapshotRunner.getJobPool()).getCorePoolSize());
         assertEquals(20, ((ThreadPoolExecutor) snapshotRunner.getJobPool()).getMaximumPoolSize());
 
@@ -341,9 +335,8 @@ class AutoRefreshSnapshotSchedulerTest {
         var projectInstance = projectManager.getProject(project);
         projectManager.updateProject(projectInstance, projectInstance.getName(), projectInstance.getDescription(),
                 overrideProps);
-        projectInstance = projectManager.getProject(project);
-        snapshotScheduler.checkRefreshRunnerJobPool(projectInstance.getConfig(), project);
         snapshotRunner = AutoRefreshSnapshotRunner.getInstanceByProject(project);
+        snapshotRunner.run();
         assertEquals(21, ((ThreadPoolExecutor) snapshotRunner.getJobPool()).getCorePoolSize());
         assertEquals(21, ((ThreadPoolExecutor) snapshotRunner.getJobPool()).getMaximumPoolSize());
     }
@@ -353,6 +346,22 @@ class AutoRefreshSnapshotSchedulerTest {
         snapshotScheduler.schedulerAutoRefresh();
         assertEquals(0, snapshotScheduler.getSchedulerProjectCount().get());
         assertEquals(0, snapshotScheduler.getTaskFutures().size());
+    }
+
+    @Test
+    void testRunAutoRefreshJob() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        NProjectManager prjManager = NProjectManager.getInstance(conf);
+        ProjectInstance prj = prjManager.listAllProjects().get(0);
+        prjManager.updateProject(prj.getName(), copyForWrite -> {
+            copyForWrite.putOverrideKylinProps("kylin.snapshot.manual-management-enabled", "true");
+            copyForWrite.putOverrideKylinProps("kylin.snapshot.auto-refresh-enabled", "true");
+        });
+        conf.setProperty("kylin.snapshot.auto-refresh-cron", "* * * */1 * ?");
+        ((ThreadPoolTaskScheduler) projectScheduler).initialize();
+        snapshotScheduler.schedulerAutoRefresh();
+        ExecutableManager executableManager = ExecutableManager.getInstance(conf, prj.getName());
+        await().atMost(Duration.TEN_SECONDS).until(() -> !executableManager.getAllJobs().isEmpty());
     }
 
     @Test
@@ -368,20 +377,14 @@ class AutoRefreshSnapshotSchedulerTest {
                 overrideProps);
         val fileSystem = HadoopUtil.getWorkingFileSystem();
         val markFilePath = new Path(KylinConfig.readSystemKylinConfig().getSnapshotAutoRefreshDir(project) + MARK);
-        try (val mockedStatic = Mockito.mockStatic(AutoRefreshSnapshotRunner.class);
-                val mockedStatic2 = Mockito.mockStatic(EpochManager.class)) {
+        try (val mockedStatic = Mockito.mockStatic(AutoRefreshSnapshotRunner.class)) {
             val runner = Mockito.mock(AutoRefreshSnapshotRunner.class);
-            val epochManager = Mockito.mock(EpochManager.class);
             mockedStatic.when(() -> AutoRefreshSnapshotRunner.getInstance(anyString())).thenReturn(runner);
-            mockedStatic2.when(EpochManager::getInstance).thenReturn(epochManager);
             doNothing().when(runner).doRun();
             ReflectionTestUtils.setField(runner, "projectConfig", KylinConfig.readSystemKylinConfig());
             ReflectionTestUtils.setField(runner, "project", project);
             Mockito.doCallRealMethod().when(runner).runWhenSchedulerInit();
             Mockito.doCallRealMethod().when(runner).deleteMarkFile();
-            val epoch = Mockito.mock(Epoch.class);
-            when(epochManager.getEpoch(anyString())).thenReturn(epoch);
-            when(epoch.getCurrentEpochOwner()).thenReturn(AddressUtil.getLocalInstance());
 
             assertFalse(fileSystem.exists(markFilePath));
             snapshotScheduler.afterPropertiesSet();

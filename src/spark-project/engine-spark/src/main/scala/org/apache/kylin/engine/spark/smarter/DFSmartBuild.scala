@@ -17,24 +17,24 @@
  */
 package org.apache.kylin.engine.spark.smarter
 
-import java.lang.{Long => JLong}
-import java.util
-import java.util.function.Function
-import java.util.{Arrays, Map => JMap}
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
+import org.apache.commons.lang3.StringUtils
+import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil.{getColumns, str2Longs, toLayouts}
 import org.apache.kylin.engine.spark.job._
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.metadata.cube.cuboid.{NSpanningTree, NSpanningTreeFactory}
 import org.apache.kylin.metadata.cube.model._
-import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.Path
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.{Column, Dataset, Row}
-import org.apache.spark.tracker.{BuildContext, IndexTaskContext, IndexTaskScheduler, ResourceState}
+import org.apache.spark.tracker.{AppStatusContext, IndexTaskContext, IndexTaskScheduler, ResourceState}
 
+import java.lang.{Long => JLong}
+import java.util
+import java.util.function.Function
+import java.util.{Arrays, Map => JMap}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -52,7 +52,7 @@ class DFSmartBuild extends DFBuildJob with Logging {
   private var persistedFlatTable = new ListBuffer[String]
   private var persistedViewFactTable = new ListBuffer[String]
   private var runningIndexList = new ListBuffer[Long]
-  private var buildContext: BuildContext = _
+  private var buildContext: AppStatusContext = _
 
   override protected def extraInit(): Unit = {
     dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID)
@@ -68,7 +68,7 @@ class DFSmartBuild extends DFBuildJob with Logging {
       .filter(_ != null)
       .seq
     nSpanningTree = NSpanningTreeFactory.fromLayouts(cuboids.asJava, dataflowId)
-    buildContext = new BuildContext(ss.sparkContext, config)
+    buildContext = new AppStatusContext(ss.sparkContext, config)
     buildContext.appStatusTracker.startMonitorBuildResourceState()
   }
 

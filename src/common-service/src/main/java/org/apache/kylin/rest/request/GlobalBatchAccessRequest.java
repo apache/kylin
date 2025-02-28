@@ -18,12 +18,12 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class GlobalBatchAccessRequest {

@@ -18,17 +18,19 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import static org.apache.kylin.engine.spark.utils.ExecutableHandleUtils.makeSegmentReady;
+import static org.apache.kylin.engine.spark.utils.ExecutableHandleUtils.mergeMetadata;
+
 import java.util.List;
 
+import org.apache.kylin.engine.spark.utils.ExecutableHandleUtils;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.MergerInfo;
-import org.apache.kylin.job.execution.handler.ExecutableHandleUtils;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
-import org.apache.kylin.rest.feign.MetadataInvoker;
 
 import lombok.val;
 
@@ -45,13 +47,12 @@ public class ExecutableAddSegmentHandler extends ExecutableHandler {
         val jobId = executable.getId();
         val modelId = getModelId();
         Preconditions.checkState(executable.getTasks().size() > 1, "job " + jobId + " steps is not enough");
-
         val errorOrPausedJobCount = getErrorOrPausedJobCount();
         MergerInfo mergerInfo = new MergerInfo(project, modelId, jobId, errorOrPausedJobCount, HandlerType.ADD_SEGMENT);
         ExecutableHandleUtils.getNeedMergeTasks(executable)
                 .forEach(task -> mergerInfo.addTaskMergeInfo(task, SparkJobFactoryUtils.needBuildSnapshots(task)));
 
-        List<NDataLayout[]> mergedLayout = MetadataInvoker.getInstance().mergeMetadata(project, mergerInfo);
+        List<NDataLayout[]> mergedLayout = mergeMetadata(project, mergerInfo);
         List<AbstractExecutable> tasks = ExecutableHandleUtils.getNeedMergeTasks(executable);
         Preconditions.checkArgument(mergedLayout.size() == tasks.size());
         for (int idx = 0; idx < tasks.size(); idx++) {
@@ -67,7 +68,6 @@ public class ExecutableAddSegmentHandler extends ExecutableHandler {
         if (((DefaultExecutableOnModel) getExecutable()).checkAnyLayoutExists()) {
             return;
         }
-        MetadataInvoker.getInstance().makeSegmentReady(getProject(), getModelId(), getSegmentId(),
-                getErrorOrPausedJobCount());
+        makeSegmentReady(getProject(), getModelId(), getSegmentId());
     }
 }

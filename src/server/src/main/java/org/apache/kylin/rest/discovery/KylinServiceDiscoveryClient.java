@@ -28,19 +28,19 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;
 import org.springframework.cloud.zookeeper.discovery.ZookeeperDiscoveryClient;
 import org.springframework.stereotype.Component;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @ConditionalOnZookeeperEnabled
+@ConditionalOnNodeRegistryZookeeperEnabled
 @Component
 @Slf4j
 public class KylinServiceDiscoveryClient implements KylinServiceDiscovery {

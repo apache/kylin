@@ -18,8 +18,6 @@
 
 package org.apache.spark.deploy.master
 
-import java.util
-
 import org.apache.kylin.cluster.{AvailableResource, IClusterManager, ResourceInfo}
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.deploy.DeployMessages.{KillApplication, MasterStateResponse, RequestMasterState}
@@ -29,6 +27,8 @@ import org.apache.spark.rpc.{RpcAddress, RpcEnv}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.util.Utils
 import org.apache.spark.{SecurityManager, SparkConf}
+
+import java.util
 
 // scalastyle:off
 class StandaloneClusterManager extends IClusterManager with Logging {

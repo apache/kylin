@@ -19,14 +19,10 @@ package org.apache.kylin.common.constant;
 
 public final class AsyncProfilerConstants {
 
-    private AsyncProfilerConstants() {}
+    private AsyncProfilerConstants() {
+    }
 
     public static final String ASYNC_PROFILER_LIB_MAC = "libasyncProfiler-mac.so";
     public static final String ASYNC_PROFILER_LIB_LINUX_X64 = "libasyncProfiler-linux-x64.so";
-
-    public static final String ASYNC_PROFILER_LIB_LINUX_MUSL_X64 = "libasyncProfiler-linux-musl-x64.so";
-
     public static final String ASYNC_PROFILER_LIB_LINUX_ARM64 = "libasyncProfiler-linux-arm64.so";
-
-    public static final String ASYNC_PROFILER_LIB_LINUX_MUSL_ARM64 = "libasyncProfiler-linux-musl-arm64.so";
 }

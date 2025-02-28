@@ -38,8 +38,7 @@ public enum ExecutableState {
     private static Multimap<ExecutableState, ExecutableState> VALID_STATE_TRANSFER;
 
     static {
-        VALID_STATE_TRANSFER = Multimaps.newSetMultimap(
-                Maps.newEnumMap(ExecutableState.class),
+        VALID_STATE_TRANSFER = Multimaps.newSetMultimap(Maps.newEnumMap(ExecutableState.class),
                 () -> new CopyOnWriteArraySet<>());
 
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.PENDING);
@@ -76,7 +75,7 @@ public enum ExecutableState {
     }
 
     public static ExecutableState[] getFinalStates() {
-        return new ExecutableState[] {SUCCEED, DISCARDED, SUICIDAL};
+        return new ExecutableState[] { SUCCEED, DISCARDED, SUICIDAL };
     }
 
     public static List<ExecutableState> getNotFinalStates() {
@@ -109,9 +108,7 @@ public enum ExecutableState {
     }
 
     public boolean isNotBad() {
-        return this == SUCCEED
-                || this == SKIP
-                || this == WARNING;
+        return this == SUCCEED || this == SKIP || this == WARNING;
     }
 
     public static boolean isValidStateTransfer(ExecutableState from, ExecutableState to) {
@@ -120,26 +117,26 @@ public enum ExecutableState {
 
     public JobStatusEnum toJobStatus() {
         switch (this) {
-            case SKIP:
-                return JobStatusEnum.SKIP;
-            case READY:
-            case PENDING:
-                return JobStatusEnum.PENDING;
-            case RUNNING:
-                return JobStatusEnum.RUNNING;
-            case ERROR:
-                return JobStatusEnum.ERROR;
-            case SUCCEED:
-                return JobStatusEnum.FINISHED;
-            case PAUSED:
-                return JobStatusEnum.STOPPED;
-            case SUICIDAL:
-            case DISCARDED:
-                return JobStatusEnum.DISCARDED;
-            case WARNING:
-                return JobStatusEnum.WARNING;
-            default:
-                throw new RuntimeException("invalid state:" + this);
+        case SKIP:
+            return JobStatusEnum.SKIP;
+        case READY:
+        case PENDING:
+            return JobStatusEnum.PENDING;
+        case RUNNING:
+            return JobStatusEnum.RUNNING;
+        case ERROR:
+            return JobStatusEnum.ERROR;
+        case SUCCEED:
+            return JobStatusEnum.FINISHED;
+        case PAUSED:
+            return JobStatusEnum.STOPPED;
+        case SUICIDAL:
+        case DISCARDED:
+            return JobStatusEnum.DISCARDED;
+        case WARNING:
+            return JobStatusEnum.WARNING;
+        default:
+            throw new RuntimeException("invalid state:" + this);
         }
     }
 

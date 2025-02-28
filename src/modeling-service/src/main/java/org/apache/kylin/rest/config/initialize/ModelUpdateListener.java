@@ -21,12 +21,12 @@ package org.apache.kylin.rest.config.initialize;
 import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.springframework.stereotype.Component;
 
-import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

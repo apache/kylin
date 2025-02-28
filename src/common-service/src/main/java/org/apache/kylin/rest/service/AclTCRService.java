@@ -49,6 +49,11 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.AclGrantEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AclRevokeEventNotifier;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.acl.DependentColumn;
@@ -73,13 +78,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 
@@ -1198,15 +1197,17 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
                 .collect(Collectors.toList());
     }
 
-    public boolean remoteGrantACL(String projectId, List<AccessRequest> accessRequests) throws JsonProcessingException {
+    public boolean remoteGrantACL(String projectId, List<AccessRequest> accessRequests) throws IOException {
         AclGrantEventNotifier notifier = new AclGrantEventNotifier(projectId,
                 JsonUtil.writeValueAsString(accessRequests));
-        return remoteRequest(notifier, projectId);
+        updateAclFromRemote(notifier, null);
+        return true;
     }
 
-    public boolean remoteRevokeACL(String projectId, String sid, boolean principal) {
+    public boolean remoteRevokeACL(String projectId, String sid, boolean principal) throws IOException {
         AclRevokeEventNotifier notifier = new AclRevokeEventNotifier(projectId, sid, principal);
-        return remoteRequest(notifier, projectId);
+        updateAclFromRemote(null, notifier);
+        return true;
     }
 
     public void updateAclFromRemote(AclGrantEventNotifier grantEventNotifier,

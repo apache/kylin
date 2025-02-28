@@ -28,15 +28,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ViewRequest {
-  @JsonProperty("ddl_project")
-  private String ddlProject;
-  @JsonProperty("sql")
-  private String sql;
-  @JsonProperty("restrict")
-  private String restrict;
+    @JsonProperty("ddl_project")
+    private String ddlProject;
+    @JsonProperty("sql")
+    private String sql;
+    @JsonProperty("restrict")
+    private String restrict;
 
-  public ViewRequest(String ddlProject, String sql) {
-    this.ddlProject = ddlProject;
-    this.sql = sql;
-  }
+    public ViewRequest(String ddlProject, String sql) {
+        this.ddlProject = ddlProject;
+        this.sql = sql;
+    }
 }

@@ -1,0 +1,47 @@
+{
+  "uuid" : "addc20c4-55df-436f-8602-2fbd4bca2910",
+  "name" : "TEST_SELLER_TYPE_DIM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SELLER_TYPE_CD",
+    "datatype" : "smallint",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "SELLER_TYPE_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "3",
+    "name" : "GLBL_RPRT_SLR_SGMNT_CD",
+    "datatype" : "tinyint"
+  }, {
+    "id" : "4",
+    "name" : "SELLER_GROUP_CD",
+    "datatype" : "tinyint",
+    "index" : "T"
+  }, {
+    "id" : "5",
+    "name" : "SELLER_GROUP_DESC",
+    "datatype" : "string"
+  }, {
+    "id" : "6",
+    "name" : "DIM_CRE_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "7",
+    "name" : "DIM_CRE_USER",
+    "datatype" : "string"
+  }, {
+    "id" : "8",
+    "name" : "DIM_UPD_DATE",
+    "datatype" : "string"
+  }, {
+    "id" : "9",
+    "name" : "DIM_UPD_USER",
+    "datatype" : "string"
+  } ],
+  "database" : "edw",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "default"
+}

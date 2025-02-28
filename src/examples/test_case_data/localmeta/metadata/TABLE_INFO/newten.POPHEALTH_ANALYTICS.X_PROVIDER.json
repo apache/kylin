@@ -1,0 +1,55 @@
+{
+  "uuid" : "adaf14f4-5210-419a-b2f7-559ede58fc2b",
+  "last_modified" : 1509548179758,
+  "version" : "2.3.0.20500",
+  "name" : "X_PROVIDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "NPI",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "2",
+    "name" : "FULL_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "3",
+    "name" : "EMP_STATUS",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "4",
+    "name" : "DEFAULT_TIN",
+    "datatype" : "varchar(20)"
+  }, {
+    "id" : "5",
+    "name" : "DEFAULT_PRACTICE",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "6",
+    "name" : "TAXONOMY_CODE",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "7",
+    "name" : "CLASSIFICATION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "SPECIALIZATION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "CONFIDENCE",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "10",
+    "name" : "SOURCE",
+    "datatype" : "varchar(35)"
+  }, {
+    "id" : "11",
+    "name" : "LOAD_DT",
+    "datatype" : "date"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

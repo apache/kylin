@@ -26,7 +26,6 @@ import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -45,9 +44,6 @@ public class BuildBaseIndexResponse extends BasicResponse {
 
     @JsonProperty("base_agg_index")
     private IndexInfo aggIndex;
-
-    @JsonIgnore
-    private boolean isCleanSecondStorage = false;
 
     @JsonProperty("computed_column_conflict")
     private ComputedColumnConflictResponse ccConflict;

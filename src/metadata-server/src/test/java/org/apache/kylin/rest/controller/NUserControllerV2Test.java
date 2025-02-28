@@ -22,14 +22,15 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.rest.response.ManagedUserResponse;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.controller.v2.NUserControllerV2;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.controller.v2.NUserControllerV2;
+import org.apache.kylin.rest.response.ManagedUserResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +57,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class NUserControllerV2Test extends NLocalFileMetadataTestCase {
 
@@ -128,6 +128,6 @@ public class NUserControllerV2Test extends NLocalFileMetadataTestCase {
     public void testBasics() {
         EnvelopeResponse<UserDetails> userDetailsEnvelopeResponse = nUserControllerV2.authenticatedUser();
         Assert.assertNotNull(userDetailsEnvelopeResponse);
-        Assert.assertTrue(userDetailsEnvelopeResponse.getCode().equals(KylinException.CODE_SUCCESS));
+        Assert.assertEquals(KylinException.CODE_SUCCESS, userDetailsEnvelopeResponse.getCode());
     }
 }

@@ -21,9 +21,10 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.primitives.Ints;
+
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 public class TypeDef {
     private static final Pattern P = Pattern

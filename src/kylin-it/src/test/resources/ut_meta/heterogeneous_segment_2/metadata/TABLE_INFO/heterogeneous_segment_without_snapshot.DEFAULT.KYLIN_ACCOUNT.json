@@ -1,0 +1,54 @@
+{
+  "uuid" : "a74f4be3-b35d-4634-ab00-758cd490b84b",
+  "last_modified" : 1630403473640,
+  "create_time" : 1630401560951,
+  "version" : "4.0.0.0",
+  "name" : "KYLIN_ACCOUNT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "datatype" : "integer",
+    "comment" : "Account Buyer Level",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "datatype" : "integer",
+    "comment" : "Account Seller Level",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "ACCOUNT_COUNTRY",
+    "datatype" : "varchar(4096)",
+    "comment" : "Account Country",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT_CONTACT",
+    "datatype" : "varchar(4096)",
+    "comment" : "Account Contact Info",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "project" : "heterogeneous_segment_without_snapshot"
+}

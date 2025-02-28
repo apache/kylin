@@ -28,6 +28,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,8 +69,32 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        userService.createUser(
-                new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(new UserGrantedAuthority("ROLE_ADMIN"))));
+        userService.createUser(new ManagedUser("ADMIN", "KYLIN", false,
+                Collections.singletonList(new UserGrantedAuthority("ROLE_ADMIN"))));
+    }
+
+    @Test
+    public void testGetDashboardStatistics() throws Exception {
+        String project = "gc_test";
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/statistics").contentType(MediaType.APPLICATION_JSON)
+                .param("project", project).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testIsAccelerating() throws Exception {
+        String project = "gc_test";
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/acceleration").contentType(MediaType.APPLICATION_JSON)
+                .param("project", project).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testAccelerate() throws Exception {
+        String project = "gc_test";
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/acceleration").contentType(MediaType.APPLICATION_JSON)
+                .param("project", project).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -93,7 +118,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
 
         final String exceptionMsg = JsonPath.compile("$.data.exceptionMessage")
                 .read(result.getResponse().getContentAsString());
-        Assert.assertTrue(StringUtils.contains(exceptionMsg, "No realization found for OLAPContext"));
+        Assert.assertTrue(StringUtils.contains(exceptionMsg, "No realization found for OlapContext"));
     }
 
     @Test
@@ -110,7 +135,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
         H2Database h2DB = new H2Database(h2Connection, getTestConfig(), "default");
         h2DB.loadAllTables();
 
-        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=DEFAULT");
+        overwriteSystemProp("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default;SCHEMA=`DEFAULT`");
         overwriteSystemProp("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
         overwriteSystemProp("kylin.query.pushdown.jdbc.username", "sa");
         overwriteSystemProp("kylin.query.pushdown.jdbc.password", "");
@@ -149,7 +174,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.engineType").value(QueryContext.PUSHDOWN_RDBMS))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.storageCacheUsed").value(false))
                 .andDo(MockMvcResultHandlers.print()).andReturn();
-
+        h2DB.dropAll();
         h2Connection.close();
     }
 

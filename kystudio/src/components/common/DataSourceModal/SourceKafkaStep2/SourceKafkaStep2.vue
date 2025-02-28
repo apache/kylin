@@ -168,6 +168,7 @@ export default class SourceKafkaStep2 extends Vue {
   columnList = []
   filterColumns = []
   rules = {
+    database: [{ required: true, message: this.$t('inputDatabase'), trigger: 'change' }],
     name: [
       { required: true, message: this.$t('pleaseInputTableName'), trigger: 'blur' },
       {validator: this.checkName, trigger: 'blur'}
@@ -483,6 +484,7 @@ export default class SourceKafkaStep2 extends Vue {
     })
     this.kafkaMeta.subscribe = this.convertData && this.convertData.name
     this.kafkaMeta.kafka_bootstrap_servers = this.convertData && this.convertData.kafka.kafka_config.kafka_bootstrap_servers
+    this.kafkaMeta.parser_name = this.convertData && this.convertData.kafka.kafka_config.parser_name
     this.kafkaMeta.project = this.currentSelectedProject
     this.$emit('input', { kafkaMeta: this.kafkaMeta })
   }

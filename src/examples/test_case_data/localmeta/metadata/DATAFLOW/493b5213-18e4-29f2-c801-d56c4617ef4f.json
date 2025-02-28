@@ -1,0 +1,15 @@
+{
+  "uuid" : "493b5213-18e4-29f2-c801-d56c4617ef4f",
+  "last_modified" : 1709200391416,
+  "create_time" : 1709200391416,
+  "version" : "4.0.0.0",
+  "status" : "OFFLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "TestBuildV2Dict",
+  "segment_uuids" : [ "028909fe-e1e1-f600-418d-35c36b38088b" ]
+}

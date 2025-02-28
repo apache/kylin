@@ -35,14 +35,14 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.query.relnode.KapJoinRel;
+import org.apache.kylin.query.relnode.OlapJoinRel;
 
 public class RuleUtils {
 
     private RuleUtils() {
     }
 
-    public static boolean isJoinOnlyOneAggChild(KapJoinRel joinRel) {
+    public static boolean isJoinOnlyOneAggChild(OlapJoinRel joinRel) {
         RelNode joinLeftChild;
         RelNode joinRightChild;
         final RelNode joinLeft = joinRel.getLeft();

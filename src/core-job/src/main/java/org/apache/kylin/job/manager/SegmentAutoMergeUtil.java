@@ -19,22 +19,19 @@
 package org.apache.kylin.job.manager;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NSegmentConfigHelper;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SegmentAutoMergeUtil {
-
-    private static Logger logger = LoggerFactory.getLogger(SegmentAutoMergeUtil.class);
 
     private SegmentAutoMergeUtil() {
     }
@@ -64,7 +61,7 @@ public class SegmentAutoMergeUtil {
                 mergeSeg = NDataflowManager.getInstance(config, project).mergeSegments(df,
                         rangeToMerge, true);
             } catch (Exception e) {
-                logger.warn("Failed to generate a merge segment", e);
+                log.warn("Failed to generate a merge segment", e);
             }
 
             if (mergeSeg != null) {
@@ -84,7 +81,7 @@ public class SegmentAutoMergeUtil {
     public static boolean canSkipMergeAndClearSeg(String project, String modelId) {
         val segmentConfig = NSegmentConfigHelper.getModelSegmentConfig(project, modelId);
         if (segmentConfig == null) {
-            logger.error("segment config is null");
+            log.error("segment config is null");
             return true;
         }
         return segmentConfig.canSkipAutoMerge() && segmentConfig.canSkipHandleRetentionSegment();

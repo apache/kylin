@@ -25,6 +25,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.graph.Graph;
+import org.apache.kylin.guava30.shaded.common.graph.GraphBuilder;
+import org.apache.kylin.guava30.shaded.common.graph.MutableGraph;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -35,14 +42,6 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.graph.Graph;
-import org.apache.kylin.guava30.shaded.common.graph.GraphBuilder;
-import org.apache.kylin.guava30.shaded.common.graph.MutableGraph;
 import lombok.Data;
 import lombok.val;
 

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_COUNT_DISTINCT",
+  "tableAlias" : "TEST_COUNT_DISTINCT",
+  "columnName" : "TINYINT_ID",
+  "expression" : "cast (test_count_distinct.string_id as tinyint)",
+  "innerExpression" : "cast (test_count_distinct.string_id as tinyint)",
+  "datatype" : "tinyint",
+  "comment" : null,
+  "uuid" : "8a684758-e587-a080-8f39-15bf640eca53",
+  "project" : "count_distinct_no_encode"
+}

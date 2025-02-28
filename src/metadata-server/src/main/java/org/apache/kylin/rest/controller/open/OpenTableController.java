@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -62,8 +63,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
@@ -124,7 +123,8 @@ public class OpenTableController extends NBasicController {
         Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(project, withExt,
                 StringUtils.upperCase(table, Locale.ROOT), StringUtils.upperCase(database, Locale.ROOT), isFuzzy,
                 Collections.singletonList(sourceType), returnTableSize);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.getCustom(tableDescWithActualSize, offset, limit), "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                DataResult.getCustom(tableDescWithActualSize, offset, limit), "");
     }
 
     @ApiOperation(value = "loadTables", tags = { "AI" })
@@ -153,16 +153,17 @@ public class OpenTableController extends NBasicController {
         return tableController.loadTables(tableLoadRequest);
     }
 
-    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"N/A"})
+    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = { "N/A" })
     @PostMapping(value = "/compatibility/aws")
     @ResponseBody
-    public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(@RequestBody AWSTableLoadRequest tableLoadRequest)
-            throws Exception {
+    public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(
+            @RequestBody AWSTableLoadRequest tableLoadRequest) throws Exception {
         String projectName = checkProjectName(tableLoadRequest.getProject());
         tableLoadRequest.setProject(projectName);
         checkRequiredArg("need_sampling", tableLoadRequest.getNeedSampling());
         validatePriority(tableLoadRequest.getPriority());
-        boolean sampleConditionError = (null == tableLoadRequest.getSamplingRows() || tableLoadRequest.getSamplingRows() > MAX_SAMPLING_ROWS
+        boolean sampleConditionError = (null == tableLoadRequest.getSamplingRows()
+                || tableLoadRequest.getSamplingRows() > MAX_SAMPLING_ROWS
                 || tableLoadRequest.getSamplingRows() < MIN_SAMPLING_ROWS);
         if (Boolean.TRUE.equals(tableLoadRequest.getNeedSampling()) && sampleConditionError) {
             throw new KylinException(JOB_SAMPLING_RANGE_INVALID, MIN_SAMPLING_ROWS, MAX_SAMPLING_ROWS);
@@ -222,10 +223,11 @@ public class OpenTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
 
-    @ApiOperation(value = "reloadAWSTablesCompatibleCrossAccount", tags = {"N/A"})
+    @ApiOperation(value = "reloadAWSTablesCompatibleCrossAccount", tags = { "N/A" })
     @PostMapping(value = "/reload/compatibility/aws")
     @ResponseBody
-    public EnvelopeResponse<OpenReloadTableResponse> reloadAWSTablesCompatibleCrossAccount(@RequestBody OpenReloadTableRequest request) {
+    public EnvelopeResponse<OpenReloadTableResponse> reloadAWSTablesCompatibleCrossAccount(
+            @RequestBody OpenReloadTableRequest request) {
         String projectName = checkProjectName(request.getProject());
         checkStreamingOperation(request.getProject(), request.getS3TableExtInfo().getName());
         request.setProject(projectName);
@@ -278,10 +280,11 @@ public class OpenTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, dbTblName, "");
     }
 
-    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = {"N/A" })
+    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = { "N/A" })
     @PutMapping(value = "/ext/prop/aws")
     @ResponseBody
-    public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(@RequestBody UpdateAWSTableExtDescRequest request) {
+    public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(
+            @RequestBody UpdateAWSTableExtDescRequest request) {
         String projectName = checkProjectName(request.getProject());
         request.setProject(projectName);
         return tableController.updateLoadedAWSTableExtProp(request);

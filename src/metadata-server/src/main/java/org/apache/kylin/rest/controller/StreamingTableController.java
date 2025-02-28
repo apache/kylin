@@ -18,15 +18,15 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.RELOAD_TABLE_FAILED;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.RELOAD_TABLE_FAILED;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.request.StreamingRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.service.StreamingTableService;
 import org.apache.kylin.rest.service.TableExtService;

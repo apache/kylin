@@ -21,9 +21,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

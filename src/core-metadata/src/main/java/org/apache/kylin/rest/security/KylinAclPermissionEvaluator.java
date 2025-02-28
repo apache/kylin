@@ -27,9 +27,9 @@ import java.util.Objects;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.springframework.security.acls.AclPermissionEvaluator;
 import org.springframework.security.acls.domain.PermissionFactory;
 import org.springframework.security.acls.model.Permission;
@@ -37,7 +37,7 @@ import org.springframework.security.core.Authentication;
 
 public class KylinAclPermissionEvaluator extends AclPermissionEvaluator {
 
-    private PermissionFactory permissionFactory;
+    private final PermissionFactory permissionFactory;
 
     public KylinAclPermissionEvaluator(AclService aclService, PermissionFactory permissionFactory) {
         super(aclService);
@@ -82,11 +82,11 @@ public class KylinAclPermissionEvaluator extends AclPermissionEvaluator {
 
     private List<Permission> resolveKylinPermission(Object permission) {
         if (permission instanceof Integer) {
-            return Arrays.asList(permissionFactory.buildFromMask(((Integer) permission).intValue()));
+            return Collections.singletonList(permissionFactory.buildFromMask((Integer) permission));
         }
 
         if (permission instanceof Permission) {
-            return Arrays.asList((Permission) permission);
+            return Collections.singletonList((Permission) permission);
         }
 
         if (permission instanceof Permission[]) {

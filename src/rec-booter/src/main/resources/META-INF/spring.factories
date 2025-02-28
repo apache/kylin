@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=org.apache.kylin.rest.KylinPrepareEnvListener,org.apache.kylin.rest.config.KylinPropertySourceConfiguration

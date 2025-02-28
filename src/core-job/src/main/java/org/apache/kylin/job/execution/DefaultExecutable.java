@@ -141,8 +141,8 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         }
     }
 
-    private void executeNextSteps(Map<String, Executable> dagExecutablesMap, Executable executable,
-            JobContext context) throws ExecuteException {
+    private void executeNextSteps(Map<String, Executable> dagExecutablesMap, Executable executable, JobContext context)
+            throws ExecuteException {
         final Set<String> nextSteps = executable.getNextSteps();
         if (CollectionUtils.isNotEmpty(nextSteps)) {
             List<Executable> nextExecutables = nextSteps.stream().map(dagExecutablesMap::get)
@@ -155,9 +155,9 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         while (true) {
             try {
                 val runningCount = dagExecutables.stream()
-                        .filter(executable -> executable.getStatus().equals(ExecutableState.RUNNING)
-                                || executable.getStatus().equals(ExecutableState.PENDING)
-                                || executable.getStatus().equals(ExecutableState.READY))
+                        .filter(executable -> executable.getStatus() == ExecutableState.RUNNING
+                                || executable.getStatus() == ExecutableState.PENDING
+                                || executable.getStatus() == ExecutableState.READY)
                         .count();
                 if (runningCount == 0) {
                     logger.debug("{} all next step finished", dagExecutables.get(0).getPreviousStep());
@@ -208,8 +208,10 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
 
     @Override
     protected void onExecuteStart() throws JobStoppedException {
-        if (isStoppedNonVoluntarily() && ExecutableState.PENDING != getOutput().getState()) //onExecuteStart will turn PENDING to RUNNING
+        if (isStoppedNonVoluntarily() && ExecutableState.PENDING != getOutput().getState()) {
+            //onExecuteStart will turn PENDING to RUNNING
             return;
+        }
         updateJobOutput(project, getId(), ExecutableState.RUNNING, null, null, null);
     }
 
@@ -234,8 +236,8 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         case PAUSED:
         case READY:
             if (isStoppedNonVoluntarily()) {
-                logger.info("Execute finished  {} which is stopped nonvoluntarily, state: {}",
-                        this.getDisplayName(), getOutput().getState());
+                logger.info("Execute finished  {} which is stopped nonvoluntarily, state: {}", this.getDisplayName(),
+                        getOutput().getState());
                 break;
             }
             Consumer<String> hook = null;
@@ -243,7 +245,8 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             String output = null;
             String shortErrMsg = null;
             if (state == ExecutableState.ERROR) {
-                logger.warn("[UNEXPECTED_THINGS_HAPPENED] Unexpected ERROR state discovered here!!!");
+                logger.warn("[UNEXPECTED_THINGS_HAPPENED] Unexpected ERROR state discovered here!!! {}",
+                        result.getErrorMsg());
                 info = result.getExtraInfo();
                 output = result.getErrorMsg();
                 hook = this::onExecuteErrorHook;

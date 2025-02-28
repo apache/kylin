@@ -18,25 +18,19 @@
 
 package org.apache.kylin.query.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class DefaultQueryTransformerTest extends NLocalFileMetadataTestCase {
+@MetadataInfo
+class DefaultQueryTransformerTest {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        this.createTestMetadata();
         KylinConfig.getInstanceFromEnv().setProperty("kylin.query.optimized-sum-cast-double-rule-enabled", "false");
-    }
-
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
     }
 
     @Test
@@ -56,7 +50,7 @@ public class DefaultQueryTransformerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void sumOfCastTransform() {
+    void sumOfCastTransform() {
         DefaultQueryTransformer transformer = new DefaultQueryTransformer();
 
         String fnConvertSumSql = "select SUM(CAST(LSTG_SITE_ID AS DOUBLE)) from KYLIN_SALES group by LSTG_SITE_ID";
@@ -87,7 +81,7 @@ public class DefaultQueryTransformerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void functionEscapeTransform() {
+    void functionEscapeTransform() {
         DefaultQueryTransformer transformer = new DefaultQueryTransformer();
 
         String fnConvertSumSql = "select {fn EXTRACT(YEAR from PART_DT)} from KYLIN_SALES";
@@ -96,7 +90,7 @@ public class DefaultQueryTransformerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTransformIntervalFunction() {
+    void testTransformIntervalFunction() {
         DefaultQueryTransformer transformer = new DefaultQueryTransformer();
         String sql = "select ( date '2001-09-28' + interval floor(1.5) day ) from test_kylin_fact";
         String correctSql = transformer.transform(sql, "", "");

@@ -22,9 +22,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.DataFormatException;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.domain.JobInfo;
@@ -48,10 +50,10 @@ public class JobInfoUtil {
     }
 
     public static ExecutablePO deserializeExecutablePO(JobInfo jobInfo) {
-        ByteSource byteSource = ByteSource.wrap(jobInfo.getJobContent());
         try {
-            return deserializeExecutablePO(byteSource, jobInfo.getUpdateTime().getTime(), jobInfo.getProject());
-        } catch (IOException e) {
+            ByteSource byteSource = ByteSource.wrap(CompressionUtils.decompress(jobInfo.getJobContent()));
+            return deserializeExecutablePO(byteSource, jobInfo.getUpdateTime(), jobInfo.getProject());
+        } catch (IOException | DataFormatException e) {
             log.warn("Error when deserializing jobInfo, id: {} " + jobInfo.getJobId(), e);
             return null;
         }

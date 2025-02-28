@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.project;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +32,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -69,7 +69,7 @@ public class NProjectManagerTest extends NLocalFileMetadataTestCase {
         }
 
         val projects = projectManager.listAllProjects();
-        Assert.assertEquals(30, projects.size());
+        Assert.assertEquals(35, projects.size());
         Assert.assertTrue(projects.stream().noneMatch(p -> p.getName().equals("test")));
     }
 
@@ -124,6 +124,7 @@ public class NProjectManagerTest extends NLocalFileMetadataTestCase {
         }
     }
 
+    @Ignore("To avoid database table locks, the number of projects is no longer strictly limited.")
     @Test
     public void createProjectParallel() throws InterruptedException {
         KylinConfig conf = getTestConfig();
@@ -137,13 +138,13 @@ public class NProjectManagerTest extends NLocalFileMetadataTestCase {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 NProjectManager pManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
                 return pManager.createProject("project_tmp_1", "ADMIN", "", new LinkedHashMap<>());
-            }, "_global");
+            }, "project_tmp_1");
         });
         Thread t2 = new Thread(() -> {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 NProjectManager pManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
                 return pManager.createProject("project_tmp_2", "ADMIN", "", new LinkedHashMap<>());
-            }, "_global");
+            }, "project_tmp_2");
         });
 
         t1.start();

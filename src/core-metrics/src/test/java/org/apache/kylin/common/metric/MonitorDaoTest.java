@@ -26,13 +26,12 @@ import org.apache.kylin.common.metrics.service.InfluxDBInstance;
 import org.apache.kylin.common.metrics.service.JobStatusMonitorMetric;
 import org.apache.kylin.common.metrics.service.MonitorDao;
 import org.apache.kylin.common.metrics.service.QueryMonitorMetric;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import org.assertj.core.util.Lists;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class MonitorDaoTest {
 
@@ -121,32 +120,32 @@ public class MonitorDaoTest {
     }
 
     @Test
-    public void testWrite2InfluxDB() {
+    void testWrite2InfluxDB() {
         MonitorDao monitorDao = new MonitorDao(influxDBInstance);
 
         boolean result = monitorDao.write2InfluxDB(monitorDao.convert2InfluxDBWriteRequest(mockQueryMonitorMetric()));
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
 
         result = monitorDao.write2InfluxDB(monitorDao.convert2InfluxDBWriteRequest(mockJobStatusMonitorMetric()));
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void testReadQueryMonitorMetricFromInfluxDB() {
+    void testReadQueryMonitorMetricFromInfluxDB() {
         MonitorDao monitorDao = new MonitorDao(influxDBInstance);
 
         List<QueryMonitorMetric> monitorMetric = monitorDao.readQueryMonitorMetricFromInfluxDB(0L, Long.MAX_VALUE);
-        Assert.assertEquals(monitorMetric.get(0).getHost(), "localhost");
-        Assert.assertEquals(monitorMetric.get(0).getErrorAccumulated(), Integer.valueOf(2));
+        Assertions.assertEquals("localhost", monitorMetric.get(0).getHost());
+        Assertions.assertEquals(Integer.valueOf(2), monitorMetric.get(0).getErrorAccumulated());
     }
 
     @Test
-    public void testReadJobStatusMonitorMetricFromInfluxDB() {
+    void testReadJobStatusMonitorMetricFromInfluxDB() {
         MonitorDao monitorDao = new MonitorDao(influxDBInstance);
 
         List<JobStatusMonitorMetric> monitorMetric = monitorDao.readJobStatusMonitorMetricFromInfluxDB(0L,
                 Long.MAX_VALUE);
-        Assert.assertEquals(monitorMetric.get(0).getPid(), "33222");
-        Assert.assertEquals(monitorMetric.get(0).getErrorJobs(), Long.valueOf(5));
+        Assertions.assertEquals("33222", monitorMetric.get(0).getPid());
+        Assertions.assertEquals(Long.valueOf(5), monitorMetric.get(0).getErrorJobs());
     }
 }

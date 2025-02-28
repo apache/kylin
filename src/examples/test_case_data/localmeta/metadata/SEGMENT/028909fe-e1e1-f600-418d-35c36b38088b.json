@@ -1,0 +1,31 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1709200391416,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : { },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : 0,
+  "source_bytes_size" : 0,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "028909fe-e1e1-f600-418d-35c36b38088b",
+  "model_uuid" : "493b5213-18e4-29f2-c801-d56c4617ef4f",
+  "project" : "TestBuildV2Dict"
+}

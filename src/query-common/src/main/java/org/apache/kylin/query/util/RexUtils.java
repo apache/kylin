@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.query.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Values;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -43,17 +45,18 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.DateString;
 import org.apache.calcite.util.TimestampString;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.relnode.KapAggregateRel;
-import org.apache.kylin.query.relnode.KapJoinRel;
-import org.apache.kylin.query.relnode.KapProjectRel;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapAggregateRel;
+import org.apache.kylin.query.relnode.OlapJoinRel;
+import org.apache.kylin.query.relnode.OlapProjectRel;
+import org.apache.kylin.query.relnode.OlapTableScan;
 
 import lombok.val;
-import lombok.var;
 
 public class RexUtils {
 
@@ -151,11 +154,11 @@ public class RexUtils {
      */
     public static boolean isMerelyTableColumnReference(RelNode rel, Collection<Integer> columnIndexes) {
         // project and aggregations may change the columns
-        if (rel instanceof KapProjectRel) {
-            return isProjectMerelyTableColumnReference((KapProjectRel) rel, columnIndexes);
-        } else if (rel instanceof KapAggregateRel) {
-            return isAggMerelyTableColumnReference((KapAggregateRel) rel, columnIndexes);
-        } else if (rel instanceof KapJoinRel) { // test each sub queries of a join
+        if (rel instanceof OlapProjectRel) {
+            return isProjectMerelyTableColumnReference((OlapProjectRel) rel, columnIndexes);
+        } else if (rel instanceof OlapAggregateRel) {
+            return isAggMerelyTableColumnReference((OlapAggregateRel) rel, columnIndexes);
+        } else if (rel instanceof OlapJoinRel) { // test each sub queries of a join
             return isJoinMerelyTableColumnReference(rel, columnIndexes);
         } else { // other rel nodes won't changes the columns, just pass column idx down
             for (RelNode inputRel : rel.getInputs()) {
@@ -184,9 +187,9 @@ public class RexUtils {
         return true;
     }
 
-    private static boolean isAggMerelyTableColumnReference(KapAggregateRel rel, Collection<Integer> columnIndexes) {
+    private static boolean isAggMerelyTableColumnReference(OlapAggregateRel rel, Collection<Integer> columnIndexes) {
         Set<Integer> nextInputRefKeys = new HashSet<>();
-        KapAggregateRel agg = rel;
+        OlapAggregateRel agg = rel;
         for (Integer columnIdx : columnIndexes) {
             if (columnIdx >= agg.getRewriteGroupKeys().size()) { // pointing to agg calls
                 return false;
@@ -197,9 +200,9 @@ public class RexUtils {
         return isMerelyTableColumnReference(agg.getInput(), nextInputRefKeys);
     }
 
-    private static boolean isProjectMerelyTableColumnReference(KapProjectRel rel, Collection<Integer> columnIndexes) {
+    private static boolean isProjectMerelyTableColumnReference(OlapProjectRel rel, Collection<Integer> columnIndexes) {
         Set<Integer> nextInputRefKeys = new HashSet<>();
-        KapProjectRel project = rel;
+        OlapProjectRel project = rel;
         for (Integer columnIdx : columnIndexes) {
             RexNode projExp = project.getProjects().get(columnIdx);
             if (projExp.getKind() == SqlKind.CAST) {
@@ -213,8 +216,8 @@ public class RexUtils {
         return isMerelyTableColumnReference(project.getInput(), nextInputRefKeys);
     }
 
-    public static boolean isMerelyTableColumnReference(KapJoinRel rel, RexNode condition) {
-        // since join rel's columns are just consist of the all the columns from all sub queries
+    public static boolean isMerelyTableColumnReference(OlapJoinRel rel, RexNode condition) {
+        // since join relNode's columns are just consist of the all the columns from all sub queries
         // we can simply use the input ref index extracted from the condition rex node as the column idx of the join rel
         return isMerelyTableColumnReference(rel,
                 getAllInputRefs(condition).stream().map(RexSlot::getIndex).collect(Collectors.toSet()));
@@ -260,41 +263,132 @@ public class RexUtils {
     }
 
     public static RexNode transformValue2RexLiteral(RexBuilder rexBuilder, String value, DataType colType) {
+        RelDataType relDataType;
+        String[] splits;
+        Object parsedValue = colType.parseValue(value);
         switch (colType.getName()) {
         case DataType.DATE:
-            return rexBuilder.makeDateLiteral(new DateString(value));
+            // In order to support the column type is date, but the value is timestamp string.
+            // for example: DEFAULT.TEST_KYLIN_FACT.CAL_DT with type date,
+            // the filter condition is: cast("cal_dt" as timestamp) >= timestamp '2012-01-01 00:00:00',
+            // the FilterConditionExpander will translate it to compare CAL_DT >= date '2012-01-01'
+            // This seems like an unsafe operation.
+            splits = StringUtils.split(value.trim(), " ");
+            Preconditions.checkArgument(splits.length >= 1, "split %s with error", value);
+            return rexBuilder.makeDateLiteral(new DateString(splits[0]));
+        case DataType.DATETIME:
         case DataType.TIMESTAMP:
-            var relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.TIMESTAMP);
-            return rexBuilder.makeTimestampLiteral(new TimestampString(value), relDataType.getPrecision());
-        case DataType.VARCHAR:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.TIMESTAMP);
+            // If the value with format yyyy-MM-dd, then pad with ` 00:00:00`,
+            // if with format `yyyy-MM-dd HH:mm:ss`, use this value directly,
+            // otherwise, wrong format, making literal will throw exception by Calcite.
+            // Convert yyyy-MM-dd HH:mm:ss.0 to yyyy-MM-dd HH:mm:ss
+            // because this format is not supported in calcite TimestampString
+            int dotIndex = value.indexOf(".");
+            if (dotIndex != -1 && Integer.parseInt(value.substring(dotIndex + 1)) == 0) {
+                value = value.substring(0, dotIndex);
+            }
+            splits = StringUtils.split(value.trim(), " ");
+            String ts = splits.length == 1 ? value + " 00:00:00" : value;
+            return rexBuilder.makeTimestampLiteral(new TimestampString(ts), relDataType.getPrecision());
         case DataType.STRING:
-            return rexBuilder.makeLiteral(value);
-        case DataType.INTEGER:
-            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.INTEGER);
-            return rexBuilder.makeLiteral(Integer.parseInt(value), relDataType, false);
-        case DataType.BIGINT:
-            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
-            return rexBuilder.makeLiteral(Long.parseLong(value), relDataType, false);
+        case DataType.VARCHAR:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.VARCHAR, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+        case DataType.NUMERIC:
+        case DataType.DECIMAL:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.DECIMAL, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+        case DataType.BYTE:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.TINYINT, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+        case DataType.INT:
+        case DataType.INT4:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.INTEGER, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+        case DataType.SHORT:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.SMALLINT, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+        case DataType.LONG:
+        case DataType.LONG8:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.BIGINT, colType.getPrecision());
+            return rexBuilder.makeLiteral(parsedValue, relDataType, false);
         default:
-            throw new IllegalArgumentException(
-                    String.format(Locale.ROOT, "%s data type is not supported for partition column", colType));
+            try {
+                SqlTypeName sqlTypeName = SqlTypeName.get(colType.getName().toUpperCase(Locale.ROOT));
+                int precision = colType.getPrecision();
+                if (sqlTypeName == null) {
+                    throw new IllegalArgumentException(colType + " data type is not supported for filter column");
+                }
+                relDataType = precision == -1 ? rexBuilder.getTypeFactory().createSqlType(sqlTypeName)
+                        : rexBuilder.getTypeFactory().createSqlType(sqlTypeName, precision);
+                return rexBuilder.makeLiteral(parsedValue, relDataType, false);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                        String.format(Locale.ROOT, "%s data type is not supported for filter column", colType), e);
+            }
         }
     }
 
-    public static RexInputRef transformColumn2RexInputRef(TblColRef partitionCol, Set<OLAPTableScan> tableScans) {
-        for (OLAPTableScan tableScan : tableScans) {
+    public static RexInputRef transformColumn2RexInputRef(TblColRef tblColRef, Set<OlapTableScan> tableScans) {
+        for (OlapTableScan tableScan : tableScans) {
             val tableIdentity = tableScan.getTableName();
-            if (tableIdentity.equals(partitionCol.getTable())) {
-                val index = tableScan.getColumnRowType().getAllColumns().indexOf(partitionCol);
+            if (tableIdentity.equals(tblColRef.getTable())) {
+                val index = tableScan.getColumnRowType().getAllColumns().indexOf(tblColRef);
                 if (index >= 0) {
-                    return OLAPContext.createUniqueInputRefAmongTables(tableScan, index, tableScans);
+                    return ContextUtil.createUniqueInputRefAmongTables(tableScan, index, tableScans);
                 }
-                throw new IllegalStateException(String.format(Locale.ROOT, "Cannot find column %s in all tableScans",
-                        partitionCol.getIdentity()));
+                throw new IllegalStateException(
+                        String.format(Locale.ROOT, "Cannot find column %s in all tableScans", tblColRef.getIdentity()));
             }
         }
 
         throw new IllegalStateException(
-                String.format(Locale.ROOT, "Cannot find column %s in all tableScans", partitionCol.getIdentity()));
+                String.format(Locale.ROOT, "Cannot find column %s in all tableScans", tblColRef.getIdentity()));
+    }
+
+    // At present: `a * b * c` equals to `b * a * c`, but not equals to `a * c * b`.
+    public static RexNode symmetricalExchange(RexBuilder rexBuilder, RexNode rexNode) {
+        if (!(rexNode instanceof RexCall)) {
+            return rexNode;
+        }
+        RexCall call = (RexCall) rexNode;
+        SqlOperator operator = call.getOperator();
+        List<RexNode> operands = call.getOperands();
+        final SqlKind kind = operator.getKind();
+        final SqlKind reversedKind = kind.reverse();
+        final int x = reversedKind.compareTo(kind);
+        if (operands.size() == 2) {
+            RexNode operand0 = operands.get(0);
+            RexNode operand1 = operands.get(1);
+            RexNode newOperand0 = symmetricalExchange(rexBuilder, operand0);
+            RexNode newOperand1 = symmetricalExchange(rexBuilder, operand1);
+            if (x < 0) {
+                SqlOperator reverseOp = operator.reverse();
+                if (reverseOp == null) {
+                    return call.clone(call.getType(), Arrays.asList(newOperand0, newOperand1));
+                }
+                return rexBuilder.makeCall(call.getType(), reverseOp, Arrays.asList(newOperand1, newOperand0));
+            } else if (rexNode.isA(SqlKind.SYMMETRICAL_SAME_ARG_TYPE)) {
+                if (reorderOperands(operand0, operand1) < 0) {
+                    return call.clone(call.getType(), Arrays.asList(newOperand1, newOperand0));
+                }
+            } else {
+                return call.clone(call.getType(), Arrays.asList(newOperand0, newOperand1));
+            }
+        }
+        List<RexNode> newOperands = operands.stream() //
+                .map(rex -> symmetricalExchange(rexBuilder, rex)).collect(Collectors.toList());
+        return call.clone(call.getType(), newOperands);
+    }
+
+    // copy from calcite
+    private static int reorderOperands(RexNode operand0, RexNode operand1) {
+        // Reorder the operands based on the SqlKind enumeration sequence,
+        // smaller is in the behind, e.g. the literal is behind of input ref and AND, OR.
+        int x = operand0.getKind().compareTo(operand1.getKind());
+        // If the operands are same kind, use the hashcode to reorder.
+        // Note: the RexInputRef's hash code is its index.
+        return x != 0 ? x : operand1.hashCode() - operand0.hashCode();
     }
 }

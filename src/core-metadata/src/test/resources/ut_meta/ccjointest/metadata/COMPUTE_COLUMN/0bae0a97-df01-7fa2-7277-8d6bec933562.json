@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_34",
+  "expression" : "TIMESTAMPADD(MINUTE, 1, CALCS.TIME1)",
+  "innerExpression" : "TIMESTAMPADD('MINUTE', 1, CALCS.TIME1)",
+  "datatype" : "TIMESTAMP",
+  "comment" : "Auto suggested from: TIMESTAMPADD(MINUTE, 1, CALCS.TIME1)",
+  "uuid" : "0bae0a97-df01-7fa2-7277-8d6bec933562",
+  "project" : "tdvt"
+}

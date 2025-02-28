@@ -23,11 +23,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.kylin.common.util.Pair;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
 import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 

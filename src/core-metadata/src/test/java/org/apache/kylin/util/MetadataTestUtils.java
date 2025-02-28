@@ -33,15 +33,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class MetadataTestUtils {
 
@@ -110,12 +109,38 @@ public class MetadataTestUtils {
         }, project);
     }
 
-    public static void toSemiAutoProjectMode(String project) {
+    public static void mockSnapshotPath(String project, String tableIdentity, String snapshotPath) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NTableMetadataManager mgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            mgr.updateTableDesc(tableIdentity, copyForWrite -> copyForWrite.setLastSnapshotPath(snapshotPath));
+            return null;
+        }, project);
+    }
+
+    public static void mockInternalTable(String project, String tableIdentity, boolean hasInternalTable) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NTableMetadataManager mgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            String path = "hdfs://localhost:9000/" + tableIdentity;
+            mgr.updateTableDesc(tableIdentity, copyForWrite -> copyForWrite.setHasInternal(hasInternalTable));
+            return null;
+        }, project);
+    }
+
+    public static void toSemiAutoMode(String project) {
         updateProjectConfig(project, "kylin.metadata.semi-automatic-mode", "true");
+    }
+
+    public static void toPureExpertMode(String project) {
+        updateProjectConfig(project, "kylin.metadata.semi-automatic-mode", "false");
     }
 
     public static KylinConfig turnOnExcludedTable(KylinConfig config) {
         config.setProperty("kylin.metadata.table-exclusion-enabled", "true");
+        return config;
+    }
+
+    public static KylinConfig turnOffExcludedTable(KylinConfig config) {
+        config.setProperty("kylin.metadata.table-exclusion-enabled", "false");
         return config;
     }
 
@@ -154,8 +179,7 @@ public class MetadataTestUtils {
         }, project);
     }
 
-    public static void createTable(String project, Class<?> clazz, String srcTableDir, String tableIdentity)
-            throws IOException {
+    public static void createTable(String project, Class<?> clazz, String srcTableDir, String tableIdentity) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             String tableJsonPath = concatTablePath(srcTableDir, tableIdentity);
             String fullPath = Objects.requireNonNull(clazz.getResource(tableJsonPath)).getPath();
@@ -173,8 +197,7 @@ public class MetadataTestUtils {
      * --- srcTableDir is `/data/tableDesc`
      * --- tableIdentity is `SSB.CUSTOMER`
      */
-    public static void replaceTable(String project, Class<?> clazz, String srcTableDir, String tableIdentity)
-            throws IOException {
+    public static void replaceTable(String project, Class<?> clazz, String srcTableDir, String tableIdentity) {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             String tableJsonPath = concatTablePath(srcTableDir, tableIdentity);
             String fullPath = Objects.requireNonNull(clazz.getResource(tableJsonPath)).getPath();

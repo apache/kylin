@@ -38,10 +38,11 @@ import scala.collection.mutable
 // scalastyle:off
 object RuntimeHelper extends Logging {
 
-  final val literalZero = new Column(Literal(0, DataTypes.IntegerType))
-  final val literalOne = new Column(Literal(1, DataTypes.IntegerType))
-  final val literalTs = new Column(Literal(null, DataTypes.TimestampType))
-  final val literalString = new Column(Literal(null, DataTypes.StringType))
+  final val intZero = new Column(Literal(0, DataTypes.IntegerType))
+  final val intOne = new Column(Literal(1, DataTypes.IntegerType))
+  final val timestampNull = new Column(Literal(null, DataTypes.TimestampType))
+  final val stringNull = new Column(Literal(null, DataTypes.StringType))
+  final val boolNull = new Column(Literal(null, DataTypes.BooleanType))
 
   def registerSingleByColName(funcName: String, dataType: DataType): String = {
     val name = dataType.toString
@@ -124,12 +125,12 @@ object RuntimeHelper extends Logging {
               val hasTopN = topNMapping.nonEmpty && topNIndexs.nonEmpty
               if (hasTopN && topNIndexs.map(_._2).contains(gTInfoIndex)) {
                 // topn measure will be erase when calling inline
-                literalOne.as(s"${factTableName}_${columnName}")
+                intOne.as(s"${factTableName}_${columnName}")
               } else if (projectConfig.useTableIndexAnswerSelectStarEnabled() && gTInfoIndex < 0) {
                 if (column.getColumnDesc.getType.isNumberFamily) {
-                  literalZero.as(s"${factTableName}_${columnName}")
+                  intZero.as(s"${factTableName}_${columnName}")
                 } else {
-                  literalString.as(s"${factTableName}_${columnName}")
+                  stringNull.as(s"${factTableName}_${columnName}")
                 }
               } else if (primaryKey.get(gTInfoIndex)) {
                 //  primary key
@@ -148,11 +149,14 @@ object RuntimeHelper extends Logging {
           } else if (deriveMap.contains(index)) {
             deriveMap.apply(index)
           } else if (DataType.DATETIME_FAMILY.contains(column.getType.getName)) {
-            literalTs.as(s"${factTableName}_${columnName}")
+            // https://github.com/Kyligence/KAP/issues/14561
+            timestampNull.as(s"${factTableName}_${columnName}")
           } else if (DataType.STRING_FAMILY.contains(column.getType.getName)) {
-            literalString.as(s"${factTableName}_${columnName}")
+            stringNull.as(s"${factTableName}_${columnName}")
+          } else if (DataType.BOOLEAN_FAMILY.contains(column.getType.getName)) {
+            boolNull.as(s"${factTableName}_${columnName}")
           } else {
-            literalOne.as(s"${factTableName}_${columnName}")
+            intOne.as(s"${factTableName}_${columnName}")
           }
       }
   }

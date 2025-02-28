@@ -50,7 +50,7 @@ public class TableIndexMatcher extends IndexMatcher {
     @Override
     protected boolean fastValidCheckBeforeMatch() {
         // cols may have null values as the CC col in query may not present in the model
-        sqlColumns = sqlDigest.allColumns.stream().map(tblColMap::get).collect(Collectors.toSet());
+        sqlColumns = sqlDigest.getAllColumns().stream().map(tblColMap::get).collect(Collectors.toSet());
         return !sqlColumns.contains(null);
     }
 
@@ -67,8 +67,8 @@ public class TableIndexMatcher extends IndexMatcher {
         if (NProjectManager.getProjectConfig(project).useTableIndexAnswerSelectStarEnabled()) {
             penaltyFactor = unmatchedCols.size();
             unmatchedCols.removeAll(dataflow.getAllColumnsIndex());
-            TableRef tableRef = dataflow.getModel().getTableNameMap().get(sqlDigest.factTable);
-            if (sqlDigest.isRawQuery && (sqlDigest.allColumns.size() == tableRef.getColumns().size())) {
+            TableRef tableRef = dataflow.getModel().getTableNameMap().get(sqlDigest.getFactTable());
+            if (sqlDigest.isRawQuery && (sqlDigest.getAllColumns().size() == tableRef.getColumns().size())) {
                 unmatchedCols.clear();
             }
         }
@@ -93,7 +93,7 @@ public class TableIndexMatcher extends IndexMatcher {
     @Override
     protected boolean canSkipIndexMatch(IndexEntity index) {
         boolean isUseTableIndex = dataflow.getConfig().isUseTableIndexAnswerNonRawQuery()
-                && !nonSupportFunTableIndex(sqlDigest.aggregations);
+                && !nonSupportFunTableIndex(sqlDigest.getAggregations());
         return !index.isTableIndex() || (!sqlDigest.isRawQuery && !isUseTableIndex);
     }
 }

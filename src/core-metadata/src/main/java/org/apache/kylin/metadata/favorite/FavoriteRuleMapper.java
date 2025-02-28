@@ -54,7 +54,7 @@ public interface FavoriteRuleMapper {
             @Result(column = "enabled", property = "enabled", jdbcType = JdbcType.BOOLEAN),
             @Result(column = "update_time", property = "updateTime", jdbcType = JdbcType.BIGINT),
             @Result(column = "create_time", property = "createTime", jdbcType = JdbcType.BIGINT),
-            @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT)})
+            @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT) })
     FavoriteRule selectOne(SelectStatementProvider selectStatement);
 
     @SelectProvider(type = SqlProviderAdapter.class, method = "select")

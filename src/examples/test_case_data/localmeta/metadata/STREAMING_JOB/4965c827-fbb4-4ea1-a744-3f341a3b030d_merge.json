@@ -1,0 +1,33 @@
+{
+  "uuid" : "4965c827-fbb4-4ea1-a744-3f341a3b030d_merge",
+  "last_modified" : 1622188271125,
+  "create_time" : 1622186665096,
+  "version" : "4.0.0.0",
+  "model_alias" : "model_streaming",
+  "owner" : "ADMIN",
+  "model_id" : "4965c827-fbb4-4ea1-a744-3f341a3b030d",
+  "last_start_time" : "2021-05-28 15:51:11",
+  "last_end_time" : "2021-05-28 15:51:11",
+  "last_update_time" : "2021-05-28 15:51:11",
+  "last_batch_count" : null,
+  "subscribe" : "streaming_fusion_ssb_topic",
+  "fact_table" : "DEFAULT.SSB_STREAMING",
+  "job_status" : "RUNNING",
+  "job_type" : "STREAMING_MERGE",
+  "process_id" : null,
+  "node_info" : null,
+  "yarn_app_id" : null,
+  "yarn_app_url" : null,
+  "params" : {
+    "spark.executor.memory" : "1g",
+    "kylin.streaming.segment-max-size" : "32m",
+    "spark.master" : "yarn-client",
+    "spark.driver.memory" : "512m",
+    "spark.executor.cores" : "2",
+    "kylin.streaming.job-retry-enabled" : "false",
+    "spark.executor.instances" : "2",
+    "kylin.streaming.segment-merge-threshold" : "3",
+    "spark.sql.shuffle.partitions" : "8"
+  },
+  "project" : "streaming_test"
+}

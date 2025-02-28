@@ -66,6 +66,7 @@ import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -102,7 +103,7 @@ import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.query.engine.QueryExec;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.request.ModelRequest;
@@ -110,14 +111,11 @@ import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.SCD2SimplificationConvertUtil;
-import org.apache.kylin.rest.util.SpringContext;
 import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -151,6 +149,7 @@ public class ModelSemanticHelper extends BasicService {
         NDataModel dataModel;
         try {
             dataModel = JsonUtil.deepCopy(modelRequest, NDataModel.class);
+            dataModel.setComputedColumnDescs(ComputedColumnUtil.deepCopy(modelRequest.getComputedColumnDescs()));
         } catch (IOException e) {
             ThreadUtil.warnKylinStackTrace("Parse json failed...\n");
             throw new KylinException(CommonErrorCode.FAILED_PARSE_JSON, e);
@@ -167,6 +166,8 @@ public class ModelSemanticHelper extends BasicService {
             allTablesMap.put(factTableIdentity, extendTable);
         }
         dataModel.setUuid(modelRequest.getUuid() != null ? modelRequest.getUuid() : RandomUtil.randomUUIDStr());
+        dataModel.setDescription(
+                modelRequest.getDescription() != null ? modelRequest.getDescription() : StringUtils.EMPTY);
         dataModel.setProject(modelRequest.getProject());
         dataModel.setAllMeasures(convertMeasure(simplifiedMeasures));
         dataModel.setAllNamedColumns(convertNamedColumns(modelRequest.getProject(), dataModel, modelRequest));
@@ -178,6 +179,7 @@ public class ModelSemanticHelper extends BasicService {
 
     /**
      * expand model request, add hidden internal measures from current model
+     *
      * @param modelRequest
      * @return
      */
@@ -237,6 +239,7 @@ public class ModelSemanticHelper extends BasicService {
 
     /**
      * expand measures (e.g. CORR measure) in current model, may create new CC or new measures
+     *
      * @param model
      * @return
      */
@@ -331,7 +334,7 @@ public class ModelSemanticHelper extends BasicService {
     }
 
     private JoinDesc deriveJoins(QueryExec queryExec, String sql) {
-        List<OLAPContext> contexts = queryExec.deriveOlapContexts(sql);
+        List<OlapContext> contexts = queryExec.deriveOlapContexts(sql);
         Optional<KylinException> th;
         if (contexts.isEmpty()) {
             th = Optional.of(new KylinException(ErrorCodeServer.SCD2_MODEL_UNKNOWN_EXCEPTION,
@@ -340,9 +343,9 @@ public class ModelSemanticHelper extends BasicService {
             th = Optional.of(new KylinException(ErrorCodeServer.SCD2_MODEL_UNKNOWN_EXCEPTION,
                     "Small sub-queries were split from the input sql: " + sql));
         } else {
-            OLAPContext ctx = contexts.get(0);
-            if (ctx.joins.size() == 1) {
-                return ctx.joins.get(0);
+            OlapContext ctx = contexts.get(0);
+            if (ctx.getJoins().size() == 1) {
+                return ctx.getJoins().get(0);
             }
             th = Optional.of(new KylinException(ErrorCodeServer.SCD2_MODEL_UNKNOWN_EXCEPTION,
                     "Non-equiv-join conditions were split. the input sql is: " + sql));
@@ -485,20 +488,20 @@ public class ModelSemanticHelper extends BasicService {
         return matchAlias;
     }
 
-    private Function<List<NDataModel.NamedColumn>, Map<String, NDataModel.NamedColumn>> toExistMap = allCols -> allCols
-            .stream().filter(NDataModel.NamedColumn::isExist)
-            .collect(Collectors.toMap(NDataModel.NamedColumn::getAliasDotColumn, Function.identity()));
+    private final Function<List<NDataModel.NamedColumn>, Map<String, NDataModel.NamedColumn>> toExistMap //
+            = allCols -> allCols.stream().filter(NDataModel.NamedColumn::isExist)
+                    .collect(Collectors.toMap(NDataModel.NamedColumn::getAliasDotColumn, Function.identity()));
 
-    private Function<List<NDataModel.Measure>, Map<SimplifiedMeasure, NDataModel.Measure>> toMeasureMap = allCols -> allCols
-            .stream().filter(m -> !m.isTomb())
-            .collect(Collectors.toMap(SimplifiedMeasure::fromMeasure, Function.identity(), (u, v) -> {
-                throw new KylinException(ServerErrorCode.DUPLICATE_MEASURE_EXPRESSION,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getDuplicateMeasureDefinition(), v.getName()));
-            }));
+    private final Function<List<NDataModel.Measure>, Map<SimplifiedMeasure, NDataModel.Measure>> toMeasureMap //
+            = allCols -> allCols.stream().filter(m -> !m.isTomb())
+                    .collect(Collectors.toMap(SimplifiedMeasure::fromMeasure, Function.identity(), (u, v) -> {
+                        throw new KylinException(ServerErrorCode.DUPLICATE_MEASURE_EXPRESSION, String
+                                .format(Locale.ROOT, MsgPicker.getMsg().getDuplicateMeasureDefinition(), v.getName()));
+                    }));
 
-    private Function<List<NDataModel.NamedColumn>, Map<String, NDataModel.NamedColumn>> toDimensionMap = allCols -> allCols
-            .stream().filter(NDataModel.NamedColumn::isDimension)
-            .collect(Collectors.toMap(NDataModel.NamedColumn::getAliasDotColumn, Function.identity()));
+    private final Function<List<NDataModel.NamedColumn>, Map<String, NDataModel.NamedColumn>> toDimensionMap //
+            = allCols -> allCols.stream().filter(NDataModel.NamedColumn::isDimension)
+                    .collect(Collectors.toMap(NDataModel.NamedColumn::getAliasDotColumn, Function.identity()));
 
     private boolean isValidMeasure(MeasureDesc measure) {
         val funcDesc = measure.getFunction();
@@ -583,6 +586,8 @@ public class ModelSemanticHelper extends BasicService {
             updateImpact.getInvalidMeasures().add(unusedMeasure.getId());
         });
         originModel.setComputedColumnDescs(expectedModel.getComputedColumnDescs());
+        originModel.setComputedColumnUuids(originModel.getComputedColumnDescs().stream()
+                .map(ComputedColumnDesc::getUuid).collect(Collectors.toList()));
 
         // compare measures
         List<NDataModel.Measure> newMeasures = Lists.newArrayList();
@@ -668,8 +673,9 @@ public class ModelSemanticHelper extends BasicService {
     }
 
     /**
-     *  one measure in expectedModel but not in originModel then add one
-     *  one in expectedModel, is also a TOMB one in originModel, set status to not TOMB
+     * one measure in expectedModel but not in originModel then add one
+     * one in expectedModel, is also a TOMB one in originModel, set status to not TOMB
+     *
      * @param newMeasures
      * @param originModel
      * @param updateImpact
@@ -724,6 +730,7 @@ public class ModelSemanticHelper extends BasicService {
 
     /**
      * one in expectedModel, is also a TOMB one in originModel, set status as the expected's
+     *
      * @param newCols
      * @param originModel
      * @param updateImpact
@@ -755,6 +762,7 @@ public class ModelSemanticHelper extends BasicService {
     /**
      * if a measure becomes invalid because of cc delete,
      * the measure and related aggGroups/layouts should remains
+     *
      * @param removedCCs
      * @param originModel
      * @param measureId
@@ -1017,14 +1025,14 @@ public class ModelSemanticHelper extends BasicService {
     private void handleReloadData(NDataModel newModel, NDataModel oriModel, String project, String start, String end) {
         val config = KylinConfig.getInstanceFromEnv();
         val dataflowManager = NDataflowManager.getInstance(config, project);
+        val segmentManager = NDataSegmentManager.getInstance(config, project);
         var df = dataflowManager.getDataflow(newModel.getUuid());
         val segments = df.getFlatSegments();
 
+        segments.forEach(segmentManager::delete);
         dataflowManager.updateDataflow(df.getUuid(), copyForWrite -> {
-            copyForWrite.setSegments(new Segments<>());
+            copyForWrite.setSegmentUuids(new Segments<>());
         });
-
-        cleanModelWithSecondStorage(newModel.getUuid(), project);
 
         String modelId = newModel.getUuid();
         NDataModelManager modelManager = NDataModelManager.getInstance(config, project);
@@ -1050,13 +1058,6 @@ public class ModelSemanticHelper extends BasicService {
                 segments.forEach(segment -> segmentRanges.add(segment.getSegRange()));
                 dataflowManager.fillDfManually(df, segmentRanges);
             }
-        }
-    }
-
-    private void cleanModelWithSecondStorage(String modelId, String project) {
-        if (SecondStorageUtil.isModelEnable(project, modelId)) {
-            SecondStorageUpdater updater = SpringContext.getBean(SecondStorageUpdater.class);
-            updater.cleanModel(project, modelId);
         }
     }
 
@@ -1142,10 +1143,13 @@ public class ModelSemanticHelper extends BasicService {
         });
 
         // check if CC-used column exists in tableDesc. If not, remove computed column desc
+        model.bindComputedColumns();
         List<ComputedColumnDesc> computedColumnDescs = model.getComputedColumnDescs();
         List<ComputedColumnDesc> validCCDescs = discardInvalidComputedColumnsForBrokenModel(aliasDotColSet,
                 computedColumnDescs);
         model.setComputedColumnDescs(validCCDescs);
+        model.setComputedColumnUuids(
+                validCCDescs.stream().map(ComputedColumnDesc::getUuid).collect(Collectors.toList()));
 
         //check all named columns, rule out invalid model columns and CCs
         List<NDataModel.NamedColumn> allNamedColumns = model.getAllNamedColumns();

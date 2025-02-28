@@ -39,6 +39,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
@@ -51,8 +53,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -134,7 +134,8 @@ public final class SnapshotSourceTableStatsTool {
     public static void extractSnapshotSourceTableStats(String project, KylinConfig config, File sourceTableStatsDir,
             FileSystem fs, List<String> tables) {
         for (String table : tables) {
-            val fullTablePathString = config.getSnapshotAutoRefreshDir(project) + SOURCE_TABLE_STATS + BACKSLASH + table;
+            val fullTablePathString = config.getSnapshotAutoRefreshDir(project) + SOURCE_TABLE_STATS + BACKSLASH
+                    + table;
             try {
                 File sourceTableStatsSnapshotDir = new File(sourceTableStatsDir, SOURCE_TABLE_STATS);
                 if (!sourceTableStatsSnapshotDir.exists()) {

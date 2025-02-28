@@ -1,0 +1,27 @@
+{
+  "uuid" : "a1fcb863-6aff-4e61-b2dd-63317e48a9da",
+  "last_modified" : 1497607294935,
+  "version" : "2.0.0",
+  "name" : "INVENTORY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "INV_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "INV_WAREHOUSE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "INV_QUANTITY_ON_HAND",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "INV_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

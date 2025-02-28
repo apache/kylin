@@ -397,12 +397,6 @@ kylin.restclient.connection.default-max-per-route,Int,http请求到达指定机�
 kylin.restclient.connection.max-total,Int,http请求连接池最大连接数,HTTP request connection pool maximum number of connections,TRUE,TRUE
 kylin.scheduler.schedule-job-timeout-minute,Int,作业超时时长，默认没有超时,"The job is timeout, and there is no timeout for default",TRUE,TRUE
 kylin.scheduler.schedule-limit-per-minute,Int,限制调度器事件处理的频率，默认每分钟10次,"Limit the frequency of processing the scheduling event, 10 times per minute by default",TRUE,TRUE
-kylin.second-storage.diag-log-matcher,String,分层存储诊断包的日志文件匹配规则,Log file matching rules for layered storage diagnostic packages,TRUE,TRUE
-kylin.second-storage.diag-max-compressed-file,Int,分层存储诊断包允许的最大压缩文件个数,The number of maximum compression files allowed by layered storage diagnostic packages,TRUE,TRUE
-kylin.second-storage.load-deduplication-window,Int,分层存储的重复数据删除窗口,Repeated data delete window for layered storage,TRUE,TRUE
-kylin.second-storage.load-retry,Int,重试次数,number of retries,TRUE,TRUE
-kylin.second-storage.load-retry-interval,Int,重试时间,Retry time,TRUE,TRUE
-kylin.second-storage.ssh-identity-path,String,分层存储的私钥路径,Private key path for layered storage,TRUE,TRUE
 kylin.security.acl.admin-role,String,将一个 LDAP 群组映射成管理员角色（大小写敏感）,Imam into a LDAP group into an administrator role (sensitivity),TRUE,TRUE
 kylin.security.allow-non-admin-generate-query-diag-package,boolean,是否允许非管理员打查询诊断包,Whether the non -administrator is allowed to query the diagnostic package,TRUE,TRUE
 kylin.security.allow-project-admin-grant-acl,boolean,是否允许每个项目中的项目管理员给用户或用户组分配表/行/列访问权限,Whether the project administrator in each project is allowed to distribute the table/row/line access permission to the user or user group,TRUE,TRUE
@@ -545,7 +539,6 @@ server.port,Int,服务启动的端口,The port of the service start,TRUE,TRUE
 spring.session.store-type,String,spring session 存储类型,Spring session storage type,TRUE,TRUE
 kylin.engine.dynamic-resource-plan-enabled,boolean,在FI平台使用动态资源计划时候，有可能导致无法分配资源，从而构建失败,"When using a dynamic resource plan on the FI platform, it may lead to the failure to allocate resources and build a failure",TRUE,TRUE
 kylin.engine.spark-conf.spark.sql.adaptive.coalescePartitions.minPartitionNum,Int,此参数默认值为 Application 的 Default Parallelism，计算公式为 instance * core，设置此参数为较低值（建议为1）时，可修正由于默认值过大而造成的最终分区数量过大（产生过多tasks），进而影响到整体构建性能。,"The default value of this parameter is the Default Paullelism of Application. The calculation formula is Instance * Core. When setting this parameter to a lower value (Suggestion is 1), the number of final partitions caused by excessive default value can Tasks), which affects the overall construction performance.",TRUE,TRUE
-kylin.second-storage.node-replica,Int,分层存储节点副本数量,Number of copies of storage nodes,TRUE,TRUE
 kylin.cube.merge-segment-storage-threshold,Double,"segment合并阈值检查百分比，取值范围为[0,1]，为0时代表不执行检查逻辑","Segment merged threshold inspection percentage, the range of the value is [0,1], which is not performed by the 0 era.",TRUE,TRUE
 kylin.query.engine.clean-spark-ui-zombie-job-enabled,boolean,清理查询 spark 应用的僵尸job,Clean up the zombie job of spark application,TRUE,TRUE
 kylin.job.use-bigint-as-timestamp-for-partition-column,boolean,支持timestamp格式的bigint作为时间分区列，之前行为支持，改动后默认不支持，可以设置为true回滚为之前行为,"BIGINT supports the TimeStamp format as the time partition column. The previous behavior supports, the default is not supported after the change, it can be set to roll back as the previous behavior",TRUE,TRUE

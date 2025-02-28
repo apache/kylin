@@ -30,12 +30,12 @@ import lombok.val;
 public class MetaUtilsTest extends NLocalFileMetadataTestCase {
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         createTestMetadata();
     }
 
     @After
-    public void cleanup() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 

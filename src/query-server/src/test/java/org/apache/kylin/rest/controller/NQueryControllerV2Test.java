@@ -17,19 +17,21 @@
  */
 package org.apache.kylin.rest.controller;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.controller.v2.NQueryControllerV2;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
-import org.apache.kylin.metadata.query.QueryMetrics;
-import org.apache.kylin.rest.controller.v2.NQueryControllerV2;
 import org.apache.kylin.rest.response.SQLResponseV2;
 import org.apache.kylin.rest.service.QueryHistoryService;
+import org.apache.kylin.rest.service.QueryService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,8 +48,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
 public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
 
@@ -91,8 +91,8 @@ public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
     public void testPrepareQuery() throws Exception {
         final PrepareSqlRequest sqlRequestV2 = mockPrepareSqlRequest();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query/prestate").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(sqlRequestV2))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .content(JsonUtil.writeValueAsString(sqlRequestV2))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nQueryControllerV2).prepareQuery(Mockito.any());
@@ -101,8 +101,8 @@ public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
     @Test
     public void testQuery() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(mockPrepareSqlRequest()))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .content(JsonUtil.writeValueAsString(mockPrepareSqlRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nQueryControllerV2).query(Mockito.any());
@@ -122,11 +122,12 @@ public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
     @Test
     public void testQueryUserTagExceedLimitation() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(mockInvalidateTagSqlRequest()))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .content(JsonUtil.writeValueAsString(mockInvalidateTagSqlRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("999")).andExpect(MockMvcResultMatchers
-                        .jsonPath("$.msg").value("Can’t add the tag, as the length exceeds the maximum 256 characters. Please modify it."));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("999"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.msg").value(
+                        "Can’t add the tag, as the length exceeds the maximum 256 characters. Please modify it."));
 
         Mockito.verify(nQueryControllerV2, Mockito.times(0)).query(Mockito.any());
     }
@@ -134,8 +135,8 @@ public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
     @Test
     public void testPrepareQueryUserTagExceedLimitation() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query/prestate").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(mockInvalidateTagSqlRequest()))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .content(JsonUtil.writeValueAsString(mockInvalidateTagSqlRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         Mockito.verify(nQueryControllerV2, Mockito.times(0)).prepareQuery(Mockito.any());
@@ -146,19 +147,19 @@ public class NQueryControllerV2Test extends NLocalFileMetadataTestCase {
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setScanRows(Lists.newArrayList(50L, 10L));
         NativeQueryRealization nativeQueryRealization1 = new NativeQueryRealization();
-        nativeQueryRealization1.setIndexType(QueryMetrics.AGG_INDEX);
+        nativeQueryRealization1.setType(QueryMetrics.AGG_INDEX);
         nativeQueryRealization1.setModelAlias("modelA");
         NativeQueryRealization nativeQueryRealization2 = new NativeQueryRealization();
-        nativeQueryRealization2.setIndexType(QueryMetrics.TABLE_INDEX);
+        nativeQueryRealization2.setType(QueryMetrics.TABLE_INDEX);
         nativeQueryRealization2.setModelAlias("modelB");
         NativeQueryRealization nativeQueryRealization3 = new NativeQueryRealization();
-        nativeQueryRealization3.setIndexType(QueryMetrics.TABLE_INDEX);
+        nativeQueryRealization3.setType(QueryMetrics.TABLE_INDEX);
         nativeQueryRealization3.setModelAlias("modelA");
         NativeQueryRealization nativeQueryRealization4 = new NativeQueryRealization();
-        nativeQueryRealization4.setIndexType(QueryMetrics.AGG_INDEX);
+        nativeQueryRealization4.setType(QueryMetrics.AGG_INDEX);
         nativeQueryRealization4.setModelAlias("modelB");
         NativeQueryRealization nativeQueryRealization5 = new NativeQueryRealization();
-        nativeQueryRealization5.setIndexType(QueryMetrics.TABLE_SNAPSHOT);
+        nativeQueryRealization5.setType(QueryMetrics.TABLE_SNAPSHOT);
         nativeQueryRealization5.setModelAlias("modelB");
         sqlResponse.setNativeRealizations(Lists.newArrayList(nativeQueryRealization1, nativeQueryRealization2));
         SQLResponseV2 sqlResponseV2 = new SQLResponseV2(sqlResponse);

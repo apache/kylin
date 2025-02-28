@@ -1,0 +1,64 @@
+{
+  "name" : "20200518111100_20210118111100",
+  "create_time_utc" : 1622190016291,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1589771460000,
+    "date_range_end" : 1610939460000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "1",
+      "max" : "5988"
+    },
+    "11" : {
+      "min" : "1",
+      "max" : "7"
+    },
+    "12" : {
+      "min" : "1",
+      "max" : "29"
+    },
+    "2" : {
+      "min" : "105115",
+      "max" : "26341129"
+    },
+    "16" : {
+      "min" : "1-URGENT",
+      "max" : "5-LOW"
+    },
+    "10" : {
+      "min" : "2020-11-29 00:00:00.0",
+      "max" : "2020-11-30 00:00:00.0"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : 12010,
+  "source_bytes_size" : 1369556,
+  "column_source_bytes" : {
+    "SSB.LINEORDER_HIVE.LO_PARTITIONCOLUMN" : 252210,
+    "SSB.LINEORDER_HIVE.LO_ORDERKEY" : 34468,
+    "SSB.LINEORDER_HIVE.LO_LINENUMBER" : 12010,
+    "SSB.LINEORDER_HIVE.LO_CUSTKEY" : 20729,
+    "SSB.LINEORDER_HIVE.LO_ORDERPRIOTITY" : 91011,
+    "SSB.LINEORDER_HIVE.LO_ORDTOTALPRICE" : 91876
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "86b5daaa-e295-4e8c-b877-f97bda69bee5",
+  "model_uuid" : "222b9a23-699c-4699-b0dd-38c9412b3dfd",
+  "project" : "streaming_test"
+}

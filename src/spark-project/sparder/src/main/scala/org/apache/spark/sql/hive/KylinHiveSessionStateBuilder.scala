@@ -44,7 +44,7 @@ class KylinHiveSessionStateBuilder(sparkSession: SparkSession,
 
 object Const {
   val SoftAffinityInputFormatMap: Map[String, String] = Map(
-    "org.apache.hadoop.mapred.TextInputFormat" -> "io.kyligence.kap.cache.softaffinity.SoftAffinityTextInputFormat"
+    "org.apache.hadoop.mapred.TextInputFormat" -> "org.apache.kylin.cache.softaffinity.SoftAffinityTextInputFormat"
   )
   val SerDeMap: Map[String, String] = Map(
     "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" -> "io.kyligence.hive.serde2.lazy.LazyQuoteAwareSerDe"

@@ -20,7 +20,7 @@ package org.apache.kylin.streaming.jobs.impl;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-import static org.apache.kylin.common.persistence.ResourceStore.STREAMING_RESOURCE_ROOT;
+import static org.apache.kylin.common.persistence.MetadataType.STREAMING_JOB;
 import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
 import static org.apache.kylin.streaming.constants.StreamingConstants.REST_SERVER_IP;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_CORES_MAX;
@@ -74,13 +74,16 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.persistence.ImageDesc;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -99,9 +102,6 @@ import org.apache.kylin.streaming.jobs.StreamingJobUtils;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
 import org.apache.spark.launcher.SparkLauncher;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -189,14 +189,16 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         params.put("path", String.format(Locale.ROOT, "%s/meta_%d", getJobTmpMetaStoreUrlPath(), currentTimestamp));
         params.put("zip", "true");
         params.put("snapshot", "true");
-        return new StorageURL(config.getMetadataUrlPrefix(), HDFSMetadataStore.HDFS_SCHEME, params);
+        return new StorageURL(config.getMetadataUrlPrefix(), FileSystemMetadataStore.HDFS_SCHEME, params);
     }
 
     protected Set<String> getMetadataDumpList() {
         val metaSet = NDataflowManager.getInstance(config, project).getDataflow(modelId)
                 .collectPrecalculationResource();
         metaSet.add(ResourceStore.METASTORE_IMAGE);
-        metaSet.add(String.format(Locale.ROOT, "/%s%s/%s", project, STREAMING_RESOURCE_ROOT, jobId));
+        String uuid = jobId.substring(0, 36);
+        metaSet.add(MetadataType.mergeKeyWithType(uuid + "_build", STREAMING_JOB));
+        metaSet.add(MetadataType.mergeKeyWithType(uuid + "_merge", STREAMING_JOB));
         return metaSet;
     }
 
@@ -228,7 +230,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
     private void initStorageUrl() {
         // in local mode or ut env, or scheme is not hdfs
         // use origin config direct
-        if (!StreamingUtils.isJobOnCluster(config) || !StringUtils.equals(HDFSMetadataStore.HDFS_SCHEME,
+        if (!StreamingUtils.isJobOnCluster(config) || !StringUtils.equals(FileSystemMetadataStore.HDFS_SCHEME,
                 jobParams.getOrDefault(STREAMING_META_URL, STREAMING_META_URL_DEFAULT))) {
             distMetaStorageUrl = config.getMetadataUrl();
             return;
@@ -336,7 +338,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
 
     private void rewriteKafkaJaasConf(StringBuilder sb, String existOptStr, String value) {
         KapConfig kapConfig = KapConfig.getInstanceFromEnv();
-        if (!kapConfig.isKafkaJaasEnabled() || !jobType.equals(JobTypeEnum.STREAMING_BUILD)
+        if (!kapConfig.isKafkaJaasEnabled() || jobType != JobTypeEnum.STREAMING_BUILD
                 || existOptStr.contains(JAASCONF_PROPS)) {
             return;
         }
@@ -355,7 +357,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
 
     private void addParserJar(SparkLauncher sparkLauncher) {
         String parserName = getParserName();
-        if (jobType.equals(JobTypeEnum.STREAMING_BUILD) && !StringUtils.equals(DEFAULT_PARSER_NAME, parserName)) {
+        if (jobType == JobTypeEnum.STREAMING_BUILD && !StringUtils.equals(DEFAULT_PARSER_NAME, parserName)) {
             DataParserInfo parserInfo = getDataParser(parserName);
             String jarPath = getParserJarPath(parserInfo);
             sparkLauncher.addJar(jarPath);
@@ -373,10 +375,10 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
             sparkLauncher.setConf(SPARK_KERBEROS_KEYTAB, kapConfig.getKerberosKeytabPath());
             sparkLauncher.setConf(SPARK_KERBEROS_PRINCIPAL, kapConfig.getKerberosPrincipal());
         }
-        if (kapConfig.isKafkaJaasEnabled() && jobType.equals(JobTypeEnum.STREAMING_BUILD)) {
+        if (kapConfig.isKafkaJaasEnabled() && jobType == JobTypeEnum.STREAMING_BUILD) {
             String keyTabAbsPath = StreamingJobUtils.getJaasKeyTabAbsPath();
             if (StringUtils.isNotEmpty(keyTabAbsPath)) {
-                // upload keytab in kafka jaas 
+                // upload keytab in kafka jaas
                 sparkLauncher.addFile(keyTabAbsPath);
             }
         }
@@ -395,7 +397,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
                 .setConf(SparkLauncher.EXECUTOR_EXTRA_CLASSPATH, Paths.get(kylinJobJar).getFileName().toString())
                 .setConf(SPARK_DRIVER_OPTS, wrapDriverJavaOptions(sparkConf))
                 .setConf(SPARK_EXECUTOR_OPTS, wrapExecutorJavaOptions(sparkConf))
-                .setConf(SPARK_YARN_AM_OPTS, wrapYarnAmJavaOptions(sparkConf)).addJar(config.getKylinExtJarsPath())
+                .setConf(SPARK_YARN_AM_OPTS, wrapYarnAmJavaOptions(sparkConf)).addJar(config.getKylinExtJarsPath(true))
                 .addFile(config.getLogSparkStreamingExecutorPropertiesFile()).setAppResource(kylinJobJar)
                 .setMainClass(mainClazz).addAppArgs(appArgs);
         handler = sparkLauncher.startApplication(listener);

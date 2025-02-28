@@ -18,18 +18,27 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import static org.awaitility.Awaitility.with;
+
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.job.dao.NExecutableDao;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.util.JobContextUtil;
+import org.awaitility.core.ConditionFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.mockito.Mockito;
+
+import lombok.val;
 
 public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
 
-    //TODO need to be rewritten
-    // protected NDefaultScheduler scheduler;
-
-    // protected static NExecutableManager executableManager;
-    protected static NExecutableDao executableDao;
+    protected static ExecutableManager executableManager;
 
     protected String project;
 
@@ -39,14 +48,12 @@ public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
         this.project = project;
     }
 
-    //TODO need to be rewritten
-    /*
     @Before
-    public void setup() throws Exception {
-        overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
+    public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         killProcessCount = new AtomicInteger();
-        val originExecutableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        val originExecutableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         executableManager = Mockito.spy(originExecutableManager);
         Mockito.doAnswer(invocation -> {
             String jobId = invocation.getArgument(0);
@@ -54,21 +61,16 @@ public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
             killProcessCount.incrementAndGet();
             return null;
         }).when(executableManager).destroyProcess(Mockito.anyString());
-        executableDao = NExecutableDao.getInstance(KylinConfig.getInstanceFromEnv(), project);
         startScheduler();
     }
 
     void startScheduler() {
-        scheduler = NDefaultScheduler.getInstance(project);
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-        if (!scheduler.hasStarted()) {
-            throw new RuntimeException("scheduler has not been started");
-        }
+        JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());
     }
 
     @After
-    public void after() throws Exception {
-        NDefaultScheduler.destroyInstance();
+    public void tearDown() throws Exception {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }
 
@@ -81,7 +83,7 @@ public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
     }
 
     protected void waitForJobByStatus(String jobId, int maxWaitMilliseconds, final ExecutableState state,
-            final NExecutableManager executableManager) {
+            final ExecutableManager executableManager) {
         getConditionFactory(maxWaitMilliseconds).until(() -> {
             AbstractExecutable job = executableManager.getJob(jobId);
             ExecutableState status = job.getStatus();
@@ -103,6 +105,5 @@ public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
     protected final ConditionFactory getConditionFactory() {
         return getConditionFactory(60000);
     }
-     */
 
 }

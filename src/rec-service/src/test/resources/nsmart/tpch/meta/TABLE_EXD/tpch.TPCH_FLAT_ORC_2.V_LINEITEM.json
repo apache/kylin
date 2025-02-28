@@ -1,0 +1,167 @@
+{
+  "uuid" : "c7b140b6-3d1e-4e65-8cd5-4495d2eb8d6c",
+  "last_modified" : 1493190855683,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.V_LINEITEM",
+  "last_build_job_id" : "ea59e115-e512-4dfa-9e44-203b4ac69893",
+  "columns_stats" : [ {
+    "max_value" : "12000000",
+    "min_value" : "1",
+    "max_length_value" : "10319104",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 2978907
+  }, {
+    "max_value" : "400000",
+    "min_value" : "1",
+    "max_length_value" : "355463",
+    "min_length_value" : "7",
+    "null_count" : 0,
+    "cardinality" : 407979
+  }, {
+    "max_value" : "20000",
+    "min_value" : "1",
+    "max_length_value" : "12294",
+    "min_length_value" : "8",
+    "null_count" : 0,
+    "cardinality" : 19945
+  }, {
+    "max_value" : "7",
+    "min_value" : "1",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "50.0",
+    "min_value" : "1.0",
+    "max_length_value" : "39.0",
+    "min_length_value" : "5.0",
+    "null_count" : 0,
+    "cardinality" : 50
+  }, {
+    "max_value" : "104899.5",
+    "min_value" : "900.99",
+    "max_length_value" : "100079.52",
+    "min_length_value" : "992.0",
+    "null_count" : 0,
+    "cardinality" : 953275
+  }, {
+    "max_value" : "0.1",
+    "min_value" : "0.0",
+    "max_length_value" : "0.01",
+    "min_length_value" : "0.1",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "0.08",
+    "min_value" : "0.0",
+    "max_length_value" : "0.07",
+    "min_length_value" : "0.0",
+    "null_count" : 0,
+    "cardinality" : 9
+  }, {
+    "max_value" : "R",
+    "min_value" : "A",
+    "max_length_value" : "A",
+    "min_length_value" : "A",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "O",
+    "min_value" : "F",
+    "max_length_value" : "F",
+    "min_length_value" : "F",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1998-12-01",
+    "min_value" : "1992-01-02",
+    "max_length_value" : "1992-01-12",
+    "min_length_value" : "1992-01-12",
+    "null_count" : 0,
+    "cardinality" : 2456
+  }, {
+    "max_value" : "1998-10-31",
+    "min_value" : "1992-01-31",
+    "max_length_value" : "1992-02-13",
+    "min_length_value" : "1992-02-13",
+    "null_count" : 0,
+    "cardinality" : 2382
+  }, {
+    "max_value" : "1998-12-31",
+    "min_value" : "1992-01-03",
+    "max_length_value" : "1992-02-01",
+    "min_length_value" : "1992-02-01",
+    "null_count" : 0,
+    "cardinality" : 2501
+  }, {
+    "max_value" : "TAKE BACK RETURN",
+    "min_value" : "COLLECT COD",
+    "max_length_value" : "DELIVER IN PERSON",
+    "min_length_value" : "NONE",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "TRUCK",
+    "min_value" : "AIR",
+    "max_length_value" : "REG AIR",
+    "min_length_value" : "AIR",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "zzle? slyly regular instruc",
+    "min_value" : " Tiresias ",
+    "max_length_value" : "se requests. slyly special accounts wake un",
+    "min_length_value" : "e ironic i",
+    "null_count" : 0,
+    "cardinality" : 8393115
+  }, {
+    "max_value" : "1998",
+    "min_value" : "1992",
+    "max_length_value" : "1992",
+    "min_length_value" : "1992",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "1",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "104899.0",
+    "min_value" : "813.591",
+    "max_length_value" : "26363.428000000004",
+    "min_length_value" : "924.6",
+    "null_count" : 0,
+    "cardinality" : 6916253
+  }, {
+    "max_value" : "8315.92",
+    "min_value" : "0.0",
+    "max_length_value" : "3098.9649600000002",
+    "min_length_value" : "0.0",
+    "null_count" : 0,
+    "cardinality" : 8872962
+  }, {
+    "max_value" : "50000.0",
+    "min_value" : "1.0",
+    "max_length_value" : "3847.7599999999998",
+    "min_length_value" : "2.9",
+    "null_count" : 0,
+    "cardinality" : 2324298
+  } ],
+  "sample_rows" : [ [ "9927461", "9923719", "10091238", "9505921", "9266276", "10050470", "9255075", "9890913", "10202630", "10072167" ], [ "233059", "177966", "55526", "398622", "110913", "236484", "79714", "296417", "309179", "344582" ], [ "19651", "17332", "17543", "13929", "1834", "13632", "14239", "6957", "10028", "8214" ], [ "2", "2", "4", "2", "3", "4", "4", "4", "1", "3" ], [ "46.0", "33.0", "27.0", "16.0", "13.0", "27.0", "25.0", "50.0", "29.0", "33.0" ], [ "8426.1", "36999.0", "34509.64", "22860.23", "33635.5", "49068.64", "21349.35", "44162.01", "43774.92", "54011.93" ], [ "0.01", "0.1", "0.01", "0.0", "0.09", "0.02", "0.02", "0.08", "0.02", "0.06" ], [ "0.08", "0.01", "0.06", "0.07", "0.01", "0.04", "0.02", "0.04", "0.02", "0.02" ], [ "A", "R", "R", "A", "R", "R", "R", "R", "A", "A" ], [ "F", "F", "F", "F", "F", "F", "F", "F", "F", "F" ], [ "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24", "1997-10-24" ], [ "1992-03-24", "1992-02-09", "1992-03-27", "1992-03-10", "1992-03-03", "1992-03-31", "1992-02-22", "1992-02-10", "1992-02-06", "1992-03-24" ], [ "1996-09-05", "1996-09-14", "1996-09-17", "1996-09-14", "1996-10-01", "1996-09-25", "1996-09-03", "1996-09-08", "1996-09-19", "1996-09-11" ], [ "NONE", "DELIVER IN PERSON", "DELIVER IN PERSON", "NONE", "TAKE BACK RETURN", "TAKE BACK RETURN", "DELIVER IN PERSON", "NONE", "TAKE BACK RETURN", "DELIVER IN PERSON" ], [ "SHIP", "TRUCK", "MAIL", "SHIP", "AIR", "MAIL", "SHIP", "REG AIR", "TRUCK", "REG AIR" ], [ "close accounts. unusual theodolites about t", " regular foxes according to the theo", ". carefully e", "dependencies. slyly close platelets hagg", "y stealthi", " dependencies are bli", " final ideas. final, reg", "ithely special accounts dazzle alongside of", "equests. blithely final dinos h", "press theodolites are sly" ], [ "1997", "1997", "1997", "1997", "1997", "1997", "1997", "1997", "1997", "1997" ], [ "0", "0", "1", "0", "0", "1", "0", "1", "1", "1" ], [ "0", "0", "1", "0", "0", "1", "0", "1", "0", "1" ], [ "24912.063000000002", "35519.904", "9655.6482", "20690.12", "57946.8708", "77877.5424", "12261.858", "83452.924", "38602.5822", "48524.867999999995" ], [ "653.86536", "332.991", "1967.0494799999997", "1584.2139390000002", "336.355", "1923.490688", "418.44725999999997", "1625.1619680000001", "875.4984", "1026.22667" ], [ "1550.5500000000002", "9270.72", "3936.7799999999997", "604.67", "17365.68", "31496.159999999996", "3834.9", "1529.0400000000002", "33770.88", "16623.45" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "11997996",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

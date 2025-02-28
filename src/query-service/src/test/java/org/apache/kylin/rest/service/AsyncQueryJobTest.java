@@ -78,18 +78,20 @@ import lombok.val;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class, KylinInfoExtension.class })
-@PowerMockIgnore({ "javax.management.*", "javax.script.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.w3c.dom.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
 
-    final static String BUILD_HADOOP_CONF = "kylin.engine.submit-hadoop-conf-dir";
-    final static String BUILD_HADOOP_CONF_VALUE = "/home/kylin/hadoop_conf";
+    static final String BUILD_HADOOP_CONF = "kylin.engine.submit-hadoop-conf-dir";
+    static final String BUILD_HADOOP_CONF_VALUE = "/home/kylin/hadoop_conf";
 
-    final static String ASYNC_HADOOP_CONF = "kylin.query.async-query.submit-hadoop-conf-dir";
-    final static String ASYNC_HADOOP_CONF_VALUE = "/home/kylin/hadoop_conf_async";
-    final static String ASYNC_QUERY_CLASS = "-className org.apache.kylin.query.engine.AsyncQueryApplication";
-    final static String ASYNC_QUERY_SPARK_EXECUTOR_CORES = "kylin.query.async-query.spark-conf.spark.executor.cores";
-    final static String ASYNC_QUERY_SPARK_EXECUTOR_MEMORY = "kylin.query.async-query.spark-conf.spark.executor.memory";
-    final static String ASYNC_QUERY_SPARK_QUEUE = "root.quard";
+    static final String ASYNC_HADOOP_CONF = "kylin.query.async-query.submit-hadoop-conf-dir";
+    static final String ASYNC_HADOOP_CONF_VALUE = "/home/kylin/hadoop_conf_async";
+    static final String ASYNC_QUERY_CLASS = "-className org.apache.kylin.query.engine.AsyncQueryApplication";
+    static final String ASYNC_QUERY_SPARK_EXECUTOR_CORES = "kylin.query.async-query.spark-conf.spark.executor.cores";
+    static final String ASYNC_QUERY_SPARK_EXECUTOR_MEMORY = "kylin.query.async-query.spark-conf.spark.executor.memory";
+    static final String ASYNC_QUERY_SPARK_QUEUE = "root.quard";
 
     @Before
     public void setup() throws IOException {
@@ -230,22 +232,19 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
     }
 
     private void testMetadata(FileSystem workingFileSystem, FileStatus metaFileStatus) throws IOException {
-        val rawResourceMap = Maps.<String, RawResource> newHashMap();
+        val rawResourceMap = Maps.<String, RawResource> newTreeMap();
         FileStatus metadataFile = metaFileStatus;
         try (FSDataInputStream inputStream = workingFileSystem.open(metadataFile.getPath());
                 ZipInputStream zipIn = new ZipInputStream(inputStream)) {
             ZipEntry zipEntry = null;
             while ((zipEntry = zipIn.getNextEntry()) != null) {
-                if (!zipEntry.getName().startsWith("/")) {
-                    continue;
-                }
                 long t = zipEntry.getTime();
                 RawResource raw = new RawResource(zipEntry.getName(), ByteSource.wrap(IOUtils.toByteArray(zipIn)), t,
                         0);
                 rawResourceMap.put(zipEntry.getName(), raw);
             }
         }
-        Assert.assertEquals(86, rawResourceMap.size());
+        Assert.assertEquals(119, rawResourceMap.size());
     }
 
     private void testKylinConfig(FileSystem workingFileSystem, FileStatus metaFileStatus) throws IOException {
@@ -357,8 +356,6 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
         val properties = new Properties();
         properties.setProperty("kylin.extension.info.factory",
                 "org.apache.kylin.common.extension.KylinInfoExtension$Factory");
-        properties.setProperty("kylin.second-storage.class",
-                "org.apache.kylin.common.extension.KylinInfoExtension$Factory");
         properties.setProperty("kylin.streaming.enabled", "true");
 
         val kylinInfoExtensionFactory = Mockito.mock(KylinInfoExtension.Factory.class);
@@ -370,7 +367,6 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
         properties1.putAll(properties);
         asyncQueryJob.modifyDump(properties1);
         Assert.assertNull(properties1.get("kylin.extension.info.factory"));
-        Assert.assertNull(properties1.get("kylin.second-storage.class"));
         Assert.assertEquals("false", properties1.get("kylin.streaming.enabled"));
 
         Mockito.when(kylinInfoExtensionFactory.checkKylinInfo()).thenReturn(true);
@@ -378,8 +374,6 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
         properties2.putAll(properties);
         asyncQueryJob.modifyDump(properties2);
         Assert.assertNull(properties2.get("kylin.extension.info.factory"));
-        Assert.assertEquals(properties.getProperty("kylin.second-storage.class"),
-                properties2.get("kylin.second-storage.class"));
         Assert.assertEquals(properties.getProperty("kylin.streaming.enabled"),
                 properties2.get("kylin.streaming.enabled"));
     }

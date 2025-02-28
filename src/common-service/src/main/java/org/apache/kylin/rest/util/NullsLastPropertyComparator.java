@@ -42,6 +42,7 @@ public class NullsLastPropertyComparator<T> extends PropertyComparator<T> {
             return null;
         }
     }
+
     // null data is placed at the end of the list
     @Override
     public int compare(T a, T b) {

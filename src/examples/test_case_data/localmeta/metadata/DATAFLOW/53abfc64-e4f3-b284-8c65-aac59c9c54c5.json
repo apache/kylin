@@ -1,0 +1,14 @@
+{
+  "uuid" : "53abfc64-e4f3-b284-8c65-aac59c9c54c5",
+  "last_modified" : 1658833231006,
+  "create_time" : 1658777620926,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "multi_level_partition",
+  "segment_uuids" : [ "ce60db4c-7347-e21b-3b96-6575033e31ab" ]
+}

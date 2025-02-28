@@ -1,0 +1,135 @@
+{
+  "uuid" : "5e6d499e-bf28-48af-9421-f848b77b354f",
+  "last_modified" : 1497607294718,
+  "version" : "2.0.0",
+  "name" : "CALL_CENTER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CC_CALL_CENTER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "CC_CALL_CENTER_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "CC_REC_START_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "CC_REC_END_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "CC_CLOSED_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "CC_OPEN_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "CC_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "CC_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "CC_EMPLOYEES",
+    "datatype" : "integer"
+  }, {
+    "id" : "10",
+    "name" : "CC_SQ_FT",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "CC_HOURS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "CC_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "CC_MKT_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "14",
+    "name" : "CC_MKT_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "CC_MKT_DESC",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "CC_MARKET_MANAGER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "CC_DIVISION",
+    "datatype" : "integer"
+  }, {
+    "id" : "18",
+    "name" : "CC_DIVISION_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "CC_COMPANY",
+    "datatype" : "integer"
+  }, {
+    "id" : "20",
+    "name" : "CC_COMPANY_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "21",
+    "name" : "CC_STREET_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "22",
+    "name" : "CC_STREET_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "23",
+    "name" : "CC_STREET_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "24",
+    "name" : "CC_SUITE_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "25",
+    "name" : "CC_CITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "26",
+    "name" : "CC_COUNTY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "27",
+    "name" : "CC_STATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "28",
+    "name" : "CC_ZIP",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "29",
+    "name" : "CC_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "30",
+    "name" : "CC_GMT_OFFSET",
+    "datatype" : "double"
+  }, {
+    "id" : "31",
+    "name" : "CC_TAX_PERCENTAGE",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

@@ -30,6 +30,7 @@ import org.apache.curator.x.discovery.details.ServiceCacheImpl;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.curator.x.discovery.details.ServiceDiscoveryImpl;
 import org.apache.kylin.common.util.LogOutputTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,13 +44,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({ "javax.management.*", "org.apache.hadoop.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.w3c.dom.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest(KylinServiceDiscoveryCache.class)
 @Slf4j
 public class KylinServiceDiscoveryCacheTest extends LogOutputTestCase {

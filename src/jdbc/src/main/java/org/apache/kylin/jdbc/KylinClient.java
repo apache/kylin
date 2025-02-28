@@ -23,6 +23,7 @@ import static org.apache.kylin.jdbc.LoggerUtils.exit;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -162,53 +164,53 @@ public class KylinClient implements IRemoteClient {
         Class result = Object.class;
 
         switch (sqlType) {
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-                result = String.class;
-                break;
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-                result = BigDecimal.class;
-                break;
-            case Types.BIT:
-            case Types.BOOLEAN:
-                result = Boolean.class;
-                break;
-            case Types.TINYINT:
-                result = Byte.class;
-                break;
-            case Types.SMALLINT:
-                result = Short.class;
-                break;
-            case Types.INTEGER:
-                result = Integer.class;
-                break;
-            case Types.BIGINT:
-                result = Long.class;
-                break;
-            case Types.REAL:
-            case Types.FLOAT:
-            case Types.DOUBLE:
-                result = Double.class;
-                break;
-            case Types.BINARY:
-            case Types.VARBINARY:
-            case Types.LONGVARBINARY:
-                result = Byte[].class;
-                break;
-            case Types.DATE:
-                result = Date.class;
-                break;
-            case Types.TIME:
-                result = Time.class;
-                break;
-            case Types.TIMESTAMP:
-                result = Timestamp.class;
-                break;
-            default:
-                //do nothing
-                break;
+        case Types.CHAR:
+        case Types.VARCHAR:
+        case Types.LONGVARCHAR:
+            result = String.class;
+            break;
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            result = BigDecimal.class;
+            break;
+        case Types.BIT:
+        case Types.BOOLEAN:
+            result = Boolean.class;
+            break;
+        case Types.TINYINT:
+            result = Byte.class;
+            break;
+        case Types.SMALLINT:
+            result = Short.class;
+            break;
+        case Types.INTEGER:
+            result = Integer.class;
+            break;
+        case Types.BIGINT:
+            result = Long.class;
+            break;
+        case Types.REAL:
+        case Types.FLOAT:
+        case Types.DOUBLE:
+            result = Double.class;
+            break;
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            result = Byte[].class;
+            break;
+        case Types.DATE:
+            result = Date.class;
+            break;
+        case Types.TIME:
+            result = Time.class;
+            break;
+        case Types.TIMESTAMP:
+            result = Timestamp.class;
+            break;
+        default:
+            //do nothing
+            break;
         }
 
         return result;
@@ -220,42 +222,42 @@ public class KylinClient implements IRemoteClient {
         }
 
         switch (sqlType) {
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-                return value;
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-                return new BigDecimal(value);
-            case Types.BIT:
-            case Types.BOOLEAN:
-                return Boolean.parseBoolean(value);
-            case Types.TINYINT:
-                return Byte.valueOf(value);
-            case Types.SMALLINT:
-                return Short.valueOf(value);
-            case Types.INTEGER:
-                return Integer.parseInt(value);
-            case Types.BIGINT:
-                return Long.parseLong(value);
-            case Types.FLOAT:
-                return Float.parseFloat(value);
-            case Types.REAL:
-            case Types.DOUBLE:
-                return Double.parseDouble(value);
-            case Types.BINARY:
-            case Types.VARBINARY:
-            case Types.LONGVARBINARY:
-                return value.getBytes();
-            case Types.DATE:
-                return dateConverter(value);
-            case Types.TIME:
-                return timeConverter(value);
-            case Types.TIMESTAMP:
-                return timestampConverter(value);
-            default:
-                //do nothing
-                break;
+        case Types.CHAR:
+        case Types.VARCHAR:
+        case Types.LONGVARCHAR:
+            return value;
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            return new BigDecimal(value);
+        case Types.BIT:
+        case Types.BOOLEAN:
+            return Boolean.parseBoolean(value);
+        case Types.TINYINT:
+            return Byte.parseByte(value);
+        case Types.SMALLINT:
+            return Short.parseShort(value);
+        case Types.INTEGER:
+            return Integer.parseInt(value);
+        case Types.BIGINT:
+            return Long.parseLong(value);
+        case Types.FLOAT:
+            return Float.parseFloat(value);
+        case Types.REAL:
+        case Types.DOUBLE:
+            return Double.parseDouble(value);
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            return value.getBytes(Charset.defaultCharset());
+        case Types.DATE:
+            return dateConverter(value);
+        case Types.TIME:
+            return timeConverter(value);
+        case Types.TIMESTAMP:
+            return timestampConverter(value);
+        default:
+            //do nothing
+            break;
         }
 
         return value;
@@ -294,7 +296,7 @@ public class KylinClient implements IRemoteClient {
     }
 
     private long parseDateTime(String value, String format) throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.getDefault(Locale.Category.FORMAT));
         formatter.setTimeZone(TimeZone.getTimeZone(TIME_ZONE));
         return formatter.parse(value).getTime();
     }
@@ -320,7 +322,8 @@ public class KylinClient implements IRemoteClient {
         if (authToken == null || authToken.trim().isEmpty()) {
             String username = connProps.getProperty("user");
             String password = connProps.getProperty("password");
-            authToken = DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
+            authToken = DatatypeConverter
+                    .printBase64Binary((username + ":" + password).getBytes(Charset.defaultCharset()));
         }
         method.addHeader("Authorization", AUTH_METHOD + authToken);
         method.addHeader("Auto", "true");

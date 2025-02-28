@@ -21,8 +21,8 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;

@@ -24,17 +24,14 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
-import org.apache.kylin.rest.service.MaintenanceModeSupporter;
-import org.apache.kylin.tool.restclient.RestClient;
+import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +45,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-
 public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider {
 
     private static final Logger limitLoginLogger = LoggerFactory.getLogger(LimitLoginAuthenticationProvider.class);
@@ -57,12 +52,6 @@ public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider 
     @Autowired
     @Qualifier("userService")
     UserService userService;
-
-    @Autowired(required = false)
-    @Qualifier("maintenanceModeService")
-    MaintenanceModeSupporter maintenanceModeService;
-
-    private ConcurrentHashMap<String, RestClient> clientMap = new ConcurrentHashMap<>();
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -96,7 +85,9 @@ public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider 
             updateUserLockStatus(managedUser, userName);
             Authentication auth = super.authenticate(authentication);
 
-            if (managedUser != null && managedUser.getWrongTime() > 0 && !maintenanceModeService.isMaintenanceMode()) {
+            // Metadata modifications need to be based on the latest metadata copy.
+            managedUser = getUser(userName);
+            if (managedUser != null && managedUser.getWrongTime() > 0) {
                 managedUser.clearAuthenticateFailedRecord();
                 updateUser(managedUser);
             }
@@ -105,6 +96,7 @@ public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider 
 
             return auth;
         } catch (BadCredentialsException e) {
+            managedUser = getUser(userName);
             authenticateFail(managedUser, userName);
             if (managedUser != null && managedUser.isLocked()) {
                 if (UserLockRuleUtil.isLockedPermanently(managedUser)) {
@@ -124,6 +116,15 @@ public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider 
         }
     }
 
+    private ManagedUser getUser(String userName) {
+        NKylinUserManager userManager = NKylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ManagedUser managedUser = userManager.get(userName);
+        if (managedUser != null) {
+            return managedUser;
+        }
+        return (ManagedUser) userService.loadUserByUsername(userName);
+    }
+
     private void buildBadCredentialsException(String userName, BadCredentialsException e) {
         String msg = String.format(Locale.ROOT, MsgPicker.getMsg().getUserInPermanentlyLockedStatus(), userName);
         limitLoginLogger.error(msg, new KylinException(USER_LOCKED, e));
@@ -138,28 +139,7 @@ public class LimitLoginAuthenticationProvider extends DaoAuthenticationProvider 
     }
 
     private void updateUser(ManagedUser managedUser) {
-        boolean isOwner = false;
-        EpochManager manager = EpochManager.getInstance();
-        try {
-            isOwner = manager.checkEpochOwner(EpochManager.GLOBAL);
-        } catch (Exception e) {
-            logger.error("Get global epoch owner failed, update locally.", e);
-            return;
-        }
-        if (isOwner) {
-            userService.updateUser(managedUser);
-        } else {
-            try {
-                String owner = manager.getEpochOwner(EpochManager.GLOBAL).split("\\|")[0];
-                if (clientMap.get(owner) == null) {
-                    clientMap.clear();
-                    clientMap.put(owner, new RestClient(owner));
-                }
-                clientMap.get(owner).updateUser(managedUser);
-            } catch (Exception e) {
-                logger.error("Failed to update user throw restclient", e);
-            }
-        }
+        userService.updateUser(managedUser);
     }
 
     private void updateUserLockStatus(ManagedUser managedUser, String userName) {

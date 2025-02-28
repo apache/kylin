@@ -1,0 +1,152 @@
+{
+  "uuid" : "4f68d257-45ff-40bf-bf31-f7d2bd942b1d",
+  "last_modified" : 1575725130391,
+  "create_time" : 1575724427340,
+  "version" : "4.0.0.0",
+  "dataflow" : "e0e90065-e7c3-49a0-a801-20465ca64799",
+  "layout_instances" : [ {
+    "layout_id" : 20001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 81000000,
+    "byte_size" : 149846,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724506262
+  }, {
+    "layout_id" : 50001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 114050000,
+    "byte_size" : 123260,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724506263
+  }, {
+    "layout_id" : 1,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 4000000,
+    "byte_size" : 110528,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724511167
+  }, {
+    "layout_id" : 30001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 112000000,
+    "byte_size" : 2224,
+    "file_count" : 1,
+    "source_rows" : 9998,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724511167
+  }, {
+    "layout_id" : 60001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 115000000,
+    "byte_size" : 157933,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724500618
+  }, {
+    "layout_id" : 40001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 113000000,
+    "byte_size" : 118615,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724506262
+  }, {
+    "layout_id" : 10001,
+    "build_job_id" : "7cd82a5c-24cf-4fac-a106-226b793a7811",
+    "rows" : 68000000,
+    "byte_size" : 118753,
+    "file_count" : 1,
+    "source_rows" : 9998,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724511167
+  }, {
+    "layout_id" : 20000000001,
+    "build_job_id" : "545f245e-bda2-46bb-aaac-3d4440092488",
+    "rows" : 10000,
+    "byte_size" : 84623,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724613615
+  }, {
+    "layout_id" : 20000010001,
+    "build_job_id" : "545f245e-bda2-46bb-aaac-3d4440092488",
+    "rows" : 10000,
+    "byte_size" : 80560,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724614751
+  }, {
+    "layout_id" : 20000020001,
+    "build_job_id" : "2ab0998a-0ca9-4524-87f9-b50a4a38714c",
+    "rows" : 10000,
+    "byte_size" : 79051,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724710047
+  }, {
+    "layout_id" : 20000030001,
+    "build_job_id" : "2ab0998a-0ca9-4524-87f9-b50a4a38714c",
+    "rows" : 10000,
+    "byte_size" : 45305,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575724710676
+  }, {
+    "layout_id" : 70001,
+    "build_job_id" : "7647b056-b60b-4466-9953-d7796436a192",
+    "rows" : 112000000,
+    "byte_size" : 95558,
+    "file_count" : 1,
+    "source_rows" : 9998,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575725087089
+  }, {
+    "layout_id" : 80001,
+    "build_job_id" : "d466a710-21d7-45e6-acb1-5646a517b533",
+    "rows" : 8276,
+    "byte_size" : 98108,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1575725181107
+  } ],
+  "project" : "gc_test"
+}

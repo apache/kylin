@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.builder;
 
 import static org.apache.spark.dict.NGlobalDictBuilderAssist.resize;
+import static org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -26,13 +27,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
 import org.apache.spark.dict.NGlobalDictionaryV2;
 import org.apache.spark.sql.Dataset;
@@ -40,12 +44,21 @@ import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 public class DictionaryBuilderHelper {
     protected static final Logger logger = LoggerFactory.getLogger(DictionaryBuilderHelper.class);
+
+    protected static Set<TblColRef> findNeedDictCols(List<LayoutEntity> layouts) {
+        Set<TblColRef> dictColSet = Sets.newHashSet();
+        for (LayoutEntity layout : layouts) {
+            for (MeasureDesc measureDesc : layout.getIndex().getEffectiveMeasures().values()) {
+                if (needGlobalDict(measureDesc) == null)
+                    continue;
+                TblColRef col = measureDesc.getFunction().getParameters().get(0).getColRef();
+                dictColSet.add(col);
+            }
+        }
+        return dictColSet;
+    }
 
     /**
      * Dictionary resize in three cases
@@ -56,11 +69,10 @@ public class DictionaryBuilderHelper {
      *  #3 After the last build, the number of individual buckets in the existing dictionary is greater
      *  than the threshold multiplied by KylinConfigBase.getGlobalDictV2BucketOverheadFactor
      */
-    public static int calculateBucketSize(NDataSegment seg, TblColRef col, Dataset<Row> afterDistinct)
-            throws IOException {
-        long resizeVersion = System.currentTimeMillis();
+    public static int calculateBucketSize(NDataSegment seg, TblColRef col, Dataset<Row> afterDistinct,
+            Long resizeBuildVersion) throws IOException {
         NGlobalDictionaryV2 globalDict = new NGlobalDictionaryV2(seg.getProject(), col.getTable(), col.getName(),
-                seg.getConfig().getHdfsWorkingDirectory(), resizeVersion);
+                seg.getConfig().getHdfsWorkingDirectory(), NO_VERSION_SPECIFIED);
         int bucketPartitionSize = globalDict.getBucketSizeOrDefault(seg.getConfig().getGlobalDictV2MinHashPartitions());
         int bucketThreshold = seg.getConfig().getGlobalDictV2ThresholdBucketSize();
         int resizeBucketSize = bucketPartitionSize;
@@ -70,7 +82,7 @@ public class DictionaryBuilderHelper {
             double loadFactor = seg.getConfig().getGlobalDictV2InitLoadFactor();
             resizeBucketSize = Math.max(Math.toIntExact(afterDisCount / (int) (bucketThreshold * loadFactor)),
                     bucketPartitionSize);
-            logger.info("Building a global dictionary column first for  {} , the size of the bucket is set to {}",
+            logger.info("Building a global dictionary column first for {}, the size of the bucket is set to {}",
                     col.getName(), bucketPartitionSize);
         } else {
             long afterDisCount = afterDistinct.count();
@@ -108,26 +120,13 @@ public class DictionaryBuilderHelper {
             if (resizeBucketSize != bucketPartitionSize) {
                 logger.info("Start building a global dictionary column for {}, need resize from {} to {} ",
                         col.getName(), bucketPartitionSize, resizeBucketSize);
-                resize(col, seg, resizeBucketSize, afterDistinct.sparkSession(), resizeVersion);
+                resize(col, seg, resizeBucketSize, afterDistinct.sparkSession(), resizeBuildVersion);
                 logger.info("End building a global dictionary column for {}, need resize from {} to {} ", col.getName(),
                         bucketPartitionSize, resizeBucketSize);
             }
         }
 
         return resizeBucketSize;
-    }
-
-    protected static Set<TblColRef> findNeedDictCols(List<LayoutEntity> layouts) {
-        Set<TblColRef> dictColSet = Sets.newHashSet();
-        for (LayoutEntity layout : layouts) {
-            for (MeasureDesc measureDesc : layout.getIndex().getEffectiveMeasures().values()) {
-                if (needGlobalDict(measureDesc) == null)
-                    continue;
-                TblColRef col = measureDesc.getFunction().getParameters().get(0).getColRef();
-                dictColSet.add(col);
-            }
-        }
-        return dictColSet;
     }
 
     public static Set<TblColRef> extractTreeRelatedGlobalDictToBuild(NDataSegment seg,
@@ -145,7 +144,9 @@ public class DictionaryBuilderHelper {
         }
         Set<TblColRef> buildedColRefSet = findNeedDictCols(buildedLayouts);
         Set<TblColRef> toBuildColRefSet = findNeedDictCols(toBuildCuboids);
-        toBuildColRefSet.removeIf(col -> buildedColRefSet.contains(col));
+        if (!seg.buildedDictColShouldRebuild()) {
+            toBuildColRefSet.removeIf(col -> buildedColRefSet.contains(col));
+        }
         return toBuildColRefSet;
     }
 

@@ -42,10 +42,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.NProjectManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.SneakyThrows;
 import lombok.val;

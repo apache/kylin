@@ -28,20 +28,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
-import org.apache.kylin.metadata.model.MultiPartitionDesc;
-import org.apache.kylin.metadata.model.NDataModel;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.MultiPartitionDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -145,14 +145,14 @@ public class SchemaNode {
         while (matcher.find(matchEnd)) {
             retainedStrings.add(matcher.group(1));
             matchStart = matcher.start();
-            expr = expr.substring(0, matchEnd).concat(expr.substring(matchEnd, matchStart).toUpperCase())
+            expr = expr.substring(0, matchEnd).concat(StringUtils.upperCase(expr.substring(matchEnd, matchStart)))
                     .concat(expr.substring(matchStart));
             matchEnd = matcher.end();
         }
-        expr = expr.substring(0, matchEnd).concat(expr.substring(matchEnd).toUpperCase());
+        expr = expr.substring(0, matchEnd).concat(StringUtils.upperCase(expr.substring(matchEnd)));
 
         if (retainedStrings.isEmpty()) {
-            return expr.toUpperCase();
+            return StringUtils.upperCase(expr);
         }
 
         return expr;

@@ -1,0 +1,11 @@
+{
+  "uuid" : "3c7dea5c-76b4-42a6-8f98-38e99d5cf95f",
+  "last_modified" : 1605694601173,
+  "create_time" : 1605694601170,
+  "version" : "4.0.0.0",
+  "resource_group_enabled" : false,
+  "resource_groups" : [ ],
+  "instances" : [ ],
+  "mapping_info" : [ ],
+  "project" : "_global"
+}

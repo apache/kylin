@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "ORDER_ID_PLUS_1",
+  "expression" : "TEST_KYLIN_FACT.ORDER_ID + 1",
+  "datatype" : "bigint",
+  "uuid" : "c84aeda0-5eaa-fe2a-f16c-b6efbcbd4ee4",
+  "project" : "default"
+}

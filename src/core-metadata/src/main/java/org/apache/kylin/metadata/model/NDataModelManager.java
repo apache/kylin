@@ -33,10 +33,10 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
-import org.apache.kylin.common.persistence.lock.ModuleLockEnum;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.ClassUtil;
@@ -45,10 +45,12 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.exception.ModelBrokenException;
+import org.apache.kylin.metadata.project.NProjectManager;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -86,8 +88,7 @@ public class NDataModelManager {
     protected void init(KylinConfig cfg, final String project) {
         this.config = cfg;
         this.project = project;
-        String resourceRootPath = "/" + project + ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<NDataModel>(getStore(), resourceRootPath, NDataModel.class) {
+        this.crud = new CachedCrudAssist<NDataModel>(getStore(), MetadataType.MODEL, project, NDataModel.class) {
             @Override
             protected NDataModel initEntityAfterReload(NDataModel model, String resourceName) {
 
@@ -192,18 +193,35 @@ public class NDataModelManager {
     }
 
     public NDataModel getDataModelDescByAlias(String alias) {
-        return crud.listAll().stream().filter(model -> model.getAlias().equalsIgnoreCase(alias)).findFirst()
-                .orElse(null);
-    }
-    
-    public List<String> getModelNamesByFuzzyName(String fuzzyName) {
-        return crud.listAll().stream().filter(model -> StringUtils.containsIgnoreCase(model.getAlias(), fuzzyName)).map(model -> model.getAlias())
-                .collect(Collectors.toList());
+        RawResourceFilter filter = RawResourceFilter.simpleFilter(RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE,
+                "alias", alias);
+        return crud.listByFilter(filter).stream().findFirst().orElse(null);
     }
 
-    public NDataModel dropModel(NDataModel desc) {
-        crud.delete(desc);
-        return desc;
+    public List<String> getModelNamesByFuzzyName(String fuzzyName) {
+        RawResourceFilter filter = RawResourceFilter.simpleFilter(RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE,
+                "alias", fuzzyName);
+        return crud.listByFilter(filter).stream().map(NDataModel::getAlias).collect(Collectors.toList());
+    }
+
+    public NDataModel dropModel(NDataModel model) {
+        crud.delete(model);
+        dropRelatedCc(model);
+        return model;
+    }
+
+    private void dropRelatedCc(NDataModel model) {
+        // drop relations of model <-> cc
+        Manager<CcModelRelationDesc> relationManager = Manager.getInstance(config, project, CcModelRelationDesc.class);
+        List<CcModelRelationDesc> items = relationManager
+                .listByFilter(RawResourceFilter.equalFilter("modelUuid", model.getUuid()));
+        items.forEach(relationManager::delete);
+
+        // drop cc
+        Set<String> ccUuids = items.stream().map(CcModelRelationDesc::getCcUuid).collect(Collectors.toSet());
+        relationManager.listAll().stream().map(CcModelRelationDesc::getCcUuid).forEach(ccUuids::remove);
+        ComputedColumnManager ccManager = config.getManager(project, ComputedColumnManager.class);
+        ccUuids.forEach(cc -> ccManager.get(cc).ifPresent(ccManager::delete));
     }
 
     public NDataModel dropModel(String id) {
@@ -211,16 +229,15 @@ public class NDataModelManager {
         if (model == null) {
             return null;
         }
-        crud.delete(model);
-        return model;
+        return dropModel(model);
     }
 
     public Set<String> listAllModelAlias() {
-        return crud.listAll().stream().map(NDataModel::getAlias).collect(Collectors.toSet());
+        return listAllModels().stream().map(NDataModel::getAlias).collect(Collectors.toSet());
     }
 
     public Set<String> listAllModelIds() {
-        return crud.listAll().stream().map(NDataModel::getId).collect(Collectors.toSet());
+        return listAllModels().stream().map(NDataModel::getId).collect(Collectors.toSet());
     }
 
     public List<NDataModel> listAllModels() {
@@ -248,15 +265,16 @@ public class NDataModelManager {
     public NDataModel createDataModelDesc(NDataModel model, String owner) {
         NDataModel copy = copyForWrite(model);
 
-        MemoryLockUtils.manuallyLockModule(project, ModuleLockEnum.MODEL, getStore());
+        // Lock-free lightweight checking
         checkDuplicateModel(model);
-
         //check model count
-        List<NDataModel> allModels = readAllModelsFromSystem(model.getProject());
+        List<NDataModel> allModels = listAllModels();
         NCircuitBreaker.verifyModelCreation(allModels.size());
 
         copy.setOwner(owner);
-        copy.setStorageType(getConfig().getDefaultStorageType());
+        if (model.getStorageTypeValue() == 0) {
+            copy.setStorageType(NProjectManager.getProjectConfig(project).getDefaultStorageType());
+        }
         model = saveModel(copy);
         return model;
     }
@@ -325,11 +343,50 @@ public class NDataModelManager {
     }
 
     private NDataModel saveModel(NDataModel model) {
-        model.checkSingleIncrementingLoadingTable();
         model.init(config, project, getCCRelatedModels(model));
+        updateCcAndRelations(model);
+        updateTableModelRelations(model);
         crud.save(model);
         return model;
+    }
 
+    private void updateCcAndRelations(NDataModel model) {
+        // save CC && update ComputedColumnUuids
+        ComputedColumnManager ccManager = config.getManager(project, ComputedColumnManager.class);
+        Manager<CcModelRelationDesc> relationManager = Manager.getInstance(config, project, CcModelRelationDesc.class);
+
+        List<ComputedColumnDesc> newCC = model.getComputedColumnDescs().stream()
+                .map(cc -> ccManager.saveCCWithCheck(model, cc)).collect(Collectors.toList());
+        model.setComputedColumnUuids(newCC.stream().map(ComputedColumnDesc::getUuid).collect(Collectors.toList()));
+        model.setComputedColumnDescs(newCC);
+
+        // update cc model relation
+        List<CcModelRelationDesc> oldRelations = relationManager
+                .listByFilter(RawResourceFilter.equalFilter("modelUuid", model.getUuid()));
+        List<String> oldUuids = oldRelations.stream().map(CcModelRelationDesc::getCcUuid).collect(Collectors.toList());
+
+        oldRelations.stream().filter(relation -> !model.getComputedColumnUuids().contains(relation.getCcUuid()))
+                .forEach(relationManager::delete);
+        model.getComputedColumnUuids().stream().filter(uuid -> !oldUuids.contains(uuid))
+                .forEach(uuid -> relationManager.createAS(new CcModelRelationDesc(uuid, model.getUuid())));
+    }
+
+    private void updateTableModelRelations(NDataModel model) {
+        Manager<TableModelRelationDesc> relationManager = Manager.getInstance(config, project,
+                TableModelRelationDesc.class);
+
+        List<TableModelRelationDesc> oldRelations = relationManager
+                .listByFilter(RawResourceFilter.equalFilter("modelUuid", model.getUuid()));
+        List<String> oldIdentities = oldRelations.stream().map(TableModelRelationDesc::getTableIdentity)
+                .collect(Collectors.toList());
+
+        Set<String> finalIdentities = model.getAllTables().stream().map(TableRef::getTableIdentity)
+                .collect(Collectors.toSet());
+
+        oldRelations.stream().filter(relation -> !finalIdentities.contains(relation.getTableIdentity()))
+                .forEach(relationManager::delete);
+        finalIdentities.stream().filter(identity -> !oldIdentities.contains(identity))
+                .forEach(identity -> relationManager.createAS(new TableModelRelationDesc(identity, model.getUuid())));
     }
 
     public NDataModel copyForWrite(NDataModel nDataModel) {
@@ -373,12 +430,17 @@ public class NDataModelManager {
             return Lists.newArrayList();
         }
         NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.readSystemKylinConfig(), project);
+        NDataflowManager innerManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         return manager.listAllDataflows(true).stream() //
                 .filter(df -> df.checkBrokenWithRelatedInfo() || !df.getModel().getComputedColumnDescs().isEmpty()) //
-                .map(df -> NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
-                        .getDataflow(df.getId()))
-                .filter(df -> !df.checkBrokenWithRelatedInfo()) //
+                .map(df -> innerManager.getDataflow(df.getId()))
+                .filter(df -> df != null && !df.checkBrokenWithRelatedInfo()) //
                 .map(NDataflow::getModel).collect(Collectors.toList());
+    }
+
+    private void lockModelsUnderProject() {
+        getStore().batchLock(MetadataType.MODEL,
+                RawResourceFilter.simpleFilter(RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE, "project", project));
     }
 
     public interface NDataModelUpdater {

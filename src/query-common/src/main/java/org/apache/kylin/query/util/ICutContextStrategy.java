@@ -21,30 +21,30 @@ package org.apache.kylin.query.util;
 import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.kylin.query.relnode.KapRel;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapRel;
 
 public interface ICutContextStrategy {
 
-    List<OLAPRel> cutOffContext(OLAPRel rootRel, RelNode parentOfRoot);
+    List<OlapRel> cutOffContext(OlapRel rootRel, RelNode parentOfRoot);
 
-    boolean needCutOff(OLAPRel rootRel);
+    boolean needCutOff(OlapRel rootRel);
 
-    class CutContextImplementor {
+    class ContextCutImpl {
         private int ctxSeq;
 
-        public CutContextImplementor(int ctxSeq) {
+        public ContextCutImpl(int ctxSeq) {
             this.ctxSeq = ctxSeq;
         }
 
         public void visitChild(RelNode input) {
-            ((KapRel) input).implementCutContext(this);
+            ((OlapRel) input).implementCutContext(this);
         }
 
-        public OLAPContext allocateContext(KapRel topNode, RelNode parentOfTopNode) {
-            OLAPContext context = new OLAPContext(ctxSeq++);
-            OLAPContext.registerContext(context);
+        public OlapContext allocateContext(OlapRel topNode, RelNode parentOfTopNode) {
+            OlapContext context = new OlapContext(ctxSeq++);
+            ContextUtil.registerContext(context);
             context.setTopNode(topNode);
             topNode.setContext(context);
             context.setParentOfTopNode(parentOfTopNode);

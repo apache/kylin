@@ -1,0 +1,47 @@
+{
+  "uuid" : "44e2b22e-a0a6-4c51-b2dd-1e7f18841fc9",
+  "last_modified" : 1494334079326,
+  "version" : "2.0.0",
+  "name" : "ORDERS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "O_ORDERKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "O_CUSTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "O_ORDERSTATUS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "O_TOTALPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "5",
+    "name" : "O_ORDERDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "6",
+    "name" : "O_ORDERPRIORITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "O_CLERK",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "O_SHIPPRIORITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "O_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "VIRTUAL_VIEW",
+  "database" : "TPCH",
+  "project" : "tpch"
+}

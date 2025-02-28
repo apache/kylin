@@ -22,8 +22,8 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.kylin.job.domain.PriorityFistRandomOrderJob;
 import org.apache.kylin.job.domain.JobLock;
+import org.apache.kylin.job.domain.PriorityFistRandomOrderJob;
 
 @Mapper
 public interface JobLockMapper {
@@ -45,13 +45,14 @@ public interface JobLockMapper {
     int deleteAllJobLock();
 
     int updateLock(@Param("lockId") String lockId, @Param("lockNode") String lockNode,
-            @Param("renewalSec") long renewalSec);
+            @Param("renewalSec") long renewalSec, @Param("updateTime") long updateTime);
 
     int removeLock(@Param("lockId") String lockId, @Param("lockNode") String lockNode);
 
     int batchRemoveLock(@Param("jobIdList") List<String> jobIdList);
 
-    List<PriorityFistRandomOrderJob> findNonLockIdList(@Param("batchSize") int batchSize);
+    List<PriorityFistRandomOrderJob> findNonLockIdList(@Param("batchSize") int batchSize,
+            @Param("projects") List<String> projects);
 
     List<String> findExpiredORNonLockIdList(@Param("batchSize") int batchSize);
 

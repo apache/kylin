@@ -41,7 +41,6 @@ public class DefaultQueryTransformer implements IQueryTransformer {
     private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern
             .compile("[{]" + S0 + "fn" + SM + "(EXTRACT\\(.*?\\))" + S0 + "[}]", Pattern.CASE_INSENSITIVE);
 
-    //TODO #11033
     private static final Pattern PIN_SUM_OF_CAST = Pattern.compile(S0 + "\\bSUM" + S0 + "\\(" + S0 + "CAST" + S0 + "\\("
             + S0 + "([^\\s,]+)" + S0 + "AS" + SM + "DOUBLE" + S0 + "\\)" + S0 + "\\)", Pattern.CASE_INSENSITIVE);
 
@@ -54,8 +53,7 @@ public class DefaultQueryTransformer implements IQueryTransformer {
                 if (!m.find())
                     break;
 
-                sql = sql.substring(0, m.start()) + " SUM(" + m.group(1).trim() + ")"
-                        + sql.substring(m.end(), sql.length());
+                sql = sql.substring(0, m.start()) + " SUM(" + m.group(1).trim() + ")" + sql.substring(m.end());
             }
         }
         return sql;

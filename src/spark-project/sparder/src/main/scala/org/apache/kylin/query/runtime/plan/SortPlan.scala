@@ -19,7 +19,7 @@ package org.apache.kylin.query.runtime.plan
 
 import org.apache.calcite.DataContext
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.kylin.query.relnode.KapSortRel
+import org.apache.kylin.query.relnode.OlapSortRel
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.KapFunctions.k_lit
 import org.apache.spark.sql.catalyst.expressions.{Ascending, Descending, NullsFirst, NullsLast, SortOrder}
@@ -29,10 +29,10 @@ import scala.collection.JavaConverters._
 
 object SortPlan extends LogEx {
   def sort(plan: LogicalPlan,
-           rel: KapSortRel,
+           rel: OlapSortRel,
            dataContext: DataContext): LogicalPlan = logTime("sort", debug = true) {
 
-    val columns = rel.getChildExps.asScala
+    val columns = rel.getSortExps.asScala
       .map(rex => {
         val visitor = new SparderRexVisitor(plan.output.map(_.name),
           rel.getInput.getRowType,

@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 public class RawSqlBlock {
 
     public enum Type {
-        COMMENT, STATEMENT
+        COMMENT, STATEMENT, HINT
     }
 
     private String text;

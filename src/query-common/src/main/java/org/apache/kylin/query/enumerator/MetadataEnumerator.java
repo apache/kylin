@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.calcite.linq4j.Enumerator;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.QueryInterruptChecker;
 
 /**
@@ -35,9 +35,9 @@ public class MetadataEnumerator implements Enumerator<Object[]> {
     private Iterator<Object[]> iterator;
     private int scanCount = 0;
 
-    public MetadataEnumerator(OLAPContext olapContext) {
+    public MetadataEnumerator(OlapContext olapContext) {
 
-        this.result = olapContext.getColValuesRange();
+        this.result = olapContext.getColValuesRange(true);
         reset();
     }
 

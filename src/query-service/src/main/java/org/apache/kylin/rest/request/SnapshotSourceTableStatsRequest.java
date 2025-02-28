@@ -18,10 +18,11 @@
 
 package org.apache.kylin.rest.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
 
 @Data
 public class SnapshotSourceTableStatsRequest {

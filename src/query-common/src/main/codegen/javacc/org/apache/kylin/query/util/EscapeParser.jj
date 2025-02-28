@@ -792,12 +792,29 @@ void EscapeFunctionParameter(List<String> paramCollection) :
 
 String ParameterExpression() :
 {
+    StringBuilder transformedStr = new StringBuilder();
     String innerString = "";
-    String nextString = "";
 }
 {
     (
-        innerString = EscapeExpress()
+    LOOKAHEAD(2)
+    innerString = GetParameterExpressionInnerString()
+    {
+        transformedStr.append(innerString);
+    }
+    )+
+    {
+        return transformedStr.toString();
+    }
+}
+
+String GetParameterExpressionInnerString() :
+{
+    String innerString = "";
+}
+{
+    (
+      innerString = EscapeExpress()
     | innerString = SubstringExpression()
     | innerString = OverlayExpression()
     | innerString = GroupingSetsExpression()
@@ -817,12 +834,8 @@ String ParameterExpression() :
     | innerString = Punctuation()
     | innerString = Any()
     )
-    (
-        LOOKAHEAD(2)
-        nextString = ParameterExpression()
-    )?
     {
-        return innerString + nextString;
+        return innerString;
     }
 }
 

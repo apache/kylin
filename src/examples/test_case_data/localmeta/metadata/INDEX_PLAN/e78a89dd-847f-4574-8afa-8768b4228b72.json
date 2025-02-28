@@ -1,0 +1,60 @@
+{
+  "uuid" : "e78a89dd-847f-4574-8afa-8768b4228b72",
+  "last_modified" : 1616489988016,
+  "create_time" : 1612690025915,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : {
+    "dimensions" : [ 0, 9, 10, 11, 12, 23 ],
+    "measures" : [ 100000, 100001 ],
+    "global_dim_cap" : null,
+    "aggregation_groups" : [ {
+      "includes" : [ 0, 9, 10, 11, 12, 23 ],
+      "measures" : [ 100000, 100001 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ ],
+        "joint_dims" : [ ]
+      }
+    } ],
+    "layout_id_mapping" : [ 10001, 20001, 30001, 40001, 50001, 60001, 70001, 80001, 90001, 100001, 110001, 120001, 130001, 140001, 150001, 160001, 170001, 180001, 190001, 200001, 210001, 220001, 230001, 240001, 250001, 260001, 270001, 280001, 290001, 300001, 310001, 320001, 330001, 340001, 350001, 360001, 370001, 380001, 390001, 400001, 410001, 420001, 430001, 440001, 450001, 460001, 470001, 480001, 490001, 500001, 510001, 520001, 530001, 540001, 550001, 560001, 570001, 580001, 590001, 600001, 610001, 620001, 630001 ],
+    "parent_forward" : 3,
+    "index_start_id" : 10000,
+    "last_modify_time" : 1616489211035,
+    "layout_black_list" : [ ],
+    "scheduler_version" : 2
+  },
+  "indexes" : [ {
+    "id" : 20000000000,
+    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000000001,
+      "name" : null,
+      "owner" : "ADMIN",
+      "col_order" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1616489080741,
+      "manual" : true,
+      "auto" : false,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 640000,
+  "next_table_index_id" : 20000010000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 0,
+  "approved_removal_recs" : 0,
+  "project" : "streaming_test"
+}

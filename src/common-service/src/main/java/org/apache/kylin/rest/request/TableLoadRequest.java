@@ -40,6 +40,13 @@ public class TableLoadRequest implements ProjectInsensitiveRequest {
     @JsonDeserialize(using = ArgsTypeJsonDeserializer.IntegerJsonDeserializer.class)
     @JsonProperty("sampling_rows")
     private Integer samplingRows;
+
+    // for internal table
+    @JsonProperty("load_as_internal")
+    private Boolean loadAsInternal = false;
+    @JsonProperty("storage_type")
+    private String storageType;
+
     private int priority = ExecutablePO.DEFAULT_PRIORITY;
     @JsonProperty("yarn_queue")
     private String yarnQueue;

@@ -1,0 +1,24 @@
+{
+  "uuid" : "e286e39e-40d7-44c2-8fa2-41b365632882",
+  "project" : "learn_kylin",
+  "name" : "KYLIN_COUNTRY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COUNTRY",
+    "datatype" : "string"
+  }, {
+    "id" : "2",
+    "name" : "LATITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "3",
+    "name" : "LONGITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "4",
+    "name" : "NAME",
+    "datatype" : "string"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

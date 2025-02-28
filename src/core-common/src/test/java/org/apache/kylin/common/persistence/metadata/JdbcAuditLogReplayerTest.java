@@ -17,14 +17,12 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.RandomUtil;
@@ -43,57 +41,38 @@ import lombok.extern.slf4j.Slf4j;
 @MetadataInfo(onlyProps = true)
 @JdbcMetadataInfo
 public class JdbcAuditLogReplayerTest {
-
-    private static final String LOCAL_INSTANCE = "127.0.0.1";
-    private final Charset charset = Charset.defaultCharset();
-
     @Test
     public void testDatabaseNotAvailable(JdbcInfo info) throws Exception {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
+        workerStore.checkAndPutResource(METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
 
         val auditLogStore = workerStore.getAuditLogStore();
         val jdbcTemplate = info.getJdbcTemplate();
-        changeProject("abc", info, false);
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry("abc", info, false);
         auditLogStore.restore(0);
-        Assert.assertEquals(2, workerStore.listResourcesRecursively("/").size());
+        Assert.assertEquals(2, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
 
-        val auditLogTableName = info.getTableName() + "_audit_log";
+        val auditLogTableName = info.getTableName() + JdbcAuditLogStore.AUDIT_LOG_SUFFIX;
 
         jdbcTemplate.batchUpdate("ALTER TABLE " + auditLogTableName + " RENAME TO TEST_AUDIT_LOG_TEST",
-                "ALTER TABLE " + info.getTableName() + " RENAME TO TEST_TEST");
+                "ALTER TABLE " + info.getTableName() + "_project RENAME TO TEST_TEST");
 
         //replay fail
         try {
             auditLogStore.catchupWithTimeout();
         } catch (BadSqlGrammarException e) {
+            log.info("expected exception {}", e.getMessage());
         }
 
         //restore audit log
         jdbcTemplate.update("ALTER TABLE TEST_AUDIT_LOG_TEST RENAME TO " + auditLogTableName);
-        changeProject("abcd", info, false);
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry("abcd", info, false);
 
         //replay to maxOffset
         Awaitility.await().atMost(6, TimeUnit.SECONDS)
-                .until(() -> 3 == workerStore.listResourcesRecursively("/").size());
+                .until(() -> 3 == workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
         //important for release a replay thread
         auditLogStore.close();
     }
-
-    void changeProject(String project, JdbcInfo info, boolean isDel) throws Exception {
-        val jdbcTemplate = info.getJdbcTemplate();
-        val url = getTestConfig().getMetadataUrl();
-        String unitId = RandomUtil.randomUUIDStr();
-
-        Object[] log = isDel
-                ? new Object[] { "/_global/project/" + project + ".json", null, System.currentTimeMillis(), 0, unitId,
-                        null, LOCAL_INSTANCE }
-                : new Object[] { "/_global/project/" + project + ".json", "abc".getBytes(charset),
-                        System.currentTimeMillis(), 0, unitId, null, LOCAL_INSTANCE };
-        List<Object[]> logs = new ArrayList<>();
-        logs.add(log);
-        jdbcTemplate.batchUpdate(
-                String.format(Locale.ROOT, JdbcAuditLogStore.INSERT_SQL, url.getIdentifier() + "_audit_log"), logs);
-    }
-
 }

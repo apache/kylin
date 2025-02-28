@@ -1,0 +1,188 @@
+{
+  "name" : "20211229000000_20211230000000",
+  "create_time_utc" : 1641870531956,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1640757600000,
+    "date_range_end" : 1640844000000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "22" : {
+      "min" : "10010756",
+      "max" : "10011619"
+    },
+    "23" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "24" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-30"
+    },
+    "25" : {
+      "min" : "'abc_4_10756'",
+      "max" : "'abc_4_11619'"
+    },
+    "26" : {
+      "min" : "10767.123",
+      "max" : "11630.123"
+    },
+    "27" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "28" : {
+      "min" : "10756",
+      "max" : "11619"
+    },
+    "29" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-29"
+    },
+    "30" : {
+      "min" : "2021-12-29 00:02:29.0",
+      "max" : "2021-12-30 00:00:49.0"
+    },
+    "10" : {
+      "min" : "8",
+      "max" : "8"
+    },
+    "11" : {
+      "min" : "10767.123",
+      "max" : "11630.123"
+    },
+    "12" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-29"
+    },
+    "13" : {
+      "min" : "10756",
+      "max" : "11619"
+    },
+    "14" : {
+      "min" : "7",
+      "max" : "7"
+    },
+    "15" : {
+      "min" : "2021-12-29 00:02:29.0",
+      "max" : "2021-12-30 00:00:49.0"
+    },
+    "16" : {
+      "min" : "10010756",
+      "max" : "10011619"
+    },
+    "17" : {
+      "min" : "19.00",
+      "max" : "20.00"
+    },
+    "18" : {
+      "min" : "109.0",
+      "max" : "118.0"
+    },
+    "19" : {
+      "min" : "10756",
+      "max" : "11619"
+    },
+    "0" : {
+      "min" : "10010756",
+      "max" : "10011619"
+    },
+    "1" : {
+      "min" : "19.00",
+      "max" : "20.00"
+    },
+    "2" : {
+      "min" : "109.0",
+      "max" : "118.0"
+    },
+    "3" : {
+      "min" : "10756",
+      "max" : "11619"
+    },
+    "4" : {
+      "min" : "1640707339784",
+      "max" : "1640793639768"
+    },
+    "5" : {
+      "min" : "20211229",
+      "max" : "20211229"
+    },
+    "6" : {
+      "min" : "2021-12-29",
+      "max" : "2021-12-30"
+    },
+    "7" : {
+      "min" : "'abc_4_10756'",
+      "max" : "'abc_4_11619'"
+    },
+    "8" : {
+      "min" : "20211229",
+      "max" : "20211229"
+    },
+    "9" : {
+      "min" : "10010756",
+      "max" : "10011619"
+    },
+    "20" : {
+      "min" : "1640707339784",
+      "max" : "1640793639768"
+    },
+    "21" : {
+      "min" : "10756",
+      "max" : "11619"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1641871504581,
+  "source_count" : 864,
+  "source_bytes_size" : 7856896,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_FACT_30_3W.STRING_9" : 11232,
+    "TEST_DB.TEST_FACT_30_3W.STRING_NUM_16" : 864,
+    "TEST_DB.TEST_FACT_30_3W.TIMESTAMP_11" : 18144,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DATE2_25" : 6912,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_12" : 11232,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_28" : 6912,
+    "TEST_DB.TEST_FACT_30_3W.STRING_NUM_17" : 864,
+    "TEST_DB.TEST_FACT_30_3W.DATE_6" : 8640,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DATE2_24" : 6912,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DATE_21" : 8640,
+    "TEST_DB.TEST_FACT_30_3W.STRING_8" : 11232,
+    "TEST_DB.TEST_FACT_30_3W.INT_27" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.TIMESTAMP_10" : 18144,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_2" : 6912,
+    "TEST_DB.TEST_FACT_30_3W.ID" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.INT_0" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.INT_14" : 864,
+    "TEST_DB.TEST_FACT_30_3W.DOUBLE_5" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DATE_20" : 8640,
+    "TEST_DB.TEST_FACT_30_3W.DECIMAL_19" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DECIMAL_22" : 7776,
+    "TEST_DB.TEST_FACT_30_3W.INT_26" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_3" : 6912,
+    "TEST_DB.TEST_FACT_30_3W.STRING_DECIMAL_23" : 7776,
+    "TEST_DB.TEST_FACT_30_3W.INT_15" : 864,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_13" : 11232,
+    "TEST_DB.TEST_FACT_30_3W.DOUBLE_4" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.DATE_7" : 8640,
+    "TEST_DB.TEST_FACT_30_3W.INT_1" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.DECIMAL_18" : 4320,
+    "TEST_DB.TEST_FACT_30_3W.BIGINT_29" : 6912
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "dbddd2c9-7887-f8aa-5940-a1b8761a47c5",
+  "model_uuid" : "cdf17c7b-18e3-9a09-23d1-4e82b7bc9123",
+  "project" : "multi_partition_date_type"
+}

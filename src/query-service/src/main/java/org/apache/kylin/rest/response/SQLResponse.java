@@ -24,11 +24,11 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +49,13 @@ public class SQLResponse implements Serializable {
     // the data type for each column
     private List<SelectedColumnMeta> columnMetas;
 
-    // the results rows, each row contains several columns
+    // the result rows, each row contains several columns
     private Iterable<List<String>> results;
+
+    @JsonProperty("query_plan")
+    private QueryContext.QueryPlan queryPlan;
+    @JsonProperty("is_explain")
+    private boolean isExplain;
 
     // if not select query, only return affected row count
     protected int affectedRowCount;
@@ -67,6 +72,9 @@ public class SQLResponse implements Serializable {
 
     protected long duration;
 
+    @JsonProperty("cpu_time")
+    protected long cpuTime;
+
     protected boolean isPartial = false;
 
     @JsonProperty("vacant")
@@ -78,8 +86,6 @@ public class SQLResponse implements Serializable {
 
     private String appMasterURL = "";
 
-    @Getter
-    @Setter
     protected int failTimes = -1;
 
     @JsonProperty("appMasterURL")
@@ -151,6 +157,8 @@ public class SQLResponse implements Serializable {
 
     @JsonProperty("executed_plan")
     private String executedPlan;
+
+    private boolean isBigQuery = false;
 
     public SQLResponse() {
         this(new LinkedList<>(), new LinkedList<>(), 0, false, null);
@@ -232,9 +240,10 @@ public class SQLResponse implements Serializable {
 
     public void updateDataFetchTime(QueryContext queryContext) {
         // The dataFetchTime could come from:
-        // 1) from queryContext.getMetrics().getDataFetchTime(), in case of push-down, this is the time from local file cache (KylinCacheFileSystem)
+        // 1) from queryContext.getMetrics().getDataFetchTime(), in case of push-down,
+        //    this is the time from local file cache (KylinCacheFileSystem)
         // 2) from this.nativeRealizations, in case of index query, this is the time when segment is built
-        // We take the max of the above all.
+        //    We take the max of the above all.
 
         dataFetchTime = queryContext.getMetrics().getDataFetchTime();
 

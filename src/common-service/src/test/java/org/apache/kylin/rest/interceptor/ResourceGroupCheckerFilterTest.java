@@ -26,6 +26,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.junit.After;
 import org.junit.Assert;
@@ -42,6 +43,7 @@ public class ResourceGroupCheckerFilterTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() {
+        JobContextUtil.cleanUp();
         createTestMetadata();
     }
 

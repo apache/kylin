@@ -21,10 +21,11 @@ package org.apache.kylin.rest.config.initialize;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_INDEX_FAIL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_SEGMENT_FAIL;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_EXCEPTION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_REFRESH_CHECK_INDEX_FAIL;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,19 +47,21 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.manager.JobManager;
 import org.apache.kylin.job.model.JobParam;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -68,8 +71,6 @@ import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-//TODO need to be rewritten
-@Ignore
 public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     public static final String DEFAULT_PROJECT = "default";
@@ -84,20 +85,11 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         SparkJobFactoryUtils.initJobFactory();
         createTestMetadata();
         prepareSegment();
-        // startScheduler();
     }
 
-    //    void startScheduler() {
-    //        scheduler = NDefaultScheduler.getInstance(DEFAULT_PROJECT);
-    //        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-    //        if (!scheduler.hasStarted()) {
-    //            throw new RuntimeException("scheduler has not been started");
-    //        }
-    //    }
-
     @After
-    public void after() throws Exception {
-        // NDefaultScheduler.destroyInstance();
+    public void after() {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }
 
@@ -112,7 +104,9 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val oldLayouts = new ArrayList<>(df.getSegments().get(0).getLayoutsMap().values());
         update.setToUpdateSegs(oldSegs);
         update.setToRemoveLayouts(oldLayouts.get(0), oldLayouts.get(1));
-        dfm.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT).updateDataflow(update),
+                DEFAULT_PROJECT);
 
         // select some segments and indexes
         HashSet<String> relatedSegments = Sets.newHashSet();
@@ -135,17 +129,20 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testAddIndex_selectNoIndex() {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
 
-        val update = new NDataflowUpdate(df.getUuid());
-        val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
-        seg.setStatus(SegmentStatusEnum.READY);
-        update.setToUpdateSegs(seg);
-        update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg.getId(), 1L),
-                NDataLayout.newDataLayout(df, seg.getId(), 10001L), NDataLayout.newDataLayout(df, seg.getId(), 10002L));
-        dfm.updateDataflow(update);
+            val update = new NDataflowUpdate(df.getUuid());
+            val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+            seg.setStatus(SegmentStatusEnum.READY);
+            update.setToUpdateSegs(seg);
+            update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg.getId(), 1L),
+                    NDataLayout.newDataLayout(df, seg.getId(), 10001L),
+                    NDataLayout.newDataLayout(df, seg.getId(), 10002L));
+            return dfm.updateDataflow(update);
+        }, DEFAULT_PROJECT);
 
         jobManager.addIndexJob(new JobParam(MODEL_ID, "ADMIN"));
 
@@ -157,22 +154,24 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testAddIndex_ExcludeLockedIndex() {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
 
-        val update = new NDataflowUpdate(df.getUuid());
-        val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
-        seg.setStatus(SegmentStatusEnum.READY);
-        update.setToUpdateSegs(seg);
-        update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg.getId(), 1L),
-                NDataLayout.newDataLayout(df, seg.getId(), 10001L), NDataLayout.newDataLayout(df, seg.getId(), 10002L));
-        dfm.updateDataflow(update);
-
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        UnitOfWork.doInTransactionWithRetry(() -> indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
-            copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L), Collections.emptyMap());
-        }), MODEL_ID);
+            val update = new NDataflowUpdate(df.getUuid());
+            val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+            seg.setStatus(SegmentStatusEnum.READY);
+            update.setToUpdateSegs(seg);
+            update.setToAddOrUpdateLayouts(NDataLayout.newDataLayout(df, seg.getId(), 1L),
+                    NDataLayout.newDataLayout(df, seg.getId(), 10001L),
+                    NDataLayout.newDataLayout(df, seg.getId(), 10002L));
+            dfm.updateDataflow(update);
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            return indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
+                copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L));
+            });
+        }, DEFAULT_PROJECT);
 
         jobManager.addIndexJob(new JobParam(MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
@@ -191,7 +190,9 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val oldLayouts = new ArrayList<>(df.getSegments().get(0).getLayoutsMap().values());
         update.setToUpdateSegs(oldSegs);
         update.setToRemoveLayouts(oldLayouts.get(0), oldLayouts.get(1));
-        dfm.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(
+                () -> NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT).updateDataflow(update),
+                DEFAULT_PROJECT);
 
         HashSet<String> relatedSegments = Sets.newHashSet();
         df.getSegments().forEach(seg -> relatedSegments.add(seg.getId()));
@@ -215,13 +216,15 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         var df = dfm.getDataflow(MODEL_ID);
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        UnitOfWork.doInTransactionWithRetry(() -> indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
-            copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L), Collections.emptyMap());
-        }), MODEL_ID);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            return indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
+                copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L));
+            });
+        }, DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(df.getSegments().get(0), MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
-        val segmentResponse = new NDataSegmentResponse(df, df.getSegments().get(0), executables);
+        val segmentResponse = new NDataSegmentResponse(df, df.getSegments(), df.getSegments().get(0), executables);
         Assert.assertEquals(1, segmentResponse.getLockedIndexCount());
         Assert.assertEquals(18, getProcessLayout(executables.get(0)));
     }
@@ -231,13 +234,15 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         var df = dfm.getDataflow(MODEL_ID);
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        UnitOfWork.doInTransactionWithRetry(() -> indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
-            Set<Long> layouts = copyForWrite.getAllLayoutIds(false);
-            layouts.remove(20000000001L);
-            copyForWrite.removeLayouts(layouts, true, true);
-            copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L), Collections.emptyMap());
-        }), MODEL_ID);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            return indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
+                Set<Long> layouts = copyForWrite.getAllLayoutIds(false);
+                layouts.remove(20000000001L);
+                copyForWrite.removeLayouts(layouts, true, true);
+                copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L));
+            });
+        }, MODEL_ID);
         thrown.expect(KylinException.class);
         thrown.expectMessage(JOB_REFRESH_CHECK_INDEX_FAIL.getMsg());
         jobManager.refreshSegmentJob(new JobParam(df.getSegments().get(0), MODEL_ID, "ADMIN"));
@@ -246,15 +251,22 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRefreshJob() {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
 
-        val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+
+        NDataSegment seg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        }, DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(seg, MODEL_ID, "ADMIN"));
 
-        val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
+        NDataSegment seg2 = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
+        }, DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(seg2, MODEL_ID, "ADMIN"));
 
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
@@ -273,13 +285,13 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testRefreshJob_timeException() {
-
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
-
-        val seg = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        NDataSegment seg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        }, DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(seg, MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(1, executables.size());
@@ -291,14 +303,17 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testRefreshJob_emptyIndex() {
-        val dfManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val df = dfManager.getDataflow(MODEL_ID);
-        val update = new NDataflowUpdate(df.getUuid());
-        val seg = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
-        seg.setStatus(SegmentStatusEnum.READY);
-        update.setToUpdateSegs(seg);
-        dfManager.updateDataflow(update);
+        NDataSegment seg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            val df = dfManager.getDataflow(MODEL_ID);
+            val update = new NDataflowUpdate(df.getUuid());
+            val newSeg = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+            newSeg.setStatus(SegmentStatusEnum.READY);
+            update.setToUpdateSegs(newSeg);
+            dfManager.updateDataflow(update);
+            return newSeg;
+        }, DEFAULT_PROJECT);
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         jobManager.refreshSegmentJob(new JobParam(seg, MODEL_ID, "ADMIN"), true);
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
@@ -308,16 +323,19 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testMergeJob() {
-        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        List<NDataSegment> newSegments = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+            val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-03-01"), SegmentRange.dateToLong("" + "2012-05-01")));
+            return Arrays.asList(seg1, seg2);
+        }, DEFAULT_PROJECT);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
-        val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-03-01"), SegmentRange.dateToLong("" + "2012-05-01")));
-        jobManager.mergeSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
-        jobManager.mergeSegmentJob(new JobParam(seg2, MODEL_ID, "ADMIN"));
+        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+        jobManager.mergeSegmentJob(new JobParam(newSegments.get(0), MODEL_ID, "ADMIN"));
+        jobManager.mergeSegmentJob(new JobParam(newSegments.get(1), MODEL_ID, "ADMIN"));
 
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(2, executables.size());
@@ -340,16 +358,17 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val oldLayouts = new ArrayList<>(df.getSegments().get(0).getLayoutsMap().values());
         update.setToUpdateSegs(oldSegs);
         update.setToRemoveLayouts(oldLayouts.get(0), oldLayouts.get(1));
-        dfm.updateDataflow(update);
-
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        NDataSegment seg1 = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager manager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            NDataflow updated = manager.updateDataflow(update);
+            return manager.appendSegment(updated, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        }, DEFAULT_PROJECT);
         thrown.expect(KylinException.class);
         thrown.expectMessage(JOB_CREATE_CHECK_SEGMENT_FAIL.getMsg());
         jobManager.mergeSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
     }
 
-    /*
     @Test
     public void testMergeJob_notReadySegmentException() {
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
@@ -359,10 +378,6 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
                 SegmentRange.dateToLong("2012-09-01"), SegmentRange.dateToLong("" + "2012-10-01")));
         try {
-            scheduler.getContext().setReachQuotaLimit(false);
-            log.info("init scheduler, current quota limit state is {}", scheduler.getContext().isReachQuotaLimit());
-            log.info("start schedule, current kylin.storage.quota-in-giga-bytes is {}",
-                    KylinConfig.getInstanceFromEnv().getStorageQuotaSize());
             jobManager.mergeSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
             Assert.fail();
         } catch (KylinException e) {
@@ -370,21 +385,17 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         }
     }
 
-     */
-
-    /*
     @Test
     public void testMergeJob_timeEception() {
-        scheduler.getContext().setReachQuotaLimit(false);
-        log.info("init scheduler, current quota limit state is {}", scheduler.getContext().isReachQuotaLimit());
-        log.info("start schedule, current kylin.storage.quota-in-giga-bytes is {}",
-                KylinConfig.getInstanceFromEnv().getStorageQuotaSize());
         val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        NDataSegment seg1 = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+        }, DEFAULT_PROJECT);
+        
         jobManager.mergeSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(1, executables.size());
@@ -393,20 +404,21 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
         jobManager.mergeSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
     }
 
-     */
-
     @Test
     public void testAddSegmentJob_selectNoSegments() {
-        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        List<NDataSegment> newSegments = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+            val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-06-01"), SegmentRange.dateToLong("" + "2012-07-01")));
+            return Arrays.asList(seg1, seg2);
+        }, DEFAULT_PROJECT);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
-        val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-06-01"), SegmentRange.dateToLong("" + "2012-07-01")));
-        jobManager.addSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
-        jobManager.addSegmentJob(new JobParam(seg2, MODEL_ID, "ADMIN"));
+        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+        jobManager.addSegmentJob(new JobParam(newSegments.get(0), MODEL_ID, "ADMIN"));
+        jobManager.addSegmentJob(new JobParam(newSegments.get(1), MODEL_ID, "ADMIN"));
 
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(2, executables.size());
@@ -418,19 +430,22 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testAddSegmentJob_selectSegments() {
-        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        List<NDataSegment> newSegs = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+            val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-06-01"), SegmentRange.dateToLong("" + "2012-07-01")));
+            return Arrays.asList(seg1, seg2);
+        }, DEFAULT_PROJECT);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
-        val seg2 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-06-01"), SegmentRange.dateToLong("" + "2012-07-01")));
         HashSet<Long> targetLayouts = new HashSet<>();
         targetLayouts.add(1L);
         targetLayouts.add(10001L);
-        jobManager.addSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN", targetLayouts));
-        jobManager.addSegmentJob(new JobParam(seg2, MODEL_ID, "ADMIN", targetLayouts));
+        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+        jobManager.addSegmentJob(new JobParam(newSegs.get(0), MODEL_ID, "ADMIN", targetLayouts));
+        jobManager.addSegmentJob(new JobParam(newSegs.get(1), MODEL_ID, "ADMIN", targetLayouts));
 
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(2, executables.size());
@@ -442,32 +457,36 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testAddSegmentJob_onlyIncludeLockedIndex() {
-        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        UnitOfWork.doInTransactionWithRetry(() -> indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
-            Set<Long> layouts = copyForWrite.getAllLayoutIds(false);
-            layouts.remove(20000000001L);
-            copyForWrite.removeLayouts(layouts, true, true);
-            copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L), Collections.emptyMap());
-        }), MODEL_ID);
+        NDataSegment seg1 = UnitOfWork.doInTransactionWithRetry(() -> {
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            indexManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
+                Set<Long> layouts = copyForWrite.getAllLayoutIds(false);
+                layouts.remove(20000000001L);
+                copyForWrite.removeLayouts(layouts, true, true);
+                copyForWrite.markWhiteIndexToBeDelete(MODEL_ID, Sets.newHashSet(20000000001L));
+            });
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+        }, DEFAULT_PROJECT);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
         thrown.expect(KylinException.class);
         thrown.expectMessage(JOB_CREATE_CHECK_INDEX_FAIL.getMsg());
+        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         jobManager.addSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
     }
 
     @Test
     public void testAddSegmentJob_timeException() {
-        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        var df = dfm.getDataflow(MODEL_ID);
+        NDataSegment seg1 = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfm = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            var df = dfm.getDataflow(MODEL_ID);
+            return dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+        }, DEFAULT_PROJECT);
 
-        val seg1 = dfm.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-05-01"), SegmentRange.dateToLong("" + "2012-06-01")));
+        val jobManager = JobManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         jobManager.addSegmentJob(new JobParam(seg1, MODEL_ID, "ADMIN"));
         List<AbstractExecutable> executables = getRunningExecutables(DEFAULT_PROJECT, MODEL_ID);
         Assert.assertEquals(1, executables.size());
@@ -478,37 +497,40 @@ public class JobSchedulerTest extends NLocalFileMetadataTestCase {
     }
 
     public void prepareSegment() {
-        val dfManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val df = dfManager.getDataflow(MODEL_ID);
-        val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val dfManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
+            val df = dfManager.getDataflow(MODEL_ID);
+            val indexManager = NIndexPlanManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
 
-        val update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dfManager.updateDataflow(update);
+            val update = new NDataflowUpdate(df.getUuid());
+            update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
+            dfManager.updateDataflow(update);
 
-        val seg1 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
-        val seg2 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
-        val seg3 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-03-01"), SegmentRange.dateToLong("" + "2012-04-01")));
-        val seg4 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-04-01"), SegmentRange.dateToLong("" + "2012-05-01")));
-        seg1.setStatus(SegmentStatusEnum.READY);
-        seg2.setStatus(SegmentStatusEnum.READY);
-        seg3.setStatus(SegmentStatusEnum.READY);
-        seg4.setStatus(SegmentStatusEnum.READY);
-        val update2 = new NDataflowUpdate(df.getUuid());
-        update2.setToUpdateSegs(seg1, seg2, seg3, seg4);
-        List<NDataLayout> layouts = Lists.newArrayList();
-        indexManager.getIndexPlan(MODEL_ID).getAllLayouts().forEach(layout -> {
-            layouts.add(NDataLayout.newDataLayout(df, seg1.getId(), layout.getId()));
-            layouts.add(NDataLayout.newDataLayout(df, seg2.getId(), layout.getId()));
-            layouts.add(NDataLayout.newDataLayout(df, seg3.getId(), layout.getId()));
-            layouts.add(NDataLayout.newDataLayout(df, seg4.getId(), layout.getId()));
-        });
-        update2.setToAddOrUpdateLayouts(layouts.toArray(new NDataLayout[0]));
-        dfManager.updateDataflow(update2);
+            val seg1 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("" + "2012-02-01")));
+            val seg2 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-02-01"), SegmentRange.dateToLong("" + "2012-03-01")));
+            val seg3 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-03-01"), SegmentRange.dateToLong("" + "2012-04-01")));
+            val seg4 = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-04-01"), SegmentRange.dateToLong("" + "2012-05-01")));
+            seg1.setStatus(SegmentStatusEnum.READY);
+            seg2.setStatus(SegmentStatusEnum.READY);
+            seg3.setStatus(SegmentStatusEnum.READY);
+            seg4.setStatus(SegmentStatusEnum.READY);
+            val update2 = new NDataflowUpdate(df.getUuid());
+            update2.setToUpdateSegs(seg1, seg2, seg3, seg4);
+            List<NDataLayout> layouts = Lists.newArrayList();
+            indexManager.getIndexPlan(MODEL_ID).getAllLayouts().forEach(layout -> {
+                layouts.add(NDataLayout.newDataLayout(df, seg1.getId(), layout.getId()));
+                layouts.add(NDataLayout.newDataLayout(df, seg2.getId(), layout.getId()));
+                layouts.add(NDataLayout.newDataLayout(df, seg3.getId(), layout.getId()));
+                layouts.add(NDataLayout.newDataLayout(df, seg4.getId(), layout.getId()));
+            });
+            update2.setToAddOrUpdateLayouts(layouts.toArray(new NDataLayout[0]));
+            dfManager.updateDataflow(update2);
+            return true;
+        }, DEFAULT_PROJECT);
     }
 
     private List<AbstractExecutable> getRunningExecutables(String project, String model) {

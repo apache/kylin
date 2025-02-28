@@ -1,0 +1,214 @@
+{
+  "uuid" : "013988a4-15c2-4f27-a923-ccdeed8608f9",
+  "last_modified" : 0,
+  "create_time" : 1630401560968,
+  "version" : "4.0.0.0",
+  "name" : "KYLIN_CATEGORY_GROUPINGS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "comment" : "Category ID, PK",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "LEAF_CATEG_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "SITE_ID",
+    "datatype" : "integer",
+    "comment" : "Site ID, PK",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "CATEG_BUSN_MGR",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "CATEG_BUSN_UNIT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "REGN_CATEG",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "USER_DEFINED_FIELD1",
+    "datatype" : "varchar(4096)",
+    "comment" : "User Defined Field1",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "USER_DEFINED_FIELD3",
+    "datatype" : "varchar(4096)",
+    "comment" : "User Defined Field3",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "KYLIN_GROUPINGS_CRE_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "KYLIN_GROUPINGS_UPD_DATE",
+    "datatype" : "varchar(4096)",
+    "comment" : "Last Updated Date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "KYLIN_GROUPINGS_CRE_USER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "KYLIN_GROUPINGS_UPD_USER",
+    "datatype" : "varchar(4096)",
+    "comment" : "Last Updated User",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "META_CATEG_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "META_CATEG_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "Level1 Category",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "CATEG_LVL2_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "CATEG_LVL3_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "CATEG_LVL4_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "CATEG_LVL5_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "CATEG_LVL6_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "CATEG_LVL7_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "CATEG_LVL2_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "Level2 Category",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "CATEG_LVL3_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "Level3 Category",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "CATEG_LVL4_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "CATEG_LVL5_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "CATEG_LVL6_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "26",
+    "name" : "CATEG_LVL7_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "27",
+    "name" : "CATEG_FLAGS",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "28",
+    "name" : "ADULT_CATEG_YN",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "29",
+    "name" : "DOMAIN_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "30",
+    "name" : "USER_DEFINED_FIELD5",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "31",
+    "name" : "VCS_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "32",
+    "name" : "GCS_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "33",
+    "name" : "MOVE_TO",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "34",
+    "name" : "SAP_CATEGORY_ID",
+    "datatype" : "decimal(10,0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "35",
+    "name" : "SRC_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "36",
+    "name" : "BSNS_VRTCL_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "project" : "heterogeneous_segment_2"
+}

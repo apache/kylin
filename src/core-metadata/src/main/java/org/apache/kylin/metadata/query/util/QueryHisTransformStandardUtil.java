@@ -23,15 +23,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.metadata.query.NativeQueryRealization;
+import org.apache.kylin.common.NativeQueryRealization;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryHistoryInfoResponse;
 import org.apache.kylin.metadata.query.QueryHistoryResponse;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryRealization;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QueryHisTransformStandardUtil {
 
@@ -45,7 +44,7 @@ public class QueryHisTransformStandardUtil {
         if (queryHistories.get(QUERY_HISTORIES) == null) {
             return data;
         }
-        List<QueryHistory> queryHistoriesList = (List<QueryHistory>)queryHistories.get(QUERY_HISTORIES);
+        List<QueryHistory> queryHistoriesList = (List<QueryHistory>) queryHistories.get(QUERY_HISTORIES);
         for (QueryHistory qh : queryHistoriesList) {
             QueryHistoryResponse history = new QueryHistoryResponse();
             history.setQueryRealizations(qh.getQueryRealizations());
@@ -78,9 +77,8 @@ public class QueryHisTransformStandardUtil {
         List<QueryRealization> queryRealizations = Lists.newArrayList();
         if (realizations != null) {
             for (NativeQueryRealization r : realizations) {
-                QueryRealization qr = new QueryRealization(
-                        r.getModelId(), r.getModelAlias(), r.getLayoutId(), r.getIndexType(),
-                        r.isPartialMatchModel(), r.isValid(), r.getSnapshots());
+                QueryRealization qr = new QueryRealization(r.getModelId(), r.getModelAlias(), r.getLayoutId(),
+                        r.getType(), r.getStorageType(), r.isPartialMatchModel(), r.isValid(), r.getLookupTables());
                 queryRealizations.add(qr);
             }
         }
@@ -88,13 +86,10 @@ public class QueryHisTransformStandardUtil {
     }
 
     public static QueryHistoryInfoResponse transformQueryHisInfo(QueryHistoryInfo qh) {
-        if (qh == null) {
-            return null;
-        }
-        QueryHistoryInfoResponse queryHistoryInfoResponse = new QueryHistoryInfoResponse(
-                qh.isExactlyMatch(), qh.getScanSegmentNum(), qh.getState(), qh.isExecutionError(), qh.getErrorMsg(),
-                qh.getQuerySnapshots(), qh.getRealizationMetrics(), qh.getTraces(), qh.getCacheType(), qh.getQueryMsg());
-        return queryHistoryInfoResponse;
+        return qh == null ? null
+                : new QueryHistoryInfoResponse(qh.isExactlyMatch(), qh.getScanSegmentNum(), qh.getState(),
+                        qh.isExecutionError(), qh.getErrorMsg(), qh.getQuerySnapshots(), qh.getRealizationMetrics(),
+                        qh.getTraces(), qh.getCacheType(), qh.getQueryMsg());
     }
 
     @SuppressWarnings("unchecked")

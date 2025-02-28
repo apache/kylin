@@ -54,13 +54,13 @@ public class IntDimEnc extends DimensionEncoding implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new IntDimEnc(Integer.parseInt(args[0]));
         }
-    };
+    }
 
     // ============================================================================
 
     private int fixedLen;
 
-    transient private int avoidVerbose = 0;
+    private transient int avoidVerbose = 0;
 
     //no-arg constructor is required for Externalizable
     public IntDimEnc() {

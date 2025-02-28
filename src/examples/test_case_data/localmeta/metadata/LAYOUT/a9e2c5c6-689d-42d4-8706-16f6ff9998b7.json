@@ -1,0 +1,18 @@
+{
+  "uuid" : "a9e2c5c6-689d-42d4-8706-16f6ff9998b7",
+  "last_modified" : 1512113416003,
+  "version" : "3.0.0.0",
+  "dataflow" : "cb596712-3a09-46f8-aea1-988b43fe9b6c",
+  "segment_id" : 0,
+  "layout_instances" : [ {
+    "layout_id" : 1,
+    "status" : "READY",
+    "build_job_id" : 0,
+    "rows" : 0,
+    "byte_size" : 99,
+    "source_rows" : 0,
+    "source_byte_size" : 0,
+    "create_time" : 1538323200000
+  } ],
+  "project" : "default"
+}

@@ -18,14 +18,14 @@
 
 package org.apache.kylin.cluster
 
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
-import org.apache.kylin.cluster.parser.SchedulerParserFactory
-import org.apache.kylin.engine.spark.utils.StorageUtils
 import org.apache.commons.collections.CollectionUtils
 import org.apache.hadoop.yarn.api.records.{ApplicationId, ApplicationReport, QueueInfo, YarnApplicationState}
 import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.hadoop.yarn.exceptions.YarnException
+import org.apache.kylin.cluster.parser.SchedulerParserFactory
+import org.apache.kylin.engine.spark.utils.StorageUtils
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 

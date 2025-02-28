@@ -1,0 +1,39 @@
+{
+  "name" : "1613957120000_1613957130000",
+  "create_time_utc" : 1613957130000,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$KafkaOffsetPartitionedSegmentRange",
+    "source_offset_start" : 1613957120000,
+    "source_offset_end" : 1613957130000,
+    "source_partition_offset_start" : {
+      "0" : 200,
+      "1" : 200,
+      "2" : 200
+    },
+    "source_partition_offset_end" : {
+      "0" : 300,
+      "1" : 300,
+      "2" : 300
+    }
+  },
+  "timeRange" : null,
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : -1,
+  "source_bytes_size" : -1,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "uuid" : "c380dd2a-43b8-4268-b73d-2a5f76236632",
+  "model_uuid" : "e78a89dd-847f-4574-8afa-8768b4228b72",
+  "project" : "streaming_test"
+}

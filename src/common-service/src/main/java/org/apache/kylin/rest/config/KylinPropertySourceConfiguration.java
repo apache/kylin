@@ -21,7 +21,9 @@ import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.Unsafe;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.session.StoreType;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -35,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 public class KylinPropertySourceConfiguration implements EnvironmentPostProcessor, Ordered {
 
     private static final String SYSTEM_PROPERTY_PREFIX = "kylin.system.property.";
+    private static final String SPRING_SESSION_CLEAN_CRON = "spring.session.jdbc.cleanup-cron";
+    public static final String SPRING_SESSION_JDBC_CLEANUP_FLAG = "spring.session.jdbc.cleanup-flag";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -61,6 +65,7 @@ public class KylinPropertySourceConfiguration implements EnvironmentPostProcesso
         };
 
         setSystemProperty(kylinConfig.exportToProperties());
+        discardJDBCCleanSessionProperties(kylinConfig);
         propertySources.addAfter("systemProperties", source);
     }
 
@@ -68,7 +73,7 @@ public class KylinPropertySourceConfiguration implements EnvironmentPostProcesso
         for (String propertyName : properties.stringPropertyNames()) {
             if (propertyName.startsWith(SYSTEM_PROPERTY_PREFIX)) {
                 String propertyValue = properties.getProperty(propertyName);
-                System.setProperty(propertyName.replaceFirst(SYSTEM_PROPERTY_PREFIX, ""), propertyValue);
+                Unsafe.setProperty(propertyName.replaceFirst(SYSTEM_PROPERTY_PREFIX, ""), propertyValue);
             }
         }
     }
@@ -76,5 +81,18 @@ public class KylinPropertySourceConfiguration implements EnvironmentPostProcesso
     @Override
     public int getOrder() {
         return ConfigDataEnvironmentPostProcessor.ORDER + 1020;
+    }
+
+    /**
+     * when spring store type is jdbc, we should do following:
+     * 1. use {@link org.apache.kylin.rest.service.task.SpringSessionCleanScheduler} rather than spring session cleanup
+     * 2. discard spring session cleanup task
+     */
+    public void discardJDBCCleanSessionProperties(KylinConfig kylinConfig) {
+        if (kylinConfig.getSpringStoreType().equalsIgnoreCase(StoreType.JDBC.toString())) {
+            log.info("Discard JDBC clean session properties.");
+            Unsafe.setProperty(SPRING_SESSION_CLEAN_CRON, "-");
+            Unsafe.setProperty(SPRING_SESSION_JDBC_CLEANUP_FLAG, "false");
+        }
     }
 }

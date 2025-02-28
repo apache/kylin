@@ -20,8 +20,8 @@ package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.SegmentBuildJob
-import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.engine.spark.job.stage.build.BuildDict
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
+import org.apache.kylin.engine.spark.job.step.build.BuildDict
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
@@ -64,11 +64,11 @@ class TestBuildDictLockConflict extends SparderBaseFunSuite with SharedSparkSess
     val spiedTracker = Mockito.spy(spark.sparkContext.statusTracker)
     val spiedSegmentJob = Mockito.spy(classOf[SegmentBuildJob])
     Mockito.doAnswer(_ => spiedSparkSession).when(spiedSegmentJob).getSparkSession
-    val buildParam = new BuildParam()
-    buildParam.setSpanningTree(toBuildTree)
-    buildParam.setFlatTableDesc(flatTableDesc)
+    val params = new ParamPropagation()
+    params.setSpanningTree(toBuildTree)
+    params.setFlatTableDesc(flatTableDesc)
 
-    val flatTable = new BuildDict(spiedSegmentJob, seg, buildParam) {
+    val flatTable = new BuildDict(spiedSegmentJob, seg, params) {
       override def execute(): Unit = {
         // do nothing.
       }

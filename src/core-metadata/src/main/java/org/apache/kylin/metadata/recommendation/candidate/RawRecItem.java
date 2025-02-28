@@ -23,19 +23,19 @@ import static org.apache.commons.lang3.time.DateUtils.MILLIS_PER_DAY;
 import java.io.IOException;
 import java.util.Locale;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.recommendation.entity.CCRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.annotation.Clarification;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +49,7 @@ import lombok.val;
 public class RawRecItem {
     public static final String IMPORTED = "IMPORTED";
     public static final String QUERY_HISTORY = "QUERY_HISTORY";
+    public static final String INDEX_PLANNER = "INDEX_PLANNER";
 
     private static final String TYPE_ERROR_FORMAT = "incorrect raw recommendation type(%d), type value must from 1 to 4 included";
     private static final String STATE_ERROR_FORMAT = "incorrect raw recommendation state(%d), type value must from 0 to 4 included";

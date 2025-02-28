@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.util;
 
+import java.util.Locale;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
@@ -44,7 +46,9 @@ public class QueryInterruptChecker {
                     && SlowQueryDetector.getRunningQueries().get(Thread.currentThread()).isStopByUser()) {
                 throw new UserStopQueryException("");
             }
-
+            if (QueryContext.current().getQueryTagInfo().isErrInterrupted()) {
+                throw new KylinRuntimeException(QueryContext.current().getQueryTagInfo().getInterruptReason());
+            }
             QueryContext.current().getQueryTagInfo().setTimeout(true);
             throw new KylinTimeoutException("The query exceeds the set time limit of "
                     + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds() + "s. " + stepInfo);
@@ -70,18 +74,18 @@ public class QueryInterruptChecker {
         if (entry != null) {
             if (entry.isStopByUser() && entry.getPlannerCancelFlag().isCancelRequested()
                     && Thread.currentThread().isInterrupted()) {
-                throw new UserStopQueryException(String.format("Manually stop the query %s. Caused: %s. Step: %s",
-                        entry.getQueryId(), cause, step));
+                throw new UserStopQueryException(String.format(Locale.ROOT,
+                        "Manually stop the query %s. Caused: %s. Step: %s", entry.getQueryId(), cause, step));
             }
 
-            if (entry.getPlannerCancelFlag().isCancelRequested() && Thread.currentThread().isInterrupted()) {
+            if (entry.getPlannerCancelFlag().isCancelRequested() && entry.isTimeoutStop) {
                 QueryContext.current().getQueryTagInfo().setTimeout(true);
-                throw new KylinTimeoutException(String.format("Run out of time of the query %s. Caused: %s. Step: %s",
-                        entry.getQueryId(), cause, step));
+                throw new KylinTimeoutException(String.format(Locale.ROOT,
+                        "Run out of time of the query %s. Caused: %s. Step: %s", entry.getQueryId(), cause, step));
             }
 
             if (entry.isStopByUser() || entry.getPlannerCancelFlag().isCancelRequested()) {
-                throw new UserStopQueryException(String.format(
+                throw new UserStopQueryException(String.format(Locale.ROOT,
                         "You are trying to cancel the query %s with inconsistent states:"
                                 + " [isStopByUser=%s, isCancelRequested=%s]! Caused: %s. Step: %s",
                         entry.getQueryId(), entry.isStopByUser(), entry.getPlannerCancelFlag().isCancelRequested(),
@@ -89,7 +93,7 @@ public class QueryInterruptChecker {
             }
         }
         if (Thread.currentThread().isInterrupted()) {
-            throw new InterruptedException(String.format("Interrupted on thread %s. Caused: %s. Step: %s",
+            throw new InterruptedException(String.format(Locale.ROOT, "Interrupted on thread %s. Caused: %s. Step: %s",
                     Thread.currentThread().getName(), cause, step));
         }
     }

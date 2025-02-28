@@ -29,7 +29,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.guava30.shaded.common.base.Charsets;
 import org.apache.kylin.guava30.shaded.common.hash.Hashing;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,6 @@ import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigB
 import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.zookeeper.discovery.ZookeeperInstance;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
@@ -60,14 +58,13 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import lombok.val;
 
 @ImportResource(locations = { "applicationContext.xml", "kylinSecurity.xml" })
-@SpringBootApplication(scanBasePackages="org.apache.kylin", excludeName = "io.kyligence.kap.secondstorage.management.ManagementConfig")
+@SpringBootApplication(scanBasePackages = "org.apache.kylin")
 @EnableScheduling
 @EnableAsync
 @EnableCaching
 @EnableDiscoveryClient
 @LoadBalancerClient(name = "spring-boot-provider", configuration = org.apache.kylin.rest.LoadBalanced.class)
 @EnableSpringHttpSession
-@EnableFeignClients(basePackages = { "io.kyligence", "org.apache.kylin" })
 @MapperScan("org.apache.kylin.job.mapper")
 public class BootstrapServer implements ISmartApplicationListenerForSystem {
 
@@ -147,7 +144,6 @@ public class BootstrapServer implements ISmartApplicationListenerForSystem {
             logger.info("init backend end...");
         } else if (event instanceof ContextClosedEvent) {
             logger.info("Stop Kylin 5 node...");
-            EpochManager.getInstance().releaseOwnedEpochs();
         }
     }
 

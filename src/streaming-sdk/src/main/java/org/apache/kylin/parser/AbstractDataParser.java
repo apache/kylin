@@ -34,7 +34,8 @@ import lombok.extern.slf4j.Slf4j;
  * 2. Initialization once is done in a parameterless construct
  * 3. Initialization every data in before() method
  * 4. Check the parsed data in after() method
- * Indicates that the current data is incorrect and needs to be skipped in the construction. Please throw an exception in the appropriate position
+ * Indicates that the current data is incorrect and needs to be skipped in the construction.
+ * Please throw an exception in the appropriate position
  */
 @Slf4j
 public abstract class AbstractDataParser<I> implements Serializable {

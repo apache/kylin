@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+  "model_uuid" : "6051780b-2b91-81e7-94ba-d7e18e2aec1b",
+  "project" : "test_agg_pushdown",
+  "uuid" : "f487f4c6-816d-f648-fe6f-c4b33c428832"
+}

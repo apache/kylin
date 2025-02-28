@@ -23,14 +23,14 @@ import org.apache.commons.io.FileUtils
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{DataFrame, SQLContext, SQLImplicits, SparkSession}
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
+import org.apache.spark.sql.{DataFrame, SQLContext, SQLImplicits, SparkSession}
 import org.apache.spark.util.Utils
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 trait SharedSparkSession
-    extends BeforeAndAfterAll
+  extends BeforeAndAfterAll
     with BeforeAndAfterEach
     with Logging {
   self: Suite =>
@@ -59,14 +59,28 @@ trait SharedSparkSession
     // ${hive.scratch.dir.permission}. To resolve the permission issue, the simplest way is to
     // delete it. Later, it will be re-created with the right permission.
     val scratchDir = Utils.createTempDir()
-    if(scratchDir.exists()) {
+    if (scratchDir.exists()) {
       FileUtils.deleteDirectory(scratchDir)
     }
     conf.set(ConfVars.SCRATCHDIR.varname, scratchDir.toString)
+    cleanupAnyExistingSession()
     initSpark()
   }
 
-   def initSpark(): Unit = {
+  private[spark] def cleanupAnyExistingSession(): Unit = {
+    var session = SparkSession.getActiveSession
+    if (session.isEmpty) {
+      session = SparkSession.getDefaultSession
+    }
+    if (session.isDefined) {
+      session.get.stop()
+      SparkSession.clearActiveSession()
+      SparkSession.clearDefaultSession()
+    }
+  }
+
+  def initSpark(): Unit = {
+    GlutenTestConfig.configGluten(conf)
     _spark = SparkSession.builder
       .master(master)
       .appName(getClass.getSimpleName)
@@ -118,9 +132,10 @@ trait SharedSparkSession
   def sql(sql: String): DataFrame = {
     spark.sql(sql)
   }
+
   /**
-    * Drops global temporary view `viewNames` after calling `f`.
-    */
+   * Drops global temporary view `viewNames` after calling `f`.
+   */
   protected def withGlobalTempView(viewNames: String*)(f: => Unit): Unit = {
     try f finally {
       // If the test failed part way, we don't want to mask the failure by failing to remove
@@ -132,8 +147,8 @@ trait SharedSparkSession
   }
 
   /**
-    * Drops table `tableName` after calling `f`.
-    */
+   * Drops table `tableName` after calling `f`.
+   */
   protected def withTable(tableNames: String*)(f: => Unit): Unit = {
     try f finally {
       tableNames.foreach { name =>
@@ -143,8 +158,8 @@ trait SharedSparkSession
   }
 
   /**
-    * Drops view `viewName` after calling `f`.
-    */
+   * Drops view `viewName` after calling `f`.
+   */
   protected def withView(viewNames: String*)(f: => Unit): Unit = {
     try f finally {
       viewNames.foreach { name =>

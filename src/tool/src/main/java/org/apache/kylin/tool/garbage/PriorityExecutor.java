@@ -18,10 +18,6 @@
 
 package org.apache.kylin.tool.garbage;
 
-import lombok.EqualsAndHashCode;
-import org.apache.kylin.common.util.DaemonThreadFactory;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -29,6 +25,11 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.kylin.common.util.DaemonThreadFactory;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+
+import lombok.EqualsAndHashCode;
 
 public class PriorityExecutor extends ThreadPoolExecutor {
 

@@ -18,16 +18,15 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.constant.Constants.CORE_META_DIR;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.METADATA_BACKUP_IS_IN_PROGRESS;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.SYSTEM_IN_METADATA_RECOVER;
-import static org.apache.kylin.common.persistence.transaction.UnitOfWork.GLOBAL_UNIT;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -57,11 +56,13 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.tool.CancelHook;
 import org.apache.kylin.tool.FavoriteRuleTool;
 import org.apache.kylin.tool.JobInfoTool;
-import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.QueryHistoryOffsetTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Service("opsService")
 public class OpsService {
@@ -72,30 +73,32 @@ public class OpsService {
     public static final String SYSTEM_LEVEL_METADATA_BACKUP_DIR_NAME = "_system_level_metadata_backup";
     public static final String PROJECT_LEVEL_METADATA_BACKUP_DIR_NAME = "_project_level_metadata_backup";
     public static final String BACKUP_STATUS = "_backup_status";
-    public static final String _GLOBAL = GLOBAL_UNIT;
-    public static final String CORE_META_DIR = "core_meta";
-    public static final String META_BACKUP_PATH =
-            KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + META_BACKUP_DIR;
-    public static final String GLOBAL_METADATA_BACKUP_PATH =
-            META_BACKUP_PATH + "/" + SYSTEM_LEVEL_METADATA_BACKUP_DIR_NAME;
-    public static final String PROJECT_METADATA_BACKUP_PATH =
-            META_BACKUP_PATH + "/" + PROJECT_LEVEL_METADATA_BACKUP_DIR_NAME;
-    public static int defaultStatusReadRetryTime = 5;
+    private static final String PATH_SEP = "/";
+    public static final String META_BACKUP_PATH = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
+            + META_BACKUP_DIR;
+    public static final String GLOBAL_METADATA_BACKUP_PATH = META_BACKUP_PATH + PATH_SEP
+            + SYSTEM_LEVEL_METADATA_BACKUP_DIR_NAME;
+    public static final String PROJECT_METADATA_BACKUP_PATH = META_BACKUP_PATH + PATH_SEP
+            + PROJECT_LEVEL_METADATA_BACKUP_DIR_NAME;
+    private static int defaultStatusReadRetryTime = 5;
+
+    public static void resetStatusReadRetryTime(int times) {
+        defaultStatusReadRetryTime = times;
+    }
 
     public static String getMetaBackupStoreDir(String project) {
-        if (project == null || project.equals(_GLOBAL)) {
+        if (project == null || project.equals(UnitOfWork.GLOBAL_UNIT)) {
             return GLOBAL_METADATA_BACKUP_PATH;
         } else {
-            return PROJECT_METADATA_BACKUP_PATH + "/" + project;
+            return PROJECT_METADATA_BACKUP_PATH + PATH_SEP + project;
         }
     }
 
     public String backupMetadata(String project) {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         String username = AclPermissionUtil.getCurrentUsername();
-        MetadataBackupOperator metadataBackupOperator = new MetadataBackupOperator(getMetaBackupStoreDir(project),
-                fs, username, project);
-        return metadataBackupOperator.startBackup();
+        MetadataBackup metadataBackup = new MetadataBackup(getMetaBackupStoreDir(project), fs, username, project);
+        return metadataBackup.startBackup();
     }
 
     public static List<MetadataBackupResponse> getMetadataBackupList(String project) throws IOException {
@@ -106,14 +109,14 @@ public class OpsService {
         if (!fs.exists(path)) {
             return res;
         }
-        for (FileStatus fileStatu: fs.listStatus(path)) {
+        for (FileStatus fileStatu : fs.listStatus(path)) {
             if (fileStatu.isDirectory()) {
-                Path statusPath = new Path(fileStatu.getPath().toString() + "/" + BACKUP_STATUS);
+                Path statusPath = new Path(fileStatu.getPath().toString() + PATH_SEP + BACKUP_STATUS);
                 MetadataBackupResponse response = new MetadataBackupResponse();
                 response.setPath(fileStatu.getPath().toUri().toString());
                 if (fs.exists(statusPath)) {
-                    MetadataBackupStatuInfo backupStatuInfo =
-                            getMetadataStatusInfoWithRetry(statusPath, fs, defaultStatusReadRetryTime);
+                    MetadataBackupStatusInfo backupStatuInfo = getMetadataStatusInfoWithRetry(statusPath, fs,
+                            defaultStatusReadRetryTime);
                     response.setStatus(backupStatuInfo.getStatus());
                     response.setSize(backupStatuInfo.getSize());
                     response.setOwner(backupStatuInfo.getOwner());
@@ -124,26 +127,28 @@ public class OpsService {
         return res;
     }
 
-    public static MetadataBackupStatuInfo getMetadataStatusInfoWithRetry(Path statusPath, FileSystem fs, int retryTime) {
-        MetadataBackupStatuInfo metadataBackupStatuInfo = new MetadataBackupStatuInfo();
+    public static MetadataBackupStatusInfo getMetadataStatusInfoWithRetry(Path statusPath, FileSystem fs,
+            int retryTime) {
+        MetadataBackupStatusInfo metadataBackupStatusInfo = new MetadataBackupStatusInfo();
         do {
             try (FSDataInputStream fis = fs.open(statusPath)) {
                 String value = fis.readUTF();
-                 metadataBackupStatuInfo = JsonUtil.readValue(value, MetadataBackupStatuInfo.class);
-                 return metadataBackupStatuInfo;
+                metadataBackupStatusInfo = JsonUtil.readValue(value, MetadataBackupStatusInfo.class);
+                return metadataBackupStatusInfo;
             } catch (Exception e) {
-                retryTime--;
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    log.error(e.getMessage(), e);
-                    Thread.currentThread().interrupt();
-                }
                 log.error(e.getMessage(), e);
-                metadataBackupStatuInfo.setStatus(MetadataBackupStatu.UNKNOWN);
+                metadataBackupStatusInfo.setStatus(MetadataBackupStatus.UNKNOWN);
+                if (--retryTime >= 0) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException ex) {
+                        log.error(e.getMessage(), e);
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
         } while (retryTime >= 0);
-        return metadataBackupStatuInfo;
+        return metadataBackupStatusInfo;
     }
 
     public static String deleteMetadataBackup(List<String> pathStrs, String project) throws IOException {
@@ -184,16 +189,16 @@ public class OpsService {
         return pathStr + " path not exist";
     }
 
-    public void cancelAndDeleteMetadataBackup(String rootPath, String project) throws IOException, InterruptedException, ExecutionException {
-        MetadataBackupOperator.cancelAndAsyncDeleteBackup(rootPath, project);
+    public void cancelAndDeleteMetadataBackup(String rootPath, String project) throws IOException {
+        MetadataBackup.cancelAndAsyncDeleteBackup(rootPath, project);
     }
 
-    public String doMetadataRestore(String path, String project, boolean afterTruncate) {
+    public String restoreMetadata(String path, String project, boolean afterTruncate) {
         if (project == null) {
-            project = _GLOBAL;
+            project = UnitOfWork.GLOBAL_UNIT;
         }
-        MetadataRestoreOperator operator = new MetadataRestoreOperator(path, project, afterTruncate);
-        return operator.submitMetadataRestore();
+        MetadataRestore metadataRestore = new MetadataRestore(path, project, afterTruncate);
+        return MetadataRestore.submitMetadataRestore(metadataRestore);
     }
 
     public MetadataRestoreTask.MetadataRestoreStatus getMetadataRestoreStatus(String uuid, String project) {
@@ -202,54 +207,54 @@ public class OpsService {
         }
         AsyncTaskManager taskManager = AsyncTaskManager.getInstance(project);
         AbstractAsyncTask asyncTask = taskManager.get(AsyncTaskManager.METADATA_RECOVER_TASK, uuid);
-        if (asyncTask == null){
+        if (asyncTask == null) {
             return null;
         } else {
             return ((MetadataRestoreTask) asyncTask).getStatus();
         }
     }
 
-    public boolean hasMetadataRestoreRunning() {
-        return MetadataRestoreOperator.hasMetadataRestoreRunning();
-    }
+    @Getter
+    public static class MetadataBackup {
+        public static final Logger log = LoggerFactory.getLogger(MetadataBackup.class);
 
-    public static class MetadataBackupOperator {
-        public static final Logger log = LoggerFactory.getLogger(MetadataBackupOperator.class);
-        public static final Map<String, Pair<Future, MetadataBackupOperator>> runningTask = new ConcurrentHashMap<>();
-        private static final ExecutorService executor = Executors.newCachedThreadPool();
+        private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+        @Getter
+        protected static final Map<String, Pair<Future, MetadataBackup>> runningTask = new ConcurrentHashMap<>();
 
-        private FileSystem fs;
-        private String rootPath;
-        private Path statusPath;
-        private MetadataBackupStatuInfo statuInfo;
-        private String project;
+        private final FileSystem fs;
+        private final String rootPath;
+        private final Path statusPath;
+        private final MetadataBackupStatusInfo statusInfo;
+        private final String project;
         private String projectMetadataBackupKey;
 
         private MetadataToolHelper coreMetadataTool;
         private JobInfoTool jobInfoTool;
+        @Setter
         private QueryHistoryOffsetTool queryHistoryOffsetTool;
         private FavoriteRuleTool favoriteRuleTool;
 
-        public MetadataBackupOperator(String dir, FileSystem fs, String user, String project) {
+        public MetadataBackup(String dir, FileSystem fs, String user, String project) {
             this.projectMetadataBackupKey = dir;
-            this.rootPath = dir + "/" + System.currentTimeMillis();
+            this.rootPath = dir + PATH_SEP + System.currentTimeMillis();
             this.fs = fs;
-            this.statuInfo = new MetadataBackupStatuInfo();
-            this.statusPath = new Path(rootPath + "/" + BACKUP_STATUS);
+            this.statusInfo = new MetadataBackupStatusInfo();
+            this.statusPath = new Path(rootPath + PATH_SEP + BACKUP_STATUS);
             this.project = project;
-            statuInfo.setOwner(user);
-            statuInfo.setPath(rootPath);
+            statusInfo.setOwner(user);
+            statusInfo.setPath(rootPath);
             init();
         }
 
-        public MetadataBackupOperator(MetadataBackupResponse response, String project) {
+        public MetadataBackup(MetadataBackupResponse response, String project) {
             this.rootPath = response.getPath();
             this.project = project;
             this.fs = HadoopUtil.getWorkingFileSystem();
-            this.statusPath = new Path(rootPath + "/" + BACKUP_STATUS);
-            this.statuInfo = new MetadataBackupStatuInfo();
-            statuInfo.setOwner(response.getOwner());
-            statuInfo.setPath(rootPath);
+            this.statusPath = new Path(rootPath + PATH_SEP + BACKUP_STATUS);
+            this.statusInfo = new MetadataBackupStatusInfo();
+            statusInfo.setOwner(response.getOwner());
+            statusInfo.setPath(rootPath);
             init();
         }
 
@@ -263,25 +268,28 @@ public class OpsService {
             favoriteRuleTool.setHook(hook);
             this.jobInfoTool = new JobInfoTool();
             jobInfoTool.setHook(hook);
-            if (project == null || project.equals(_GLOBAL)) {
-                List<String> projects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects().stream()
-                        .map(ProjectInstance::getName).collect(Collectors.toList());
-                statuInfo.setProjects(projects);
+            if (project == null || project.equals(UnitOfWork.GLOBAL_UNIT)) {
+                List<String> projects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()
+                        .stream().map(ProjectInstance::getName).collect(Collectors.toList());
+                statusInfo.setProjects(projects);
             } else {
-                statuInfo.setProjects(Lists.newArrayList(project));
+                statusInfo.setProjects(Lists.newArrayList(project));
             }
         }
 
-        public synchronized static void cancelAndAsyncDeleteBackup(String rootPath, String project) throws IOException {
+        public static synchronized void cancelAndAsyncDeleteBackup(String rootPath, String project) throws IOException {
             String key = getProjectMetadataKeyFromRootPath(rootPath);
             if (runningTask.containsKey(key)) {
                 Future future = runningTask.get(key).getFirst();
                 cancelBackup(key);
-                executor.submit(() -> {
+                EXECUTOR.submit(() -> {
                     try {
                         future.get();
                         OpsService.deleteMetadataBackup(rootPath, project);
-                    } catch (Throwable e) {
+                    } catch (InterruptedException e) {
+                        log.error(e.getMessage(), e);
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     }
                 });
@@ -289,7 +297,7 @@ public class OpsService {
         }
 
         public static void cancelBackup(String projectMetadataBackupKey) throws IOException {
-            Pair<Future, MetadataBackupOperator> pair = runningTask.remove(projectMetadataBackupKey);
+            Pair<Future, MetadataBackup> pair = runningTask.remove(projectMetadataBackupKey);
             pair.getSecond().markCanceled();
         }
 
@@ -299,17 +307,17 @@ public class OpsService {
 
         public void doBackupMetadata() throws Exception {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
-            if (project == null || project.equals(_GLOBAL)) {
+            if (project == null || project.equals(UnitOfWork.GLOBAL_UNIT)) {
                 List<ProjectInstance> projects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                         .listAllProjects();
-                coreMetadataTool.backupToDirectPath(config, rootPath + "/" + CORE_META_DIR);
+                coreMetadataTool.backupToDirectPath(config, rootPath + PATH_SEP + CORE_META_DIR);
                 for (ProjectInstance projectInstance : projects) {
                     queryHistoryOffsetTool.backup(rootPath, projectInstance.getName());
                     favoriteRuleTool.backup(rootPath, projectInstance.getName());
                     jobInfoTool.backup(rootPath, projectInstance.getName());
                 }
             } else {
-                coreMetadataTool.backupToDirectPath(config, rootPath + "/" + CORE_META_DIR, project);
+                coreMetadataTool.backupToDirectPath(config, rootPath + PATH_SEP + CORE_META_DIR, project);
                 queryHistoryOffsetTool.backup(rootPath, project);
                 favoriteRuleTool.backup(rootPath, project);
                 jobInfoTool.backup(rootPath, project);
@@ -331,34 +339,34 @@ public class OpsService {
 
         public void updateStatus() throws IOException {
             try (FSDataOutputStream fos = fs.create(statusPath, true)) {
-                String value = JsonUtil.writeValueAsString(statuInfo);
+                String value = JsonUtil.writeValueAsString(statusInfo);
                 fos.writeUTF(value);
             }
         }
 
         public void markCanceled() throws IOException {
-            statuInfo.setStatus(MetadataBackupStatu.CANCELED);
+            statusInfo.setStatus(MetadataBackupStatus.CANCELED);
             updateStatus();
         }
 
         public void markInProgress() throws IOException {
-            statuInfo.setStatus(MetadataBackupStatu.IN_PROGRESS);
+            statusInfo.setStatus(MetadataBackupStatus.IN_PROGRESS);
             updateStatus();
         }
 
         public void markSuccess(long size) throws IOException {
-            statuInfo.setStatus(MetadataBackupStatu.SUCCEED);
-            statuInfo.setSize(String.valueOf(size));
+            statusInfo.setStatus(MetadataBackupStatus.SUCCEED);
+            statusInfo.setSize(String.valueOf(size));
             updateStatus();
         }
 
         public void markFail() {
             try {
-                statuInfo.setStatus(MetadataBackupStatu.FAILED);
+                statusInfo.setStatus(MetadataBackupStatus.FAILED);
                 updateStatus();
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
-                log.error("mark metadata backup {} failed failed.", statusPath.toString());
+                log.error("mark metadata backup {} failed failed.", statusPath);
             }
         }
 
@@ -366,7 +374,7 @@ public class OpsService {
             if (runningTask.containsKey(projectMetadataBackupKey)) {
                 throw new KylinException(METADATA_BACKUP_IS_IN_PROGRESS);
             }
-            Future<?> submit = executor.submit(() -> {
+            Future<?> submit = EXECUTOR.submit(() -> {
                 try {
                     markInProgress();
                     doBackupMetadata();
@@ -388,62 +396,45 @@ public class OpsService {
             return fs;
         }
 
-        public Path getStatusPath() {
-            return statusPath;
-        }
-
-        public MetadataBackupStatuInfo getStatuInfo() {
-            return statuInfo;
-        }
-
-        public void setCoreMetadataTool(MetadataToolHelper coreMetadataTool) {
-            this.coreMetadataTool = coreMetadataTool;
-        }
-
-        public void setJobInfoTool(JobInfoTool jobInfoTool) {
-            this.jobInfoTool = jobInfoTool;
-        }
-
-        public void setQueryHistoryOffsetTool(QueryHistoryOffsetTool queryHistoryOffsetTool) {
-            this.queryHistoryOffsetTool = queryHistoryOffsetTool;
-        }
-
-        public void setFavoriteRuleTool(FavoriteRuleTool favoriteRuleTool) {
-            this.favoriteRuleTool = favoriteRuleTool;
-        }
     }
 
-    public static class MetadataRestoreOperator {
-        public static final Logger log = LoggerFactory.getLogger(MetadataRestoreOperator.class);
-        public static Future runningOperator;
-        public static final ExecutorService executor = Executors.newCachedThreadPool();
-        public boolean afterTruncate;
-        public String project;
-        public String path;
-        public String uuid;
+    @Getter
+    public static class MetadataRestore {
+
+        public static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+
+        @Getter
+        @Setter
+        private static Future runningTask;
+
+        private final boolean afterTruncate;
+        private final String project;
+        private final String path;
+        private final String uuid;
 
         private QueryHistoryOffsetTool queryHistoryOffsetTool;
         private FavoriteRuleTool favoriteRuleTool;
+        @Setter
         private JobInfoTool jobInfoTool;
 
-        public static boolean hasMetadataRestoreRunning() {
-            return runningOperator != null;
-        }
-
-        public String submitMetadataRestore() {
-            if (hasMetadataRestoreRunning()) {
-                throw new KylinException(SYSTEM_IN_METADATA_RECOVER);
-            }
-            runningOperator = executor.submit(() -> doRestore());
-            return uuid;
-        }
-
-        public MetadataRestoreOperator(String path, String project, boolean afterTruncate) {
+        public MetadataRestore(String path, String project, boolean afterTruncate) {
             this.path = path;
             this.afterTruncate = afterTruncate;
             this.uuid = UUID.randomUUID().toString();
             this.project = project;
             init();
+        }
+
+        public static synchronized boolean hasMetadataRestoreRunning() {
+            return runningTask != null;
+        }
+
+        public static String submitMetadataRestore(MetadataRestore metadataRestore) {
+            if (hasMetadataRestoreRunning()) {
+                throw new KylinException(SYSTEM_IN_METADATA_RECOVER);
+            }
+            runningTask = EXECUTOR_SERVICE.submit(metadataRestore::doRestore);
+            return metadataRestore.uuid;
         }
 
         public void init() {
@@ -453,27 +444,24 @@ public class OpsService {
         }
 
         public void doRestore() {
-            synchronized (MetadataRestoreOperator.class) {
+            synchronized (MetadataRestore.class) {
                 AsyncTaskManager asyncTaskManager = AsyncTaskManager.getInstance(project);
                 MetadataRestoreTask metadataRestoreTask = MetadataRestoreTask.newTask(uuid);
                 metadataRestoreTask.setTaskAttributes(new MetadataRestoreTask.MetadataRestoreTaskAttributes());
                 metadataRestoreTask.setStatus(MetadataRestoreTask.MetadataRestoreStatus.IN_PROGRESS);
                 metadataRestoreTask.setProject(project);
                 asyncTaskManager.save(metadataRestoreTask);
-                MaintainModeTool maintainModeTool = new MaintainModeTool("metadata restore");
                 try {
                     log.info("start to restore metadata from {}.", path);
-                    maintainModeTool.init();
-                    maintainModeTool.markEpochs();
                     KylinConfig config = KylinConfig.getInstanceFromEnv();
-                    if (_GLOBAL.equals(project)) {
-                        MetadataBackupStatuInfo backupStatuInfo = OpsService.getMetadataStatusInfoWithRetry(
-                                new Path(path + "/" + BACKUP_STATUS), HadoopUtil.getWorkingFileSystem(), 1);
-                        backupStatuInfo.projects.forEach(relProject -> restoreProject(relProject, config, false));
-                        new MetadataToolHelper().restore(config, _GLOBAL, path + "/" + CORE_META_DIR, afterTruncate,
-                                true);
+                    if (UnitOfWork.GLOBAL_UNIT.equals(project)) {
+                        MetadataBackupStatusInfo backupStatusInfo = OpsService.getMetadataStatusInfoWithRetry(
+                                new Path(path + PATH_SEP + BACKUP_STATUS), HadoopUtil.getWorkingFileSystem(), 1);
+                        backupStatusInfo.projects.forEach(relProject -> this.restoreProject(relProject, config, false));
+                        new MetadataToolHelper().restore(config, UnitOfWork.GLOBAL_UNIT,
+                                path + PATH_SEP + CORE_META_DIR, afterTruncate, true);
                     } else {
-                        restoreProject(project, config, true);
+                        this.restoreProject(this.project, config, true);
                     }
                     log.info("restore metadata from {} succeed.", path);
                     metadataRestoreTask.setStatus(MetadataRestoreTask.MetadataRestoreStatus.SUCCEED);
@@ -483,89 +471,38 @@ public class OpsService {
                     log.error(e.getMessage(), e);
                 } finally {
                     asyncTaskManager.save(metadataRestoreTask);
-                    maintainModeTool.releaseEpochs();
-                    runningOperator = null;
+                    MetadataRestore.setRunningTask(null);
                 }
             }
         }
 
-        public void restoreProject(String project, KylinConfig config, boolean backup) {
-            log.info("start to restore metadata for {} project.", project);
+        public void restoreProject(String realProject, KylinConfig config, boolean backup) {
+            log.info("start to restore metadata for {} project.", realProject);
             UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().processor(() -> {
-                new MetadataToolHelper().restore(config, project, path + "/" + CORE_META_DIR, afterTruncate, backup);
+                new MetadataToolHelper().restore(config, realProject, path + PATH_SEP + CORE_META_DIR, afterTruncate,
+                        backup);
                 UnitOfWork.get().doAfterUpdate(() -> {
-                    queryHistoryOffsetTool.restoreProject(path, project, afterTruncate);
-                    favoriteRuleTool.restoreProject(path, project, afterTruncate);
-                    jobInfoTool.restoreProject(path, project, afterTruncate);
+                    queryHistoryOffsetTool.restoreProject(path, realProject, afterTruncate);
+                    favoriteRuleTool.restoreProject(path, realProject, afterTruncate);
+                    jobInfoTool.restoreProject(path, realProject, afterTruncate);
                 });
                 return null;
-            }).useProjectLock(true).unitName(_GLOBAL).all(true).build());
-            log.info("restore metadata for {} project succeed.", project);
-        }
-
-        public void setQueryHistoryOffsetTool(QueryHistoryOffsetTool queryHistoryOffsetTool) {
-            this.queryHistoryOffsetTool = queryHistoryOffsetTool;
-        }
-
-        public void setFavoriteRuleTool(FavoriteRuleTool favoriteRuleTool) {
-            this.favoriteRuleTool = favoriteRuleTool;
-        }
-
-        public void setJobInfoTool(JobInfoTool jobInfoTool) {
-            this.jobInfoTool = jobInfoTool;
+            }).useProjectLock(true).unitName(UnitOfWork.GLOBAL_UNIT).all(true).build());
+            log.info("restore metadata for {} project succeed.", realProject);
         }
     }
 
-    public static class MetadataBackupStatuInfo {
+    @Getter
+    @Setter
+    public static class MetadataBackupStatusInfo {
         private String path;
-        private MetadataBackupStatu status;
+        private MetadataBackupStatus status;
         private String size;
         private String owner;
         private List<String> projects;
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        public MetadataBackupStatu getStatus() {
-            return status;
-        }
-
-        public void setStatus(MetadataBackupStatu status) {
-            this.status = status;
-        }
-
-        public String getSize() {
-            return size;
-        }
-
-        public void setSize(String size) {
-            this.size = size;
-        }
-
-        public String getOwner() {
-            return owner;
-        }
-
-        public void setOwner(String owner) {
-            this.owner = owner;
-        }
-
-        public void setProjects(List<String> projects) {
-            this.projects = projects;
-        }
-
-        public List<String> getProjects() {
-            return projects;
-        }
-
     }
 
-    public enum MetadataBackupStatu {
+    public enum MetadataBackupStatus {
         IN_PROGRESS, SUCCEED, FAILED, CANCELED, UNKNOWN
     }
 }

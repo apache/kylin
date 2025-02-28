@@ -17,17 +17,17 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
+import static org.apache.kylin.common.persistence.metadata.JdbcAuditLogStoreTool.prepareJdbcAuditLogStore;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.JdbcInfo;
 import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -37,8 +37,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.junitpioneer.jupiter.RetryingTest;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -58,15 +56,15 @@ public class JdbcAuditLogGroupbyReplayerTest {
         val workerStore = initResourceStore();
         String project1 = "abc1";
         String project2 = "abc2";
-        changeProject(project1, info, false);
-        changeProject(project2, info, false);
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry(project1, info, false);
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry(project2, info, false);
         workerStore.catchup();
-        Assert.assertEquals(3, workerStore.listResourcesRecursively("/").size());
+        Assert.assertEquals(3, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
 
-        addProjectLog(project2, info, 6000);
-        addProjectLog(project1, info, 6000);
+        prepareJdbcAuditLogStore(project1, info.getJdbcTemplate(), 6000);
+        prepareJdbcAuditLogStore(project2, info.getJdbcTemplate(), 6000);
         Awaitility.await().atMost(6, TimeUnit.SECONDS)
-                .until(() -> 12003 == workerStore.listResourcesRecursively("/").size());
+                .until(() -> 12003 == workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
         Awaitility.await().atMost(6, TimeUnit.SECONDS)
                 .until(() -> 12002 == workerStore.getAuditLogStore().getLogOffset());
         workerStore.getAuditLogStore().catchupWithTimeout();
@@ -76,8 +74,9 @@ public class JdbcAuditLogGroupbyReplayerTest {
     private ResourceStore initResourceStore() {
         getTestConfig().setProperty("kylin.auditlog.replay-groupby-project-reload-enable", "true");
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
-        Assert.assertEquals(1, workerStore.listResourcesRecursively("/").size());
+        workerStore.checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
+                StringEntity.serializer);
+        Assert.assertEquals(1, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
         return workerStore;
     }
 
@@ -85,41 +84,12 @@ public class JdbcAuditLogGroupbyReplayerTest {
     public void testHandleProjectChange(JdbcInfo info) throws Exception {
         val workerStore = initResourceStore();
         String project = "abc1";
-        changeProject(project, info, false);
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry(project, info, false);
         workerStore.catchup();
-        Assert.assertEquals(2, workerStore.listResourcesRecursively("/").size());
-        changeProject(project, info, true);
+        Assert.assertEquals(2, workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
+        JdbcAuditLogStoreTool.mockAuditLogForProjectEntry(project, info, true);
         Awaitility.await().atMost(6, TimeUnit.SECONDS)
-                .until(() -> 1 == workerStore.listResourcesRecursively("/").size());
+                .until(() -> 1 == workerStore.listResourcesRecursively(MetadataType.ALL.name()).size());
         ((JdbcAuditLogStore) workerStore.getAuditLogStore()).forceClose();
-    }
-
-    private void addProjectLog(String project, JdbcInfo info, int logNum) throws Exception {
-        val url = getTestConfig().getMetadataUrl();
-        val jdbcTemplate = info.getJdbcTemplate();
-        String unitId = RandomUtil.randomUUIDStr();
-        List<Object[]> logs = Lists.newArrayList();
-        for (int i = 0; i < logNum; i++) {
-            logs.add(new Object[] { "/" + project + "/abc/b" + i, "abc".getBytes(charset), System.currentTimeMillis(),
-                    0, unitId, null, LOCAL_INSTANCE });
-        }
-        jdbcTemplate.batchUpdate(
-                String.format(Locale.ROOT, JdbcAuditLogStore.INSERT_SQL, url.getIdentifier() + "_audit_log"), logs);
-    }
-
-    void changeProject(String project, JdbcInfo info, boolean isDel) throws Exception {
-        val jdbcTemplate = info.getJdbcTemplate();
-        val url = getTestConfig().getMetadataUrl();
-        String unitId = RandomUtil.randomUUIDStr();
-
-        Object[] log = isDel
-                ? new Object[] { "/_global/project/" + project + ".json", null, System.currentTimeMillis(), 0, unitId,
-                        null, LOCAL_INSTANCE }
-                : new Object[] { "/_global/project/" + project + ".json", "abc".getBytes(charset),
-                        System.currentTimeMillis(), 0, unitId, null, LOCAL_INSTANCE };
-        List<Object[]> logs = new ArrayList<>();
-        logs.add(log);
-        jdbcTemplate.batchUpdate(
-                String.format(Locale.ROOT, JdbcAuditLogStore.INSERT_SQL, url.getIdentifier() + "_audit_log"), logs);
     }
 }

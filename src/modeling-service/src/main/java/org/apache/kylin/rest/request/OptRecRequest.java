@@ -48,4 +48,11 @@ public class OptRecRequest implements ProjectInsensitiveRequest {
 
     @JsonProperty("names")
     private Map<Integer, String> names = Maps.newHashMap();
+
+    @JsonProperty("job_id")
+    private String jobId;
+
+    @JsonProperty("token")
+    private String token;
+
 }

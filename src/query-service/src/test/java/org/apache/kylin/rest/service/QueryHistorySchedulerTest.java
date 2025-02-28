@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.metadata.query.QueryMetrics.QUERY_RESPONSE_TIME;
+import static org.apache.kylin.metadata.query.RDBMSQueryHistoryDaoTest.createQueryMetrics;
 import static org.awaitility.Awaitility.await;
 
 import java.util.ArrayList;
@@ -32,8 +34,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QueryHistorySchedulerTest extends NLocalFileMetadataTestCase {
 
@@ -57,33 +57,7 @@ public class QueryHistorySchedulerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testWriteQueryHistoryAsynchronousNormal() throws Exception {
         // product
-        QueryMetrics queryMetrics = new QueryMetrics("6a9a151f-f992-4d52-a8ec-8ff3fd3de6b1", "192.168.1.6:7070");
-        queryMetrics.setSql("select LSTG_FORMAT_NAME from KYLIN_SALES\nLIMIT 500");
-        queryMetrics.setSqlPattern("SELECT \"LSTG_FORMAT_NAME\"\nFROM \"KYLIN_SALES\"\nLIMIT 1");
-        queryMetrics.setQueryDuration(5578L);
-        queryMetrics.setTotalScanBytes(863L);
-        queryMetrics.setTotalScanCount(4096L);
-        queryMetrics.setResultRowCount(500L);
-        queryMetrics.setSubmitter("ADMIN");
-        queryMetrics.setErrorType("");
-        queryMetrics.setCacheHit(true);
-        queryMetrics.setIndexHit(true);
-        queryMetrics.setQueryTime(1584888338274L);
-        queryMetrics.setProjectName("default");
-
-        QueryMetrics.RealizationMetrics realizationMetrics = new QueryMetrics.RealizationMetrics("20000000001L",
-                "Table Index", "771157c2-e6e2-4072-80c4-8ec25e1a83ea", Lists.newArrayList("[DEFAULT.TEST_ACCOUNT]"));
-        realizationMetrics.setQueryId("6a9a151f-f992-4d52-a8ec-8ff3fd3de6b1");
-        realizationMetrics.setDuration(4591L);
-        realizationMetrics.setQueryTime(1586405449387L);
-        realizationMetrics.setProjectName("default");
-
-        List<QueryMetrics.RealizationMetrics> realizationMetricsList = Lists.newArrayList();
-        realizationMetricsList.add(realizationMetrics);
-        realizationMetricsList.add(realizationMetrics);
-        QueryHistoryInfo queryHistoryInfo = new QueryHistoryInfo();
-        queryHistoryInfo.setRealizationMetrics(realizationMetricsList);
-        queryMetrics.setQueryHistoryInfo(queryHistoryInfo);
+        QueryMetrics queryMetrics = createQueryMetrics(1584888338274L, 5578L, true, "default", true);
 
         QueryHistoryScheduler queryHistoryScheduler = QueryHistoryScheduler.getInstance();
         queryHistoryScheduler.offerQueryHistoryQueue(queryMetrics);
@@ -99,33 +73,7 @@ public class QueryHistorySchedulerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testWriteQueryHistoryAsynchronousIfBufferFull() throws Exception {
-        QueryMetrics queryMetrics = new QueryMetrics("6a9a151f-f992-4d52-a8ec-8ff3fd3de6b1", "192.168.1.6:7070");
-        queryMetrics.setSql("select LSTG_FORMAT_NAME from KYLIN_SALES\nLIMIT 500");
-        queryMetrics.setSqlPattern("SELECT \"LSTG_FORMAT_NAME\"\nFROM \"KYLIN_SALES\"\nLIMIT 1");
-        queryMetrics.setQueryDuration(5578L);
-        queryMetrics.setTotalScanBytes(863L);
-        queryMetrics.setTotalScanCount(4096L);
-        queryMetrics.setResultRowCount(500L);
-        queryMetrics.setSubmitter("ADMIN");
-        queryMetrics.setErrorType("");
-        queryMetrics.setCacheHit(true);
-        queryMetrics.setIndexHit(true);
-        queryMetrics.setQueryTime(1584888338274L);
-        queryMetrics.setProjectName("default");
-
-        QueryMetrics.RealizationMetrics realizationMetrics = new QueryMetrics.RealizationMetrics("20000000001L",
-                "Table Index", "771157c2-e6e2-4072-80c4-8ec25e1a83ea", Lists.newArrayList("[DEFAULT.TEST_ACCOUNT]"));
-        realizationMetrics.setQueryId("6a9a151f-f992-4d52-a8ec-8ff3fd3de6b1");
-        realizationMetrics.setDuration(4591L);
-        realizationMetrics.setQueryTime(1586405449387L);
-        realizationMetrics.setProjectName("default");
-
-        List<QueryMetrics.RealizationMetrics> realizationMetricsList = Lists.newArrayList();
-        realizationMetricsList.add(realizationMetrics);
-        realizationMetricsList.add(realizationMetrics);
-        QueryHistoryInfo queryHistoryInfo = new QueryHistoryInfo();
-        queryHistoryInfo.setRealizationMetrics(realizationMetricsList);
-        queryMetrics.setQueryHistoryInfo(queryHistoryInfo);
+        QueryMetrics queryMetrics = createQueryMetrics(1584888338274L, 5578L, true, "default", true);
 
         QueryHistoryScheduler queryHistoryScheduler = QueryHistoryScheduler.getInstance();
         queryHistoryScheduler.offerQueryHistoryQueue(queryMetrics);
@@ -178,5 +126,30 @@ public class QueryHistorySchedulerTest extends NLocalFileMetadataTestCase {
         isCollectedFinished = queryHistoryScheduler.isCollectedFinished(queryId, null, queryMetrics);
         Assert.assertFalse(isCollectedFinished);
         Assert.assertEquals(1, queryHistoryScheduler.queryMetricsQueue.size());
+    }
+
+    @Test
+    public void testInsertAndUpdate() throws Exception {
+        // product
+        QueryMetrics queryMetrics = createQueryMetrics(1584888338274L, 5578L, true, "default", true);
+
+        QueryHistoryScheduler queryHistoryScheduler = QueryHistoryScheduler.getInstance();
+        queryHistoryScheduler.offerQueryHistoryQueue(queryMetrics);
+        queryHistoryScheduler.offerQueryHistoryQueue(queryMetrics);
+        Assert.assertEquals(2, queryHistoryScheduler.queryMetricsQueue.size());
+
+        QueryMetrics queryMetricsUpdate = new QueryMetrics(queryMetrics.getQueryId());
+        QueryHistoryInfo info = new QueryHistoryInfo();
+        info.getTraces().add(new QueryHistoryInfo.QueryTraceSpan(QUERY_RESPONSE_TIME, null, 123));
+        queryMetricsUpdate.setQueryHistoryInfo(info);
+        queryMetricsUpdate.setUpdateMetrics(true);
+        queryHistoryScheduler.offerQueryHistoryQueue(queryMetricsUpdate);
+        Assert.assertEquals(3, queryHistoryScheduler.queryMetricsQueue.size());
+
+        // consume
+        queryHistoryScheduler.init();
+        await().atMost(3000, TimeUnit.MILLISECONDS).untilAsserted(() -> {
+            Assert.assertEquals(0, queryHistoryScheduler.queryMetricsQueue.size());
+        });
     }
 }

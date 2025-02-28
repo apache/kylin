@@ -63,8 +63,8 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
         MemcachedCacheConfig cacheConfig = new MemcachedCacheConfig();
         cacheConfig.setMaxObjectSize(maxObjectSize);
         MemcachedClient memcachedClient = mock(MemcachedClient.class);
-        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName,
-                7 * 24 * 3600);
+        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig,
+                CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName, 7 * 24 * 3600);
         memcachedChunkingCache = new MemcachedChunkingCache(memcachedCache);
         memCachedAdaptor = new MemCachedCacheAdaptor(memcachedChunkingCache);
 
@@ -138,7 +138,7 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
         memcachedChunkingCache.evict("");
         memcachedChunkingCache.evict(null);
         memcachedChunkingCache.put("first", "first_value");
-        keyHook.setChunkskey(new String[]{"first", "second"});
+        keyHook.setChunkskey(new String[] { "first", "second" });
         for (String key : keyHook.getChunkskey()) {
             memcachedChunkingCache.evict(key);
         }
@@ -178,12 +178,14 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals(keyHook, keyHookEq);
         Assert.assertEquals(keyHook.hashCode(), keyHookEq.hashCode());
-        Assert.assertTrue(keyHook.equals(keyHookEq) && (keyHook.toString().equals(keyHookEq.toString()) && keyHook.equals(keyHook)));
+        Assert.assertTrue(keyHook.equals(keyHookEq)
+                && (keyHook.toString().equals(keyHookEq.toString()) && keyHook.equals(keyHook)));
 
         keyHookEq.setChunkskey(null);
         keyHookEq.setValues(null);
 
         Assert.assertNotEquals(keyHook, keyHookEq);
-        Assert.assertFalse(keyHook.equals(keyHookEq) || keyHook.toString().equals(keyHookEq.toString()) || keyHook.equals(null));
+        Assert.assertFalse(
+                keyHook.equals(keyHookEq) || keyHook.toString().equals(keyHookEq.toString()) || keyHook.equals(null));
     }
 }

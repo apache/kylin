@@ -1,0 +1,447 @@
+{
+  "uuid" : "dfec2d95-590e-44c3-86b1-7b034dad1a9a",
+  "last_modified" : 1493261922069,
+  "version" : "2.0.0",
+  "name" : "AIRLINE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "YEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "2",
+    "name" : "QUARTER",
+    "datatype" : "integer"
+  }, {
+    "id" : "3",
+    "name" : "MONTH",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "DAYOFMONTH",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "DAYOFWEEK",
+    "datatype" : "integer"
+  }, {
+    "id" : "6",
+    "name" : "UNIQUECARRIER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "AIRLINEID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "CARRIER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "TAILNUM",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "FLIGHTNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "ORIGINAIRPORTID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "12",
+    "name" : "ORIGINAIRPORTSEQID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "13",
+    "name" : "ORIGINCITYMARKETID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "14",
+    "name" : "ORIGIN",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "ORIGINCITYNAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "ORIGINSTATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "ORIGINSTATEFIPS",
+    "datatype" : "integer"
+  }, {
+    "id" : "18",
+    "name" : "ORIGINSTATENAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "ORIGINWAC",
+    "datatype" : "integer"
+  }, {
+    "id" : "20",
+    "name" : "DESTAIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "21",
+    "name" : "DESTAIRPORTSEQID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "22",
+    "name" : "DESTCITYMARKETID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "23",
+    "name" : "DEST",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "24",
+    "name" : "DESTCITYNAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "25",
+    "name" : "DESTSTATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "26",
+    "name" : "DESTSTATEFIPS",
+    "datatype" : "integer"
+  }, {
+    "id" : "27",
+    "name" : "DESTSTATENAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "28",
+    "name" : "DESTWAC",
+    "datatype" : "integer"
+  }, {
+    "id" : "29",
+    "name" : "CRSDEPTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "30",
+    "name" : "DEPTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "31",
+    "name" : "DEPDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "32",
+    "name" : "DEPDELAYMINUTES",
+    "datatype" : "integer"
+  }, {
+    "id" : "33",
+    "name" : "DEPDEL15",
+    "datatype" : "integer"
+  }, {
+    "id" : "34",
+    "name" : "DEPARTUREDELAYGROUPS",
+    "datatype" : "integer"
+  }, {
+    "id" : "35",
+    "name" : "DEPTIMEBLK",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "36",
+    "name" : "TAXIOUT",
+    "datatype" : "integer"
+  }, {
+    "id" : "37",
+    "name" : "WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "38",
+    "name" : "WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "39",
+    "name" : "TAXIIN",
+    "datatype" : "integer"
+  }, {
+    "id" : "40",
+    "name" : "CRSARRTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "41",
+    "name" : "ARRTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "42",
+    "name" : "ARRDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "43",
+    "name" : "ARRDELAYMINUTES",
+    "datatype" : "integer"
+  }, {
+    "id" : "44",
+    "name" : "ARRDEL15",
+    "datatype" : "integer"
+  }, {
+    "id" : "45",
+    "name" : "ARRIVALDELAYGROUPS",
+    "datatype" : "integer"
+  }, {
+    "id" : "46",
+    "name" : "ARRTIMEBLK",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "47",
+    "name" : "CANCELLED",
+    "datatype" : "integer"
+  }, {
+    "id" : "48",
+    "name" : "CANCELLATIONCODE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "49",
+    "name" : "DIVERTED",
+    "datatype" : "integer"
+  }, {
+    "id" : "50",
+    "name" : "CRSELAPSEDTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "51",
+    "name" : "ACTUALELAPSEDTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "52",
+    "name" : "AIRTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "53",
+    "name" : "FLIGHTS",
+    "datatype" : "integer"
+  }, {
+    "id" : "54",
+    "name" : "DISTANCE",
+    "datatype" : "bigint"
+  }, {
+    "id" : "55",
+    "name" : "DISTANCEGROUP",
+    "datatype" : "integer"
+  }, {
+    "id" : "56",
+    "name" : "CARRIERDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "57",
+    "name" : "WEATHERDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "58",
+    "name" : "NASDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "59",
+    "name" : "SECURITYDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "60",
+    "name" : "LATEAIRCRAFTDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "61",
+    "name" : "FIRSTDEPTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "62",
+    "name" : "TOTALADDGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "63",
+    "name" : "LONGESTADDGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "64",
+    "name" : "DIVAIRPORTLANDINGS",
+    "datatype" : "integer"
+  }, {
+    "id" : "65",
+    "name" : "DIVREACHEDDEST",
+    "datatype" : "integer"
+  }, {
+    "id" : "66",
+    "name" : "DIVACTUALELAPSEDTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "67",
+    "name" : "DIVARRDELAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "68",
+    "name" : "DIVDISTANCE",
+    "datatype" : "integer"
+  }, {
+    "id" : "69",
+    "name" : "DIV1AIRPORT",
+    "datatype" : "integer"
+  }, {
+    "id" : "70",
+    "name" : "DIV1AIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "71",
+    "name" : "DIV1AIRPORTSEQID",
+    "datatype" : "integer"
+  }, {
+    "id" : "72",
+    "name" : "DIV1WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "73",
+    "name" : "DIV1TOTALGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "74",
+    "name" : "DIV1LONGESTGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "75",
+    "name" : "DIV1WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "76",
+    "name" : "DIV1TAILNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "77",
+    "name" : "DIV2AIRPORT",
+    "datatype" : "integer"
+  }, {
+    "id" : "78",
+    "name" : "DIV2AIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "79",
+    "name" : "DIV2AIRPORTSEQID",
+    "datatype" : "integer"
+  }, {
+    "id" : "80",
+    "name" : "DIV2WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "81",
+    "name" : "DIV2TOTALGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "82",
+    "name" : "DIV2LONGESTGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "83",
+    "name" : "DIV2WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "84",
+    "name" : "DIV2TAILNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "85",
+    "name" : "DIV3AIRPORT",
+    "datatype" : "integer"
+  }, {
+    "id" : "86",
+    "name" : "DIV3AIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "87",
+    "name" : "DIV3AIRPORTSEQID",
+    "datatype" : "integer"
+  }, {
+    "id" : "88",
+    "name" : "DIV3WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "89",
+    "name" : "DIV3TOTALGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "90",
+    "name" : "DIV3LONGESTGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "91",
+    "name" : "DIV3WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "92",
+    "name" : "DIV3TAILNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "93",
+    "name" : "DIV4AIRPORT",
+    "datatype" : "integer"
+  }, {
+    "id" : "94",
+    "name" : "DIV4AIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "95",
+    "name" : "DIV4AIRPORTSEQID",
+    "datatype" : "integer"
+  }, {
+    "id" : "96",
+    "name" : "DIV4WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "97",
+    "name" : "DIV4TOTALGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "98",
+    "name" : "DIV4LONGESTGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "99",
+    "name" : "DIV4WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "100",
+    "name" : "DIV4TAILNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "101",
+    "name" : "DIV5AIRPORT",
+    "datatype" : "integer"
+  }, {
+    "id" : "102",
+    "name" : "DIV5AIRPORTID",
+    "datatype" : "integer"
+  }, {
+    "id" : "103",
+    "name" : "DIV5AIRPORTSEQID",
+    "datatype" : "integer"
+  }, {
+    "id" : "104",
+    "name" : "DIV5WHEELSON",
+    "datatype" : "integer"
+  }, {
+    "id" : "105",
+    "name" : "DIV5TOTALGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "106",
+    "name" : "DIV5LONGESTGTIME",
+    "datatype" : "integer"
+  }, {
+    "id" : "107",
+    "name" : "DIV5WHEELSOFF",
+    "datatype" : "integer"
+  }, {
+    "id" : "108",
+    "name" : "DIV5TAILNUM",
+    "datatype" : "integer"
+  }, {
+    "id" : "109",
+    "name" : "FLIGHTDATE",
+    "datatype" : "date"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "AIRLINE",
+  "project" : "airline"
+}

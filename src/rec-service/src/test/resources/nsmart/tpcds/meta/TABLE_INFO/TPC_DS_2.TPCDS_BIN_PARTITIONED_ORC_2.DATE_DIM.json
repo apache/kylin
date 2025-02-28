@@ -1,0 +1,123 @@
+{
+  "uuid" : "9b1fd39b-499f-463f-8cc5-9741301bef1a",
+  "last_modified" : 1497607294985,
+  "version" : "2.0.0",
+  "name" : "DATE_DIM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "D_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "D_DATE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "D_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "D_MONTH_SEQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "D_WEEK_SEQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "6",
+    "name" : "D_QUARTER_SEQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "D_YEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "8",
+    "name" : "D_DOW",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "D_MOY",
+    "datatype" : "integer"
+  }, {
+    "id" : "10",
+    "name" : "D_DOM",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "D_QOY",
+    "datatype" : "integer"
+  }, {
+    "id" : "12",
+    "name" : "D_FY_YEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "13",
+    "name" : "D_FY_QUARTER_SEQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "14",
+    "name" : "D_FY_WEEK_SEQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "15",
+    "name" : "D_DAY_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "D_QUARTER_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "D_HOLIDAY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "D_WEEKEND",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "D_FOLLOWING_HOLIDAY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "20",
+    "name" : "D_FIRST_DOM",
+    "datatype" : "integer"
+  }, {
+    "id" : "21",
+    "name" : "D_LAST_DOM",
+    "datatype" : "integer"
+  }, {
+    "id" : "22",
+    "name" : "D_SAME_DAY_LY",
+    "datatype" : "integer"
+  }, {
+    "id" : "23",
+    "name" : "D_SAME_DAY_LQ",
+    "datatype" : "integer"
+  }, {
+    "id" : "24",
+    "name" : "D_CURRENT_DAY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "25",
+    "name" : "D_CURRENT_WEEK",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "26",
+    "name" : "D_CURRENT_MONTH",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "27",
+    "name" : "D_CURRENT_QUARTER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "28",
+    "name" : "D_CURRENT_YEAR",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

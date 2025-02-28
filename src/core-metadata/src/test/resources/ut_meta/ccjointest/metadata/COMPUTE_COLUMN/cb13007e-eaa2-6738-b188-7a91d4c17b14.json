@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_35",
+  "expression" : "SECOND(CALCS.DATE1)",
+  "innerExpression" : "SECOND(CALCS.DATE1)",
+  "datatype" : "INTEGER",
+  "comment" : "Auto suggested from: SECOND(CALCS.DATE1)",
+  "uuid" : "cb13007e-eaa2-6738-b188-7a91d4c17b14",
+  "project" : "tdvt"
+}

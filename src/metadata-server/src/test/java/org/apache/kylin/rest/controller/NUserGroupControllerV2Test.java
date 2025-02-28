@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.v2.NUserGroupControllerV2;
 import org.apache.kylin.rest.service.NUserGroupService;
@@ -43,7 +44,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.accept.ContentNegotiationManager;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.val;
 
 @MetadataInfo(onlyProps = true)

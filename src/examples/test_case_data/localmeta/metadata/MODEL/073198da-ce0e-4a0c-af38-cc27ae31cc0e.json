@@ -1,0 +1,385 @@
+{
+  "uuid" : "073198da-ce0e-4a0c-af38-cc27ae31cc0e",
+  "alias" : "match_copy",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_ORDER",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_ORDER.ORDER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ]
+    }
+  }, {
+    "table" : "EDW.TEST_SELLER_TYPE_DIM",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SLR_SEGMENT_CD" ]
+    }
+  }, {
+    "table" : "EDW.TEST_CAL_DT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_CAL_DT.CAL_DT" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.CAL_DT" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID", "TEST_CATEGORY_GROUPINGS.SITE_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.LEAF_CATEG_ID", "TEST_KYLIN_FACT.LSTG_SITE_ID" ]
+    }
+  }, {
+    "table" : "EDW.TEST_SITES",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_SITES.SITE_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_COUNTRY",
+    "alias" : "BUYER_COUNTRY",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "BUYER_COUNTRY.COUNTRY" ],
+      "foreign_key" : [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_COUNTRY",
+    "alias" : "SELLER_COUNTRY",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "SELLER_COUNTRY.COUNTRY" ],
+      "foreign_key" : [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_ACCOUNT",
+    "alias" : "SELLER_ACCOUNT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "SELLER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SELLER_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.TEST_ACCOUNT",
+    "alias" : "BUYER_ACCOUNT",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "BUYER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "TEST_ORDER.BUYER_ID" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "SITE_NAME",
+    "column" : "TEST_SITES.SITE_NAME"
+  }, {
+    "id" : 1,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID"
+  }, {
+    "id" : 2,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT"
+  }, {
+    "id" : 3,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+  }, {
+    "id" : 4,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  }, {
+    "id" : 5,
+    "name" : "META_CATEG_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME"
+  }, {
+    "id" : 6,
+    "name" : "CATEG_LVL2_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME"
+  }, {
+    "id" : 7,
+    "name" : "CATEG_LVL3_NAME",
+    "column" : "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME"
+  }, {
+    "id" : 8,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 9,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 10,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT",
+    "tomb" : true
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE"
+  }, {
+    "id" : 12,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 13,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID"
+  }, {
+    "id" : 14,
+    "name" : "TEST_DATE_ENC",
+    "column" : "TEST_ORDER.TEST_DATE_ENC"
+  }, {
+    "id" : 15,
+    "name" : "TEST_TIME_ENC",
+    "column" : "TEST_ORDER.TEST_TIME_ENC"
+  }, {
+    "id" : 16,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 17,
+    "name" : "BUYER_ID",
+    "column" : "TEST_ORDER.BUYER_ID"
+  }, {
+    "id" : 18,
+    "name" : "SELLER_BUYER_LEVEL",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_BUYER_LEVEL"
+  }, {
+    "id" : 19,
+    "name" : "SELLER_SELLER_LEVEL",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL"
+  }, {
+    "id" : 20,
+    "name" : "SELLER_COUNTRY",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_COUNTRY"
+  }, {
+    "id" : 21,
+    "name" : "SELLER_COUNTRY_NAME",
+    "column" : "SELLER_COUNTRY.NAME"
+  }, {
+    "id" : 22,
+    "name" : "BUYER_BUYER_LEVEL",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL"
+  }, {
+    "id" : 23,
+    "name" : "BUYER_SELLER_LEVEL",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_SELLER_LEVEL"
+  }, {
+    "id" : 24,
+    "name" : "BUYER_COUNTRY",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_COUNTRY"
+  }, {
+    "id" : 25,
+    "name" : "BUYER_COUNTRY_NAME",
+    "column" : "BUYER_COUNTRY.NAME"
+  }, {
+    "id" : 26,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 27,
+    "name" : "ORDER_ID2",
+    "column" : "TEST_ORDER.ORDER_ID"
+  }, {
+    "id" : 28,
+    "name" : "SELLER_TYPE_CD",
+    "column" : "TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD"
+  }, {
+    "id" : 29,
+    "name" : "CAL_DT2",
+    "column" : "TEST_CAL_DT.CAL_DT"
+  }, {
+    "id" : 30,
+    "name" : "LEAF_CATEG_ID2",
+    "column" : "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID"
+  }, {
+    "id" : 31,
+    "name" : "SITE_ID2",
+    "column" : "TEST_CATEGORY_GROUPINGS.SITE_ID"
+  }, {
+    "id" : 32,
+    "name" : "SITE_ID3",
+    "column" : "TEST_SITES.SITE_ID"
+  }, {
+    "id" : 33,
+    "name" : "COUNTRY1",
+    "column" : "BUYER_COUNTRY.COUNTRY"
+  }, {
+    "id" : 34,
+    "name" : "COUNTRY2",
+    "column" : "SELLER_COUNTRY.COUNTRY"
+  }, {
+    "id" : 35,
+    "name" : "ACCOUNT_ID1",
+    "column" : "BUYER_ACCOUNT.ACCOUNT_ID"
+  }, {
+    "id" : 36,
+    "name" : "ACCOUNT_ID2",
+    "column" : "SELLER_ACCOUNT.ACCOUNT_ID"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "TRANS_CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "GMV_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100002,
+    "name" : "GMV_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100003,
+    "name" : "GMV_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "id" : 100004,
+    "name" : "ITEM_COUNT_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100005,
+    "name" : "ITEM_COUNT_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100006,
+    "name" : "ITEM_COUNT_MIN",
+    "tomb" : true,
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100007,
+    "name" : "SELLER_HLL",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 100008,
+    "name" : "COUNT_DISTINCT",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "hllc(10)"
+    }
+  }, {
+    "id" : 100009,
+    "name" : "TOP_SELLER",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      }, {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "topn(100, 4)",
+      "configuration" : {
+        "topn.encoding.TEST_KYLIN_FACT.SELLER_ID" : "int:4"
+      }
+    }
+  }, {
+    "id" : 100010,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100011,
+    "name" : "GVM_PERCENTILE",
+    "function" : {
+      "expression" : "PERCENTILE",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "percentile(100)"
+    }
+  } ],
+  "column_correlations" : [ {
+    "name" : "CATEGORY_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME" ]
+  }, {
+    "name" : "DATE_HIERARCHY",
+    "correlation_type" : "hierarchy",
+    "columns" : [ "TEST_CAL_DT.WEEK_BEG_DT", "TEST_KYLIN_FACT.CAL_DT" ]
+  }, {
+    "name" : "SITE_JOINT",
+    "correlation_type" : "joint",
+    "columns" : [ "TEST_KYLIN_FACT.LSTG_SITE_ID", "TEST_SITES.SITE_NAME" ]
+  } ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : {
+    "partition_date_column" : "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_type" : "APPEND"
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "match"
+}

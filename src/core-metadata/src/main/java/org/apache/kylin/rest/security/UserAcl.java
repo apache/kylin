@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.security;
 
-import static org.apache.kylin.common.persistence.ResourceStore.ACL_GLOBAL_ROOT;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.springframework.security.acls.model.Permission;
 
@@ -124,13 +123,13 @@ public class UserAcl extends RootPersistentEntity {
     }
 
     @Override
-    public String getResourcePath() {
-        return ACL_GLOBAL_ROOT + "/" + username;
+    public String resourceName() {
+        return username;
     }
 
     @Override
-    public String resourceName() {
-        return username;
+    public MetadataType resourceType() {
+        return MetadataType.USER_GLOBAL_ACL;
     }
 
     @Override

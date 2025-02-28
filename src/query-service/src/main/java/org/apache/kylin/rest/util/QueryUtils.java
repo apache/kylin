@@ -21,32 +21,20 @@ package org.apache.kylin.rest.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.util.PrepareSQLUtils;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
-import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
-import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class QueryUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryUtils.class);
-
-    public static SQLResponse handleTempStatement(SQLRequest sqlRequest, KylinConfig config) {
-        String sql = sqlRequest.getSql();
-        Pair<Boolean, String> result = TempStatementUtil.handleTempStatement(sql, config);
-        boolean isCreateTempStatement = result.getFirst();
-        sql = result.getSecond();
-        sqlRequest.setSql(sql);
-        return isCreateTempStatement ? new SQLResponse(null, null, 0, false, null) : null;
-    }
 
     public static boolean isPrepareStatementWithParams(SQLRequest sqlRequest) {
         return sqlRequest instanceof PrepareSqlRequest && ((PrepareSqlRequest) sqlRequest).getParams() != null

@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_KYLIN_FACT",
+  "model_uuid" : "b4ca12ff-f5bf-4307-8fcb-a430caa4665d",
+  "project" : "model_missing_partition",
+  "uuid" : "d5bba861-8024-8705-5c76-960734cff03a"
+}

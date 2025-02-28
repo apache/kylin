@@ -23,12 +23,13 @@ import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -73,7 +74,7 @@ public class DFSFileTableReader implements TableReader {
         this.filePath = filePath;
         this.delim = delim;
         this.expectedColumnNumber = expectedColumnNumber;
-        this.readerList = new ArrayList<RowReader>();
+        this.readerList = new ArrayList<>();
 
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
@@ -95,7 +96,7 @@ public class DFSFileTableReader implements TableReader {
             if (!isExceptionSayingNotSeqFile(e))
                 throw e;
 
-            this.readerList = new ArrayList<RowReader>();
+            this.readerList = new ArrayList<>();
             for (FileStatus f : allFiles) {
                 RowReader rowReader = new CsvRowReader(fs, f.getPath().toString());
                 this.readerList.add(rowReader);
@@ -107,10 +108,8 @@ public class DFSFileTableReader implements TableReader {
         if (e.getMessage() != null && e.getMessage().contains("not a SequenceFile"))
             return true;
 
-        if (e instanceof EOFException) // in case the file is very very small
-            return true;
-
-        return false;
+        // in case the file is very, very small
+        return e instanceof EOFException;
     }
 
     @Override
@@ -150,7 +149,7 @@ public class DFSFileTableReader implements TableReader {
     }
 
     private String[] split(String line, String delim) {
-        // FIXME CVS line should be parsed considering escapes
+        // CVS line should be parsed considering escapes???
         String[] str = StringSplitter.split(line, delim);
 
         // un-escape CSV
@@ -185,16 +184,16 @@ public class DFSFileTableReader implements TableReader {
 
     private String autoDetectDelim(String line) {
         if (expectedColumnNumber > 0) {
-            for (String delim : DETECT_DELIMS) {
-                if (StringSplitter.split(line, delim).length == expectedColumnNumber) {
-                    logger.info("Auto detect delim to be '" + delim + "', split line to " + expectedColumnNumber
-                            + " columns -- " + line);
-                    return delim;
+            for (String del : DETECT_DELIMS) {
+                if (StringSplitter.split(line, del).length == expectedColumnNumber) {
+                    logger.info("Auto detect delim to be '{}', split line to {} columns -- {}", del,
+                            expectedColumnNumber, line);
+                    return del;
                 }
             }
         }
 
-        logger.info("Auto detect delim to be null, will take THE-WHOLE-LINE as a single value, for " + filePath);
+        logger.info("Auto detect delim to be null, will take THE-WHOLE-LINE as a single value, for {}", filePath);
         return null;
     }
 
@@ -235,7 +234,7 @@ public class DFSFileTableReader implements TableReader {
 
         CsvRowReader(FileSystem fs, String path) throws IOException {
             FSDataInputStream in = fs.open(new Path(path));
-            reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         }
 
         @Override

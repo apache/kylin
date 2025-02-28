@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,8 +32,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
-
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 
 public class KylinConfigExporterCLITest extends NLocalFileMetadataTestCase {
     @Rule

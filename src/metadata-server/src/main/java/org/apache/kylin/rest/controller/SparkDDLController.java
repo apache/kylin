@@ -27,9 +27,7 @@ import org.apache.kylin.rest.request.ViewRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.LogicalViewResponse;
 import org.apache.kylin.rest.service.SparkDDLService;
-
 import org.apache.spark.sql.LogicalViewLoader;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,51 +41,49 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping(value = "/api/spark_source", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON,
-                                                         HTTP_VND_APACHE_KYLIN_JSON})
+@RequestMapping(value = "/api/spark_source", produces = { HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON,
+        HTTP_VND_APACHE_KYLIN_JSON })
 @Slf4j
 public class SparkDDLController extends NBasicController {
 
-  @Autowired
-  private SparkDDLService sparkDDLService;
+    @Autowired
+    private SparkDDLService sparkDDLService;
 
-  @ApiOperation(value = "ddl")
-  @PostMapping(value = "/ddl")
-  @ResponseBody
-  public EnvelopeResponse<String> executeSQL(@RequestBody ViewRequest request) {
-    String project = checkProjectName(request.getDdlProject());
-    request.setDdlProject(project);
-    String result = sparkDDLService.executeSQL(request);
-    return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
-  }
+    @ApiOperation(value = "ddl")
+    @PostMapping(value = "/ddl")
+    @ResponseBody
+    public EnvelopeResponse<String> executeSQL(@RequestBody ViewRequest request) {
+        String project = checkProjectName(request.getDdlProject());
+        request.setDdlProject(project);
+        String result = sparkDDLService.executeSQL(request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
+    }
 
-  @ApiOperation(value = "ddl_description")
-  @GetMapping(value = "/ddl/description")
-  @ResponseBody
-  public EnvelopeResponse<List<List<String>>> description(
-      @RequestParam("project") String project,
-      @RequestParam("page_type") String pageType) {
-    project = checkProjectName(project);
-    return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-        sparkDDLService.pluginsDescription(project, pageType), "");
-  }
+    @ApiOperation(value = "ddl_description")
+    @GetMapping(value = "/ddl/description")
+    @ResponseBody
+    public EnvelopeResponse<List<List<String>>> description(@RequestParam("project") String project,
+            @RequestParam("page_type") String pageType) {
+        project = checkProjectName(project);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                sparkDDLService.pluginsDescription(project, pageType), "");
+    }
 
-  @ApiOperation(value = "ddl_sync")
-  @GetMapping(value = "/ddl/sync")
-  @ResponseBody
-  public EnvelopeResponse<String> sync() {
-    LogicalViewLoader.syncViewFromDB();
-    return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
-  }
+    @ApiOperation(value = "ddl_sync")
+    @GetMapping(value = "/ddl/sync")
+    @ResponseBody
+    public EnvelopeResponse<String> sync() {
+        LogicalViewLoader.syncViewFromDB();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
 
-  @ApiOperation(value = "ddl_desc")
-  @GetMapping(value = "/ddl/view_list")
-  @ResponseBody
-  public EnvelopeResponse<List<LogicalViewResponse>> list(
-      @RequestParam("project") String project,
-      @RequestParam(value = "table", required = false, defaultValue = "") String tableName) {
-    project = checkProjectName(project);
-    List<LogicalViewResponse> logicalViews = sparkDDLService.listAll(project, tableName);
-    return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, logicalViews, "");
-  }
+    @ApiOperation(value = "ddl_desc")
+    @GetMapping(value = "/ddl/view_list")
+    @ResponseBody
+    public EnvelopeResponse<List<LogicalViewResponse>> list(@RequestParam("project") String project,
+            @RequestParam(value = "table", required = false, defaultValue = "") String tableName) {
+        project = checkProjectName(project);
+        List<LogicalViewResponse> logicalViews = sparkDDLService.listAll(project, tableName);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, logicalViews, "");
+    }
 }

@@ -20,9 +20,11 @@
         "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <module name="LineLength">
-        <property name="max" value="1000"/>
+        <property name="max" value="120"/>
+        <property name="fileExtensions" value="java,scala"/>
         <property name="ignorePattern"
-                  value=".*url=.*|^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+                  value='.*url=.*|^package.*|^import.*|a href|href|http://|https://|ftp://|@.*|.*?"'/>
+        <!-- @.* refers to @JsonAutoDetect, .*?" refers to  some string starts with double quote -->
     </module>
 
     <module name="Header">
@@ -32,12 +34,28 @@
 
     <module name="FileTabCharacter"/>
     <module name="SuppressWarningsFilter"/>
+    <module name="NewlineAtEndOfFile"/>
     <module name="TreeWalker">
         <module name="AvoidStarImport"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports">
             <property name="processJavadoc" value="true"/>
         </module>
+        <module name="ImportOrder">
+            <property name="groups" value="/^java\./,/^javax\./,/^org\./,/^com\./"/>
+            <property name="ordered" value="false"/>
+            <property name="separated" value="true"/>
+            <property name="option" value="top"/>
+            <property name="caseSensitive" value="true"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+            <property name="useContainerOrderingForStatic" value="true"/>
+        </module>
+        <property name="fileExtensions" value="java,scala"/>
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+        <module name="UnnecessarySemicolonInEnumeration"/>
+        <module name="CommentsIndentation"/>
+        <module name="NoCodeInFile"/>
+        <module name="ModifierOrder"/>
         <module name="IllegalImport">
             <property name="regexp" value="true"/>
             <property name="illegalClasses" value="com\.google\.common\.(?!collect\.ImmutableList).*"/>
@@ -64,9 +82,6 @@
         <module name="SimplifyBooleanReturn"/>
         <module name="StringLiteralEquality"/>
         <!--        <module name="UnnecessaryParentheses"/>-->
-        <!--        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>-->
-        <!--        <module name="UnnecessarySemicolonInEnumeration"/>-->
-
         <!--<module name="InnerAssignment"/>-->
         <module name="MissingSwitchDefault"/>
         <!--<module name="FinalClass"/>-->

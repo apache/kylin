@@ -1,0 +1,16 @@
+{
+  "uuid" : "cb9aca49-0226-a7ae-e4ef-cc38808a4245",
+  "last_modified" : 1546941164950,
+  "version" : "3.0.0.0",
+  "mvcc" : 1,
+  "description" : null,
+  "owner" : null,
+  "mp_values" : [ ],
+  "create_time_utc" : 1546941164946,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "meta_key" : "cb9aca49-0226-a7ae-e4ef-cc38808a4245",
+  "project" : "flaw_model",
+  "segment_uuids" : [ "b4910fc1-2c75-40da-901e-a9c1e8995dea" ]
+}

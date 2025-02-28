@@ -29,6 +29,10 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.cache.fs.AbstractCacheFileSystem;
+import org.apache.kylin.cache.fs.AlluxioHdfsFileInputStream;
+import org.apache.kylin.cache.fs.CacheFileInputStream;
+import org.apache.kylin.cache.fs.CacheFileSystemConstants;
 import org.apache.kylin.common.AbstractTestCase;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -36,11 +40,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.cache.fs.AbstractCacheFileSystem;
-import org.apache.kylin.cache.fs.AlluxioHdfsFileInputStream;
-import org.apache.kylin.cache.fs.CacheFileInputStream;
-import org.apache.kylin.cache.fs.CacheFileSystemConstants;
 
 public class KylinCacheFileSystemTest extends AbstractTestCase {
 
@@ -54,27 +53,32 @@ public class KylinCacheFileSystemTest extends AbstractTestCase {
     public static FileStatus f = null;
 
     @Test
-    public void testExtractAcceptCacheTimeFromSql() {
+    public void testExtractAcceptCacheTimeInHintStr() {
         {
-            String[] pair = extractAcceptCacheTime("");
-            Assert.assertArrayEquals(new String[] { "", null }, pair);
+            String time = extractAcceptCacheTime("");
+            Assert.assertNull(time);
         }
         {
-            String[] pair = extractAcceptCacheTime("ACCEPT_CACHE_TIME");
-            Assert.assertArrayEquals(new String[] { "ACCEPT_CACHE_TIME", null }, pair);
+            String time = extractAcceptCacheTime("ACCEPT_CACHE_TIME");
+            Assert.assertNull(time);
         }
         {
-            String[] pair = extractAcceptCacheTime("select * from xxx /*+ ACCEPT_CACHE_TIME(158176387682000) */");
-            Assert.assertArrayEquals(new String[] { "select * from xxx ", "158176387682000" }, pair);
+            String time = extractAcceptCacheTime("select * from xxx /*+ ACCEPT_CACHE_TIME(158176387682000) */");
+            Assert.assertEquals("158176387682000", time);
         }
         {
-            String[] pair = extractAcceptCacheTime("/*+ ACCEPT_CACHE_TIME(158176387682000) */\nselect * from xxx");
-            Assert.assertArrayEquals(new String[] { "\nselect * from xxx", "158176387682000" }, pair);
+            String time = extractAcceptCacheTime("/*+ ACCEPT_CACHE_TIME(158176387682000) */\nselect * from xxx");
+            Assert.assertEquals("158176387682000", time);
         }
         {
-            String[] pair = extractAcceptCacheTime(
+            String time = extractAcceptCacheTime(
                     "/*+ ACCEPT_CACHE_TIME(158176387682000, 2021-03-28T12:33:54) */\nselect * from xxx");
-            Assert.assertArrayEquals(new String[] { "\nselect * from xxx", "158176387682000" }, pair);
+            Assert.assertEquals("158176387682000", time);
+        }
+        {
+            String time = extractAcceptCacheTime(
+                    "/*+ MODEL_PRIORITY(m1,m2), ABC, ACCEPT_CACHE_TIME(158176387682000, 2021-03-28T12:33:54), DEF, ACCEPT_CACHE_TIME(158176387682001) */");
+            Assert.assertEquals("158176387682000", time);
         }
         // now 2023/2/27:  1677466066216
         // big enough:   158176387682000

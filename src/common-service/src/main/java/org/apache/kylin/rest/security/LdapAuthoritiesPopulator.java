@@ -22,17 +22,16 @@ import java.util.Set;
 
 import javax.naming.directory.SearchControls;
 
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.rest.constant.Constant;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 public class LdapAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
-    private SimpleGrantedAuthority adminRoleAsAuthority;
+    private final SimpleGrantedAuthority adminRoleAsAuthority;
 
     public LdapAuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole,
             SearchControls searchControls) {

@@ -25,9 +25,9 @@ import java.util.Set;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * 
+ *
  * @author xjiang
- * 
+ *
  */
 public class ColumnRowType {
 
@@ -78,11 +78,11 @@ public class ColumnRowType {
         return -1;
     }
 
-    public int getIndexByNameAndByContext(OLAPContext ctx, String columnName) {
+    public int getColumnIndex(OlapContext ctx, String columnName) {
         for (int i = 0; i < columns.size(); i++) {
             TblColRef colRef = columns.get(i);
             if (colRef.getName().equals(columnName) && ctx.belongToContextTables(colRef)
-                    && ctx.realization.getModel().getRootFactTable().equals(colRef.getTableRef())) {
+                    && ctx.getRealization().getModel().getRootFactTable().equals(colRef.getTableRef())) {
                 return i;
             }
         }

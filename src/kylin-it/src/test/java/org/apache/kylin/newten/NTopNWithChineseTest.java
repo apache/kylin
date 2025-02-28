@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
@@ -38,18 +37,26 @@ import org.sparkproject.guava.collect.Sets;
 import lombok.val;
 
 public class NTopNWithChineseTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/topn_with_chinese");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/topn_with_chinese" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Override
@@ -63,8 +70,8 @@ public class NTopNWithChineseTest extends NLocalWithSparkSessionTest {
         NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
         NDataflow df = dsMgr.getDataflow(dfID);
         val layouts = df.getIndexPlan().getAllLayouts();
-        indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
+                Sets.newLinkedHashSet(layouts), true);
         String sqlHitCube = "select city, sum(int_id) as a from topn_with_chinese group by city order by a desc limit 10";
         List<String> hitCubeResult = ExecAndComp.queryModelWithoutCompute(getProject(), sqlHitCube) //
                 .collectAsList().stream().map(Row::toString).collect(Collectors.toList());

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -44,8 +45,8 @@ public class StreamingJobManager {
     private StreamingJobManager(KylinConfig config, String project) {
         this.project = project;
         this.config = config;
-        String resourceRootPath = "/" + project + ResourceStore.STREAMING_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<StreamingJobMeta>(getStore(), resourceRootPath, "", StreamingJobMeta.class) {
+        this.crud = new CachedCrudAssist<StreamingJobMeta>(getStore(), MetadataType.STREAMING_JOB, project,
+                StreamingJobMeta.class) {
             @Override
             protected StreamingJobMeta initEntityAfterReload(StreamingJobMeta entity, String resourceName) {
                 entity.setProject(project);

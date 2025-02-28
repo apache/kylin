@@ -18,6 +18,8 @@
 
 package org.apache.kylin.tool.setup;
 
+import java.util.Locale;
+
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.spark.util.KylinHiveUtils;
 import org.slf4j.Logger;
@@ -32,7 +34,7 @@ public class HiveConnectivityCheckTool {
             KylinHiveUtils.checkHiveIsAccessible("show databases");
             return true;
         } catch (Exception e) {
-            logger.error(String.format("Connection test failed %s", e.getMessage()));
+            logger.error(String.format(Locale.ROOT, "Connection test failed %s", e.getMessage()));
             return false;
         }
     }

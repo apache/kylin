@@ -1,0 +1,15 @@
+{
+  "uuid" : "c4bb7f53-e8d1-ed0a-06d0-b7cff21634f7",
+  "last_modified" : 1699339180199,
+  "create_time" : 1699338612778,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "test_jdbc",
+  "segment_uuids" : [ "f1b656b9-1795-5b4e-fe29-7649684bb9ba" ]
+}

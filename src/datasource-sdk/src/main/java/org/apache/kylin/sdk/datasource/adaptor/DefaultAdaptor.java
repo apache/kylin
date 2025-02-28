@@ -31,7 +31,6 @@ import java.util.Map;
 import javax.sql.rowset.CachedRowSet;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.kylin.guava30.shaded.common.base.Joiner;
 
 /**
@@ -41,7 +40,7 @@ import org.apache.kylin.guava30.shaded.common.base.Joiner;
 @SuppressWarnings("UnstableApiUsage")
 public class DefaultAdaptor extends AbstractJdbcAdaptor {
 
-    private static Joiner joiner = Joiner.on("_");
+    private static final Joiner JOINER = Joiner.on("_");
 
     private static final String TABLE_SCHEM = "TABLE_SCHEM";
     private static final String TABLE_NAME = "TABLE_NAME";
@@ -159,11 +158,12 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
 
     /**
      * defects:
-     * identifier can not tell column or table or database, here follow the order database->table->column, once matched and returns
+     * identifier can not tell column or table or database,
+     * here follow the order database->table->column, once matched and returns
      * so once having a database name Test and table name TEst, will always find Test.
      *
      * @param identifier
-     * @return identifier with case sensitive
+     * @return identifier with case-sensitive
      */
     public String fixIdentifierCaseSensitive(String identifier) {
         try {
@@ -248,7 +248,7 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
                         String name = rs.getString(TABLE_NAME);
                         String database = rs.getString(TABLE_SCHEM) != null ? rs.getString(TABLE_SCHEM)
                                 : rs.getString("TABLE_CAT");
-                        String cacheKey = joiner.join(config.datasourceId, config.url, "tables", database);
+                        String cacheKey = JOINER.join(config.datasourceId, config.url, "tables", database);
                         List<String> cachedTables = TABLES_CACHE.getIfPresent(cacheKey);
                         if (cachedTables == null) {
                             cachedTables = new ArrayList<>();
@@ -321,7 +321,7 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
                             : columnsRs.getString("TABLE_CAT");
                     String table = columnsRs.getString(TABLE_NAME);
                     String column_name = columnsRs.getString("COLUMN_NAME");
-                    String cacheKey = joiner.join(config.datasourceId, config.url, database, table, "columns");
+                    String cacheKey = JOINER.join(config.datasourceId, config.url, database, table, "columns");
                     List<String> cachedColumns = COLUMNS_CACHE.getIfPresent(cacheKey);
                     if (cachedColumns == null) {
                         cachedColumns = new ArrayList<>();
@@ -359,11 +359,11 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         String dropsql2 = "DROP VIEW IF EXISTS " + tableIdentity;
 
         StringBuilder ddl = new StringBuilder();
-        ddl.append("CREATE TABLE " + tableIdentity + "\n");
+        ddl.append("CREATE TABLE ").append(tableIdentity).append("\n");
         ddl.append("(" + "\n");
 
         for (Map.Entry<String, String> col : columnInfo.entrySet()) {
-            ddl.append(col.getKey() + " " + toSourceTypeName(col.getValue()) + ",\n");
+            ddl.append(col.getKey()).append(" ").append(toSourceTypeName(col.getValue())).append(",\n");
         }
 
         ddl.deleteCharAt(ddl.length() - 2);
@@ -380,5 +380,4 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
 
         return new String[] { dropView, dropTable, createSql };
     }
-
 }

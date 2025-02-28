@@ -17,28 +17,33 @@
  */
 package org.apache.spark.sql.common
 
-import java.io.File
 import org.apache.curator.test.TestingServer
 import org.apache.kylin.common.util.{NLocalFileMetadataTestCase, Unsafe}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
+import java.io.File
+
 
 trait LocalMetadata extends BeforeAndAfterAll with BeforeAndAfterEach {
   self: Suite =>
-  val metadata = "../examples/test_case_data/localmeta"
+  var metadata: String = _
   var metaStore: NLocalFileMetadataTestCase = _
   var zkTestServer: TestingServer = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     metaStore = new NLocalFileMetadataTestCase
-    if (new File(metadata).exists()) {
-      metaStore.createTestMetadata(metadata)
+    if (metadata == null) {
+      metaStore.createTestMetadata()
     } else {
-      metaStore.createTestMetadata("../" + metadata)
+      metaStore.createTestMetadata(metadata)
     }
     zkTestServer = new TestingServer(true)
     Unsafe.setProperty("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString)
+  }
+
+  protected def appendMetadata(metadata: String): Unit = {
+    this.metadata = metadata
   }
 
   protected def overwriteSystemProp(key: String, value: String): Unit = {

@@ -18,14 +18,12 @@
 
 package org.apache.kylin.query.blacklist;
 
-import static org.apache.kylin.common.persistence.ResourceStore.GLOBAL_PROJECT;
-
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,8 +33,6 @@ import lombok.Data;
 @Data
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class SQLBlacklist extends RootPersistentEntity implements Serializable {
-
-    public static final String SQL_BLACKLIST_RESOURCE_ROOT = GLOBAL_PROJECT + "/sql_blacklist";
 
     public SQLBlacklist() {
         updateRandomUuid();
@@ -141,9 +137,9 @@ public class SQLBlacklist extends RootPersistentEntity implements Serializable {
     public String resourceName() {
         return project;
     }
-    
+
     @Override
-    public String getResourcePath() {
-        return SQL_BLACKLIST_RESOURCE_ROOT + "/" + resourceName() + MetadataConstants.FILE_SURFIX;
+    public MetadataType resourceType() {
+        return MetadataType.SQL_BLACKLIST;
     }
 }

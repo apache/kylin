@@ -34,22 +34,23 @@ import javax.sql.rowset.CachedRowSet;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.sdk.datasource.framework.FixedCachedRowSetImpl;
 import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfigurer;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
+import org.apache.kylin.source.SupportsSparkCatalog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.cache.Cache;
-import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 
 /**
  * Extends this Abstract class to create Adaptors for new jdbc data source.
  */
-public abstract class AbstractJdbcAdaptor implements Closeable {
+public abstract class AbstractJdbcAdaptor implements Closeable, SupportsSparkCatalog {
 
     protected static final Logger logger = LoggerFactory.getLogger(DefaultAdaptor.class);
     protected final BasicDataSource dataSource;
@@ -64,6 +65,18 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
             .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(4096).build();
 
     private static Joiner joiner = Joiner.on("_");
+
+    // for ut only
+    @VisibleForTesting
+    public AdaptorConfig getConfig() {
+        return config;
+    }
+
+    // for ut only
+    @VisibleForTesting
+    public BasicDataSource getDataSource() {
+        return dataSource;
+    }
 
     // Used by DefaultSourceConnector just for build, do not abuse it!
     protected AbstractJdbcAdaptor() {
@@ -88,6 +101,9 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
         props.setProperty("url", config.url);
         props.setProperty("username", config.username);
         props.setProperty("password", config.password);
+        props.setProperty("maxTotal", String.valueOf(config.poolMaxTotal));
+        props.setProperty("maxIdle", String.valueOf(config.poolMaxIdle));
+        props.setProperty("minIdle", String.valueOf(config.poolMinIdle));
 
         dataSource = BasicDataSourceFactory.createDataSource(props);
 
@@ -124,7 +140,8 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     }
 
     /**
-     * Convert a <C>ResultSet</C> to <C>CachedRowSet</C>, because <C>ResultSet</C> relies on the connection kept Open, but <C>CachedRowSet</C> not.
+     * Convert a <C>ResultSet</C> to <C>CachedRowSet</C>,
+     * because <C>ResultSet</C> relies on the connection kept Open, but <C>CachedRowSet</C> not.
      *
      * @param resultSet
      * @return
@@ -192,7 +209,8 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     }
 
     /**
-     * To close a <C>AutoCloseable</C> implementation, such as <C>java.sql.Connection</C>, <C>java.sql.Statement</C>, <C><java.sql.ResultSet/C>.
+     * To close a <C>AutoCloseable</C> implementation, such as <C>java.sql.Connection</C>,
+     * <C>java.sql.Statement</C>, <C><java.sql.ResultSet/C>.
      *
      * @param closeable Such as <C>java.sql.Connection</C>, <C>java.sql.Statement</C>, <C><java.sql.ResultSet/C>.
      */
@@ -237,7 +255,8 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     }
 
     /**
-     * To execute a set of sql statements, and won't expect the results. Usually used to execute a set of Update operations.
+     * To execute a set of sql statements, and won't expect the results.
+     * Usually used to execute a set of Update operations.
      *
      * @param sqls A set of sql statements
      * @throws SQLException If one of the sql statements executed failed.
@@ -322,8 +341,10 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     public abstract String toKylinTypeName(int sourceTypeId);
 
     /**
-     * To converted a column type name which is defined in Kylin metadata, to a column type name which is supported in JDBC source.
-     * For example, Kylin defines a integer type as "INTEGER" in table metadata, but JDBC source defines it as "INT". So we need to convert from "INTEGER" to "INT" here.
+     * To convert a column type name which is defined in Kylin metadata,
+     * to a column type name which is supported in JDBC source.
+     * For example, Kylin defines a integer type as "INTEGER" in table metadata,
+     * but JDBC source defines it as "INT". So we need to convert from "INTEGER" to "INT" here.
      *
      * @param kylinTypeName A column type name which is defined in Kylin.
      * @return A column type name which is supported in JDBC source.
@@ -331,8 +352,10 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     public abstract String toSourceTypeName(String kylinTypeName);
 
     /**
-     * To fix the sql to be smoothly executed in JDBC source, because the SQL dialect may be different between Kylin and JDBC source.
-     * The framework will convert the sql according to dialect of jdbc source firstly (if skipDefaultSqlConvert() returns <C>FALSE</C>), and then
+     * To fix the sql to be smoothly executed in JDBC source,
+     * because the SQL dialect may be different between Kylin and JDBC source.
+     * The framework will convert the sql according to dialect of jdbc source
+     * firstly (if skipDefaultSqlConvert() returns <C>FALSE</C>), and then
      * call this method.
      *
      * @param sql The SQL statement to be fixed.
@@ -350,7 +373,8 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
 
     /**
      * To list all the available database names from JDBC source.
-     * Some JDBC source will expose SYSTEM databases from the default implementation, then developers can overwrite this method and do some filtering.
+     * Some JDBC source will expose SYSTEM databases from the default implementation,
+     * then developers can overwrite this method and do some filtering.
      * Besides, some RDBMS uses Catalog as the definition of database, you can find details in <C>MysqlAdaptor</C>
      *
      * @return The list of all the available database names.

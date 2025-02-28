@@ -1,0 +1,58 @@
+{
+  "uuid" : "838fb093-95b2-4aad-9042-3790543352f6",
+  "last_modified" : 1497949795586,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.HOUSEHOLD_DEMOGRAPHICS",
+  "last_build_job_id" : "67df3733-b9de-4152-a46e-3f1fc1c81ca5",
+  "columns_stats" : [ {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "1000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "20",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "0-500",
+    "max_length_value" : "5001-10000",
+    "min_length_value" : "0-500",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "9",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "4",
+    "min_value" : "-1",
+    "max_length_value" : "-1",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 6
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "2", "4", "6", "8", "10", "12", "14", "16", "18", "20" ], [ "0-500", "0-500", "0-500", "0-500", "0-500", "0-500", "0-500", "0-500", "0-500", "0-500" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "7200",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "883",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/household_demographics",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

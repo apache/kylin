@@ -23,7 +23,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.net.util.TrustManagerUtils;
-
 import org.apache.kylin.shaded.influxdb.okhttp3.OkHttpClient;
 import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBFactory;

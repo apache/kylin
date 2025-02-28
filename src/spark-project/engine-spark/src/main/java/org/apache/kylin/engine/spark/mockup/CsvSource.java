@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -34,6 +33,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
 import org.apache.kylin.engine.spark.source.NSparkCubingSourceInput;
 import org.apache.kylin.engine.spark.source.NSparkMetadataExplorer;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -43,15 +44,8 @@ import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.execution.utils.SchemaProcessor;
 import org.apache.spark.sql.types.StructType;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class CsvSource implements ISource {
 
@@ -69,26 +63,21 @@ public class CsvSource implements ISource {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
 
         if (engineInterface == NSparkCubingSource.class) {
-            return (I) new NSparkCubingSource() {
-
-                @Override
-                public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
-                    if ("null".equalsIgnoreCase(table.getDatabase())
-                            || KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB().equalsIgnoreCase(table.getDatabase())) {
-                      return new NSparkCubingSourceInput().getSourceData(table, ss, parameters);
-                    }
-                    String path = new File(getUtMetaDir(), "data/" + table.getIdentity() + ".csv").getAbsolutePath();
-                    ColumnDesc[] columnDescs = table.getColumns();
-                    List<ColumnDesc> tblColDescs = Lists.newArrayListWithCapacity(columnDescs.length);
-                    for (ColumnDesc columnDesc : columnDescs) {
-                        if (!columnDesc.isComputedColumn()) {
-                            tblColDescs.add(columnDesc);
-                        }
-                    }
-                    StructType structType = SchemaProcessor
-                            .buildSchemaWithRawTable(tblColDescs.toArray(new ColumnDesc[0]));
-                    return ss.read().option("delimiter", ",").schema(structType).csv(path);
+            return (I) (NSparkCubingSource) (table, ss, parameters) -> {
+                if ("null".equalsIgnoreCase(table.getDatabase()) || KylinConfig.getInstanceFromEnv()
+                        .getDDLLogicalViewDB().equalsIgnoreCase(table.getDatabase())) {
+                    return new NSparkCubingSourceInput().getSourceData(table, ss, parameters);
                 }
+                String path = new File(getUtMetaDir(), "data/" + table.getIdentity() + ".csv").getAbsolutePath();
+                ColumnDesc[] columnDescs = table.getColumns();
+                List<ColumnDesc> tblColDescs = Lists.newArrayListWithCapacity(columnDescs.length);
+                for (ColumnDesc columnDesc : columnDescs) {
+                    if (!columnDesc.isComputedColumn()) {
+                        tblColDescs.add(columnDesc);
+                    }
+                }
+                StructType structType = SchemaProcessor.buildSchemaWithRawTable(tblColDescs.toArray(new ColumnDesc[0]));
+                return ss.read().option("delimiter", ",").schema(structType).csv(path);
             };
         }
         throw new IllegalArgumentException("Unsupported engine interface: " + engineInterface);
@@ -170,7 +159,7 @@ public class CsvSource implements ISource {
 
         @Override
         public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj)
-            throws Exception {
+                throws Exception {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             if (config.getDDLLogicalViewDB().equalsIgnoreCase(database)) {
                 return new NSparkMetadataExplorer().loadTableMetadata(database, table, prj);
@@ -206,8 +195,7 @@ public class CsvSource implements ISource {
         @Override
         public Set<String> getTablePartitions(String database, String table, String prj, String partitionCols) {
             if (table.equalsIgnoreCase("SUPPLIER") && partitionCols.equalsIgnoreCase("S_NATION")) {
-                Set<String> partitions = Sets.newHashSet("2019-01-03", "2019-01-04");
-                return partitions;
+                return Sets.newHashSet("2019-01-03", "2019-01-04");
             }
             throw new UnsupportedOperationException();
         }

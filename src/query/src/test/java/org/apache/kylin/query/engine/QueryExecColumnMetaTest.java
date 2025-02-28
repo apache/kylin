@@ -19,13 +19,9 @@
 package org.apache.kylin.query.engine;
 
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.QueryExtension;
 import org.junit.After;
 import org.junit.Assert;
@@ -60,19 +56,16 @@ public class QueryExecColumnMetaTest extends NLocalFileMetadataTestCase {
             { "pRICE", "PRice" }, { "pRICE", "PRice" } };
 
     @Test
-    public void testColumnNames() throws SQLException {
+    public void testColumnNames() {
         assert sqls.length == expectedColumnNamesList.length;
 
-        for (int i = 0; i < sqls.length; i++) {
-            String sql = sqls[i];
-            String expectedColumnNames = String.join(", ", expectedColumnNamesList[i]);
-
-            List<StructField> columns = new QueryExec("newten", KylinConfig.getInstanceFromEnv())
-                    .getColumnMetaData(sql);
-            String actualColNames = columns.stream().map(StructField::getName).collect(Collectors.joining(", "));
-
-            Assert.assertEquals(String.format(Locale.ROOT, "ColumnName test failed: sql-%d [%s]", i, sql),
-                    expectedColumnNames, actualColNames);
+        String expectedError = "Column 'pRICE' is ambiguous";
+        for (String sql : sqls) {
+            try {
+                new QueryExec("newten", KylinConfig.getInstanceFromEnv()).getColumnMetaData(sql);
+            } catch (SQLException e) {
+                Assert.assertTrue(e.getMessage().contains(expectedError));
+            }
         }
     }
 

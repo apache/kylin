@@ -18,7 +18,14 @@
 
 package org.apache.kylin.helper;
 
-import lombok.val;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.naming.directory.SearchControls;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.metadata.upgrade.GlobalAclVersionManager;
@@ -26,15 +33,11 @@ import org.apache.kylin.tool.util.LdapUtils;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 
-import javax.naming.directory.SearchControls;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import lombok.val;
 
 public class UpdateUserAclToolHelper {
-    private UpdateUserAclToolHelper() {}
+    private UpdateUserAclToolHelper() {
+    }
 
     public static UpdateUserAclToolHelper getInstance() {
         return new UpdateUserAclToolHelper();
@@ -73,8 +76,5 @@ public class UpdateUserAclToolHelper {
         val versionManager = GlobalAclVersionManager.getInstance(KylinConfig.getInstanceFromEnv());
         return versionManager.exists();
     }
-
-
-
 
 }

@@ -21,17 +21,13 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.metadata.model.NTableMetadataManager.getInstance;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,22 +47,19 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.ObsConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.job.JobContext;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRange;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRangeManager;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ManagementType;
@@ -79,7 +71,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.user.ManagedUser;
@@ -89,7 +80,6 @@ import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.DateRangeRequest;
 import org.apache.kylin.rest.request.TopTableRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
-import org.apache.kylin.rest.response.BatchLoadTableResponse;
 import org.apache.kylin.rest.response.NInitTablesResponse;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
@@ -168,8 +158,9 @@ public class TableServiceTest extends CSVSourceTestCase {
     private final StreamingJobListener eventListener = new StreamingJobListener();
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        JobContextUtil.cleanUp();
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", Mockito.spy(AclUtil.class));
         ReflectionTestUtils.setField(modelService, "aclEvaluate", aclEvaluate);
@@ -203,7 +194,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         }
         EventBusFactory.getInstance().register(eventListener, true);
 
-        JobContextUtil.cleanUp();
         JobContext jobContext = JobContextUtil.getJobContext(getTestConfig());
         try {
             // need not start job scheduler
@@ -212,14 +202,16 @@ public class TableServiceTest extends CSVSourceTestCase {
             log.error("Destroy jobContext failed.");
             throw new RuntimeException("Destroy jobContext failed.", e);
         }
+        // Streaming jon need this lock.
+        jobContext.getLockClient().start();
     }
 
     @After
     public void tearDown() {
         EventBusFactory.getInstance().unregister(eventListener);
-        cleanupTestMetadata();
-        FileUtils.deleteQuietly(new File("metastore_db"));
         JobContextUtil.cleanUp();
+        super.tearDown();
+        FileUtils.deleteQuietly(new File("metastore_db"));
         FileUtils.deleteQuietly(new File("../modeling-service/metastore_db"));
     }
 
@@ -265,16 +257,16 @@ public class TableServiceTest extends CSVSourceTestCase {
         Assert.assertEquals(2, tableDesc.size());
         val tableMetadataManager = getInstance(getTestConfig(), "streaming_test");
         var tableDesc1 = tableMetadataManager.getTableDesc("DEFAULT.SSB_TOPIC");
-        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
+        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().isStreamingEnabled()));
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
         tableDesc = tableService.getTableDesc("streaming_test", true, "", "DEFAULT", true, sourceType, 10).getFirst();
         Assert.assertEquals(0, tableDesc.size());
         // check kafka table
-        Assert.assertFalse(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
+        Assert.assertFalse(tableDesc1.isAccessible(getTestConfig().isStreamingEnabled()));
 
         // check batch table
         tableDesc1 = tableMetadataManager.getTableDesc("SSB.CUSTOMER");
-        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
+        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().isStreamingEnabled()));
     }
 
     @Test
@@ -485,7 +477,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         tableService.filterSamplingRows("newten", tableDescResponse, false, aclTCRs);
 
         Assert.assertEquals(1, tableDescResponse.getSamplingRows().size());
-        Assert.assertEquals("country_a,10.10,11.11,name_%a",
+        Assert.assertEquals("country_a,11.11,name_%a",
                 String.join(",", tableDescResponse.getSamplingRows().get(0)));
     }
 
@@ -518,16 +510,16 @@ public class TableServiceTest extends CSVSourceTestCase {
         TableExtDesc tableExt = new TableExtDesc();
         tableExt.setIdentity("DEFAULT.TEST_COUNTRY");
         TableExtDesc tableExtDesc = new TableExtDesc(tableExt);
-        String[] result = tableService.loadTableToProject(nTableDesc, tableExtDesc, "default");
-        Assert.assertEquals(1, result.length);
+        String result = tableService.loadTableToProject(nTableDesc, tableExtDesc, "default");
+        Assert.assertEquals("DEFAULT.TEST_COUNTRY", result);
     }
 
     @Test
     public void testLoadTableToProjectWithS3Role() throws IOException {
         getTestConfig().setProperty("kylin.env.use-dynamic-role-credential-in-table", "true");
         assert !SparderEnv.getSparkSession().conf().contains(String.format(S3_ROLE_ARN_KEY_FORMAT, "testbucket"));
-        List<TableDesc> tables = tableService.getTableDesc("default", true, "TEST_COUNTRY", "DEFAULT", true,
-                Collections.emptyList(), 10).getFirst();
+        List<TableDesc> tables = tableService
+                .getTableDesc("default", true, "TEST_COUNTRY", "DEFAULT", true, Collections.emptyList(), 10).getFirst();
         TableDesc nTableDesc = new TableDesc(tables.get(0));
         TableExtDesc tableExt = new TableExtDesc();
         tableExt.setIdentity("DEFAULT.TEST_COUNTRY");
@@ -535,12 +527,12 @@ public class TableServiceTest extends CSVSourceTestCase {
         tableExtDesc.addDataSourceProp(TableExtDesc.S3_ROLE_PROPERTY_KEY, "testRole");
         tableExtDesc.addDataSourceProp(TableExtDesc.LOCATION_PROPERTY_KEY, "s3://testbucket/path");
         tableExtDesc.addDataSourceProp(TableExtDesc.S3_ENDPOINT_KEY, "us-west-2.amazonaws.com");
-        String[] result = tableService.loadTableToProject(nTableDesc, tableExtDesc, "default");
+        String result = tableService.loadTableToProject(nTableDesc, tableExtDesc, "default");
         assert SparderEnv.getSparkSession().conf().get(String.format(S3_ROLE_ARN_KEY_FORMAT, "testbucket"))
                 .equals("testRole");
         assert SparderEnv.getSparkSession().conf().get(String.format(S3_ENDPOINT_KEY_FORMAT, "testbucket"))
                 .equals("us-west-2.amazonaws.com");
-        Assert.assertEquals(1, result.length);
+        Assert.assertEquals(nTableDesc.getIdentity(), result);
     }
 
     @Test
@@ -562,7 +554,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         roleCredentialInfo = new TableExtDesc.RoleCredentialInfo("testbucket2", "testRole", "", type, "");
         tableService.addAndBroadcastSparkSession(roleCredentialInfo);
         assert SparderEnv.getSparkSession().conf().get(String.format(S3_ROLE_ARN_KEY_FORMAT, "testbucket2"))
-                       .equals("testRole");
+                .equals("testRole");
 
         getTestConfig().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "false");
         roleCredentialInfo = new TableExtDesc.RoleCredentialInfo("testbucket1", "testRole", "", type, "");
@@ -580,19 +572,23 @@ public class TableServiceTest extends CSVSourceTestCase {
                 "oss-cn-shanghai-internal.aliyuncs.com", type, "cn-shanghai");
         tableService.addAndBroadcastSparkSession(roleCredentialInfo);
         // fs.oss.bucket.testbucket2.credentials.provider
-        assert SparderEnv.getSparkSession().conf().contains(String.format(ObsConfig.OSS.getAssumedRoleCredentialProviderKey(), "testbucket2"));
-        assert SparderEnv.getSparkSession().conf().contains(String.format(ObsConfig.OSS.getCredentialProviderKey(), "testbucket2"));
-        assert SparderEnv.getSparkSession().conf().contains(String.format(ObsConfig.OSS.getEndpointKey(), "testbucket2"));
+        assert SparderEnv.getSparkSession().conf()
+                .contains(String.format(ObsConfig.OSS.getAssumedRoleCredentialProviderKey(), "testbucket2"));
+        assert SparderEnv.getSparkSession().conf()
+                .contains(String.format(ObsConfig.OSS.getCredentialProviderKey(), "testbucket2"));
+        assert SparderEnv.getSparkSession().conf()
+                .contains(String.format(ObsConfig.OSS.getEndpointKey(), "testbucket2"));
         assert SparderEnv.getSparkSession().conf().contains(String.format(ObsConfig.OSS.getRegionKey(), "testbucket2"));
-        assert SparderEnv.getSparkSession().conf().contains(String.format(ObsConfig.OSS.getRoleArnKey(), "testbucket2"));
+        assert SparderEnv.getSparkSession().conf()
+                .contains(String.format(ObsConfig.OSS.getRoleArnKey(), "testbucket2"));
         assert SparderEnv.getSparkSession().conf().get("fs.oss.bucket.testbucket2.credentials.provider")
-                        .equals(ObsConfig.OSS.getCredentialProviderValue());
+                .equals(ObsConfig.OSS.getCredentialProviderValue());
         assert SparderEnv.getSparkSession().conf().get("fs.oss.bucket.testbucket2.assumed.role.credentials.provider")
-                        .equals(ObsConfig.OSS.getAssumedRoleCredentialProviderValue());
+                .equals(ObsConfig.OSS.getAssumedRoleCredentialProviderValue());
         roleCredentialInfo = new TableExtDesc.RoleCredentialInfo("testbucket2", "testRole", "", type, "");
         tableService.addAndBroadcastSparkSession(roleCredentialInfo);
         assert SparderEnv.getSparkSession().conf().get(String.format(ObsConfig.OSS.getRoleArnKey(), "testbucket2"))
-                       .equals("testRole");
+                .equals("testRole");
 
         getTestConfig().setProperty("kylin.env.use-dynamic-role-credential-in-table", "false");
         roleCredentialInfo = new TableExtDesc.RoleCredentialInfo("testbucket3", "testRole", "", type, "");
@@ -614,8 +610,8 @@ public class TableServiceTest extends CSVSourceTestCase {
         TableExtDesc tableExt = new TableExtDesc();
         tableExt.setIdentity("CASE_SENSITIVE.TEST_KYLIN_FACT");
         TableExtDesc tableExtDesc = new TableExtDesc(tableExt);
-        String[] result = tableService.loadTableToProject(origin, tableExtDesc, "case_sensitive");
-        Assert.assertEquals(1, result.length);
+        String result = tableService.loadTableToProject(origin, tableExtDesc, "case_sensitive");
+        Assert.assertEquals("CASE_SENSITIVE.TEST_KYLIN_FACT", result);
         ObjectMapper mapper = new ObjectMapper();
         String jsonContent = mapper.writeValueAsString(origin);
         InputStream savedStream = IOUtils.toInputStream(jsonContent, Charset.defaultCharset());
@@ -648,10 +644,10 @@ public class TableServiceTest extends CSVSourceTestCase {
         TableExtDesc tableExt = new TableExtDesc();
         tableExt.setIdentity("DEFAULT.TEST_UNLOAD");
         TableExtDesc tableExtDesc = new TableExtDesc(tableExt);
-        String[] result = tableService.loadTableToProject(tableDesc, tableExtDesc, "default");
+        String result = tableService.loadTableToProject(tableDesc, tableExtDesc, "default");
         NTableMetadataManager nTableMetadataManager = NTableMetadataManager
                 .getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        Assert.assertEquals(1, result.length);
+        Assert.assertEquals("DEFAULT.TEST_UNLOAD", result);
         val size = nTableMetadataManager.listAllTables().size();
         String unloadedTable = tableService.unloadTable("default", "DEFAULT.TEST_UNLOAD", false);
         Assert.assertEquals(tableDesc.getIdentity(), unloadedTable);
@@ -705,31 +701,6 @@ public class TableServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testUnloadTable_RemoveNDataLoadingRange() throws Exception {
-        setupPushdownEnv();
-        String tableName = "DEFAULT.TEST_KYLIN_FACT";
-
-        NTableMetadataManager nTableMetadataManager = NTableMetadataManager
-                .getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        val originSize = nTableMetadataManager.listAllTables().size();
-
-        // Add partition_key and data_loading_range
-        tableService.setPartitionKey(tableName, "default", "CAL_DT", "yyyy-MM-dd");
-
-        // unload table
-        tableService.unloadTable("default", tableName, false);
-        Assert.assertEquals(originSize - 1, nTableMetadataManager.listAllTables().size());
-
-        // reload table
-        String[] tables = { "DEFAULT.TEST_KYLIN_FACT" };
-        List<Pair<TableDesc, TableExtDesc>> extractTableMeta = tableService.extractTableMeta(tables, "default");
-        tableService.loadTableToProject(extractTableMeta.get(0).getFirst(), extractTableMeta.get(0).getSecond(),
-                "default");
-        Assert.assertEquals(originSize, nTableMetadataManager.listAllTables().size());
-        cleanPushdownEnv();
-    }
-
-    @Test
     public void testUnloadKafkaTable() {
         String project = "streaming_test";
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
@@ -774,19 +745,8 @@ public class TableServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testSetPartitionKeyAndSetDataRange() throws Exception {
-        setupPushdownEnv();
-        testGetBatchLoadTablesBefore();
-        testSetPartitionKeyWithoutException();
-        testGetBatchLoadTablesAfter();
-        testgetPartitionColumnFormat();
-        cleanPushdownEnv();
-    }
-
-    @Test
     public void testGetPartitionFormatForbidden() throws Exception {
         setupPushdownEnv();
-        testGetBatchLoadTablesBefore();
         final String table = "DEFAULT.TEST_KYLIN_FACT";
         final NTableMetadataManager tableMgr = getInstance(getTestConfig(), "default");
         final TableDesc tableDesc = tableMgr.getTableDesc(table);
@@ -804,7 +764,6 @@ public class TableServiceTest extends CSVSourceTestCase {
     public void testGetPartitionFormatException() throws Exception {
         setupPushdownEnv();
         getTestConfig().setProperty("kylin.query.pushdown.partition-check.runner-class-name", "org.apache.kylin.AAA");
-        testGetBatchLoadTablesBefore();
         final String table = "DEFAULT.TEST_KYLIN_FACT";
         try {
             tableService.getPartitionColumnFormat("default", table, "CAL_DT", null);
@@ -812,153 +771,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         } catch (Exception e) {
             Assert.assertEquals(MsgPicker.getMsg().getPushdownPartitionFormatError(), e.getMessage());
         }
-    }
-
-    private void testGetBatchLoadTablesBefore() {
-        List<BatchLoadTableResponse> responses = tableService.getBatchLoadTables("default");
-        Assert.assertEquals(0, responses.size());
-    }
-
-    private void testGetBatchLoadTablesAfter() {
-        List<BatchLoadTableResponse> responses = tableService.getBatchLoadTables("default");
-        Assert.assertEquals(1, responses.size());
-        BatchLoadTableResponse response = responses.get(0);
-        Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", response.getTable());
-        Assert.assertEquals(61, response.getRelatedIndexNum());
-    }
-
-    private void testSetPartitionKeyWithoutException() throws Exception {
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        List<TableDesc> tables = tableService
-                .getTableDesc("default", false, "", "DEFAULT", true, Collections.emptyList(), 10).getFirst();
-        //test set fact and table list order by fact
-        Assert.assertTrue(tables.get(0).getName().equals("TEST_KYLIN_FACT") && tables.get(0).isIncrementLoading());
-    }
-
-    //test toggle partition Key,A to null, null to A ,A to B with model:with lag behind, without lag behind
-    @Test
-    public void testTogglePartitionKey_NullToNotNull() {
-        val dfMgr = NDataflowManager.getInstance(getTestConfig(), "default");
-        val loadingRangeMgr = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-
-        var df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(1, df.getSegments().size());
-        Assert.assertNull(loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(0, df.getSegments().size());
-        val loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNotNull(loadingRange);
-        Assert.assertEquals("TEST_KYLIN_FACT.CAL_DT", loadingRange.getColumnName());
-
-    }
-
-    @Test
-    public void testTogglePartitionKey_OneToAnother() {
-        val dfMgr = NDataflowManager.getInstance(getTestConfig(), "default");
-        var df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(1, df.getSegments().size());
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(0, df.getSegments().size());
-
-        val loadingRangeMgr = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        var loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        val copy = loadingRangeMgr.copyForWrite(loadingRange);
-        copy.setCoveredRange(new SegmentRange.TimePartitionedSegmentRange(0L, 100000L));
-        loadingRangeMgr.updateDataLoadingRange(copy);
-
-        //change partition
-
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "ORDER_ID", "yyyy-MM-dd");
-        loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNull(loadingRange.getCoveredRange());
-        Assert.assertEquals("TEST_KYLIN_FACT.ORDER_ID", loadingRange.getColumnName());
-
-    }
-
-    @Test
-    public void testTogglePartitionKey_OneToNull() {
-        val dfMgr = NDataflowManager.getInstance(getTestConfig(), "default");
-        var df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(1, df.getSegments().size());
-        val loadingRangeMgr = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        var loadingRange = new NDataLoadingRange();
-        loadingRange.setTableName("DEFAULT.TEST_KYLIN_FACT");
-        loadingRange.setColumnName("TEST_KYLIN_FACT.CAL_DT");
-        loadingRangeMgr.createDataLoadingRange(loadingRange);
-
-        loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNull(loadingRange.getCoveredRange());
-        Assert.assertEquals("TEST_KYLIN_FACT.CAL_DT", loadingRange.getColumnName());
-
-        //set null
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "", "");
-        df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(1, df.getSegments().size());
-
-        val executables = getRunningExecutables("default", df.getUuid());
-        Assert.assertEquals(1, executables.size());
-
-        loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNull(loadingRange);
-    }
-
-    @Test
-    public void testTogglePartitionKey_NullToOneWithLagBehindModel() {
-        val dfMgr = NDataflowManager.getInstance(getTestConfig(), "default");
-        var df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(RealizationStatusEnum.ONLINE, df.getStatus());
-        dfMgr.updateDataflowStatus(df.getId(), RealizationStatusEnum.LAG_BEHIND);
-        val loadingRangeMgr = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        var loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNull(loadingRange);
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        df = dfMgr.getDataflowByModelAlias("nmodel_basic");
-        loadingRange = loadingRangeMgr.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertNotNull(loadingRange);
-        Assert.assertEquals("TEST_KYLIN_FACT.CAL_DT", loadingRange.getColumnName());
-        Assert.assertEquals(RealizationStatusEnum.ONLINE, df.getStatus());
-
-    }
-
-    private void testgetPartitionColumnFormat() throws Exception {
-        // Test on batch table
-        String format = tableService.getPartitionColumnFormat("default", "DEFAULT.TEST_KYLIN_FACT", "CAL_DT", null);
-        Assert.assertEquals("yyyy-MM-dd", format);
-
-        // Test on streaming table
-        NTableMetadataManager mgr = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        TableDesc desc = mgr.listAllTables().get(0);
-        desc.setKafkaConfig(new KafkaConfig());
-
-        val msg = "{\"a\": 2, \"b\": 2, \"minute_start\": \"2000-01-01 05:06:12\"}";
-        val base64Msg = new String(Base64.encodeBase64(msg.getBytes()));
-        ByteBuffer buffer = ByteBuffer.wrap(base64Msg.getBytes(StandardCharsets.UTF_8));
-        List<ByteBuffer> encodedMessages = new ArrayList<>();
-        encodedMessages.add(buffer);
-        encodedMessages.add(buffer);
-        List<String> messages = new ArrayList<>();
-        messages.add(msg);
-        messages.add(msg);
-        when(kafkaServiceMock.getMessages(any(), any(String.class))).thenReturn(encodedMessages);
-
-        Map<String, Object> mockResp = new HashMap<>();
-        mockResp.put("message_type", true);
-        mockResp.put("message", messages);
-
-        Map<String, Object> parseMap = Maps.newHashMap();
-        parseMap.put("minute_start", "2000-01-01 05:06:12");
-        when(kafkaServiceMock.decodeMessage(any())).thenReturn(mockResp);
-
-        when(kafkaServiceMock.parserMessage(any(String.class), any(), any(String.class))).thenReturn(parseMap);
-        String format2 = tableService.getPartitionColumnFormat("default", "DEFAULT.STREAMING_TABLE", "MINUTE_START",
-                null);
-        Assert.assertEquals("yyyy-MM-dd HH:mm:ss", format2);
-
-        when(kafkaServiceMock.getMessages(any(), any(String.class))).thenCallRealMethod();
-        when(kafkaServiceMock.decodeMessage(any())).thenCallRealMethod();
-        desc.setKafkaConfig(null);
     }
 
     @Test
@@ -984,29 +796,6 @@ public class TableServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void checkRefreshDataRangeException1() {
-        thrown.expect(KylinException.class);
-        thrown.expectMessage(Message.getInstance().getInvalidRefreshSegmentByNoSegment());
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        tableService.checkRefreshDataRangeReadiness("default", "DEFAULT.TEST_KYLIN_FACT", "0", "1294364500000");
-    }
-
-    @Test
-    public void checkRefreshDataRangeException2() {
-        thrown.expect(KylinException.class);
-        thrown.expectMessage(Message.getInstance().getInvalidRefreshSegmentByNotReady());
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        NDataLoadingRangeManager rangeManager = NDataLoadingRangeManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                "default");
-        NDataLoadingRange dataLoadingRange = rangeManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        SegmentRange<Long> segmentRange = new SegmentRange.TimePartitionedSegmentRange(1294364400000L, 1294364500000L);
-        dataLoadingRange.setCoveredRange(segmentRange);
-        NDataLoadingRange updateRange = rangeManager.copyForWrite(dataLoadingRange);
-        rangeManager.updateDataLoadingRange(updateRange);
-        tableService.checkRefreshDataRangeReadiness("default", "DEFAULT.TEST_KYLIN_FACT", "0", "1294364500000");
-    }
-
-    @Test
     public void testGetAutoMergeConfigException() {
         thrown.expect(KylinException.class);
         thrown.expectMessage(MODEL_ID_NOT_EXIST.getMsg("default"));
@@ -1017,45 +806,15 @@ public class TableServiceTest extends CSVSourceTestCase {
     public void testGetAutoMergeConfig() {
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         NDataModel dataModel = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        dataModel.setManagementType(ManagementType.TABLE_ORIENTED);
-        NDataModel dataModelUpdate = modelManager.copyForWrite(dataModel);
-        modelManager.updateDataModelDesc(dataModelUpdate);
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        //table oriented model
-        AutoMergeConfigResponse response = tableService.getAutoMergeConfigByTable("default", "DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertEquals(0, response.getVolatileRange().getVolatileRangeNumber());
-        Assert.assertFalse(response.isAutoMergeEnabled());
-        Assert.assertEquals(4, response.getAutoMergeTimeRanges().size());
-
-        dataModel = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         dataModel.setManagementType(ManagementType.MODEL_BASED);
-        dataModelUpdate = modelManager.copyForWrite(dataModel);
+        NDataModel dataModelUpdate = modelManager.copyForWrite(dataModel);
         modelManager.updateDataModelDesc(dataModelUpdate);
         //model Based model
-        response = tableService.getAutoMergeConfigByModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
+        AutoMergeConfigResponse response = tableService.getAutoMergeConfigByModel("default",
+                "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         Assert.assertEquals(0, response.getVolatileRange().getVolatileRangeNumber());
         Assert.assertFalse(response.isAutoMergeEnabled());
         Assert.assertEquals(4, response.getAutoMergeTimeRanges().size());
-
-    }
-
-    @Test
-    public void testSetAutoMergeConfigByTable() {
-        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        NDataModel dataModel = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        dataModel.setManagementType(ManagementType.TABLE_ORIENTED);
-        NDataModel dataModelUpdate = modelManager.copyForWrite(dataModel);
-        modelManager.updateDataModelDesc(dataModelUpdate);
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        AutoMergeRequest autoMergeRequest = mockAutoMergeRequest();
-        tableService.setAutoMergeConfigByTable("default", autoMergeRequest);
-        AutoMergeConfigResponse respone = tableService.getAutoMergeConfigByTable("default", "DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertEquals(respone.isAutoMergeEnabled(), autoMergeRequest.isAutoMergeEnabled());
-        Assert.assertEquals(respone.getAutoMergeTimeRanges().size(), autoMergeRequest.getAutoMergeTimeRanges().length);
-        Assert.assertEquals(respone.getVolatileRange().getVolatileRangeNumber(),
-                autoMergeRequest.getVolatileRangeNumber());
-        Assert.assertEquals(respone.getVolatileRange().getVolatileRangeType().toString(),
-                autoMergeRequest.getVolatileRangeType());
 
     }
 
@@ -1082,77 +841,11 @@ public class TableServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testSetPushDownMode() {
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        tableService.setPushDownMode("default", "DEFAULT.TEST_KYLIN_FACT", true);
-        boolean result = tableService.getPushDownMode("default", "DEFAULT.TEST_KYLIN_FACT");
-        Assert.assertTrue(result);
-    }
-
-    @Test
     public void testGetTableNameResponse_PASS() throws Exception {
         List<TableNameResponse> result = tableService.getTableNameResponses("default", "DEFAULT", "");
         Assert.assertEquals(11, result.size());
         Assert.assertTrue(result.get(0).isLoaded());
 
-    }
-
-    @Test
-    public void testSetFact_NoRelatedModels_PASS() {
-        val tableManager = NTableMetadataManager.getInstance(getTestConfig(), "default");
-        val dataloadingManager = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "", "yyyy-MM-dd");
-        Assert.assertFalse(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-        Assert.assertNull(dataloadingManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        Assert.assertTrue(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-        Assert.assertNotNull(dataloadingManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-    }
-
-    @Test
-    public void testSetFact_NotRootFactTable_Exception() {
-        val tableManager = NTableMetadataManager.getInstance(getTestConfig(), "default");
-        val dataloadingManager = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "", "");
-        Assert.assertFalse(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-        Assert.assertNull(dataloadingManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-        thrown.expect(KylinException.class);
-        thrown.expectMessage(String.format(Locale.ROOT, Message.getInstance().getInvalidSetTableIncLoading(),
-                "DEFAULT.TEST_ACCOUNT", "nmodel_basic_inner"));
-        tableService.setPartitionKey("DEFAULT.TEST_ACCOUNT", "default", "CAL_DT", "yyyy-MM-dd");
-    }
-
-    @Test
-    public void testSetFact_IncrementingExists_Exception() {
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        thrown.expect(KylinException.class);
-        thrown.expectMessage(String.format(Locale.ROOT, Message.getInstance().getInvalidSetTableIncLoading(),
-                "DEFAULT.TEST_ACCOUNT", "nmodel_basic_inner"));
-        tableService.setPartitionKey("DEFAULT.TEST_ACCOUNT", "default", "CAL_DT", "yyyy-MM-dd");
-    }
-
-    @Test
-    public void testSetFact_HasRelatedModels_PASS() {
-        val tableManager = NTableMetadataManager.getInstance(getTestConfig(), "default");
-        val modelManager = NDataModelManager.getInstance(getTestConfig(), "default");
-        val dataloadingManager = NDataLoadingRangeManager.getInstance(getTestConfig(), "default");
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "", "");
-
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "CAL_DT", "yyyy-MM-dd");
-        Assert.assertTrue(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-        Assert.assertEquals("TEST_KYLIN_FACT.CAL_DT", modelManager
-                .getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getPartitionDesc().getPartitionDateColumn());
-
-        Assert.assertTrue(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-        Assert.assertNotNull(dataloadingManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-
-        tableService.setPartitionKey("DEFAULT.TEST_KYLIN_FACT", "default", "", "");
-        Assert.assertFalse(tableManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT").isIncrementLoading());
-
-        Assert.assertNull(dataloadingManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT"));
-        Assert.assertNull(modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getPartitionDesc());
-        val executables = getRunningExecutables("default", null);
-        Assert.assertEquals(4, executables.size());
     }
 
     @Test

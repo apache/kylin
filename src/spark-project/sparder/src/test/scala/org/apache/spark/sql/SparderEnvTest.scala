@@ -19,10 +19,10 @@
 package org.apache.spark.sql
 
 import org.apache.kylin.common.exception.KylinTimeoutException
-
-import java.util.concurrent.CountDownLatch
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.common.{LocalMetadata, SparderBaseFunSuite}
+
+import java.util.concurrent.CountDownLatch
 
 // scalastyle:off
 class SparderEnvTest extends SparderBaseFunSuite with LocalMetadata {

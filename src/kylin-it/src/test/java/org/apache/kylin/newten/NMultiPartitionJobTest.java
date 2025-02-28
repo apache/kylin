@@ -16,19 +16,21 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Row;
@@ -38,25 +40,32 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import lombok.val;
 
 public class NMultiPartitionJobTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.model.multi-partition-enabled", "true");
-        this.createTestMetadata("src/test/resources/ut_meta/multi_partition");
+        setOverlay("src/test/resources/ut_meta/multi_partition");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
-    @After
-    public void after() {
-        cleanupTestMetadata();
-        JobContextUtil.cleanUp();
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/multi_partition" };
     }
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        JobContextUtil.cleanUp();
+        super.tearDown();
+    }
+
     @Override
     public String getProject() {
         return "multi_partition";
@@ -69,7 +78,10 @@ public class NMultiPartitionJobTest extends NLocalWithSparkSessionTest {
         NDataflow df = dfManager.getDataflow(dfID);
         val update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dfManager.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
 
         val layouts = df.getIndexPlan().getAllLayouts();
         long startTime = SegmentRange.dateToLong("2020-11-05");
@@ -105,7 +117,10 @@ public class NMultiPartitionJobTest extends NLocalWithSparkSessionTest {
         NDataflow df = dfManager.getDataflow(dfID);
         val update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dfManager.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
 
         val layouts = df.getIndexPlan().getAllLayouts();
         long startTime = SegmentRange.dateToLong("2020-11-01");
@@ -174,7 +189,10 @@ public class NMultiPartitionJobTest extends NLocalWithSparkSessionTest {
         NDataflow df = dfManager.getDataflow(dataflowId);
         val update = new NDataflowUpdate(dataflowId);
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dfManager.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
 
         val layoutList = df.getIndexPlan().getAllLayouts();
         long startTime = SegmentRange.dateToLong("2020-11-05");

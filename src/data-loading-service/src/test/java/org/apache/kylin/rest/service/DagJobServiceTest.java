@@ -139,7 +139,7 @@ class DagJobServiceTest {
             manager.updateStageStatus(stage11.getId(), task1.getId(), ExecutableState.ERROR, null, null);
             manager.saveUpdatedJob();
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val stack = ExceptionUtils.getStackTrace(new MockJobException());
         val reason = new MockJobException().getMessage();
@@ -150,7 +150,7 @@ class DagJobServiceTest {
             manager.updateStageStatus(stage31.getId(), task3.getId(), ExecutableState.ERROR, null, null);
             manager.saveUpdatedJob();
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val jobDetail = jobService.getJobDetail(DEFAULT_PROJECT, job.getId());
         Assertions.assertEquals(task1.getId(), jobDetail.get(0).getId());
@@ -215,7 +215,7 @@ class DagJobServiceTest {
             manager.updateStageStatus(stage11.getId(), task1.getId(), ExecutableState.ERROR, null, null);
             manager.saveUpdatedJob();
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val stack = ExceptionUtils.getStackTrace(new MockJobException());
         val reason = new MockJobException().getMessage();
@@ -226,7 +226,7 @@ class DagJobServiceTest {
             manager.updateStageStatus(stage31.getId(), task3.getId(), ExecutableState.ERROR, null, null);
             manager.saveUpdatedJob();
             return null;
-        }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, DEFAULT_PROJECT, 1);
 
         val jobDetail = jobService.getJobDetail(DEFAULT_PROJECT, job.getId());
         Assertions.assertEquals(task1.getId(), jobDetail.get(0).getId());

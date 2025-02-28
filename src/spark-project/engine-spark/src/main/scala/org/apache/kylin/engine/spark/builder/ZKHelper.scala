@@ -22,12 +22,17 @@ import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 
-object ZKHelper extends Logging{
+/**
+ * Try zookeeper jaas config for distributed lock
+ * [[org.apache.kylin.common.lock.curator.CuratorDistributedLockFactory]]
+ */
+object ZKHelper extends Logging {
   private val YARN_CLUSTER: String = "cluster"
 
   def tryZKJaasConfiguration(ss: SparkSession): Unit = {
     val config = KylinConfig.getInstanceFromEnv
-    if (YARN_CLUSTER.equals(config.getDeployMode)) {
+    if (YARN_CLUSTER.equals(config.getDeployMode)
+      && config.getDistributedLockFactoryFullClassName.contains("CuratorDistributedLockFactory")) {
       val kapConfig = KapConfig.wrap(config)
       if (KapConfig.FI_PLATFORM.equals(kapConfig.getKerberosPlatform) || KapConfig.TDH_PLATFORM.equals(kapConfig.getKerberosPlatform)) {
         val sparkConf = ss.sparkContext.getConf

@@ -27,13 +27,12 @@ import static org.apache.kylin.tool.util.ScreenPrintUtil.printlnRed;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -167,7 +166,7 @@ public class RecCandidateTool extends ExecutableApplication {
             }
             for (val model : models) {
                 List<RawRecItem> data = new ArrayList<>();
-                try (InputStream in = new FileInputStream(model);
+                try (InputStream in = Files.newInputStream(model.toPath());
                         BufferedReader br = new BufferedReader(new InputStreamReader(in, Charset.defaultCharset()))) {
                     String line;
                     while ((line = br.readLine()) != null) {
@@ -238,7 +237,7 @@ public class RecCandidateTool extends ExecutableApplication {
 
         JdbcRawRecStore jdbcRawRecStore = new JdbcRawRecStore(kylinConfig);
         List<RawRecItem> result = jdbcRawRecStore.listAll(project, modelId, Integer.MAX_VALUE);
-        try (OutputStream os = new FileOutputStream(modelFile);
+        try (OutputStream os = Files.newOutputStream(modelFile.toPath());
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os, Charset.defaultCharset()))) {
             for (RawRecItem line : result) {
                 try {

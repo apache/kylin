@@ -26,13 +26,12 @@ import java.util.HashSet;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.loader.utils.ClassLoaderUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class AddToClassPathActionTest extends NLocalFileMetadataTestCase {
 

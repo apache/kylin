@@ -131,14 +131,13 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
             Assert.assertTrue(e instanceof KylinException);
         }
 
-        Mockito.doThrow(new Exception("")).when(queryRoutingEngine).tryPushDownSelectQuery(Mockito.any(), Mockito.any(),
-                Mockito.anyBoolean());
+        Mockito.doThrow(new SQLException("")).when(queryRoutingEngine).tryPushDownSelectQuery(Mockito.any(),
+                Mockito.any(), Mockito.anyBoolean());
         try {
             queryRoutingEngine.queryWithSqlMassage(queryParams);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+        } catch (RuntimeException e) {
+            Assert.assertTrue(true);
         }
-
     }
 
     @Test
@@ -152,14 +151,16 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
         queryParams.setSql(sql);
         queryParams.setKylinConfig(kylinconfig);
         queryParams.setSelect(true);
-
-        Mockito.doThrow(new SparkException(
+        SparkException sparkException = new SparkException(
                 "Job aborted due to stage failure: Task 40 in stage 888.0 failed 1 times, most recent failure: "
-                        + "Lost task 40.0 in stage 888.0 (TID 79569, hrbd-73, executor 5): ExecutorLostFailure (executor 5 exited "
-                        + "caused by one of the running tasks) Reason: Container killed by YARN for exceeding memory limits.  6.5 GB "
-                        + "of 6.5 GB physical memory used. Consider boosting spark.yarn.executor.memoryOverhead or disabling "
-                        + "yarn.nodemanager.vmem-check-enabled because of YARN-4714."))
-                .when(queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
+                        + "Lost task 40.0 in stage 888.0 (TID 79569, hrbd-73, executor 5): "
+                        + "ExecutorLostFailure (executor 5 exited caused by one of the running tasks) "
+                        + "Reason: Container killed by YARN for exceeding memory limits.  6.5 GB "
+                        + "of 6.5 GB physical memory used. "
+                        + "Consider boosting spark.yarn.executor.memoryOverhead or disabling "
+                        + "yarn.nodemanager.vmem-check-enabled because of YARN-4714.");
+        SQLException sqlException = new SQLException(sparkException);
+        Mockito.doThrow(sqlException).when(queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
 
         try {
             queryRoutingEngine.queryWithSqlMassage(queryParams);

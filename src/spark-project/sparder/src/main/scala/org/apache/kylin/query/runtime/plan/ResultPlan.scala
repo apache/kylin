@@ -22,25 +22,29 @@ import java.io.{File, FileOutputStream, OutputStreamWriter}
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicLong
 import java.{lang, util}
-
 import org.apache.calcite.rel.`type`.{RelDataType, RelDataTypeField}
 import org.apache.commons.io.IOUtils
+import org.apache.gluten.extension.GlutenSessionExtensions
 import org.apache.hadoop.fs.Path
-import org.apache.kylin.common.exception.NewQueryRefuseException
+import org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_OUT_OF_DATA_RANGE
+import org.apache.kylin.common.exception.{BigQueryException, NewQueryRefuseException}
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
+import org.apache.kylin.engine.spark.QueryCostCollector
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
+import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.query.{BigQueryThresholdUpdater, StructField}
 import org.apache.kylin.metadata.state.QueryShareStateManager
 import org.apache.kylin.query.engine.RelColumnMetaDataExtractor
 import org.apache.kylin.query.engine.exec.ExecuteResult
 import org.apache.kylin.query.pushdown.SparkSqlClient.readPushDownResultRow
-import org.apache.kylin.query.relnode.OLAPContext
+import org.apache.kylin.query.relnode.ContextUtil
 import org.apache.kylin.query.util.{AsyncQueryUtil, QueryInterruptChecker, SparkJobTrace, SparkQueryJobManager}
 import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution._
+import org.apache.spark.sql.execution.gluten.KylinFileSourceScanExecTransformer
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.util.{SparderConstants, SparderTypeUtil}
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparderEnv}
@@ -48,8 +52,6 @@ import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparderEnv}
 import scala.collection.JavaConverters._
 import scala.collection.convert.ImplicitConversions.`iterator asScala`
 import scala.collection.mutable
-
-import io.kyligence.kap.secondstorage.SecondStorageUtil
 
 // scalastyle:off
 object ResultType extends Enumeration {
@@ -62,222 +64,8 @@ object ResultPlan extends LogEx {
   val SPARK_SCHEDULER_POOL: String = "spark.scheduler.pool"
 
   val QUOTE_CHAR = "\""
-  val END_OF_LINE_SYMBOLS = IOUtils.LINE_SEPARATOR_UNIX
+  val END_OF_LINE_SYMBOLS: String = IOUtils.LINE_SEPARATOR_UNIX
   val CHECK_WRITE_SIZE = 1000
-
-  private def collectInternal(df: DataFrame, rowType: RelDataType): (java.lang.Iterable[util.List[String]], Int) = logTime("collectInternal", debug = true) {
-    val jobGroup = Thread.currentThread().getName
-    val sparkContext = SparderEnv.getSparkSession.sparkContext
-    val kapConfig = KapConfig.getInstanceFromEnv
-    val partitionsNum =
-      if (kapConfig.getSparkSqlShufflePartitions != -1) {
-        kapConfig.getSparkSqlShufflePartitions
-      } else {
-        Math.min(QueryContext.current().getMetrics.getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
-          SparderEnv.getTotalCore).toInt
-      }
-    QueryContext.current().setShufflePartitions(partitionsNum)
-    logInfo(s"partitions num are: $partitionsNum," +
-      s" total scan bytes are: ${QueryContext.current().getMetrics.getSourceScanBytes}," +
-      s" total cores are: ${SparderEnv.getTotalCore}")
-
-    val queryId = QueryContext.current().getQueryId
-    sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
-    df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
-
-    sparkContext.setJobGroup(jobGroup,
-      QueryContext.current().getMetrics.getCorrectedSql,
-      interruptOnCancel = true)
-    try {
-      val autoBroadcastJoinThreshold = SparderEnv.getSparkSession.sessionState.conf.autoBroadcastJoinThreshold
-      val sparkPlan = df.queryExecution.executedPlan
-      var sumOfSourceScanRows = QueryContext.current.getMetrics.getAccumSourceScanRows
-      if (KapConfig.getInstanceFromEnv.isQueryLimitEnabled && KapConfig.getInstanceFromEnv.isApplyLimitInfoToSourceScanRowsEnabled) {
-        val accumRowsCounter = new AtomicLong(0)
-        extractEachStageLimitRows(sparkPlan, -1, accumRowsCounter)
-        sumOfSourceScanRows = accumRowsCounter.get()
-        logDebug(s"Spark executed plan is \n $sparkPlan; \n accumRowsCounter: $accumRowsCounter")
-      }
-      logInfo(s"autoBroadcastJoinThreshold: [before:$autoBroadcastJoinThreshold, " +
-        s"after: ${SparderEnv.getSparkSession.sessionState.conf.autoBroadcastJoinThreshold}]")
-      sparkContext.setLocalProperty("source_scan_rows", QueryContext.current().getMetrics.getSourceScanRows.toString)
-      logDebug(s"source_scan_rows is ${QueryContext.current().getMetrics.getSourceScanRows.toString}")
-
-      val bigQueryThreshold = BigQueryThresholdUpdater.getBigQueryThreshold
-      val pool = getQueryFairSchedulerPool(sparkContext.getConf, QueryContext.current(), bigQueryThreshold,
-        sumOfSourceScanRows, partitionsNum)
-      sparkContext.setLocalProperty(SPARK_SCHEDULER_POOL, pool)
-
-      // judge whether to refuse the new big query
-      logDebug(s"Total source scan rows: $sumOfSourceScanRows")
-      if (QueryShareStateManager.isShareStateSwitchEnabled
-        && sumOfSourceScanRows >= bigQueryThreshold
-        && SparkQueryJobManager.isNewBigQueryRefuse) {
-        QueryContext.current().getQueryTagInfo.setRefused(true)
-        throw new NewQueryRefuseException("Refuse new big query, sum of source_scan_rows is " + sumOfSourceScanRows
-          + ", refuse query threshold is " + bigQueryThreshold + ". Current step: Collecting dataset for sparder. ")
-      }
-
-      QueryContext.current.record("executed_plan")
-      QueryContext.currentTrace().endLastSpan()
-      val jobTrace = new SparkJobTrace(jobGroup, QueryContext.currentTrace(), QueryContext.current().getQueryId, sparkContext)
-      val results = df.toIterator()
-      val resultRows = results._1
-      val resultSize = results._2
-      if (kapConfig.isQuerySparkJobTraceEnabled) jobTrace.jobFinished()
-      QueryContext.current.record("collect_result")
-
-      val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
-      val (jobCount, stageCount, taskCount) = QueryMetricUtils.collectTaskRelatedMetrics(jobGroup, sparkContext)
-      QueryContext.current().getMetrics.setScanRows(scanRows)
-      QueryContext.current().getMetrics.setScanBytes(scanBytes)
-      QueryContext.current().getMetrics.setQueryJobCount(jobCount)
-      QueryContext.current().getMetrics.setQueryStageCount(stageCount)
-      QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
-
-      if (!QueryContext.current().getSecondStorageUsageMap.isEmpty &&
-        KylinConfig.getInstanceFromEnv.getSecondStorageQueryMetricCollect) {
-        val executedPlan = SecondStorageUtil.collectExecutedPlan(getNormalizedExplain(df))
-        val pushedPlan = SecondStorageUtil.convertExecutedPlan(executedPlan, QueryContext.current.getProject, OLAPContext.getNativeRealizations)
-        QueryContext.current().getMetrics.setQueryExecutedPlan(pushedPlan)
-      }
-
-      logInfo(s"Actual total scan count: $scanRows, " +
-        s"file scan row count: ${QueryContext.current.getMetrics.getAccumSourceScanRows}, " +
-        s"may apply limit row count: $sumOfSourceScanRows, Big query threshold: $bigQueryThreshold, Allocate pool: $pool, " +
-        s"Is Vip: ${QueryContext.current().getQueryTagInfo.isHighPriorityQuery}, " +
-        s"Is TableIndex: ${QueryContext.current().getQueryTagInfo.isTableIndex}")
-
-      val resultTypes = rowType.getFieldList.asScala
-      (readResultRow(resultRows, resultTypes), resultSize)
-    } catch {
-      case e: Throwable =>
-        if (e.isInstanceOf[InterruptedException]) {
-          Thread.currentThread.interrupt()
-          sparkContext.cancelJobGroup(jobGroup)
-          QueryInterruptChecker.checkThreadInterrupted("Interrupted at the stage of collecting result in ResultPlan.",
-            "Current step: Collecting dataset for sparder.")
-        }
-        throw e
-    } finally {
-      QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
-    }
-  }
-
-
-  def readResultRow(resultRows: util.Iterator[Row], resultTypes: mutable.Buffer[RelDataTypeField]): lang.Iterable[util.List[String]] = {
-    () =>
-      new util.Iterator[util.List[String]] {
-
-        override def hasNext: Boolean = resultRows.hasNext
-
-        override def next(): util.List[String] = {
-          val row = resultRows.next()
-          if (Thread.interrupted()) {
-            throw new InterruptedException
-          }
-          row.toSeq.zip(resultTypes).map {
-            case (value, relField) => SparderTypeUtil.convertToStringWithCalciteType(value, relField.getType)
-          }.asJava
-        }
-      }
-  }
-
-  private def getNormalizedExplain(df: DataFrame): String = {
-    df.queryExecution.executedPlan.toString.replaceAll("#\\d+", "#x")
-  }
-
-  def getQueryFairSchedulerPool(sparkConf: SparkConf, queryContext: QueryContext, bigQueryThreshold: Long,
-                                sumOfSourceScanRows: Long, partitionsNum: Int): String = {
-    var pool = "heavy_tasks"
-    if (queryContext.getQueryTagInfo.isHighPriorityQuery) {
-      pool = "vip_tasks"
-    } else if (queryContext.getQueryTagInfo.isTableIndex) {
-      pool = "extreme_heavy_tasks"
-    } else if (KapConfig.getInstanceFromEnv.isQueryLimitEnabled && SparderEnv.isSparkExecutorResourceLimited(sparkConf)) {
-      if (sumOfSourceScanRows < bigQueryThreshold) {
-        pool = "lightweight_tasks"
-      }
-    } else if (partitionsNum < SparderEnv.getTotalCore) {
-      pool = "lightweight_tasks"
-    }
-    pool
-  }
-
-  def extractEachStageLimitRows(exPlan: SparkPlan, stageLimitRows: Int, rowsCounter: AtomicLong): Unit = {
-    exPlan match {
-      case exec: KylinFileSourceScanExec =>
-        val sourceScanRows = exec.getSourceScanRows
-        val finalScanRows = if (stageLimitRows > 0) Math.min(stageLimitRows, sourceScanRows) else sourceScanRows
-        rowsCounter.addAndGet(finalScanRows)
-        logDebug(s"Apply limit to source scan, sourceScanRows: $sourceScanRows, " +
-          s"stageLimit: $stageLimitRows, finalScanRows: $finalScanRows")
-      case _ =>
-        var tempStageLimitRows = stageLimitRows
-        exPlan match {
-          case exec: LocalLimitExec =>
-            tempStageLimitRows = exec.limit
-          case exec: CollectLimitExec =>
-            tempStageLimitRows = exec.limit
-          case _ => if (!exPlan.isInstanceOf[ProjectExec] && !exPlan.isInstanceOf[ColumnarToRowExec]
-            && !exPlan.isInstanceOf[InputAdapter] && !exPlan.isInstanceOf[WholeStageCodegenExec]) {
-            tempStageLimitRows = -1
-          }
-        }
-        exPlan.children.foreach(childPlan => {
-          extractEachStageLimitRows(childPlan, tempStageLimitRows, rowsCounter)
-        })
-    }
-  }
-
-  /**
-   * use to check acl  or other
-   *
-   * @param df         finally df
-   * @param methodBody resultFunc
-   * @tparam U
-   * @return
-   */
-  def withScope[U](df: DataFrame)(methodBody: => U): U = {
-    HadoopUtil.setCurrentConfiguration(df.sparkSession.sparkContext.hadoopConfiguration)
-    try {
-      methodBody
-    } finally {
-      // remember clear local properties.
-      df.sparkSession.sparkContext.setLocalProperty(SPARK_SCHEDULER_POOL, null)
-      df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
-      SparderEnv.setDF(df)
-      HadoopUtil.setCurrentConfiguration(null)
-    }
-  }
-
-  def getResult(df: DataFrame, rowType: RelDataType): ExecuteResult = withScope(df) {
-    val queryTagInfo = QueryContext.current().getQueryTagInfo
-    if (queryTagInfo.isAsyncQuery) {
-      saveAsyncQueryResult(df, queryTagInfo.getFileFormat, queryTagInfo.getFileEncode, rowType)
-    }
-    val result = if (SparderEnv.needCompute() && !QueryContext.current().getQueryTagInfo.isAsyncQuery) {
-      collectInternal(df, rowType)
-    } else {
-      (new util.LinkedList[util.List[String]], 0)
-    }
-    new ExecuteResult(result._1, result._2)
-  }
-
-  // Only for MDX. Sparder won't actually calculate the data.
-  def completeResultForMdx(df: DataFrame, rowType: RelDataType): ExecuteResult = {
-    val fields: mutable.Buffer[StructField] = RelColumnMetaDataExtractor.getColumnMetadata(rowType).asScala
-    val fieldAlias: Seq[String] = fields.map(filed => filed.getName)
-    SparderEnv.setDF(df.toDF(fieldAlias: _*))
-    new ExecuteResult(new util.LinkedList[util.List[String]], 0)
-  }
-
-  def wrapAlias(originDS: DataFrame, rowType: RelDataType): DataFrame = {
-    val newFields = rowType.getFieldList.asScala.map(t => t.getName)
-    val newDS = originDS.toDF(newFields: _*)
-    logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
-    newDS
-  }
 
   def saveAsyncQueryResult(df: DataFrame, format: String, encode: String, rowType: RelDataType): Unit = {
     val kapConfig = KapConfig.getInstanceFromEnv
@@ -326,7 +114,8 @@ object ResultPlan extends LogEx {
         normalizeSchema(df).write.option("timestampFormat", dateTimeFormat).option("encoding", encode)
           .option("charset", "utf-8").mode(SaveMode.Append).parquet(path)
     }
-    AsyncQueryUtil.createSuccessFlag(QueryContext.current().getProject, QueryContext.current().getQueryId)
+    val successFileContent = if (QueryContext.current().isOutOfSegmentRange) new AsyncQueryUtil.SuccessFileContent(ASYNC_QUERY_OUT_OF_DATA_RANGE.getErrorCode.getCode) else null
+    AsyncQueryUtil.createSuccessFlagWithContent(QueryContext.current().getProject, QueryContext.current().getQueryId, successFileContent)
     if (kapConfig.isQuerySparkJobTraceEnabled) {
       jobTrace.jobFinished()
     }
@@ -334,13 +123,267 @@ object ResultPlan extends LogEx {
       val newExecution = QueryToExecutionIDCache.getQueryExecution(queryExecutionId)
       val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(newExecution.executedPlan)
       val (jobCount, stageCount, taskCount) = QueryMetricUtils.collectTaskRelatedMetrics(jobGroup, sparkContext)
+      val cpuTime = QueryCostCollector.getAndCleanStatus(QueryContext.current().getQueryId)
       logInfo(s"scanRows is ${scanRows}, scanBytes is ${scanBytes}")
       QueryContext.current().getMetrics.setScanRows(scanRows)
       QueryContext.current().getMetrics.setScanBytes(scanBytes)
       QueryContext.current().getMetrics.setQueryJobCount(jobCount)
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
+      QueryContext.current().getMetrics.setCpuTime(cpuTime)
       setResultRowCount(newExecution.executedPlan)
+    }
+  }
+
+  private def ifRefuseQuery(sumOfSourceScanRows: Long, bigQueryThreshold: Long, sourceScanRows: util.List[lang.Long], ifBigQuery: Boolean): Unit = {
+    if (QueryShareStateManager.isShareStateSwitchEnabled
+      && sumOfSourceScanRows >= bigQueryThreshold
+      && (SparkQueryJobManager.isNewBigQueryRefuse || KapConfig.getInstanceFromEnv.isBigQueryLimitEnable)) {
+      if (ifBigQuery) {
+        QueryContext.current().setBigQuery(true)
+        QueryContext.current().getMetrics.setScanRows(sourceScanRows)
+        throw new BigQueryException("This query is bigquery.")
+      } else {
+        QueryContext.current().getQueryTagInfo.setRefused(true)
+        throw new NewQueryRefuseException("Refuse new big query, sum of source_scan_rows is " + sumOfSourceScanRows
+          + ", refuse query threshold is " + bigQueryThreshold + ". Current step: Collecting dataset for sparder. ")
+      }
+    } else if (ifBigQuery) {
+      QueryContext.current().getMetrics.setScanRows(sourceScanRows)
+      QueryContext.current().setBigQuery(false)
+      throw new BigQueryException("This query is non bigquery.")
+    }
+  }
+
+  def asyncQueryIteratorWriteCsv(resultRows: java.util.Iterator[Row], outputStream: OutputStreamWriter, rowType: RelDataType): Unit = {
+    var asyncQueryRowSize = 0
+    val separator = QueryContext.current().getQueryTagInfo.getSeparator
+    val asyncQueryResult = if (rowType != null) {
+      val resultTypes = rowType.getFieldList.asScala
+      readResultRow(resultRows, resultTypes)
+    } else {
+      readPushDownResultRow(resultRows, false)
+    }
+
+    asyncQueryResult.forEach(row => {
+
+      asyncQueryRowSize += 1
+      val builder = new StringBuilder
+
+      for (i <- 0 until row.size()) {
+        val column = if (row.get(i) == null) "" else row.get(i)
+
+        if (i > 0) builder.append(separator)
+
+        val escapedCsv = encodeCell(column, separator)
+        builder.append(escapedCsv)
+      }
+      builder.append(END_OF_LINE_SYMBOLS)
+      outputStream.write(builder.toString())
+      if (asyncQueryRowSize % CHECK_WRITE_SIZE == 0) {
+        outputStream.flush()
+      }
+    })
+    outputStream.flush()
+  }
+
+  private def getNormalizedExplain(df: DataFrame): String = {
+    df.queryExecution.executedPlan.toString.replaceAll("#\\d+", "#x")
+  }
+
+  def getQueryFairSchedulerPool(sparkConf: SparkConf, queryContext: QueryContext, bigQueryThreshold: Long,
+                                sumOfSourceScanRows: Long, partitionsNum: Int): String = {
+    var pool = "heavy_tasks"
+    if (queryContext.getQueryTagInfo.isHighPriorityQuery) {
+      pool = "vip_tasks"
+    } else if (queryContext.getQueryTagInfo.isTableIndex) {
+      pool = "extreme_heavy_tasks"
+    } else if (KapConfig.getInstanceFromEnv.isQueryLimitEnabled && SparderEnv.isSparkExecutorResourceLimited(sparkConf)) {
+      if (sumOfSourceScanRows < bigQueryThreshold) {
+        pool = "lightweight_tasks"
+      }
+    } else if (partitionsNum < SparderEnv.getTotalCore) {
+      pool = "lightweight_tasks"
+    }
+    pool
+  }
+
+  def extractEachStageLimitRows(exPlan: SparkPlan, stageLimitRows: Int, rowsCounter: AtomicLong): Unit = {
+    exPlan match {
+      case exec: KylinFileSourceScanExec =>
+        val sourceScanRows = exec.getSourceScanRows
+        val finalScanRows = if (stageLimitRows > 0) Math.min(stageLimitRows, sourceScanRows) else sourceScanRows
+        rowsCounter.addAndGet(finalScanRows)
+        logDebug(s"Apply limit to source scan, sourceScanRows: $sourceScanRows, " +
+          s"stageLimit: $stageLimitRows, finalScanRows: $finalScanRows")
+      case transformer: KylinFileSourceScanExecTransformer =>
+        val sourceScanRows = transformer.getSourceScanRows
+        val finalScanRows = if (stageLimitRows > 0) Math.min(stageLimitRows, sourceScanRows) else sourceScanRows
+        rowsCounter.addAndGet(finalScanRows)
+        logDebug(s"Apply limit to source scan, sourceScanRows: $sourceScanRows, " +
+          s"stageLimit: $stageLimitRows, finalScanRows: $finalScanRows")
+      case _ =>
+        var tempStageLimitRows = stageLimitRows
+        exPlan match {
+          case exec: LocalLimitExec =>
+            tempStageLimitRows = exec.limit
+          case exec: CollectLimitExec =>
+            tempStageLimitRows = exec.limit
+          case _ => if (!exPlan.isInstanceOf[ProjectExec] && !exPlan.isInstanceOf[ColumnarToRowExec]
+            && !exPlan.isInstanceOf[InputAdapter] && !exPlan.isInstanceOf[WholeStageCodegenExec]) {
+            tempStageLimitRows = -1
+          }
+        }
+        exPlan.children.foreach(childPlan => {
+          extractEachStageLimitRows(childPlan, tempStageLimitRows, rowsCounter)
+        })
+    }
+  }
+
+  /**
+   * use to check acl  or other
+   *
+   * @param df         finally df
+   * @param methodBody resultFunc
+   * @tparam U
+   * @return
+   */
+  def withScope[U](df: DataFrame)(methodBody: => U): U = {
+    HadoopUtil.setCurrentConfiguration(df.sparkSession.sparkContext.hadoopConfiguration)
+    try {
+      methodBody
+    } finally {
+      // remember clear local properties.
+      df.sparkSession.sparkContext.setLocalProperty(SPARK_SCHEDULER_POOL, null)
+      df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
+      SparderEnv.setDF(df)
+      HadoopUtil.setCurrentConfiguration(null)
+    }
+  }
+
+  def getResult(df: DataFrame, rowType: RelDataType): ExecuteResult = withScope(df) {
+    if (!ContextUtil.getNativeRealizations.isEmpty && !KylinConfig.getInstanceFromEnv.queryIndexUseGluten()) {
+      df.sparkSession.sparkContext.setLocalProperty(GlutenSessionExtensions.GLUTEN_ENABLE_FOR_THREAD_KEY, "false")
+    }
+    val queryTagInfo = QueryContext.current().getQueryTagInfo
+    if (queryTagInfo.isAsyncQuery) {
+      saveAsyncQueryResult(df, queryTagInfo.getFileFormat, queryTagInfo.getFileEncode, rowType)
+    }
+    val result = if (SparderEnv.needCompute() && !QueryContext.current().getQueryTagInfo.isAsyncQuery) {
+      collectInternal(df, rowType)
+    } else {
+      (new util.LinkedList[util.List[String]], 0)
+    }
+    new ExecuteResult(result._1, result._2)
+  }
+
+  // Only for MDX. Sparder won't actually calculate the data.
+  def completeResultForMdx(df: DataFrame, rowType: RelDataType): ExecuteResult = {
+    val fields: mutable.Buffer[StructField] = RelColumnMetaDataExtractor.getColumnMetadata(rowType).asScala
+    val fieldAlias: Seq[String] = fields.map(filed => filed.getName)
+    SparderEnv.setDF(df.toDF(fieldAlias: _*))
+    new ExecuteResult(new util.LinkedList[util.List[String]], 0)
+  }
+
+  def wrapAlias(originDS: DataFrame, rowType: RelDataType): DataFrame = {
+    val newFields = rowType.getFieldList.asScala.map(t => t.getName)
+    val newDS = originDS.toDF(newFields: _*)
+    logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
+    newDS
+  }
+
+  private def collectInternal(df: DataFrame, rowType: RelDataType): (java.lang.Iterable[java.util.List[String]], Int) = logTime("collectInternal", debug = true) {
+    val jobGroup = Thread.currentThread().getName
+    val sparkContext = SparderEnv.getSparkSession.sparkContext
+    val kapConfig = KapConfig.getInstanceFromEnv
+    val partitionsNum =
+      if (kapConfig.getSparkSqlShufflePartitions != -1) {
+        kapConfig.getSparkSqlShufflePartitions
+      } else {
+        Math.min(QueryContext.current().getMetrics.getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
+          SparderEnv.getTotalCore).toInt
+      }
+    QueryContext.current().setShufflePartitions(partitionsNum)
+    logInfo(s"partitions num are: $partitionsNum," +
+      s" total scan bytes are: ${QueryContext.current().getMetrics.getSourceScanBytes}," +
+      s" total cores are: ${SparderEnv.getTotalCore}")
+
+    val queryId = QueryContext.current().getQueryId
+    sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
+
+    sparkContext.setJobGroup(jobGroup,
+      QueryContext.current().getMetrics.getCorrectedSql,
+      interruptOnCancel = true)
+    try {
+      val autoBroadcastJoinThreshold = SparderEnv.getSparkSession.sessionState.conf.autoBroadcastJoinThreshold
+      val sparkPlan = df.queryExecution.executedPlan
+      var sumOfSourceScanRows = QueryContext.current.getMetrics.getAccumSourceScanRows
+      if (KapConfig.getInstanceFromEnv.isQueryLimitEnabled && KapConfig.getInstanceFromEnv.isApplyLimitInfoToSourceScanRowsEnabled) {
+        val accumRowsCounter = new AtomicLong(0)
+        extractEachStageLimitRows(sparkPlan, -1, accumRowsCounter)
+        sumOfSourceScanRows = accumRowsCounter.get()
+        logDebug(s"Spark executed plan is \n $sparkPlan; \n accumRowsCounter: $accumRowsCounter")
+      }
+      logInfo(s"autoBroadcastJoinThreshold: [before:$autoBroadcastJoinThreshold, " +
+        s"after: ${SparderEnv.getSparkSession.sessionState.conf.autoBroadcastJoinThreshold}]")
+      sparkContext.setLocalProperty("source_scan_rows", QueryContext.current().getMetrics.getSourceScanRows.toString)
+      logDebug(s"source_scan_rows is ${QueryContext.current().getMetrics.getSourceScanRows.toString}")
+
+      val bigQueryThreshold = BigQueryThresholdUpdater.getBigQueryThreshold
+      val pool = getQueryFairSchedulerPool(sparkContext.getConf, QueryContext.current(), bigQueryThreshold,
+        sumOfSourceScanRows, partitionsNum)
+      sparkContext.setLocalProperty(SPARK_SCHEDULER_POOL, pool)
+
+      // judge whether to refuse the new big query
+      logDebug(s"Total source scan rows: $sumOfSourceScanRows")
+      val sourceScanRows = Array(new lang.Long(sumOfSourceScanRows)).toList.asJava
+      val ifBigQuery: Boolean = QueryContext.current().isIfBigQuery
+      ifRefuseQuery(sumOfSourceScanRows, bigQueryThreshold, sourceScanRows, ifBigQuery)
+
+      QueryContext.current.record("executed_plan")
+      QueryContext.currentTrace().endLastSpan()
+      val jobTrace = new SparkJobTrace(jobGroup, QueryContext.currentTrace(), QueryContext.current().getQueryId, sparkContext)
+      val results = if (NProjectManager.getProjectConfig(QueryContext.current().getProject)
+        .isQueryUseIterableCollectApi) {
+        df.collectToIterator()
+      } else {
+        df.toIterator()
+      }
+      val resultRows = results._1
+      val resultSize = results._2
+      if (kapConfig.isQuerySparkJobTraceEnabled) jobTrace.jobFinished()
+      QueryContext.current.record("collect_result")
+
+      val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
+      val (jobCount, stageCount, taskCount) = QueryMetricUtils.collectTaskRelatedMetrics(jobGroup, sparkContext)
+      val cpuTime = QueryCostCollector.getAndCleanStatus(QueryContext.current().getQueryId)
+      QueryContext.current().getMetrics.setScanRows(scanRows)
+
+      QueryContext.current().getMetrics.setScanBytes(scanBytes)
+      QueryContext.current().getMetrics.setQueryJobCount(jobCount)
+      QueryContext.current().getMetrics.setQueryStageCount(stageCount)
+      QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
+      QueryContext.current().getMetrics.setCpuTime(cpuTime)
+
+      logInfo(s"Actual total scan count: $scanRows, " +
+        s"file scan row count: ${QueryContext.current.getMetrics.getAccumSourceScanRows}, " +
+        s"may apply limit row count: $sumOfSourceScanRows, Big query threshold: $bigQueryThreshold, Allocate pool: $pool, " +
+        s"Is Vip: ${QueryContext.current().getQueryTagInfo.isHighPriorityQuery}, " +
+        s"Is TableIndex: ${QueryContext.current().getQueryTagInfo.isTableIndex}")
+
+      val resultTypes = rowType.getFieldList.asScala
+      (readResultRow(resultRows, resultTypes), resultSize)
+    } catch {
+      case e: Throwable =>
+        if (e.isInstanceOf[InterruptedException]) {
+          Thread.currentThread.interrupt()
+          sparkContext.cancelJobGroup(jobGroup)
+          QueryInterruptChecker.checkThreadInterrupted("Interrupted at the stage of collecting result in ResultPlan.",
+            "Current step: Collecting dataset for sparder.")
+        }
+        throw e
+    } finally {
+      QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
     }
   }
 
@@ -429,36 +472,22 @@ object ResultPlan extends LogEx {
     if (file.exists()) file.delete()
   }
 
-  def asyncQueryIteratorWriteCsv(resultRows: util.Iterator[Row], outputStream: OutputStreamWriter, rowType: RelDataType): Unit = {
-    var asyncQueryRowSize = 0
-    val separator = QueryContext.current().getQueryTagInfo.getSeparator
-    val asyncQueryResult = if (rowType != null) {
-      val resultTypes = rowType.getFieldList.asScala
-      readResultRow(resultRows, resultTypes)
-    } else {
-      readPushDownResultRow(resultRows, false)
-    }
+  def readResultRow(resultRows: java.util.Iterator[Row], resultTypes: mutable.Buffer[RelDataTypeField]): lang.Iterable[util.List[String]] = {
+    () =>
+      new java.util.Iterator[util.List[String]] {
 
-    asyncQueryResult.forEach(row => {
+        override def hasNext: Boolean = resultRows.hasNext
 
-      asyncQueryRowSize += 1
-      val builder = new StringBuilder
-
-      for (i <- 0 until row.size()) {
-        val column = if (row.get(i) == null) "" else row.get(i)
-
-        if (i > 0) builder.append(separator)
-
-        val escapedCsv = encodeCell(column, separator)
-        builder.append(escapedCsv)
+        override def next(): util.List[String] = {
+          val row = resultRows.next()
+          if (Thread.interrupted()) {
+            throw new InterruptedException
+          }
+          row.toSeq.zip(resultTypes).map {
+            case (value, relField) => SparderTypeUtil.convertToStringWithCalciteType(value, relField.getType)
+          }.asJava
+        }
       }
-      builder.append(END_OF_LINE_SYMBOLS)
-      outputStream.write(builder.toString())
-      if (asyncQueryRowSize % CHECK_WRITE_SIZE == 0) {
-        outputStream.flush()
-      }
-    })
-    outputStream.flush()
   }
 
   // the encode logic is copied from org.supercsv.encoder.DefaultCsvEncoder.encode

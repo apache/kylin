@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.NDataModelManager;
 
@@ -30,28 +31,31 @@ import lombok.val;
 
 public class MetadataToolTestFixture {
 
-    public static void fixtureRestoreTest(KylinConfig kylinConfig, File junitFolder, String folder) throws IOException {
+    public static void fixtureRestoreTest(KylinConfig kylinConfig, File junitFolder, String type) throws IOException {
         // copy an metadata image to junit folder
-        ResourceTool.copy(kylinConfig, KylinConfig.createInstanceFromUri(junitFolder.getAbsolutePath()), folder);
+        ResourceTool.copy(kylinConfig, KylinConfig.createInstanceFromUri(junitFolder.getAbsolutePath()), type);
         fixtureRestoreTest();
 
     }
 
     public static void fixtureRestoreTest() {
-        val dataModelMgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            val dataModelMgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
 
-        // Make the current resource store state inconsistent with the image store
-        val dataModel1 = dataModelMgr.getDataModelDescByAlias("nmodel_basic");
-        dataModel1.setOwner("who");
-        dataModelMgr.updateDataModelDesc(dataModel1);
+            // Make the current resource store state inconsistent with the image store
+            val dataModel1 = dataModelMgr.getDataModelDescByAlias("nmodel_basic");
+            dataModel1.setOwner("who");
+            dataModelMgr.updateDataModelDesc(dataModel1);
 
-        val dataModel2 = dataModelMgr.getDataModelDescByAlias("nmodel_basic_inner");
-        dataModelMgr.dropModel(dataModel2);
+            val dataModel2 = dataModelMgr.getDataModelDescByAlias("nmodel_basic_inner");
+            dataModelMgr.dropModel(dataModel2);
 
-        val dataModel3 = dataModelMgr.copyBySerialization(dataModel2);
-        dataModel3.setUuid(RandomUtil.randomUUIDStr());
-        dataModel3.setAlias("data_model_3");
-        dataModel3.setMvcc(-1L);
-        dataModelMgr.createDataModelDesc(dataModel3, "who");
+            val dataModel3 = dataModelMgr.copyBySerialization(dataModel2);
+            dataModel3.setUuid(RandomUtil.randomUUIDStr());
+            dataModel3.setAlias("data_model_3");
+            dataModel3.setMvcc(-1L);
+            dataModelMgr.createDataModelDesc(dataModel3, "who");
+            return true;
+        }, "default");
     }
 }

@@ -47,8 +47,8 @@ function error() {
     echo -e "\033[31m$@\033[0m"
 }
 
-PROJECT_DIR=$(cd -P -- "$(dirname -- "$0")/../.." && pwd -P)
-WORKDIR=$(cd -P -- "${PROJECT_DIR}/dev-support/local" && pwd -P)
+PROJECT_DIR=$(cd -P -- "$(dirname -- "$0")/../../.." && pwd -P)
+WORKDIR=$(cd -P -- "${PROJECT_DIR}/dev-support/contributor/local" && pwd -P)
 FRONTEND_DIR=$(cd -P -- "${PROJECT_DIR}/kystudio" && pwd -P)
 
 KYLIN_HOME="${PROJECT_DIR}"
@@ -96,7 +96,8 @@ EOF" >"${PROJECT_DIR}/.idea/runConfigurations/BootstrapServer_local_community.xm
 
         info "* Build Frontend..."
         cd ${FRONTEND_DIR}
-        npm install >>/dev/null 2>&1
+        npm install -g yarn
+        yarn install >>/dev/null 2>&1
 
         info "* Init Done!"
         ;;

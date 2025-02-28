@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.SUMLC_EXTEND_4X",
+  "tableAlias" : "SUMLC_EXTEND_4X",
+  "columnName" : "TINYINT_CC",
+  "expression" : "SUMLC_EXTEND_4X.TINYINT_DATA * 2",
+  "innerExpression" : "`SUMLC_EXTEND_4X`.`TINYINT_DATA` * 2",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "eedfeb8f-8afe-001c-8b20-e4b17480e53a",
+  "project" : "sum_lc"
+}

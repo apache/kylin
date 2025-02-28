@@ -41,6 +41,8 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.rule.ClearKEPropertiesRule;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.request.PasswordChangeRequest;
@@ -62,23 +64,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.accept.ContentNegotiationManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 
@@ -107,6 +109,12 @@ public class NUserControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private IUserGroupService userGroupService;
+
+    @Mock
+    private SessionRegistry sessionRegistry;
+
+    @Spy
+    private FindByIndexNameSessionRepository sessionRepository;
 
     @Mock
     Environment env;
@@ -138,6 +146,7 @@ public class NUserControllerTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         ReflectionTestUtils.setField(nUserController, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(nUserController, "userAclService", userAclService);
+        ReflectionTestUtils.setField(nUserController, "sessionRepository", sessionRepository);
     }
 
     @After

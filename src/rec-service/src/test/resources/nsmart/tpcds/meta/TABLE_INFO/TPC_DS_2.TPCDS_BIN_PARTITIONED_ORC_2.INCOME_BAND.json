@@ -1,0 +1,23 @@
+{
+  "uuid" : "bc0a1fee-ca66-4147-8fea-7f1371b3a804",
+  "last_modified" : 1497607294951,
+  "version" : "2.0.0",
+  "name" : "INCOME_BAND",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "IB_INCOME_BAND_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "IB_LOWER_BOUND",
+    "datatype" : "integer"
+  }, {
+    "id" : "3",
+    "name" : "IB_UPPER_BOUND",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

@@ -1,0 +1,18 @@
+{
+  "uuid" : "bb018fdc-b9a6-4e92-8ee6-24973d1d1f24",
+  "last_modified" : 1546952007663,
+  "version" : "3.0.0.0",
+  "mvcc" : 1,
+  "dataflow" : "039eef32-9691-4c88-93ba-d65c58a1ab7a",
+  "layout_instances" : [ {
+    "layout_id" : 20000000001,
+    "build_job_id" : "96f77207-30ab-4b4e-b927-ee3928d50692",
+    "rows" : 2000,
+    "byte_size" : 17756,
+    "file_count" : 1,
+    "source_rows" : 2000,
+    "source_byte_size" : 0,
+    "create_time" : 1546952037805
+  } ],
+  "project" : "broken_test"
+}

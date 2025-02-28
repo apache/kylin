@@ -21,11 +21,13 @@ package org.apache.kylin.metadata.model;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +56,8 @@ public class FusionModelManager {
     private FusionModelManager(KylinConfig config, String project) {
         this.config = config;
         this.project = project;
-        String resourceRootPath = "/" + project + ResourceStore.FUSION_MODEL_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<FusionModel>(getStore(), resourceRootPath, FusionModel.class) {
+        this.crud = new CachedCrudAssist<FusionModel>(getStore(), MetadataType.FUSION_MODEL, project,
+                FusionModel.class) {
             @Override
             protected FusionModel initEntityAfterReload(FusionModel t, String resourceName) {
                 t.init(config, project);
@@ -74,7 +76,7 @@ public class FusionModelManager {
     }
 
     public FusionModel getFusionModel(String modelId) {
-        if (org.apache.commons.lang.StringUtils.isEmpty(modelId)) {
+        if (StringUtils.isEmpty(modelId)) {
             return null;
         }
         return crud.get(modelId);

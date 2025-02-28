@@ -35,14 +35,13 @@ import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.metrics.reporter.InfluxdbReporter;
 import org.apache.kylin.common.metrics.service.InfluxDBInstance;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import lombok.Getter;
 
 public class MetricsInfluxdbReporter implements MetricsReporter {

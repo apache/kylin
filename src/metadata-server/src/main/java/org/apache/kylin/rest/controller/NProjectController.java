@@ -57,10 +57,12 @@ import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
 import org.apache.kylin.rest.request.MultiPartitionConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
+import org.apache.kylin.rest.request.ProjectAutoSemiUpdateRequest;
 import org.apache.kylin.rest.request.ProjectConfigRequest;
 import org.apache.kylin.rest.request.ProjectConfigResetRequest;
 import org.apache.kylin.rest.request.ProjectExclusionRequest;
 import org.apache.kylin.rest.request.ProjectGeneralInfoRequest;
+import org.apache.kylin.rest.request.ProjectInternalTableConfigRequest;
 import org.apache.kylin.rest.request.ProjectKerberosInfoRequest;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.request.PushDownConfigRequest;
@@ -79,7 +81,6 @@ import org.apache.kylin.rest.response.StorageVolumeInfoResponse;
 import org.apache.kylin.rest.response.UserProjectPermissionResponse;
 import org.apache.kylin.rest.security.AclPermissionEnum;
 import org.apache.kylin.rest.security.AclPermissionFactory;
-import org.apache.kylin.rest.service.EpochService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -123,10 +124,6 @@ public class NProjectController extends NBasicController {
     @Autowired
     @Qualifier("modelService")
     private ModelService modelService;
-
-    @Autowired
-    @Qualifier("epochService")
-    private EpochService epochService;
 
     @ApiOperation(value = "getProjects", tags = {
             "SM" }, notes = "Update Param: page_offset, page_size; Update Response: total_size")
@@ -183,12 +180,6 @@ public class NProjectController extends NBasicController {
         }
 
         ProjectInstance createdProj = projectService.createProject(projectDesc.getName(), projectDesc);
-        try {
-            epochService.updateEpoch(Collections.singletonList(projectDesc.getName()), false, false);
-        } catch (Exception e) {
-            logger.warn("Transfer update epoch {} request failed, wait for schedule worker to update epoch.",
-                    projectDesc.getName(), e);
-        }
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, createdProj, "");
     }
 
@@ -343,8 +334,7 @@ public class NProjectController extends NBasicController {
             @RequestBody SnapshotConfigRequest snapshotConfigRequest) {
         checkBooleanArg("snapshot_manual_management_enabled",
                 snapshotConfigRequest.getSnapshotManualManagementEnabled());
-        checkBooleanArg("snapshot_automatic_refresh_enabled",
-                snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
+        checkBooleanArg("snapshot_automatic_refresh_enabled", snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
         projectService.updateSnapshotConfig(project, snapshotConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
@@ -377,6 +367,15 @@ public class NProjectController extends NBasicController {
     public EnvelopeResponse<String> updateProjectGeneralInfo(@PathVariable("project") String project,
             @RequestBody ProjectGeneralInfoRequest projectGeneralInfoRequest) {
         projectService.updateProjectGeneralInfo(project, projectGeneralInfoRequest);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "updateprojectAutoSemi", tags = { "SM" }, notes = "Add URL: {project}; ")
+    @PutMapping(value = "/{project:.+}/auto_semi_config")
+    @ResponseBody
+    public EnvelopeResponse<String> updateProjectAutoSemi(@PathVariable("project") String project,
+            @RequestBody ProjectAutoSemiUpdateRequest projectAutoSemiUpdateRequest) {
+        projectService.updateAutoSemiConfig(project, projectAutoSemiUpdateRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
@@ -459,6 +458,15 @@ public class NProjectController extends NBasicController {
     }
 
     @ApiOperation(value = "deleteProjectConfig", tags = { "SM" })
+    @DeleteMapping(value = "/{project:.+}/config")
+    @ResponseBody
+    public EnvelopeResponse<String> deleteProjectConfig(@PathVariable("project") String project,
+            @RequestParam(value = "config_name") String configName) {
+        ProjectConfigRequest request = new ProjectConfigRequest(project, configName);
+        return deleteProjectConfig(request);
+    }
+
+    @ApiOperation(value = "deleteProjectConfig", tags = { "SM" })
     @PostMapping(value = "/config/deletion")
     @ResponseBody
     public EnvelopeResponse<String> deleteProjectConfig(@RequestBody ProjectConfigRequest request) {
@@ -515,6 +523,15 @@ public class NProjectController extends NBasicController {
     public EnvelopeResponse<String> updateTableExclusionConfig(@PathVariable("project") String project,
             @RequestBody ProjectExclusionRequest request) {
         projectService.updateTableExclusionRule(project, request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "updateInternalTableConfig", notes = "Add URL: {project}; ")
+    @PutMapping(value = "/{project:.+}/internal_table_enabled")
+    @ResponseBody
+    public EnvelopeResponse<String> updateInternalTableConfig(@PathVariable("project") String project,
+            @RequestBody ProjectInternalTableConfigRequest request) {
+        projectService.updateInternalTableConfig(project, request);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 }

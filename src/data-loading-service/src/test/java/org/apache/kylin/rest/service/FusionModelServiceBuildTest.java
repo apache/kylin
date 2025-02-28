@@ -24,12 +24,12 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.job.dao.JobInfoDao;
-import org.apache.kylin.job.service.JobInfoService;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.config.initialize.ModelUpdateListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.IndexesToSegmentsRequest;
@@ -90,9 +90,10 @@ public class FusionModelServiceBuildTest extends SourceTestCase {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    @Override
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         EventBusFactory.getInstance().register(modelUpdateListener, true);
         ReflectionTestUtils.setField(fusionModelService, "modelService", modelService);
@@ -120,10 +121,11 @@ public class FusionModelServiceBuildTest extends SourceTestCase {
         ReflectionTestUtils.setField(jobInfoService, "modelService", modelService);
     }
 
+    @Override
     @After
     public void tearDown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -131,12 +133,13 @@ public class FusionModelServiceBuildTest extends SourceTestCase {
         String modelId = "334671fd-e383-4fc9-b5c2-94fce832f77a";
         String streamingId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
         String project = "streaming_test";
-        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        modelManager.updateDataModel(modelId, copyForWrite -> {
-            copyForWrite.setManagementType(ManagementType.MODEL_BASED);
-            copyForWrite.setPartitionDesc(null);
-        });
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> NDataModelManager
+                .getInstance(KylinConfig.getInstanceFromEnv(), project).updateDataModel(modelId, copyForWrite -> {
+                    copyForWrite.setManagementType(ManagementType.MODEL_BASED);
+                    copyForWrite.setPartitionDesc(null);
+                }), project);
 
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         NDataModel model = modelManager.getDataModelDesc(streamingId);
         IncrementBuildSegmentParams incrParams = new IncrementBuildSegmentParams(project, modelId, "1633017600000",
                 "1633104000000", model.getPartitionDesc(), model.getMultiPartitionDesc(), null, true, null);
@@ -166,7 +169,7 @@ public class FusionModelServiceBuildTest extends SourceTestCase {
         }
 
         // test batch of fusion model
-        buildSegmentsRequest.setSegmentIds(Arrays.asList("86b5daaa-e295-4e8c-b877-f97bda69bee5"));
+        buildSegmentsRequest.setSegmentIds(Arrays.asList("027db8f2-145d-4e6c-6a1b-7139bb1fb5bc"));
         try {
             fusionModelService.addIndexesToSegments(fusionId, buildSegmentsRequest);
         } catch (Exception e) {

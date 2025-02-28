@@ -32,6 +32,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.kylin.tool.daemon.handler.DownGradeStateHandler;
 import org.apache.kylin.tool.daemon.handler.NormalStateHandler;
 import org.apache.kylin.tool.daemon.handler.RestartStateHandler;
@@ -40,9 +42,6 @@ import org.apache.kylin.tool.daemon.handler.UpGradeStateHandler;
 import org.apache.kylin.tool.daemon.handler.WarnStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 
 public class KapGuardian {
     private static final Logger logger = LoggerFactory.getLogger(KapGuardian.class);

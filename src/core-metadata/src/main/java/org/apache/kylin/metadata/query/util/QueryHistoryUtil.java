@@ -27,13 +27,13 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QueryHistoryUtil {
 
@@ -64,10 +64,11 @@ public class QueryHistoryUtil {
         QueryHistorySql queryHistorySql = queryHistory.getQueryHistorySql();
         String sql = queryHistorySql.getNormalizedSql();
 
-        return StringUtils.join(Lists.newArrayList(formatQueryTime, queryHistory.getDuration() + "ms",
-                        queryHistory.getQueryId(), "\"" + sql.replace("\"", "\"\"") + "\"", answerBy,
-                        queryHistory.getQueryStatus(), queryHistory.getHostName(), queryHistory.getQuerySubmitter(), queryMsg),
-                ',').replaceAll("\n|\r", " ");
+        return StringUtils
+                .join(Lists.newArrayList(formatQueryTime, queryHistory.getDuration() + "ms", queryHistory.getQueryId(),
+                        "\"" + sql.replace("\"", "\"\"") + "\"", answerBy, queryHistory.getQueryStatus(),
+                        queryHistory.getHostName(), queryHistory.getQuerySubmitter(), queryMsg), ',')
+                .replaceAll("\n|\r", " ");
     }
 
     public static String toQueryHistorySqlText(QueryHistorySql queryHistorySql) throws JsonProcessingException {

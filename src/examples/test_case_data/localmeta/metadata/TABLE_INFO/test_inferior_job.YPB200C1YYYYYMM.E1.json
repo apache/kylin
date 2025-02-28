@@ -1,0 +1,1278 @@
+{
+  "uuid" : "68edbc38-86d8-609f-a8e0-aa0ae21962e2",
+  "last_modified" : 0,
+  "create_time" : 1649659319917,
+  "version" : "4.0.0.0",
+  "name" : "E1",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "A001",
+    "datatype" : "bigint",
+    "comment" : "",
+    "case_sensitive_name" : "a001"
+  }, {
+    "id" : "2",
+    "name" : "A002",
+    "datatype" : "bigint",
+    "comment" : "",
+    "case_sensitive_name" : "a002"
+  }, {
+    "id" : "3",
+    "name" : "A003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a003"
+  }, {
+    "id" : "4",
+    "name" : "A004",
+    "datatype" : "double",
+    "comment" : "",
+    "case_sensitive_name" : "a004"
+  }, {
+    "id" : "5",
+    "name" : "A005",
+    "datatype" : "varchar(4096)",
+    "comment" : "",
+    "case_sensitive_name" : "a005"
+  }, {
+    "id" : "6",
+    "name" : "A006",
+    "datatype" : "decimal(38,10)",
+    "comment" : "",
+    "case_sensitive_name" : "a006"
+  }, {
+    "id" : "7",
+    "name" : "A007",
+    "datatype" : "boolean",
+    "comment" : "",
+    "case_sensitive_name" : "a007"
+  }, {
+    "id" : "8",
+    "name" : "A008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a008"
+  }, {
+    "id" : "9",
+    "name" : "A009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a009"
+  }, {
+    "id" : "10",
+    "name" : "A010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a010"
+  }, {
+    "id" : "11",
+    "name" : "A011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a011"
+  }, {
+    "id" : "12",
+    "name" : "A012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a012"
+  }, {
+    "id" : "13",
+    "name" : "A013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a013"
+  }, {
+    "id" : "14",
+    "name" : "A014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a014"
+  }, {
+    "id" : "15",
+    "name" : "A015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a015"
+  }, {
+    "id" : "16",
+    "name" : "A016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a016"
+  }, {
+    "id" : "17",
+    "name" : "A017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a017"
+  }, {
+    "id" : "18",
+    "name" : "A018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a018"
+  }, {
+    "id" : "19",
+    "name" : "A019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a019"
+  }, {
+    "id" : "20",
+    "name" : "A020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "a020"
+  }, {
+    "id" : "21",
+    "name" : "B001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b001"
+  }, {
+    "id" : "22",
+    "name" : "B002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b002"
+  }, {
+    "id" : "23",
+    "name" : "B003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b003"
+  }, {
+    "id" : "24",
+    "name" : "B004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b004"
+  }, {
+    "id" : "25",
+    "name" : "B005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b005"
+  }, {
+    "id" : "26",
+    "name" : "B006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b006"
+  }, {
+    "id" : "27",
+    "name" : "B007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b007"
+  }, {
+    "id" : "28",
+    "name" : "B008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b008"
+  }, {
+    "id" : "29",
+    "name" : "B009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b009"
+  }, {
+    "id" : "30",
+    "name" : "B010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b010"
+  }, {
+    "id" : "31",
+    "name" : "B011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b011"
+  }, {
+    "id" : "32",
+    "name" : "B012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b012"
+  }, {
+    "id" : "33",
+    "name" : "B013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b013"
+  }, {
+    "id" : "34",
+    "name" : "B014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b014"
+  }, {
+    "id" : "35",
+    "name" : "B015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b015"
+  }, {
+    "id" : "36",
+    "name" : "B016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b016"
+  }, {
+    "id" : "37",
+    "name" : "B017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b017"
+  }, {
+    "id" : "38",
+    "name" : "B018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b018"
+  }, {
+    "id" : "39",
+    "name" : "B019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b019"
+  }, {
+    "id" : "40",
+    "name" : "B020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "b020"
+  }, {
+    "id" : "41",
+    "name" : "C001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c001"
+  }, {
+    "id" : "42",
+    "name" : "C002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c002"
+  }, {
+    "id" : "43",
+    "name" : "C003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c003"
+  }, {
+    "id" : "44",
+    "name" : "C004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c004"
+  }, {
+    "id" : "45",
+    "name" : "C005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c005"
+  }, {
+    "id" : "46",
+    "name" : "C006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c006"
+  }, {
+    "id" : "47",
+    "name" : "C007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c007"
+  }, {
+    "id" : "48",
+    "name" : "C008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c008"
+  }, {
+    "id" : "49",
+    "name" : "C009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c009"
+  }, {
+    "id" : "50",
+    "name" : "C010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c010"
+  }, {
+    "id" : "51",
+    "name" : "C011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c011"
+  }, {
+    "id" : "52",
+    "name" : "C012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c012"
+  }, {
+    "id" : "53",
+    "name" : "C013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c013"
+  }, {
+    "id" : "54",
+    "name" : "C014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c014"
+  }, {
+    "id" : "55",
+    "name" : "C015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c015"
+  }, {
+    "id" : "56",
+    "name" : "C016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c016"
+  }, {
+    "id" : "57",
+    "name" : "C017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c017"
+  }, {
+    "id" : "58",
+    "name" : "C018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c018"
+  }, {
+    "id" : "59",
+    "name" : "C019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c019"
+  }, {
+    "id" : "60",
+    "name" : "C020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "c020"
+  }, {
+    "id" : "61",
+    "name" : "D001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d001"
+  }, {
+    "id" : "62",
+    "name" : "D002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d002"
+  }, {
+    "id" : "63",
+    "name" : "D003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d003"
+  }, {
+    "id" : "64",
+    "name" : "D004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d004"
+  }, {
+    "id" : "65",
+    "name" : "D005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d005"
+  }, {
+    "id" : "66",
+    "name" : "D006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d006"
+  }, {
+    "id" : "67",
+    "name" : "D007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d007"
+  }, {
+    "id" : "68",
+    "name" : "D008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d008"
+  }, {
+    "id" : "69",
+    "name" : "D009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d009"
+  }, {
+    "id" : "70",
+    "name" : "D010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d010"
+  }, {
+    "id" : "71",
+    "name" : "D011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d011"
+  }, {
+    "id" : "72",
+    "name" : "D012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d012"
+  }, {
+    "id" : "73",
+    "name" : "D013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d013"
+  }, {
+    "id" : "74",
+    "name" : "D014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d014"
+  }, {
+    "id" : "75",
+    "name" : "D015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d015"
+  }, {
+    "id" : "76",
+    "name" : "D016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d016"
+  }, {
+    "id" : "77",
+    "name" : "D017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d017"
+  }, {
+    "id" : "78",
+    "name" : "D018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d018"
+  }, {
+    "id" : "79",
+    "name" : "D019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d019"
+  }, {
+    "id" : "80",
+    "name" : "D020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "d020"
+  }, {
+    "id" : "81",
+    "name" : "E001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e001"
+  }, {
+    "id" : "82",
+    "name" : "E002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e002"
+  }, {
+    "id" : "83",
+    "name" : "E003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e003"
+  }, {
+    "id" : "84",
+    "name" : "E004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e004"
+  }, {
+    "id" : "85",
+    "name" : "E005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e005"
+  }, {
+    "id" : "86",
+    "name" : "E006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e006"
+  }, {
+    "id" : "87",
+    "name" : "E007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e007"
+  }, {
+    "id" : "88",
+    "name" : "E008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e008"
+  }, {
+    "id" : "89",
+    "name" : "E009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e009"
+  }, {
+    "id" : "90",
+    "name" : "E010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e010"
+  }, {
+    "id" : "91",
+    "name" : "E011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e011"
+  }, {
+    "id" : "92",
+    "name" : "E012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e012"
+  }, {
+    "id" : "93",
+    "name" : "E013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e013"
+  }, {
+    "id" : "94",
+    "name" : "E014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e014"
+  }, {
+    "id" : "95",
+    "name" : "E015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e015"
+  }, {
+    "id" : "96",
+    "name" : "E016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e016"
+  }, {
+    "id" : "97",
+    "name" : "E017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e017"
+  }, {
+    "id" : "98",
+    "name" : "E018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e018"
+  }, {
+    "id" : "99",
+    "name" : "E019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e019"
+  }, {
+    "id" : "100",
+    "name" : "E020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "e020"
+  }, {
+    "id" : "101",
+    "name" : "F001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f001"
+  }, {
+    "id" : "102",
+    "name" : "F002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f002"
+  }, {
+    "id" : "103",
+    "name" : "F003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f003"
+  }, {
+    "id" : "104",
+    "name" : "F004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f004"
+  }, {
+    "id" : "105",
+    "name" : "F005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f005"
+  }, {
+    "id" : "106",
+    "name" : "F006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f006"
+  }, {
+    "id" : "107",
+    "name" : "F007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f007"
+  }, {
+    "id" : "108",
+    "name" : "F008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f008"
+  }, {
+    "id" : "109",
+    "name" : "F009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f009"
+  }, {
+    "id" : "110",
+    "name" : "F010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f010"
+  }, {
+    "id" : "111",
+    "name" : "F011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f011"
+  }, {
+    "id" : "112",
+    "name" : "F012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f012"
+  }, {
+    "id" : "113",
+    "name" : "F013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f013"
+  }, {
+    "id" : "114",
+    "name" : "F014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f014"
+  }, {
+    "id" : "115",
+    "name" : "F015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f015"
+  }, {
+    "id" : "116",
+    "name" : "F016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f016"
+  }, {
+    "id" : "117",
+    "name" : "F017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f017"
+  }, {
+    "id" : "118",
+    "name" : "F018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f018"
+  }, {
+    "id" : "119",
+    "name" : "F019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f019"
+  }, {
+    "id" : "120",
+    "name" : "F020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "f020"
+  }, {
+    "id" : "121",
+    "name" : "G001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g001"
+  }, {
+    "id" : "122",
+    "name" : "G002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g002"
+  }, {
+    "id" : "123",
+    "name" : "G003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g003"
+  }, {
+    "id" : "124",
+    "name" : "G004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g004"
+  }, {
+    "id" : "125",
+    "name" : "G005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g005"
+  }, {
+    "id" : "126",
+    "name" : "G006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g006"
+  }, {
+    "id" : "127",
+    "name" : "G007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g007"
+  }, {
+    "id" : "128",
+    "name" : "G008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g008"
+  }, {
+    "id" : "129",
+    "name" : "G009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g009"
+  }, {
+    "id" : "130",
+    "name" : "G010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g010"
+  }, {
+    "id" : "131",
+    "name" : "G011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g011"
+  }, {
+    "id" : "132",
+    "name" : "G012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g012"
+  }, {
+    "id" : "133",
+    "name" : "G013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g013"
+  }, {
+    "id" : "134",
+    "name" : "G014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g014"
+  }, {
+    "id" : "135",
+    "name" : "G015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g015"
+  }, {
+    "id" : "136",
+    "name" : "G016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g016"
+  }, {
+    "id" : "137",
+    "name" : "G017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g017"
+  }, {
+    "id" : "138",
+    "name" : "G018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g018"
+  }, {
+    "id" : "139",
+    "name" : "G019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g019"
+  }, {
+    "id" : "140",
+    "name" : "G020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "g020"
+  }, {
+    "id" : "141",
+    "name" : "H001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h001"
+  }, {
+    "id" : "142",
+    "name" : "H002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h002"
+  }, {
+    "id" : "143",
+    "name" : "H003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h003"
+  }, {
+    "id" : "144",
+    "name" : "H004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h004"
+  }, {
+    "id" : "145",
+    "name" : "H005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h005"
+  }, {
+    "id" : "146",
+    "name" : "H006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h006"
+  }, {
+    "id" : "147",
+    "name" : "H007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h007"
+  }, {
+    "id" : "148",
+    "name" : "H008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h008"
+  }, {
+    "id" : "149",
+    "name" : "H009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h009"
+  }, {
+    "id" : "150",
+    "name" : "H010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h010"
+  }, {
+    "id" : "151",
+    "name" : "H011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h011"
+  }, {
+    "id" : "152",
+    "name" : "H012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h012"
+  }, {
+    "id" : "153",
+    "name" : "H013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h013"
+  }, {
+    "id" : "154",
+    "name" : "H014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h014"
+  }, {
+    "id" : "155",
+    "name" : "H015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h015"
+  }, {
+    "id" : "156",
+    "name" : "H016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h016"
+  }, {
+    "id" : "157",
+    "name" : "H017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h017"
+  }, {
+    "id" : "158",
+    "name" : "H018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h018"
+  }, {
+    "id" : "159",
+    "name" : "H019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h019"
+  }, {
+    "id" : "160",
+    "name" : "H020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "h020"
+  }, {
+    "id" : "161",
+    "name" : "I001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i001"
+  }, {
+    "id" : "162",
+    "name" : "I002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i002"
+  }, {
+    "id" : "163",
+    "name" : "I003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i003"
+  }, {
+    "id" : "164",
+    "name" : "I004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i004"
+  }, {
+    "id" : "165",
+    "name" : "I005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i005"
+  }, {
+    "id" : "166",
+    "name" : "I006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i006"
+  }, {
+    "id" : "167",
+    "name" : "I007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i007"
+  }, {
+    "id" : "168",
+    "name" : "I008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i008"
+  }, {
+    "id" : "169",
+    "name" : "I009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i009"
+  }, {
+    "id" : "170",
+    "name" : "I010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i010"
+  }, {
+    "id" : "171",
+    "name" : "I011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i011"
+  }, {
+    "id" : "172",
+    "name" : "I012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i012"
+  }, {
+    "id" : "173",
+    "name" : "I013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i013"
+  }, {
+    "id" : "174",
+    "name" : "I014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i014"
+  }, {
+    "id" : "175",
+    "name" : "I015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i015"
+  }, {
+    "id" : "176",
+    "name" : "I016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i016"
+  }, {
+    "id" : "177",
+    "name" : "I017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i017"
+  }, {
+    "id" : "178",
+    "name" : "I018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i018"
+  }, {
+    "id" : "179",
+    "name" : "I019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i019"
+  }, {
+    "id" : "180",
+    "name" : "I020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "i020"
+  }, {
+    "id" : "181",
+    "name" : "J001",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j001"
+  }, {
+    "id" : "182",
+    "name" : "J002",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j002"
+  }, {
+    "id" : "183",
+    "name" : "J003",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j003"
+  }, {
+    "id" : "184",
+    "name" : "J004",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j004"
+  }, {
+    "id" : "185",
+    "name" : "J005",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j005"
+  }, {
+    "id" : "186",
+    "name" : "J006",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j006"
+  }, {
+    "id" : "187",
+    "name" : "J007",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j007"
+  }, {
+    "id" : "188",
+    "name" : "J008",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j008"
+  }, {
+    "id" : "189",
+    "name" : "J009",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j009"
+  }, {
+    "id" : "190",
+    "name" : "J010",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j010"
+  }, {
+    "id" : "191",
+    "name" : "J011",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j011"
+  }, {
+    "id" : "192",
+    "name" : "J012",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j012"
+  }, {
+    "id" : "193",
+    "name" : "J013",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j013"
+  }, {
+    "id" : "194",
+    "name" : "J014",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j014"
+  }, {
+    "id" : "195",
+    "name" : "J015",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j015"
+  }, {
+    "id" : "196",
+    "name" : "J016",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j016"
+  }, {
+    "id" : "197",
+    "name" : "J017",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j017"
+  }, {
+    "id" : "198",
+    "name" : "J018",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j018"
+  }, {
+    "id" : "199",
+    "name" : "J019",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j019"
+  }, {
+    "id" : "200",
+    "name" : "J020",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "j020"
+  }, {
+    "id" : "201",
+    "name" : "ACI_START_DATE",
+    "datatype" : "timestamp",
+    "comment" : "",
+    "case_sensitive_name" : "ACI_START_DATE"
+  }, {
+    "id" : "202",
+    "name" : "ACI_DATE",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : "ACI_DATE"
+  }, {
+    "id" : "203",
+    "name" : "ACI_YEAR_MONTH",
+    "datatype" : "varchar(4096)",
+    "comment" : "",
+    "case_sensitive_name" : "ACI_YEAR_MONTH"
+  }, {
+    "id" : "204",
+    "name" : "DATE",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : "DATE"
+  }, {
+    "id" : "205",
+    "name" : "MONTH",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : "MONTH"
+  }, {
+    "id" : "206",
+    "name" : "YEAR",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : "YEAR"
+  }, {
+    "id" : "207",
+    "name" : "TIMESTAMP",
+    "datatype" : "timestamp",
+    "comment" : "",
+    "case_sensitive_name" : "TIMESTAMP"
+  }, {
+    "id" : "208",
+    "name" : "YEAR_MONTH",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : "YEAR_MONTH",
+    "is_partitioned" : true
+  } ],
+  "source_type" : 9,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : "YEAR_MONTH",
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "YPB200C1YYYYYMM",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "test_inferior_job"
+}

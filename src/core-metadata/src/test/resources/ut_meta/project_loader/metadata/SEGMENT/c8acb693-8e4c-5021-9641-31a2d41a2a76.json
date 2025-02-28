@@ -1,0 +1,48 @@
+{
+  "name" : "19700831000000_19700901000000",
+  "create_time_utc" : 1642748815832,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 20880000000,
+    "date_range_end" : 20966400000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "12" : {
+      "min" : "1970-08-31",
+      "max" : "1970-08-31"
+    },
+    "7" : {
+      "min" : "1105522222",
+      "max" : "1105522222"
+    },
+    "8" : {
+      "min" : "1279630376",
+      "max" : "1279630376"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1642749067728,
+  "source_count" : 1,
+  "source_bytes_size" : 1856223,
+  "column_source_bytes" : {
+    "SSB.P_LINEORDER.LO_ORDERKEY" : 10,
+    "SSB.P_LINEORDER.LO_CUSTKEY" : 10,
+    "SSB.P_LINEORDER.LO_ORDERDATE" : 10
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "c8acb693-8e4c-5021-9641-31a2d41a2a76",
+  "model_uuid" : "0b45826c-ee12-8862-b2ba-02354b4bb04b",
+  "project" : "test_cache_loader"
+}

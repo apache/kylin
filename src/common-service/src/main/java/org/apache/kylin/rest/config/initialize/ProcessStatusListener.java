@@ -39,16 +39,17 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.ProcessUtils;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
 import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
+
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProcessStatusListener {
+
+    private static final ProcessStatusListener INSTANCE = new ProcessStatusListener();
 
     private static final File CHILD_PROCESS_FILE = new File(KapConfig.getKylinHomeAtBestEffort(), "child_process");
     private static final String KILL_PROCESS_TREE = "kill-process-tree.sh";
@@ -56,6 +57,15 @@ public class ProcessStatusListener {
 
     // Lock subscribed actions which would read or write the child-process file.
     private final Lock fileLock = new ReentrantLock();
+
+    private ProcessStatusListener() {
+
+    }
+
+    public static ProcessStatusListener getInstance() {
+        log.info("ProcessStatusListener instance fetched.");
+        return INSTANCE;
+    }
 
     @Subscribe
     public void onProcessStart(CliCommandExecutor.ProcessStart processStart) {

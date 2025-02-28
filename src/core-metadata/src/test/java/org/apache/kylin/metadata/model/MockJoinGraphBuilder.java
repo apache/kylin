@@ -23,10 +23,9 @@ import java.util.List;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.junit.Assert;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class MockJoinGraphBuilder {
     private NDataModel modelDesc;

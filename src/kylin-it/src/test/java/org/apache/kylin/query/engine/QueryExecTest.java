@@ -19,44 +19,36 @@
 package org.apache.kylin.query.engine;
 
 import java.sql.SQLException;
+import java.util.List;
 
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.NativeQueryRealization;
+import org.apache.kylin.common.util.TestUtils;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.util.QueryHelper;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import lombok.val;
+@MetadataInfo(overlay = "src/test/resources/ut_meta/heterogeneous_segment_2")
+class QueryExecTest {
 
-public class QueryExecTest extends NLocalFileMetadataTestCase {
-
-    final String project = "default";
-
-    @Before
-    public void setup() {
-        createTestMetadata();
-    }
-
-    @After
-    public void teardown() {
-        cleanupTestMetadata();
+    public String getProject() {
+        return "default";
     }
 
     private Dataset<Row> check(String SQL) throws SQLException {
         SparderEnv.skipCompute();
-        QueryExec qe = new QueryExec(project, KylinConfig.getInstanceFromEnv());
+        QueryExec qe = new QueryExec(getProject(), KylinConfig.getInstanceFromEnv());
         qe.executeQuery(SQL);
         Dataset<Row> dataset = SparderEnv.getDF();
-        Assert.assertNotNull(dataset);
+        Assertions.assertNotNull(dataset);
         SparderEnv.cleanCompute();
         return dataset;
     }
@@ -64,15 +56,16 @@ public class QueryExecTest extends NLocalFileMetadataTestCase {
     /**
      * <p>See also {@link org.apache.kylin.query.engine.QueryExecTest#testSumCaseWhenHasNull()}
      *
-     * @throws SQLException
      */
     @Test
-    public void testWorkWithoutKapAggregateReduceFunctionsRule() throws SQLException {
-        overwriteSystemProp("kylin.query.convert-sum-expression-enabled", "true");
+    void testWorkWithoutKapAggregateReduceFunctionsRule() throws SQLException {
+        // Can not reproduce https://github.com/Kyligence/KAP/issues/15261 at 4.x
+        // we needn't introduce KapAggregateReduceFunctionsRule as we did in 3.x
+        TestUtils.getTestConfig().setProperty("kylin.query.convert-sum-expression-enabled", "true");
         String SQL = "select sum(t.a1 * 2)  from ("
                 + "select sum(price/2) as a1, sum(ITEM_COUNT) as a2 from TEST_KYLIN_FACT group by LSTG_FORMAT_NAME"
                 + ") t";
-        Assert.assertNotNull(check(SQL));
+        Assertions.assertNotNull(check(SQL));
     }
 
     /**
@@ -84,11 +77,10 @@ public class QueryExecTest extends NLocalFileMetadataTestCase {
      *
      * <p>See also {@link org.apache.kylin.query.engine.QueryExecTest#testWorkWithoutKapAggregateReduceFunctionsRule()}
      *
-     * @throws SqlParseException
      */
     @Test
-    public void testSumCaseWhenHasNull() throws SQLException {
-        overwriteSystemProp("kylin.query.convert-sum-expression-enabled", "true");
+    void testSumCaseWhenHasNull() throws SQLException {
+        TestUtils.getTestConfig().setProperty("kylin.query.convert-sum-expression-enabled", "true");
         String SQLWithZero = "select CAL_DT,\n"
                 + "       sum(case when LSTG_FORMAT_NAME in ('ABIN', 'XYZ') then 2 else 0 end)\n"
                 + "from TEST_KYLIN_FACT\n" + "group by CAL_DT";
@@ -100,38 +92,61 @@ public class QueryExecTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSingleQuery() throws SQLException {
+    void testSingleQuery() {
         SparderEnv.skipCompute();
         try {
             String sql = "select CAL_DT, count(*) from TEST_KYLIN_FACT group by CAL_DT";
             SparkSession session = SparderEnv.getSparkSession();
-            Dataset<Row> dataset = QueryHelper.sql(session, project, sql);
-            Assert.assertNotNull(dataset);
+            Dataset<Row> dataset = QueryHelper.sql(session, getProject(), sql);
+            Assertions.assertNotNull(dataset);
         } finally {
             SparderEnv.cleanCompute();
         }
     }
 
     @Test
-    public void testSingleQueryWithError() {
+    void testSingleQueryWithError() {
         SparderEnv.skipCompute();
         // useless, only for sonar condition coverage
-        val prevRunLocalConf = System.getProperty("kylin.query.engine.run-constant-query-locally");
+        String prevRunLocalConf = System.getProperty("kylin.query.engine.run-constant-query-locally");
         Unsafe.clearProperty("kylin.query.engine.run-constant-query-locally");
         Exception expectException = null;
         try {
             String sql = "select CAL_DT, count(*) from TEST_KYLIN_FACT group by CAL_DT_2";
             SparkSession session = SparderEnv.getSparkSession();
-            Dataset<Row> dataset = QueryHelper.sql(session, project, sql);
-            Assert.assertNotNull(dataset);
+            Dataset<Row> dataset = QueryHelper.sql(session, getProject(), sql);
+            Assertions.assertNotNull(dataset);
         } catch (Exception e) {
             expectException = e;
         } finally {
-            Assert.assertTrue(expectException instanceof AnalysisException);
+            Assertions.assertInstanceOf(AnalysisException.class, expectException);
             SparderEnv.cleanCompute();
             if (prevRunLocalConf != null) {
                 Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", prevRunLocalConf);
             }
+        }
+    }
+
+    @Test
+    void testModelRealizationAndOutOfSegmentRange() {
+        SparderEnv.skipCompute();
+        try {
+            // PART_DT>'2024-01-01', out of segment range
+            String sql = "select PART_DT, count(*) from KYLIN_SALES inner join kylin_account on SELLER_ID=ACCOUNT_ID"
+                    + " where PART_DT>'2024-01-01' group by PART_DT";
+            SparkSession session = SparderEnv.getSparkSession();
+            Dataset<Row> dataset = QueryHelper.sql(session, "heterogeneous_segment_2", sql);
+            Assertions.assertNotNull(dataset);
+
+            List<NativeQueryRealization> realizationList = ContextUtil.getNativeRealizations();
+            Assertions.assertEquals(1, realizationList.size());
+            NativeQueryRealization realization = realizationList.get(0);
+            Assertions.assertNotNull(realization.getModelId());
+            Assertions.assertNotNull(realization.getModelAlias());
+            Assertions.assertNull(realization.getLayoutId());
+            Assertions.assertNull(realization.getType());
+        } finally {
+            SparderEnv.cleanCompute();
         }
     }
 }

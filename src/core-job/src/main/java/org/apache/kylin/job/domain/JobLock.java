@@ -34,23 +34,35 @@ public class JobLock {
 
     private String lockId;
 
+    private String project;
+
     private String lockNode;
 
     private Date lockExpireTime;
 
     private int priority;
 
-    private Date createTime;
+    private long createTime;
 
-    private Date updateTime;
+    private long updateTime;
 
     // placeholder for mybatis ${}
     private String jobLockTable;
 
     private String database;
 
-    public JobLock(String lockId) {
+    private String jobType = JobTypeEnum.OFFLINE.name();
+
+    public JobLock(String lockId, String project, int priority, JobTypeEnum type) {
         this.lockId = lockId;
-        this.createTime = new Date();
+        this.project = project;
+        this.priority = priority;
+        this.createTime = System.currentTimeMillis();
+        this.updateTime = System.currentTimeMillis();
+        this.jobType = type.name();
+    }
+
+    public enum JobTypeEnum {
+        STREAMING, OFFLINE, MASTER, OTHER
     }
 }

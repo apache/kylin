@@ -276,8 +276,8 @@ class BuildSnapshotRunnableTest {
             val job2 = new NSparkSnapshotJob();
             job2.setParam(NBatchConstants.P_SELECTED_PARTITION_VALUE,
                     JsonUtil.writeValueAsString(Sets.newHashSet("3", "4")));
-            Mockito.when(executableManager.jobInfoToExecutable(executableManager.fetchJobsByTypesAndStates(
-                    null, Lists.newArrayList(SNAPSHOT_BUILD.name(), SNAPSHOT_REFRESH.name()), null,
+            Mockito.when(executableManager.jobInfoToExecutable(executableManager.fetchJobsByTypesAndStates(null,
+                    Lists.newArrayList(SNAPSHOT_BUILD.name(), SNAPSHOT_REFRESH.name()), null,
                     ExecutableState.getNotFinalStates()))).thenReturn(runningJobs);
 
             val thread = new BuildSnapshotRunnable();

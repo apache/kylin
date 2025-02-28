@@ -1,0 +1,37 @@
+{
+  "uuid" : "f9484266-f737-4d95-9485-b2cf934bdd6b",
+  "last_modified" : 0,
+  "create_time" : 1578487044134,
+  "version" : "4.0.0.0",
+  "name" : "TEST_KEYWORD_COLUMN",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "DATE",
+    "datatype" : "date",
+    "index" : "T"
+  }, {
+    "id" : "2",
+    "name" : "DATE2",
+    "datatype" : "date",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "ID",
+    "datatype" : "smallint"
+  }, {
+    "id" : "4",
+    "name" : "STRING",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "5",
+    "name" : "VARCHAR",
+    "datatype" : "varchar(4096)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "KEYWORD",
+  "project" : "keyword"
+}

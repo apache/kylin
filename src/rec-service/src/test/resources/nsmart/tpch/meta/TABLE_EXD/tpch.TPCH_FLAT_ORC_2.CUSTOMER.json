@@ -1,0 +1,69 @@
+{
+  "uuid" : "b526a51c-28e8-4e85-a266-8aee052f5949",
+  "last_modified" : 1493191029939,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.CUSTOMER",
+  "last_build_job_id" : "d9f67ae5-ce22-4a83-aa7e-b0684722ed0c",
+  "columns_stats" : [ {
+    "max_value" : "15000",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 15047
+  }, {
+    "max_value" : "Customer#000015000",
+    "min_value" : "Customer#000000001",
+    "max_length_value" : "Customer#000000001",
+    "min_length_value" : "Customer#000000001",
+    "null_count" : 0,
+    "cardinality" : 15617
+  }, {
+    "max_value" : "zzxGktzXTMKS1BxZlgQ9nqQ",
+    "min_value" : "   5L06W67,Mw8G",
+    "max_length_value" : "RGT yzQ0y4l0H90P783LG4U95bXQFDRXbWa1sl,X",
+    "min_length_value" : "ziSrvyyBke",
+    "null_count" : 0,
+    "cardinality" : 14683
+  }, {
+    "max_value" : "24",
+    "min_value" : "0",
+    "max_length_value" : "15",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "34-999-121-7718",
+    "min_value" : "10-103-318-6809",
+    "max_length_value" : "25-989-741-2988",
+    "min_length_value" : "25-989-741-2988",
+    "null_count" : 0,
+    "cardinality" : 16050
+  }, {
+    "max_value" : "9999.72",
+    "min_value" : "-999.95",
+    "max_length_value" : "7498.12",
+    "min_length_value" : "2.3",
+    "null_count" : 0,
+    "cardinality" : 14528
+  }, {
+    "max_value" : "MACHINERY",
+    "min_value" : "AUTOMOBILE",
+    "max_length_value" : "AUTOMOBILE",
+    "min_length_value" : "BUILDING",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "zzle. blithely regular instructions cajol",
+    "min_value" : " Tiresias among the boldly regular pinto beans wake pending",
+    "max_length_value" : "pecial deposits. ironic ideas boost blithely according to the closely ironic theodolites! furiously final deposits n",
+    "min_length_value" : "sual accounts across the slyl",
+    "null_count" : 0,
+    "cardinality" : 15406
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "Customer#000000001", "Customer#000000003", "Customer#000000005", "Customer#000000007", "Customer#000000009", "Customer#000000011", "Customer#000000013", "Customer#000000015", "Customer#000000017", "Customer#000000019" ], [ "IVhzIApeRb ot,c,E", "MG9kdTD2WBHm", "KvpyuHCplrB84WgAiGV6sYpZq7Tj", "TcGe5gaZNgVePxU5kRrvXBfkasDTea", "xKiAFTjUsCuxfeleNqefumTrjS", "PkWS 3HlXqwTuzrKg633BEi", "nsXQu0oVjD7PM659uC3SRSp", "YtWggXoOLdwdo7b0y,BZaGUQMLJMX1Y,EC,6Dn", "izrh 6jdqtp2eqdtbkswDD8SG4SzXruMfIXyR7", "uc,3bHIx84H,wdrmLOjVsiqXCq2tr" ], [ "15", "1", "3", "18", "8", "23", "3", "23", "2", "18" ], [ "25-989-741-2988", "11-719-748-3364", "13-750-942-6364", "28-190-982-9759", "18-338-906-3675", "33-464-151-3439", "13-761-547-5974", "33-687-542-7601", "12-970-682-3487", "28-396-526-5053" ], [ "711.56", "7498.12", "794.47", "9561.95", "8324.07", "-272.6", "3857.34", "2788.52", "6.34", "8914.71" ], [ "BUILDING", "AUTOMOBILE", "HOUSEHOLD", "AUTOMOBILE", "FURNITURE", "BUILDING", "BUILDING", "HOUSEHOLD", "AUTOMOBILE", "HOUSEHOLD" ], [ "to the even, regular platelets. regular, ironic epitaphs nag e", " deposits eat slyly ironic, even instructions. express foxes detect slyly. blithely even accounts abov", "n accounts will have to unwind. foxes cajole accor", "ainst the ironic, express theodolites. express, even pinto beans among the exp", "r theodolites according to the requests wake thinly excuses: pending requests haggle furiousl", "ckages. requests sleep slyly. quickly even pinto beans promise above the slyly regular pinto beans. ", "ounts sleep carefully after the close frays. carefully bold notornis use ironic requests. blithely", " platelets. regular deposits detect asymptotes. blithely unusual packages nag slyly at the fluf", "packages wake! blithely even pint", " nag. furiously careful packages are slyly at the accounts. furiously regular in" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "15000",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

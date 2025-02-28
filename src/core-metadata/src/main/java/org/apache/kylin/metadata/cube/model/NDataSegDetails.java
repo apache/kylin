@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  * Holds details of pre-calculated data (like layouts) of a data segment.
@@ -73,8 +73,6 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
 
     @JsonIgnore
     private KylinConfigExt config;
-
-    private String project;
 
     public KylinConfigExt getConfig() {
         return config;
@@ -214,11 +212,12 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (!super.equals(obj))
-            return false;
         if (getClass() != obj.getClass())
             return false;
         NDataSegDetails other = (NDataSegDetails) obj;
+        if (!uuid.equals(other.uuid)) {
+            return false;
+        }
         if (dataflowId == null) {
             return other.dataflowId == null;
         } else
@@ -230,10 +229,9 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
         return "NDataSegDetails [" + dataflowId + "." + uuid + "]";
     }
 
-    @Override
-    public String getResourcePath() {
-        return "/" + project + NDataSegDetails.DATAFLOW_DETAILS_RESOURCE_ROOT + "/" + dataflowId + "/" + uuid
-                + MetadataConstants.FILE_SURFIX;
-    }
 
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.LAYOUT;
+    }
 }

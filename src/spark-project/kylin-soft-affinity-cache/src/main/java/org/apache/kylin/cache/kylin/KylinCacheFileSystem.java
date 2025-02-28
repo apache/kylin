@@ -21,17 +21,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.cache.fs.AbstractCacheFileSystem;
+import org.apache.kylin.cache.fs.CacheFileSystemConstants;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.spark.SparkContext;
 import org.apache.spark.TaskContext;
 import org.apache.spark.sql.SparkSession;
 
-import org.apache.kylin.cache.fs.AbstractCacheFileSystem;
-import org.apache.kylin.cache.fs.CacheFileSystemConstants;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class KylinCacheFileSystem extends AbstractCacheFileSystem {
+
+    private static final Pattern ACCEPT_CACHE_TIME_PATTERN = Pattern.compile("ACCEPT_CACHE_TIME\\([^()]*\\)");
 
     /**
      * Check whether it needs to cache data on the current executor
@@ -59,45 +61,47 @@ public class KylinCacheFileSystem extends AbstractCacheFileSystem {
     /**
      * To instruct local cache eviction, sql can contain a hint like
      * <pre>
-     *      select * from xxx /*+ ACCEPT_CACHE_TIME(158176387682000) * /    -- no space between * and /
+     *      select * from xxx &#47;*+ ACCEPT_CACHE_TIME(158176387682000) *&#47;
      * </pre>
      * <p/>
      * The value is carried to Spark local property, naming "spark.kylin.local-cache.accept-cache-time",
      * and then is used by AbstractCacheFileSystem
      * <p/>
-     * Returns [sql_without_cache_hint, accept_cache_time]
+     * @param hintStr The hint string, i.e. &#47;*+ ACCEPT_CACHE_TIME(158176387682000) *&#47;
+     * @return 1st param of ACCEPT_CACHE_TIME
      */
-    private static final Pattern PTN = Pattern.compile("[(]\\s*([0-9]+)");
-    // returns [sql_with_hint_removed, the_millis_or_null]
-    static String[] extractAcceptCacheTime(String sql) {
-        int cut1 = sql.indexOf("ACCEPT_CACHE_TIME");
-        if (cut1 < 0)
-            return new String[]{sql, null};
-        int cut2 = sql.lastIndexOf("/*", cut1);
-        int cut3 = sql.indexOf("*/", cut1);
-        if (cut2 < 0 || cut3 < 0)
-            return new String[]{sql, null};
-
-        String newSql = sql.substring(0, cut2) + sql.substring(cut3 + 2);
-        String hintStr = sql.substring(cut2, cut3);
-        String millis = null;
-
-        Matcher m = PTN.matcher(hintStr);
-        if (m.find()) {
-            millis = m.group(1);
-        }
-
-        return new String[]{newSql, millis};
+    public static String processAcceptCacheTimeInHintStr(String hintStr) {
+        String time = extractAcceptCacheTime(hintStr);
+        setAcceptCacheTimeLocally(time);
+        return time;
     }
 
-    public static String processAcceptCacheTimeInSql(String sql) {
-        String[] sqlAndAct = extractAcceptCacheTime(sql);
-        setAcceptCacheTimeLocally(sqlAndAct[1]);
-        return sqlAndAct[0];
+    public static String extractAcceptCacheTime(String hintStr) {
+        String time = null;
+        if (StringUtils.isNotBlank(hintStr)) {
+            Matcher matcher = ACCEPT_CACHE_TIME_PATTERN.matcher(hintStr);
+            if (matcher.find(0)) {
+                String acceptCacheTimeHint = matcher.group();
+                time = extractTime(acceptCacheTimeHint);
+            }
+        }
+        return time;
+    }
+
+    public static String extractTime(String hint) {
+        if (StringUtils.isBlank(hint) || hint.indexOf("ACCEPT_CACHE_TIME(") != 0) {
+            return null;
+        }
+        String[] parts = hint.replace("ACCEPT_CACHE_TIME(", "").replace(")", "").split(",");
+        if (parts.length < 1) {
+            return null;
+        }
+        return parts[0];
     }
 
     public static void setAcceptCacheTimeLocally(String acceptCacheTime) {
-        setAcceptCacheTimeLocally(acceptCacheTime == null ? System.currentTimeMillis() : Long.parseLong(acceptCacheTime));
+        setAcceptCacheTimeLocally(
+                acceptCacheTime == null ? System.currentTimeMillis() : Long.parseLong(acceptCacheTime));
     }
 
     /**
@@ -110,7 +114,8 @@ public class KylinCacheFileSystem extends AbstractCacheFileSystem {
 
         long now = System.currentTimeMillis();
         if (acceptCacheTime > now + 1000) { // +1000 for some error tolerance of time
-            log.error("Accept-cache-time {} is later than clock time {}. Please check the time sync across machines.", acceptCacheTime, now);
+            log.error("Accept-cache-time {} is later than clock time {}. Please check the time sync across machines.",
+                    acceptCacheTime, now);
             acceptCacheTime = now;
         }
 
@@ -120,15 +125,20 @@ public class KylinCacheFileSystem extends AbstractCacheFileSystem {
         }
 
         sparkContext.setLocalProperty(key, Long.toString(acceptCacheTime));
+        sparkContext.setLocalProperty(CacheFileSystemConstants.PARAMS_KEY_ACCEPT_CACHE_TIME_FOR_GLUTEN,
+                Long.toString(acceptCacheTime));
     }
 
     public static void clearAcceptCacheTimeLocally() {
         Preconditions.checkState(SparkSession.getDefaultSession().isDefined());
         SparkContext sparkContext = SparkSession.getDefaultSession().get().sparkContext();
         sparkContext.setLocalProperty(CacheFileSystemConstants.PARAMS_KEY_ACCEPT_CACHE_TIME, null);
+        sparkContext.setLocalProperty(CacheFileSystemConstants.PARAMS_KEY_ACCEPT_CACHE_TIME_FOR_GLUTEN, null);
 
         if (TaskContext.get() != null) { // should not have TaskContext, just in case..
             TaskContext.get().getLocalProperties().remove(CacheFileSystemConstants.PARAMS_KEY_ACCEPT_CACHE_TIME);
+            TaskContext.get().getLocalProperties()
+                    .remove(CacheFileSystemConstants.PARAMS_KEY_ACCEPT_CACHE_TIME_FOR_GLUTEN);
         }
     }
 

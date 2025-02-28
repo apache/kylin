@@ -18,6 +18,7 @@
 package org.apache.kylin.rest.aspect;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,13 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Aspect
 @Component
+
 public class SchedulerEnhancer {
 
     @Around("@annotation(org.springframework.scheduling.annotation.Scheduled)")
     public void aroundScheduled(ProceedingJoinPoint pjp) throws Throwable {
         val config = KylinConfig.getInstanceFromEnv();
-        if (!"query".equals(config.getServerMode())) {
-            log.debug("schedule at job leader");
+        if (!"query".equals(config.getServerMode())
+                && JobContextUtil.getJobContext(config).getJobScheduler().isMaster()) {
+            log.debug("schedule at job master.");
             pjp.proceed();
         }
     }

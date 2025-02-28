@@ -126,7 +126,7 @@ public class Bytes {
      * @param b byte array, which can be null
      * @return 0 if b is null, otherwise returns length
      */
-    final public static int len(byte[] b) {
+    public static int len(byte[] b) {
         return b == null ? 0 : b.length;
     }
 

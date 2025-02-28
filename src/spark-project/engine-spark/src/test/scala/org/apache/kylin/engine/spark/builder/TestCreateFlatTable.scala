@@ -17,12 +17,11 @@
  */
 package org.apache.kylin.engine.spark.builder
 
-import java.text.SimpleDateFormat
-import java.util.{Locale, TimeZone}
-
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.DFChooser
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, SegmentRange}
@@ -30,6 +29,9 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBa
 import org.apache.spark.sql.{Dataset, Row}
 import org.junit.Assert
 
+import java.text.SimpleDateFormat
+import java.util
+import java.util.{Locale, TimeZone}
 import scala.collection.JavaConverters._
 
 // scalastyle:off
@@ -76,32 +78,39 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
   }
 
   test("Check the flattable filter and encode") {
+    val segments = UnitOfWork.doInTransactionWithRetry(() => {
+      val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
+      var df: NDataflow = dsMgr.getDataflow(MODEL_NAME1)
+      // cleanup all segments first
+      val update = new NDataflowUpdate(df.getUuid)
+      update.setToRemoveSegsWithArray(df.getSegments.asScala.toArray)
+      df = dsMgr.updateDataflow(update)
+      // add new segments
+      val seg1 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
+      val seg2 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1356019200000L, 1376019200000L))
+      val seg3 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1376019200000L, 1396019200000L))
+      val seg4 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1396019200000L, 1416019200000L))
+      util.Arrays.asList(seg1, seg2, seg3, seg4)
+    }, DEFAULT_PROJECT)
+
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     val df: NDataflow = dsMgr.getDataflow(MODEL_NAME1)
-    // cleanup all segments first
-    val update = new NDataflowUpdate(df.getUuid)
-    update.setToRemoveSegsWithArray(df.getSegments.asScala.toArray)
-    dsMgr.updateDataflow(update)
 
     // resource detect mode
-    val seg1 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
-    val afterJoin1 = generateFlatTable(seg1, df, false)
-    checkFilterCondition(afterJoin1, seg1)
-    checkEncodeCols(afterJoin1, seg1, false)
+    val afterJoin1 = generateFlatTable(segments.get(0), df, false)
+    checkFilterCondition(afterJoin1, segments.get(0))
+    checkEncodeCols(afterJoin1, segments.get(0), false)
 
-    val seg2 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1356019200000L, 1376019200000L))
-    val afterJoin2 = generateFlatTable(seg2, df, false)
-    checkFilterCondition(afterJoin2, seg2)
-    checkEncodeCols(afterJoin2, seg2, false)
+    val afterJoin2 = generateFlatTable(segments.get(1), df, false)
+    checkFilterCondition(afterJoin2, segments.get(1))
+    checkEncodeCols(afterJoin2, segments.get(1), false)
 
     // cubing mode
-    val seg3 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1376019200000L, 1396019200000L))
-    val afterJoin3 = generateFlatTable(seg3, df, true)
-    checkEncodeCols(afterJoin3, seg3, true)
+    val afterJoin3 = generateFlatTable(segments.get(2), df, true)
+    checkEncodeCols(afterJoin3, segments.get(2), true)
 
-    val seg4 = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(1396019200000L, 1416019200000L))
-    val afterJoin4 = generateFlatTable(seg4, df, true)
-    checkEncodeCols(afterJoin4, seg4, true)
+    val afterJoin4 = generateFlatTable(segments.get(3), df, true)
+    checkEncodeCols(afterJoin4, segments.get(3), true)
   }
 
   private def checkFilterCondition(ds: Dataset[Row], seg: NDataSegment) = {
@@ -129,7 +138,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
     val toBuildTree = NSpanningTreeFactory.fromLayouts(seg.getIndexPlan.getAllLayouts, MODEL_NAME1)
     val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
     val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan, seg.getSegRange, needJoin)
-    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, spark, null)
+    val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, spark, null, new ParamPropagation)
     val afterJoin = flatTable.generateDataset(needEncode)
     afterJoin
   }

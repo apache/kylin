@@ -41,12 +41,11 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.query.exception.SumExprUnSupportException;
-
-import com.google.common.collect.ImmutableList;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -157,7 +156,7 @@ public class AggExpressionUtil {
 
     private static boolean isIfCondition(RexNode exp) {
         if (exp instanceof RexCall) {
-            return ((RexCall) exp).getOperator().isName("IF");
+            return ((RexCall) exp).getOperator().isName("IF", false);
         }
         return false;
     }
@@ -189,7 +188,7 @@ public class AggExpressionUtil {
                 continue;
             }
             int input = call.getArgList().get(0);
-            RexNode expression = oldProject.getChildExps().get(input);
+            RexNode expression = oldProject.getProjects().get(input);
             int[] sourceInput = RelOptUtil.InputFinder.bits(expression).toArray();
             aggExpression.setExpression(expression);
             if (hasSumCaseWhen(call, expression)) {
@@ -291,7 +290,7 @@ public class AggExpressionUtil {
         List<GroupExpression> groupExpressions = Lists.newArrayListWithCapacity(oldAgg.getGroupCount());
         Map<Integer, Integer> old2new = Maps.newHashMap();
         for (int groupBy : oldAgg.getGroupSet()) {
-            RexNode projectExpr = oldProject.getChildExps().get(groupBy);
+            RexNode projectExpr = oldProject.getProjects().get(groupBy);
             CollectRexVisitor visitor = new CollectRexVisitor(true);
             projectExpr.accept(visitor);
             GroupExpression groupExpr = new GroupExpression();

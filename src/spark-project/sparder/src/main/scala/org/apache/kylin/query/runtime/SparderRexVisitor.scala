@@ -18,11 +18,6 @@
 
 package org.apache.kylin.query.runtime
 
-
-import java.math.BigDecimal
-import java.sql.Timestamp
-import java.time.ZoneId
-
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.calcite.rex._
@@ -35,11 +30,13 @@ import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.util.DateTimeUtils._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DataTypes, DateType, LongType, TimestampType}
+import org.apache.spark.sql.types.{DataTypes, DateType, LongType, StringType, TimestampType}
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.unsafe.types.UTF8String
 
+import java.sql.Timestamp
+import java.time.ZoneId
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
@@ -89,6 +86,9 @@ class SparderRexVisitor(val inputFieldNames: Seq[String],
     def getColumns: ListBuffer[Column] = {
       children.map {
         case null => new Column(Literal(null, DataTypes.BooleanType))
+        // see https://olapio.atlassian.net/browse/KE-42088
+        // Calcite 1.30 change child type
+        case boolCol: Boolean => new Column(Literal(boolCol.booleanValue(), DataTypes.BooleanType))
         case child =>
           assert(child.isInstanceOf[Column])
           child.asInstanceOf[Column]
@@ -165,7 +165,10 @@ class SparderRexVisitor(val inputFieldNames: Seq[String],
         left =!= right
       case PLUS =>
         assert(children.size == 2)
-        if (op.getName.equals("DATETIME_PLUS")) {
+        // see https://olapio.atlassian.net/browse/KE-42035
+        // Calcite 1.30 changed the name of operand in the SqlDatetimePlusOperator class,
+        // instead of using "DATETIME_PLUS", use "+"
+        if (op.getName.equals("+")) {
           // scalastyle:off
           children.last match {
             case num: MonthNum => {
@@ -174,10 +177,22 @@ class SparderRexVisitor(val inputFieldNames: Seq[String],
               call.getType.getSqlTypeName match {
                 case SqlTypeName.DATE =>
                   return k_lit(k_add_months(k_lit(ts), num.num)).cast(DateType)
+                case SqlTypeName.TIMESTAMP =>
+                  return k_lit(k_add_months(k_lit(ts), num.num)).cast(TimestampType)
                 case _ =>
                   return k_lit(k_add_months(k_lit(ts), num.num))
               }
             }
+            case _ =>
+          }
+          call.getType.getSqlTypeName match {
+            case SqlTypeName.CHAR | SqlTypeName.VARCHAR | SqlTypeName.BINARY | SqlTypeName.VARBINARY =>
+              return k_lit(children.head)
+                .cast(TimestampType)
+                .cast(LongType)
+                .plus(k_lit(children.last))
+                .cast(TimestampType)
+                .cast(StringType)
             case _ =>
           }
         }
@@ -324,23 +339,25 @@ class SparderRexVisitor(val inputFieldNames: Seq[String],
         if (Seq("MONTH", "YEAR", "QUARTER").contains(
           t.getIntervalQualifier.timeUnitRange.name)) {
           return Some(
-            MonthNum(k_lit(literal.getValue.asInstanceOf[BigDecimal].intValue)))
+            MonthNum(k_lit(RexLiteral.intValue(literal))))
         }
         if (literal.getType.getFamily
           .asInstanceOf[SqlTypeFamily] == SqlTypeFamily.INTERVAL_DAY_TIME) {
           return Some(
             SparderTypeUtil.toSparkTimestamp(
-              new java.math.BigDecimal(literal.getValue.toString).longValue()))
+              new java.math.BigDecimal(RexLiteral.value(literal).toString).longValue()))
         }
       }
 
       case literalSql: BasicSqlType => {
+        val literalStr = RexLiteral.value(literal).toString
         literalSql.getSqlTypeName match {
           case SqlTypeName.DATE =>
-            return Some(stringToTime(literal.toString))
+            return Some(stringToTime(literalStr))
           case SqlTypeName.TIMESTAMP =>
-            return Some(toJavaTimestamp(stringToTimestamp(UTF8String.fromString(literal.toString),
-              ZoneId.systemDefault()).head))
+            val string = UTF8String.fromString(literalStr)
+            val maybeLong = stringToTimestamp(string, ZoneId.systemDefault())
+            return Some(toJavaTimestamp(maybeLong.head))
           case _ =>
         }
       }

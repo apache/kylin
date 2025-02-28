@@ -1,0 +1,195 @@
+{
+  "uuid" : "c2f81b79-2c10-dce2-4206-588cab0e68ec",
+  "last_modified" : 1667548802841,
+  "create_time" : 1667544081868,
+  "version" : "4.0.0.0",
+  "alias" : "sum_lc_cc_test",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : null,
+  "fact_table" : "SSB.SUMLC_CC_TEST",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "ACCOUNT",
+    "column" : "SUMLC_CC_TEST.ACCOUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "MONTH_DATA",
+    "column" : "SUMLC_CC_TEST.MONTH_DATA"
+  }, {
+    "id" : 2,
+    "name" : "INT_DATA",
+    "column" : "SUMLC_CC_TEST.INT_DATA"
+  }, {
+    "id" : 3,
+    "name" : "YEAR_DATA",
+    "column" : "SUMLC_CC_TEST.YEAR_DATA"
+  }, {
+    "id" : 4,
+    "name" : "DAY_DATA",
+    "column" : "SUMLC_CC_TEST.DAY_DATA"
+  }, {
+    "id" : 5,
+    "name" : "DATE_DATA",
+    "column" : "SUMLC_CC_TEST.DATE_DATA",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "TIME_COMPOSE_CC",
+    "column" : "SUMLC_CC_TEST.TIME_COMPOSE_CC"
+  }, {
+    "id" : 7,
+    "name" : "INT_DATA_CC",
+    "column" : "SUMLC_CC_TEST.INT_DATA_CC",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "TO_TIME_COMPOSE_CC",
+    "column" : "SUMLC_CC_TEST.TO_TIME_COMPOSE_CC",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_lc_int_data_time_cc",
+    "function" : {
+      "expression" : "SUM_LC",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.INT_DATA"
+      }, {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.TIME_COMPOSE_CC"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "tomb" : true,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_lc_int_data_cc_date_data",
+    "function" : {
+      "expression" : "SUM_LC",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.INT_DATA_CC"
+      }, {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.DATE_DATA"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_lc_int_cc_time_cc",
+    "function" : {
+      "expression" : "SUM_LC",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.INT_DATA_CC"
+      }, {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.TIME_COMPOSE_CC"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100003,
+    "tomb" : true,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_lc_int_data_time_cc",
+    "function" : {
+      "expression" : "SUM_LC",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.INT_DATA"
+      }, {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.TO_TIME_COMPOSE_CC"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100004,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum_lc_int_cc_time_cc",
+    "function" : {
+      "expression" : "SUM_LC",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.INT_DATA_CC"
+      }, {
+        "type" : "column",
+        "value" : "SUMLC_CC_TEST.TO_TIME_COMPOSE_CC"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100005,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "SUMLC_CC_TEST" : {
+        "x" : 463.5555691189238,
+        "y" : 122.99999660915798,
+        "width" : 200.0,
+        "height" : 466.66666666666663
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ "02ab3ddf-80e7-8067-3bed-28afa86be143", "90d9f466-9168-f843-c246-64d90e10884a", "f2431726-8b6c-6fc1-7d4b-c1331ed34d8d" ],
+  "project" : "sum_lc"
+}

@@ -18,5 +18,5 @@
 package org.apache.kylin.sdk.datasource.framework.utils;
 
 public class Constants {
-    public final static String ALIAS_ROWNUM_ORCALE = "ROWNUM__";
+    public static final String ALIAS_ROWNUM_ORCALE = "ROWNUM__";
 }

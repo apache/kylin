@@ -18,9 +18,12 @@
 
 package org.apache.spark.dict;
 
+import static org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
@@ -37,8 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-
-import static org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED;
 
 public class NGlobalDictHDFSStore implements NGlobalDictStore {
 
@@ -137,7 +138,7 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
             return fs.open(fp);
         } else if (!fs.getScheme().startsWith("s3")) {
             throw new FileNotFoundException(
-                    String.format("%s. No Retry, file[%s] not found.", errorMsg, fp.toString()));
+                    String.format(Locale.ROOT, "%s. No Retry, file[%s] not found.", errorMsg, fp.toString()));
         } else {
             logger.info("Try to open {}", fp);
             int retryTimes = 0;
@@ -148,7 +149,7 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
                     TimeUnit.SECONDS.sleep(1L);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    throw new IOException(String.format(
+                    throw new IOException(String.format(Locale.ROOT,
                             "unexpected things happened[%s] when sleeping for retry open file:", ie.getMessage()));
                 }
                 retryTimes += 1;
@@ -157,13 +158,13 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
                 }
             }
             throw new FileNotFoundException(
-                    String.format("%s. Retry timeout, file[%s] not found.", errorMsg, fp.toString()));
+                    String.format(Locale.ROOT, "%s. Retry timeout, file[%s] not found.", errorMsg, fp.toString()));
         }
     }
 
     @Override
-    public Object2LongMap<String> getBucketDict(long version, NGlobalDictMetaInfo metaInfo, int bucketId, boolean isForColumnEncoding)
-            throws IOException {
+    public Object2LongMap<String> getBucketDict(long version, NGlobalDictMetaInfo metaInfo, int bucketId,
+            boolean isForColumnEncoding) throws IOException {
         Object2LongMap<String> object2IntMap = new Object2LongOpenHashMap<>();
         Path versionDir = getVersionDir(version);
         FileStatus[] bucketFiles = fileSystem.listStatus(versionDir, path -> path.getName().endsWith("_" + bucketId));
@@ -188,17 +189,21 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
         return object2IntMap;
     }
 
-    private FileStatus[] checkAndRetryGetBucketFiles(NGlobalDictMetaInfo metaInfo, Path versionDir, int bucketId, boolean isForColumnEncoding, FileStatus[] bucketFiles) throws IOException {
+    private FileStatus[] checkAndRetryGetBucketFiles(NGlobalDictMetaInfo metaInfo, Path versionDir, int bucketId,
+            boolean isForColumnEncoding, FileStatus[] bucketFiles) throws IOException {
         logger.info("[bucketId:{}][isForColumnEncoding:{}]", bucketId, isForColumnEncoding);
 
         if (bucketFiles.length == 0 && metaInfo.isEmptyDict()) {
-            logger.info("[bucketId:{}][isForColumnEncoding:{}] Empty dict, no bucket files check required", bucketId, isForColumnEncoding);
+            logger.info("[bucketId:{}][isForColumnEncoding:{}] Empty dict, no bucket files check required", bucketId,
+                    isForColumnEncoding);
             return bucketFiles;
         }
 
         // isForColumnEncoding == true means at least 1 dict file should exist
         if (isForColumnEncoding && bucketFiles.length == 0) {
-            logger.warn("[bucketId:{}][isForColumnEncoding:{}] Get bucket dict under strict mode but no bucket dict files found in dir {}", bucketId, isForColumnEncoding, versionDir);
+            logger.warn(
+                    "[bucketId:{}][isForColumnEncoding:{}] Get bucket dict under strict mode but no bucket dict files found in dir {}",
+                    bucketId, isForColumnEncoding, versionDir);
             tryOpenAndLogBucketDictFiles(versionDir, bucketId, bucketFiles);
             final int MAX_RETRY = 3;
             int retry = 1;
@@ -206,7 +211,8 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
                 logger.info("[bucketId:{}][retry:{}] Retry listing bucket dict files", bucketId, retry);
                 bucketFiles = fileSystem.listStatus(versionDir, path -> path.getName().endsWith("_" + bucketId));
                 if (bucketFiles.length == 0) {
-                    logger.warn("[bucketId:{}][retry:{}] Retry listing bucket dict files, no bucket dict files found", bucketId, retry);
+                    logger.warn("[bucketId:{}][retry:{}] Retry listing bucket dict files, no bucket dict files found",
+                            bucketId, retry);
                 }
                 retry++;
                 if (retry <= MAX_RETRY) {
@@ -219,24 +225,30 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
                 // Try open again for logging evidence
                 tryOpenAndLogBucketDictFiles(versionDir, bucketId, bucketFiles);
                 // Throw exception
-                throw new FileNotFoundException(String.format("[bucketId:%s] The necessary bucket dict files were not available", bucketId));
+                throw new FileNotFoundException(String.format(Locale.ROOT,
+                        "[bucketId:%s] The necessary bucket dict files were not available", bucketId));
             }
         }
         return bucketFiles;
     }
 
-    private void logBucketFiles(NGlobalDictMetaInfo metaInfo, int bucketId, boolean isForColumnEncoding, FileStatus[] bucketFiles) {
+    private void logBucketFiles(NGlobalDictMetaInfo metaInfo, int bucketId, boolean isForColumnEncoding,
+            FileStatus[] bucketFiles) {
         if (bucketFiles.length == 0) {
             if (metaInfo.isEmptyDict()) {
-                logger.info("[bucketId:{}][isForColumnEncoding:{}] Empty dict, no need to log bucket files", bucketId, isForColumnEncoding);
+                logger.info("[bucketId:{}][isForColumnEncoding:{}] Empty dict, no need to log bucket files", bucketId,
+                        isForColumnEncoding);
             } else {
-                logger.info("[bucketId:{}][isForColumnEncoding:{}] Try listing bucketFiles, but no bucketFiles found", bucketId, isForColumnEncoding);
+                logger.info("[bucketId:{}][isForColumnEncoding:{}] Try listing bucketFiles, but no bucketFiles found",
+                        bucketId, isForColumnEncoding);
             }
             return;
         }
-        logger.info("[bucketId:{}][isForColumnEncoding:{}] bucketFiles size: {}", bucketId, isForColumnEncoding, bucketFiles.length);
+        logger.info("[bucketId:{}][isForColumnEncoding:{}] bucketFiles size: {}", bucketId, isForColumnEncoding,
+                bucketFiles.length);
         for (FileStatus file : bucketFiles) {
-            logger.info("[bucketId:{}][isForColumnEncoding:{}] Listing dict file: {}, file size: {}", bucketId, isForColumnEncoding, file.getPath(), file.getLen());
+            logger.info("[bucketId:{}][isForColumnEncoding:{}] Listing dict file: {}, file size: {}", bucketId,
+                    isForColumnEncoding, file.getPath(), file.getLen());
         }
     }
 
@@ -253,7 +265,7 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
             fileSystem.open(bucketDictFile).close();
             logger.info("Bucket dict file {} opened", bucketDictFile);
         } catch (Exception e) {
-            logger.error(String.format("Error on opening bucket dict file: %s", bucketDictFile), e);
+            logger.error(String.format(Locale.ROOT, "Error on opening bucket dict file: %s", bucketDictFile), e);
         }
     }
 
@@ -407,6 +419,5 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
             }
         }
     }
-
 
 }

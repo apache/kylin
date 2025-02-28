@@ -19,6 +19,7 @@ package org.apache.kylin.rest.response;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -72,6 +73,12 @@ public class SnapshotColResponse implements Comparable<SnapshotColResponse> {
             return new SnapshotColResponse(table.getDatabase(), table.getName(), null, null,
                     excludePartCol(table.getColumns(), null), table.getSourceType());
         }
+    }
+
+    public static SnapshotColResponse from(TableDesc table,
+            UnaryOperator<SnapshotColResponse> transform) {
+        SnapshotColResponse res = from(table);
+        return transform != null ? transform.apply(res) : res;
     }
 
     private static Map<String, String> excludePartCol(ColumnDesc[] columns, String partitionCol) {

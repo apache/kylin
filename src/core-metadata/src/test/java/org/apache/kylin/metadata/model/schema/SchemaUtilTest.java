@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.model.schema;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,20 +29,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.graph.Graph;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.model.ModelJoinRelationTypeEnum;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,12 +54,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.guava30.shaded.common.graph.Graph;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 public class SchemaUtilTest extends NLocalFileMetadataTestCase {
@@ -67,6 +64,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         this.createTestMetadata("src/test/resources/ut_meta/schema_utils/original_project");
+        ComputedColumnUtil.setEXTRACTOR((model, config, cc) -> cc);
     }
 
     @After
@@ -95,7 +93,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_fact_table_project/conflict_fact_table_project_model_metadata_2020_11_17_07_38_50_ECFF797F0B088D53A2FA781ABA3BC111.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -133,7 +131,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_dim_table_project/conflict_dim_table_project_model_metadata_2020_11_14_16_20_06_5BCDB43E43D8C8D9E94A90C396CDA23F.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -163,7 +161,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_filter_condition_project/conflict_filter_condition_project_model_metadata_2020_11_13_14_07_15_2AE3E159782BD88DF0445DE9F8B5101C.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -182,7 +180,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_join_condition_project/conflict_join_condition_project_model_metadata_2020_11_16_02_17_56_FB6573FA0363D0850D6807ABF0BCE060.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -221,7 +219,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_join_relation_type_project/target_project_model_metadata_2020_12_07_14_26_55_89173666F1E93F7988011666659D95AD.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -248,7 +246,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_partition_col_project/conflict_partition_col_project_model_metadata_2020_11_14_17_09_51_98DA15B726CE71B8FACA563708B8F4E5.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -267,7 +265,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_column_update/model_column_update_model_metadata_2020_11_14_17_11_19_77E61B40A0A3C2D1E1DE54E6982C98F5.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -300,7 +298,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_cc_update/model_cc_update_model_metadata_2020_11_14_17_15_29_FAAAF2F8FA213F2888D3380720C28B4D.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -333,7 +331,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_cc_update/model_cc_same_expression_different_name_update_model_metadata_2020_11_14_17_15_29_850F781B4B5B5C7A480F5834C6644FCB.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -359,7 +357,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_cc_in_different_fact_table/target_project_model_metadata_2020_12_07_15_37_19_1C3C399B52A4E4E4F07C017C9692A7CB.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -383,7 +381,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_agg_update/model_agg_update_model_metadata_2020_11_14_17_16_54_CF515DB4597CBE5DAE244A6EBF5FF5F3.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -405,7 +403,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_index_update/model_index_project_model_metadata_2020_11_16_02_37_33_1B8D602879F14297E132978D784C46EA.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -458,7 +456,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_index_update/model_index_project_model_metadata_2020_11_16_02_37_33_1B8D602879F14297E132978D784C46EA.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String key = "/model_index_project/index_plan/10d5eb7c-d854-4f72-9e4b-9b1f3c65bcda.json";
+        String key = "INDEX_PLAN/10d5eb7c-d854-4f72-9e4b-9b1f3c65bcda";
         String value = "{\"uuid\":\"10d5eb7c-d854-4f72-9e4b-9b1f3c65bcda\",\"last_modified\":1605494236502,\"create_time\":1605494168935,\"version\":\"4.0.0.0\","
                 + "\"description\":null,\"rule_based_index\":{\"dimensions\":[1,4,5,6,7,8,10,12],\"measures\":[100000,100001,100002,100003,100004,100005,100006,100007,"
                 + "100008,100009,100010,100011],\"global_dim_cap\":null,\"aggregation_groups\":[{\"includes\":[1,4,5,6,7,8,10,12],\"measures\":[100011,100000,100001,100002,"
@@ -475,10 +473,10 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
                 + "\"next_aggregation_index_id\":80000,\"next_table_index_id\":20000020000,\"agg_shard_by_columns\":[],\"extend_partition_columns\":[],\"layout_bucket_num\":{}}";
 
         val rawResource = rawResourceMap.get(key);
-        val update = new RawResource(rawResource.getResPath(), ByteSource.wrap(value.getBytes()),
-                rawResource.getTimestamp(), rawResource.getMvcc());
+        val update = new RawResource(rawResource.getMetaKey(), ByteSource.wrap(value.getBytes()),
+                rawResource.getTs(), rawResource.getMvcc());
         rawResourceMap.put(key, update);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         importModelContext.getTargetKylinConfig();
         boolean result = true;
@@ -497,7 +495,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_different_column_measure_id_update/original_project_model_metadata_2020_11_14_15_24_56_4B2101A84E908397A8E711864FC8ADF2.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -515,7 +513,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_different_column_datatype_update/original_project_datatype_model_metadata_2020_11_14_15_24_56_9BCCCB5D08F218EC86DD9D850017F5F5.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -541,7 +539,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_missing_table_update/model_table_missing_update_model_metadata_2020_11_16_02_37_33_3182D4A7694DA64E3D725C140CF80A47.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -576,7 +574,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/conflict_multiple_partition_project/target_project_model_metadata_2020_12_02_17_27_25_F5A5FC2CC8452A2D55384F97D90C8CCE.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -604,7 +602,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_different_multiple_partition_project/target_project_model_metadata_2020_12_02_20_50_10_F85294019F1CE7DB159D6C264B672472.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -632,7 +630,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_create/model_create_model_metadata_2020_11_14_17_11_19_B6A82E50A2B4A7EE5CD606F01045CA84.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());
@@ -697,7 +695,7 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_exception/model_exception_model_metadata_2020_11_19_15_13_11_4B823934CF76C0A124244456539C9296.zip");
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         thrown.expect(KylinException.class);
         thrown.expectMessage("Can’t import the model.\n" + "Model [none_exists_column] is broken, can not export.\n"
                 + "Model [illegal_index] is broken, can not export.\n"
@@ -705,30 +703,20 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
         new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
     }
 
-    static Map<String, RawResource> getRawResourceFromUploadFile(File uploadFile) throws IOException {
-        Map<String, RawResource> rawResourceMap = Maps.newHashMap();
-        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(uploadFile))) {
-            ZipEntry zipEntry;
-            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                val bs = ByteSource.wrap(IOUtils.toByteArray(zipInputStream));
-                long t = zipEntry.getTime();
-                String resPath = StringUtils.prependIfMissing(zipEntry.getName(), "/");
-                if (!resPath.startsWith(ResourceStore.METASTORE_UUID_TAG) && !resPath.endsWith(".json")) {
-                    continue;
-                }
-                rawResourceMap.put(resPath, new RawResource(resPath, bs, t, 0));
-            }
-            return rawResourceMap;
-        }
+    public static Map<String, RawResource> getRawResourceFromUploadFile(File uploadFile) throws IOException {
+        val resourceMap = FileSystemMetadataStore.getFilesFromCompressedFile(new Path(uploadFile.toURI()),
+                new FileSystemMetadataStore.CompressHandler(), HadoopUtil.getWorkingFileSystem());
+        val filesFromCompressedFile = Maps.<String, RawResource> newHashMap();
+        resourceMap.forEach((k, v) -> filesFromCompressedFile.put(k.replaceAll(".json", ""), v));
+        return filesFromCompressedFile;
     }
 
-    static String getModelMetadataProjectName(Set<String> rawResourceList) {
-        String anyPath = rawResourceList.stream().filter(
-                resourcePath -> resourcePath.indexOf(File.separator) != resourcePath.lastIndexOf(File.separator))
-                .findAny().orElse(null);
-        if (StringUtils.isBlank(anyPath)) {
+    static String getModelMetadataProjectName(Map<String, RawResource> rawResourceMap) {
+        RawResource raw = rawResourceMap.values().stream()
+                .filter(rawResource -> rawResource != null && rawResource.getProject() != null).findAny().orElse(null);
+        if (raw == null) {
             throw new KylinException(MODEL_METADATA_FILE_ERROR, MsgPicker.getMsg().getModelMetadataPackageInvalid());
         }
-        return anyPath.split(File.separator)[1];
+        return raw.getProject();
     }
 }

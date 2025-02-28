@@ -28,8 +28,16 @@ public class TombRawResource extends RawResource {
     @Getter
     private static TombRawResource INSTANCE = new TombRawResource();
 
-    TombRawResource(String resPath) {
-        super(resPath, null, 0, 0);
+    private MetadataType metaType;
+
+    TombRawResource(String metaKey, MetadataType metaType) {
+        super(metaKey, null, 0, 0);
+        this.metaType = metaType;
+    }
+
+    @Override
+    public MetadataType getMetaType() {
+        return metaType;
     }
 
     private TombRawResource() {

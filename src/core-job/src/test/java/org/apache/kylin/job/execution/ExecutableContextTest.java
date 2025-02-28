@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.jupiter.api.Test;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 
 @MetadataInfo
@@ -35,7 +35,7 @@ class ExecutableContextTest {
     void getJobThreads() {
         val job = new DefaultExecutable();
         val context = new ExecutableContext(Maps.newConcurrentMap(), Maps.newConcurrentMap(),
-                KylinConfig.getInstanceFromEnv(), 0);
+                KylinConfig.getInstanceFromEnv());
         context.addRunningJob(job);
 
         assertNotNull(context.getRunningJobThread(job));

@@ -18,12 +18,11 @@
 
 package org.apache.kylin.cluster.parser
 
-import java.util.{List => JList}
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.kylin.cluster.{AvailableResource, ResourceInfo}
-import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 
+import java.util.{List => JList}
 import scala.collection.JavaConverters._
 
 class CapacitySchedulerParser extends SchedulerParser {
@@ -47,7 +46,8 @@ class CapacitySchedulerParser extends SchedulerParser {
       logInfo("configure yarn queue using dynamic resource plan in capacity scheduler")
       min = 1.0
     }
-    var resource = AvailableResource(totalResource.percentage(min), totalResource.percentage(queueMax))
+    val elasticResource = AvailableResource(totalResource.percentage(min), totalResource.percentage(queueMax))
+    var resource: AvailableResource = elasticResource
     try {
       val queueAvailableRes = KylinBuildEnv.get.clusterManager.fetchQueueStatistics(queueName)
       resource = AvailableResource(queueAvailableRes, totalResource.percentage(queueMax))
@@ -56,10 +56,20 @@ class CapacitySchedulerParser extends SchedulerParser {
         logInfo(s"The current hadoop version does not support QueueInfo.getQueueStatistics method.")
         None
     }
-
+    resource = checkElasticResourceEnable(elasticResource, resource)
     logInfo(s"Capacity actual available resource: $resource.")
     resource
   }
+
+  private def checkElasticResourceEnable(elasticResource: AvailableResource, resource: AvailableResource): AvailableResource = {
+    if (KylinBuildEnv.get().kylinConfig.useQueueElasticResource()) {
+      logInfo(s"use elastically available resource")
+      elasticResource
+    } else {
+      resource
+    }
+  }
+
 
   private def clusterAvailableCapacity(node: JsonNode): Double = {
     val max = parseValue(node.get("capacity")).toDouble

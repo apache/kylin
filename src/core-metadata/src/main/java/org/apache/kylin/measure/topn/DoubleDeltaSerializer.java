@@ -38,8 +38,8 @@ public class DoubleDeltaSerializer implements java.io.Serializable {
         }
     }
 
-    final private int precision;
-    final private int multiplier;
+    private final int precision;
+    private final int multiplier;
 
     transient ThreadLocal<long[]> deltasThreadLocal;
 

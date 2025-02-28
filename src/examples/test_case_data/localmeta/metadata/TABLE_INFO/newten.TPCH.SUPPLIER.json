@@ -1,0 +1,39 @@
+{
+  "uuid" : "d5675fda-58e6-4518-a8c3-42edc9d4944f",
+  "last_modified" : 1494334079278,
+  "version" : "2.0.0",
+  "name" : "SUPPLIER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "S_SUPPKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "S_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "S_ADDRESS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "S_NATIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "S_PHONE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "S_ACCTBAL",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "S_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH",
+  "project" : "newten"
+}

@@ -51,6 +51,7 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -93,7 +94,7 @@ import lombok.extern.slf4j.Slf4j;
  * - FILE HASH: a (hash) code that represents a file, typically made up of filename, last modified, size etc.
  */
 @Slf4j
-@SuppressWarnings({"rawtypes"})
+@SuppressWarnings({ "rawtypes" })
 public class FileSegments {
     // used in SparkContext local property
     public static String SOURCE_FILTER_KEY = "spark.kylin.fileseg.filter";
@@ -111,7 +112,8 @@ public class FileSegments {
         String sourceFileDir = getSegSourceFileDir(seg, config);
         String sourceFileHash = String.join(FILE_HASH_SEP, segRange.getFileHash());
 
-        // The sourceFileDir metadata is at "table_exd/data_source_properties/location", value like "s3://maosha-public/liyang/cloud_billings"
+        // The sourceFileDir metadata is at "table_exd/data_source_properties/location", 
+        // value like "s3://maosha-public/liyang/cloud_billings"
         // The sourceFileHash is a relative path based on the dir, like "cloud_billing_standard_sample.csv"
 
         sparkContext.setLocalProperty(pathFilterKey(sourceFileDir), sourceFileHash);
@@ -154,8 +156,8 @@ public class FileSegments {
     public static void clearFileSegFilterLocally() {
         if (SparkSession.getDefaultSession().isDefined()) {
             SparkContext sparkContext = SparkSession.getDefaultSession().get().sparkContext();
-            List<String> keys = sparkContext.getLocalProperties().keySet().stream()
-                    .map(Object::toString).collect(Collectors.toList());
+            List<String> keys = sparkContext.getLocalProperties().keySet().stream().map(Object::toString)
+                    .collect(Collectors.toList());
             for (String key : keys) {
                 if (key.startsWith(SOURCE_FILTER_KEY))
                     sparkContext.setLocalProperty(key, null);
@@ -174,7 +176,8 @@ public class FileSegments {
     }
 
     public static String computeFileHash(FileStatus file) {
-        return file.getPath().getName() + "/" + Long.toString(file.getLen(), 36) + "/" + Long.toString(file.getModificationTime(), 36);
+        return file.getPath().getName() + "/" + Long.toString(file.getLen(), 36) + "/"
+                + Long.toString(file.getModificationTime(), 36);
     }
 
     public static String hashToName(String fileHash) {
@@ -190,10 +193,8 @@ public class FileSegments {
     }
 
     public static void forceFileSegments(String project, String modelId, String storageLocation,
-                                         @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-                                         Optional<List<String>> fileHashOpt,
-                                         Function<FileSegRange, NDataSegment> segCreator,
-                                         Function<String, Boolean> segDeleter) {
+            @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<List<String>> fileHashOpt,
+            Function<FileSegRange, NDataSegment> segCreator, Function<String, Boolean> segDeleter) {
         KylinConfig config = NProjectManager.getProjectConfig(project);
 
         // ensure model has a file based partition
@@ -207,8 +208,8 @@ public class FileSegments {
             newPart.setCubePartitionType(PartitionType.FILE);
             newPart.setFileStorageLocation(noEndingSlash(storageLocation));
             newPart.setPartitionConditionBuilderClz(FileSegmentConditionBuilder.class.getName());
-            newPart.setPartitionDateColumn("");            // no use, just for code compatibility
-            newPart.setPartitionDateFormat("yyyy-MM-dd");  // no use, just for code compatibility
+            newPart.setPartitionDateColumn(""); // no use, just for code compatibility
+            newPart.setPartitionDateFormat("yyyy-MM-dd"); // no use, just for code compatibility
             modelManager.updateDataModel(modelId, (modelCopy) -> modelCopy.setPartitionDesc(newPart));
         }
 
@@ -257,9 +258,7 @@ public class FileSegments {
 
         // do the creation
         FileRangeGenerator gen = new FileRangeGenerator(
-                origSegments.stream()
-                        .filter(seg -> !toDelSegIds.contains(seg.getId()))
-                        .collect(Collectors.toList()));
+                origSegments.stream().filter(seg -> !toDelSegIds.contains(seg.getId())).collect(Collectors.toList()));
         for (String toCreateHash : toCreateHashs) {
             try {
                 segCreator.apply(gen.nextFileSegRange(toCreateHash));
@@ -270,15 +269,14 @@ public class FileSegments {
 
         // logging
         ModelFileSegments result = getModelFileSegments(project, modelId);
-        log.info("Sync file segments for {}/{}, {} created, {} deleted, results {}/{}/{}/{}",
-                project, result.model, toCreateHashs.size(), toDelSegIds.size(),
-                result.summary.get(FileSegStatusEnum.LOADED),
-                result.summary.get(FileSegStatusEnum.LOADING),
-                result.summary.get(FileSegStatusEnum.EXIST),
+        log.info("Sync file segments for {}/{}, {} created, {} deleted, results {}/{}/{}/{}", project, result.model,
+                toCreateHashs.size(), toDelSegIds.size(), result.summary.get(FileSegStatusEnum.LOADED),
+                result.summary.get(FileSegStatusEnum.LOADING), result.summary.get(FileSegStatusEnum.EXIST),
                 result.summary.get(FileSegStatusEnum.WARNING));
     }
 
-    private static List<String> filterFileHashs(Optional<List<String>> fileHashOpt, String modelForLog, KylinConfig config) {
+    private static List<String> filterFileHashs(Optional<List<String>> fileHashOpt, String modelForLog,
+            KylinConfig config) {
         if (!fileHashOpt.isPresent())
             return Collections.emptyList();
 
@@ -302,7 +300,8 @@ public class FileSegments {
 
         // a folder without success file is ignored
         if (successFile != null && !hasSuccessFile) {
-            log.debug("Model {} ignored forceFileSegments() due to missing success file {} from {} detected files", modelForLog, successFile, hashList.size());
+            log.debug("Model {} ignored forceFileSegments() due to missing success file {} from {} detected files",
+                    modelForLog, successFile, hashList.size());
             return Collections.emptyList();
         }
 
@@ -319,7 +318,8 @@ public class FileSegments {
         NDataflow df = dfManager.getDataflow(modelId); // yes, dataflow id == model id
         Preconditions.checkState(df.getModel().isFilePartitioned());
 
-        // collect file->[segment status], note a file may have two segments, one is READY, another is NEW (building)
+        // collect file->[segment status], note a file may have two segments, 
+        // one is READY, another is NEW (building)
         Map<String, Set<NDataSegment>> fileToSegs = new LinkedHashMap<>();
         for (NDataSegment seg : df.getSegments()) {
             SegmentRange range = seg.getSegRange();
@@ -328,13 +328,12 @@ public class FileSegments {
 
             FileSegRange fileRange = (FileSegRange) range;
             for (String fileHash : fileRange.fileHash) {
-                fileToSegs.compute(fileHash,
-                        (hash, set) -> {
-                            if (set == null)
-                                set = new HashSet<>();
-                            set.add(seg);
-                            return set;
-                        });
+                fileToSegs.compute(fileHash, (hash, set) -> {
+                    if (set == null)
+                        set = new HashSet<>();
+                    set.add(seg);
+                    return set;
+                });
             }
         }
 
@@ -366,23 +365,19 @@ public class FileSegments {
             }
         }
 
-        Map<FileSegStatusEnum, Integer> summary = ImmutableMap.of(
-                FileSegStatusEnum.LOADED, loaded,
-                FileSegStatusEnum.LOADING, loading,
-                FileSegStatusEnum.EXIST, exist,
-                FileSegStatusEnum.WARNING, warning);
+        Map<FileSegStatusEnum, Integer> summary = ImmutableMap.of(FileSegStatusEnum.LOADED, loaded,
+                FileSegStatusEnum.LOADING, loading, FileSegStatusEnum.EXIST, exist, FileSegStatusEnum.WARNING, warning);
 
         // check if any index is being built (not new segment, but new index)
         boolean isBuildingIndex = guessIsBuildingIndex(df);
 
-        return new ModelFileSegments(project, df.getModelAlias(),
-                df.getLastDataRefreshTime(), df.getIndexPlan().getLastModified(),
-                loading > 0, isBuildingIndex, false,
-                summary, segStatuses);
+        return new ModelFileSegments(project, df.getModelAlias(), df.getLastDataRefreshTime(),
+                df.getIndexPlan().getLastModified(), loading > 0, isBuildingIndex, false, summary, segStatuses);
     }
 
     public static boolean guessIsBuildingIndex(NDataflow df) {
-        Set<Long> plannedLayouts = df.getIndexPlan().getAllLayouts().stream().map(layout -> layout.getId()).collect(Collectors.toSet());
+        Set<Long> plannedLayouts = df.getIndexPlan().getAllLayouts().stream().map(LayoutEntity::getId)
+                .collect(Collectors.toSet());
         for (NDataSegment seg : df.getSegments()) {
             if (seg.getStatus() == SegmentStatusEnum.NEW)
                 continue; // ignore new data loading
@@ -410,13 +405,10 @@ public class FileSegments {
     }
 
     public static String makeSyncFileSegSql(List<NDataModel> models) {
-        List<String> factTables = models.stream()
-                .map(m -> m.getRootFactTableName())
-                .distinct()
+        List<String> factTables = models.stream().map(NDataModel::getRootFactTableName).distinct()
                 .collect(Collectors.toList());
 
-        return factTables.stream()
-                .map(tbl -> "select count(*) _SYNC_FILE_SEGMENTS_ from " + tbl)
+        return factTables.stream().map(tbl -> "select count(*) _SYNC_FILE_SEGMENTS_ from " + tbl)
                 .collect(Collectors.joining(" union all "));
     }
 
@@ -430,8 +422,8 @@ public class FileSegments {
 
         List<NDataModel> models = listModelsOfFileSeg(project);
         return models.stream()
-                .filter(m -> modelAliasOrFactTables.stream()
-                        .anyMatch(inp -> m.getAlias().equalsIgnoreCase(inp) || m.getRootFactTableName().equalsIgnoreCase(inp)))
+                .filter(m -> modelAliasOrFactTables.stream().anyMatch(
+                        inp -> m.getAlias().equalsIgnoreCase(inp) || m.getRootFactTableName().equalsIgnoreCase(inp)))
                 .collect(Collectors.toList());
     }
 
@@ -441,7 +433,8 @@ public class FileSegments {
 
         List<NDataModel> models = dfManager.listUnderliningDataModels();
         return models.stream()
-                .filter(m -> m.isFilePartitioned() && ((FilePartitionDesc) m.getPartitionDesc()).getFileStorageLocation() != null)
+                .filter(m -> m.isFilePartitioned()
+                        && ((FilePartitionDesc) m.getPartitionDesc()).getFileStorageLocation() != null)
                 .collect(Collectors.toList());
     }
 
@@ -502,8 +495,7 @@ public class FileSegments {
             dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT));
             dateFormat.setTimeZone(TimeZone.getDefault());
 
-            Optional<Long> maxEnd = origSegments.stream()
-                    .map(seg -> (Long) seg.getSegRange().getEnd())
+            Optional<Long> maxEnd = origSegments.stream().map(seg -> (Long) seg.getSegRange().getEnd())
                     .reduce(Math::max);
             maxEnd.ifPresent(millis -> nextStartYear = yearOf(millis));
 
@@ -568,7 +560,8 @@ public class FileSegments {
         }
 
         @Override
-        public String buildMultiPartitionCondition(PartitionDesc partDesc, MultiPartitionDesc multiPartDesc, LinkedList<Long> partitionIds, ISegment seg, SegmentRange segRange) {
+        public String buildMultiPartitionCondition(PartitionDesc partDesc, MultiPartitionDesc multiPartDesc,
+                LinkedList<Long> partitionIds, ISegment seg, SegmentRange segRange) {
             return "1=1";
         }
     }

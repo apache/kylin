@@ -27,22 +27,20 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.kylin.common.exception.DistributedLockException;
 import org.apache.kylin.common.util.ThrowableUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CuratorDistributedLock implements Lock {
     private static final Logger logger = LoggerFactory.getLogger(CuratorDistributedLock.class);
     private static final String ZK_ROOT = "/distribute_lock";
 
     static final Map<CuratorFramework, ConcurrentMap<LockEntry, Boolean>> lockedThreads = Maps.newConcurrentMap();
-    private InterProcessMutex lock;
-    private CuratorFramework client;
-    private String path;
+    private final InterProcessMutex lock;
+    private final CuratorFramework client;
+    private final String path;
     private long clientSessionId = -1;
 
     CuratorDistributedLock(CuratorFramework client, String path) {

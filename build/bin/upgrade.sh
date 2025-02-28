@@ -83,7 +83,7 @@ function check_kylin_query_transformers() {
         query_transformers=$(sed -n '/^kylin.query.transformers/p' ${OLD_KYLIN_HOME}/conf/kylin.properties)
     fi
 
-    if [[ -n "${query_transformers}" && (! ${query_transformers} =~ io.kyligence.kap.query.security.RowFilter) ]]; then
+    if [[ -n "${query_transformers}" && (! ${query_transformers} =~ org.apache.kylin.query.security.RowFilter) ]]; then
           error "Please check the value of the configuration item [kylin.query.transformers] in kylin.properties or kylin.properties.override, which needs to include [org.apache.kylin.query.security.RowFilter] class."
           exit 1
     fi

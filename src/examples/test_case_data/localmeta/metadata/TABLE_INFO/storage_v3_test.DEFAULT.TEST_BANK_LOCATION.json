@@ -1,0 +1,32 @@
+{
+  "uuid" : "3804d2f8-64c6-4924-b09a-c6475b1ba91c",
+  "last_modified" : 1604998096059,
+  "create_time" : 1604997133954,
+  "version" : "4.0.0.0",
+  "name" : "TEST_BANK_LOCATION",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COUNTRY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "LOCATION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "OWNER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "database" : "DEFAULT",
+  "project" : "storage_v3_test"
+}

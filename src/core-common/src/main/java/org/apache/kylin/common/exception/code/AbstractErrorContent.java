@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.ResourceUtils;
-
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import lombok.extern.slf4j.Slf4j;

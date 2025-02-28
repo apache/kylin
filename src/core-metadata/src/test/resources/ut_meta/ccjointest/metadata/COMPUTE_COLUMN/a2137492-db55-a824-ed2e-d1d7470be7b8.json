@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "COUNTRY_UPPER",
+  "expression" : "UPPER(TEST_KYLIN_FACT.LSTG_FORMAT_NAME)",
+  "datatype" : "string",
+  "uuid" : "a2137492-db55-a824-ed2e-d1d7470be7b8",
+  "project" : "default"
+}

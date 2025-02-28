@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.util.Enumeration;
+import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ public class ClassUtil {
                 String match = file.getName();
                 Validate.isTrue(match.startsWith("*") && match.endsWith("*"));
                 match = match.substring(1, match.length() - 1);
-                for (File f : dir.listFiles()) {
+                for (File f : Objects.requireNonNull(dir.listFiles())) {
                     if (f.getName().contains(match) && f.getName().endsWith(".jar"))
                         _addToClasspath(f, classLoader);
                 }
@@ -92,7 +93,8 @@ public class ClassUtil {
     }
 
     /**
-     * Load the first jar library contains clazz with preferJarKeyword matched. If preferJarKeyword is null, just load the
+     * Load the first jar library contains clazz with preferJarKeyword matched.
+     * If preferJarKeyword is null, just load the
      * jar likes Hadoop Commons' ClassUtil
      * @param clazz
      * @param preferJarKeyWord
@@ -117,7 +119,7 @@ public class ClassUtil {
                 url = (URL) e.nextElement();
                 if (!"jar".equals(url.getProtocol()))
                     break;
-                if (preferJarKeyWord != null && url.getPath().indexOf(preferJarKeyWord) != -1)
+                if (preferJarKeyWord != null && url.getPath().contains(preferJarKeyWord))
                     break;
                 if (preferJarKeyWord == null)
                     break;

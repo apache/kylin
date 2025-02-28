@@ -20,6 +20,7 @@ package org.apache.kylin.measure.topn;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -50,8 +52,6 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private static final Logger logger = LoggerFactory.getLogger(TopNMeasureType.class);
@@ -61,8 +61,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     public static final String CONFIG_ENCODING_PREFIX = "topn.encoding.";
     public static final String CONFIG_ENCODING_VERSION_PREFIX = "topn.encoding_version.";
-    public static final String CONFIG_AGG = "topn.aggregation";
-    public static final String CONFIG_ORDER = "topn.order";
 
     public static class Factory extends MeasureTypeFactory<TopNCounter<ByteArray>> {
 
@@ -97,10 +95,10 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
-        validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
+        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
     }
 
-    private void validate(String funcName, DataType dataType, boolean checkDataType) {
+    private void validate(String funcName, DataType dataType) {
         if (!FUNC_TOP_N.equals(funcName))
             throw new IllegalArgumentException();
 
@@ -178,9 +176,9 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
 
             @Override
-            public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc,
-                    Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
-                TopNCounter<ByteArray> topNCounter = value;
+            public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> topNCounter,
+                    MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts,
+                    Map<TblColRef, Dictionary<String>> newDicts) {
 
                 if (newDimensionEncodings == null) {
                     literalCols = getTopNLiteralColumn(measureDesc.getFunction());
@@ -260,20 +258,21 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
         List<TblColRef> literalCol = getTopNLiteralColumn(topN.getFunction());
         for (TblColRef colRef : literalCol) {
-            if (digest.filterColumns.contains(colRef)) {
-                // doesn't allow filtering by topn literal column
+            if (digest.getFilterColumns().contains(colRef)) {
+                // doesn't allow filtering by topN literal column
                 return null;
             }
         }
 
-        if (!digest.groupbyColumns.containsAll(literalCol) || !literalCol.containsAll(digest.groupbyColumns))
+        if (!new HashSet<>(digest.getGroupByColumns()).containsAll(literalCol)
+                || !new HashSet<>(literalCol).containsAll(digest.getGroupByColumns()))
             return null;
 
         // check digest requires only one measure
-        if (digest.aggregations.size() == 1) {
+        if (digest.getAggregations().size() == 1) {
 
             // the measure function must be SUM
-            FunctionDesc onlyFunction = digest.aggregations.iterator().next();
+            FunctionDesc onlyFunction = digest.getAggregations().iterator().next();
             if (!isTopNCompatibleSum(topN.getFunction(), onlyFunction))
                 return null;
 
@@ -299,21 +298,17 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     private boolean checkOrderByAndLimit(SQLDigest digest, int topNPrecision) {
-        if (digest.limit > topNPrecision) {
+        if (digest.getLimit() > topNPrecision) {
             return false;
         }
 
-        // Top N style query can only has one order by field and must be descending order.
-        if (digest.sortColumns.size() != 1 || digest.sortOrders.get(0) != SQLDigest.OrderEnum.DESCENDING) {
+        // Top N style query can only have one order by field and must be descending order.
+        if (digest.getSortColumns().size() != 1 || digest.getSortOrders().get(0) != SQLDigest.OrderEnum.DESCENDING) {
             return false;
         }
-        TblColRef sortCol = digest.sortColumns.get(0);
-        // String database = sortCol.getColumnDesc().getTable().getDatabase();
+        TblColRef sortCol = digest.getSortColumns().get(0);
 
-        for (FunctionDesc agg : digest.aggregations) {
-            //  if (!agg.getParameters().get(0).getColRef().getColumnDesc().getTable().getDatabase().equals(database)) {
-            //      continue;
-            //  }
+        for (FunctionDesc agg : digest.getAggregations()) {
             if (sortCol.getName().equals(agg.getRewriteFieldName())) {
                 return true;
             }
@@ -337,10 +332,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         TblColRef topnNumCol = getTopNNumericColumn(topN);
 
         if (topnNumCol == null) {
-            if (sum.isCount())
-                return true;
-
-            return false;
+            return sum.isCount();
         }
 
         if (!sum.isSum())
@@ -360,20 +352,21 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(MeasureDesc involvedMeasure, SQLDigest sqlDigest) {
-        if (sqlDigest.aggregations.size() > 1) {
+        List<FunctionDesc> sqlDigestAggregations = sqlDigest.getAggregations();
+        if (sqlDigestAggregations.size() > 1) {
             return;
         }
 
         FunctionDesc topnFunc = involvedMeasure.getFunction();
         List<TblColRef> topnLiteralCol = getTopNLiteralColumn(topnFunc);
 
-        if (!sqlDigest.groupbyColumns.containsAll(topnLiteralCol)
-                || !topnLiteralCol.containsAll(sqlDigest.groupbyColumns)) {
+        if (!new HashSet<>(sqlDigest.getGroupByColumns()).containsAll(topnLiteralCol)
+                || !new HashSet<>(topnLiteralCol).containsAll(sqlDigest.getGroupByColumns())) {
             return;
         }
 
-        if (!sqlDigest.aggregations.isEmpty()) {
-            FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
+        if (!sqlDigestAggregations.isEmpty()) {
+            FunctionDesc origFunc = sqlDigestAggregations.iterator().next();
             if (!origFunc.isSum() && !origFunc.isCount()) {
                 logger.warn("When query with topN, only SUM/Count function is allowed.");
                 return;
@@ -383,12 +376,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 return;
             }
 
-            logger.info("Rewrite function " + origFunc + " to " + topnFunc);
+            logger.info("Rewrite function {} to {}", origFunc, topnFunc);
         }
 
-        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
-        sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
-        sqlDigest.metricColumns.addAll(topnLiteralCol);
+        sqlDigest.setAggregations(Lists.newArrayList(topnFunc));
+        sqlDigest.getGroupByColumns().removeAll(topnLiteralCol);
+        sqlDigest.getMetricColumns().addAll(topnLiteralCol);
     }
 
     @Override
@@ -413,7 +406,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             literalTupleIdx[i] = tupleInfo.hasColumn(colRef) ? tupleInfo.getColumnIndex(colRef) : -1;
         }
 
-        // for TopN, the aggr must be SUM
+        // for TopN, the aggregation must be SUM
         final int numericTupleIdx;
         if (numericCol != null) {
             FunctionDesc sumFunc = FunctionDesc.newInstance(FunctionDesc.FUNC_SUM,
@@ -517,11 +510,9 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     /**
      * Get the encoding name and version for the given col from Measure FunctionDesc
-     * @param functionDesc
-     * @param tblColRef
      * @return a pair of the encoding name and encoding version
      */
-    public static final Pair<String, String> getEncoding(FunctionDesc functionDesc, TblColRef tblColRef) {
+    public static Pair<String, String> getEncoding(FunctionDesc functionDesc, TblColRef tblColRef) {
         String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getIdentity());
         String encodingVersion = functionDesc.getConfiguration()
                 .get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getIdentity());

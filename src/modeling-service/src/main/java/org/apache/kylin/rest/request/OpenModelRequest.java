@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class OpenModelRequest extends ModelRequest{
-  @JsonProperty("model_name")
-  private String modelName;
+public class OpenModelRequest extends ModelRequest {
+    @JsonProperty("model_name")
+    private String modelName;
 }

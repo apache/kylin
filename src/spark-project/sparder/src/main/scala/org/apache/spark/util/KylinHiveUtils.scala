@@ -18,8 +18,8 @@
 package org.apache.spark.util
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.KylinSession.KylinBuilder
+import org.apache.spark.sql.SparkSession
 
 
 object KylinHiveUtils extends Logging {

@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.query.relnode.OLAPContextProp;
+import org.apache.kylin.query.relnode.OlapContextProp;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.QueryAliasMatchInfo;
 
@@ -37,12 +37,16 @@ import lombok.extern.slf4j.Slf4j;
 public class RemoveIncapableRealizationsRule extends PruningRule {
     @Override
     public void apply(Candidate candidate) {
+        if (!isStorageMatch(candidate)) {
+            return;
+        }
+
         if (candidate.getCapability() != null) {
             return;
         }
 
         // Preserve the initial OlapContext and initialize the matching result of Candidate as false.
-        OLAPContextProp propsBeforeRewrite = RealizationChooser.preservePropsBeforeRewrite(candidate.getCtx());
+        OlapContextProp propsBeforeRewrite = RealizationChooser.preservePropsBeforeRewrite(candidate.getCtx());
         CapabilityResult capabilityResult = new CapabilityResult();
 
         IRealization realization = candidate.getRealization();
@@ -56,13 +60,18 @@ public class RemoveIncapableRealizationsRule extends PruningRule {
         }
 
         if (!capabilityResult.isCapable()) {
-            RealizationChooser.restoreOLAPContextProps(candidate.getCtx(), propsBeforeRewrite);
+            RealizationChooser.restoreOlapContextProps(candidate.getCtx(), propsBeforeRewrite);
             candidate.getCtx().resetSQLDigest();
             capabilityResult = getCapabilityResult(candidate);
             candidate.recordRewrittenCtxProps();
         }
 
         candidate.setCapability(capabilityResult);
+    }
+
+    @Override
+    public boolean isStorageMatch(Candidate candidate) {
+        return candidate.getRealization().getModel().getStorageType().isV1Storage();
     }
 
     private CapabilityResult getCapabilityResult(Candidate candidate) {

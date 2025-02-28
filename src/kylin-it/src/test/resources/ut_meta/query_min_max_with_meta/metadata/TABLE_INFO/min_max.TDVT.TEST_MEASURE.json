@@ -1,0 +1,124 @@
+{
+  "uuid" : "51f40fcc-ab67-8654-0ff1-3619b5072d78",
+  "last_modified" : 0,
+  "create_time" : 1679547981840,
+  "version" : "4.0.0.0",
+  "name" : "TEST_MEASURE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ID1",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "id1"
+  }, {
+    "id" : "2",
+    "name" : "ID2",
+    "datatype" : "integer",
+    "case_sensitive_name" : "id2"
+  }, {
+    "id" : "3",
+    "name" : "ID3",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "id3"
+  }, {
+    "id" : "4",
+    "name" : "ID4",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "id4"
+  }, {
+    "id" : "5",
+    "name" : "PRICE1",
+    "datatype" : "double",
+    "case_sensitive_name" : "price1"
+  }, {
+    "id" : "6",
+    "name" : "PRICE2",
+    "datatype" : "double",
+    "case_sensitive_name" : "price2"
+  }, {
+    "id" : "7",
+    "name" : "PRICE3",
+    "datatype" : "decimal(19,4)",
+    "case_sensitive_name" : "price3"
+  }, {
+    "id" : "8",
+    "name" : "NAME1",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "name1"
+  }, {
+    "id" : "9",
+    "name" : "NAME2",
+    "datatype" : "varchar(256)",
+    "case_sensitive_name" : "name2"
+  }, {
+    "id" : "10",
+    "name" : "NAME3",
+    "datatype" : "char(10)",
+    "case_sensitive_name" : "name3"
+  }, {
+    "id" : "11",
+    "name" : "DATE1",
+    "datatype" : "date",
+    "case_sensitive_name" : "date1"
+  }, {
+    "id" : "12",
+    "name" : "TIME1",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : "time1"
+  }, {
+    "id" : "13",
+    "name" : "FLAG",
+    "datatype" : "boolean",
+    "case_sensitive_name" : "flag"
+  }, {
+    "id" : "14",
+    "name" : "ID_NULL",
+    "datatype" : "int",
+    "case_sensitive_name" : "id_null"
+  }, {
+    "id" : "15",
+    "name" : "DATE_NULL",
+    "datatype" : "date",
+    "case_sensitive_name" : "date_null"
+  }, {
+    "id" : "16",
+    "name" : "TIMESTAMP_NULL",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : "timestamp_null"
+  }, {
+    "id" : "17",
+    "name" : "STRING_NULL",
+    "datatype" : "string",
+    "case_sensitive_name" : "string_null"
+  }, {
+    "id" : "18",
+    "name" : "FLAG_NULL",
+    "datatype" : "boolean",
+    "case_sensitive_name" : "flag_null"
+  }, {
+    "id" : "19",
+    "name" : "DOUBLE_NULL",
+    "datatype" : "double",
+    "case_sensitive_name" : "double_null"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "TDVT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "min_max"
+}

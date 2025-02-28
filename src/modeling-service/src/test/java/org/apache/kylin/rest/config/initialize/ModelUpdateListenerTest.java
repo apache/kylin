@@ -18,18 +18,18 @@
 
 package org.apache.kylin.rest.config.initialize;
 
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.IUserGroupService;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.FusionModelService;
+import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.NUserGroupService;
 import org.apache.kylin.rest.service.SourceTestCase;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,8 +64,8 @@ public class ModelUpdateListenerTest extends SourceTestCase {
     private final ModelUpdateListener modelUpdateListener = new ModelUpdateListener();
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         EventBusFactory.getInstance().register(modelUpdateListener, true);
         ReflectionTestUtils.setField(fusionModelService, "modelService", modelService);

@@ -1,0 +1,75 @@
+{
+  "uuid" : "3f2fbb80-75d1-4563-a7df-e68aae77eb0e",
+  "last_modified" : 1509548179750,
+  "version" : "2.3.0.20500",
+  "name" : "Z_S0_CPRM_GENERICS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "PHYSICIAN_NAME",
+    "datatype" : "varchar(150)"
+  }, {
+    "id" : "2",
+    "name" : "ASSOCIATE_PRACTICE",
+    "datatype" : "varchar(150)"
+  }, {
+    "id" : "3",
+    "name" : "SPECIALTY",
+    "datatype" : "varchar(128)"
+  }, {
+    "id" : "4",
+    "name" : "NETWORK_AFFILIATION",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "5",
+    "name" : "PCP",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "6",
+    "name" : "ATTRIB_MEMBERS",
+    "datatype" : "decimal(5,0)"
+  }, {
+    "id" : "7",
+    "name" : "ATTRIB_GENERIC_UTILIZATION",
+    "datatype" : "decimal(10,0)"
+  }, {
+    "id" : "8",
+    "name" : "ATTRIB_EPISODES",
+    "datatype" : "decimal(3,0)"
+  }, {
+    "id" : "9",
+    "name" : "ATTRIB_OVERALL_COST",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "10",
+    "name" : "NPI",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "11",
+    "name" : "ATTRIB_AVG_AGE",
+    "datatype" : "decimal(4,0)"
+  }, {
+    "id" : "12",
+    "name" : "POPULATION",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "13",
+    "name" : "ATTRIB_PRESCRIPTIONS",
+    "datatype" : "decimal(6,0)"
+  }, {
+    "id" : "14",
+    "name" : "ATTRIB_DRUG_COST",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "15",
+    "name" : "ATTRIB_DRUG_PMPM",
+    "datatype" : "varchar(26)"
+  }, {
+    "id" : "16",
+    "name" : "ATTRIB_RISK_ADJ_DRUG_PMPM",
+    "datatype" : "char(128)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "POPHEALTH_ANALYTICS",
+  "project" : "newten"
+}

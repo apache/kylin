@@ -18,6 +18,10 @@
 
 package org.apache.kylin.job.execution;
 
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.INTERNAL;
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.OTHER;
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.SNAPSHOT;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,6 +88,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
 
     protected static final String SUBMITTER = "submitter";
     protected static final String PARENT_ID = "parentId";
+    private static final Integer DEFAULT_DRIVER_MEMORY = 512;
     public static final String RUNTIME_INFO = "runtimeInfo";
     public static final String DEPENDENT_FILES = "dependentFiles";
 
@@ -104,7 +109,9 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
 
     @Setter
     @Getter
-    private String targetSubject; //uuid of the model or table identity if table sampling
+    // uuid of the model or table identity if table sampling
+    // or internal table
+    private String targetSubject;
 
     @Setter
     @Getter
@@ -238,7 +245,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
 
             tryAgain = false;
             try {
-                JobContextUtil.withTxAndRetry(()->{
+                JobContextUtil.withTxAndRetry(() -> {
                     checkNeedQuit(false);
                     f.process();
 
@@ -295,7 +302,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     protected ExecutableState adjustState(ExecutableState originalState) {
         return originalState;
     }
-        
+
     protected void onExecuteErrorHook(String jobId) {
         // At present, only instance of DefaultExecutableOnModel take full advantage of this method.
     }
@@ -329,12 +336,12 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
                 }
             }
             executableManager.updateJobOutput(jobId, newStatus, existedInfo, null, null, 0, failedMsg);
-            if (hook != null) {
-                hook.accept(jobId);
-            }
 
             return true;
         });
+        if (hook != null) {
+            hook.accept(jobId);
+        }
 
         //write output to HDFS
         updateJobOutputToHDFS(project, jobId, output, logPath);
@@ -383,11 +390,14 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
             }
 
             retry++;
-
-        } while (needRetry(this.retry, result.getThrowable())); //exception in ExecuteResult should handle by user itself.
+            //exception in ExecuteResult should handle by user itself.
+        } while (needRetry(this.retry, result.getThrowable()));
         //check exception in result to avoid retry on ChainedExecutable(only need retry on subtask actually)
 
         onExecuteFinished(result);
+        if (result.getThrowable() != null) {
+            result.getThrowable().printStackTrace();
+        }
         return result;
     }
 
@@ -400,7 +410,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     protected List<AbstractExecutable> getOtherPipelineRunningStep() {
         val parent = getParent();
         val previousStepId = getPreviousStep();
-        if (parent instanceof DefaultExecutable && parent.getJobSchedulerMode().equals(JobSchedulerModeEnum.DAG)) {
+        if (parent instanceof DefaultExecutable && parent.getJobSchedulerMode() == JobSchedulerModeEnum.DAG) {
             val otherPipelineTasks = getOtherPipelineTasks((DefaultExecutable) parent, previousStepId);
             val dagExecutablesMap = ((DefaultExecutable) parent).getTasks().stream()
                     .collect(Collectors.toMap(AbstractExecutable::getId, task -> task));
@@ -419,7 +429,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
 
     protected List<AbstractExecutable> getStepOrNextStepsWithStatus(AbstractExecutable executable,
             Map<String, AbstractExecutable> dagExecutablesMap, ExecutableState state) {
-        if (executable.getStatus().equals(state)) {
+        if (executable.getStatus() == state) {
             return Lists.newArrayList(executable);
         }
         return executable.getNextSteps().stream().map(dagExecutablesMap::get)
@@ -470,20 +480,21 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
             val parent = getParent();
             ExecutableState state = parent.getStatus();
             switch (state) {
-                case READY:
-                case PENDING:
-                case PAUSED:
-                case DISCARDED:
-                    //if a job is restarted(all steps' status changed to READY) or paused or discarded, the old thread may still be alive and attempt to update job output
-                    //in this case the old thread should fail itself by calling this
-                    if (applyChange) {
-                        logger.debug("abort {} because parent job is {}", getId(), state);
-                        updateJobOutput(project, getId(), state, null, null, null);
-                    }
-                    abort = true;
-                    break;
-                default:
-                    break;
+            case READY:
+            case PENDING:
+            case PAUSED:
+            case DISCARDED:
+                // If a job is restarted(all steps' status changed to READY) or paused or discarded,
+                // the old thread may still be alive and attempt to update job output
+                //in this case the old thread should fail itself by calling this
+                if (applyChange) {
+                    logger.debug("abort {} because parent job is {}", getId(), state);
+                    updateJobOutput(project, getId(), state, null, null, null);
+                }
+                abort = true;
+                break;
+            default:
+                break;
             }
 
             return abort;
@@ -625,7 +636,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     }
 
     public void checkParentJobStatus() {
-        if (!getParent().getStatus().equals(ExecutableState.RUNNING)) {
+        if (getParent().getStatus() != ExecutableState.RUNNING) {
             throw new IllegalStateException("invalid parent job state, parent job:" + getParent().getDisplayName()
                     + ", state:" + getParent().getStatus());
         }
@@ -670,7 +681,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     public static long getEndTime(Output output) {
         return output.getEndTime();
     }
-    
+
     public final long getEndTime(ExecutablePO po) {
         return getEndTime(getOutput(po));
     }
@@ -690,7 +701,7 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     // just using to get job duration in get job list
     public long getDurationFromStepOrStageDurationSum(ExecutablePO executablePO) {
         var duration = getDuration(executablePO);
-        if (this instanceof DagExecutable && getJobSchedulerMode().equals(JobSchedulerModeEnum.DAG)) {
+        if (this instanceof DagExecutable && getJobSchedulerMode() == JobSchedulerModeEnum.DAG) {
             duration = calculateDagExecutableDuration(executablePO);
         } else if (this instanceof ChainedExecutable) {
             duration = calculateChainedExecutableDuration(executablePO);
@@ -702,13 +713,15 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
         val tasks = ((DagExecutable) this).getTasks();
         val tasksMap = tasks.stream().collect(Collectors.toMap(AbstractExecutable::getId, task -> task));
         return tasks.stream().filter(task -> StringUtils.isBlank(task.getPreviousStep()))
-                .map(task -> calculateDagTaskExecutableDuration(task, executablePO, tasksMap)).max(Long::compare).orElse(0L);
+                .map(task -> calculateDagTaskExecutableDuration(task, executablePO, tasksMap)).max(Long::compare)
+                .orElse(0L);
     }
 
     private Long calculateDagTaskExecutableDuration(AbstractExecutable task, ExecutablePO executablePO,
             Map<String, ? extends AbstractExecutable> tasksMap) {
         Long nextTaskDurationMax = task.getNextSteps().stream().map(tasksMap::get)
-                .map(nextTask -> calculateDagTaskExecutableDuration(nextTask, executablePO, tasksMap)).max(Long::compare).orElse(0L);
+                .map(nextTask -> calculateDagTaskExecutableDuration(nextTask, executablePO, tasksMap))
+                .max(Long::compare).orElse(0L);
         return getTaskDuration(task, executablePO) + nextTaskDurationMax;
     }
 
@@ -730,15 +743,17 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     private long getTaskDuration(AbstractExecutable task, ExecutablePO executablePO) {
         var taskDuration = task.getDuration(executablePO);
         if (task instanceof ChainedStageExecutable) {
-            taskDuration = calculateSingleSegmentStagesDuration((ChainedStageExecutable) task, executablePO, taskDuration);
+            taskDuration = calculateSingleSegmentStagesDuration((ChainedStageExecutable) task, executablePO,
+                    taskDuration);
         }
         return taskDuration;
     }
 
-    private long calculateSingleSegmentStagesDuration(ChainedStageExecutable task, ExecutablePO executablePO, long taskDuration) {
+    private long calculateSingleSegmentStagesDuration(ChainedStageExecutable task, ExecutablePO executablePO,
+            long taskDuration) {
         val stagesMap = task.getStagesMap();
         if (stagesMap.size() == 1) {
-            for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
+            for (Map.Entry<String, List<StageExecutable>> entry : stagesMap.entrySet()) {
                 taskDuration = entry.getValue().stream()
                         .map(stage -> getStageDuration(stage.getOutput(entry.getKey()), getParent())) //
                         .mapToLong(Long::valueOf) //
@@ -768,7 +783,8 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
     public static long getStageDuration(Output output, AbstractExecutable parent) {
         if (output.getDuration() != 0) {
             var duration = output.getDuration();
-            // If the parent job is not running, the duration of the stage is no longer counted no matter what state the stage is
+            // If the parent job is not running, the duration of the stage
+            // is no longer counted no matter what state the stage is
             if (parent != null && parent.getStatus() == ExecutableState.RUNNING
                     && ExecutableState.RUNNING == output.getState()) {
                 duration = duration + System.currentTimeMillis() - output.getLastRunningStartTime();
@@ -875,20 +891,26 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
         return config.getSparkEngineDriverMemorySnapshotBuilding();
     }
 
+    private static int computeInternalTableLoadMemory() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        return config.getSparkEngineDriverMemoryInternalTableLoading();
+    }
+
     public int computeStepDriverMemory() {
-        if (getJobType() == JobTypeEnum.TABLE_SAMPLING) {
+        switch (getJobType().getCategory()) {
+        case OTHER:
             return computeTableAnalyzeMemory();
-        }
-
-        if (getJobType() == JobTypeEnum.SNAPSHOT_BUILD || getJobType() == JobTypeEnum.SNAPSHOT_REFRESH) {
+        case SNAPSHOT:
             return computeSnapshotAnalyzeMemory();
+        case INTERNAL:
+            return computeInternalTableLoadMemory();
+        default:
+            String layouts = getParam(NBatchConstants.P_LAYOUT_IDS);
+            if (layouts != null) {
+                return computeDriverMemory(StringHelper.splitAndTrim(layouts, ",").length);
+            }
         }
-
-        String layouts = getParam(NBatchConstants.P_LAYOUT_IDS);
-        if (layouts != null) {
-            return computeDriverMemory(StringHelper.splitAndTrim(layouts, ",").length);
-        }
-        return 0;
+        return DEFAULT_DRIVER_MEMORY;
     }
 
     public static Integer computeDriverMemory(Integer cuboidNum) {
@@ -930,10 +952,14 @@ public abstract class AbstractExecutable extends AbstractJobExecutable implement
 
     protected void wrapWithExecuteExceptionUpdateJobError(Exception exception) {
         JobContextUtil.withTxAndRetry(() -> {
-            getExecutableManager(project).updateJobError(getId(), getId(), null, ExceptionUtils.getStackTrace(exception),
-                    exception.getMessage());
+            getExecutableManager(project).updateJobError(getId(), getId(), null,
+                    ExceptionUtils.getStackTrace(exception), exception.getMessage());
 
             return true;
         });
+    }
+
+    public boolean isInternalTableSparkJob() {
+        return false;
     }
 }

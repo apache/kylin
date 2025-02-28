@@ -1,0 +1,118 @@
+{
+  "name" : "20120331000000_20140401000000",
+  "create_time_utc" : 1701409711274,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1333123200000,
+    "date_range_end" : 1396281600000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "11" : {
+      "min" : "'ATOM'",
+      "max" : "'中国'"
+    },
+    "12" : {
+      "min" : "''ATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOMATOM'",
+      "max" : "'中国'"
+    },
+    "13" : {
+      "min" : "1",
+      "max" : "5"
+    },
+    "14" : {
+      "min" : "1",
+      "max" : "11"
+    },
+    "15" : {
+      "min" : "2",
+      "max" : "12"
+    },
+    "16" : {
+      "min" : "'ATOM'",
+      "max" : "'中国'"
+    },
+    "0" : {
+      "min" : "2012-03-21 00:00:00",
+      "max" : "2013-03-31 00:00:00"
+    },
+    "1" : {
+      "min" : "2012-03-31",
+      "max" : "2014-03-31"
+    },
+    "2" : {
+      "min" : "10000000157",
+      "max" : "10000000163"
+    },
+    "3" : {
+      "min" : "132322342",
+      "max" : "332342342"
+    },
+    "4" : {
+      "min" : "1241",
+      "max" : "124123"
+    },
+    "5" : {
+      "min" : "313",
+      "max" : "31233"
+    },
+    "6" : {
+      "min" : null,
+      "max" : null
+    },
+    "7" : {
+      "min" : "14.2423",
+      "max" : "1434.2423"
+    },
+    "8" : {
+      "min" : "12.34",
+      "max" : "29.334"
+    },
+    "9" : {
+      "min" : "124.44",
+      "max" : "123422.244"
+    },
+    "10" : {
+      "min" : "1",
+      "max" : "3"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1701409722122,
+  "source_count" : 6,
+  "source_bytes_size" : 2596,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_MEASURE.TIME2" : 126,
+    "TEST_DB.TEST_MEASURE.FLAG" : 24,
+    "TEST_DB.TEST_MEASURE.PRICE6" : 10,
+    "TEST_DB.TEST_MEASURE.PRICE2" : 54,
+    "TEST_DB.TEST_MEASURE.ID3" : 27,
+    "TEST_DB.TEST_MEASURE.PRICE7" : 6,
+    "TEST_DB.TEST_MEASURE.ID2" : 54,
+    "TEST_DB.TEST_MEASURE.NAME2" : 42,
+    "TEST_DB.TEST_MEASURE.PRICE3" : 52,
+    "TEST_DB.TEST_MEASURE.TIME1" : 60,
+    "TEST_DB.TEST_MEASURE.PRICE1" : 35,
+    "TEST_DB.TEST_MEASURE.ID4" : 27,
+    "TEST_DB.TEST_MEASURE.NAME1" : 443,
+    "TEST_DB.TEST_MEASURE.ID1" : 66,
+    "TEST_DB.TEST_MEASURE.NAME3" : 42,
+    "TEST_DB.TEST_MEASURE.PRICE5" : 6,
+    "TEST_DB.TEST_MEASURE.NAME4" : 11
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "1132bdcb-ac2b-8886-427a-ee0e3b7f8c63",
+  "model_uuid" : "1e12e297-ae63-4019-5e05-f571174ea157",
+  "project" : "multi_partition_date_type"
+}

@@ -1,0 +1,100 @@
+{
+  "uuid" : "c4bb7f53-e8d1-ed0a-06d0-b7cff21634f7",
+  "last_modified" : 1699338612703,
+  "create_time" : 1699338611368,
+  "version" : "4.0.0.0",
+  "alias" : "test",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.CUSTOMER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : {
+    "check_options" : 0,
+    "fault_threshold" : 0,
+    "fault_actions" : 0
+  },
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "C_ADDRESS",
+    "column" : "CUSTOMER.C_ADDRESS"
+  }, {
+    "id" : 1,
+    "name" : "C_NATION",
+    "column" : "CUSTOMER.C_NATION"
+  }, {
+    "id" : 2,
+    "name" : "C_CITY",
+    "column" : "CUSTOMER.C_CITY"
+  }, {
+    "id" : 3,
+    "name" : "C_PHONE",
+    "column" : "CUSTOMER.C_PHONE"
+  }, {
+    "id" : 4,
+    "name" : "C_REGION",
+    "column" : "CUSTOMER.C_REGION"
+  }, {
+    "id" : 5,
+    "name" : "C_NAME",
+    "column" : "CUSTOMER.C_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "C_MKTSEGMENT",
+    "column" : "CUSTOMER.C_MKTSEGMENT"
+  }, {
+    "id" : 7,
+    "name" : "C_CUSTKEY",
+    "column" : "CUSTOMER.C_CUSTKEY"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "CUSTOMER" : {
+        "x" : 655.7777235243055,
+        "y" : 275.7222154405382,
+        "width" : 220.0,
+        "height" : 443.3333333333333
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "test_jdbc"
+}

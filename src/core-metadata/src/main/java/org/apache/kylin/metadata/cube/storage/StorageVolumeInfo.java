@@ -20,11 +20,11 @@ package org.apache.kylin.metadata.cube.storage;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.kylin.common.annotation.Clarification;
 
 @Getter
 @Setter

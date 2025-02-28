@@ -1,0 +1,105 @@
+{
+  "type": "INNER",
+  "primary_key": [
+    "TEST_ACCOUNT.ACCOUNT_ID"
+  ],
+  "foreign_key": [
+    "TEST_KYLIN_FACT.SELLER_ID"
+  ],
+  "non_equi_join_condition": {
+    "type": "EXPRESSION",
+    "data_type": {
+      "type_name": "BOOLEAN",
+      "precision": 1,
+      "scale": -2147483648
+    },
+    "op": "AND",
+    "op_name": "AND",
+    "operands": [
+      {
+        "type": "EXPRESSION",
+        "data_type": {
+          "type_name": "BOOLEAN",
+          "precision": 1,
+          "scale": -2147483648
+        },
+        "op": "LESS_THAN",
+        "op_name": "<",
+        "operands": [
+          {
+            "type": "COLUMN",
+            "data_type": {
+              "type_name": "BIGINT",
+              "precision": 19,
+              "scale": 0
+            },
+            "op": "INPUT_REF",
+            "op_name": null,
+            "operands": [],
+            "value": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+            "expr": null
+          },
+          {
+            "type": "COLUMN",
+            "data_type": {
+              "type_name": "INTEGER",
+              "precision": 10,
+              "scale": 0
+            },
+            "op": "INPUT_REF",
+            "op_name": null,
+            "operands": [],
+            "value": "TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+            "expr": null
+          }
+        ],
+        "value": null,
+        "expr": null
+      },
+      {
+        "type": "EXPRESSION",
+        "data_type": {
+          "type_name": "BOOLEAN",
+          "precision": 1,
+          "scale": -2147483648
+        },
+        "op": "GREATER_THAN_OR_EQUAL",
+        "op_name": ">=",
+        "operands": [
+          {
+            "type": "COLUMN",
+            "data_type": {
+              "type_name": "BIGINT",
+              "precision": 19,
+              "scale": 0
+            },
+            "op": "INPUT_REF",
+            "op_name": null,
+            "operands": [],
+            "value": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+            "expr": null
+          },
+          {
+            "type": "COLUMN",
+            "data_type": {
+              "type_name": "INTEGER",
+              "precision": 10,
+              "scale": 0
+            },
+            "op": "INPUT_REF",
+            "op_name": null,
+            "operands": [],
+            "value": "TEST_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+            "expr": null
+          }
+        ],
+        "value": null,
+        "expr": null
+      }
+    ],
+    "value": null,
+    "expr": "\"TEST_KYLIN_FACT\".\"SELLER_ID\" = \"TEST_ACCOUNT\".\"ACCOUNT_ID\" AND \"TEST_KYLIN_FACT\".\"LEAF_CATEG_ID\" < \"TEST_ACCOUNT\".\"ACCOUNT_SELLER_LEVEL\" AND \"TEST_KYLIN_FACT\".\"LEAF_CATEG_ID\" >= \"TEST_ACCOUNT\".\"ACCOUNT_BUYER_LEVEL\""
+  },
+  "primary_table": null,
+  "foreign_table": null
+}

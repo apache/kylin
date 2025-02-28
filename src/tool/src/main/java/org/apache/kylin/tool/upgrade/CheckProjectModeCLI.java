@@ -33,12 +33,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutableApplication;
-import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.OptionBuilder;
-import org.apache.kylin.metadata.project.ProjectInstance;
-
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
 import lombok.extern.slf4j.Slf4j;
 

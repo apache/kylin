@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 /**
  */
 @SuppressWarnings("serial")
-abstract public class MeasureAggregator<V> implements Serializable {
+public abstract class MeasureAggregator<V> implements Serializable {
 
     public static MeasureAggregator<?> create(String funcName, DataType dataType) {
         return MeasureTypeFactory.create(funcName, dataType).newAggregator();
@@ -67,14 +67,14 @@ abstract public class MeasureAggregator<V> implements Serializable {
     public void setDependentAggregator(MeasureAggregator agg) {
     }
 
-    abstract public void reset();
+    public abstract void reset();
 
-    abstract public void aggregate(V value);
+    public abstract void aggregate(V value);
 
-    abstract public V aggregate(V value1, V value2);
+    public abstract V aggregate(V value1, V value2);
 
-    abstract public V getState();
+    public abstract V getState();
 
     // get an estimate of memory consumption UPPER BOUND
-    abstract public int getMemBytesEstimate();
+    public abstract int getMemBytesEstimate();
 }

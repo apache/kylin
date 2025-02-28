@@ -1,0 +1,27 @@
+{
+  "uuid" : "16386e20-2f04-4ba3-926a-e4e31982512b",
+  "last_modified" : 1494334079232,
+  "version" : "2.0.0",
+  "name" : "NATION",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "N_NATIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "N_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "N_REGIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "N_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH",
+  "project" : "tpch"
+}

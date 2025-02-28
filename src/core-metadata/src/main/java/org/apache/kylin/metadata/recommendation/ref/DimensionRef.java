@@ -21,9 +21,9 @@ package org.apache.kylin.metadata.recommendation.ref;
 import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.NoArgsConstructor;
 

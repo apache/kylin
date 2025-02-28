@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.MoreExecutors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.MoreExecutors;
 
 @Slf4j
 public class StorageCleanerCLI {
@@ -35,11 +35,8 @@ public class StorageCleanerCLI {
             CleanTaskExecutorService.getInstance().bindWorkingPool(MoreExecutors::newDirectExecutorService);
 
             StorageCleaner cleaner = new StorageCleaner().withTag(StorageCleaner.CleanerTag.CLI);
-            CleanTaskExecutorService.getInstance()
-                .submit(
-                    cleaner,
-                    KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS)
-                .get();
+            CleanTaskExecutorService.getInstance().submit(cleaner,
+                    KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS).get();
         } catch (Exception e) {
             log.warn("cleanup HDFS failed.", e);
         }

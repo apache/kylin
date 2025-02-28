@@ -13,6 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT sum(price)  as sum_price
- FROM TEST_KYLIN_FACT 
+ FROM TEST_KYLIN_FACT
  WHERE CAL_DT > cast(TIMESTAMPADD(Day, -15000, CURRENT_TIMESTAMP ) as DATE)
 GROUP BY CAL_DT

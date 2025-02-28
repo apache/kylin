@@ -21,6 +21,7 @@ package org.apache.kylin.tool.garbage;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -155,8 +156,8 @@ public class CleanTaskExecutorService implements Closeable {
 
             @Override
             protected String details() {
-                return String.format("traceId: %s, tag: %s, projects: %s", cleaner.getTraceId(), cleaner.getTag(),
-                        cleaner.getProjectNames().toString());
+                return String.format(Locale.ROOT, "traceId: %s, tag: %s, projects: %s", cleaner.getTraceId(),
+                        cleaner.getTag(), cleaner.getProjectNames().toString());
             }
 
             @Override

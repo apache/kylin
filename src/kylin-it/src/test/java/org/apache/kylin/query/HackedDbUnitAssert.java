@@ -54,7 +54,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
     }
 
     // THIS METHOD IS MOSTLY COPIED FROM DbUnitAssert. CHANGES ARE LEAD BY hackXXX CONDITION CHECKS.
-    public void assertEquals(ITable expectedTable, ITable actualTable, FailureHandler failureHandler) throws DatabaseUnitException {
+    public void assertEquals(ITable expectedTable, ITable actualTable, FailureHandler failureHandler)
+            throws DatabaseUnitException {
         logger.trace("assertEquals(expectedTable, actualTable, failureHandler) - start");
         logger.debug("assertEquals: expectedTable={}", expectedTable);
         logger.debug("assertEquals: actualTable={}", actualTable);
@@ -62,7 +63,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
 
         // Do not continue if same instance
         if (expectedTable == actualTable) {
-            logger.debug("The given tables reference the same object. Will return immediately. (Table={})", expectedTable);
+            logger.debug("The given tables reference the same object. Will return immediately. (Table={})",
+                    expectedTable);
             return;
         }
 
@@ -81,7 +83,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         if (!hackCheckContains) {
             if (expectedRowsCount != actualRowsCount) {
                 String msg = "row count (table=" + expectedTableName + ")";
-                Error error = failureHandler.createFailure(msg, String.valueOf(expectedRowsCount), String.valueOf(actualRowsCount));
+                Error error = failureHandler.createFailure(msg, String.valueOf(expectedRowsCount),
+                        String.valueOf(actualRowsCount));
                 logger.error(error.toString());
                 throw error;
             }
@@ -102,13 +105,15 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         Columns.ColumnDiff columnDiff = Columns.getColumnDiff(expectedMetaData, actualMetaData);
         if (columnDiff.hasDifference()) {
             String message = columnDiff.getMessage();
-            Error error = failureHandler.createFailure(message, Columns.getColumnNamesAsString(expectedColumns), Columns.getColumnNamesAsString(actualColumns));
+            Error error = failureHandler.createFailure(message, Columns.getColumnNamesAsString(expectedColumns),
+                    Columns.getColumnNamesAsString(actualColumns));
             logger.error(error.toString());
             throw error;
         }
 
         // Get the datatypes to be used for comparing the sorted columns
-        ComparisonColumn[] comparisonCols = getComparisonColumns(expectedTableName, expectedColumns, actualColumns, failureHandler);
+        ComparisonColumn[] comparisonCols = getComparisonColumns(expectedTableName, expectedColumns, actualColumns,
+                failureHandler);
 
         // Finally compare the data
         if (hackCheckContains)
@@ -119,7 +124,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
 
     // THIS METHOD IS COPIED FROM SUPER CLASS TO CHANGE ComparisonColumn TO OUR OWN.
     @Override
-    protected ComparisonColumn[] getComparisonColumns(String expectedTableName, Column[] expectedColumns, Column[] actualColumns, FailureHandler failureHandler) {
+    protected ComparisonColumn[] getComparisonColumns(String expectedTableName, Column[] expectedColumns,
+            Column[] actualColumns, FailureHandler failureHandler) {
         ComparisonColumn[] result = new ComparisonColumn[expectedColumns.length];
 
         for (int j = 0; j < expectedColumns.length; j++) {
@@ -135,7 +141,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         private String columnName;
         private DataType dataType;
 
-        public HackedComparisonColumn(String tableName, Column expectedColumn, Column actualColumn, FailureHandler failureHandler) {
+        public HackedComparisonColumn(String tableName, Column expectedColumn, Column actualColumn,
+                FailureHandler failureHandler) {
 
             // super class is actually useless, all public methods are overridden below
             super(tableName, expectedColumn, expectedColumn, failureHandler);
@@ -155,9 +162,12 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         }
 
         // COPIED FROM SUPER CLASS, CHANGES ARE LEAD BY hackXXX CONDITION CHECKS.
-        private DataType getComparisonDataType(String tableName, Column expectedColumn, Column actualColumn, FailureHandler failureHandler) {
+        private DataType getComparisonDataType(String tableName, Column expectedColumn, Column actualColumn,
+                FailureHandler failureHandler) {
             if (logger.isDebugEnabled())
-                logger.debug("getComparisonDataType(tableName={}, expectedColumn={}, actualColumn={}, failureHandler={}) - start", new Object[] { tableName, expectedColumn, actualColumn, failureHandler });
+                logger.debug(
+                        "getComparisonDataType(tableName={}, expectedColumn={}, actualColumn={}, failureHandler={}) - start",
+                        new Object[] { tableName, expectedColumn, actualColumn, failureHandler });
 
             DataType expectedDataType = expectedColumn.getDataType();
             DataType actualDataType = actualColumn.getDataType();
@@ -180,8 +190,10 @@ public class HackedDbUnitAssert extends DbUnitAssert {
                 }
 
                 // Impossible to determine which data type to use
-                String msg = "Incompatible data types: (table=" + tableName + ", col=" + expectedColumn.getColumnName() + ")";
-                throw failureHandler.createFailure(msg, String.valueOf(expectedDataType), String.valueOf(actualDataType));
+                String msg = "Incompatible data types: (table=" + tableName + ", col=" + expectedColumn.getColumnName()
+                        + ")";
+                throw failureHandler.createFailure(msg, String.valueOf(expectedDataType),
+                        String.valueOf(actualDataType));
             }
 
             // Both columns have same data type, return any one of them
@@ -190,8 +202,10 @@ public class HackedDbUnitAssert extends DbUnitAssert {
 
     }
 
-    private void compareDataContains(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols, FailureHandler failureHandler) throws DataSetException {
-        logger.debug("compareData(expectedTable={}, actualTable={}, " + "comparisonCols={}, failureHandler={}) - start", new Object[] { expectedTable, actualTable, comparisonCols, failureHandler });
+    private void compareDataContains(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols,
+            FailureHandler failureHandler) throws DataSetException {
+        logger.debug("compareData(expectedTable={}, actualTable={}, " + "comparisonCols={}, failureHandler={}) - start",
+                new Object[] { expectedTable, actualTable, comparisonCols, failureHandler });
 
         if (expectedTable == null) {
             throw new NullPointerException("The parameter 'expectedTable' must not be null");
@@ -214,7 +228,8 @@ public class HackedDbUnitAssert extends DbUnitAssert {
 
     }
 
-    private boolean findRowInExpectedTable(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols, FailureHandler failureHandler, int index) throws DataSetException {
+    private boolean findRowInExpectedTable(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols,
+            FailureHandler failureHandler, int index) throws DataSetException {
 
         // iterate over all rows
         for (int i = 0; i < expectedTable.getRowCount(); i++) {
@@ -232,23 +247,17 @@ public class HackedDbUnitAssert extends DbUnitAssert {
                 // Compare the values
                 if (skipCompare(columnName, expectedValue, actualValue)) {
                     if (logger.isTraceEnabled()) {
-                        logger.trace("ignoring comparison " + expectedValue + "=" + actualValue + " on column " + columnName);
+                        logger.trace("ignoring comparison " + expectedValue + "=" + actualValue + " on column "
+                                + columnName);
                     }
                     continue;
                 }
 
                 if (dataType.compare(expectedValue, actualValue) != 0) {
                     break;
-
-                    //                    Difference diff = new Difference(expectedTable, actualTable, i, columnName, expectedValue, actualValue);
-                    //
-                    //                    // Handle the difference (throw error immediately or something else)
-                    //                    failureHandler.handle(diff);
                 } else {
                     if (j == comparisonCols.length - 1) {
                         return true;
-                    } else {
-                        continue;
                     }
                 }
             }

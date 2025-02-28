@@ -28,23 +28,20 @@ import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import lombok.val;
 
 public class SchemaUtilCCLineBreakTest extends NLocalFileMetadataTestCase {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Before
     public void setup() {
         this.createTestMetadata("src/test/resources/ut_meta/schema_utils/original_project_cc_linebreak");
+        ComputedColumnUtil.setEXTRACTOR((model, config, cc) -> cc);
     }
 
     @After
@@ -67,7 +64,7 @@ public class SchemaUtilCCLineBreakTest extends NLocalFileMetadataTestCase {
         String expr = "(CASE WHEN PNL_RISK_RESULTS_VD.MEASURE = FX_FAMILY_ENRICHED.ATTRIBUTE_ID AND FX_FAMILY_ENRICHED.GCRS_PRODUCT_CODE = FX_FAMILY_ENRICHED.PRODUCTHIERARCHY_GCRS_CODEID \n"
                 + "THEN 1 ELSE 0 END)";
         Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(file);
-        String srcProject = getModelMetadataProjectName(rawResourceMap.keySet());
+        String srcProject = getModelMetadataProjectName(rawResourceMap);
         val importModelContext = new ImportModelContext(getTargetProject(), srcProject, rawResourceMap);
         val difference = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
                 importModelContext.getTargetKylinConfig());

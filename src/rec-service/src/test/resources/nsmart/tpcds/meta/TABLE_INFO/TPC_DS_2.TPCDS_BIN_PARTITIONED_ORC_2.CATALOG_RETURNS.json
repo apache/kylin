@@ -1,0 +1,119 @@
+{
+  "uuid" : "3c19f4b4-fd86-4dfa-b00f-7a08f3cae6b1",
+  "last_modified" : 1497607295080,
+  "version" : "2.0.0",
+  "name" : "CATALOG_RETURNS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CR_RETURNED_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "CR_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "CR_REFUNDED_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "CR_REFUNDED_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "CR_REFUNDED_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "CR_REFUNDED_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "CR_RETURNING_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "CR_RETURNING_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "CR_RETURNING_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "CR_RETURNING_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "11",
+    "name" : "CR_CALL_CENTER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "12",
+    "name" : "CR_CATALOG_PAGE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "13",
+    "name" : "CR_SHIP_MODE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "14",
+    "name" : "CR_WAREHOUSE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "15",
+    "name" : "CR_REASON_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "16",
+    "name" : "CR_ORDER_NUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "17",
+    "name" : "CR_RETURN_QUANTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "18",
+    "name" : "CR_RETURN_AMOUNT",
+    "datatype" : "double"
+  }, {
+    "id" : "19",
+    "name" : "CR_RETURN_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "20",
+    "name" : "CR_RETURN_AMT_INC_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "21",
+    "name" : "CR_FEE",
+    "datatype" : "double"
+  }, {
+    "id" : "22",
+    "name" : "CR_RETURN_SHIP_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "23",
+    "name" : "CR_REFUNDED_CASH",
+    "datatype" : "double"
+  }, {
+    "id" : "24",
+    "name" : "CR_REVERSED_CHARGE",
+    "datatype" : "double"
+  }, {
+    "id" : "25",
+    "name" : "CR_STORE_CREDIT",
+    "datatype" : "double"
+  }, {
+    "id" : "26",
+    "name" : "CR_NET_LOSS",
+    "datatype" : "double"
+  }, {
+    "id" : "27",
+    "name" : "CR_RETURNED_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

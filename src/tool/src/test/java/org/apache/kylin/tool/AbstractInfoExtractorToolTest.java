@@ -61,17 +61,16 @@ public class AbstractInfoExtractorToolTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
+        JobContextUtil.cleanUp();
         createTestMetadata();
         jdbcTemplate = JdbcUtil.getJdbcTemplate(getTestConfig());
-
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobInfoDao(getTestConfig());
     }
 
     @After
     public void teardown() {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
 
         JobContextUtil.cleanUp();
@@ -207,7 +206,7 @@ public class AbstractInfoExtractorToolTest extends NLocalFileMetadataTestCase {
         File queryHistoryOffsetDir = new File(mainDir, "query_history_offset");
         Assert.assertTrue(queryHistoryOffsetDir.listFiles().length >= 1);
     }
-    
+
     public ExecutablePO createJob() {
         DefaultExecutable job = new DefaultExecutableOnModel();
         job.setName(JobTypeEnum.INDEX_BUILD.toString());

@@ -1,0 +1,184 @@
+{
+  "uuid" : "9193bffa-090b-495c-9270-a776d47ae583",
+  "last_modified" : 1497609425464,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.STORE_SALES",
+  "last_build_job_id" : "e1b733a1-01c6-4712-9e9c-6fa249de8b7b",
+  "columns_stats" : [ {
+    "max_value" : "75599",
+    "min_value" : "28800",
+    "max_length_value" : "69858",
+    "min_length_value" : "69858",
+    "null_count" : 259122,
+    "cardinality" : 45916
+  }, {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "20294",
+    "min_length_value" : "9",
+    "null_count" : 0,
+    "cardinality" : 26057
+  }, {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "127592",
+    "min_length_value" : "7",
+    "null_count" : 259238,
+    "cardinality" : 143346
+  }, {
+    "max_value" : "1920798",
+    "min_value" : "1",
+    "max_length_value" : "1760216",
+    "min_length_value" : "1",
+    "null_count" : 258750,
+    "cardinality" : 410649
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "6308",
+    "min_length_value" : "1",
+    "null_count" : 259291,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "54800",
+    "min_length_value" : "7",
+    "null_count" : 259284,
+    "cardinality" : 70099
+  }, {
+    "max_value" : "22",
+    "min_value" : "1",
+    "max_length_value" : "22",
+    "min_length_value" : "8",
+    "null_count" : 259360,
+    "cardinality" : 12
+  }, {
+    "max_value" : "322",
+    "min_value" : "1",
+    "max_length_value" : "196",
+    "min_length_value" : "4",
+    "null_count" : 258962,
+    "cardinality" : 330
+  }, {
+    "max_value" : "480000",
+    "min_value" : "1",
+    "max_length_value" : "113207",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 485217
+  }, {
+    "max_value" : "100",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "8",
+    "null_count" : 259190,
+    "cardinality" : 100
+  }, {
+    "max_value" : "100.0",
+    "min_value" : "1.0",
+    "max_length_value" : "45.98",
+    "min_length_value" : "9.7",
+    "null_count" : 259384,
+    "cardinality" : 9605
+  }, {
+    "max_value" : "200.0",
+    "min_value" : "1.0",
+    "max_length_value" : "128.67",
+    "min_length_value" : "3.6",
+    "null_count" : 259681,
+    "cardinality" : 19021
+  }, {
+    "max_value" : "199.56",
+    "min_value" : "0.0",
+    "max_length_value" : "113.46",
+    "min_length_value" : "1.9",
+    "null_count" : 259072,
+    "cardinality" : 18166
+  }, {
+    "max_value" : "17588.25",
+    "min_value" : "0.0",
+    "max_length_value" : "10714.39",
+    "min_length_value" : "0.0",
+    "null_count" : 259135,
+    "cardinality" : 315845
+  }, {
+    "max_value" : "19562.4",
+    "min_value" : "0.0",
+    "max_length_value" : "12141.22",
+    "min_length_value" : "0.0",
+    "null_count" : 259708,
+    "cardinality" : 488621
+  }, {
+    "max_value" : "10000.0",
+    "min_value" : "1.0",
+    "max_length_value" : "1061.62",
+    "min_length_value" : "6.3",
+    "null_count" : 259332,
+    "cardinality" : 396444
+  }, {
+    "max_value" : "19984.0",
+    "min_value" : "1.12",
+    "max_length_value" : "12027.16",
+    "min_length_value" : "8.3",
+    "null_count" : 259310,
+    "cardinality" : 657705
+  }, {
+    "max_value" : "1749.87",
+    "min_value" : "0.0",
+    "max_length_value" : "1185.62",
+    "min_length_value" : "0.0",
+    "null_count" : 260025,
+    "cardinality" : 89016
+  }, {
+    "max_value" : "17588.25",
+    "min_value" : "0.0",
+    "max_length_value" : "13544.16",
+    "min_length_value" : "0.0",
+    "null_count" : 259135,
+    "cardinality" : 315845
+  }, {
+    "max_value" : "19562.4",
+    "min_value" : "0.0",
+    "max_length_value" : "10338.83",
+    "min_length_value" : "0.0",
+    "null_count" : 258922,
+    "cardinality" : 572086
+  }, {
+    "max_value" : "21192.87",
+    "min_value" : "0.0",
+    "max_length_value" : "12782.05",
+    "min_length_value" : "0.0",
+    "null_count" : 259521,
+    "cardinality" : 797497
+  }, {
+    "max_value" : "9731.7",
+    "min_value" : "-9991.0",
+    "max_length_value" : "-1434.71",
+    "min_length_value" : "1.6",
+    "null_count" : 259713,
+    "cardinality" : 720402
+  }, {
+    "max_value" : "2452642",
+    "min_value" : "2450816",
+    "max_length_value" : "2452379",
+    "min_length_value" : "2452379",
+    "null_count" : 259352,
+    "cardinality" : 1857
+  } ],
+  "sample_rows" : [ [ "66384", "66925", "66925", "66925", "67823", "40950", "44751", "66925", "70539", "49485" ], [ "22936", "6457", "15472", "8516", "18724", "16592", "17324", "14869", "11281", "21268" ], [ "137813", "137813", "137813", "137813", "10686", "40596", "40596", "10686", "10686", "10686" ], [ "72785", "72785", "72785", "72785", "1324329", "1324329", "1324329", "1324329", "333316", "333316" ], [ "5953", "2695", "3166", "3166", "3166", "3166", "4471", "2", "2", "5719" ], [ "62474", "60320", "60320", "62474", "40270", "68548", "68548", "60320", "", "60320" ], [ "13", "19", "22", "19", "22", "19", "19", "16", "16", "7" ], [ "31", "155", "212", "27", "292", "141", "163", "139", "34", "" ], [ "121570", "135156", "135156", "135156", "142993", "142993", "142993", "142993", "121359", "121359" ], [ "27", "22", "77", "63", "44", "1", "25", "37", "57", "47" ], [ "96.47", "75.48", "42.11", "5.31", "52.11", "72.57", "30.64", "26.46", "1.46", "98.36" ], [ "44.0", "48.99", "172.12", "150.48", "37.33", "155.49", "39.56", "5.56", "3.46", "128.93" ], [ "1.78", "1.69", "75.58", "28.24", "89.21", "167.44", "33.45", "46.57", "13.43", "40.82" ], [ "0.0", "", "1088.74", "2981.9", "155.14", "286.12", "0.0", "771.45", "0.0", "7814.24" ], [ "5402.7", "2060.52", "9524.76", "1555.4", "553.0", "8995.42", "6705.48", "2314.26", "9307.39", "1347.57" ], [ "539.36", "3865.8", "272.8", "757.08", "2085.72", "34.09", "372.4", "2292.36", "3366.72", "741.6" ], [ "4890.34", "3826.9", "4441.0", "7142.52", "4201.92", "373.86", "4728.38", "2493.43", "6122.52", "13112.4" ], [ "100.24", "0.41", "145.73", "119.56", "1.01", "37.16", "110.65", "462.06", "2.73", "25.66" ], [ "1896.68", "0.0", "0.0", "0.0", "230.26", "0.0", "0.0", "0.0", "0.0", "0.0" ], [ "236.3", "7.87", "594.44", "564.97", "9909.68", "1.98", "1220.12", "296.1", "423.68", "5801.5" ], [ "2734.86", "991.89", "63.9", "303.91", "421.98", "2730.4", "2370.73", "7101.59", "548.49", "887.32" ], [ "292.05", "-1870.74", "301.6", "-4720.57", "1532.72", "-2764.35", "-19.14", "-2652.96", "-1289.34", "1114.2" ], [ "2452018", "2452018", "2452018", "2452018", "2452018", "2452018", "2452018", "2452018", "2452018", "2452018" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "5760749",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "0",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/store_sales",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "SS_SOLD_DATE_SK",
+    "owner" : "root",
+    "total_file_number" : "0"
+  },
+  "project" : "TPC_DS_2"
+}

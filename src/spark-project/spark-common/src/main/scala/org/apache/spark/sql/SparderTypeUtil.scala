@@ -165,6 +165,13 @@ object SparderTypeUtil extends Logging {
       case SqlTypeName.ARRAY if dt.getComponentType.getSqlTypeName == SqlTypeName.VARCHAR => ArrayType(StringType)
       case SqlTypeName.OTHER if dt.getComponentType == null => ArrayType(StringType) // handle null
       case SqlTypeName.ANY => StringType
+      // see https://olapio.atlassian.net/browse/KE-42045
+      // Function: explode、subtract_bitmap_value、subtract_bitmap_uuid
+      case SqlTypeName.VARBINARY | SqlTypeName.BINARY => BinaryType
+      case SqlTypeName.ARRAY =>
+        val elementDataType = convertSqlTypeToSparkType(dt.getComponentType)
+        ArrayType(elementDataType)
+      case SqlTypeName.NULL => NullType // to support ifnull(null, null)
       case _ =>
         throw new IllegalArgumentException(s"unsupported SqlTypeName $dt")
     }
@@ -203,14 +210,15 @@ object SparderTypeUtil extends Logging {
   }
 
   def getValueFromRexLit(literal: RexLiteral): Any = {
+    val v = RexLiteral.value(literal)
     val ret = literal.getValue match {
       case s: NlsString =>
         getValueFromNlsString(s)
       case _: GregorianCalendar =>
         if (literal.getTypeName.getName.equals("DATE")) {
-          new Date(DateTimeUtils.stringToTimestamp(UTF8String.fromString(literal.toString), ZoneId.systemDefault()).get / 1000)
+          new Date(DateTimeUtils.stringToTimestamp(UTF8String.fromString(v.toString), ZoneId.systemDefault()).get / 1000)
         } else {
-          new Timestamp(DateTimeUtils.stringToTimestamp(UTF8String.fromString(literal.toString), ZoneId.systemDefault()).get / 1000)
+          new Timestamp(DateTimeUtils.stringToTimestamp(UTF8String.fromString(v.toString), ZoneId.systemDefault()).get / 1000)
         }
       case range: TimeUnitRange =>
         // Extract(x from y) in where clause
@@ -229,6 +237,8 @@ object SparderTypeUtil extends Logging {
             b.floatValue()
           case SqlTypeName.SMALLINT =>
             b.shortValue()
+          case SqlTypeName.TINYINT =>
+            b.byteValue()
           case _ =>
             b
         }
@@ -247,7 +257,7 @@ object SparderTypeUtil extends Logging {
       case null =>
         null
       case _ =>
-        literal.getValue.toString
+        v.toString
     }
     ret
   }

@@ -19,14 +19,14 @@
 package org.apache.kylin.query.util;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
-import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapRel;
+import org.apache.kylin.query.relnode.OlapTableScan;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -35,43 +35,43 @@ import lombok.Setter;
 @Setter
 public class ContextReCutStrategy implements ICutContextStrategy {
 
-    private CutContextImplementor reCutter;
+    private ContextCutImpl reCutter;
 
     @Override
-    public List<OLAPRel> cutOffContext(OLAPRel rootRel, RelNode parentOfRoot) {
-        for (OLAPTableScan tableScan : rootRel.getContext().allTableScans) {
+    public List<OlapRel> cutOffContext(OlapRel rootRel, RelNode parentOfRoot) {
+        for (OlapTableScan tableScan : rootRel.getContext().getAllTableScans()) {
             tableScan.setColumnRowType(null);
         }
-        // pre-order travel tree, recut context to smaller contexts
-        OLAPContext originCtx = rootRel.getContext();
+        // pre-order travel tree, re-cut context to smaller contexts
+        OlapContext originCtx = rootRel.getContext();
         reCutter.visitChild(rootRel);
-        OLAPContext.clearThreadLocalContextById(originCtx.id);
+        ContextUtil.clearThreadLocalContextById(originCtx.getId());
         return Lists.newArrayList(rootRel);
     }
 
     @Override
-    public boolean needCutOff(OLAPRel rootRel) {
+    public boolean needCutOff(OlapRel rootRel) {
         return rootRel.getContext() != null && rootRel.getContext().isHasJoin();
     }
 
     void tryCutToSmallerContexts(RelNode root, RuntimeException e) {
-        ICutContextStrategy.CutContextImplementor cutter = getReCutter() == null
-                ? new ICutContextStrategy.CutContextImplementor(
-                        Objects.requireNonNull(OLAPContext.getThreadLocalContexts()).size())
-                : new ICutContextStrategy.CutContextImplementor(getReCutter().getCtxSeq());
+        ContextCutImpl cutter = getReCutter() == null //
+                ? new ContextCutImpl(ContextUtil.getThreadLocalContexts().size())
+                : new ContextCutImpl(getReCutter().getCtxSeq());
         setReCutter(cutter);
-        for (OLAPContext context : ContextUtil.listContextsHavingScan()) {
-            if (context.isHasSelected() && context.realization == null
-                    && (!context.isHasPreCalcJoin() || context.getModelAlias() != null)) {
-                throw e;
-            } else if (context.isHasSelected() && context.realization == null) {
-                QueryContextCutter.cutContext(this, context.getTopNode(), root);
-                ContextUtil.setSubContexts(root.getInput(0));
-                continue;
-            } else if (context.realization != null) {
-                context.unfixModel();
-            }
-            context.clearCtxInfo();
-        }
+        ContextUtil.listContextsHavingScan().stream()
+                .filter(context -> context.deduceLookupTableType() == NLookupCandidate.Policy.NONE).forEach(context -> {
+                    if (context.isHasSelected() && context.getRealization() == null
+                            && (!context.isHasPreCalcJoin() || context.getBoundedModelAlias() != null)) {
+                        throw e;
+                    } else if (context.isHasSelected() && context.getRealization() == null) {
+                        QueryContextCutter.cutContext(this, context.getTopNode(), root);
+                        ContextUtil.setSubContexts(root.getInput(0));
+                        return;
+                    } else if (context.getRealization() != null) {
+                        context.unfixModel();
+                    }
+                    context.clearCtxInfo();
+                });
     }
 }

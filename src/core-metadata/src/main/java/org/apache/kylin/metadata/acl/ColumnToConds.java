@@ -28,21 +28,24 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.text.StrBuilder;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -53,19 +56,14 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
-import org.apache.kylin.metadata.acl.ColumnToConds.Cond.IntervalType;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 //all row conditions in the table, for example:C1:{cond1, cond2},C2{cond1, cond3}, immutable
 public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.Cond>> implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ColumnToConds.class);
     private static final String COMMA = ",";
 
     public ColumnToConds() {
@@ -105,7 +103,7 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
 
     public static String concatConds(ColumnToConds condsWithCol, ColumnToConds likeCondsWithCol,
             Map<String, String> columnWithType) {
-        StrBuilder result = new StrBuilder();
+        StringBuilder result = new StringBuilder();
         Set<String> conditionCols = new HashSet<>();
         conditionCols.addAll(condsWithCol.keySet());
         conditionCols.addAll(likeCondsWithCol.keySet());
@@ -132,7 +130,7 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
             }
             if (CollectionUtils.isNotEmpty(likeConditions)) {
                 if (!isValidLikeColumnType(type)) {
-                    logger.error(MsgPicker.getMsg().getRowAclNotStringType());
+                    log.error(MsgPicker.getMsg().getRowAclNotStringType());
                 } else {
                     if (CollectionUtils.isNotEmpty(intervalConditions)) {
                         result.append(" or ");
@@ -148,7 +146,7 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
         }
 
         if (!conditionCols.isEmpty()) {
-            result.setLength(result.size() - 5);
+            result.setLength(result.length() - 5);
         }
 
         if (conditionCols.size() > 1) {
@@ -157,22 +155,17 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
         return result.toString();
     }
 
-    public static String preview(String project, String table, ColumnToConds condsWithColumn,
-            ColumnToConds likeCondsWithColumn) {
-        Map<String, String> columnWithType = Preconditions.checkNotNull(getColumnWithType(project, table));
-        return concatConds(condsWithColumn, likeCondsWithColumn, columnWithType);
+    public enum IntervalType implements Serializable {
+        OPEN, // x in (a,b): a < x < b
+        CLOSED, // x in [a,b]: a ≤ x ≤ b
+        LEFT_INCLUSIVE, // x in [a,b): a ≤ x < b
+        RIGHT_INCLUSIVE, // x in (a,b]: a < x ≤ b
+        LIKE // x LIKE 'abc%'
     }
 
-    @JsonSerialize(using = Cond.RowACLCondSerializer.class)
-    @JsonDeserialize(using = Cond.RowACLCondDeserializer.class)
+    @JsonSerialize(using = ColumnToConds.RowACLCondSerializer.class)
+    @JsonDeserialize(using = ColumnToConds.RowACLCondDeserializer.class)
     public static class Cond implements Serializable {
-        public enum IntervalType implements Serializable {
-            OPEN, // x in (a,b): a < x < b
-            CLOSED, // x in [a,b]: a ≤ x ≤ b
-            LEFT_INCLUSIVE, // x in [a,b): a ≤ x < b
-            RIGHT_INCLUSIVE, // x in (a,b]: a < x ≤ b
-            LIKE // x LIKE 'abc%'
-        }
 
         private IntervalType type;
         private String leftExpr;
@@ -258,7 +251,7 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
                 sdf.setTimeZone(TimeZone.getDefault());
                 expr = sdf.format(new Date(Long.parseLong(expr)));
                 //transform "1970-01-01 00:00:59" into "00:00:59"
-                expr = "TIME '" + expr.substring(TIME_START_POS, expr.length()) + "'";
+                expr = "TIME '" + expr.substring(TIME_START_POS) + "'";
             }
             return expr;
         }
@@ -285,7 +278,7 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
             return expr;
         }
 
-        private static Pair<String, String> getOp(Cond.IntervalType type) {
+        private static Pair<String, String> getOp(IntervalType type) {
             switch (type) {
             case OPEN:
                 return Pair.newPair(">", "<");
@@ -311,9 +304,9 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
 
             if (type != cond.type)
                 return false;
-            if (leftExpr != null ? !leftExpr.equals(cond.leftExpr) : cond.leftExpr != null)
+            if (!Objects.equals(leftExpr, cond.leftExpr))
                 return false;
-            return rightExpr != null ? rightExpr.equals(cond.rightExpr) : cond.rightExpr == null;
+            return Objects.equals(rightExpr, cond.rightExpr);
         }
 
         @Override
@@ -324,40 +317,41 @@ public class ColumnToConds extends CaseInsensitiveStringMap<List<ColumnToConds.C
             return result;
         }
 
-        static class RowACLCondSerializer extends JsonSerializer<Cond> {
+    }
 
-            @Override
-            public void serialize(Cond cond, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                Object[] c;
-                if (cond.leftExpr.equals(cond.rightExpr)) {
-                    c = new Object[2];
-                    c[0] = cond.type.ordinal();
-                    c[1] = cond.leftExpr;
-                } else {
-                    c = new Object[3];
-                    c[0] = cond.type.ordinal();
-                    c[1] = cond.leftExpr;
-                    c[2] = cond.rightExpr;
-                }
-                gen.writeObject(c);
+    static class RowACLCondSerializer extends JsonSerializer<Cond> {
+
+        @Override
+        public void serialize(Cond cond, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            Object[] c;
+            if (cond.leftExpr.equals(cond.rightExpr)) {
+                c = new Object[2];
+                c[0] = cond.type.ordinal();
+                c[1] = cond.leftExpr;
+            } else {
+                c = new Object[3];
+                c[0] = cond.type.ordinal();
+                c[1] = cond.leftExpr;
+                c[2] = cond.rightExpr;
             }
+            gen.writeObject(c);
         }
+    }
 
-        static class RowACLCondDeserializer extends JsonDeserializer<Cond> {
+    static class RowACLCondDeserializer extends JsonDeserializer<Cond> {
 
-            @Override
-            public Cond deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                Object[] c = p.readValueAs(Object[].class);
-                Cond cond = new Cond();
-                cond.type = IntervalType.values()[(int) c[0]];
-                if (c.length == 2) {
-                    cond.leftExpr = cond.rightExpr = (String) c[1];
-                } else {
-                    cond.leftExpr = (String) c[1];
-                    cond.rightExpr = (String) c[2];
-                }
-                return cond;
+        @Override
+        public Cond deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            Object[] c = p.readValueAs(Object[].class);
+            Cond cond = new Cond();
+            cond.type = IntervalType.values()[(int) c[0]];
+            if (c.length == 2) {
+                cond.leftExpr = cond.rightExpr = (String) c[1];
+            } else {
+                cond.leftExpr = (String) c[1];
+                cond.rightExpr = (String) c[2];
             }
+            return cond;
         }
     }
 }

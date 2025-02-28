@@ -17,11 +17,9 @@
 
 package org.apache.spark.utils
 
-import java.util.{Map => JMap}
-
 import org.apache.kylin.cluster.{AvailableResource, IClusterManager, ResourceInfo}
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SparkJobConstants}
+import org.apache.kylin.engine.spark.job.{JobConstants, KylinBuildEnv}
 import org.apache.kylin.engine.spark.utils.SparkConfHelper._
 import org.apache.spark.SparkConf
 import org.apache.spark.application.NoRetryException
@@ -30,6 +28,7 @@ import org.apache.spark.internal.config.{DRIVER_MEMORY_OVERHEAD, DRIVER_MEMORY_O
 import org.apache.spark.resource.ResourceProfile
 import org.apache.spark.util.Utils
 
+import java.util.{Map => JMap}
 import scala.util.{Failure, Success, Try}
 
 
@@ -39,7 +38,7 @@ object ResourceUtils extends Logging {
   def caculateRequiredCores(detectItems: JMap[String, String]): String = {
     Try {
       val it = detectItems.entrySet().iterator()
-      var pNum = SparkJobConstants.DEFAULT_REQUIRED_CORES
+      var pNum = JobConstants.DEFAULT_REQUIRED_CORES
       if (it.hasNext) {
         val item = it.next()
         pNum = item.getValue
@@ -51,7 +50,7 @@ object ResourceUtils extends Logging {
         partitionNum
       case Failure(throwable) =>
         logWarning(s"caculate required cores failed ${this.getClass.getName}", throwable)
-        SparkJobConstants.DEFAULT_REQUIRED_CORES
+        JobConstants.DEFAULT_REQUIRED_CORES
     }
   }
 

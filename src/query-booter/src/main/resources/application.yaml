@@ -42,6 +42,10 @@ management:
       exposure:
         include: prometheus
 
+springfox:
+  documentation:
+    enabled: ${kylin.swagger.enabled}
+
 spring:
   http:
     multipart:

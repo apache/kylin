@@ -36,13 +36,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.OutOfMaxCombinationException;
 import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.ThreadUtil;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
-import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-
 import org.apache.kylin.guava30.shaded.common.base.Predicate;
 import org.apache.kylin.guava30.shaded.common.collect.Iterators;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +105,7 @@ public class KECuboidSchedulerV1 extends CuboidScheduler {
         if (!Objects.equals(newSortingOrder, oldSortingResult)) {
             log.error(METADATA_INCONSISTENT_ERROR_MSG_PATTERN, indexPlan.getProject(), indexPlan.getModelAlias(),
                     RULE_BASED_INDEX_METADATA_INCONSISTENT, ThreadUtil.getKylinStackTrace());
-            log.debug("Set difference new:{}, old:{}", newSortingResult, oldSortingResult);
+            log.debug("Set difference new:{}, old:{}", newSortingOrder, oldSortingResult);
         }
 
     }

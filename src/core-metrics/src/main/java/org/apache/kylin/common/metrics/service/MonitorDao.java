@@ -24,11 +24,10 @@ import java.util.Map;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-
 import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import org.apache.kylin.shaded.influxdb.org.influxdb.impl.InfluxDBResultMapper;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

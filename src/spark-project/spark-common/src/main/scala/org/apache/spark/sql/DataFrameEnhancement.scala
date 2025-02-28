@@ -17,8 +17,8 @@
  */
 package org.apache.spark.sql
 
-import org.apache.spark.sql.catalyst.plans.logical.LocalLimit
 import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.sql.catalyst.plans.logical.LocalLimit
 
 
 object DataFrameEnhancement {

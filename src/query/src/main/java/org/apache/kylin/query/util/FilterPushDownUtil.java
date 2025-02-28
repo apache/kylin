@@ -38,17 +38,13 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRange;
-import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 public class FilterPushDownUtil {
 
@@ -59,35 +55,6 @@ public class FilterPushDownUtil {
      * org.apache.kylin.query.util.PushDownUtil#tryPushDownQuery(String, String, String, SQLException, boolean, boolean)
      */
     private static final String HIVE_DEFAULT_SCHEMA = "DEFAULT";
-
-    /**
-     * Apply time partitioned data loading range to the sqlToUpdate.
-     *
-     * @param sqlToUpdate input sql need update
-     * @param range       time partitioned data loading range
-     * @return            string applied data loading range
-     * @throws SqlParseException if there is a parse error
-     */
-    static String applyDataLoadingRange(String sqlToUpdate, NDataLoadingRange range) throws SqlParseException {
-        Preconditions.checkNotNull(range);
-        SegmentRange readySegmentRange = range.getCoveredRange();
-        Preconditions.checkNotNull(readySegmentRange);
-
-        final String tableName = range.getTableName();
-        final String columnName = range.getColumnName();
-        final String[] schemaAndShortName = tableName.split("\\.");
-        Preconditions.checkState(schemaAndShortName.length == 2);
-
-        // use start and waterMark
-        final String start = DateFormat.formatToDateStr((Long) readySegmentRange.getStart(),
-                DateFormat.DEFAULT_DATE_PATTERN);
-        final String waterMark = DateFormat.formatToDateStr((Long) readySegmentRange.getEnd(),
-                DateFormat.DEFAULT_DATE_PATTERN);
-        String extraCondition = String.format(Locale.ROOT, "%s >= '%s' and %s <= '%s'", columnName, start, columnName,
-                waterMark);
-
-        return applyFilterCondition(sqlToUpdate, extraCondition, tableName);
-    }
 
     /**
      * Apply the extraCondition to the sqlToUpdate with a extra condition, only if the select
@@ -186,7 +153,7 @@ public class FilterPushDownUtil {
 
             if (call instanceof SqlBasicCall) {
                 SqlBasicCall basicCall = (SqlBasicCall) call;
-                for (SqlNode node : basicCall.getOperands()) {
+                for (SqlNode node : basicCall.getOperandList()) {
                     node.accept(this);
                 }
                 return null;
@@ -259,10 +226,10 @@ public class FilterPushDownUtil {
         private void extractNames(List<Pair<String, String>> nameAndAliasNames, SqlNode node) {
             if (node instanceof SqlBasicCall) {
                 SqlBasicCall call = (SqlBasicCall) node;
-                final SqlNode sqlNode = call.getOperands()[0];
+                final SqlNode sqlNode = call.operand(0);
                 if (sqlNode instanceof SqlIdentifier) {
                     String name = sqlNode.toString();
-                    String aliasName = call.getOperands()[1].toString();
+                    String aliasName = call.operand(1).toString();
                     nameAndAliasNames.add(new Pair<>(name, aliasName));
                 }
             }
@@ -302,7 +269,7 @@ public class FilterPushDownUtil {
             if (call instanceof SqlBasicCall) {
                 SqlBasicCall basicCall = (SqlBasicCall) call;
 
-                for (SqlNode node : basicCall.getOperands()) {
+                for (SqlNode node : basicCall.getOperandList()) {
                     node.accept(this);
                 }
             }

@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_ORDER",
+  "model_uuid" : "8c670664-8d05-466a-802f-83c023b56c79",
+  "project" : "multi_partition_pruning",
+  "uuid" : "4a751660-150d-f3b6-d902-5967909f09bc"
+}

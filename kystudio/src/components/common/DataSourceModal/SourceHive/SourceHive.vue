@@ -2,10 +2,10 @@
   <div class="source-hive clearfix" :class="{'zh-lang': $store.state.system.lang !== 'en'}">
     <div class="list clearfix">
       <div class="ksd-ml-24 ksd-mt-24">
-        <el-input :placeholder="$t('filterTableName')" 
-                  v-model="filterText" 
-                  prefix-icon="el-icon-search" 
-                  @keyup.enter.native="handleFilter()" 
+        <el-input :placeholder="$t('filterTableName')"
+                  v-model="filterText"
+                  prefix-icon="el-icon-search"
+                  @keyup.enter.native="handleFilter()"
                   @clear="handleFilter()">
         </el-input>
       </div>
@@ -48,11 +48,11 @@
               :validateRegex="regex.validateDB"
               @validateFail="selectedDBValidateFail"
               @refreshData="refreshDBData"
-              splitChar="," 
+              splitChar=","
               :selectedlabels="selectDBNames"
               :allowcreate="true"
               :placeholder="$t('dbPlaceholder')"
-              @removeTag="removeSelectedDB" 
+              @removeTag="removeSelectedDB"
               :datamap="{label: 'label', value: 'value'}">
             </arealabel>
           </div>
@@ -68,11 +68,11 @@
               :validateRegex="regex.validateTable"
               @validateFail="selectedTableValidateFail"
               @refreshData="refreshTableData"
-              splitChar="," 
+              splitChar=","
               :selectedlabels="selectTablesNames"
               :allowcreate="true"
               :placeholder="$t('dbTablePlaceholder')"
-              @removeTag="removeSelectedTable" 
+              @removeTag="removeSelectedTable"
               :datamap="{label: 'label', value: 'value'}">
             </arealabel>
           </div>
@@ -90,22 +90,32 @@
         </div>
       </transition>
     </div>
-    <div :class="['sample-block', {'has-error': needSampling && errorMsg}]">
-      <span class="ksd-title-label-small ksd-mr-10">{{$t('samplingTitle')}}</span><el-switch
+    <div class="source-options">
+      <div :class="['sample-block', {'has-error': needSampling && errorMsg}]">
+        <span class="ksd-title-label-small ksd-mr-10">{{$t('samplingTitle')}}</span><el-switch
         @change="handleSampling"
         :value="needSampling"
         :active-text="$t('kylinLang.common.OFF')"
         :inactive-text="$t('kylinLang.common.ON')">
       </el-switch>
-      <div class="sample-desc ksd-mt-5">{{$t('sampleDesc')}}</div>
-      <div class="sample-desc">
-        {{$t('sampleDesc1')}}<el-input size="small" style="width: 110px;" class="ksd-mrl-5" v-number="samplingRows" :value="samplingRows" :disabled="!needSampling" :class="{'is-error': needSampling&&errorMsg}" @input="handleSamplingRows"></el-input>{{$t('sampleDesc2')}}
-        <div class="error-msg" v-if="needSampling&&errorMsg">{{errorMsg}}</div>
+        <div class="sample-desc ksd-mt-5">{{$t('sampleDesc')}}</div>
+        <div class="sample-desc">
+          {{$t('sampleDesc1')}}<el-input size="small" style="width: 110px;" class="ksd-mrl-5" v-number="samplingRows" :value="samplingRows" :disabled="!needSampling" :class="{'is-error': needSampling&&errorMsg}" @input="handleSamplingRows"></el-input>{{$t('sampleDesc2')}}
+          <div class="error-msg" v-if="needSampling&&errorMsg">{{errorMsg}}</div>
+        </div>
+      </div>
+      <div v-if="currentSelectedProjectInternalTableEnabled" :class="['sample-block', {'has-error': loadAsInternalTable && errorMsg}]">
+        <span class="ksd-title-label-small ksd-mr-10">{{$t('loadAsInternalTableOption')}}</span><el-switch
+        @change="handleInternalTableOption"
+        :value="loadAsInternalTable"
+        :active-text="$t('kylinLang.common.OFF')"
+        :inactive-text="$t('kylinLang.common.ON')">
+      </el-switch>
+        <div class="sample-desc ksd-mt-5">{{$t('loadAsInternalTableDesc')}}</div>
       </div>
     </div>
   </div>
 </template>
-
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions, mapState } from 'vuex'
@@ -127,6 +137,7 @@ import arealabel from '../../area_label.vue'
       default: () => []
     },
     needSampling: Boolean,
+    loadAsInternalTable: Boolean,
     samplingRows: {
       default: 20000000
     },
@@ -141,7 +152,8 @@ import arealabel from '../../area_label.vue'
   },
   computed: {
     ...mapGetters([
-      'currentSelectedProject'
+      'currentSelectedProject',
+      'currentSelectedProjectInternalTableEnabled'
     ]),
     ...mapState({
       loadHiveTableNameEnabled: state => state.system.loadHiveTableNameEnabled
@@ -581,6 +593,15 @@ export default class SourceHive extends Vue {
       this.contentStyle.height = '367px'
     }
   }
+
+  handleInternalTableOption (loadAsInternalTable) {
+    this.$emit('input', { loadAsInternalTable })
+    if (!loadAsInternalTable) {
+      this.errorMsg = ''
+      this.contentStyle.height = '367px'
+    }
+  }
+
   handleSamplingRows (samplingRows) {
     if (samplingRows && samplingRows < 10000) {
       this.errorMsg = this.$t('minNumber')
@@ -712,9 +733,12 @@ export default class SourceHive extends Vue {
     position: relative;
     // height: 453px;
   }
+  .source-options {
+    display: flex;
+    padding: 0 8px;
+  }
   .sample-block {
-    margin-left: calc(400px + 25px + 10px);
-    margin-top: -13px;
+    flex: 1;
     .sample-desc {
       color: @text-title-color;
       word-break: break-word;
@@ -824,8 +848,8 @@ export default class SourceHive extends Vue {
     background-color: @regular-background-color;
     // bottom: 25px;
     margin-top: 10px;
-    right: 20px;
-    width: 485px;
+    right: 24px;
+    width: 466px;
     .infoIcon{
       position: absolute;
       top: 10px;

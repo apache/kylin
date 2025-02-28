@@ -1,0 +1,60 @@
+{
+  "uuid" : "c9ddd37e-c870-4ccf-a131-5eef8fe6cb7e",
+  "last_modified" : 1509531215483,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "index_plan_override_encodings" : { },
+  "indexes" : [ {
+    "id" : 100000,
+    "dimensions" : [ 1, 2, 3, 4 ],
+    "measures" : [ 100001 ],
+    "layouts" : [ {
+      "id" : 100001,
+      "auto" : true,
+      "col_order" : [ 1, 2, 3, 4, 100001 ],
+      "storage_type" : 20
+    } ]
+  }, {
+    "id" : 100002,
+    "dimensions" : [ 2, 4 ],
+    "measures" : [ 100001 ],
+    "layouts" : [ {
+      "id" : 100003,
+      "auto" : true,
+      "col_order" : [ 2, 4, 100001 ],
+      "storage_type" : 20
+    } ]
+  }, {
+    "id" : 100004,
+    "dimensions" : [ 1, 2 ],
+    "measures" : [ 100001 ],
+    "layouts" : [ {
+      "id" : 100005,
+      "auto" : true,
+      "col_order" : [ 1, 2, 100001 ],
+      "storage_type" : 20
+    } ]
+  }, {
+    "id" : 100007,
+    "dimensions" : [ 1 ],
+    "measures" : [ 100001 ],
+    "layouts" : [ {
+      "id" : 100008,
+      "auto" : true,
+      "col_order" : [ 1, 100001 ],
+      "storage_type" : 20
+    } ]
+  } ],
+  "dictionaries" : [ ],
+  "next_aggregation_index_id" : 1010000,
+  "next_table_index_id" : 20000040000,
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : null,
+  "status_need_notify" : [ ],
+  "engine_type" : 0,
+  "project" : "char_n_column"
+}

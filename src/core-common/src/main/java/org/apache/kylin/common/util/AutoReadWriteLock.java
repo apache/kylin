@@ -30,7 +30,7 @@ public class AutoReadWriteLock {
 
     // ============================================================================
 
-    final private ReentrantReadWriteLock rwlock;
+    private final ReentrantReadWriteLock rwlock;
 
     public AutoReadWriteLock() {
         this(new ReentrantReadWriteLock());

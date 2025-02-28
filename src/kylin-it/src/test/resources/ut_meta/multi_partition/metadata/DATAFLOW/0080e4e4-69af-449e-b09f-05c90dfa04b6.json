@@ -1,0 +1,19 @@
+{
+  "uuid" : "0080e4e4-69af-449e-b09f-05c90dfa04b6",
+  "last_modified" : 1604998096140,
+  "create_time" : 1604997347265,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1604997347266,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "multi_partition",
+  "segment_uuids" : [ ]
+}

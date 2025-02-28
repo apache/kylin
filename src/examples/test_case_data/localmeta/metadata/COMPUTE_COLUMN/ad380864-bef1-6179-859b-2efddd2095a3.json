@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "DEAL_AMOUNT",
+  "expression" : "TEST_KYLIN_FACT.PRICE * TEST_KYLIN_FACT.ITEM_COUNT",
+  "innerExpression": "`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`",
+  "datatype" : "DECIMAL(30,4)",
+  "comment" : "deal amount of left join model (with legacy expression format)",
+  "uuid" : "ad380864-bef1-6179-859b-2efddd2095a3",
+  "project" : "default"
+}

@@ -53,7 +53,7 @@ public interface QueryHistoryIdOffsetMapper {
             @Result(column = "query_history_id_offset", property = "offset", jdbcType = JdbcType.BIGINT),
             @Result(column = "update_time", property = "updateTime", jdbcType = JdbcType.BIGINT),
             @Result(column = "create_time", property = "createTime", jdbcType = JdbcType.BIGINT),
-            @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT)})
+            @Result(column = "mvcc", property = "mvcc", jdbcType = JdbcType.BIGINT) })
     QueryHistoryIdOffset selectOne(SelectStatementProvider selectStatement);
 
     @SelectProvider(type = SqlProviderAdapter.class, method = "select")

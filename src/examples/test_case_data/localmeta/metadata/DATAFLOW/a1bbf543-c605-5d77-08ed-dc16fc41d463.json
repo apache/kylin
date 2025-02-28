@@ -1,0 +1,16 @@
+{
+  "uuid" : "a1bbf543-c605-5d77-08ed-dc16fc41d463",
+  "last_modified" : 1546952007663,
+  "version" : "3.0.0.0",
+  "mvcc" : 2,
+  "description" : null,
+  "owner" : null,
+  "mp_values" : [ ],
+  "create_time_utc" : 1546952007577,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "meta_key" : "a1bbf543-c605-5d77-08ed-dc16fc41d463",
+  "project" : "bad_query_test",
+  "segment_uuids" : [ "1ea97530-5d76-0d5e-c150-fc7d96373bf8", "beea6ee5-c8dc-8990-1f5f-8a00951172e1", "99aaea2a-6d64-6606-8392-f561845a389d" ]
+}

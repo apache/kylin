@@ -1,3 +1,0 @@
-
-select substr(initcap(lstg_format_name),2) a
-from test_kylin_fact

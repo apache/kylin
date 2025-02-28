@@ -20,6 +20,8 @@ package org.apache.kylin.rest.security;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_FAILED;
 
+import org.apache.kylin.guava30.shaded.common.hash.HashFunction;
+import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 import org.apache.kylin.rest.service.LdapUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
-
-import org.apache.kylin.guava30.shaded.common.hash.HashFunction;
-import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 
 /**
  * A wrapper class for the authentication provider; Will do something more for Kylin.

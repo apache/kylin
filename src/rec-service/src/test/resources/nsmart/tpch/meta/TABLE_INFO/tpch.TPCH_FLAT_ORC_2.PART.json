@@ -1,0 +1,47 @@
+{
+  "uuid" : "e50e07a2-9e7f-46f0-9e38-bc83faee85e0",
+  "last_modified" : 1480841307382,
+  "version" : "1.6.1",
+  "name" : "PART",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "P_PARTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "P_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "P_MFGR",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "P_BRAND",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "P_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "P_SIZE",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "P_CONTAINER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "P_RETAILPRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "9",
+    "name" : "P_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH_FLAT_ORC_2",
+  "project" : "tpch"
+}

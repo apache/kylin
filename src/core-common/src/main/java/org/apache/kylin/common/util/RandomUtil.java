@@ -37,6 +37,10 @@ public class RandomUtil {
     public static String randomUUIDStr() {
         return randomUUID().toString();
     }
+    
+    public static String randomUUIDStrWithUnderline() {
+        return randomUUIDStr().replace("-", "_");
+    }
 
     public static int nextInt(final int startInclusive, final int endExclusive) {
         Preconditions.checkArgument(endExclusive >= startInclusive,

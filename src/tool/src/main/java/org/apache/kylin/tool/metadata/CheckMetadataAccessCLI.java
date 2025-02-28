@@ -18,14 +18,16 @@
 
 package org.apache.kylin.tool.metadata;
 
+import static org.apache.kylin.common.persistence.MetadataType.PROJECT;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
@@ -70,9 +72,9 @@ public class CheckMetadataAccessCLI {
         logger.info("Start to test. Test metastore is: " + config.getMetadataUrl().toString());
         //test store's connection.
         try {
-            store.collectResourceRecursively(ResourceStore.PROJECT_ROOT, MetadataConstants.FILE_SURFIX);
+            store.listResourcesRecursively(PROJECT.name());
         } catch (Exception e) {
-            logger.error("Connection test failed." + e.getCause());
+            logger.error("Connection test failed." + e.getCause(), e);
             return false;
         }
 
@@ -107,7 +109,7 @@ public class CheckMetadataAccessCLI {
             }, projectName);
         } catch (TransactionException e) {
             logger.error("Update test failed." + e.getMessage());
-            clean(store, ProjectInstance.concatResourcePath(projectName));
+            clean(store, MetadataType.mergeKeyWithType(projectName, PROJECT));
             return false;
         }
 
@@ -118,7 +120,7 @@ public class CheckMetadataAccessCLI {
                 return null;
             }, projectName);
         } catch (TransactionException e) {
-            clean(store, ProjectInstance.concatResourcePath(projectName));
+            clean(store, MetadataType.mergeKeyWithType(projectName, PROJECT));
             logger.error("Deletion test failed");
             return false;
         }

@@ -67,7 +67,7 @@ public class ParquetBloomFilter {
             return;
         }
         try {
-            project = project.toUpperCase();
+            project = StringUtils.upperCase(project);
             FileSystem fs = HadoopUtil.getFileSystem(config.getHdfsWorkingDirectory());
             Path filterInfo = new Path(QueryFiltersCollector.FILTER_STORAGE_PATH);
             if (!fs.exists(filterInfo)) {
@@ -82,8 +82,8 @@ public class ParquetBloomFilter {
                 if (!fs.exists(projectFiltersFile)) {
                     continue;
                 }
-                Map<String, Map<String, Integer>> modelColumns = JsonUtil.readValue(
-                        HadoopUtil.readStringFromHdfs(fs, projectFiltersFile), Map.class);
+                Map<String, Map<String, Integer>> modelColumns = JsonUtil
+                        .readValue(HadoopUtil.readStringFromHdfs(fs, projectFiltersFile), Map.class);
                 if (modelColumns.containsKey(modelId)) {
                     modelColumns.get(modelId).forEach((column, hit) -> {
                         int originHit = columnsHits.getOrDefault(column, 0);
@@ -106,7 +106,7 @@ public class ParquetBloomFilter {
             return;
         }
         String manualColumn = config.getBloomBuildColumn();
-        String bloomColumnIds= config.getBloomBuildColumnIds();
+        String bloomColumnIds = config.getBloomBuildColumnIds();
         if (StringUtils.isNotBlank(manualColumn)) {
             String[] blooms = manualColumn.split("#");
             for (int i = 0; i < blooms.length; i += 2) {
@@ -130,8 +130,8 @@ public class ParquetBloomFilter {
             return;
         }
         Set<String> columns = Arrays.stream(data.columns()).collect(Collectors.toSet());
-        Set<ColumnFilter> dataColumns = columnFilters.stream()
-                .filter(column -> columns.contains(column.columnId)).collect(Collectors.toSet());
+        Set<ColumnFilter> dataColumns = columnFilters.stream().filter(column -> columns.contains(column.columnId))
+                .collect(Collectors.toSet());
         int count = 0;
         for (ColumnFilter columnFilter : dataColumns) {
             if (count >= config.getBloomBuildColumnMaxNum()) {

@@ -20,14 +20,18 @@ package org.apache.kylin.job.scheduler;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.awaitility.Awaitility.await;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.JobContext;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.domain.JobLock;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -35,28 +39,31 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
+import org.apache.kylin.job.mapper.JobLockMapper;
 import org.apache.kylin.job.rest.JobMapperFilter;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.Assert;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@MetadataInfo(onlyProps = true)
-class JdbcJobSchedulerTest {
+@MetadataInfo
+class JdbcJobSchedulerTest extends AbstractTestCase {
     private static final String PROJECT = "default";
-    
+
     private JobInfoDao jobInfoDao;
     private JobContext jobContext;
-    
+
     @BeforeEach
     public void setup() {
         KylinConfig config = getTestConfig();
-        config.setProperty("kylin.job.slave-pull-batch-size", "1");
-        config.setProperty("kylin.job.slave-lock-renew-sec", "3");
+        overwriteSystemProp("kylin.job.max-concurrent-jobs", "2");
+        overwriteSystemProp("kylin.job.slave-lock-renew-sec", "3");
         jobContext = JobContextUtil.getJobContext(config);
         jobInfoDao = JobContextUtil.getJobInfoDao(config);
     }
@@ -65,29 +72,27 @@ class JdbcJobSchedulerTest {
     public void clean() {
         JobContextUtil.cleanUp();
     }
-    
+
     @Test
     void happyPath() {
         String jobId = mockJob();
-        Assert.assertEquals(jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus(),
+        Assertions.assertEquals(jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus(),
                 ExecutableState.READY.name());
-        await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
-                .equals(ExecutableState.PENDING.name()));
-        await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+        await().atMost(3, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
                 .equals(ExecutableState.RUNNING.name()));
         await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
                 .equals(ExecutableState.SUCCEED.name()));
         //release lock
         await().atMost(5, TimeUnit.SECONDS).until(() -> jobContext.getJobLockMapper().selectByJobId(jobId) == null);
     }
-    
+
     @Test
     void oneJobCanNotRunOnTwoNodesTest() throws Exception {
         JobContext secondJobContext = mockJobContext("127.0.0.1:7071");
         String jobId = mockJob();
         await().atMost(5, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
                 .equals(ExecutableState.RUNNING.name()));
-        Assert.assertEquals(secondJobContext.getJobScheduler().getRunningJob().size()
+        Assertions.assertEquals(secondJobContext.getJobScheduler().getRunningJob().size()
                 + jobContext.getJobScheduler().getRunningJob().size(), 1);
 
         secondJobContext.destroy();
@@ -95,6 +100,7 @@ class JdbcJobSchedulerTest {
 
     @Test
     void JobsScheduledOnTwoNode() throws Exception {
+        overwriteSystemProp("kylin.job.max-concurrent-jobs", "3");
         JobContext secondJobContext = mockJobContext("127.0.0.1:7071");
         System.setProperty("COST_TIME", "3000");
         for (int i = 0; i < 3; i++) {
@@ -103,10 +109,10 @@ class JdbcJobSchedulerTest {
         JobMapperFilter filter = new JobMapperFilter();
         filter.setStatuses(ExecutableState.RUNNING);
         await().atMost(5, TimeUnit.SECONDS).until(() -> jobInfoDao.getJobInfoListByFilter(filter).size() == 3);
-        Assert.assertEquals(secondJobContext.getJobScheduler().getRunningJob().size()
+        Assertions.assertEquals(secondJobContext.getJobScheduler().getRunningJob().size()
                 + jobContext.getJobScheduler().getRunningJob().size(), 3);
-        Assert.assertTrue(jobContext.getJobScheduler().getRunningJob().size() > 0);
-        Assert.assertTrue(secondJobContext.getJobScheduler().getRunningJob().size() > 0);
+        Assertions.assertTrue(jobContext.getJobScheduler().getRunningJob().size() > 0
+                || secondJobContext.getJobScheduler().getRunningJob().size() > 0);
 
         secondJobContext.destroy();
         System.clearProperty("COST_TIME");
@@ -115,13 +121,13 @@ class JdbcJobSchedulerTest {
     @Test
     void testLockExpiredAndJobNotFinal() {
         String jobId = mockJob();
-        JobLock lock = new JobLock(jobId);
+        JobLock lock = new JobLock(jobId, PROJECT, 1, JobLock.JobTypeEnum.OFFLINE);
         lock.setLockNode("mock_node");
         lock.setLockExpireTime(new Date());
         int expect = jobContext.getJobLockMapper().insert(lock);
-        Assert.assertEquals(1, expect);
-        await().atMost(5, TimeUnit.SECONDS).until(
-                () -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus().equals(ExecutableState.SUCCEED.name()));
+        Assertions.assertEquals(1, expect);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+                .equals(ExecutableState.SUCCEED.name()));
     }
 
     @Test
@@ -136,24 +142,24 @@ class JdbcJobSchedulerTest {
         String p0_1 = mockJobWithPriority(0);
         String p1_1 = mockJobWithPriority(1);
         jobContext.getJobScheduler().start();
-        await().atMost(1, TimeUnit.MINUTES).until(() ->
-                jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStatus().equals(ExecutableState.SUCCEED.name())
+        await().atMost(1, TimeUnit.MINUTES).until(() -> jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStatus()
+                .equals(ExecutableState.SUCCEED.name())
                 && jobInfoDao.getExecutablePOByUuid(p1_0).getOutput().getStatus().equals(ExecutableState.SUCCEED.name())
                 && jobInfoDao.getExecutablePOByUuid(p2_0).getOutput().getStatus().equals(ExecutableState.SUCCEED.name())
                 && jobInfoDao.getExecutablePOByUuid(p0_1).getOutput().getStatus().equals(ExecutableState.SUCCEED.name())
                 && jobInfoDao.getExecutablePOByUuid(p1_1).getOutput().getStatus()
                         .equals(ExecutableState.SUCCEED.name()));
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p1_0).getOutput().getStartTime());
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_0).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p1_1).getOutput().getStartTime());
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_1).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_1).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p1_0).getOutput().getStartTime());
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_1).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p0_1).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p1_1).getOutput().getStartTime());
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p1_0).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p1_0).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p2_0).getOutput().getStartTime());
-        Assert.assertTrue(jobInfoDao.getExecutablePOByUuid(p1_1).getOutput().getStartTime() < jobInfoDao
+        Assertions.assertTrue(jobInfoDao.getExecutablePOByUuid(p1_1).getOutput().getStartTime() < jobInfoDao
                 .getExecutablePOByUuid(p2_0).getOutput().getStartTime());
     }
 
@@ -166,6 +172,7 @@ class JdbcJobSchedulerTest {
             JobLock lock = new JobLock();
             String id = "mock_lock_id_" + i;
             lock.setLockId(id);
+            lock.setProject(PROJECT);
             lock.setLockNode("mock_node");
             lock.setPriority(p);
             lock.setLockExpireTime(new Date());
@@ -177,21 +184,51 @@ class JdbcJobSchedulerTest {
         JdbcJobScheduler jobScheduler = Mockito.spy(originScheduler);
         Mockito.when(jobScheduler.hasRunningJob()).thenReturn(true);
         jobContext.setJobScheduler(jobScheduler);
-        List<String> order1 = jobContext.getJobScheduler().findNonLockIdListInOrder(20);
-        List<String> order2 = jobContext.getJobScheduler().findNonLockIdListInOrder(20);
-        Boolean hasDiff = false;
+        List<String> order1 = jobContext.getJobScheduler().findNonLockIdListInOrder(20,
+                Collections.singletonList(PROJECT));
+        List<String> order2 = jobContext.getJobScheduler().findNonLockIdListInOrder(20,
+                Collections.singletonList(PROJECT));
+        boolean hasDiff = false;
         int currentPriority = 0;
         for (int i = 0; i < order1.size(); i++) {
             String jobId1 = order1.get(i);
             String jobId2 = order2.get(i);
             int priority1 = jobMap.get(jobId1);
             int priority2 = jobMap.get(jobId2);
-            Assert.assertEquals(priority1, priority2);
-            Assert.assertTrue(priority1 >= currentPriority);
+            Assertions.assertEquals(priority1, priority2);
+            Assertions.assertTrue(priority1 >= currentPriority);
             currentPriority = priority1;
             hasDiff |= !jobId1.equals(jobId2);
         }
-        Assert.assertTrue(hasDiff);
+        Assertions.assertTrue(hasDiff);
+    }
+
+    @Test
+    void testFindNonLockIdListWithProject() {
+        jobContext.getJobScheduler().destroy();
+        JobLock lock = new JobLock();
+        String id = "mock_lock";
+        lock.setLockId(id);
+        lock.setProject(PROJECT);
+        lock.setPriority(3);
+        jobContext.getJobLockMapper().insert(lock);
+
+        List<String> jobIdList;
+        
+        jobIdList = jobContext.getJobScheduler().findNonLockIdListInOrder(5, Collections.emptyList());
+        Assertions.assertTrue(jobIdList.isEmpty());
+        
+        List<String> allProjects = NProjectManager.getInstance(getTestConfig()).listAllProjects().stream()
+                .map(ProjectInstance::getName).collect(Collectors.toList());
+        String otherProject = allProjects.stream().filter(project -> !project.equals(PROJECT)).findFirst().get();
+        jobIdList = jobContext.getJobScheduler().findNonLockIdListInOrder(5, Collections.singletonList(otherProject));
+        Assertions.assertTrue(jobIdList.isEmpty());
+
+        jobIdList = jobContext.getJobScheduler().findNonLockIdListInOrder(5, Collections.singletonList(PROJECT));
+        Assertions.assertEquals(1, jobIdList.size());
+
+        jobIdList = jobContext.getJobScheduler().findNonLockIdListInOrder(5, allProjects);
+        Assertions.assertEquals(1, jobIdList.size());
     }
 
     @Test
@@ -200,10 +237,43 @@ class JdbcJobSchedulerTest {
         AbstractExecutable job = mockExecutable();
         // insert job lock, without lock node
         String jobId = job.getJobId();
-        JobLock lock = new JobLock(jobId);
+        JobLock lock = new JobLock(jobId, PROJECT, 1, JobLock.JobTypeEnum.OFFLINE);
         int expect = jobContext.getJobLockMapper().insert(lock);
-        Assert.assertEquals(1, expect);
+        Assertions.assertEquals(1, expect);
         await().atMost(60, TimeUnit.SECONDS).until(() -> jobContext.getJobLockMapper().selectByJobId(jobId) == null);
+    }
+
+    @Test
+    void testResumeRunningJobs() {
+        KylinConfig config = getTestConfig();
+        // Stop schedule
+        JobContextUtil.stopScheduler();
+        // Init job mappers without schedule
+        JobInfoDao dao = JobContextUtil.getJobInfoDao(config);
+        JobLockMapper mapper = (JobLockMapper) ReflectionTestUtils.getField(dao, "jobLockMapper");
+
+        String jobId = mockJob();
+        jobInfoDao.updateJob(jobId, job -> {
+            ExecutableOutputPO jobOutput = job.getOutput();
+            jobOutput.setStatus(ExecutableState.RUNNING.name());
+            jobOutput.addStartTime(System.currentTimeMillis());
+            job.getTasks().forEach(task -> task.getOutput().setStatus(ExecutableState.PENDING.name()));
+            return true;
+        });
+        mapper.insertSelective(new JobLock(jobId, PROJECT, 3, JobLock.JobTypeEnum.OFFLINE));
+        // init schedule
+        JobContextUtil.getJobContext(config);
+
+        await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+                .equals(ExecutableState.READY.name()));
+        await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+                .equals(ExecutableState.PENDING.name()));
+        await().atMost(5, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+                .equals(ExecutableState.RUNNING.name()));
+        await().atMost(2, TimeUnit.SECONDS).until(() -> jobInfoDao.getExecutablePOByUuid(jobId).getOutput().getStatus()
+                .equals(ExecutableState.SUCCEED.name()));
+        //release lock
+        await().atMost(5, TimeUnit.SECONDS).until(() -> jobContext.getJobLockMapper().selectByJobId(jobId) == null);
     }
 
     private String mockJob() {

@@ -23,10 +23,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.loader.utils.ClassLoaderUtils;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.loader.utils.ClassLoaderUtils;
 
 import lombok.extern.slf4j.Slf4j;
 

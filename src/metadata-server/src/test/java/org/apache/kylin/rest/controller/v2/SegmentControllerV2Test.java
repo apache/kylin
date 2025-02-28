@@ -25,12 +25,13 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.request.CubeRebuildRequest;
 import org.apache.kylin.rest.request.SegmentMgmtRequest;
 import org.apache.kylin.rest.response.JobInfoResponse;
@@ -56,8 +57,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class SegmentControllerV2Test extends NLocalFileMetadataTestCase {
 

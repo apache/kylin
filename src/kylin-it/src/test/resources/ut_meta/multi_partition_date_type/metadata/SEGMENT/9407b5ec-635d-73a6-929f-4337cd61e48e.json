@@ -1,0 +1,87 @@
+{
+  "name" : "20211031000000_20211101000000",
+  "create_time_utc" : 1641380003303,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1635656400000,
+    "date_range_end" : 1635742800000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "'abc_4_3912'",
+      "max" : "'abc_4_90674'"
+    },
+    "1" : {
+      "min" : "10003912",
+      "max" : "10090674"
+    },
+    "12" : {
+      "min" : "2021-10-31",
+      "max" : "2021-10-31"
+    },
+    "2" : {
+      "min" : "2021-10-31 00:00:01.0",
+      "max" : "2021-10-31 23:59:28.0"
+    },
+    "3" : {
+      "min" : "3912",
+      "max" : "90674"
+    },
+    "4" : {
+      "min" : "41",
+      "max" : "908"
+    },
+    "5" : {
+      "min" : "39123912",
+      "max" : "9067490674"
+    },
+    "6" : {
+      "min" : "2021-10-31 00:00:01",
+      "max" : "2021-10-31 23:59:28"
+    },
+    "7" : {
+      "min" : "10003912",
+      "max" : "10090674"
+    },
+    "10" : {
+      "min" : "41.0",
+      "max" : "908.0"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1641384285656,
+  "source_count" : 2592,
+  "source_bytes_size" : 14623650,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_FACT_13_10W.INT_1" : 20736,
+    "TEST_DB.TEST_FACT_13_10W.DOUBLE_5" : 0,
+    "TEST_DB.TEST_FACT_13_10W.STRING_8" : 31456,
+    "TEST_DB.TEST_FACT_13_10W.DATE_6" : 25920,
+    "TEST_DB.TEST_FACT_13_10W.DATE_7" : 0,
+    "TEST_DB.TEST_FACT_13_10W.TIMESTAMP_10" : 54432,
+    "TEST_DB.TEST_FACT_13_10W.INT_0" : 10720,
+    "TEST_DB.TEST_FACT_13_10W.STRING_9" : 49248,
+    "TEST_DB.TEST_FACT_13_10W.BIGINT_12" : 0,
+    "TEST_DB.TEST_FACT_13_10W.BIGINT_3" : 5536,
+    "TEST_DB.TEST_FACT_13_10W.ID" : 21441,
+    "TEST_DB.TEST_FACT_13_10W.TIMESTAMP_11" : 0,
+    "TEST_DB.TEST_FACT_13_10W.BIGINT_2" : 20736,
+    "TEST_DB.TEST_FACT_13_10W.DOUBLE_4" : 10720
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "9407b5ec-635d-73a6-929f-4337cd61e48e",
+  "model_uuid" : "3718b614-5191-2254-77e9-f4c5ca64e309",
+  "project" : "multi_partition_date_type"
+}

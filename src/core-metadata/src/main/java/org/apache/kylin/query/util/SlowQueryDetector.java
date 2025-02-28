@@ -26,11 +26,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -78,9 +77,11 @@ public class SlowQueryDetector extends Thread {
     }
 
     public void queryStart(String stopId) {
-        runningQueries.put(currentThread(), new QueryEntry(System.currentTimeMillis(), currentThread(),
-                QueryContext.current().getQueryId(), QueryContext.current().getUserSQL(), stopId, false,
-                QueryContext.current().getQueryTagInfo().isAsyncQuery(), null, CancelFlag.getContextCancelFlag()));
+        runningQueries.put(currentThread(),
+                new QueryEntry(System.currentTimeMillis(), currentThread(), QueryContext.current().getQueryId(),
+                        QueryContext.current().getUserSQL(), stopId, false,
+                        QueryContext.current().getQueryTagInfo().isAsyncQuery(), false, null,
+                        CancelFlag.getContextCancelFlag()));
     }
 
     public void addJobIdForAsyncQueryJob(String jobId) {
@@ -189,6 +190,7 @@ public class SlowQueryDetector extends Thread {
         final String stopId;
         boolean isStopByUser;
         final boolean isAsyncQuery;
+        boolean isTimeoutStop;
         String jobId;
         final CancelFlag plannerCancelFlag;
 
@@ -196,12 +198,13 @@ public class SlowQueryDetector extends Thread {
             return (System.currentTimeMillis() - startTime) / 1000;
         }
 
-        public boolean setInterruptIfTimeout() {
+        public synchronized boolean setInterruptIfTimeout() {
             if (isAsyncQuery) {
                 return false;
             }
             long runningMs = System.currentTimeMillis() - startTime;
             if (runningMs >= queryTimeoutMs) {
+                isTimeoutStop = true;
                 plannerCancelFlag.requestCancel();
                 thread.interrupt();
                 logger.error("Trying to cancel query: {}", thread.getName());
@@ -209,6 +212,10 @@ public class SlowQueryDetector extends Thread {
             }
 
             return false;
+        }
+
+        public synchronized CancelFlag getPlannerCancelFlag() {
+            return plannerCancelFlag;
         }
     }
 }

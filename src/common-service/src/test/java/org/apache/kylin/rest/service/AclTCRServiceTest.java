@@ -93,7 +93,9 @@ import lombok.val;
 import lombok.var;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class })
 public class AclTCRServiceTest extends NLocalFileMetadataTestCase {
 
@@ -1315,7 +1317,7 @@ public class AclTCRServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(userService.isGlobalAdmin("ADMIN")).thenReturn(true);
         List<SidPermissionWithAclResponse> responses = accessService.getUserOrGroupAclPermissions(projects, "ADMIN",
                 true);
-        Assert.assertEquals(30, responses.size());
+        Assert.assertEquals(35, responses.size());
         Assert.assertTrue(responses.stream().allMatch(response -> "ADMIN".equals(response.getProjectPermission())));
 
         // test normal group

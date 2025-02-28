@@ -1,0 +1,81 @@
+{
+  "uuid" : "74fdd9d5-b6d2-4058-8e64-0a701515b14f",
+  "last_modified" : 1483156117110,
+  "version" : "1.6.1",
+  "table_name" : "SSB.PART",
+  "last_build_job_id" : "ff96f919-3c63-4232-90fc-2caad9785ecf",
+  "columns_stats" : [ {
+    "max_value" : "426",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 434
+  }, {
+    "max_value" : "yellow turquoise",
+    "min_value" : "almond chocolate",
+    "max_length_value" : "aquamarine firebrick",
+    "min_length_value" : "hot sky",
+    "null_count" : 0,
+    "cardinality" : 418
+  }, {
+    "max_value" : "MFGR#10",
+    "min_value" : "MFGR#01",
+    "max_length_value" : "MFGR#01",
+    "min_length_value" : "MFGR#01",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "MFGR#1010",
+    "min_value" : "MFGR#0101",
+    "max_length_value" : "MFGR#0102",
+    "min_length_value" : "MFGR#0102",
+    "null_count" : 0,
+    "cardinality" : 95
+  }, {
+    "max_value" : "MFGR#10100000000000000000000000000000000000000000000000000000000SMALL PLATED STEEL",
+    "min_value" : "MFGR#01010000000000000000000000000000000000000000000000000000000ECONOMY BRUSHED STEEL",
+    "max_length_value" : "MFGR#01080000000000000000000000000000000000000000000000000000000STANDARD BURNISHED NICKEL",
+    "min_length_value" : "MFGR#010200523",
+    "null_count" : 0,
+    "cardinality" : 437
+  }, {
+    "max_value" : "white",
+    "min_value" : "",
+    "max_length_value" : "00000000000000000000000000000000STANDARD BURNISHED NICKEL",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 194
+  }, {
+    "max_value" : "STANDARD POLISHED TIN",
+    "min_value" : "ECONOMY ANODIZED BRASS",
+    "max_length_value" : "STANDARD BURNISHED NICKEL",
+    "min_length_value" : "PROMO PLATED TIN",
+    "null_count" : 0,
+    "cardinality" : 140
+  }, {
+    "max_value" : "50",
+    "min_value" : "1",
+    "max_length_value" : "21",
+    "min_length_value" : "7",
+    "null_count" : 0,
+    "cardinality" : 51
+  }, {
+    "max_value" : "WRAP PKG",
+    "min_value" : "JUMBO BAG",
+    "max_length_value" : "JUMBO CASE",
+    "min_length_value" : "SM PKG",
+    "null_count" : 0,
+    "cardinality" : 38
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "lace spring", "green antique", "blush chiffon", "blanched tan", "rose moccasin", "turquoise sandy", "blue olive", "dark sky", "navy orange", "forest floral" ], [ "MFGR#01", "MFGR#06", "MFGR#07", "MFGR#09", "MFGR#07", "MFGR#05", "MFGR#09", "MFGR#05", "MFGR#03", "MFGR#07" ], [ "MFGR#0102", "MFGR#0603", "MFGR#0710", "MFGR#0901", "MFGR#0701", "MFGR#0507", "MFGR#0906", "MFGR#0508", "MFGR#0301", "MFGR#0708" ], [ "MFGR#010200523", "MFGR#06030000234", "MFGR#0710000000236", "MFGR#090100000000071", "MFGR#07010000000000414", "MFGR#0507000000000000942", "MFGR#090600000000000000814", "MFGR#05080000000000000000934", "MFGR#0301000000000000000000584", "MFGR#070800000000000000000000431" ], [ "goldenrod", "dark", "forest", "blue", "thistle", "chocolate", "ghost", "navajo", "burnished", "" ], [ "PROMO BURNISHED COPPER", "STANDARD POLISHED BRASS", "STANDARD POLISHED TIN", "SMALL PLATED COPPER", "SMALL BURNISHED STEEL", "STANDARD BURNISHED NICKEL", "MEDIUM BURNISHED NICKEL", "LARGE ANODIZED BRASS", "ECONOMY BRUSHED STEEL", "SMALL ANODIZED NICKEL" ], [ "7", "21", "15", "45", "12", "43", "1", "45", "16", "33" ], [ "JUMBO PKG", "WRAP CASE", "SM PKG", "SM BAG", "WRAP CASE", "WRAP BOX", "JUMBO PACK", "LG CASE", "LG BOX", "WRAP BOX" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "426",
+  "data_source_properties" : { },
+  "project" : "ssb"
+}

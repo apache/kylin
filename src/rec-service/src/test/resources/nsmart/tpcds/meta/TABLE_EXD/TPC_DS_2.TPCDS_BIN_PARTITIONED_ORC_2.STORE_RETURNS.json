@@ -1,0 +1,163 @@
+{
+  "uuid" : "ed12a0fb-6428-4968-8b2a-fb2f3acba4b1",
+  "last_modified" : 1497609456184,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.STORE_RETURNS",
+  "last_build_job_id" : "8faa2176-fed8-424c-a5a6-6c4336f295ac",
+  "columns_stats" : [ {
+    "max_value" : "61199",
+    "min_value" : "28799",
+    "max_length_value" : "48602",
+    "min_length_value" : "48602",
+    "null_count" : 19753,
+    "cardinality" : 32614
+  }, {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "20557",
+    "min_length_value" : "7",
+    "null_count" : 0,
+    "cardinality" : 26057
+  }, {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "116587",
+    "min_length_value" : "3",
+    "null_count" : 20044,
+    "cardinality" : 141789
+  }, {
+    "max_value" : "1920800",
+    "min_value" : "2",
+    "max_length_value" : "1293100",
+    "min_length_value" : "2",
+    "null_count" : 19808,
+    "cardinality" : 489508
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "4486",
+    "min_length_value" : "2",
+    "null_count" : 20019,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "28415",
+    "min_length_value" : "4",
+    "null_count" : 20111,
+    "cardinality" : 70004
+  }, {
+    "max_value" : "22",
+    "min_value" : "1",
+    "max_length_value" : "16",
+    "min_length_value" : "8",
+    "null_count" : 19979,
+    "cardinality" : 12
+  }, {
+    "max_value" : "36",
+    "min_value" : "1",
+    "max_length_value" : "23",
+    "min_length_value" : "1",
+    "null_count" : 19913,
+    "cardinality" : 37
+  }, {
+    "max_value" : "480000",
+    "min_value" : "1",
+    "max_length_value" : "293761",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 342885
+  }, {
+    "max_value" : "100",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "9",
+    "null_count" : 19919,
+    "cardinality" : 100
+  }, {
+    "max_value" : "16917.12",
+    "min_value" : "0.0",
+    "max_length_value" : "10003.84",
+    "min_length_value" : "0.0",
+    "null_count" : 20010,
+    "cardinality" : 171899
+  }, {
+    "max_value" : "1293.73",
+    "min_value" : "0.0",
+    "max_length_value" : "1035.18",
+    "min_length_value" : "0.0",
+    "null_count" : 20089,
+    "cardinality" : 37534
+  }, {
+    "max_value" : "17593.8",
+    "min_value" : "0.0",
+    "max_length_value" : "12557.11",
+    "min_length_value" : "5.6",
+    "null_count" : 19957,
+    "cardinality" : 217427
+  }, {
+    "max_value" : "100.0",
+    "min_value" : "0.5",
+    "max_length_value" : "71.82",
+    "min_length_value" : "2.5",
+    "null_count" : 20001,
+    "cardinality" : 9648
+  }, {
+    "max_value" : "8631.06",
+    "min_value" : "0.0",
+    "max_length_value" : "3320.19",
+    "min_length_value" : "4.1",
+    "null_count" : 19824,
+    "cardinality" : 112240
+  }, {
+    "max_value" : "16550.24",
+    "min_value" : "0.0",
+    "max_length_value" : "11316.07",
+    "min_length_value" : "0.0",
+    "null_count" : 19935,
+    "cardinality" : 149199
+  }, {
+    "max_value" : "12635.61",
+    "min_value" : "0.0",
+    "max_length_value" : "11368.24",
+    "min_length_value" : "9.2",
+    "null_count" : 20042,
+    "cardinality" : 104067
+  }, {
+    "max_value" : "12327.07",
+    "min_value" : "0.0",
+    "max_length_value" : "10639.78",
+    "min_length_value" : "1.2",
+    "null_count" : 20121,
+    "cardinality" : 104273
+  }, {
+    "max_value" : "9256.12",
+    "min_value" : "0.51",
+    "max_length_value" : "2058.99",
+    "min_length_value" : "9.5",
+    "null_count" : 19810,
+    "cardinality" : 168231
+  }, {
+    "max_value" : "2452822",
+    "min_value" : "2450820",
+    "max_length_value" : "2450861",
+    "min_length_value" : "2450861",
+    "null_count" : 19976,
+    "cardinality" : 2030
+  } ],
+  "sample_rows" : [ [ "31007", "35434", "41310", "56560", "58490", "", "32961", "55309", "", "" ], [ "20461", "4809", "14757", "1211", "21567", "22601", "21297", "22291", "13737", "53" ], [ "121518", "27822", "94068", "65667", "61043", "28742", "66075", "40739", "81930", "46534" ], [ "1755543", "", "676725", "1776317", "1216347", "959502", "458894", "623659", "1026724", "263460" ], [ "4830", "4630", "7004", "3607", "2687", "194", "4595", "", "554", "4161" ], [ "56536", "46622", "28515", "9019", "5959", "29679", "27707", "28442", "26639", "64098" ], [ "14", "20", "20", "2", "4", "10", "22", "19", "1", "16" ], [ "21", "8", "16", "5", "7", "33", "33", "31", "21", "34" ], [ "364435", "293568", "301088", "252761", "147990", "346173", "437324", "243219", "352663", "435471" ], [ "5", "4", "32", "79", "2", "10", "", "3", "3", "23" ], [ "329.45", "257.73", "14.54", "3.52", "34.92", "5364.02", "1648.5", "2380.32", "84.24", "7.98" ], [ "0.0", "57.1", "206.3", "55.58", "75.32", "6.11", "61.34", "23.1", "47.43", "15.08" ], [ "757.38", "342.0", "2345.11", "111.07", "123.1", "2693.94", "1192.24", "5006.0", "89.77", "110.55" ], [ "75.77", "40.27", "82.36", "33.87", "84.77", "60.52", "44.52", "0.76", "79.3", "63.9" ], [ "269.28", "20.06", "923.56", "347.89", "96.98", "", "909.28", "93.2", "102.96", "9.3" ], [ "1446.38", "184.9", "1364.0", "952.26", "48.13", "33.73", "307.1", "958.83", "22.85", "656.59" ], [ "0.0", "4.97", "1.8", "0.17", "105.98", "964.2", "738.93", "3349.5", "4.14", "487.62" ], [ "112.02", "108.28", "2.12", "0.16", "317.83", "3.4", "29.03", "28.76", "114.81", "282.17" ], [ "175.89", "1638.14", "127.95", "839.32", "2726.32", "57.34", "41.72", "226.11", "329.53", "28.45" ], [ "2452167", "2452167", "2452167", "2452167", "2452167", "2452167", "2452167", "2452167", "2452167", "2452167" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "575285",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "0",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/store_returns",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "SR_RETURNED_DATE_SK",
+    "owner" : "root",
+    "total_file_number" : "0"
+  },
+  "project" : "TPC_DS_2"
+}

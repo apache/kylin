@@ -1,0 +1,16 @@
+{
+  "uuid" : "908e0597-7176-4361-84bb-ed8bbee1d133",
+  "last_modified" : 1591855756911,
+  "create_time" : 1591846800171,
+  "version" : "4.0.0.0",
+  "name" : "infer_filter",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1591846800171,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "principal" : null,
+  "keytab" : null,
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "project" : "_global"
+}

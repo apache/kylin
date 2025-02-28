@@ -1,0 +1,240 @@
+{
+  "uuid" : "78a24200-7943-4634-98d4-0ac614628181",
+  "last_modified" : 1497949773292,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CALL_CENTER",
+  "last_build_job_id" : "de7ea2ea-84e8-4a3e-abc0-72e390827839",
+  "columns_stats" : [ {
+    "max_value" : "8",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "max_value" : "AAAAAAAAIAAAAAAA",
+    "min_value" : "AAAAAAAABAAAAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "2002-01-01",
+    "min_value" : "1998-01-01",
+    "max_length_value" : "1998-01-01",
+    "min_length_value" : "1998-01-01",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2001-12-31",
+    "min_value" : "",
+    "max_length_value" : "2000-12-31",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : null,
+    "min_value" : null,
+    "max_length_value" : null,
+    "min_length_value" : null,
+    "null_count" : 8,
+    "cardinality" : 0
+  }, {
+    "max_value" : "2451063",
+    "min_value" : "2450806",
+    "max_length_value" : "2450952",
+    "min_length_value" : "2450952",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Pacific Northwest",
+    "min_value" : "California",
+    "max_length_value" : "Pacific Northwest",
+    "min_length_value" : "NY Metro",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "small",
+    "min_value" : "large",
+    "max_length_value" : "medium",
+    "min_length_value" : "large",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "23",
+    "min_value" : "1",
+    "max_length_value" : "23",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "13087",
+    "min_value" : "649",
+    "max_length_value" : "13087",
+    "min_length_value" : "649",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "max_value" : "8AM-8AM",
+    "min_value" : "8AM-12AM",
+    "max_length_value" : "8AM-12AM",
+    "min_length_value" : "8AM-4PM",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "Wayne Ray",
+    "min_value" : "Alden Snyder",
+    "max_length_value" : "Felipe Perkins",
+    "min_length_value" : "Wayne Ray",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "6",
+    "min_value" : "2",
+    "max_length_value" : "6",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "Wrong troops shall work sometimes in a opti",
+    "min_value" : "A bit narrow forms matter animals. Consist",
+    "max_length_value" : "Dealers make most historical, direct students",
+    "min_length_value" : "More than other authori",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "Shared others could not count fully dollars. New members ca",
+    "min_value" : "Blue, due beds come. Politicians would not make far thoughts. Specifically new horses partic",
+    "max_length_value" : "Blue, due beds come. Politicians would not make far thoughts. Specifically new horses partic",
+    "min_length_value" : "Common, free creditors should exper",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "Matthew Clifton",
+    "min_value" : "Daniel Weller",
+    "max_length_value" : "Frederick Weaver",
+    "min_length_value" : "Julius Tran",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "5",
+    "min_value" : "1",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "pri",
+    "min_value" : "anti",
+    "max_length_value" : "ought",
+    "min_length_value" : "pri",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "6",
+    "min_value" : "1",
+    "max_length_value" : "6",
+    "min_length_value" : "6",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "pri",
+    "min_value" : "able",
+    "max_length_value" : "cally",
+    "min_length_value" : "pri",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "984",
+    "min_value" : "415",
+    "max_length_value" : "730",
+    "min_length_value" : "730",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Pine Ridge",
+    "min_value" : "Ash Hill",
+    "max_length_value" : "Jefferson Tenth",
+    "min_length_value" : "Ash Hill",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Way",
+    "min_value" : "Boulevard",
+    "max_length_value" : "Boulevard",
+    "min_length_value" : "RD",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Suite U",
+    "min_value" : "Suite 0",
+    "max_length_value" : "Suite 180",
+    "min_length_value" : "Suite 0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Midway",
+    "min_value" : "Fairview",
+    "max_length_value" : "Fairview",
+    "min_length_value" : "Midway",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Williamson County",
+    "min_value" : "Williamson County",
+    "max_length_value" : "Williamson County",
+    "min_length_value" : "Williamson County",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "TN",
+    "min_value" : "TN",
+    "max_length_value" : "TN",
+    "min_length_value" : "TN",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "35709",
+    "min_value" : "31904",
+    "max_length_value" : "31904",
+    "min_length_value" : "31904",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "United States",
+    "min_value" : "United States",
+    "max_length_value" : "United States",
+    "min_length_value" : "United States",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "-5.0",
+    "min_value" : "-5.0",
+    "max_length_value" : "-5.0",
+    "min_length_value" : "-5.0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "0.12",
+    "min_value" : "0.0",
+    "max_length_value" : "0.11",
+    "min_length_value" : "0.0",
+    "null_count" : 0,
+    "cardinality" : 6
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "", "", "", "", "", "" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAACAAAAAAA", "AAAAAAAAEAAAAAAA", "AAAAAAAAHAAAAAAA", "", "", "", "", "", "" ], [ "1998-01-01", "2001-01-01", "2000-01-02", "1998-01-01", "", "", "", "", "", "" ], [ "", "", "2001-12-31", "", "", "", "", "", "", "" ], [ "", "", "", "", "", "", "", "", "", "" ], [ "2450952", "2450806", "2451063", "2451024", "", "", "", "", "", "" ], [ "NY Metro", "Mid Atlantic", "North Midwest", "Pacific Northwest", "", "", "", "", "", "" ], [ "large", "medium", "small", "small", "", "", "", "", "", "" ], [ "23", "6", "10", "8", "", "", "", "", "", "" ], [ "13087", "4134", "2650", "2216", "", "", "", "", "", "" ], [ "8AM-4PM", "8AM-4PM", "8AM-8AM", "8AM-4PM", "", "", "", "", "", "" ], [ "Bob Belcher", "Mark Hightower", "Larry Mccray", "Alden Snyder", "", "", "", "", "", "" ], [ "6", "2", "2", "6", "", "", "", "", "", "" ], [ "More than other authori", "Wrong troops shall work sometimes in a opti", "Dealers make most historical, direct students", "Major, formal states can suppor", "", "", "", "", "", "" ], [ "Shared others could not count fully dollars. New members ca", "Largely blank years put substantially deaf, new others. Question", "Blue, due beds come. Politicians would not make far thoughts. Specifically new horses partic", "Reduced, subsequent bases could not lik", "", "", "", "", "", "" ], [ "Julius Tran", "Julius Durham", "Gary Colburn", "Frederick Weaver", "", "", "", "", "", "" ], [ "3", "1", "4", "5", "", "", "", "", "", "" ], [ "pri", "ought", "ese", "anti", "", "", "", "", "", "" ], [ "6", "2", "3", "4", "", "", "", "", "", "" ], [ "cally", "able", "pri", "ese", "", "", "", "", "", "" ], [ "730", "984", "463", "415", "", "", "", "", "", "" ], [ "Ash Hill", "Center Hill", "Pine Ridge", "Jefferson Tenth", "", "", "", "", "", "" ], [ "Boulevard", "Way", "RD", "Court", "", "", "", "", "", "" ], [ "Suite 0", "Suite 70", "Suite U", "Suite 180", "", "", "", "", "", "" ], [ "Midway", "Midway", "Midway", "Midway", "", "", "", "", "", "" ], [ "Williamson County", "Williamson County", "Williamson County", "Williamson County", "", "", "", "", "", "" ], [ "TN", "TN", "TN", "TN", "", "", "", "", "", "" ], [ "31904", "31904", "31904", "31904", "", "", "", "", "", "" ], [ "United States", "United States", "United States", "United States", "", "", "", "", "", "" ], [ "-5.0", "-5.0", "-5.0", "-5.0", "", "", "", "", "", "" ], [ "0.11", "0.01", "0.12", "0.0", "", "", "", "", "", "" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "8",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "4808",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/call_center",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

@@ -1,0 +1,139 @@
+--
+-- Licensed to the Apache Software Foundation (ASF) under one
+-- or more contributor license agreements.  See the NOTICE file
+-- distributed with this work for additional information
+-- regarding copyright ownership.  The ASF licenses this file
+-- to you under the Apache License, Version 2.0 (the
+-- "License"); you may not use this file except in compliance
+-- with the License.  You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+
+SELECT "db_3"."F_NAME" AS "F_NAME_3", "db_3"."P_NAME" AS "P_NAME_3", "db_3"."VERSION" AS "VERSION_3", "db_3"."COUNT" AS "COUNT_3", "db_3"."COST" AS "COST_3" FROM (SELECT COUNT(*) AS count_all, SUM(cost) AS cost, test_d_factory.F_NAME AS F_NAME
+    , test_d_product.P_NAME AS P_NAME, descrip_c AS version
+FROM t_demo_.t_demo_data t_demo_data
+    LEFT JOIN t_test.test_d_date test_d_date ON t_demo_data.date_id = test_d_date.date_id
+    LEFT JOIN t_test.test_d_media test_d_media ON t_demo_data.media_id = test_d_media.media_id
+    LEFT JOIN t_test.test_d_media_cate test_d_media_cate ON test_d_media.media_cate_id = test_d_media_cate.media_cate_id
+    LEFT JOIN t_test.test_d_location test_d_location ON test_d_media.location_id = test_d_location.location_id
+    LEFT JOIN t_test.test_d_product test_d_product ON test_d_product.product_id = t_demo_data.prod_id
+    LEFT JOIN t_test.test_d_brand test_d_brand ON test_d_product.brand_id = test_d_brand.brand_id
+    LEFT JOIN t_test.test_d_factory test_d_factory ON test_d_product.factory_id = test_d_factory.factory_id
+    LEFT JOIN t_test.test_d_prod_cate test_d_prod_cate ON test_d_product.prod_cate_id = test_d_prod_cate.prod_cate_id
+    LEFT JOIN t_test.test_d_program pre_pg ON pre_pg.prog_id = t_demo_data.pre_pg_id
+    LEFT JOIN t_test.test_d_program post_pg ON post_pg.prog_id = t_demo_data.post_pg_id
+    LEFT JOIN t_test.test_d_prog_cate pre_prog_cate ON pre_prog_cate.prog_cate_id = pre_pg.prog_cate_id
+    LEFT JOIN t_test.test_d_prog_cate post_prog_cate ON post_prog_cate.prog_cate_id = post_pg.prog_cate_id
+    LEFT JOIN t_test.test_d_brd_cate test_d_brd_cate ON test_d_brd_cate.brd_cate_id = t_demo_data.cate_brd_id
+    LEFT JOIN t_test.ov_media_alias ov_media_alias ON ov_media_alias.media_id = test_d_media.media_id
+WHERE (test_d_media.media_type = 7
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 7 AND test_d_media.monitor_type = 0
+                AND test_d_media.media_id = 20001 AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR ( test_d_media.media_type = 5 AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 5 AND test_d_media.monitor_type = 1
+                AND ( test_d_media.media_id = 9139 OR test_d_media.media_id = 9130 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230630)))
+            OR ( test_d_media.media_type = 5 AND test_d_media.monitor_type = 0
+                AND ( test_d_media.media_id = 9030 OR test_d_media.media_id = 9026 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))
+            OR ( test_d_media.media_type = 5 AND test_d_media.monitor_type = 1
+                AND ( test_d_media.media_id = 9139 OR test_d_media.media_id = 9130 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 4
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 4 AND test_d_media.monitor_type = 0
+                AND test_d_location.region_id = '1' AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 6
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 6 AND test_d_media.monitor_type = 0
+                AND ( test_d_media.media_id = 10008 OR test_d_media.media_id = 10761 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 3
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 3 AND test_d_media.monitor_type = 0
+                AND test_d_location.region_id = '1' AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 1
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 1 AND test_d_media.monitor_type = 0
+                AND test_d_location.region_id = '1' AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 2
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 2 AND test_d_media.monitor_type = 0
+                AND test_d_location.region_id = '1' AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+    OR (test_d_media.media_type = 8
+        AND test_d_product.product_id = 482564 AND test_d_date.date_id >= 20220101
+        AND test_d_date.date_id <= 20220131
+        AND day_of_week = 1 AND (1 = 2
+            OR ( test_d_media.media_type = 8 AND test_d_media.monitor_type = 0
+                AND ( test_d_media.media_id = 40077 OR test_d_media.media_id = 40011 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))
+            OR ( test_d_media.media_type = 8 AND test_d_media.monitor_type = 1
+                AND ( test_d_media.media_id = 40173 OR test_d_media.media_id = 40001 )
+                AND (1 = 2
+                    OR test_d_prod_cate.big_cate_id = 'T' OR test_d_prod_cate.mid_cate_id = 'Ty' OR test_d_prod_cate.small_cate_id = 'T22' )
+                AND (1 = 2
+                    OR (test_d_date.date_id >= 20150101
+                        AND test_d_date.date_id <= 20230228)))))
+GROUP BY test_d_factory.F_NAME, test_d_product.P_NAME, descrip_c) "db_3" WHERE ( "db_3"."F_NAME" = '测试F' ) AND ( "db_3"."P_NAME" = '测试P' ) limit 1000

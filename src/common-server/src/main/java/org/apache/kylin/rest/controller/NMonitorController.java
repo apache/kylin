@@ -26,6 +26,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.rest.request.AlertMessageRequest;
 import org.apache.kylin.rest.response.ClusterStatisticStatusResponse;
 import org.apache.kylin.rest.response.ClusterStatusResponse;
@@ -33,6 +34,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutorMemoryResponse;
 import org.apache.kylin.rest.response.ExecutorThreadInfoResponse;
 import org.apache.kylin.rest.service.MonitorService;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBIOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -43,9 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBIOException;
 import io.swagger.annotations.ApiOperation;
 
 @Controller

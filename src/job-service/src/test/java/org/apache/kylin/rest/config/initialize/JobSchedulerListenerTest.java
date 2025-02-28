@@ -45,6 +45,7 @@ import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.assertj.core.util.Lists;
@@ -55,7 +56,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;

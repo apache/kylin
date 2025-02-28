@@ -19,19 +19,18 @@ package org.apache.kylin.tool.obf;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class MappingRecorder implements Closeable {
     private boolean isClosed = false;
-    private File output;
+    private final File output;
     private Map<String, Map<String, String>> mapping = Maps.newConcurrentMap();
 
     public MappingRecorder(File output) {
@@ -72,7 +71,7 @@ public class MappingRecorder implements Closeable {
             return;
         }
 
-        try (OutputStream os = new FileOutputStream(output)) {
+        try (OutputStream os = Files.newOutputStream(output.toPath())) {
             JsonUtil.writeValue(os, mapping);
             os.flush();
         }

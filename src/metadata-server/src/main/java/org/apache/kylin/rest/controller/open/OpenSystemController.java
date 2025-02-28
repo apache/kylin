@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import io.swagger.annotations.ApiOperation;
 
 @Controller
-@RequestMapping(value = "/api", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
+@RequestMapping(value = "/api", produces = { HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class OpenSystemController extends NBasicController {
 
     @Autowired

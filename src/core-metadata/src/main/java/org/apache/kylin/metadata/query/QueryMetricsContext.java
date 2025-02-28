@@ -32,16 +32,16 @@ import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.RoutingIndicatorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class QueryMetricsContext extends QueryMetrics {
 
@@ -115,6 +115,7 @@ public class QueryMetricsContext extends QueryMetrics {
         this.queryJobCount = context.getMetrics().getQueryJobCount();
         this.queryStageCount = context.getMetrics().getQueryStageCount();
         this.queryTaskCount = context.getMetrics().getQueryTaskCount();
+        this.cpuTime = context.getMetrics().getCpuTime();
         this.isPushdown = context.getQueryTagInfo().isPushdown();
         this.isTimeout = context.getQueryTagInfo().isTimeout();
         if (context.getQueryTagInfo().isStorageCacheUsed() && context.getEngineType() != null) {
@@ -145,20 +146,21 @@ public class QueryMetricsContext extends QueryMetrics {
 
         collectErrorType(context);
         List<RealizationMetrics> realizationMetricList = collectRealizationMetrics(
-                QueryContext.current().getNativeQueryRealizationList());
-        updateSecondStorageStatus(context, realizationMetricList);
+                QueryContext.current().getQueryRealizations());
 
         QueryHistoryInfo queryHistoryInfo = new QueryHistoryInfo(context.getMetrics().isExactlyMatch(),
                 context.getMetrics().getSegCount(),
                 Objects.nonNull(this.errorType) && !this.errorType.equals(QueryHistory.NO_REALIZATION_FOUND_ERROR));
         queryHistoryInfo.setRealizationMetrics(realizationMetricList);
 
+        queryHistoryInfo.setQueryMetrics(collectQueryMetrics());
+
         List<List<String>> querySnapshots = new ArrayList<>();
-        for (QueryContext.NativeQueryRealization qcReal : QueryContext.current().getNativeQueryRealizationList()) {
-            if (CollectionUtils.isEmpty(qcReal.getSnapshots())) {
+        for (NativeQueryRealization qcReal : QueryContext.current().getQueryRealizations()) {
+            if (CollectionUtils.isEmpty(qcReal.getLookupTables())) {
                 continue;
             }
-            querySnapshots.add(qcReal.getSnapshots());
+            querySnapshots.add(qcReal.getLookupTables());
         }
         queryHistoryInfo.setQuerySnapshots(querySnapshots);
         queryHistoryInfo.setCacheType(this.cacheType);
@@ -180,19 +182,6 @@ public class QueryMetricsContext extends QueryMetrics {
                 return new QueryHistoryInfo.QueryTraceSpan(span.getName(), span.getGroup(), span.getDuration());
             }
         }).collect(Collectors.toList());
-    }
-
-    public static void updateSecondStorageStatus(final QueryContext context,
-            final List<RealizationMetrics> realizationMetricList) {
-        realizationMetricList.forEach(metric -> {
-            if (Objects.isNull(metric.getLayoutId())) {
-                // When query conditions don't meet segment range, layout id will be null.
-                metric.setSecondStorage(false);
-            } else {
-                metric.setSecondStorage(
-                        context.getSecondStorageUsageMap().getOrDefault(Long.parseLong(metric.getLayoutId()), false));
-            }
-        });
     }
 
     private void collectErrorType(final QueryContext context) {
@@ -228,17 +217,22 @@ public class QueryMetricsContext extends QueryMetrics {
         }
     }
 
-    public List<RealizationMetrics> collectRealizationMetrics(
-            List<QueryContext.NativeQueryRealization> queryRealization) {
+    public List<QueryMetric> collectQueryMetrics() {
+        List<QueryMetric> queryMetrics = new ArrayList<>();
+        queryMetrics.add(new QueryMetric(QueryHistory.CPU_TIME,this.cpuTime));
+        return queryMetrics;
+    }
+
+    public List<RealizationMetrics> collectRealizationMetrics(List<NativeQueryRealization> queryRealizations) {
         List<RealizationMetrics> realizationMetricList = new ArrayList<>();
-        if (CollectionUtils.isEmpty(queryRealization)) {
+        if (CollectionUtils.isEmpty(queryRealizations)) {
             return realizationMetricList;
         }
 
-        for (QueryContext.NativeQueryRealization realization : queryRealization) {
+        for (NativeQueryRealization realization : queryRealizations) {
             RealizationMetrics realizationMetrics = new RealizationMetrics(
-                    Objects.toString(realization.getLayoutId(), null), realization.getIndexType(),
-                    realization.getModelId(), realization.getSnapshots());
+                    Objects.toString(realization.getLayoutId(), null), realization.getType(), realization.getModelId(),
+                    realization.getLookupTables());
             realizationMetrics.setQueryId(queryId);
             realizationMetrics.setDuration(queryDuration);
             realizationMetrics.setQueryTime(queryTime);
@@ -247,20 +241,27 @@ public class QueryMetricsContext extends QueryMetrics {
             realizationMetrics.setQueryFirstDayOfWeek(queryFirstDayOfWeek);
             realizationMetrics.setQueryFirstDayOfMonth(queryFirstDayOfMonth);
             realizationMetrics.setStreamingLayout(realization.isStreamingLayout());
-            realizationMetrics.setSnapshots(realization.getSnapshots());
+            realizationMetrics.setSnapshots(realization.getLookupTables());
             realizationMetricList.add(realizationMetrics);
 
-            if (realization.getIndexType() == null)
+            if (realization.getType() == null) {
                 continue;
+            }
 
-            if (realization.getIndexType().equals(TABLE_INDEX))
+            switch (realization.getType()) {
+            case QueryMetrics.TABLE_INDEX:
                 tableIndexUsed = true;
-
-            if (realization.getIndexType().equals(AGG_INDEX))
+                break;
+            case QueryMetrics.AGG_INDEX:
                 aggIndexUsed = true;
-
-            if (realization.getIndexType().equals(TABLE_SNAPSHOT))
+                break;
+            case QueryMetrics.TABLE_SNAPSHOT:
                 tableSnapshotUsed = true;
+                break;
+            case QueryMetrics.INTERNAL_TABLE:
+                // need change table schema
+                break;
+            }
         }
         return realizationMetricList;
     }

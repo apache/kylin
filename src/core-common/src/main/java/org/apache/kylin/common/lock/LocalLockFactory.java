@@ -18,14 +18,14 @@
 
 package org.apache.kylin.common.lock;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A local version of the distributed lock factory.
@@ -39,6 +39,7 @@ public class LocalLockFactory extends DistributedLockFactory {
     }
 
     private static final HashMap<String, ReentrantLock> cache = new HashMap<>();
+
     private Lock getLockInternal(String client, String lockId) {
         synchronized (cache) {
             cache.putIfAbsent(lockId, new ReentrantLock());
@@ -80,7 +81,7 @@ public class LocalLockFactory extends DistributedLockFactory {
 
         @Override
         public void unlock() {
-            synchronized(cache) {
+            synchronized (cache) {
                 log.debug(client + " unlocking " + lockId);
                 lock.unlock();
                 cache.remove(lockId);

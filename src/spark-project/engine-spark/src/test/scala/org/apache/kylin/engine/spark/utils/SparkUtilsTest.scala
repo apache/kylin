@@ -18,12 +18,12 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
-
-import scala.collection.mutable.{ArrayBuffer, HashMap}
-import scala.reflect.ClassTag
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
+
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 class SparkUtilsTest extends SparderBaseFunSuite with SharedSparkSession {
 

@@ -20,28 +20,37 @@ package org.apache.kylin.job.common;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_INDEX_FAIL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_EMPTY;
+import static org.apache.kylin.job.constant.ExecutableConstants.COLUMNAR_SHUFFLE_MANAGER;
+import static org.apache.kylin.job.constant.ExecutableConstants.GLUTEN_PLUGIN;
+import static org.apache.kylin.job.constant.ExecutableConstants.GLUTEN_PREFIX;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_PLUGINS;
+import static org.apache.kylin.job.constant.ExecutableConstants.SPARK_SHUFFLE_MANAGER;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeProducer;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.NDataModelManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -52,19 +61,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ExecutableUtil {
 
-    static final Map<JobTypeEnum, ExecutableUtil> implementations = Maps.newHashMap();
+    private static final ConcurrentMap<JobTypeEnum, ExecutableUtil> implementations = new ConcurrentHashMap<>();
 
-    public static void registerImplementation(JobTypeEnum type, ExecutableUtil child) {
+    protected static void registerImplementation(JobTypeEnum type, ExecutableUtil child) {
         implementations.put(type, child);
     }
 
-    static {
-        implementations.put(JobTypeEnum.INDEX_BUILD, new IndexBuildJobUtil());
-        implementations.put(JobTypeEnum.INDEX_MERGE, new MergeJobUtil());
-        implementations.put(JobTypeEnum.INDEX_REFRESH, new RefreshJobUtil());
-        implementations.put(JobTypeEnum.INC_BUILD, new SegmentBuildJobUtil());
-        implementations.put(JobTypeEnum.SUB_PARTITION_REFRESH, new RefreshJobUtil());
-        implementations.put(JobTypeEnum.SUB_PARTITION_BUILD, new PartitionBuildJobUtil());
+    private static void registerDefaultImplementations() {
+        registerImplementation(JobTypeEnum.INDEX_BUILD, new IndexBuildJobUtil());
+        registerImplementation(JobTypeEnum.INDEX_MERGE, new MergeJobUtil());
+        registerImplementation(JobTypeEnum.INDEX_REFRESH, new RefreshJobUtil());
+        registerImplementation(JobTypeEnum.INC_BUILD, new SegmentBuildJobUtil());
+        registerImplementation(JobTypeEnum.SUB_PARTITION_REFRESH, new RefreshJobUtil());
+        registerImplementation(JobTypeEnum.SUB_PARTITION_BUILD, new PartitionBuildJobUtil());
+        registerImplementation(JobTypeEnum.LAYOUT_DATA_OPTIMIZE, new LayoutOptimizeJobUtil());
+    }
+
+    public static ExecutableUtil getImplementation(JobTypeEnum type) {
+        // Double-Checked Locking
+        ExecutableUtil implementation = implementations.get(type);
+        if (implementation == null) {
+            synchronized (ExecutableUtil.class) {
+                implementation = implementations.get(type);
+                if (implementation == null) {
+                    registerDefaultImplementations();
+                    implementation = implementations.get(type);
+                }
+            }
+        }
+        return implementation;
     }
 
     public static void computeParams(JobParam jobParam) {
@@ -73,12 +98,12 @@ public abstract class ExecutableUtil {
         if (model != null && model.isMultiPartitionModel()) {
             jobParam.getCondition().put(JobParam.ConditionConstant.MULTI_PARTITION_JOB, true);
         }
-        ExecutableUtil paramUtil = implementations.get(jobParam.getJobTypeEnum());
+        ExecutableUtil paramUtil = getImplementation(jobParam.getJobTypeEnum());
         if (paramUtil != null) {
             paramUtil.computeLayout(jobParam);
-        }
-        if (jobParam.isMultiPartitionJob()) {
-            paramUtil.computePartitions(jobParam);
+            if (jobParam.isMultiPartitionJob()) {
+                paramUtil.computePartitions(jobParam);
+            }
         }
     }
 
@@ -90,8 +115,10 @@ public abstract class ExecutableUtil {
             throw new KylinException(JOB_CREATE_CHECK_MULTI_PARTITION_EMPTY);
         }
         Set<JobBucket> buckets = Sets.newHashSet();
-        NDataflowManager dfm = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject());
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NDataflowManager dfm = NDataflowManager.getInstance(config, jobParam.getProject());
         NDataflow df = dfm.getDataflow(jobParam.getModel());
+        NDataSegmentManager segmentManager = config.getManager(jobParam.getProject(), NDataSegmentManager.class);
 
         for (String targetSegment : jobParam.getTargetSegments()) {
             NDataSegment segment = df.getSegment(targetSegment);
@@ -105,13 +132,16 @@ public abstract class ExecutableUtil {
             }
             jobParam.getProcessLayouts().forEach(layout -> partitions.forEach(partition -> buckets
                     .add(new JobBucket(segment.getId(), layout.getId(), bucketStart.incrementAndGet(), partition))));
-            dfm.updateDataflow(df.getId(),
-                    copyForWrite -> copyForWrite.getSegment(targetSegment).setMaxBucketId(bucketStart.get()));
+            segmentManager.update(segment.getUuid(), copyForWrite -> copyForWrite.setMaxBucketId(bucketStart.get()));
         }
         jobParam.setTargetBuckets(buckets);
     }
 
     public void checkLayoutsNotEmpty(JobParam jobParam) {
+        String enableAutoIndexPlan = jobParam.getExtParams().get(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED);
+        if (Boolean.parseBoolean(enableAutoIndexPlan)) {
+            return;
+        }
         if (CollectionUtils.isEmpty(jobParam.getProcessLayouts())) {
             log.warn("JobParam {} is no longer valid because no layout awaits building", jobParam);
             throw new KylinException(getCheckIndexErrorCode());
@@ -133,5 +163,26 @@ public abstract class ExecutableUtil {
      * Only multi partition model
      */
     public void computePartitions(JobParam jobParam) {
+    }
+
+    public static Map<String, String> removeGultenParams(Map<String, String> params) {
+        params.computeIfPresent(SPARK_PLUGINS, (pluginKey, pluginValue) -> {
+            String tempPluginValue = pluginValue;
+            String comma = ",";
+            if (StringUtils.contains(pluginValue, GLUTEN_PLUGIN)) {
+                tempPluginValue = Arrays.stream(tempPluginValue.split(comma))
+                        .filter(p -> !StringUtils.equals(p, GLUTEN_PLUGIN)).collect(Collectors.joining(comma));
+            }
+            return tempPluginValue;
+        });
+        params.computeIfPresent(SPARK_SHUFFLE_MANAGER, (pluginKey, pluginValue) -> {
+            String tempPluginValue = pluginValue;
+            if (StringUtils.equals(pluginValue, COLUMNAR_SHUFFLE_MANAGER)) {
+                tempPluginValue = "sort";
+            }
+            return tempPluginValue;
+        });
+        return params.entrySet().stream().filter(e -> !e.getKey().startsWith(GLUTEN_PREFIX))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

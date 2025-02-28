@@ -1,0 +1,10 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_MEASURE",
+  "tableAlias" : "TEST_MEASURE",
+  "columnName" : "CC_PRICE3",
+  "expression" : "TEST_MEASURE.PRICE3 + 3.1",
+  "datatype" : "decimal(19,4)",
+  "comment" : "TEST_MEASURE.PRICE3 + 3.1",
+  "uuid" : "bec6ca1c-a9e9-777a-29db-77fa8eced31a",
+  "project" : "default"
+}

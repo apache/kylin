@@ -34,6 +34,7 @@ import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.runtime.plan.ResultPlan;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
@@ -59,8 +60,10 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
     private static final Logger logger = LoggerFactory.getLogger(SlowQueryDetectorTest.class);
     private static final int TIMEOUT_MS = 5 * 1000;
 
+    @Override
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         createTestMetadata();
         slowQueryDetector = new SlowQueryDetector(100, TIMEOUT_MS);
@@ -72,8 +75,9 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
         return "match";
     }
 
+    @Override
     @After
-    public void after() {
+    public void tearDown() {
         cleanupTestMetadata();
         slowQueryDetector.interrupt();
     }
@@ -228,10 +232,12 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
     public void testSparderTimeoutCancelJob() throws Exception {
         val df = SparderEnv.getSparkSession().emptyDataFrame();
         val mockDf = Mockito.spy(df);
+        Mockito.doAnswer(new AnswersWithDelay(TIMEOUT_MS * 3, new Returns(null))).when(mockDf).collectToIterator();
         Mockito.doAnswer(new AnswersWithDelay(TIMEOUT_MS * 3, new Returns(null))).when(mockDf).toIterator();
         slowQueryDetector.queryStart("");
         try {
             SparderEnv.cleanCompute();
+            ContextUtil.clearThreadLocalContexts();
             long t = System.currentTimeMillis();
             ResultPlan.getResult(mockDf, null);
             ExecAndComp.queryModel(getProject(), "select sum(price) from TEST_KYLIN_FACT group by LSTG_FORMAT_NAME");
@@ -240,6 +246,10 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
             logger.error(error);
             Assert.fail(error);
         } catch (Exception e) {
+            boolean timeout = QueryContext.current().getQueryTagInfo().isTimeout();
+            if (!timeout) {
+                logger.error("Unexpected query exception", e);
+            }
             Assert.assertTrue(QueryContext.current().getQueryTagInfo().isTimeout());
             Assert.assertTrue(e instanceof KylinTimeoutException);
             Assert.assertEquals(
@@ -255,6 +265,7 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
     public void testPushdownTimeoutCancelJob() {
         val df = SparderEnv.getSparkSession().emptyDataFrame();
         val mockDf = Mockito.spy(df);
+        Mockito.doAnswer(new AnswersWithDelay(TIMEOUT_MS * 3, new Returns(null))).when(mockDf).collectToIterator();
         Mockito.doAnswer(new AnswersWithDelay(TIMEOUT_MS * 3, new Returns(null))).when(mockDf).toIterator();
         slowQueryDetector.queryStart("");
         try {

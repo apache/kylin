@@ -1,0 +1,211 @@
+{
+  "uuid" : "ef9d08c0-0d5e-4b4d-afe7-a18e7f7003bb",
+  "last_modified" : 1525332612906,
+  "version" : "2.3.0.20500",
+  "name" : "STAPLES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ITEM_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "2",
+    "name" : "SHIP_PRIORITY",
+    "datatype" : "varchar(14)"
+  }, {
+    "id" : "3",
+    "name" : "ORDER_PRIORITY",
+    "datatype" : "varchar(15)"
+  }, {
+    "id" : "4",
+    "name" : "ORDER_STATUS",
+    "datatype" : "varchar(13)"
+  }, {
+    "id" : "5",
+    "name" : "ORDER_QUANTITY",
+    "datatype" : "double"
+  }, {
+    "id" : "6",
+    "name" : "SALES_TOTAL",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "DISCOUNT",
+    "datatype" : "double"
+  }, {
+    "id" : "8",
+    "name" : "TAX_RATE",
+    "datatype" : "double"
+  }, {
+    "id" : "9",
+    "name" : "SHIP_MODE",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "10",
+    "name" : "FILL_TIME",
+    "datatype" : "double"
+  }, {
+    "id" : "11",
+    "name" : "GROSS_PROFIT",
+    "datatype" : "double"
+  }, {
+    "id" : "12",
+    "name" : "PRICE",
+    "datatype" : "decimal(18,4)"
+  }, {
+    "id" : "13",
+    "name" : "SHIP_HANDLE_COST",
+    "datatype" : "decimal(18,4)"
+  }, {
+    "id" : "14",
+    "name" : "EMPLOYEE_NAME",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "15",
+    "name" : "EMPLOYEE_DEPT",
+    "datatype" : "varchar(4)"
+  }, {
+    "id" : "16",
+    "name" : "MANAGER_NAME",
+    "datatype" : "varchar(255)"
+  }, {
+    "id" : "17",
+    "name" : "EMPLOYEE_YRS_EXP",
+    "datatype" : "double"
+  }, {
+    "id" : "18",
+    "name" : "EMPLOYEE_SALARY",
+    "datatype" : "decimal(18,4)"
+  }, {
+    "id" : "19",
+    "name" : "CUSTOMER_NAME",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "20",
+    "name" : "CUSTOMER_STATE",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "21",
+    "name" : "CALL_CENTER_REGION",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "22",
+    "name" : "CUSTOMER_BALANCE",
+    "datatype" : "double"
+  }, {
+    "id" : "23",
+    "name" : "CUSTOMER_SEGMENT",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "24",
+    "name" : "PROD_TYPE1",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "25",
+    "name" : "PROD_TYPE2",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "26",
+    "name" : "PROD_TYPE3",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "27",
+    "name" : "PROD_TYPE4",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "28",
+    "name" : "PRODUCT_NAME",
+    "datatype" : "varchar(100)"
+  }, {
+    "id" : "29",
+    "name" : "PRODUCT_CONTAINER",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "30",
+    "name" : "SHIP_PROMO",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "31",
+    "name" : "SUPPLIER_NAME",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "32",
+    "name" : "SUPPLIER_BALANCE",
+    "datatype" : "double"
+  }, {
+    "id" : "33",
+    "name" : "SUPPLIER_REGION",
+    "datatype" : "varchar(25)"
+  }, {
+    "id" : "34",
+    "name" : "SUPPLIER_STATE",
+    "datatype" : "varchar(50)"
+  }, {
+    "id" : "35",
+    "name" : "ORDER_ID",
+    "datatype" : "varchar(10)"
+  }, {
+    "id" : "36",
+    "name" : "ORDER_YEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "37",
+    "name" : "ORDER_MONTH",
+    "datatype" : "integer"
+  }, {
+    "id" : "38",
+    "name" : "ORDER_DAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "39",
+    "name" : "ORDER_DATE",
+    "datatype" : "timestamp"
+  }, {
+    "id" : "40",
+    "name" : "ORDER_QUARTER",
+    "datatype" : "varchar(2)"
+  }, {
+    "id" : "41",
+    "name" : "PRODUCT_BASE_MARGIN",
+    "datatype" : "double"
+  }, {
+    "id" : "42",
+    "name" : "PRODUCT_ID",
+    "datatype" : "varchar(5)"
+  }, {
+    "id" : "43",
+    "name" : "RECEIVE_TIME",
+    "datatype" : "double"
+  }, {
+    "id" : "44",
+    "name" : "RECEIVED_DATE",
+    "datatype" : "timestamp"
+  }, {
+    "id" : "45",
+    "name" : "SHIP_DATE",
+    "datatype" : "timestamp"
+  }, {
+    "id" : "46",
+    "name" : "SHIP_CHARGE",
+    "datatype" : "decimal(18,4)"
+  }, {
+    "id" : "47",
+    "name" : "TOTAL_CYCLE_TIME",
+    "datatype" : "double"
+  }, {
+    "id" : "48",
+    "name" : "PRODUCT_IN_STOCK",
+    "datatype" : "varchar(3)"
+  }, {
+    "id" : "49",
+    "name" : "PID",
+    "datatype" : "integer"
+  }, {
+    "id" : "50",
+    "name" : "MARKET_SEGMENT",
+    "datatype" : "varchar(25)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TDVT",
+  "project" : "tdvt"
+}

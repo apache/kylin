@@ -18,6 +18,7 @@
 package org.apache.kylin.tool.daemon.handler;
 
 import org.apache.kylin.common.util.SecretKeyUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.tool.daemon.CheckResult;
 import org.apache.kylin.tool.daemon.CheckStateHandler;
 import org.apache.kylin.tool.daemon.HandleResult;
@@ -27,8 +28,6 @@ import org.apache.kylin.tool.daemon.Worker;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public abstract class AbstractCheckStateHandler extends Worker implements CheckStateHandler {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCheckStateHandler.class);

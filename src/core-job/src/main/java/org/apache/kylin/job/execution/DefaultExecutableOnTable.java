@@ -18,9 +18,11 @@
 
 package org.apache.kylin.job.execution;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.rest.delegate.JobStatisticsInvoker;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import lombok.val;
 
@@ -49,6 +51,10 @@ public class DefaultExecutableOnTable extends DefaultExecutable {
         long duration = job.getDuration();
         long endTime = job.getEndTime();
         long startOfDay = TimeUtil.getDayStart(endTime);
-        JobStatisticsInvoker.getInstance().updateStatistics(project, startOfDay, null, duration, 0, 0);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            JobStatisticsManager.getInstance(KylinConfig.getInstanceFromEnv(), project).updateStatistics(startOfDay,
+                    duration, 0, 0);
+            return true;
+        }, project);
     }
 }

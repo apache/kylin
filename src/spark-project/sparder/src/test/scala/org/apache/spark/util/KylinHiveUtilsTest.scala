@@ -18,11 +18,9 @@
 
 package org.apache.spark.util
 
-import org.apache.kylin.guava30.shaded.common.io.Files
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.common.util.Unsafe.overwriteSystemProp
-import org.apache.kylin.common.util.{TempMetadataBuilder, Unsafe}
+import org.apache.kylin.guava30.shaded.common.io.Files
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 
 import java.io.File

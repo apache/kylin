@@ -1,0 +1,219 @@
+{
+  "uuid" : "548a0033-d43b-48bb-b90c-be931cbeed66",
+  "last_modified" : 1497840152463,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.DATE_DIM",
+  "last_build_job_id" : "8a92b99b-0281-4218-8507-adb322207e81",
+  "columns_stats" : [ {
+    "max_value" : "2488070",
+    "min_value" : "2415022",
+    "max_length_value" : "2415022",
+    "min_length_value" : "2415022",
+    "null_count" : 0,
+    "cardinality" : 71692
+  }, {
+    "max_value" : "AAAAAAAAPPPPECAA",
+    "min_value" : "AAAAAAAAAAAAFCAA",
+    "max_length_value" : "AAAAAAAAOKJNECAA",
+    "min_length_value" : "AAAAAAAAOKJNECAA",
+    "null_count" : 0,
+    "cardinality" : 69365
+  }, {
+    "max_value" : "2100-01-01",
+    "min_value" : "1900-01-02",
+    "max_length_value" : "1900-01-02",
+    "min_length_value" : "1900-01-02",
+    "null_count" : 0,
+    "cardinality" : 72117
+  }, {
+    "max_value" : "2400",
+    "min_value" : "0",
+    "max_length_value" : "1000",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 2403
+  }, {
+    "max_value" : "10436",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 10918
+  }, {
+    "max_value" : "801",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 780
+  }, {
+    "max_value" : "2100",
+    "min_value" : "1900",
+    "max_length_value" : "1900",
+    "min_length_value" : "1900",
+    "null_count" : 0,
+    "cardinality" : 197
+  }, {
+    "max_value" : "6",
+    "min_value" : "0",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "12",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "31",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 31
+  }, {
+    "max_value" : "4",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2100",
+    "min_value" : "1900",
+    "max_length_value" : "1900",
+    "min_length_value" : "1900",
+    "null_count" : 0,
+    "cardinality" : 197
+  }, {
+    "max_value" : "801",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 780
+  }, {
+    "max_value" : "10436",
+    "min_value" : "1",
+    "max_length_value" : "10000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 10918
+  }, {
+    "max_value" : "Wednesday",
+    "min_value" : "Friday",
+    "max_length_value" : "Wednesday",
+    "min_length_value" : "Monday",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "2100Q1",
+    "min_value" : "1900Q1",
+    "max_length_value" : "1900Q1",
+    "min_length_value" : "1900Q1",
+    "null_count" : 0,
+    "cardinality" : 837
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "Y",
+    "min_length_value" : "Y",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "2488070",
+    "min_value" : "2415021",
+    "max_length_value" : "2415021",
+    "min_length_value" : "2415021",
+    "null_count" : 0,
+    "cardinality" : 2479
+  }, {
+    "max_value" : "2488372",
+    "min_value" : "2415020",
+    "max_length_value" : "2415020",
+    "min_length_value" : "2415020",
+    "null_count" : 0,
+    "cardinality" : 2392
+  }, {
+    "max_value" : "2487705",
+    "min_value" : "2414657",
+    "max_length_value" : "2414657",
+    "min_length_value" : "2414657",
+    "null_count" : 0,
+    "cardinality" : 71480
+  }, {
+    "max_value" : "2487978",
+    "min_value" : "2414930",
+    "max_length_value" : "2414930",
+    "min_length_value" : "2414930",
+    "null_count" : 0,
+    "cardinality" : 71230
+  }, {
+    "max_value" : "N",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "N",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Y",
+    "min_value" : "N",
+    "max_length_value" : "N",
+    "min_length_value" : "N",
+    "null_count" : 0,
+    "cardinality" : 2
+  } ],
+  "sample_rows" : [ [ "2415022", "2415024", "2415026", "2415028", "2415030", "2415032", "2415034", "2415036", "2415038", "2415040" ], [ "AAAAAAAAOKJNECAA", "AAAAAAAAALJNECAA", "AAAAAAAACLJNECAA", "AAAAAAAAELJNECAA", "AAAAAAAAGLJNECAA", "AAAAAAAAILJNECAA", "AAAAAAAAKLJNECAA", "AAAAAAAAMLJNECAA", "AAAAAAAAOLJNECAA", "AAAAAAAAAMJNECAA" ], [ "1900-01-02", "1900-01-04", "1900-01-06", "1900-01-08", "1900-01-10", "1900-01-12", "1900-01-14", "1900-01-16", "1900-01-18", "1900-01-20" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "1", "1", "1", "1", "2", "2", "2", "3", "3", "3" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900" ], [ "1", "3", "5", "0", "2", "4", "6", "1", "3", "5" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "2", "4", "6", "8", "10", "12", "14", "16", "18", "20" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900", "1900" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "1", "1", "1", "1", "2", "2", "2", "3", "3", "3" ], [ "Monday", "Wednesday", "Friday", "Sunday", "Tuesday", "Thursday", "Saturday", "Monday", "Wednesday", "Friday" ], [ "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1", "1900Q1" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "Y", "N", "N", "N", "Y", "N", "N", "Y" ], [ "Y", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "2415021", "2415021", "2415021", "2415021", "2415021", "2415021", "2415021", "2415021", "2415021", "2415021" ], [ "2415020", "2415020", "2415020", "2415020", "2415020", "2415020", "2415020", "2415020", "2415020", "2415020" ], [ "2414657", "2414659", "2414661", "2414663", "2414665", "2414667", "2414669", "2414671", "2414673", "2414675" ], [ "2414930", "2414932", "2414934", "2414936", "2414938", "2414940", "2414942", "2414944", "2414946", "2414948" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "73049",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "362905",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/date_dim",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

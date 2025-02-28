@@ -99,4 +99,13 @@ public class ToolUtilTest extends NLocalFileMetadataTestCase {
         String path = ToolUtil.getHdfsJobTmpDir("abcd");
         Assert.assertTrue(path.endsWith("abcd/job_tmp"));
     }
+
+    @Test
+    public void testExistsLinuxCommon() {
+        boolean abcdExist = ToolUtil.existsLinuxCommon("abcd");
+        Assert.assertFalse(abcdExist);
+
+        boolean lsExist = ToolUtil.existsLinuxCommon("ls");
+        Assert.assertTrue(lsExist);
+    }
 }

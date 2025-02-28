@@ -1,0 +1,118 @@
+{
+  "name" : "20140401000000_20140402000000",
+  "create_time_utc" : 1701409721181,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1396281600000,
+    "date_range_end" : 1396368000000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "11" : {
+      "min" : "'中国'",
+      "max" : "'中国'"
+    },
+    "12" : {
+      "min" : "'中国'",
+      "max" : "'中国'"
+    },
+    "13" : {
+      "min" : "5",
+      "max" : "5"
+    },
+    "14" : {
+      "min" : "11",
+      "max" : "11"
+    },
+    "15" : {
+      "min" : "12",
+      "max" : "12"
+    },
+    "16" : {
+      "min" : "'中国'",
+      "max" : "'中国'"
+    },
+    "0" : {
+      "min" : "2012-03-31 00:00:00.000",
+      "max" : "2012-03-31 00:00:00.000"
+    },
+    "1" : {
+      "min" : "2014-04-01",
+      "max" : "2014-04-01"
+    },
+    "2" : {
+      "min" : "10000000164",
+      "max" : "10000000165"
+    },
+    "3" : {
+      "min" : "332342342",
+      "max" : "332342342"
+    },
+    "4" : {
+      "min" : "1241",
+      "max" : "1241"
+    },
+    "5" : {
+      "min" : "10",
+      "max" : "11"
+    },
+    "6" : {
+      "min" : "true",
+      "max" : "true"
+    },
+    "7" : {
+      "min" : "1434.2422",
+      "max" : "1434.2422"
+    },
+    "8" : {
+      "min" : "29.334",
+      "max" : "29.334"
+    },
+    "9" : {
+      "min" : "123422.244",
+      "max" : "123422.244"
+    },
+    "10" : {
+      "min" : "3",
+      "max" : "3"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1701409730929,
+  "source_count" : 2,
+  "source_bytes_size" : 2596,
+  "column_source_bytes" : {
+    "TEST_DB.TEST_MEASURE.TIME2" : 42,
+    "TEST_DB.TEST_MEASURE.FLAG" : 8,
+    "TEST_DB.TEST_MEASURE.PRICE6" : 4,
+    "TEST_DB.TEST_MEASURE.PRICE2" : 20,
+    "TEST_DB.TEST_MEASURE.ID3" : 8,
+    "TEST_DB.TEST_MEASURE.PRICE7" : 2,
+    "TEST_DB.TEST_MEASURE.ID2" : 18,
+    "TEST_DB.TEST_MEASURE.NAME2" : 16,
+    "TEST_DB.TEST_MEASURE.PRICE3" : 18,
+    "TEST_DB.TEST_MEASURE.TIME1" : 20,
+    "TEST_DB.TEST_MEASURE.PRICE1" : 12,
+    "TEST_DB.TEST_MEASURE.ID4" : 4,
+    "TEST_DB.TEST_MEASURE.NAME1" : 16,
+    "TEST_DB.TEST_MEASURE.ID1" : 22,
+    "TEST_DB.TEST_MEASURE.NAME3" : 16,
+    "TEST_DB.TEST_MEASURE.PRICE5" : 2,
+    "TEST_DB.TEST_MEASURE.NAME4" : 4
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "904964d7-b4b4-c8f5-187d-fa9b0c7bf6bf",
+  "model_uuid" : "1e12e297-ae63-4019-5e05-f571174ea157",
+  "project" : "multi_partition_date_type"
+}

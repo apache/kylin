@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
@@ -42,24 +43,23 @@ public class QueryFiltersCollector {
 
     // To reduce HDFS storage, only use map to record it.
     // schema: <project, <modelId, <columnId, filter_hit_number>>
-    protected static final ConcurrentMap<String, Map<String, Map<String, Integer>>> currentQueryFilters =
-            Maps.newConcurrentMap();
+    public static final ConcurrentMap<String, Map<String, Map<String, Integer>>> currentQueryFilters = Maps
+            .newConcurrentMap();
 
-    public static final ScheduledExecutorService executor =
-            Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("query-filter-collector"));
+    public static final ScheduledExecutorService executor = Executors
+            .newSingleThreadScheduledExecutor(new NamedThreadFactory("query-filter-collector"));
 
     public static final String SERVER_HOST = AddressUtil.getLocalServerInfo();
 
     // path should start with `_` to avoid being cleaned in storage
-    public static final String FILTER_STORAGE_PATH =
-            KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/_query_filter/";
-
+    public static final String FILTER_STORAGE_PATH = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
+            + "/_query_filter/";
 
     public static void increaseHit(String project, String modelId, String columnId) {
         if (!KylinConfig.getInstanceFromEnv().isBloomCollectFilterEnabled()) {
             return;
         }
-        project = project.toUpperCase();
+        project = StringUtils.upperCase(project);
         Map<String, Integer> modelFilters = getModelFilters(project, modelId);
         int hit = modelFilters.getOrDefault(columnId, 0);
         modelFilters.put(columnId, ++hit);
@@ -101,8 +101,8 @@ public class QueryFiltersCollector {
 
     private static Map<String, Map<String, Integer>> mergeHistory(FileSystem fs,
             Map<String, Map<String, Integer>> currentFilters, Path projectFilterPath) throws IOException {
-        Map<String, Map<String, Integer>> history = JsonUtil.readValue(
-                HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
+        Map<String, Map<String, Integer>> history = JsonUtil
+                .readValue(HadoopUtil.readStringFromHdfs(fs, projectFilterPath), Map.class);
         currentFilters.forEach((currentModel, currentColumns) -> {
             if (!history.containsKey(currentModel)) {
                 history.put(currentModel, currentColumns);
@@ -127,21 +127,21 @@ public class QueryFiltersCollector {
 
     // schema:  <modelId, <columnId, filter_hit_number>>
     private static Map<String, Map<String, Integer>> getProjectFilters(String project) {
-        project = project.toUpperCase();
+        project = StringUtils.upperCase(project);
         currentQueryFilters.computeIfAbsent(project, key -> Maps.newConcurrentMap());
         return currentQueryFilters.get(project);
     }
 
     // schema: <columnId, filter_hit_number>
     private static Map<String, Integer> getModelFilters(String project, String modelId) {
-        project = project.toUpperCase();
+        project = StringUtils.upperCase(project);
         Map<String, Map<String, Integer>> projectFilters = getProjectFilters(project);
         projectFilters.computeIfAbsent(modelId, key -> Maps.newConcurrentMap());
         return projectFilters.get(modelId);
     }
 
     public static Path getProjectFiltersFile(String host, String project) {
-        project = project.toUpperCase();
+        project = StringUtils.upperCase(project);
         return new Path(FILTER_STORAGE_PATH + host + "/" + project);
     }
 

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.GLUTEN_NOT_ENABLED_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ONCE_LOAD_TABLE_LIMIT;
@@ -35,8 +36,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -80,8 +81,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import lombok.experimental.Delegate;
-
 @Component("tableExtService")
 public class TableExtService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(TableExtService.class);
@@ -95,10 +94,10 @@ public class TableExtService extends BasicService {
     private TableService tableService;
 
     @Autowired
-    private AclEvaluate aclEvaluate;
+    private InternalTableService internalTableService;
 
-    @Delegate
-    private final TableMetadataBaseService tableMetadataBaseServer = new TableMetadataBaseService();
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     @Autowired
     private ProjectService projectService;
@@ -130,8 +129,8 @@ public class TableExtService extends BasicService {
             tableResponseFromDB = new LoadTableResponse();
             StringHelper.toUpperCaseArray(request.getDatabases(), request.getDatabases());
             dbs = classifyDbTables(request.getDatabases(), true);
-            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(dbs, project,
-                    true, tableResponseFromDB, existDbs, Maps.newHashMap());
+            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(dbs, project, true,
+                    tableResponseFromDB, existDbs, Maps.newHashMap());
             canLoadTablesFromDB = pair.getFirst();
             count = pair.getSecond();
             checkThreshold(thresholdEnabled, count);
@@ -143,8 +142,8 @@ public class TableExtService extends BasicService {
             StringHelper.toUpperCaseArray(request.getTables(), request.getTables());
             Map<String, Set<String>> tables = classifyDbTables(request.getTables(), false);
             tableResponse = new LoadTableResponse();
-            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(tables, project,
-                    false, tableResponse, existDbs, dbs);
+            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(tables, project, false,
+                    tableResponse, existDbs, dbs);
             canLoadTables = pair.getFirst();
             count = pair.getSecond() + count;
             checkThreshold(thresholdEnabled, count);
@@ -153,7 +152,8 @@ public class TableExtService extends BasicService {
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         if (tableResponseFromDB != null) {
             if (!canLoadTablesFromDB.isEmpty()) {
-                innerLoadTables(project, tableResponseFromDB, canLoadTablesFromDB);
+                innerLoadTables(project, tableResponseFromDB, canLoadTablesFromDB, request.getLoadAsInternal(),
+                        request.getStorageType());
             }
             loadTableResponse.getFailed().addAll(tableResponseFromDB.getFailed());
             loadTableResponse.getLoaded().addAll(tableResponseFromDB.getLoaded());
@@ -162,7 +162,8 @@ public class TableExtService extends BasicService {
 
         if (tableResponse != null) {
             if (!canLoadTables.isEmpty()) {
-                innerLoadTables(project, tableResponse, canLoadTables);
+                innerLoadTables(project, tableResponse, canLoadTables, request.getLoadAsInternal(),
+                        request.getStorageType());
             }
             loadTableResponse.getFailed().addAll(tableResponse.getFailed());
             loadTableResponse.getLoaded().addAll(tableResponse.getLoaded());
@@ -177,8 +178,9 @@ public class TableExtService extends BasicService {
         }
     }
 
-    public Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> findCanLoadTables(Map<String, Set<String>> dbTables, String project,
-            boolean isDb, LoadTableResponse tableResponse, Set<String> existDbs, Map<String, Set<String>> formalDbs) throws Exception {
+    public Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> findCanLoadTables(Map<String, Set<String>> dbTables,
+            String project, boolean isDb, LoadTableResponse tableResponse, Set<String> existDbs,
+            Map<String, Set<String>> formalDbs) throws Exception {
         List<Pair<TableDesc, TableExtDesc>> canLoadTables = Lists.newArrayList();
         List<TableNameResponse> responseAll = Lists.newArrayList();
         for (Map.Entry<String, Set<String>> entry : dbTables.entrySet()) {
@@ -216,8 +218,7 @@ public class TableExtService extends BasicService {
         return new Pair<>(canLoadTables, getTableCount(responseAll, canLoadTables));
     }
 
-    private int getTableCount(List<TableNameResponse> responseAll,
-            List<Pair<TableDesc, TableExtDesc>> canLoadTables) {
+    private int getTableCount(List<TableNameResponse> responseAll, List<Pair<TableDesc, TableExtDesc>> canLoadTables) {
         List<String> loaded = responseAll.stream().filter(TableNameResponse::isLoaded)
                 .map(TableNameResponse::getTableName).collect(Collectors.toList());
         return (int) canLoadTables.stream().filter(t -> !loaded.contains(t.getFirst().getIdentity())).count();
@@ -231,16 +232,15 @@ public class TableExtService extends BasicService {
         List<Pair<TableDesc, TableExtDesc>> canLoadTables = findCanLoadTables(tables, project, isDb, tableResponse,
                 existDbs, Maps.newHashMap()).getFirst();
         if (!canLoadTables.isEmpty()) {
-            return innerLoadTables(project, tableResponse, canLoadTables);
+            return innerLoadTables(project, tableResponse, canLoadTables, false, null);
         }
 
         return tableResponse;
     }
 
     @VisibleForTesting
-    public void filterAccessTables(
-        String[] tables, List<Pair<TableDesc, TableExtDesc>> canLoadTables,
-        LoadTableResponse tableResponse, String project) throws Exception {
+    public void filterAccessTables(String[] tables, List<Pair<TableDesc, TableExtDesc>> canLoadTables,
+            LoadTableResponse tableResponse, String project) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<Pair<TableDesc, TableExtDesc>> toLoadTables = extractTableMeta(tables, project, tableResponse);
         if (!config.isDDLLogicalViewEnabled()) {
@@ -249,21 +249,17 @@ public class TableExtService extends BasicService {
         }
         String viewDB = config.getDDLLogicalViewDB();
         LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
-        toLoadTables.stream()
-            .filter(table -> !table.getFirst().isLogicalView())
-            .forEach(canLoadTables::add);
-        toLoadTables.stream()
-            .filter(table -> table.getFirst().isLogicalView())
-            .forEach(table -> {
-                String tableName = table.getFirst().getName();
-                LogicalView logicalTable = viewManager.get(tableName);
-                String viewProject = logicalTable != null ? logicalTable.getCreatedProject() : "unknown";
-                if (logicalTable != null && viewProject.equalsIgnoreCase(project)) {
-                    canLoadTables.add(table);
-                } else {
-                    tableResponse.getFailed().add(viewDB + "." + tableName);
-                }
-            });
+        toLoadTables.stream().filter(table -> !table.getFirst().isLogicalView()).forEach(canLoadTables::add);
+        toLoadTables.stream().filter(table -> table.getFirst().isLogicalView()).forEach(table -> {
+            String tableName = table.getFirst().getName();
+            LogicalView logicalTable = viewManager.get(tableName);
+            String viewProject = logicalTable != null ? logicalTable.getCreatedProject() : "unknown";
+            if (logicalTable != null && viewProject.equalsIgnoreCase(project)) {
+                canLoadTables.add(table);
+            } else {
+                tableResponse.getFailed().add(viewDB + "." + tableName);
+            }
+        });
     }
 
     public LoadTableResponse loadAWSTablesCompatibleCrossAccount(List<S3TableExtInfo> s3TableExtInfoList,
@@ -314,7 +310,7 @@ public class TableExtService extends BasicService {
             }
         }
         if (!loadTables.isEmpty()) {
-            return innerLoadTables(project, tableResponse, loadTables);
+            return innerLoadTables(project, tableResponse, loadTables, false, null);
         }
 
         return tableResponse;
@@ -362,18 +358,45 @@ public class TableExtService extends BasicService {
     }
 
     private LoadTableResponse innerLoadTables(String project, LoadTableResponse tableResponse,
-            List<Pair<TableDesc, TableExtDesc>> loadTables) {
+            List<Pair<TableDesc, TableExtDesc>> loadTables, Boolean loadAsInternal, String storageType) {
+        int batchSize = NProjectManager.getProjectConfig(project).getLoadTableBatchSize();
+        List<List<Pair<TableDesc, TableExtDesc>>> batches = splitIntoBatches(loadTables, batchSize);
+        // check if gluten enabled before load table
+        if (loadAsInternal && !KylinConfig.getInstanceFromEnv().queryUseGlutenEnabled()) {
+            throw new KylinException(GLUTEN_NOT_ENABLED_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getGlutenDisabled()));
+        }
+        for (List<Pair<TableDesc, TableExtDesc>> batch : batches) {
+            try {
+                microBatchLoadTable(project, tableResponse, batch, loadAsInternal, storageType);
+            } catch (Exception e) {
+                logger.error("Load table transaction failure : ", e);
+                tableResponse.getFailed()
+                        .addAll(batch.stream().map(pair -> pair.getFirst().getIdentity()).collect(Collectors.toSet()));
+            }
+        }
+        return tableResponse;
+    }
+
+    private LoadTableResponse microBatchLoadTable(String project, LoadTableResponse tableResponse,
+            List<Pair<TableDesc, TableExtDesc>> batch, Boolean loadAsInternal, String storageType) {
         return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> { //
             NTableMetadataManager tableManager = NTableMetadataManager.getInstance(KylinConfig.readSystemKylinConfig(),
                     project);
-            loadTables.forEach(pair -> {
-                String tableName = pair.getFirst().getIdentity();
+            batch.forEach(pair -> {
+                TableDesc tableDesc = pair.getFirst();
+                TableExtDesc tableExtDesc = pair.getSecond();
+                String tableName = tableDesc.getIdentity();
                 boolean success = true;
                 boolean realLoaded = false;
                 if (tableManager.getTableDesc(tableName) == null) {
                     realLoaded = true;
                     try {
-                        loadTable(pair.getFirst(), pair.getSecond(), project);
+                        tableDesc.setProject(project);
+                        loadTable(tableDesc, tableExtDesc, project);
+                        if (loadAsInternal) {
+                            internalTableService.createInternalTable(project, tableDesc, storageType);
+                        }
                     } catch (Exception ex) {
                         logger.error("Failed to load table ({}/{})", project, tableName, ex);
                         success = false;
@@ -389,13 +412,25 @@ public class TableExtService extends BasicService {
         }, project, 2);
     }
 
+    private List<List<Pair<TableDesc, TableExtDesc>>> splitIntoBatches(List<Pair<TableDesc, TableExtDesc>> loadTables,
+            int batchSize) {
+        List<List<Pair<TableDesc, TableExtDesc>>> batches = new ArrayList<>();
+        for (int i = 0; i < loadTables.size(); i += batchSize) {
+            batches.add(new ArrayList<>(loadTables.subList(i, Math.min(i + batchSize, loadTables.size()))));
+        }
+        logger.info("Split all {} table into {} batches", loadTables.size(), batches.size());
+        return batches;
+    }
+
     private List<Pair<TableDesc, TableExtDesc>> extractTableMeta(String[] tables, String project,
             LoadTableResponse tableResponse) throws IOException, InterruptedException {
         UserGroupInformation ugi = KerberosLoginManager.getInstance().getProjectUGI(project);
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
         return ugi.doAs((PrivilegedExceptionAction<List<Pair<TableDesc, TableExtDesc>>>) () -> {
             ProjectInstance projectInstance = getManager(NProjectManager.class).getProject(project);
-            List<Pair<TableDesc, TableExtDesc>> extractTableMetas = tableService.extractTableMeta(tables, project);
-            if (projectInstance.isProjectKerberosEnabled()) {
+            List<Pair<TableDesc, TableExtDesc>> extractTableMetas = tableService.extractTableMeta(tables, project,
+                    tableResponse);
+            if (config.getTableAccessFilterEnable() && projectInstance.isProjectKerberosEnabled()) {
                 return extractTableMetas.stream().map(pair -> {
                     TableDesc tableDesc = pair.getFirst();
                     String tableName = tableDesc.getIdentity();
@@ -439,10 +474,10 @@ public class TableExtService extends BasicService {
     @Transaction(project = 2)
     public void loadTable(TableDesc tableDesc, TableExtDesc extDesc, String project) {
         checkBeforeLoadTable(tableDesc, project);
-        String[] loaded = tableService.loadTableToProject(tableDesc, extDesc, project);
+        String loaded = tableService.loadTableToProject(tableDesc, extDesc, project);
         // sanity check when loaded is empty or loaded table is not the table
         String tableName = tableDesc.getIdentity();
-        if (loaded.length == 0 || !loaded[0].equals(tableName))
+        if (loaded == null || !loaded.equals(tableName))
             throw new IllegalStateException();
 
     }
@@ -489,7 +524,8 @@ public class TableExtService extends BasicService {
         // query from all projects
         List<ProjectInstance> projectInstances = projectService.getReadableProjects(null, false);
         for (ProjectInstance projectInstance : projectInstances) {
-            NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, projectInstance.getName());
+            NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class,
+                    projectInstance.getName());
             tableNames.addAll(matchTableNames(nTableMetadataManager, fuzzyKey, exact));
         }
         return tableNames;

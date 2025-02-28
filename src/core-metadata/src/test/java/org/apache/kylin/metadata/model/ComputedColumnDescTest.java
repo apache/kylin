@@ -22,13 +22,12 @@ import java.util.Set;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ComputedColumnDescTest extends NLocalFileMetadataTestCase {
 

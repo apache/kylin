@@ -18,10 +18,10 @@
 package org.apache.kylin.engine.spark.smarter
 
 import org.apache.kylin.common.KylinConfig
-
-import java.util.concurrent.{BlockingQueue, LinkedBlockingQueue}
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
+
+import java.util.concurrent.{BlockingQueue, LinkedBlockingQueue}
 
 class BuildAppStatusStore(val kylinConfig: KylinConfig, val sc: SparkContext) extends Logging {
 

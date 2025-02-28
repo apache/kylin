@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;

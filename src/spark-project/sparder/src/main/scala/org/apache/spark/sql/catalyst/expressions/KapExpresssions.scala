@@ -17,16 +17,20 @@
  */
 package org.apache.spark.sql.catalyst.expressions
 
+import org.apache.kylin.common.util.TimeUtil
 import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionaryV2}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.analysis.{FunctionRegistry, TypeCheckResult}
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
 import org.apache.spark.sql.catalyst.expressions.codegen.Block._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode, FalseLiteral}
-import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData, KapDateTimeUtils}
+import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData, KapDateTimeUtils, TypeUtils}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.udf._
+import org.apache.spark.unsafe.types.UTF8String
 
+import java.math.RoundingMode
 import java.time.ZoneId
 import java.util.Locale
 import scala.collection.JavaConverters._
@@ -122,9 +126,6 @@ case class KapSubtractMonths(a: Expression, b: Expression)
   }
 
 }
-
-import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.util.TypeUtils
 
 @ExpressionDescription(
   usage = "_FUNC_(expr) - Returns the sum calculated from values of a group. " +
@@ -310,41 +311,137 @@ case class KylinTimestampDiff(left: Expression, mid: Expression, right: Expressi
   }
 }
 
-case class Truncate(_left: Expression, _right: Expression) extends BinaryExpression with ExpectsInputTypes {
-  override def left: Expression = _left
+case class Truncate(child: Expression, scale: Expression) extends BinaryExpression {
 
-  override def right: Expression = _right
+  override def left: Expression = child
+  override def right: Expression = scale
 
-  override def inputTypes: Seq[AbstractDataType] =
-    Seq(TypeCollection(IntegerType, LongType, DoubleType, DecimalType, IntegerType, FloatType, ShortType, ByteType), IntegerType)
+  private val mode: RoundingMode = RoundingMode.DOWN
+  private val modeStr: String = "ROUND_DOWN"
 
-  def this(exp: Expression) = this(exp, Literal(0, IntegerType))
+  def this(child: Expression) = this(child, Literal(0, IntegerType))
 
-  override protected def nullSafeEval(input1: Any, input2: Any): Any = {
-    val value2 = input2.asInstanceOf[Int]
-    left.dataType match {
-      case IntegerType => TruncateImpl.evaluate(input1.asInstanceOf[Int], value2)
-      case DoubleType => TruncateImpl.evaluate(input1.asInstanceOf[Double], value2)
-      case FloatType => TruncateImpl.evaluate(input1.asInstanceOf[Float], value2)
-      case ShortType => TruncateImpl.evaluate(input1.asInstanceOf[Short], value2)
-      case ByteType => TruncateImpl.evaluate(input1.asInstanceOf[Byte], value2)
-      case LongType => TruncateImpl.evaluate(input1.asInstanceOf[Long], value2)
-      case DecimalType() => TruncateImpl.evaluate(input1.asInstanceOf[Decimal], value2)
+  override lazy val dataType: DataType = child.dataType match {
+    // if the new scale is bigger which means we are scaling up,
+    // keep the original scale as `Decimal` does
+    case DecimalType.Fixed(p, s) =>
+      try {
+        val scaleEV = scale.eval(EmptyRow)
+        val scaleValue = scaleEV.asInstanceOf[Int]
+        DecimalType(p, scala.math.max(scala.math.min(s, scaleValue), 0))
+      } catch {
+        case _: Exception => left.dataType
+      }
+    case t => t
+  }
+
+  override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val ce = child.genCode(ctx)
+    val scaleEV = scale.genCode(ctx)
+    val scaleValue = if (scaleEV == null) null else scaleEV.value
+
+    val evaluationCode = left.dataType match {
+      case DecimalType.Fixed(_, _) =>
+        s"""
+           |java.math.BigDecimal value = ${ce.value}.toJavaBigDecimal().setScale(${scaleValue}, java.math.BigDecimal.${modeStr});
+           |${ev.value} = Decimal.apply(value);
+           |${ev.isNull} = ${ev.value} == null;
+         """.stripMargin
+      case ByteType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).byteValue();"""
+      case ShortType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).shortValue();"""
+      case IntegerType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).intValue();"""
+      case LongType =>
+        s"""
+          ${ev.value} = new java.math.BigDecimal(${ce.value}).
+            setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).longValue();"""
+      case FloatType => // if child eval to NaN or Infinity, just return it.
+        s"""
+          if (Float.isNaN(${ce.value}) || Float.isInfinite(${ce.value})) {
+            ${ev.value} = ${ce.value};
+          } else {
+            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
+              setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).floatValue();
+          }"""
+      case DoubleType => // if child eval to NaN or Infinity, just return it.
+        s"""
+          if (Double.isNaN(${ce.value}) || Double.isInfinite(${ce.value})) {
+            ${ev.value} = ${ce.value};
+          } else {
+            ${ev.value} = java.math.BigDecimal.valueOf(${ce.value}).
+              setScale(${scaleValue}, java.math.BigDecimal.${modeStr}).doubleValue();
+          }"""
+    }
+
+    val javaType = CodeGenerator.javaType(dataType)
+    if (scaleEV == null || java.lang.Boolean.parseBoolean(s"${scaleEV.isNull}")) { // if scale is null, no need to eval its child at all
+      ev.copy(code = code"""
+        boolean ${ev.isNull} = true;
+        $javaType ${ev.value} = ${CodeGenerator.defaultValue(dataType)};""")
+    } else {
+      ev.copy(code = code"""
+        ${ce.code}
+        ${scaleEV.code}
+        boolean ${ev.isNull} = ${ce.isNull};
+        $javaType ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
+        if (!${ev.isNull} && !${scaleEV.isNull}) {
+          $evaluationCode
+        }""")
     }
   }
 
-  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val tr = TruncateImpl.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (arg1, arg2) => {
-      s"""$tr.evaluate($arg1, $arg2)"""
-    })
+  override def eval(input: InternalRow): Any = {
+    val scaleEV = scale.eval(input)
+    if (scaleEV == null) { // if scale is null, no need to eval its child at all
+      null
+    } else {
+      val evalE = child.eval(input)
+      if (evalE == null) {
+        null
+      } else {
+        nullSafeEval(evalE, scaleEV.asInstanceOf[Int])
+      }
+    }
   }
 
-  override def dataType: DataType = left.dataType
+  override def nullSafeEval(input1: Any, input2: Any): Any = {
+    val scaleValue = input2.asInstanceOf[Int]
+    left.dataType match {
+      case DecimalType.Fixed(p, s) =>
+        val decimal = input1.asInstanceOf[Decimal]
+        val value = decimal.toJavaBigDecimal.setScale(scaleValue, mode)
+        Decimal.apply(value)
+      case ByteType => new java.math.BigDecimal(input1.asInstanceOf[Byte]).setScale(scaleValue, mode).byteValue()
+      case ShortType => new java.math.BigDecimal(input1.asInstanceOf[Short]).setScale(scaleValue, mode).shortValue()
+      case IntegerType => new java.math.BigDecimal(input1.asInstanceOf[Int]).setScale(scaleValue, mode).intValue()
+      case LongType => new java.math.BigDecimal(input1.asInstanceOf[Long]).setScale(scaleValue, mode).longValue()
+      case FloatType =>
+        val f = input1.asInstanceOf[Float]
+        if (f.isNaN || f.isInfinite) {
+          f
+        } else {
+          new java.math.BigDecimal(input1.asInstanceOf[Float]).setScale(scaleValue, mode).floatValue()
+        }
+      case DoubleType =>
+        val d = input1.asInstanceOf[Double]
+        if (d.isNaN || d.isInfinite) {
+          d
+        } else {
+          new java.math.BigDecimal(input1.asInstanceOf[Double]).setScale(scaleValue, mode).doubleValue()
+        }
+    }
+  }
 
-  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-    val newChildren = Seq(newLeft, newRight)
-    super.legacyWithNewChildren(newChildren)
+  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Truncate = {
+    copy(child = newLeft, scale = newRight)
   }
 }
 
@@ -616,66 +713,6 @@ case class IntersectCountByCol(childrenExp: Seq[Expression]) extends Expression 
     super.legacyWithNewChildren(newChildren)
 }
 
-case class SubtractBitmapUUID(child1: Expression, child2: Expression) extends BinaryExpression with ExpectsInputTypes {
-  override def nullable: Boolean = false
-
-  override def eval(input: InternalRow): Array[Byte] = {
-    val map1 = child1.eval(input).asInstanceOf[Array[Byte]]
-    val map2 = child2.eval(input).asInstanceOf[Array[Byte]]
-    SubtractBitmapImpl.evaluate2Bytes(map1, map2)
-  }
-
-  override def dataType: DataType = BinaryType
-
-  override def left: Expression = child1
-
-  override def right: Expression = child2
-
-  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType, BinaryType)
-
-  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val sb = SubtractBitmapImpl.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (arg1, arg2) => {
-      s"""$sb.evaluate2Bytes($arg1, $arg2)"""
-    })
-  }
-
-  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-    val newChildren = Seq(newLeft, newRight)
-    super.legacyWithNewChildren(newChildren)
-  }
-}
-
-case class SubtractBitmapValue(child1: Expression, child2: Expression, upperBound: Int) extends BinaryExpression with ExpectsInputTypes {
-  override def nullable: Boolean = false
-
-  override def eval(input: InternalRow): GenericArrayData = {
-    val map1 = child1.eval(input).asInstanceOf[Array[Byte]]
-    val map2 = child2.eval(input).asInstanceOf[Array[Byte]]
-    SubtractBitmapImpl.evaluate2Values(map1, map2, upperBound)
-  }
-
-  override def dataType: DataType = ArrayType.apply(LongType)
-
-  override def left: Expression = child1
-
-  override def right: Expression = child2
-
-  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType, BinaryType)
-
-  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val sb = SubtractBitmapImpl.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (arg1, arg2) => {
-      s"""$sb.evaluate2Values($arg1, $arg2, $upperBound)"""
-    })
-  }
-
-  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
-    val newChildren = Seq(newLeft, newRight)
-    super.legacyWithNewChildren(newChildren)
-  }
-}
-
 case class PreciseCountDistinctDecode(_child: Expression)
   extends UnaryExpression with ExpectsInputTypes {
 
@@ -842,4 +879,154 @@ case class SumLCDecode(bytes: Expression, wrapDataTypeExpr: Expression) extends 
     val newChildren = Seq(newLeft, newRight)
     super.legacyWithNewChildren(newChildren)
   }
+}
+
+case class BitmapUuidToArray(_child: Expression) extends UnaryExpression with ExpectsInputTypes {
+  override def child: Expression = _child
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType)
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val expressionUtils = ExpressionUtils.getClass.getName.stripSuffix("$")
+    defineCodeGen(ctx, ev, bytes => {
+      s"""$expressionUtils.bitmapUuidToArray($bytes)"""
+    })
+  }
+
+  override protected def nullSafeEval(bytes: Any): Any = {
+    ExpressionUtils.bitmapUuidToArray(bytes)
+  }
+
+  override def eval(input: InternalRow): Any = {
+    val bitmapByte = _child.eval(input)
+    if (bitmapByte != null) {
+      ExpressionUtils.bitmapUuidToArray(bitmapByte)
+    } else {
+      new GenericArrayData(new Array[Long](0))
+    }
+  }
+
+  override def dataType: DataType = ArrayType(LongType, false)
+
+  override def prettyName: String = "bitmap_uuid_to_array"
+
+  override protected def withNewChildInternal(newChild: Expression): Expression =
+    copy(_child = newChild)
+}
+
+case class YMDintBetween(first: Expression, second: Expression) extends BinaryExpression with ImplicitCastInputTypes {
+
+  override def left: Expression = first
+
+  override def right: Expression = second
+
+  override def dataType: DataType = StringType
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(DateType, DateType)
+
+  override protected def nullSafeEval(input1: Any, input2: Any): Any = {
+    (first.dataType, second.dataType) match {
+      case (DateType, DateType) =>
+        UTF8String.fromString(TimeUtil.ymdintBetween(KapDateTimeUtils.daysToMillis(input1.asInstanceOf[Int]),
+          KapDateTimeUtils.daysToMillis(input2.asInstanceOf[Int])))
+    }
+  }
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val td = classOf[TimeUtil].getName
+    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    defineCodeGen(ctx, ev, (arg1, arg2) => {
+      s"""org.apache.spark.unsafe.types.UTF8String.fromString($td.ymdintBetween($dtu.daysToMillis($arg1),
+         |$dtu.daysToMillis($arg2)))""".stripMargin
+    })
+  }
+
+  override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression): Expression = {
+    val newChildren = Seq(newFirst, newSecond)
+    super.legacyWithNewChildren(newChildren)
+  }
+}
+
+// support 2 or 3 param instr function, refer to StringLocate in Spark.
+case class KylinInstr(str: Expression, substr: Expression, start: Expression)
+  extends TernaryExpression with ImplicitCastInputTypes {
+
+  def this(str: Expression, substr: Expression) = {
+    this(str, substr, Literal(1))
+  }
+
+  override def first: Expression = str
+
+  override def second: Expression = substr
+
+  override def third: Expression = start
+
+  override def nullable: Boolean = str.nullable || substr.nullable
+
+  override def dataType: DataType = IntegerType
+
+  override def inputTypes: Seq[DataType] = Seq(StringType, StringType, IntegerType)
+
+  override def eval(input: InternalRow): Any = {
+    val s = start.eval(input)
+    if (s == null) {
+      0
+    } else {
+      val r = substr.eval(input)
+      if (r == null) {
+        null
+      } else {
+        val l = str.eval(input)
+        if (l == null) {
+          null
+        } else {
+          val sVal = s.asInstanceOf[Int]
+          if (sVal < 1) {
+            0
+          } else {
+            l.asInstanceOf[UTF8String].indexOf(
+              r.asInstanceOf[UTF8String],
+              s.asInstanceOf[Int] - 1) + 1
+          }
+        }
+      }
+    }
+  }
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val strGen = str.genCode(ctx)
+    val substrGen = substr.genCode(ctx)
+    val startGen = start.genCode(ctx)
+    ev.copy(code =
+      code"""
+      int ${ev.value} = 0;
+      boolean ${ev.isNull} = false;
+      ${startGen.code}
+      if (!${startGen.isNull}) {
+        ${substrGen.code}
+        if (!${substrGen.isNull}) {
+          ${strGen.code}
+          if (!${strGen.isNull}) {
+            if (${startGen.value} > 0) {
+              ${ev.value} = ${strGen.value}.indexOf(${substrGen.value},
+                ${startGen.value} - 1) + 1;
+            }
+          } else {
+            ${ev.isNull} = true;
+          }
+        } else {
+          ${ev.isNull} = true;
+        }
+      }
+     """)
+  }
+
+  override def prettyName: String =
+    getTagValue(FunctionRegistry.FUNC_ALIAS).getOrElse("instr")
+
+  override protected def withNewChildrenInternal(newFirst: Expression,
+                                                 newSecond: Expression,
+                                                 newThird: Expression): KylinInstr =
+    copy(str = newFirst, substr = newSecond, start = newThird)
+
 }

@@ -30,9 +30,6 @@ import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.InfluxDBUtils;
 import org.apache.kylin.common.util.NamedThreadFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.shaded.influxdb.org.influxdb.BatchOptions;
 import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
@@ -41,6 +38,9 @@ import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Point;
 import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Pong;
 import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
 import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Getter;
 import lombok.Setter;
 

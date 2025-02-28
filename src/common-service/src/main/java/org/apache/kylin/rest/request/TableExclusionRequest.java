@@ -21,8 +21,9 @@ package org.apache.kylin.rest.request;
 import java.io.Serializable;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -37,4 +37,20 @@ public class ErrorCodeTest {
         Assert.assertEquals("KE-060100201: An Exception occurred outside Kylin 5.0.",
                 nonKeException.getCodeMsg());
     }
+
+    @Test
+    public void testConstructFromString() {
+        ErrorCodeServer code = null;
+        // blank
+        code = ErrorCodeServer.of(null);
+        Assert.assertNull(code);
+
+        // KE-010001201
+        code = ErrorCodeServer.of("KE-010001201");
+        Assert.assertEquals(ErrorCodeServer.PROJECT_NOT_EXIST, code);
+
+        // No such code
+        code = ErrorCodeServer.of("No-Such-Code");
+        Assert.assertNull(code);
+    }
 }

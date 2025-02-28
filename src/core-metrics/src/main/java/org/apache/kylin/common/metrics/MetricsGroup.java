@@ -40,6 +40,11 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.metrics.gauges.QueryRatioGauge;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +55,6 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
-import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class MetricsGroup {
 
@@ -96,7 +95,8 @@ public class MetricsGroup {
 
     public static boolean counterInc(MetricsName name, MetricsCategory category, String entity,
             Map<String, String> tags, long increments) {
-        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return true;
+        if (!KapConfig.getInstanceFromEnv().isMonitorEnabled())
+            return true;
         if (increments < 0) {
             return false;
         }
@@ -121,7 +121,8 @@ public class MetricsGroup {
 
     public static boolean histogramUpdate(MetricsName name, MetricsCategory category, String entity,
             Map<String, String> tags, long updateTo) {
-        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return true;
+        if (!KapConfig.getInstanceFromEnv().isMonitorEnabled())
+            return true;
         if (updateTo < 0) {
             return false;
         }
@@ -426,7 +427,8 @@ public class MetricsGroup {
         if (!counters.containsKey(metricName)) {
             synchronized (counters) {
                 if (!counters.containsKey(metricName)) {
-                    // bad design: 1. Consider async realization; 2. Deadlock maybe occurs here; 3. Add timeout mechanism.
+                    // bad design: 1. Consider async realization;
+                    // 2. Deadlock maybe occurs here; 3. Add timeout mechanism.
                     final Counter metric = MetricsController.getDefaultMetricRegistry().counter(metricName);
                     final long restoreVal = tryRestoreCounter(name, category, entity, tags);
                     if (restoreVal > 0) {
@@ -444,7 +446,8 @@ public class MetricsGroup {
     public static final Map<String, MetricsObject> cacheInfluxMetricStatusMap = new ConcurrentHashMap<>();
 
     public static long tryRestoreCounter(String fieldName, String category, String entity, Map<String, String> tags) {
-        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return 0L;
+        if (!KapConfig.getInstanceFromEnv().isMonitorEnabled())
+            return 0L;
         try {
             MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
             if (MetricsName.QUERY.getVal().equals(fieldName)) {
@@ -470,9 +473,8 @@ public class MetricsGroup {
                     .query(new Query(querySql, config.getMetricsDbNameWithMetadataUrlPrefix()));
             return getResultFromSeries(result, fieldName);
         } catch (Exception e) {
-            logger.warn(
-                    "kylin.metrics tryRestoreCounter error. fieldName: [{}], category [{}], entity [{}], tags [{}]. error msg {}",
-                    fieldName, category, entity, tags, e.getMessage());
+            logger.warn("kylin.metrics tryRestoreCounter error. fieldName: [{}], category [{}], entity [{}], "
+                    + "tags [{}]. error msg {}", fieldName, category, entity, tags, e.getMessage());
         }
         return 0;
     }
@@ -493,8 +495,7 @@ public class MetricsGroup {
                         metric.dec(metric.getCount());
                         metric.inc(restoreVal);
                         logger.info("Restore monitorRegisterMetrics...metric.getCount()={}"
-                                        + ", name={}, entity={}, tags={}",
-                                metric.getCount(), name, entity, tags);
+                                + ", name={}, entity={}, tags={}", metric.getCount(), name, entity, tags);
                     }
                     counters.put(metricName, metric);
                 }
@@ -502,8 +503,10 @@ public class MetricsGroup {
         });
     }
 
-    private static long tryRestoreExceptionCounter(String fieldName, String category, String entity, Map<String, String> tags) {
-        if(!KapConfig.getInstanceFromEnv().isMonitorEnabled()) return 0L;
+    private static long tryRestoreExceptionCounter(String fieldName, String category, String entity,
+            Map<String, String> tags) {
+        if (!KapConfig.getInstanceFromEnv().isMonitorEnabled())
+            return 0L;
         MetricsObject metricsObject = new MetricsObject(fieldName, category, entity, tags);
         if (KylinConfig.getInstanceFromEnv().isDevOrUT()) {
             cacheInfluxMetricStatusMap.get(metricsObject.toString()).setInitStatus(true);
@@ -520,9 +523,7 @@ public class MetricsGroup {
             }
             return tryRestoreExceptionCounter(metricsObject, defaultInfluxDb);
         } catch (Exception e) {
-            logger.warn(
-                    "Influx tryRestoreExceptionCounter error. metricsObject={}",
-                    metricsObject, e);
+            logger.warn("Influx tryRestoreExceptionCounter error. metricsObject={}", metricsObject, e);
         }
         return 0;
     }
@@ -532,18 +533,18 @@ public class MetricsGroup {
         long currTime = System.currentTimeMillis();
         long startTime = currTime - 7 * 24 * 3600 * 1000;
         String startTimeFilter = " and time > " + startTime + " ";
-        long queryTotalTimesFirst = getValFromInflux(MetricsObjectType.FIRST.getVal(),
-                defaultInfluxDb, config, metricsObject, startTimeFilter);
-        long queryTotalTimesFirstMaxGThanFirst = getValFromInflux(MetricsObjectType.MAX.getVal(),
-                defaultInfluxDb, config, metricsObject, startTimeFilter + " and query_total_times >= " + queryTotalTimesFirst + " ");
-        long queryTotalTimesFirstMaxLThanFirst = getValFromInflux(MetricsObjectType.MAX.getVal(),
-                defaultInfluxDb, config, metricsObject, startTimeFilter + " and query_total_times < " + queryTotalTimesFirst + " ");
+        long queryTotalTimesFirst = getValFromInflux(MetricsObjectType.FIRST.getVal(), defaultInfluxDb, config,
+                metricsObject, startTimeFilter);
+        long queryTotalTimesFirstMaxGThanFirst = getValFromInflux(MetricsObjectType.MAX.getVal(), defaultInfluxDb,
+                config, metricsObject, startTimeFilter + " and query_total_times >= " + queryTotalTimesFirst + " ");
+        long queryTotalTimesFirstMaxLThanFirst = getValFromInflux(MetricsObjectType.MAX.getVal(), defaultInfluxDb,
+                config, metricsObject, startTimeFilter + " and query_total_times < " + queryTotalTimesFirst + " ");
         cacheInfluxMetricStatusMap.get(metricsObject.toString()).setInitStatus(true);
         return queryTotalTimesFirstMaxGThanFirst + queryTotalTimesFirstMaxLThanFirst;
     }
 
-    public static long getValFromInflux(String metricsObjectType, InfluxDB defaultInfluxDb,
-           KapConfig kapConfig, MetricsObject metricsObject, String filter) {
+    public static long getValFromInflux(String metricsObjectType, InfluxDB defaultInfluxDb, KapConfig kapConfig,
+            MetricsObject metricsObject, String filter) {
         try {
             String fieldName = metricsObject.getFieldName();
             final String querySql = getValFromInfluxQuerySql(metricsObjectType, metricsObject, filter);
@@ -552,8 +553,8 @@ public class MetricsGroup {
                     .query(new Query(querySql, kapConfig.getMetricsDbNameWithMetadataUrlPrefix()));
             return getResultFromSeries(result, fieldName);
         } catch (Exception e) {
-            logger.error("GetValFromInflux error metricsObjectType={}, metricsObject={}",
-                    metricsObjectType, metricsObject, e);
+            logger.error("GetValFromInflux error metricsObjectType={}, metricsObject={}", metricsObjectType,
+                    metricsObject, e);
             return -1;
         }
     }
@@ -563,13 +564,13 @@ public class MetricsGroup {
             return 0;
         }
         QueryResult.Series series = result.getResults().get(0).getSeries().get(0);
-        String valStr = fieldName.equals(series.getColumns().get(1))
-                ? String.valueOf(series.getValues().get(0).get(1))
+        String valStr = fieldName.equals(series.getColumns().get(1)) ? String.valueOf(series.getValues().get(0).get(1))
                 : String.valueOf(series.getValues().get(0).get(0));
         return NumberFormat.getInstance(Locale.getDefault(Locale.Category.FORMAT)).parse(valStr).longValue();
     }
 
-    public static String getValFromInfluxQuerySql(String metricsObjectType, MetricsObject metricsObject, String filter) {
+    public static String getValFromInfluxQuerySql(String metricsObjectType, MetricsObject metricsObject,
+            String filter) {
         String fieldName = metricsObject.getFieldName();
         String category = metricsObject.getCategory();
         String entity = metricsObject.getEntity();
@@ -577,29 +578,29 @@ public class MetricsGroup {
         final StringBuilder sb = new StringBuilder("select ");
         String tempSql = "(" + fieldName + ") as " + fieldName + " ";
         switch (metricsObjectType) {
-            case "last":
-                sb.append(MetricsObjectType.LAST.getVal());
-                sb.append(tempSql);
-                break;
-            case "first":
-                sb.append(MetricsObjectType.FIRST.getVal());
-                sb.append(tempSql);
-                break;
-            case "max":
-                sb.append(MetricsObjectType.MAX.getVal());
-                sb.append(tempSql);
-                break;
-            case "min":
-                sb.append(MetricsObjectType.MIN.getVal());
-                sb.append(tempSql);
-                break;
-            case "count":
-                sb.append(MetricsObjectType.COUNT.getVal());
-                sb.append(tempSql);
-                break;
-            default:
-                sb.append(fieldName);
-                break;
+        case "last":
+            sb.append(MetricsObjectType.LAST.getVal());
+            sb.append(tempSql);
+            break;
+        case "first":
+            sb.append(MetricsObjectType.FIRST.getVal());
+            sb.append(tempSql);
+            break;
+        case "max":
+            sb.append(MetricsObjectType.MAX.getVal());
+            sb.append(tempSql);
+            break;
+        case "min":
+            sb.append(MetricsObjectType.MIN.getVal());
+            sb.append(tempSql);
+            break;
+        case "count":
+            sb.append(MetricsObjectType.COUNT.getVal());
+            sb.append(tempSql);
+            break;
+        default:
+            sb.append(fieldName);
+            break;
         }
         sb.append(" from ");
         sb.append(MetricsInfluxdbReporter.METRICS_MEASUREMENT);

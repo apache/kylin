@@ -27,14 +27,14 @@ import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.NDataModel;
-
-import com.google.common.collect.ImmutableList;
 
 import lombok.val;
 
@@ -61,7 +61,7 @@ public class SqlIdentifierFormatterVisitor extends SqlBasicVisitor<Void> {
             Set<String> cols = table2cols.get(table);
             if (cols.contains(column)) {
                 throw new KylinException(ServerErrorCode.DUPLICATED_COLUMN_NAME,
-                        String.format("Found duplicate stored column %s for table %s!", column, table));
+                        String.format(Locale.ROOT, "Found duplicate stored column %s for table %s!", column, table));
             }
             cols.add(column);
             col2tables.putIfAbsent(column, Sets.newHashSet());
@@ -75,12 +75,14 @@ public class SqlIdentifierFormatterVisitor extends SqlBasicVisitor<Void> {
             String column = id.names.get(0).toUpperCase(Locale.ROOT).trim();
             Set<String> targetTbls = col2tables.getOrDefault(column, Sets.newHashSet());
             if (targetTbls.size() != 1) {
-                throw new KylinException(ServerErrorCode.COLUMN_NOT_EXIST,
-                        String.format(
-                        "Found unrecognized or ambiguous column: %s in candidate tables [%s] in expression '%s'.",
-                        id, targetTbls.stream().reduce(", ", String::join), expr));
+                throw new KylinException(ServerErrorCode.COLUMN_NOT_EXIST, String.format(Locale.ROOT,
+                        "Found unrecognized or ambiguous column: %s in candidate tables [%s] in expression '%s'.", id,
+                        targetTbls.stream().reduce(", ", String::join), expr));
             }
-            id.names = ImmutableList.of(targetTbls.iterator().next(), column);
+            // see https://olapio.atlassian.net/browse/KE-42069
+            ImmutableList<String> names = ImmutableList.of(targetTbls.iterator().next(), column);
+            List<SqlParserPos> poses = ImmutableList.of(SqlParserPos.ZERO, id.getComponentParserPosition(0));
+            id.setNames(names, poses);
         } else if (id.names.size() >= 2) {
             String table = id.names.get(0).toUpperCase(Locale.ROOT).trim();
             String column = id.names.get(1).toUpperCase(Locale.ROOT).trim();
@@ -88,9 +90,12 @@ public class SqlIdentifierFormatterVisitor extends SqlBasicVisitor<Void> {
             // TODO: Support 3 or more name parts, like: database.table.name?
             if (id.names.size() > 2 || cols == null || !cols.contains(column)) {
                 throw new KylinException(ServerErrorCode.COLUMN_NOT_EXIST,
-                        String.format("Found unrecognized column: %s in expression '%s'.", id, expr));
+                        String.format(Locale.ROOT, "Found unrecognized column: %s in expression '%s'.", id, expr));
             }
-            id.names = ImmutableList.of(table, column);
+            ImmutableList<String> names = ImmutableList.of(table, column);
+            List<SqlParserPos> poses = ImmutableList.of(id.getComponentParserPosition(0),
+                    id.getComponentParserPosition(1));
+            id.setNames(names, poses);
         }
         return null;
     }
@@ -99,8 +104,8 @@ public class SqlIdentifierFormatterVisitor extends SqlBasicVisitor<Void> {
     public Void visit(SqlCall call) {
         if (call instanceof SqlBasicCall
                 && (call.getOperator() instanceof SqlAsOperator || call.getOperator() instanceof SqlAggFunction)) {
-                throw new KylinException(ServerErrorCode.INVALID_PARAMETER,
-                        String.format("Unsupported SqlNode %s in expression %s", call, expr));
+            throw new KylinException(ServerErrorCode.INVALID_PARAMETER,
+                    String.format(Locale.ROOT, "Unsupported SqlNode %s in expression %s", call, expr));
         }
         return super.visit(call);
     }

@@ -1,0 +1,119 @@
+{
+  "uuid" : "53d7e8a2-f2f4-fd98-600f-e2c0cfc00df9",
+  "last_modified" : 0,
+  "create_time" : 1642748357390,
+  "version" : "4.0.0.0",
+  "name" : "P_LINEORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "LO_ORDERKEY",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "LO_LINENUMBER",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "LO_CUSTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "LO_PARTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "LO_SUPPKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "LO_ORDERDATE",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "LO_ORDERPRIOTITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "LO_SHIPPRIOTITY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "LO_QUANTITY",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "LO_EXTENDEDPRICE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "LO_ORDTOTALPRICE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "LO_DISCOUNT",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "LO_REVENUE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "LO_SUPPLYCOST",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "LO_TAX",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "LO_COMMITDATE",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "LO_SHIPMODE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "V_REVENUE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "project" : "test_cache_loader"
+}

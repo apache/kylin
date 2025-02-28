@@ -1,0 +1,524 @@
+{
+  "uuid" : "2feebac2-efdc-4f39-a538-0dda065fda3a",
+  "alias" : "test_enormous_dim3",
+  "fact_table" : "DEFAULT.TEST_ENORMOUS_DIM",
+  "owner" : "ADMIN",
+  "all_named_columns" : [ {
+    "id" : 1,
+    "name" : "DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM4",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM5",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM6",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM7",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM8",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM9",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "1DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM10",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "1DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM11",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "1DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM12",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "1DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM13",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "1DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM14",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "1DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM15",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "1DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM16",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "1DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM17",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "1DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM18",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "1DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM19",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "2DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM20",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "2DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM21",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "2DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM22",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "2DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM23",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "2DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM24",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "2DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM25",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "2DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM26",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "2DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM27",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 28,
+    "name" : "2DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM28",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 29,
+    "name" : "2DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM29",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 30,
+    "name" : "3DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM30",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 31,
+    "name" : "3DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM31",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 32,
+    "name" : "3DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM32",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "3DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM33",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 34,
+    "name" : "3DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM34",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 35,
+    "name" : "3DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM35",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 36,
+    "name" : "3DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM36",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 37,
+    "name" : "3DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM37",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 38,
+    "name" : "3DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM38",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 39,
+    "name" : "3DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM39",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 40,
+    "name" : "4DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM40",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 41,
+    "name" : "4DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM41",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 42,
+    "name" : "4DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM42",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 43,
+    "name" : "4DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM43",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 44,
+    "name" : "4DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM44",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 45,
+    "name" : "4DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM45",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 46,
+    "name" : "4DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM46",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 47,
+    "name" : "4DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM47",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 48,
+    "name" : "4DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM48",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 49,
+    "name" : "4DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM49",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 50,
+    "name" : "5DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM50",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 51,
+    "name" : "5DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM51",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 52,
+    "name" : "5DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM52",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 53,
+    "name" : "5DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM53",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 54,
+    "name" : "5DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM54",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 55,
+    "name" : "5DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM55",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 56,
+    "name" : "5DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM56",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 57,
+    "name" : "5DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM57",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 58,
+    "name" : "5DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM58",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 59,
+    "name" : "5DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM59",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 60,
+    "name" : "6DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM60",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 61,
+    "name" : "6DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM61",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 62,
+    "name" : "6DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM62",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 63,
+    "name" : "6DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM63",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 64,
+    "name" : "6DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM64",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 65,
+    "name" : "6DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM65",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 66,
+    "name" : "6DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM66",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 67,
+    "name" : "6DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM67",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 68,
+    "name" : "6DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM68",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 69,
+    "name" : "6DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM69",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 70,
+    "name" : "7DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM70",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 71,
+    "name" : "7DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM71",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 72,
+    "name" : "7DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM72",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 73,
+    "name" : "7DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM73",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 74,
+    "name" : "7DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM74",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 75,
+    "name" : "7DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM75",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 76,
+    "name" : "7DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM76",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 77,
+    "name" : "7DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM77",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 78,
+    "name" : "7DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM78",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 79,
+    "name" : "7DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM79",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 80,
+    "name" : "8DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM80",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 81,
+    "name" : "8DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM81",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 82,
+    "name" : "8DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM82",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 83,
+    "name" : "8DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM83",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 84,
+    "name" : "8DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM84",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 85,
+    "name" : "8DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM85",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 86,
+    "name" : "8DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM86",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 87,
+    "name" : "8DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM87",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 88,
+    "name" : "8DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM88",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 89,
+    "name" : "8DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM89",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 90,
+    "name" : "9DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM90",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 91,
+    "name" : "9DIM1",
+    "column" : "TEST_ENORMOUS_DIM.DIM91",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 92,
+    "name" : "9DIM2",
+    "column" : "TEST_ENORMOUS_DIM.DIM92",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 93,
+    "name" : "9DIM3",
+    "column" : "TEST_ENORMOUS_DIM.DIM93",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 94,
+    "name" : "9DIM4",
+    "column" : "TEST_ENORMOUS_DIM.DIM94",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 95,
+    "name" : "9DIM5",
+    "column" : "TEST_ENORMOUS_DIM.DIM95",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 96,
+    "name" : "9DIM6",
+    "column" : "TEST_ENORMOUS_DIM.DIM96",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 97,
+    "name" : "9DIM7",
+    "column" : "TEST_ENORMOUS_DIM.DIM97",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 98,
+    "name" : "9DIM8",
+    "column" : "TEST_ENORMOUS_DIM.DIM98",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 99,
+    "name" : "9DIM9",
+    "column" : "TEST_ENORMOUS_DIM.DIM99",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 100,
+    "name" : "10DIM0",
+    "column" : "TEST_ENORMOUS_DIM.DIM100",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "TRANS_CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "default"
+}

@@ -25,11 +25,10 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.sdk.datasource.framework.utils.XmlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class DataSourceDefProvider {
     private static final Logger logger = LoggerFactory.getLogger(DataSourceDefProvider.class);
@@ -80,7 +79,7 @@ public class DataSourceDefProvider {
             ds.init();
             return ds;
         } catch (IOException e) {
-            logger.error("[Dev Only] Failed to load data source from directory.: Path={}", resourcePath,
+            logger.error("[Dev Only] Failed to load data source from directory.: Path={}\n{}", resourcePath,
                     e.getMessage());
             return null;
         }

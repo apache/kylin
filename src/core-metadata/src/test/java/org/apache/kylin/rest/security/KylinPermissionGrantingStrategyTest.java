@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,8 +39,8 @@ public class KylinPermissionGrantingStrategyTest {
         Assert.assertTrue(permissionGrantingStrategy.isGranted(ace, AclPermission.MANAGEMENT));
         Assert.assertFalse(permissionGrantingStrategy.isGranted(ace, AclPermission.DATA_QUERY));
 
-        ace.setPermission(
-                new CompositeAclPermission(AclPermission.MANAGEMENT, Arrays.asList(AclPermission.DATA_QUERY)));
+        ace.setPermission(new CompositeAclPermission(AclPermission.MANAGEMENT,
+                Collections.singletonList(AclPermission.DATA_QUERY)));
         Assert.assertTrue(ace.getPermission() instanceof CompositeAclPermission);
         Assert.assertTrue(permissionGrantingStrategy.isGranted(ace, AclPermission.MANAGEMENT));
         Assert.assertTrue(permissionGrantingStrategy.isGranted(ace, AclPermission.DATA_QUERY));
@@ -48,7 +48,8 @@ public class KylinPermissionGrantingStrategyTest {
 
         Assert.assertEquals(new AceImpl(sid, null), (new AceImpl(sid, new AclPermission(0))));
         Assert.assertNotEquals(new AceImpl(sid, AclPermission.MANAGEMENT), (new AceImpl(sid, new AclPermission(0))));
-        Assert.assertNotEquals(new AceImpl(sid, AclPermission.MANAGEMENT).hashCode(), (new AceImpl(sid, new AclPermission(0))).hashCode());
+        Assert.assertNotEquals(new AceImpl(sid, AclPermission.MANAGEMENT).hashCode(),
+                (new AceImpl(sid, new AclPermission(0))).hashCode());
 
         ace.setPermission(AclPermission.MANAGEMENT);
         Assert.assertEquals(AclPermission.MANAGEMENT, ace.getPermission());

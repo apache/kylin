@@ -1,0 +1,53 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1688008750346,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "huadongqu",
+      "max" : "huazhongqu"
+    },
+    "1" : {
+      "min" : "shanghaiqu",
+      "max" : "zhongqu"
+    },
+    "2" : {
+      "min" : "150.1200",
+      "max" : "301.5500"
+    },
+    "3" : {
+      "min" : "22Q1",
+      "max" : "22Q3"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1688008489488,
+  "source_count" : 3,
+  "source_bytes_size" : 90,
+  "column_source_bytes" : {
+    "DEFAULT.TEST_DIM_AS_MEASURE.REGION_NAME" : 27,
+    "DEFAULT.TEST_DIM_AS_MEASURE.BIG_REGION_NAME" : 21,
+    "DEFAULT.TEST_DIM_AS_MEASURE.ARRIVAL_TRANSIT_IN_PRM_AMT" : 24,
+    "DEFAULT.TEST_DIM_AS_MEASURE.PRO_MT_SEASON" : 12
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "4409fb82-8f3a-ba01-9852-0b05f1fe690f",
+  "model_uuid" : "f29d1a92-c115-ec68-5575-9cfcc0d65890",
+  "project" : "dim_as_measure"
+}

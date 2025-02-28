@@ -24,14 +24,13 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.job.JobBucket;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -89,6 +88,11 @@ public class JobParam {
     private Set<LayoutEntity> processLayouts;
 
     private Set<LayoutEntity> deleteLayouts;
+
+    /**
+     * Used only for {@link JobTypeEnum#INDEX_BUILD} job
+     */
+    private boolean layoutsDeletableAfterBuild = false;
 
     private Set<Long> secondStorageDeleteLayoutIds;
 
@@ -196,6 +200,11 @@ public class JobParam {
         return this;
     }
 
+    public JobParam withTargetLayouts(Set<Long> targetLayouts) {
+        this.targetLayouts = targetLayouts;
+        return this;
+    }
+
     public void setTargetLayouts(Set<Long> targetLayouts) {
         if (Objects.nonNull(targetLayouts)) {
             this.targetLayouts = targetLayouts;
@@ -205,12 +214,6 @@ public class JobParam {
     public void setCondition(Map<String, Object> condition) {
         if (Objects.nonNull(condition)) {
             this.condition = condition;
-        }
-    }
-
-    public void setSecondStorageDeleteLayoutIds(Set<Long> secondStorageDeleteLayoutIds) {
-        if (Objects.nonNull(secondStorageDeleteLayoutIds)) {
-            this.secondStorageDeleteLayoutIds = secondStorageDeleteLayoutIds;
         }
     }
 

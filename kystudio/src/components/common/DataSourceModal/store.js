@@ -40,6 +40,7 @@ const initialState = JSON.stringify({
     selectedTables: [],
     selectedDatabases: [],
     needSampling: false,
+    loadAsInternalTable: false,
     samplingRows: 20000000,
     settings: {
       type: '',

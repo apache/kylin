@@ -19,6 +19,8 @@
 package org.apache.kylin.metadata.model.schema;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
+import static org.apache.kylin.common.persistence.MetadataType.PROJECT;
+import static org.apache.kylin.common.persistence.MetadataType.WITH_PROJECT_PREFIX_METADATA;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +40,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.InMemResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -48,6 +52,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+import org.apache.kylin.metadata.Manager;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -56,18 +61,21 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.RecItemSet;
 import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Getter;
 import lombok.val;
@@ -76,7 +84,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImportModelContext implements AutoCloseable {
 
-    public static final String MODEL_REC_PATH = "/%s/rec/%s.json";
+    public static final String MODEL_REC_PATH = MetadataType.TMP_REC + "/%s.%s";
 
     @Getter
     private final String targetProject;
@@ -117,13 +125,32 @@ public class ImportModelContext implements AutoCloseable {
         targetResourceStore = ResourceStore.getKylinMetaStore(targetKylinConfig);
 
         rawResourceMap.forEach((resPath, raw) -> {
-            resPath = resPath.replaceFirst(srcProject, targetProject);
-            importResourceStore.putResourceWithoutCheck(resPath, raw.getByteSource(), raw.getTimestamp(), 0);
+            ByteSource wrap;
+            try {
+                if (!targetProject.equals(raw.getProject())) {
+                    raw.setProject(targetProject);
+                    MetadataType metaType = raw.getMetaType();
+                    if (WITH_PROJECT_PREFIX_METADATA.contains(metaType)) {
+                        raw.setMetaKey(raw.getMetaKey().replaceFirst(srcProject + "\\.", targetProject + "."));
+                        resPath = raw.generateKeyWithType();
+                    }
+                    JsonNode je = JsonUtil.readValue(raw.getContent(), JsonNode.class);
+                    ObjectNode contentJsonMap = JsonUtil.valueToTree(je);
+                    contentJsonMap.put("project", targetProject);
+                    wrap = ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(contentJsonMap));
+                } else {
+                    wrap = raw.getByteSource();
+                }
+                importResourceStore.putResourceWithoutCheck(resPath, wrap, raw.getTs(), 0);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write resource, this context is broken", e);
+            }
         });
 
+        String targetProjectPath = MetadataType.mergeKeyWithType(targetProject, PROJECT);
         // put target project into importResourceStore in case of broken IndexPlan.initConfig4IndexPlan
-        importResourceStore.checkAndPutResource(ProjectInstance.concatResourcePath(targetProject),
-                targetResourceStore.getResource(ProjectInstance.concatResourcePath(targetProject)).getByteSource(), -1);
+        importResourceStore.checkAndPutResource(targetProjectPath,
+                targetResourceStore.getResource(targetProjectPath).getByteSource(), -1);
 
         originalDataModelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), targetProject);
         originalDataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), targetProject);
@@ -177,6 +204,9 @@ public class ImportModelContext implements AutoCloseable {
         newDataModel.setUuid(RandomUtil.randomUUIDStr());
         newDataModel.setMvcc(-1);
         newDataModel.setLastModified(System.currentTimeMillis());
+        Manager<ComputedColumnDesc> ccManager = targetKylinConfig.getManager(targetProject,
+                ComputedColumnManager.class);
+        updateCcMvccIfNeed(newDataModel, ccManager);
         targetDataModelManager.createDataModelDesc(newDataModel, "");
 
         IndexPlan indexPlan = importIndexPlanManager.getIndexPlanByModelAlias(importModel.getAlias()).copy();
@@ -257,7 +287,37 @@ public class ImportModelContext implements AutoCloseable {
         if (!hasModelOverrideProps) {
             newDataModel.setSegmentConfig(originalDataModel.getSegmentConfig());
         }
-        targetDataModelManager.updateDataModelDesc(newDataModel);
+        updateDataModelDescAndCC(newDataModel);
+    }
+
+    private void updateDataModelDescAndCC(NDataModel importModel) {
+        String uuid = importModel.getUuid();
+        val dataModelDesc = targetDataModelManager.getDataModelDesc(uuid);
+
+        if (dataModelDesc != null) {
+            importModel.init(targetKylinConfig, targetProject, targetDataModelManager.getCCRelatedModels(importModel));
+            Manager<ComputedColumnDesc> ccManager = targetKylinConfig.getManager(targetProject,
+                    ComputedColumnManager.class);
+            NDataModelManager.NDataModelUpdater updater = (copy) -> {
+                importModel.copyPropertiesTo(copy);
+                updateCcMvccIfNeed(copy, ccManager);
+            };
+            targetDataModelManager.updateDataModel(importModel.getUuid(), updater);
+        } else {
+            throw new IllegalArgumentException("Model '" + uuid + "' does not exist.");
+        }
+    }
+
+    private static void updateCcMvccIfNeed(NDataModel copy, Manager<ComputedColumnDesc> ccManager) {
+        if (copy.getComputedColumnUuids() != null) {
+            List<ComputedColumnDesc> ccList = new ArrayList<>();
+            copy.getComputedColumnDescs().forEach(cc -> {
+                ComputedColumnDesc copiedCc = ccManager.copy(cc);
+                copiedCc.setMvcc(ccManager.get(cc.getUuid()).map(RootPersistentEntity::getMvcc).orElse(-1L));
+                ccList.add(copiedCc);
+            });
+            copy.setComputedColumnDescs(ccList);
+        }
     }
 
     private void updateIndexPlan(NDataModel originalDataModel, IndexPlan targetIndexPlan,
@@ -438,9 +498,10 @@ public class ImportModelContext implements AutoCloseable {
 
             reorderRecommendations(rawRecItems, idChangedMap);
 
-            targetResourceStore.checkAndPutResource(
-                    String.format(Locale.ROOT, MODEL_REC_PATH, targetProject, targetModelId),
-                    ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(rawRecItems)), -1);
+            RecItemSet recItemSet = new RecItemSet(targetModelId, targetProject, rawRecItems);
+
+            targetResourceStore.checkAndPutResource(recItemSet.getResourcePath(),
+                    ByteSource.wrap(JsonUtil.writeValueAsIndentBytes(recItemSet)), -1);
         }
     }
 
@@ -474,7 +535,8 @@ public class ImportModelContext implements AutoCloseable {
     }
 
     private String handleException(String modelAlias, Exception exception) {
-        if (exception instanceof RuntimeException && exception.getMessage().contains("call on Broken Entity")) {
+        if (exception instanceof RuntimeException && exception.getMessage() != null
+                && exception.getMessage().contains("call on Broken Entity")) {
             return String.format(Locale.ROOT, MsgPicker.getMsg().getImportBrokenModel(), modelAlias);
         }
         return exception.getMessage();
@@ -483,11 +545,12 @@ public class ImportModelContext implements AutoCloseable {
     public static List<RawRecItem> parseRawRecItems(ResourceStore resourceStore, String project, String modelId)
             throws IOException {
         List<RawRecItem> rawRecItems = new ArrayList<>();
-        RawResource resource = resourceStore.getResource("/" + project + "/rec/" + modelId + ".json");
+        RawResource resource = resourceStore.getResource(String.format(Locale.ROOT, MODEL_REC_PATH, project, modelId));
 
         if (resource != null) {
             try (InputStream inputStream = resource.getByteSource().openStream()) {
-                JsonNode rawRecItemsNode = JsonUtil.readValue(inputStream, JsonNode.class);
+                JsonNode recEntity = JsonUtil.readValue(inputStream, JsonNode.class);
+                JsonNode rawRecItemsNode = recEntity.get("rec_items");
                 if (rawRecItemsNode != null) {
                     for (JsonNode jsonNode : rawRecItemsNode) {
                         rawRecItems.add(parseRawRecItem(jsonNode));

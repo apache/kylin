@@ -1,0 +1,15 @@
+{
+  "uuid" : "53bb6ab4-8058-4696-bc06-597a5e9a9103",
+  "last_modified" : 1709176992399,
+  "create_time" : 1709176844250,
+  "version" : "4.0.0.0",
+  "status" : "OFFLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "storage_v3_test",
+  "segment_uuids" : [ ]
+}

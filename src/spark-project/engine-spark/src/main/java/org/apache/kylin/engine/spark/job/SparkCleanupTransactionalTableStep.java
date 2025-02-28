@@ -24,7 +24,7 @@ import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.gen
 import java.io.IOException;
 import java.util.Locale;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,7 +36,6 @@ import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.source.hive.HiveCmdBuilder;
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ public class SparkCleanupTransactionalTableStep extends NSparkExecutable {
 
     @Override
     public ExecuteResult doWork(JobContext context) throws ExecuteException {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        KylinConfig config = getConfig();
         String jobId = getParam(NBatchConstants.P_JOB_ID);
         String dir = config.getJobTmpTransactionalTableDir(getProject(), jobId);
         logger.info("should clean dir :{} ", dir);
@@ -82,33 +81,34 @@ public class SparkCleanupTransactionalTableStep extends NSparkExecutable {
     }
 
     private void doExecuteCliCommand(String tableFullName, String cmd) {
-        if(StringUtils.isEmpty(cmd)) {
+        if (StringUtils.isEmpty(cmd)) {
             return;
         }
         try {
             CliCommandExecutor cliCommandExecutor = new CliCommandExecutor();
             CliCommandExecutor.CliCmdExecResult result = cliCommandExecutor.execute(cmd, null);
             if (result.getCode() != 0) {
-                logger.error("execute drop intermediate table return fail, table : {}, code :{}",
-                        tableFullName, result.getCode());
+                logger.error("execute drop intermediate table return fail, table : {}, code :{}", tableFullName,
+                        result.getCode());
             } else {
                 logger.info("execute drop intermediate table succeeded, table :{} ", tableFullName);
             }
         } catch (ShellException e) {
-            logger.error(String.format(Locale.ROOT, "execute drop intermediate table error, table :%s ", tableFullName), e);
+            logger.error(String.format(Locale.ROOT, "execute drop intermediate table error, table :%s ", tableFullName),
+                    e);
         }
     }
 
     public static String generateDropTableCommand(String tableFullName) {
         // By default, the tableFullName information obtained is the full path of the table，
         // eg: TEST_CDP.TEST_HIVE_TX_INTERMEDIATE5c5851ef8544
-        if(StringUtils.isEmpty(tableFullName)) {
+        if (StringUtils.isEmpty(tableFullName)) {
             logger.info("The table name is empty.");
             return "";
         }
 
         String tableName = tableFullName;
-        if(tableFullName.contains(".") && !tableFullName.endsWith(".")) {
+        if (tableFullName.contains(".") && !tableFullName.endsWith(".")) {
             String database = tableFullName.substring(0, tableFullName.indexOf("."));
             tableName = tableFullName.substring(tableFullName.indexOf(".") + 1);
             return generateHiveInitStatements(database) + generateDropTableStatement(tableName);

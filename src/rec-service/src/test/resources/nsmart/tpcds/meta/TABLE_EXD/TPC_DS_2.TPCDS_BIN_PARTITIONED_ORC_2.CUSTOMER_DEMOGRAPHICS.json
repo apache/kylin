@@ -1,0 +1,86 @@
+{
+  "uuid" : "a3a411cd-f536-467c-a472-4022edb9daa4",
+  "last_modified" : 1497840762209,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.CUSTOMER_DEMOGRAPHICS",
+  "last_build_job_id" : "f9cbb8f6-c430-44a6-a980-8645e6dbcfb0",
+  "columns_stats" : [ {
+    "max_value" : "1920800",
+    "min_value" : "1",
+    "max_length_value" : "1000000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1965726
+  }, {
+    "max_value" : "M",
+    "min_value" : "F",
+    "max_length_value" : "M",
+    "min_length_value" : "M",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "W",
+    "min_value" : "D",
+    "max_length_value" : "M",
+    "min_length_value" : "M",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "2 yr Degree",
+    "max_length_value" : "Advanced Degree",
+    "min_length_value" : "Primary",
+    "null_count" : 0,
+    "cardinality" : 6
+  }, {
+    "max_value" : "10000",
+    "min_value" : "500",
+    "max_length_value" : "10000",
+    "min_length_value" : "500",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Good",
+    "max_length_value" : "High Risk",
+    "min_length_value" : "Good",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "6",
+    "min_value" : "0",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "6",
+    "min_value" : "0",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "max_value" : "6",
+    "min_value" : "0",
+    "max_length_value" : "3",
+    "min_length_value" : "3",
+    "null_count" : 0,
+    "cardinality" : 7
+  } ],
+  "sample_rows" : [ [ "960401", "960403", "960405", "960407", "960409", "960411", "960413", "960415", "960417", "960419" ], [ "M", "M", "M", "M", "M", "M", "M", "M", "M", "M" ], [ "M", "S", "D", "W", "U", "M", "S", "D", "W", "U" ], [ "Primary", "Primary", "Primary", "Primary", "Primary", "Secondary", "Secondary", "Secondary", "Secondary", "Secondary" ], [ "500", "500", "500", "500", "500", "500", "500", "500", "500", "500" ], [ "High Risk", "High Risk", "High Risk", "High Risk", "High Risk", "High Risk", "High Risk", "High Risk", "High Risk", "High Risk" ], [ "3", "3", "3", "3", "3", "3", "3", "3", "3", "3" ], [ "3", "3", "3", "3", "3", "3", "3", "3", "3", "3" ], [ "3", "3", "3", "3", "3", "3", "3", "3", "3", "3" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "1920800",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "48950",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/customer_demographics",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

@@ -19,10 +19,10 @@
 package org.apache.kylin.source.jdbc;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,18 +35,32 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 public class H2Database {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
+    private static final String[] ALL_TABLES_DROP = new String[] { //
+            "`edw`.`test_cal_dt`", //
+            "`default`.`test_category_groupings`", //
+            "`default`.`test_kylin_fact`", //
+            "`default`.`test_order`", //
+            "`edw`.`test_seller_type_dim`", //
+            "`edw`.`test_sites`", //
+            "`default`.`test_account`", //
+            "`default`.`test_country`", //
+            "`ssb`.`customer`", //
+            "`ssb`.`dates`", //
+            "`ssb`.`p_lineorder`", //
+            "`ssb`.`lineorder`", //
+            "`ssb`.`part`", //
+            "`ssb`.`supplier`" }; //
     private static final String[] ALL_TABLES = new String[] { //
             "edw.test_cal_dt", //
             "default.test_category_groupings", //
@@ -93,9 +107,10 @@ public class H2Database {
     public void dropAll() throws SQLException {
         try (Statement stmt = h2Connection.createStatement()) {
             StringBuilder sqlBuilder = new StringBuilder();
-            for (String tblName : ALL_TABLES)
-                sqlBuilder.append("DROP TABLE ").append(tblName).append(";\n");
-            sqlBuilder.append("DROP SCHEMA DEFAULT;\nDROP SCHEMA EDW;\n");
+            for (String tblName : ALL_TABLES_DROP)
+                sqlBuilder.append("DROP TABLE IF EXISTS ").append(tblName).append(";\n");
+            sqlBuilder.append(
+                    "DROP SCHEMA IF EXISTS `DEFAULT`;\nDROP SCHEMA IF EXISTS `EDW`;\nDROP SCHEMA IF EXISTS `SSB`;");
 
             stmt.executeUpdate(sqlBuilder.toString());
         }
@@ -109,16 +124,17 @@ public class H2Database {
         try {
             File tempFile = File.createTempFile("tmp_h2", ".csv");
             try (FileOutputStream tempFileStream = new FileOutputStream(tempFile)) {
-                try (InputStream is = new FileInputStream(
-                        Paths.get(config.getMetadataUrl().getIdentifier(), "..", path).toFile())) {
+                try (InputStream is = Files.newInputStream(
+                        Paths.get(config.getMetadataUrl().getIdentifier(), "..", path).toFile().toPath())) {
                     IOUtils.copy(is, tempFileStream);
                 }
 
                 String cvsFilePath = tempFile.getPath();
                 try (Statement stmt = h2Connection.createStatement()) {
 
-                    String createDBSql = "CREATE SCHEMA IF NOT EXISTS DEFAULT;\n" + "CREATE SCHEMA IF NOT EXISTS EDW;\n"
-                            + "CREATE SCHEMA IF NOT EXISTS SSB;\n" + "SET SCHEMA DEFAULT;\n";
+                    String createDBSql = "CREATE SCHEMA IF NOT EXISTS `DEFAULT`;\n"
+                            + "CREATE SCHEMA IF NOT EXISTS `EDW`;\n" + "CREATE SCHEMA IF NOT EXISTS `SSB`;\n"
+                            + "SET SCHEMA `DEFAULT`;\n";
                     stmt.executeUpdate(createDBSql);
 
                     String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
@@ -148,7 +164,7 @@ public class H2Database {
         StringBuilder ddl = new StringBuilder();
         StringBuilder csvColumns = new StringBuilder();
 
-        ddl.append("CREATE TABLE IF NOT EXISTS " + tableDesc.getIdentity() + "\n");
+        ddl.append("CREATE TABLE IF NOT EXISTS `" + tableDesc.getDatabase() + "`.`" + tableDesc.getName() + "`\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {
@@ -160,12 +176,12 @@ public class H2Database {
                 ddl.append(",");
                 csvColumns.append(",");
             }
-            ddl.append(col.getName() + " " + getH2DataType((col.getDatatype())) + "\n");
+            ddl.append(col.getName()).append(" ").append(getH2DataType((col.getDatatype()))).append("\n");
             csvColumns.append(col.getName());
         }
         ddl.append(")" + "\n");
-        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns
-                + "', 'charset=UTF-8 fieldSeparator=,');");
+        ddl.append("AS SELECT * FROM CSVREAD('").append(csvFilePath).append("', '").append(csvColumns)
+                .append("', 'charset=UTF-8 fieldSeparator=,');");
 
         return ddl.toString();
     }
@@ -176,8 +192,9 @@ public class H2Database {
         for (ColumnDesc col : tableDesc.getColumns()) {
             if ("T".equalsIgnoreCase(col.getIndex())) {
                 StringBuilder ddl = new StringBuilder();
-                ddl.append("CREATE INDEX IF NOT EXISTS IDX_" + tableDesc.getName() + "_" + x + " ON "
-                        + tableDesc.getIdentity() + "(" + col.getName() + ")");
+                ddl.append("CREATE INDEX IF NOT EXISTS IDX_").append(tableDesc.getName()).append("_").append(x)
+                        .append(" ON ").append("`").append(tableDesc.getDatabase()).append("`.`")
+                        .append(tableDesc.getName()).append("`(").append(col.getName()).append(")");
                 ddl.append("\n");
                 result.add(ddl.toString());
                 x++;

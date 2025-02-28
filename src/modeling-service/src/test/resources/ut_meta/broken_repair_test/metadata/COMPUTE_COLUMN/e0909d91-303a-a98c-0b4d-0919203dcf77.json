@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC111",
+  "expression" : "timestampadd(day, 1, LINEORDER.LO_ORDERDATE)",
+  "innerExpression" : "TIMESTAMPADD('day', 1, `LINEORDER`.`LO_ORDERDATE`)",
+  "datatype" : "DATE",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "e0909d91-303a-a98c-0b4d-0919203dcf77",
+  "project" : "ssb"
+}

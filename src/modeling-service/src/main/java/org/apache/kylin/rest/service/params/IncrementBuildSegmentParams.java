@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.rest.request.SegmentTimeRequest;
 
@@ -48,7 +48,8 @@ public class IncrementBuildSegmentParams extends FullBuildSegmentParams {
     private List<String[]> multiPartitionValues;
     private boolean buildAllSubPartitions;
 
-    public IncrementBuildSegmentParams(String project, String modelId, SegmentRange<?> specifiedSegmentRange, boolean needBuild) {
+    public IncrementBuildSegmentParams(String project, String modelId, SegmentRange<?> specifiedSegmentRange,
+            boolean needBuild) {
         super(project, modelId, needBuild);
         this.specifiedSegmentRange = specifiedSegmentRange;
     }

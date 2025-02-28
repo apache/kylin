@@ -1,0 +1,67 @@
+{
+  "uuid" : "27a76da5-e9b7-41c4-a802-ecaf7c6857e2",
+  "last_modified" : 1497607294767,
+  "version" : "2.0.0",
+  "name" : "WAREHOUSE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "W_WAREHOUSE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "W_WAREHOUSE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "W_WAREHOUSE_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "W_WAREHOUSE_SQ_FT",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "W_STREET_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "W_STREET_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "W_STREET_TYPE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "W_SUITE_NUMBER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "W_CITY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "W_COUNTY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "W_STATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "W_ZIP",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "W_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "W_GMT_OFFSET",
+    "datatype" : "double"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

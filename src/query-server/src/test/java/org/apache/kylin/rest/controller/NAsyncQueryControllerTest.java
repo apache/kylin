@@ -21,6 +21,7 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.exception.QueryErrorCode.TOO_MANY_ASYNC_QUERY;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_OUT_OF_DATA_RANGE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_PROJECT_NAME_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_RESULT_NOT_FOUND;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_TIME_FORMAT_ERROR;
@@ -40,6 +41,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AsyncQuerySQLRequest;
 import org.apache.kylin.rest.response.AsyncQueryResponse;
@@ -639,6 +641,8 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     public void testInqueryStatusSuccess() throws Exception {
         Mockito.doReturn(true).when(asyncQueryService).hasPermission(Mockito.anyString(), Mockito.anyString());
         Mockito.doReturn(SUCCESS).when(asyncQueryService).queryStatus(Mockito.anyString(), Mockito.anyString());
+        AsyncQueryUtil.createSuccessFlagWithContent(PROJECT, "123",
+                new AsyncQueryUtil.SuccessFileContent(ASYNC_QUERY_OUT_OF_DATA_RANGE.getErrorCode().getCode()));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id}/status", "123")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -647,6 +651,9 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nAsyncQueryController).inqueryStatus(Mockito.any(), Mockito.anyString(), Mockito.any());
+        AsyncQueryUtil.SuccessFileContent successFileContent = AsyncQueryUtil.getSuccessFileContent(PROJECT, "123");
+        Assert.assertNotNull(successFileContent);
+        Assert.assertEquals(ASYNC_QUERY_OUT_OF_DATA_RANGE.getErrorCode().getCode(), successFileContent.getCode());
     }
 
     @Test

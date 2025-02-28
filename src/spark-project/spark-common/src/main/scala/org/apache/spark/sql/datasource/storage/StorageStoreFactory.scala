@@ -18,10 +18,14 @@
 
 package org.apache.spark.sql.datasource.storage
 
+import org.apache.kylin.metadata.model.NDataModel.DataStorageType
+import org.apache.kylin.metadata.model.NDataModel.DataStorageType.{DELTA, V1}
+
 object StorageStoreFactory {
-  def create(storageType: Int): StorageStore = {
+  def create(storageType: DataStorageType): StorageStore = {
     storageType match {
-      case 0 | 1 => new StorageStoreV1
+      case V1 => new StorageStoreV1
+      case DELTA => new KylinDeltaStorage
       case _ => throw new IllegalArgumentException(s"Illegal build version id: $storageType")
     }
   }

@@ -33,17 +33,16 @@ import org.apache.spark.sql.types.StructType
 import scala.collection.mutable.ArrayBuffer
 
 // scalastyle:off
-class KylinFileSourceScanExec(
-     @transient relation: HadoopFsRelation,
-     output: Seq[Attribute],
-     requiredSchema: StructType,
-     partitionFilters: Seq[Expression],
-     val optionalShardSpec: Option[ShardSpec],
-     optionalNumCoalescedBuckets: Option[Int],
-     dataFilters: Seq[Expression],
-     tableIdentifier: Option[TableIdentifier],
-     disableBucketedScan: Boolean = false,
-     sourceScanRows: Long) extends LayoutFileSourceScanExec(
+class KylinFileSourceScanExec(@transient relation: HadoopFsRelation,
+                              output: Seq[Attribute],
+                              requiredSchema: StructType,
+                              partitionFilters: Seq[Expression],
+                              val optionalShardSpec: Option[ShardSpec],
+                              optionalNumCoalescedBuckets: Option[Int],
+                              dataFilters: Seq[Expression],
+                              tableIdentifier: Option[TableIdentifier],
+                              disableBucketedScan: Boolean = false,
+                              sourceScanRows: Long) extends LayoutFileSourceScanExec(
   relation, output, requiredSchema, partitionFilters, None, optionalNumCoalescedBuckets, dataFilters, tableIdentifier, disableBucketedScan, sourceScanRows) {
 
   def getSourceScanRows: Long = {
@@ -58,7 +57,7 @@ class KylinFileSourceScanExec(
     logInfo(s"Extra runtime filters from BloomAndRangeFilterExpression to " +
       s"prune segment: ${rangeRuntimeFilters.mkString(",")}")
     val filePruner = relation.location.asInstanceOf[FilePruner]
-    val ret = filePruner.listFiles(partitionFilters, dataFilters, rangeRuntimeFilters)
+    val ret = filePruner.listFilesInternal(partitionFilters, dataFilters, rangeRuntimeFilters)
     val timeTakenMs = ((System.nanoTime() - startTime) + optimizerMetadataTimeNs) / 1000 / 1000
 
     metrics("numFiles").add(ret.map(_.files.size.toLong).sum)

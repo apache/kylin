@@ -1,0 +1,114 @@
+{
+  "uuid" : "e3e9afdd-7f05-47af-bdf0-e698c77209ff",
+  "last_modified" : 1483516307433,
+  "version" : "2.0.0",
+  "table_name" : "DEFAULT.KYLIN_SALES",
+  "last_build_job_id" : "abcfd831-5fe3-41fd-96cf-47a0532d28ce",
+  "columns_stats" : [ {
+    "column_name" : "TRANS_ID",
+    "max_value" : "9999",
+    "min_value" : "0",
+    "max_length_value" : "1000",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 10491
+  }, {
+    "column_name" : "PART_DT",
+    "max_value" : "2014-01-01",
+    "min_value" : "2012-01-01",
+    "max_length_value" : "2012-12-14",
+    "min_length_value" : "2012-12-14",
+    "null_count" : 0,
+    "cardinality" : 736
+  }, {
+    "column_name" : "LSTG_FORMAT_NAME",
+    "max_value" : "Others",
+    "min_value" : "ABIN",
+    "max_length_value" : "FP-non GTC",
+    "min_length_value" : "ABIN",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "column_name" : "LEAF_CATEG_ID",
+    "max_value" : "175750",
+    "min_value" : "65",
+    "max_length_value" : "175750",
+    "min_length_value" : "65",
+    "null_count" : 0,
+    "cardinality" : 136
+  }, {
+    "column_name" : "LSTG_SITE_ID",
+    "max_value" : "211",
+    "min_value" : "0",
+    "max_length_value" : "100",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 7
+  }, {
+    "column_name" : "SLR_SEGMENT_CD",
+    "max_value" : "16",
+    "min_value" : "-99",
+    "max_length_value" : "-99",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 8
+  }, {
+    "column_name" : "PRICE",
+    "max_value" : "99.9908",
+    "min_value" : "0.0008",
+    "max_length_value" : "36.2828",
+    "min_length_value" : "36",
+    "null_count" : 0,
+    "cardinality" : 10000
+  }, {
+    "column_name" : "ITEM_COUNT",
+    "max_value" : "20",
+    "min_value" : "1",
+    "max_length_value" : "20",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "column_name" : "SELLER_ID",
+    "max_value" : "10000999",
+    "min_value" : "10000000",
+    "max_length_value" : "10000349",
+    "min_length_value" : "10000349",
+    "null_count" : 0,
+    "cardinality" : 955
+  }, {
+    "column_name" : "BUYER_ID",
+    "max_value" : "10009998",
+    "min_value" : "10000001",
+    "max_length_value" : "10002313",
+    "min_length_value" : "10002313",
+    "null_count" : 0,
+    "cardinality" : 6624
+  }, {
+    "column_name" : "OPS_USER_ID",
+    "max_value" : "MODELER",
+    "min_value" : "ADMIN",
+    "max_length_value" : "ANALYST",
+    "min_length_value" : "ADMIN",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "column_name" : "OPS_REGION",
+    "max_value" : "Shanghai",
+    "min_value" : "Beijing",
+    "max_length_value" : "Shanghai",
+    "min_length_value" : "Beijing",
+    "null_count" : 0,
+    "cardinality" : 3
+  } ],
+  "sample_rows" : [ [ "0", "2", "4", "6", "8", "10", "12", "14", "16", "18" ], [ "2012-12-14", "2012-02-16", "2012-10-22", "2013-04-04", "2013-01-19", "2013-02-03", "2013-07-30", "2013-04-30", "2013-04-01", "2012-04-23" ], [ "Others", "ABIN", "Others", "Others", "ABIN", "Auction", "Others", "FP-GTC", "ABIN", "FP-GTC" ], [ "88750", "148324", "140746", "963", "60606", "45333", "24760", "51582", "175750", "45333" ], [ "0", "15", "100", "0", "3", "0", "0", "0", "3", "0" ], [ "11", "13", "11", "13", "13", "16", "16", "15", "16", "5" ], [ "36.2828", "88.3418", "83.454", "88.5907", "77.9727", "56.3584", "25.077", "75.82", "64.2802", "72.6553" ], [ "4", "18", "16", "11", "13", "10", "5", "6", "16", "15" ], [ "10000349", "10000005", "10000154", "10000648", "10000936", "10000470", "10000382", "10000085", "10000507", "10000863" ], [ "10002313", "10006710", "10006076", "10009869", "10000687", "10006759", "10003539", "10008148", "10007797", "10003824" ], [ "ANALYST", "ADMIN", "ADMIN", "MODELER", "MODELER", "MODELER", "ADMIN", "ANALYST", "MODELER", "MODELER" ], [ "Beijing", "Shanghai", "Shanghai", "Hongkong", "Hongkong", "Hongkong", "Shanghai", "Beijing", "Hongkong", "Hongkong" ] ],
+  "storage_location" : null,
+  "owner" : null,
+  "last_access_time" : null,
+  "last_modified_time" : null,
+  "partition_column" : null,
+  "total_file_size" : null,
+  "total_rows" : "10000",
+  "data_source_properties" : { },
+  "project" : "learn_kylin"
+}

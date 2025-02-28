@@ -18,20 +18,19 @@
 
 package org.apache.kylin.rest.reponse;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.rest.service.OpsService;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MetadataBackupResponse {
     @JsonProperty("path")
     private String path;
     @JsonProperty("status")
-    private OpsService.MetadataBackupStatu status;
+    private OpsService.MetadataBackupStatus status;
     @JsonProperty("size")
     private String size;
     @JsonProperty("owner")
     private String owner;
-
 
     public String getPath() {
         return path;
@@ -41,11 +40,11 @@ public class MetadataBackupResponse {
         this.path = path;
     }
 
-    public OpsService.MetadataBackupStatu getStatus() {
+    public OpsService.MetadataBackupStatus getStatus() {
         return status;
     }
 
-    public void setStatus(OpsService.MetadataBackupStatu status) {
+    public void setStatus(OpsService.MetadataBackupStatus status) {
         this.status = status;
     }
 

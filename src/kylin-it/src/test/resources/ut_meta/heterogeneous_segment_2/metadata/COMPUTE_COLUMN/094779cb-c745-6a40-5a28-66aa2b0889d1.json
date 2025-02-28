@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "DEFAULT.KYLIN_SALES",
+  "tableAlias" : "KYLIN_SALES",
+  "columnName" : "CC2",
+  "expression" : "\"date\"(KYLIN_SALES.PART_DT)",
+  "innerExpression" : "`date`(`KYLIN_SALES`.`PART_DT`)",
+  "datatype" : "DATE",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "094779cb-c745-6a40-5a28-66aa2b0889d1",
+  "project" : "heterogeneous_segment_with_snapshot_large_than_input_bytes"
+}

@@ -108,6 +108,11 @@ public class NoopJdbcQueryHistoryStore extends JdbcQueryHistoryStore {
     }
 
     @Override
+    public List<QueryHistory> queryByQueryIds(List<String> queryIds) {
+        return Collections.emptyList();
+    }
+
+    @Override
     public List<QueryHistory> queryAllQueryHistories() {
         return Collections.emptyList();
     }

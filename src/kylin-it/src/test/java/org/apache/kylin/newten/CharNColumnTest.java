@@ -33,19 +33,26 @@ import org.junit.Test;
 
 public class CharNColumnTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() throws Exception {
-        overwriteSystemProp("kylin.engine.persist-flattable-enabled", "false");
-        this.createTestMetadata("src/test/resources/ut_meta/test_char_n_column");
-
+    public void setUp() throws Exception {
         JobContextUtil.cleanUp();
+        setOverlay("src/test/resources/ut_meta/test_char_n_column");
+        super.setUp();
+        overwriteSystemProp("kylin.engine.persist-flattable-enabled", "false");
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/test_char_n_column" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Override
@@ -60,7 +67,7 @@ public class CharNColumnTest extends NLocalWithSparkSessionTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         populateSSWithCSVData(config, getProject(), SparderEnv.getSparkSession());
         String query1 = "select AGE, CITY, " + "intersect_count(USER_ID, TAG, array['rich','tall','handsome']) "
-                + "from TEST_CHAR_N where city=\'Beijing  \' group by AGE, CITY ";
+                + "from TEST_CHAR_N where city='Beijing  ' group by AGE, CITY ";
         List<String> r1 = ExecAndComp.queryModel(getProject(), query1).collectAsList().stream()
                 .map(row -> row.toSeq().mkString(",")).collect(Collectors.toList());
 

@@ -32,6 +32,7 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.LoggerFactory;
 
 import com.jcraft.jsch.Channel;
@@ -314,7 +315,9 @@ public class SSHClient {
         try {
             logger.info("[" + username + "@" + hostname + "] Execute command: " + command);
 
-            StringBuilder text = new StringBuilder();
+            int maxCommandLineOutputLength = KylinConfig.getInstanceFromEnv().getMaxCommandLineOutputLength();
+            StringBuilderHelper text = StringBuilderHelper.headTail(maxCommandLineOutputLength / 2,
+                    maxCommandLineOutputLength - maxCommandLineOutputLength / 2);
             int exitCode = -1;
 
             Session session = newJSchSession();

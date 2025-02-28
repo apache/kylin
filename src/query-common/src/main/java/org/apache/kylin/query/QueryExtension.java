@@ -23,13 +23,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.common.extension.ExtensionFactoryLoader;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.query.engine.SchemaMapExtension;
 import org.apache.kylin.query.engine.TableColumnAuthExtension;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class QueryExtension {
 
@@ -60,6 +59,7 @@ public class QueryExtension {
 
         private SchemaMapExtension schemaMapExtension;
         private TableColumnAuthExtension tableColumnAuthExtension;
+
         public Factory() {
             // Do nothing
         }

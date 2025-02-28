@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.security.config;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.apache.kylin.rest.service.OpenUserGroupService;
 import org.apache.kylin.rest.service.OpenUserService;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +27,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationProvider;
-
-import java.lang.reflect.InvocationTargetException;
 
 @Profile("custom")
 @Configuration

@@ -13,6 +13,7 @@ export default {
       { "id": "setting", "value": "setting", "title": "setting" },
       { "id": "source", "value": "source", "title": "Source" },
       { "id": "model", "value": "modellist", "title": "modelList" },
+      { "id": "internalTable", "value": "internaltable", "title": "internalTable" },
       { "id": "index", "value": "index", "title": "Index" },
       { "id": "modelEdit", "value": "modeledit", "title": "Model Edit" },
       { "id": "modelDetails", "value": "modeldetails", "title": "Model Details" },
@@ -68,6 +69,7 @@ export default {
       { "id": "acceRuleSettingActions" },
       { "id": "acceDelSql" },
       { "id": "acceBlackList" },
+      { "id": "accelerationActions" },
       { "id": "modelActions" },
       { "id": "addSnapshot" },
       { "id": "snapshotAction" },
@@ -94,7 +96,9 @@ export default {
       { "id": "offline" },
       { "id": "online" },
       { "id": "changeModelOwner" },
-      { "id": "secStorageAction" }
+      { "id": "secStorageAction" },
+      { "id": "indexOptimization" },
+      { "id": "storageSetting" }
     ],
     "metadataActions": [
       { "id": "executeModelMetadata" }
@@ -153,12 +157,12 @@ export default {
       "keyPattern": "groupRole-projectRole-menu",
       "entries": [
         { "key": "systemAdmin-*-[project,user,group,groupDetail,projectAuthority,diagnostic]", "value": "admin,project,user,group,groupDetail,diagnostic,projectAuthority" },
-        { "key": "systemAdmin-*-[dashboard,query,insight,queryHistory,studio,setting,source,model,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob]", "value": "dashboard,query,insight,queryHistory,studio,setting,source,model,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob,admin" },
+        { "key": "systemAdmin-*-[dashboard,query,insight,queryHistory,studio,setting,source,model,internalTable,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob]", "value": "dashboard,query,insight,queryHistory,studio,setting,source,model,internalTable,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob,admin" },
         { "key": "systemUser-admin-[project,user,group,groupDetail,projectAuthority]", "value": "project,admin,projectAuthority" },
-        { "key": "systemUser-admin-[dashboard,query,insight,queryHistory,studio,setting,source,model,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob]", "value": "dashboard,query,insight,queryHistory,studio,setting,source,model,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob,admin" },
-        { "key": "systemUser-management-*", "value": "dashboard,query,insight,queryHistory,studio,source,model,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob" },
-        { "key": "systemUser-operation-*", "value": "dashboard,query,insight,queryHistory,studio,model,modelDetails,snapshot,ddl,index,monitor,job,streamingJob,modelSubPartitionValues" },
-        { "key": "systemUser-read-*", "value": "dashboard,query,insight,queryHistory,studio,model,modelDetails,snapshot,ddl,index" },
+        { "key": "systemUser-admin-[dashboard,query,insight,queryHistory,studio,setting,source,model,internalTable,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob]", "value": "dashboard,query,insight,queryHistory,studio,setting,source,model,internalTable,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob,admin" },
+        { "key": "systemUser-management-*", "value": "dashboard,query,insight,queryHistory,studio,source,model,internalTable,index,modelEdit,modelDetails,modelSubPartitionValues,snapshot,ddl,logicalView,monitor,job,streamingJob" },
+        { "key": "systemUser-operation-*", "value": "dashboard,query,insight,queryHistory,studio,model,internalTable,modelDetails,snapshot,ddl,index,monitor,job,streamingJob,modelSubPartitionValues" },
+        { "key": "systemUser-read-*", "value": "dashboard,query,insight,queryHistory,studio,model,internalTable,modelDetails,snapshot,ddl,index" },
         { "key": "systemUser-default-*", "value": "dashboard" }
       ]
     },
@@ -186,9 +190,9 @@ export default {
     "datasourceActions": {
       "keyPattern": "groupRole-projectRole",
       "entries": [
-        { "key": "systemAdmin-*", "value": "sourceManagement,loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,acceRuleSettingActions,acceBlackList,acceDelSql,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
-        { "key": "systemUser-admin", "value": "sourceManagement,loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,acceRuleSettingActions,acceBlackList,acceDelSql,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
-        { "key": "systemUser-management", "value": "loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
+        { "key": "systemAdmin-*", "value": "sourceManagement,loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,acceRuleSettingActions,acceBlackList,acceDelSql,accelerationActions,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
+        { "key": "systemUser-admin", "value": "sourceManagement,loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,acceRuleSettingActions,acceBlackList,acceDelSql,accelerationActions,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
+        { "key": "systemUser-management", "value": "loadSource,delSourceTable,sampleSourceTable,reloadSourceTable,loadData,accelerationActions,modelActions,addSnapshot,snapshotAction,segmentActions,editAggGroup,delAggIdx,buildIndex,tableIndexActions,changePartition,changeBuildType" },
         { "key": "systemUser-operation", "value": "loadData,snapshotAction,segmentActions,buildIndex" },
         { "key": "systemUser-read", "value": "none" }
       ]
@@ -197,9 +201,9 @@ export default {
     "modelActions": {
       "keyPattern": "groupRole-projectRole",
       "entries": [
-        { "key": "systemAdmin-*", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,changeModelOwner,manageSubPartitionValues,secStorageAction" },
-        { "key": "systemUser-admin", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,changeModelOwner,manageSubPartitionValues,secStorageAction" },
-        { "key": "systemUser-management", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,manageSubPartitionValues" },
+        { "key": "systemAdmin-*", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,changeModelOwner,manageSubPartitionValues,secStorageAction,indexOptimization,storageSetting" },
+        { "key": "systemUser-admin", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,changeModelOwner,manageSubPartitionValues,secStorageAction,indexOptimization,storageSetting" },
+        { "key": "systemUser-management", "value": "dataLoad,importMDX,exportTDS,exportMDX,rename,clone,delete,purge,offline,online,deleteIndex,manageSubPartitionValues,indexOptimization" },
         { "key": "systemUser-operation", "value": "purge,exportTDS,manageSubPartitionValues" },
         { "key": "systemUser-read", "value": "exportTDS" }
       ]

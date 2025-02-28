@@ -1,0 +1,83 @@
+{
+  "uuid" : "a3887941-b187-4234-b6c8-175130c7a314",
+  "last_modified" : 1493191408909,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.V_ORDERS",
+  "last_build_job_id" : "a12a834c-00fd-490e-ab05-cec62586074d",
+  "columns_stats" : [ {
+    "max_value" : "600000",
+    "min_value" : "1",
+    "max_length_value" : "100000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 158465
+  }, {
+    "max_value" : "14999",
+    "min_value" : "1",
+    "max_length_value" : "12332",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 10147
+  }, {
+    "max_value" : "P",
+    "min_value" : "F",
+    "max_length_value" : "O",
+    "min_length_value" : "O",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "479129.21",
+    "min_value" : "833.4",
+    "max_length_value" : "194029.55",
+    "min_length_value" : "985.9",
+    "null_count" : 0,
+    "cardinality" : 152324
+  }, {
+    "max_value" : "1998-08-02",
+    "min_value" : "1992-01-01",
+    "max_length_value" : "1996-01-02",
+    "min_length_value" : "1996-01-02",
+    "null_count" : 0,
+    "cardinality" : 2403
+  }, {
+    "max_value" : "5-LOW",
+    "min_value" : "1-URGENT",
+    "max_length_value" : "4-NOT SPECIFIED",
+    "min_length_value" : "5-LOW",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "Clerk#000001000",
+    "min_value" : "Clerk#000000001",
+    "max_length_value" : "Clerk#000000951",
+    "min_length_value" : "Clerk#000000951",
+    "null_count" : 0,
+    "cardinality" : 965
+  }, {
+    "max_value" : "0",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "zzle. slyly special platele",
+    "min_value" : " Tiresias about the blithely ironic a",
+    "max_length_value" : " slyly according to the asymptotes. carefully final packages integrate furious",
+    "min_length_value" : "ideas alongside of ",
+    "null_count" : 0,
+    "cardinality" : 147474
+  }, {
+    "max_value" : "1998",
+    "min_value" : "1992",
+    "max_length_value" : "1996",
+    "min_length_value" : "1996",
+    "null_count" : 0,
+    "cardinality" : 7
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "33", "35", "37", "39", "65", "67" ], [ "3691", "12332", "4450", "3914", "6697", "12760", "8612", "8177", "1627", "5662" ], [ "O", "F", "F", "O", "F", "O", "F", "O", "P", "O" ], [ "194029.55", "247296.05", "139660.54", "231037.28", "118518.56", "192885.43", "156440.15", "307811.89", "99763.79", "167270.36" ], [ "1996-01-02", "1993-10-14", "1994-07-30", "1996-01-10", "1993-10-27", "1995-10-23", "1992-06-03", "1996-09-20", "1995-03-18", "1996-12-19" ], [ "5-LOW", "5-LOW", "5-LOW", "2-HIGH", "3-MEDIUM", "4-NOT SPECIFIED", "3-MEDIUM", "3-MEDIUM", "1-URGENT", "4-NOT SPECIFIED" ], [ "Clerk#000000951", "Clerk#000000955", "Clerk#000000925", "Clerk#000000470", "Clerk#000000409", "Clerk#000000259", "Clerk#000000456", "Clerk#000000659", "Clerk#000000632", "Clerk#000000547" ], [ "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ], [ "nstructions sleep furiously among ", "sly final accounts boost. carefully regular ideas cajole carefully. depos", "quickly. bold deposits sleep slyly. packages use slyly", "ly special requests ", "uriously. furiously final request", "zzle. carefully enticing deposits nag furio", "kly regular pinto beans. carefully unusual waters cajole never", "ole express, ironic requests: ir", "ular requests are blithely pending orbits-- even requests against the deposit", "symptotes haggle slyly around the furiously iron" ], [ "1996", "1993", "1994", "1996", "1993", "1995", "1992", "1996", "1995", "1996" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "150000",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

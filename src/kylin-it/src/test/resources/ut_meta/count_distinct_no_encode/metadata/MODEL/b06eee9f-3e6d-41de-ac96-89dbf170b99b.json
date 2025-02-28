@@ -1,0 +1,107 @@
+{
+  "uuid" : "b06eee9f-3e6d-41de-ac96-89dbf170b99b",
+  "alias" : "test_count_distinct",
+  "fact_table" : "DEFAULT.TEST_COUNT_DISTINCT",
+  "owner" : "ADMIN",
+  "join_tables" : [ ],
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "CITY",
+    "column" : "TEST_COUNT_DISTINCT.CITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "STRING_ID",
+    "column" : "TEST_COUNT_DISTINCT.STRING_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "TINYINT_ID",
+    "column" : "TEST_COUNT_DISTINCT.TINYINT_ID"
+  }, {
+    "id" : 3,
+    "name" : "SMALLINT_ID",
+    "column" : "TEST_COUNT_DISTINCT.SMALLINT_ID"
+  }, {
+    "id" : 4,
+    "name" : "INT_ID",
+    "column" : "TEST_COUNT_DISTINCT.INT_ID"
+  }, {
+    "id" : 5,
+    "name" : "BIGINT_ID",
+    "column" : "TEST_COUNT_DISTINCT.BIGINT_ID"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  }, {
+    "id" : 100001,
+    "name" : "cd_string",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_COUNT_DISTINCT.STRING_ID"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100002,
+    "name" : "cd_tinyint",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_COUNT_DISTINCT.TINYINT_ID"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100003,
+    "name" : "cd_smallint",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_COUNT_DISTINCT.SMALLINT_ID"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100004,
+    "name" : "cd_int",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_COUNT_DISTINCT.INT_ID"
+      } ],
+      "returntype" : "bitmap"
+    }
+  }, {
+    "id" : 100005,
+    "name" : "cd_bigint",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_COUNT_DISTINCT.BIGINT_ID"
+      } ],
+      "returntype" : "bitmap"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : { },
+  "computed_column_uuids" : [ "8a684758-e587-a080-8f39-15bf640eca53", "cf04e848-56d2-0828-b439-335cc530fee8", "4fd41f54-df9c-1f34-41c6-473f3f8d5093", "9b42a5bb-a7d8-5bbf-c5aa-96cd2b6dfc05" ],
+  "project" : "count_distinct_no_encode"
+}

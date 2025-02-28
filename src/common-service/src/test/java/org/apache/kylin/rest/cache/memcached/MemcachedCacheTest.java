@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import net.spy.memcached.DefaultConnectionFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache.MemCachedCacheAdaptor;
@@ -36,6 +35,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.GetFuture;
 
@@ -55,8 +55,8 @@ public class MemcachedCacheTest extends NLocalFileMetadataTestCase {
 
         cacheConfig = new MemcachedCacheConfig();
         MemcachedClient memcachedClient = mock(MemcachedClient.class);
-        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName,
-                7 * 24 * 3600);
+        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig,
+                CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName, 7 * 24 * 3600);
         memCachedAdaptor = new MemCachedCacheAdaptor(memcachedCache);
 
         //Mock put to cache

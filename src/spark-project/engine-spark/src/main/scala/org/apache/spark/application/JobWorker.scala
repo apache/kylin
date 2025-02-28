@@ -19,13 +19,14 @@
 package org.apache.spark.application
 
 
-import java.util.concurrent.Executors
-
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport.JOB_HAS_STOPPED
 import org.apache.kylin.engine.spark.scheduler._
+import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
+
+import java.util.concurrent.Executors
 
 class JobWorker(application: SparkApplication, args: Array[String], eventLoop: KylinJobEventLoop) extends Logging {
   private val pool = Executors.newSingleThreadExecutor()
@@ -57,15 +58,16 @@ class JobWorker(application: SparkApplication, args: Array[String], eventLoop: K
           application.execute(args)
           eventLoop.post(JobSucceeded())
         } catch {
+          case exception: NoRetryException => eventLoop.post(UnknownThrowable(exception))
+          case exception: IllegalDictEncodeValueException => eventLoop.post(ResourceLack(exception))
+          case exception: IllegalStateException if exception.getMessage.equals(JOB_HAS_STOPPED) =>
+            eventLoop.post(JobFailed(exception.getMessage, exception))
           // Compatible with runtime exceptions thrown by the SparkApplication.execute(args: Array[String])
           case runtimeException: RuntimeException =>
             runtimeException.getCause match {
               case noRetryException: NoRetryException => eventLoop.post(UnknownThrowable(noRetryException))
               case throwable: Throwable => eventLoop.post(ResourceLack(throwable))
             }
-          case exception: NoRetryException => eventLoop.post(UnknownThrowable(exception))
-          case exception: IllegalStateException if exception.getMessage.equals(JOB_HAS_STOPPED) =>
-            eventLoop.post(JobFailed(exception.getMessage, exception))
           case throwable: Throwable => eventLoop.post(ResourceLack(throwable))
         }
       }

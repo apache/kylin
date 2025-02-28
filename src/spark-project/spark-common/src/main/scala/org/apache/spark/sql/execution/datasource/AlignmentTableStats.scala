@@ -17,13 +17,13 @@
 
 package org.apache.spark.sql.execution.datasource
 
+import org.apache.kylin.engine.spark.job.TableMetaManager
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.{CatalogStatistics, HiveTableRelation}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.rules.Rule
-import org.apache.kylin.engine.spark.job.TableMetaManager
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.command.DDLUtils
-import org.apache.spark.sql.execution.datasources.{HadoopFsRelation, LogicalRelation}
+import org.apache.spark.sql.execution.datasources.LogicalRelation
 
 case class AlignmentTableStats(session: SparkSession) extends Rule[LogicalPlan] {
   override def apply(plan: LogicalPlan): LogicalPlan = plan transformDown {

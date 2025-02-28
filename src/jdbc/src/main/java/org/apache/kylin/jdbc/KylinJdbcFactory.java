@@ -81,7 +81,8 @@ public class KylinJdbcFactory implements AvaticaFactory {
     }
 
     @Override
-    public AvaticaConnection newConnection(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
+    public AvaticaConnection newConnection(UnregisteredDriver driver, AvaticaFactory factory, String url,
+            Properties info) throws SQLException {
         entry(logger);
         KylinConnection conn = new KylinConnection(driver, (KylinJdbcFactory) factory, url, info);
         exit(logger);
@@ -91,32 +92,40 @@ public class KylinJdbcFactory implements AvaticaFactory {
     @Override
     public AvaticaDatabaseMetaData newDatabaseMetaData(AvaticaConnection connection) {
         entry(logger);
-        AvaticaDatabaseMetaData metaData = new AvaticaDatabaseMetaData(connection) {};
+        AvaticaDatabaseMetaData metaData = new AvaticaDatabaseMetaData(connection) {
+        };
         exit(logger);
         return metaData;
     }
 
     @Override
-    public AvaticaStatement newStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public AvaticaStatement newStatement(AvaticaConnection connection, StatementHandle h, int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         entry(logger);
-        KylinStatement statement = new KylinStatement(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
+        KylinStatement statement = new KylinStatement(connection, h, resultSetType, resultSetConcurrency,
+                resultSetHoldability);
         exit(logger);
         return statement;
     }
 
     @Override
-    public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection, StatementHandle h,
+            Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         entry(logger);
-        KylinPreparedStatement preparedStatement = new KylinPreparedStatement(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
+        KylinPreparedStatement preparedStatement = new KylinPreparedStatement(connection, h, signature, resultSetType,
+                resultSetConcurrency, resultSetHoldability);
         exit(logger);
         return preparedStatement;
     }
 
     @Override
-    public AvaticaResultSet newResultSet(AvaticaStatement statement, QueryState state, Signature signature, TimeZone timeZone, Frame firstFrame) throws SQLException {
+    public AvaticaResultSet newResultSet(AvaticaStatement statement, QueryState state, Signature signature,
+            TimeZone timeZone, Frame firstFrame) throws SQLException {
         entry(logger);
         AvaticaResultSetMetaData resultSetMetaData = new AvaticaResultSetMetaData(statement, null, signature);
-        KylinResultSet resultSet = new KylinResultSet(statement, state, signature, resultSetMetaData, timeZone, firstFrame);
+        KylinResultSet resultSet = new KylinResultSet(statement, state, signature, resultSetMetaData, timeZone,
+                firstFrame);
         exit(logger);
         return resultSet;
     }

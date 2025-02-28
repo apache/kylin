@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.rest.cluster.ClusterManager;
+import org.apache.kylin.rest.discovery.ConditionalOnNodeRegistryZookeeperEnabled;
 import org.apache.kylin.rest.discovery.KylinServiceDiscoveryCache;
 import org.apache.kylin.rest.discovery.KylinServiceDiscoveryClient;
 import org.apache.kylin.rest.response.ServerInfoResponse;
@@ -37,6 +38,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @ConditionalOnZookeeperEnabled // if missing, a default impl will be filled by AppConfig.clusterManager()
+@ConditionalOnNodeRegistryZookeeperEnabled
 @Component
 @Slf4j
 public class ZookeeperClusterManager implements ClusterManager {

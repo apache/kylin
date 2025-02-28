@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -95,15 +96,18 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
         val dsMgr = NDataflowManager.getInstance(getTestConfig(), "cc_test");
         val df = dsMgr.getDataflowByModelAlias("test_model");
         val strings = df.collectPrecalculationResource();
-        Assert.assertEquals(9, strings.size());
+        Assert.assertEquals(13, strings.size());
 
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.equals("/_global/project/cc_test.json")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/model_desc/")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/index_plan/")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/dataflow/")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/dataflow_details/")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/table/")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/cc_test/table_exd/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.equals("PROJECT/cc_test")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("MODEL/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("INDEX_PLAN/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("DATAFLOW/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("LAYOUT/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("TABLE_INFO/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("TABLE_EXD/")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith(MetadataType.SEGMENT.name())));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith(MetadataType.LAYOUT.name())));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith(MetadataType.COMPUTE_COLUMN.name())));
     }
 
     @Test
@@ -111,21 +115,21 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
         val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
         val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d");
         val strings = df.collectPrecalculationResource();
-        Assert.assertEquals(7, strings.size());
+        Assert.assertEquals(8, strings.size());
 
         Assert.assertTrue(strings.stream()
-                .anyMatch(path -> path.equals("/streaming_test/dataflow/4965c827-fbb4-4ea1-a744-3f341a3b030d.json")));
+                .anyMatch(path -> path.equals("DATAFLOW/4965c827-fbb4-4ea1-a744-3f341a3b030d")));
         Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith(
-                "/streaming_test/dataflow_details/4965c827-fbb4-4ea1-a744-3f341a3b030d/3e560d22-b749-48c3-9f64-d4230207f120.json")));
+                "LAYOUT/3e560d22-b749-48c3-9f64-d4230207f120")));
         Assert.assertTrue(strings.stream().anyMatch(
-                path -> path.startsWith("/streaming_test/index_plan/4965c827-fbb4-4ea1-a744-3f341a3b030d.json")));
-        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("/_global/project/streaming_test.json")));
+                path -> path.startsWith("INDEX_PLAN/4965c827-fbb4-4ea1-a744-3f341a3b030d")));
+        Assert.assertTrue(strings.stream().anyMatch(path -> path.startsWith("PROJECT/streaming_test")));
         Assert.assertTrue(strings.stream().anyMatch(
-                path -> path.startsWith("/streaming_test/model_desc/4965c827-fbb4-4ea1-a744-3f341a3b030d.json")));
+                path -> path.startsWith("MODEL/4965c827-fbb4-4ea1-a744-3f341a3b030d")));
         Assert.assertTrue(
-                strings.stream().anyMatch(path -> path.startsWith("/streaming_test/table/DEFAULT.SSB_STREAMING.json")));
+                strings.stream().anyMatch(path -> path.startsWith("TABLE_INFO/streaming_test.DEFAULT.SSB_STREAMING")));
         Assert.assertTrue(
-                strings.stream().anyMatch(path -> path.startsWith("/streaming_test/kafka/DEFAULT.SSB_STREAMING.json")));
+                strings.stream().anyMatch(path -> path.startsWith("KAFKA_CONFIG/streaming_test.DEFAULT.SSB_STREAMING")));
     }
 
     @Test

@@ -37,14 +37,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.model.SnapshotBuildFinishedEvent;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.eventbus.KylinEventException;
 import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.job.model.SnapshotBuildFinishedEvent;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.kylin.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -114,7 +114,7 @@ public class AlluxioExtension {
             if (code != HttpStatus.SC_OK) {
                 InputStream inputStream = response.getEntity().getContent();
                 String responseContent = IOUtils.toString(inputStream);
-                log.warn("request to url, info: {}", postRequest.getURI(), responseContent);
+                log.warn("request to url{}, info: {}", postRequest.getURI(), responseContent);
             }
         }
     }

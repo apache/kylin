@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin;
 
 import java.io.IOException;
@@ -33,14 +32,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- *  This class use for improve java coverage with scala used, to be remove after scala coverage ready.
+ *  This class use for improve java coverage with scala used, to be removed after scala coverage ready.
  */
 public class SparderCoverTest extends NLocalFileMetadataTestCase {
-    private static final Logger log = LoggerFactory.getLogger(SparderCoverTest.class);
 
     @Before
     public void init() {

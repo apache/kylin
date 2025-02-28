@@ -20,6 +20,7 @@ package org.apache.kylin.rest.util;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,7 +59,8 @@ public class SparkHistoryUIUtil {
 
     @SneakyThrows
     private String getHistoryServerUrl() {
-        return String.format("http://%s:%s", InetAddress.getLocalHost().getHostAddress(), historyServer.boundPort());
+        return String.format(Locale.ROOT, "http://%s:%s", InetAddress.getLocalHost().getHostAddress(),
+                historyServer.boundPort());
     }
 
     public static String getHistoryTrackerUrl(String appId) {

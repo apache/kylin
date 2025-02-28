@@ -24,14 +24,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.IUserGroupService;
-import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.open.OpenAclTCRController;
 import org.apache.kylin.rest.request.AclTCRRequest;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.AclTCRService;
+import org.apache.kylin.rest.service.IUserGroupService;
+import org.apache.kylin.rest.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,8 +48,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 

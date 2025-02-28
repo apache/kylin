@@ -1,0 +1,6 @@
+{
+  "uuid": "ff629512-e718-b7b0-457d-d47a56f16d94",
+  "override_kylin_properties": {
+    "kylin.storage.default-storage-type": "3"
+  }
+}

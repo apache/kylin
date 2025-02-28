@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.job.service.SnapshotService;
+import org.apache.kylin.guava30.shaded.common.base.CaseFormat;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.SnapshotStatus;
@@ -49,6 +49,7 @@ import org.apache.kylin.rest.response.SnapshotColResponse;
 import org.apache.kylin.rest.response.SnapshotInfoResponse;
 import org.apache.kylin.rest.response.SnapshotPartitionsResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.rest.service.SnapshotService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,8 +63,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.base.CaseFormat;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;

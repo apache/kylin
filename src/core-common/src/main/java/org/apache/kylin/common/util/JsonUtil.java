@@ -23,11 +23,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,21 +38,24 @@ import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.databind.util.LRUMap;
-import com.fasterxml.jackson.databind.util.LookupCache;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.shaded.jackson.datatype.guava.GuavaModule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.util.LRUMap;
+import com.fasterxml.jackson.databind.util.LookupCache;
 
 public class JsonUtil {
 
@@ -70,10 +73,16 @@ public class JsonUtil {
                 .setConfig(mapper.getSerializationConfig().withView(PersistenceView.class));
         mapper.setFilterProvider(simpleFilterProvider);
         mapper.setTypeFactory(customTypeFactory);
+        mapper.registerModule(new GuavaModule());
         indentMapper.configure(SerializationFeature.INDENT_OUTPUT, true)
                 .setConfig(indentMapper.getSerializationConfig().withView(PersistenceView.class));
         indentMapper.setFilterProvider(simpleFilterProvider);
         indentMapper.setTypeFactory(customTypeFactory);
+        indentMapper.registerModule(new GuavaModule());
+    }
+
+    public static ArrayNode createArrayNode() {
+        return mapper.createArrayNode();
     }
 
     public static <T> T readValue(File src, Class<T> valueType) throws IOException {
@@ -110,6 +119,10 @@ public class JsonUtil {
 
     public static <T> T readValue(byte[] src, Class<T> valueType) throws IOException {
         return mapper.readValue(src, valueType);
+    }
+
+    public static <T> ObjectNode valueToTree(T value) {
+        return mapper.valueToTree(value);
     }
 
     public static <T> T readValue(String content, TypeReference<T> valueTypeRef) throws IOException {
@@ -155,7 +168,7 @@ public class JsonUtil {
     }
 
     public static void writeValue(File out, Object value) throws IOException {
-        writeValue(new FileOutputStream(out), value);
+        writeValue(Files.newOutputStream(out.toPath()), value);
     }
 
     public static <T> String writeValueAsStringForCollection(Object value, TypeReference<T> ref)
@@ -185,6 +198,10 @@ public class JsonUtil {
 
     public static String writeValueAsIndentString(Object value) throws JsonProcessingException {
         return indentMapper.writeValueAsString(value);
+    }
+
+    public static String writeValueAsStringWithPretty(Object value) throws JsonProcessingException {
+        return indentMapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
     }
 
     public static <T> T convert(Object obj, Class<T> valueType) {

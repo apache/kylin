@@ -110,7 +110,7 @@ public class OpenStreamingJobControllerTest extends NLocalFileMetadataTestCase {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/streaming_jobs")
                 .contentType(MediaType.APPLICATION_JSON).param("model_name", StringUtils.EMPTY)
                 .param("model_names", StringUtils.EMPTY).param("job_types", StringUtils.EMPTY)
-                .param("statuses", JobStatusEnum.RUNNING.name()).param("project", StringUtils.EMPTY).param("page_offset", "0")
+                .param("statuses", JobStatusEnum.RUNNING.name()).param("project", PROJECT).param("page_offset", "0")
                 .param("page_size", "10").param("sort_by", "last_modified").param("reverse", "true")
                 .accept(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());

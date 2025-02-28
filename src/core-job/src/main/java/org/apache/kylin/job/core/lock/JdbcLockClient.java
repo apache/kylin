@@ -109,7 +109,7 @@ public class JdbcLockClient {
         boolean acquired = false;
         try {
             int r = jobContext.getJobLockMapper().updateLock(jobLock.getLockId(), jobLock.getLockNode(),
-                    jobLock.getRenewalSec());
+                    jobLock.getRenewalSec(), System.currentTimeMillis());
             acquired = r > 0;
             return acquired;
         } catch (Exception e) {

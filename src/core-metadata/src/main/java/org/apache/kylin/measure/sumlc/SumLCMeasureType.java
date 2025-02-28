@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -30,8 +31,6 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class SumLCMeasureType extends MeasureType<SumLCCounter> {
     public static final String FUNC_SUM_LC = "SUM_LC";

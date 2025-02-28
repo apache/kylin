@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.service.task;
 
 import static org.apache.kylin.metadata.favorite.QueryHistoryIdOffset.OffsetType.META;
+import static org.apache.kylin.metadata.query.QueryMetrics.INTERNAL_TABLE;
+import static org.apache.kylin.metadata.query.QueryMetrics.TABLE_SNAPSHOT;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,6 +35,7 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.TimeZoneTestRunner;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -44,8 +47,10 @@ import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
+import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.NUserGroupService;
+import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner;
 import org.apache.kylin.rest.util.SpringContext;
 import org.junit.After;
 import org.junit.Assert;
@@ -71,7 +76,9 @@ import lombok.var;
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(TimeZoneTestRunner.class)
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestCase {
     private static final String PROJECT = "default";
     private static final String DATAFLOW = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
@@ -80,6 +87,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
     private static final String LAYOUT3 = "30001";
     private static final String LAYOUT4 = "40001";
     private static final Long QUERY_TIME = 1586760398338L;
+    private static final String USAGE_METER_PROJECT = "usage_meter_test";
+    private static final String USAGE_METER_PROJECT_DATAFLOW = "95295aaf-c2be-bd6f-f122-5c14a5c68c8d";
 
     private QueryHistoryMetaUpdateScheduler qhMetaUpdateScheduler;
     private JdbcTemplate jdbcTemplate;
@@ -95,6 +104,7 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         PowerMockito.mockStatic(UserGroupInformation.class);
         UserGroupInformation userGroupInformation = Mockito.mock(UserGroupInformation.class);
         PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(userGroupInformation);
+        JobContextUtil.cleanUp();
         createTestMetadata();
         ApplicationContext applicationContext = PowerMockito.mock(ApplicationContext.class);
         PowerMockito.when(SpringContext.getApplicationContext()).thenReturn(applicationContext);
@@ -102,7 +112,7 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
                 .thenReturn(PowerMockito.mock(PermissionFactory.class));
         PowerMockito.when(SpringContext.getBean(PermissionGrantingStrategy.class))
                 .thenReturn(PowerMockito.mock(PermissionGrantingStrategy.class));
-        qhMetaUpdateScheduler = Mockito.spy(new QueryHistoryMetaUpdateScheduler(PROJECT));
+        qhMetaUpdateScheduler = Mockito.spy(new QueryHistoryMetaUpdateScheduler());
         ReflectionTestUtils.setField(qhMetaUpdateScheduler, "userGroupService", userGroupService);
         jdbcTemplate = JdbcUtil.getJdbcTemplate(getTestConfig());
     }
@@ -110,7 +120,7 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
     @After
     public void tearDown() throws Exception {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }
@@ -120,27 +130,28 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         qhMetaUpdateScheduler.queryHistoryDAO = Mockito.mock(RDBMSQueryHistoryDAO.class);
         qhMetaUpdateScheduler.accelerateRuleUtil = Mockito.mock(AccelerateRuleUtil.class);
         Mockito.when(qhMetaUpdateScheduler.queryHistoryDAO.queryQueryHistoriesByIdOffset(Mockito.anyLong(),
-                Mockito.anyInt(), Mockito.eq(PROJECT))).thenReturn(queryHistories()).thenReturn(null);
+                Mockito.anyInt(), Mockito.eq(USAGE_METER_PROJECT))).thenReturn(queryHistories()).thenReturn(null);
 
         // before update dataflow usage, layout usage and last query time
-        NDataflow dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT)
-                .getDataflow(DATAFLOW);
+        NDataflow dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), USAGE_METER_PROJECT)
+                .getDataflow(USAGE_METER_PROJECT_DATAFLOW);
         Assert.assertEquals(3, dataflow.getQueryHitCount());
         Assert.assertNull(dataflow.getLayoutHitCount().get(20000000001L));
         Assert.assertNull(dataflow.getLayoutHitCount().get(1000001L));
         Assert.assertEquals(0L, dataflow.getLastQueryTime());
 
         // before update id offset
-        QueryHistoryIdOffsetManager idOffsetManager = QueryHistoryIdOffsetManager.getInstance(PROJECT);
+        QueryHistoryIdOffsetManager idOffsetManager = QueryHistoryIdOffsetManager.getInstance(USAGE_METER_PROJECT);
         Assert.assertEquals(0, idOffsetManager.get(META).getOffset());
 
         // run update
         QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner queryHistoryAccelerateRunner = //
-                qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner();
+                qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(USAGE_METER_PROJECT);
         queryHistoryAccelerateRunner.run();
 
         // after update dataflow usage, layout usage and last query time
-        dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT).getDataflow(DATAFLOW);
+        dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), USAGE_METER_PROJECT)
+                .getDataflow(USAGE_METER_PROJECT_DATAFLOW);
         Assert.assertEquals(6, dataflow.getQueryHitCount());
         Assert.assertEquals(2, dataflow.getLayoutHitCount().get(20000000001L).getDateFrequency()
                 .get(TimeUtil.getDayStart(QUERY_TIME)).intValue());
@@ -150,9 +161,14 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
 
         // update snapshot usage
         NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                PROJECT);
-        Assert.assertEquals(1, tableMetadataManager.getOrCreateTableExt("DEFAULT.TEST_ACCOUNT").getSnapshotHitCount());
-        Assert.assertEquals(1, tableMetadataManager.getOrCreateTableExt("DEFAULT.TEST_ORDER").getSnapshotHitCount());
+                USAGE_METER_PROJECT);
+        Assert.assertEquals(1, tableMetadataManager.getOrCreateTableExt("SSB.LINEORDER").getSnapshotHitCount());
+        Assert.assertEquals(2, tableMetadataManager.getOrCreateTableExt("SSB.CUSTOMER").getSnapshotHitCount());
+
+        // update internal table usage
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                USAGE_METER_PROJECT);
+        Assert.assertEquals(1, internalTableManager.getInternalTableDesc("SSB.CUSTOMER").getHitCount());
 
         // after update id offset
         Assert.assertEquals(8, idOffsetManager.get(META).getOffset());
@@ -170,9 +186,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         Assert.assertNull(dataflow.getLayoutHitCount().get(1000001L));
         Assert.assertEquals(0L, dataflow.getLastQueryTime());
 
-        val queryHistoryAccelerateRunner = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner();
-        Class<? extends QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner> clazz = queryHistoryAccelerateRunner
-                .getClass();
+        val queryHistoryAccelerateRunner = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(PROJECT);
+        Class<? extends QueryHistoryMetaUpdateRunner> clazz = queryHistoryAccelerateRunner.getClass();
         Method method = clazz.getDeclaredMethod("updateLastQueryTime", Map.class, String.class);
         method.setAccessible(true);
         method.invoke(queryHistoryAccelerateRunner, ImmutableMap.of("aaa", 100L), PROJECT);
@@ -184,7 +199,7 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         long lastQueryTime = dataflow1.getLastQueryTime();
         Assert.assertEquals(100L, lastQueryTime);
     }
-    
+
     @Test
     public void testUpdateMetadataWithStringRealization() {
         qhMetaUpdateScheduler.queryHistoryDAO = Mockito.mock(RDBMSQueryHistoryDAO.class);
@@ -206,9 +221,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         Assert.assertEquals(0, idOffsetManager.get(META).getOffset());
 
         // run update
-        QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner queryHistoryMetaUpdateRunner = //
-                qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner();
-        queryHistoryMetaUpdateRunner.run();
+        QueryHistoryMetaUpdateRunner qhMetaUpdater = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(PROJECT);
+        qhMetaUpdater.run();
 
         // after update dataflow usage, layout usage and last query time
         dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT).getDataflow(DATAFLOW);
@@ -225,13 +239,13 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
 
     @Test
     public void testQueryHitSnapshotCount() {
-        QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner queryHistoryAccelerateRunner = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner();
+        QueryHistoryMetaUpdateRunner qhAccUpdater = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(PROJECT);
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setSnapshotHitCount(10);
         tableExtDesc.setIdentity("123");
         Map<TableExtDesc, Integer> map = Maps.newHashMap();
         map.put(tableExtDesc, 1);
-        ReflectionTestUtils.invokeMethod(queryHistoryAccelerateRunner, "incQueryHitSnapshotCount", map, PROJECT);
+        ReflectionTestUtils.invokeMethod(qhAccUpdater, "incQueryHitSnapshotCount", map, PROJECT);
     }
 
     @Test
@@ -239,14 +253,15 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         qhMetaUpdateScheduler.queryHistoryDAO = Mockito.mock(RDBMSQueryHistoryDAO.class);
         qhMetaUpdateScheduler.accelerateRuleUtil = Mockito.mock(AccelerateRuleUtil.class);
         Mockito.when(qhMetaUpdateScheduler.queryHistoryDAO.queryQueryHistoriesByIdOffset(Mockito.anyLong(),
-                Mockito.anyInt(), Mockito.eq(PROJECT))).thenReturn(queryHistories()).thenReturn(queryHistories());
+                Mockito.anyInt(), Mockito.eq(USAGE_METER_PROJECT))).thenReturn(queryHistories())
+                .thenReturn(queryHistories());
         getTestConfig().setProperty("kylin.query.query-history-stat-interval", "0m");
         // run update
         QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner queryHistoryAccelerateRunner = //
-                qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner();
+                qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(USAGE_METER_PROJECT);
         queryHistoryAccelerateRunner.run();
 
-        QueryHistoryIdOffsetManager idOffsetManager = QueryHistoryIdOffsetManager.getInstance(PROJECT);
+        QueryHistoryIdOffsetManager idOffsetManager = QueryHistoryIdOffsetManager.getInstance(USAGE_METER_PROJECT);
         Assert.assertEquals(8, idOffsetManager.get(META).getOffset());
 
         queryHistoryAccelerateRunner.run();
@@ -255,9 +270,9 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
 
     @Test
     public void testUpdateStatMeta() {
-        QueryHistoryMetaUpdateScheduler taskScheduler = new QueryHistoryMetaUpdateScheduler("streaming_test");
-        QueryHistoryMetaUpdateScheduler.QueryHistoryMetaUpdateRunner metaUpdateRunner = taskScheduler.new QueryHistoryMetaUpdateRunner();
-        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test");
+        String proj = "streaming_test";
+        QueryHistoryMetaUpdateRunner metaUpdateRunner = qhMetaUpdateScheduler.new QueryHistoryMetaUpdateRunner(proj);
+        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), proj);
         {
             var dataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
             Assert.assertTrue(dataflow.getLayoutHitCount().isEmpty());
@@ -272,6 +287,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
             Assert.assertFalse(batchDataflow.getLayoutHitCount().containsKey(Long.parseLong(LAYOUT4)));
             Assert.assertFalse(streamingDataflow.getLayoutHitCount().containsKey(Long.parseLong(LAYOUT3)));
 
+            resetOffset(proj);
+
             ReflectionTestUtils.invokeMethod(metaUpdateRunner, "updateStatMeta", fusionModelQueryHistory());
             batchDataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
             streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
@@ -279,13 +296,23 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
             Assert.assertEquals(1, countDateFrequency(batchDataflow, LAYOUT4));
             Assert.assertEquals(1, countDateFrequency(streamingDataflow, LAYOUT3));
         }
+        resetOffset(proj);
         {
             var streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
             Assert.assertEquals(1, countDateFrequency(streamingDataflow, LAYOUT3));
+
             ReflectionTestUtils.invokeMethod(metaUpdateRunner, "updateStatMeta", streamingModelQueryHistory());
             streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
             Assert.assertEquals(2, countDateFrequency(streamingDataflow, LAYOUT3));
         }
+    }
+
+    private void resetOffset(String proj) {
+        QueryHistoryIdOffsetManager offsetManager = QueryHistoryIdOffsetManager.getInstance(proj);
+        JdbcUtil.withTxAndRetry(offsetManager.getTransactionManager(), () -> {
+            offsetManager.updateOffset(META, copyForWrite -> copyForWrite.setOffset(0));
+            return null;
+        });
     }
 
     private int countDateFrequency(NDataflow dataflow, String layout) {
@@ -333,8 +360,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         queryHistory5.setQueryTime(QUERY_TIME);
         queryHistory5.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo5 = new QueryHistoryInfo();
-        queryHistoryInfo5.setRealizationMetrics(Lists.newArrayList(
-                new QueryMetrics.RealizationMetrics(LAYOUT1, "Table Index", DATAFLOW, Lists.newArrayList())));
+        queryHistoryInfo5.setRealizationMetrics(Lists.newArrayList(new QueryMetrics.RealizationMetrics(LAYOUT1,
+                TABLE_SNAPSHOT, USAGE_METER_PROJECT_DATAFLOW, Lists.newArrayList("SSB.CUSTOMER"))));
         queryHistory5.setQueryHistoryInfo(queryHistoryInfo5);
         queryHistory5.setId(5);
 
@@ -345,8 +372,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         queryHistory6.setQueryTime(QUERY_TIME);
         queryHistory6.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo6 = new QueryHistoryInfo();
-        queryHistoryInfo6.setRealizationMetrics(Lists.newArrayList(
-                new QueryMetrics.RealizationMetrics(LAYOUT1, "Table Index", DATAFLOW, Lists.newArrayList())));
+        queryHistoryInfo6.setRealizationMetrics(Lists.newArrayList(new QueryMetrics.RealizationMetrics(LAYOUT1,
+                TABLE_SNAPSHOT, USAGE_METER_PROJECT_DATAFLOW, Lists.newArrayList("SSB.CUSTOMER", "SSB.LINEORDER"))));
         queryHistory6.setQueryHistoryInfo(queryHistoryInfo6);
         queryHistory6.setId(6);
 
@@ -357,10 +384,10 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         queryHistory7.setQueryTime(QUERY_TIME);
         queryHistory7.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo7 = new QueryHistoryInfo();
-        queryHistoryInfo7.setQuerySnapshots(Lists.newArrayList(Lists.newArrayList("DEFAULT.TEST_ACCOUNT"),
-                Lists.newArrayList("DEFAULT.TEST_ORDER")));
-        queryHistoryInfo7.setRealizationMetrics(Lists.newArrayList(
-                new QueryMetrics.RealizationMetrics(LAYOUT2, "Table Index", DATAFLOW, Lists.newArrayList())));
+        queryHistoryInfo7.setQuerySnapshots(
+                Lists.newArrayList(Lists.newArrayList("SSB.CUSTOMER"), Lists.newArrayList("SSB.LINEORDER")));
+        queryHistoryInfo7.setRealizationMetrics(Lists.newArrayList(new QueryMetrics.RealizationMetrics(LAYOUT2,
+                INTERNAL_TABLE, USAGE_METER_PROJECT_DATAFLOW, Lists.newArrayList("SSB.CUSTOMER"))));
         queryHistory7.setQueryHistoryInfo(queryHistoryInfo7);
         queryHistory7.setId(7);
 
@@ -371,8 +398,8 @@ public class QueryHistoryMetaUpdateSchedulerTest extends NLocalFileMetadataTestC
         queryHistory8.setQueryTime(QUERY_TIME);
         queryHistory8.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo8 = new QueryHistoryInfo();
-        queryHistoryInfo8.setRealizationMetrics(
-                Lists.newArrayList(new QueryMetrics.RealizationMetrics(null, null, DATAFLOW, Lists.newArrayList())));
+        queryHistoryInfo8.setRealizationMetrics(Lists.newArrayList(
+                new QueryMetrics.RealizationMetrics(null, null, USAGE_METER_PROJECT_DATAFLOW, Lists.newArrayList())));
         queryHistory8.setQueryHistoryInfo(queryHistoryInfo8);
         queryHistory8.setId(8);
 

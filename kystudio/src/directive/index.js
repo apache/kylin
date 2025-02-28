@@ -512,6 +512,48 @@ Vue.directive('drag', {
     }
   }
 })
+// 收集guide dom
+Vue.directive('guide', {
+  // bind: function (el, binding, vnode) {
+  //   console.log('----', vnode.key, vnode)
+  //   // 设置alone参数 避免虚拟dom重用导致指令生命周期错误
+  //   let keys = binding.modifiers
+  //   if (binding.arg === 'alone') {
+  //     vnode.key = Object.keys(keys).join('-')
+  //   }
+  // },
+  update: function (el, binding, vnode) {
+    const keys = binding.modifiers
+    const storeGuide = store.state.system.guideConfig.targetList
+    if (storeGuide) {
+      for (const i in keys) {
+        storeGuide[i] = el.__vue__ || el
+      }
+      if (store.state.system.guideConfig.globalMaskVisible && binding.value) {
+        storeGuide[binding.value] = el.__vue__ || el
+      }
+    }
+  },
+  inserted: function (el, binding, vnode) {
+    const keys = binding.modifiers
+    const storeGuide = store.state.system.guideConfig.targetList
+    if (storeGuide) {
+      for (const i in keys) {
+        storeGuide[i] = el.__vue__ || el
+      }
+      if (store.state.system.guideConfig.globalMaskVisible && binding.value) {
+        storeGuide[binding.value] = el.__vue__ || el
+      }
+    }
+  },
+  unbind: function (el, binding) {
+    const keys = binding.modifiers
+    const storeGuide = store.state.system.guideConfig.targetList
+    for (const i in keys) {
+      delete storeGuide[i]
+    }
+  }
+})
 let keyCodeMap = {
   'esc': 27,
   'enter': 13

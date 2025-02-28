@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_ORDER",
+  "tableAlias" : "TEST_ORDER",
+  "columnName" : "ACCOUNT_CASE_WHEN",
+  "expression" : "CASE WHEN TRUE THEN TEST_ORDER.BUYER_ID ELSE 0 END",
+  "datatype" : "bigint",
+  "uuid" : "a10abc74-3d83-04a6-009e-3f915cb9efea",
+  "project" : "default"
+}

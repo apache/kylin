@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_ORDER",
+  "model_uuid" : "1e74b613-6134-a986-810b-ac5b4f663af3",
+  "project" : "test_agg_pushdown",
+  "uuid" : "7625cbdb-c5d0-041a-df07-c4fc174e9163"
+}

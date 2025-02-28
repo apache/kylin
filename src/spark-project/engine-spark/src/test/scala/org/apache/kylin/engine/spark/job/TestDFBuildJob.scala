@@ -20,17 +20,20 @@ package org.apache.kylin.engine.spark.job
 
 import java.io.File
 import java.util
-import org.apache.kylin.guava30.shaded.common.collect.Lists
-import org.apache.kylin.engine.spark.storage.ParquetStorage
-import org.apache.kylin.engine.spark.utils.{Repartitioner, StorageUtils}
-import org.apache.kylin.metadata.cube.model.NIndexPlanManager
+
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.fs.{ContentSummary, FSDataOutputStream, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.storage.ParquetStorage
+import org.apache.kylin.engine.spark.utils.{Repartitioner, StorageUtils}
+import org.apache.kylin.guava30.shaded.common.collect.Lists
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager
+import org.apache.parquet.format.converter.ParquetMetadataConverter
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
-import org.apache.spark.sql.types.{StringType, StructType}
-import org.apache.spark.sql.{Column, Dataset, Row}
+import org.apache.spark.sql.execution.datasources.parquet.ParquetFooterReader
+import org.apache.spark.sql.types.{IntegerType, StringType, StructType}
+import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import org.junit.Assert
 import org.mockito.Mockito.{when, mock => jmock}
 import org.scalamock.scalatest.MockFactory
@@ -129,21 +132,55 @@ class TestDFBuildJob extends AnyWordSpec with MockFactory with SharedSparkSessio
       }
     }
 
+    "needResetRowGroup is true" should {
+      "reset parquet.block.size, parquet.page.size.row.check.max" in {
+        def generateData(ss: SparkSession): Dataset[Row] = {
+          var schema = new StructType
+          schema = schema.add("1", IntegerType)
+          schema = schema.add("2", StringType)
+          val data: Seq[Row] = Range(0, 1000).map(i => Row(i, if (i % 2 == 0) "a" else "b")).toSeq
+          ss.createDataFrame(ss.sparkContext.parallelize(data), schema)
+        }
+
+        val origin = generateData(spark)
+        val repartitionNum = 1
+        storage.saveTo(tempPath, origin, spark)
+        val tempFiles = new File(tempPath).listFiles().filter(_.getName.endsWith(".parquet")).sortBy(_.getName)
+        assert(tempFiles.length == 4)
+        val tempFileBlockSize = tempFiles.map(file => {
+          ParquetFooterReader.readFooter(HadoopUtil.getCurrentConfiguration,
+            new Path(tempFiles(0).getAbsolutePath), ParquetMetadataConverter.NO_FILTER).getBlocks.size()
+        }).sum
+        assert(tempFileBlockSize == 4)
+        val sortCols = origin.schema.fields.map(f => new Column(f.name))
+        val repartitioner = genMockHelper(repartitionNum, Lists.newArrayList(Integer.valueOf(1), Integer.valueOf(2)),
+          Lists.newArrayList(Integer.valueOf(2)), needResetRowGroup = true)
+        repartitioner.doRepartition(path, path + "_temp", repartitioner.getRepartitionNumByStorage, spark)
+        val files = new File(path).listFiles().filter(_.getName.endsWith(".parquet")).sortBy(_.getName)
+        assert(files.length == repartitionNum)
+
+        val fileBlocks = ParquetFooterReader.readFooter(HadoopUtil.getCurrentConfiguration,
+          new Path(files(0).getAbsolutePath), ParquetMetadataConverter.NO_FILTER).getBlocks
+        assert(fileBlocks.size > tempFileBlockSize)
+      }
+    }
   }
 
-  "layout" should{
+  "layout" should {
     "has countDistinct" in {
-         val manager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv, "default")
+      val manager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv, "default")
       val entity = manager.getIndexPlan("741ca86a-1f13-46da-a59f-95fb68615e3a").getIndexEntity(1000000).getLastLayout
       Assert.assertTrue(StorageUtils.findCountDistinctMeasure(entity))
     }
   }
 
-  def genMockHelper(repartitionNum: Int, sortByColumns: util.List[Integer], isShardByColumn: util.List[Integer] = null): Repartitioner = {
+  def genMockHelper(repartitionNum: Int, sortByColumns: util.List[Integer], isShardByColumn: util.List[Integer] = null,
+                    needResetRowGroup: Boolean = false): Repartitioner = {
     val sc = jmock(classOf[ContentSummary])
     when(sc.getFileCount).thenReturn(1L)
     when(sc.getLength).thenReturn(repartitionNum * 1024 * 1024L)
-    val helper = new Repartitioner(1, 1, repartitionNum * 100, 100, sc, isShardByColumn, sortByColumns, true)
+    val helper = new Repartitioner(1, 1, needResetRowGroup,
+      1, 1, repartitionNum * 100, 100, sc, isShardByColumn, sortByColumns, true)
     Assert.assertEquals(repartitionNum, helper.getRepartitionNumByStorage)
     helper
   }

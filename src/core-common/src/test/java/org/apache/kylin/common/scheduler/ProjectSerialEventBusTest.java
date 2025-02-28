@@ -52,8 +52,9 @@ public class ProjectSerialEventBusTest {
     void testInnerQueueStatus() throws Exception {
         LinkedList<SchedulerEventNotifier> innerEventsQueue = (LinkedList<SchedulerEventNotifier>) ReflectionTestUtils
                 .getField(projectSerialEventBus, "eventsQueue");
-        Set<ProjectSerialEventBus.RunningProject> runningProjects = (Set<ProjectSerialEventBus.RunningProject>) ReflectionTestUtils
-                .getField(projectSerialEventBus, "runningProjects");
+        Set<ProjectSerialEventBus.RunningProject> runningProjects //
+                = (Set<ProjectSerialEventBus.RunningProject>) ReflectionTestUtils.getField(projectSerialEventBus,
+                        "runningProjects");
 
         projectSerialEventBus.postAsync(new ProjectEscapedNotifier("project1"));
         assertEquals(1, runningProjects.size());
@@ -89,8 +90,9 @@ public class ProjectSerialEventBusTest {
     void testTimingDispatcherRun() {
         LinkedList<SchedulerEventNotifier> innerEventsQueue = (LinkedList<SchedulerEventNotifier>) ReflectionTestUtils
                 .getField(projectSerialEventBus, "eventsQueue");
-        Set<ProjectSerialEventBus.RunningProject> runningProjects = (Set<ProjectSerialEventBus.RunningProject>) ReflectionTestUtils
-                .getField(projectSerialEventBus, "runningProjects");
+        Set<ProjectSerialEventBus.RunningProject> runningProjects //
+                = (Set<ProjectSerialEventBus.RunningProject>) ReflectionTestUtils.getField(projectSerialEventBus,
+                        "runningProjects");
 
         innerEventsQueue.add(new ProjectEscapedNotifier("project1"));
         assertEquals(1, innerEventsQueue.size());

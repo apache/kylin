@@ -17,13 +17,13 @@
  */
 package org.apache.kylin.cache.softaffinity;
 
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.jetbrains.annotations.NotNull;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,9 +68,9 @@ public class SoftAffinityBookKeeping {
     }
 
     public static void logAudits() {
-        List<String> lines = audit().entrySet().stream()
-                .map(e -> e.getKey() + " -> " + e.getValue()).collect(Collectors.toList());
-        log.debug("Past few mappings of location -> executors: \n" + String.join("\n", lines));
+        List<String> lines = audit().entrySet().stream().map(e -> e.getKey() + " -> " + e.getValue())
+                .collect(Collectors.toList());
+        log.debug("Past few mappings of location -> executors: \n{}", String.join("\n", lines));
     }
 
     public static int size() {

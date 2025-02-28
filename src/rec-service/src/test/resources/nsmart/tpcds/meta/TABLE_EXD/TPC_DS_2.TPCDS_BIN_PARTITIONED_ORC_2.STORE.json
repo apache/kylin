@@ -1,0 +1,226 @@
+{
+  "uuid" : "6c7c381f-10ac-426d-9cf5-fe9a1288e523",
+  "last_modified" : 1497867438836,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.STORE",
+  "last_build_job_id" : "ab06ed03-8fbf-4f10-b249-74e4dca8f805",
+  "columns_stats" : [ {
+    "max_value" : "22",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 22
+  }, {
+    "max_value" : "AAAAAAAAOAAAAAAA",
+    "min_value" : "AAAAAAAAABAAAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 12
+  }, {
+    "max_value" : "2001-03-13",
+    "min_value" : "1997-03-13",
+    "max_length_value" : "1997-03-13",
+    "min_length_value" : "1997-03-13",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2001-03-12",
+    "min_value" : "",
+    "max_length_value" : "2000-03-12",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 4
+  }, {
+    "max_value" : "2451267",
+    "min_value" : "2450910",
+    "max_length_value" : "2451189",
+    "min_length_value" : "2451189",
+    "null_count" : 18,
+    "cardinality" : 4
+  }, {
+    "max_value" : "pri",
+    "min_value" : "able",
+    "max_length_value" : "ought",
+    "min_length_value" : "ese",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "297",
+    "min_value" : "218",
+    "max_length_value" : "245",
+    "min_length_value" : "245",
+    "null_count" : 0,
+    "cardinality" : 15
+  }, {
+    "max_value" : "9341467",
+    "min_value" : "5219562",
+    "max_length_value" : "5250760",
+    "min_length_value" : "5250760",
+    "null_count" : 0,
+    "cardinality" : 18
+  }, {
+    "max_value" : "8AM-8AM",
+    "min_value" : "8AM-12AM",
+    "max_length_value" : "8AM-12AM",
+    "min_length_value" : "8AM-4PM",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "William Ward",
+    "min_value" : "Alva Abner",
+    "max_length_value" : "Franklin Mcclure",
+    "min_length_value" : "John Mccoy",
+    "null_count" : 0,
+    "cardinality" : 17
+  }, {
+    "max_value" : "10",
+    "min_value" : "1",
+    "max_length_value" : "10",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Unknown",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "Unknown",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "Various bars make most. Difficult levels introduce at a boots. Buildings welcome only never el",
+    "min_value" : "Architects coul",
+    "max_length_value" : "Various bars make most. Difficult levels introduce at a boots. Buildings welcome only never el",
+    "min_length_value" : "Architects coul",
+    "null_count" : 0,
+    "cardinality" : 19
+  }, {
+    "max_value" : "Thomas Pollack",
+    "min_value" : "Charles Bartley",
+    "max_length_value" : "David Lamontagne",
+    "min_length_value" : "David Smith",
+    "null_count" : 0,
+    "cardinality" : 14
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Unknown",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "Unknown",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "Unknown",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "Unknown",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "877",
+    "min_value" : "175",
+    "max_length_value" : "767",
+    "min_length_value" : "27",
+    "null_count" : 0,
+    "cardinality" : 15
+  }, {
+    "max_value" : "Willow ",
+    "min_value" : "12th ",
+    "max_length_value" : "Washington 1st",
+    "min_length_value" : "6th ",
+    "null_count" : 0,
+    "cardinality" : 20
+  }, {
+    "max_value" : "Wy",
+    "min_value" : "Boulevard",
+    "max_length_value" : "Boulevard",
+    "min_length_value" : "Wy",
+    "null_count" : 0,
+    "cardinality" : 10
+  }, {
+    "max_value" : "Suite T",
+    "min_value" : "Suite 100",
+    "max_length_value" : "Suite 250",
+    "min_length_value" : "Suite T",
+    "null_count" : 0,
+    "cardinality" : 17
+  }, {
+    "max_value" : "Midway",
+    "min_value" : "Fairview",
+    "max_length_value" : "Fairview",
+    "min_length_value" : "Midway",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Williamson County",
+    "min_value" : "Williamson County",
+    "max_length_value" : "Williamson County",
+    "min_length_value" : "Williamson County",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "TN",
+    "min_value" : "TN",
+    "max_length_value" : "TN",
+    "min_length_value" : "TN",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "35709",
+    "min_value" : "31904",
+    "max_length_value" : "31904",
+    "min_length_value" : "31904",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "United States",
+    "min_value" : "United States",
+    "max_length_value" : "United States",
+    "min_length_value" : "United States",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "-5.0",
+    "min_value" : "-5.0",
+    "max_length_value" : "-5.0",
+    "min_length_value" : "-5.0",
+    "null_count" : 0,
+    "cardinality" : 1
+  }, {
+    "max_value" : "0.11",
+    "min_value" : "0.01",
+    "max_length_value" : "0.03",
+    "min_length_value" : "0.03",
+    "null_count" : 0,
+    "cardinality" : 8
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAACAAAAAAA", "AAAAAAAAEAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAIAAAAAAA", "AAAAAAAAKAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAOAAAAAAA", "AAAAAAAAABAAAAAA", "AAAAAAAADBAAAAAA" ], [ "1997-03-13", "2000-03-13", "1999-03-14", "1997-03-13", "2000-03-13", "1999-03-14", "1997-03-13", "2000-03-13", "1999-03-14", "1997-03-13" ], [ "", "", "2001-03-12", "", "", "2001-03-12", "", "", "2001-03-12", "" ], [ "2451189", "", "2450910", "", "", "", "", "", "", "2451267" ], [ "ought", "able", "anti", "ation", "eing", "ought", "pri", "anti", "ation", "n st" ], [ "245", "236", "288", "297", "271", "294", "219", "291", "220", "289" ], [ "5250760", "7557959", "9078805", "8954883", "6995995", "9294113", "8157564", "8724265", "5633347", "8618762" ], [ "8AM-4PM", "8AM-4PM", "8AM-4PM", "8AM-4PM", "8AM-4PM", "8AM-4PM", "8AM-12AM", "8AM-4PM", "8AM-8AM", "8AM-4PM" ], [ "William Ward", "Scott Smith", "Edwin Adams", "David Thomas", "Brett Yates", "Raymond Jacobs", "John Mccoy", "Matt Frederick", "Franklin Mcclure", "Alva Abner" ], [ "2", "7", "8", "9", "2", "6", "2", "1", "5", "3" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "Enough high areas stop expectations. Elaborate, local is", "Impossible, true arms can treat constant, complete w", "Events would achieve other, eastern hours. Mechanisms must not eat other, new org", "Architects coul", "Formal, psychological pounds relate reasonable, young principles. Black, ", "Mysterious employe", "As modern fields say more than beside a initiatives. Times m", "Products demonstrate units. Separate ways might not grow gradually fea", "Ostensibly short issues get in the patients. Urgently eventual schools ma", "Different, lovely students make" ], [ "Charles Bartley", "David Lamontagne", "Thomas Pollack", "Thomas Benton", "Dean Morrison", "Michael Wilson", "Roger Nichols", "Michael Redding", "Richard Bell", "David Smith" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "767", "877", "27", "811", "226", "175", "84", "408", "588", "240" ], [ "Spring ", "Park Laurel", "Lee 6th", "Lee ", "Hill ", "Park Green", "First ", "Franklin Hill", "Washington ", "Willow " ], [ "Wy", "Road", "Court", "Circle", "Boulevard", "Court", "Cir.", "Boulevard", "Cir.", "RD" ], [ "Suite 250", "Suite T", "Suite 80", "Suite T", "Suite 190", "Suite 160", "Suite 180", "Suite 20", "Suite 170", "Suite 280" ], [ "Midway", "Midway", "Fairview", "Midway", "Midway", "Midway", "Midway", "Midway", "Fairview", "Fairview" ], [ "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County", "Williamson County" ], [ "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN", "TN" ], [ "31904", "31904", "35709", "31904", "31904", "31904", "31904", "31904", "31904", "35709" ], [ "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States", "United States" ], [ "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0", "-5.0" ], [ "0.03", "0.03", "0.03", "0.01", "0.08", "0.11", "0.07", "0.06", "0.08", "0.01" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "22",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "5227",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/store",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

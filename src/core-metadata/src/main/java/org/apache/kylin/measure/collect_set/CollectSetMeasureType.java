@@ -20,14 +20,13 @@ package org.apache.kylin.measure.collect_set;
 
 import java.util.Map;
 
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class CollectSetMeasureType extends MeasureType<CollectSetCounter> {
 
@@ -77,8 +76,8 @@ public class CollectSetMeasureType extends MeasureType<CollectSetCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap
-            .<String, Class<?>> of(CollectSetMeasureType.FUNC_COLLECT_SET, CollectSetAggFunc.class);
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(CollectSetMeasureType.FUNC_COLLECT_SET,
+            CollectSetAggFunc.class);
 
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {

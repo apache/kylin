@@ -1,0 +1,15 @@
+{
+  "uuid" : "b4ca12ff-f5bf-4307-8fcb-a430caa4665d",
+  "last_modified" : 1546950898362,
+  "version" : "3.0.0.0",
+  "mvcc" : 1,
+  "description" : null,
+  "owner" : null,
+  "mp_values" : [ ],
+  "create_time_utc" : 1546950898355,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "project" : "model_missing_partition",
+  "segment_uuids" : [ "2067c847-bd3c-46e2-bf61-eef5ee65ea4c" ]
+}

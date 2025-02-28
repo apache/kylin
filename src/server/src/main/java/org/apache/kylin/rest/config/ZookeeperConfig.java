@@ -20,6 +20,7 @@ package org.apache.kylin.rest.config;
 
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.kylin.common.util.ZookeeperAclBuilder;
+import org.apache.kylin.rest.discovery.ConditionalOnNodeRegistryZookeeperEnabled;
 import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;
 import org.springframework.cloud.zookeeper.CuratorFrameworkCustomizer;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnZookeeperEnabled
+@ConditionalOnNodeRegistryZookeeperEnabled
 public class ZookeeperConfig implements CuratorFrameworkCustomizer {
 
     @Override

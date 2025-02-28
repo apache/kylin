@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.rest.response.HealthResponse;
 import org.apache.spark.sql.SparderEnv;
@@ -29,8 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class HealthServiceTest extends ServiceTestBase {
 

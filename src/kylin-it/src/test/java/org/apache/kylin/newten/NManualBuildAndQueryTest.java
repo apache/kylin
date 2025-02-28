@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
+import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -40,10 +41,9 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.rest.service.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,14 +57,10 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
 
-    @Before
-    public void setup() throws Exception {
-        super.init();
-    }
-
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     public void buildCubes() throws Exception {
@@ -79,7 +75,7 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
         }
     }
 
-    private void buildAndMergeCube(String dfName) throws Exception {
+    protected void buildAndMergeCube(String dfName) throws Exception {
         if (dfName.equals("89af4ee2-2cdb-4b07-b39e-4c29856309aa")) {
             buildFourSegementAndMerge(dfName);
         }
@@ -99,7 +95,10 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
         // cleanup all segments first
         NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dsMgr.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
 
         /**
          * Round1. Build 4 segment
@@ -118,15 +117,26 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
          * Round2. Merge two segments
          */
         df = dsMgr.getDataflow(dfName);
-        NDataSegment firstMergeSeg = dsMgr.mergeSegments(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2010-01-01"), SegmentRange.dateToLong("2015-01-01")), false);
+
+        NDataSegment firstMergeSeg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    getProject());
+            return dataflowManager.mergeSegments(dataflowManager.getDataflow(dfName),
+                    new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2010-01-01"),
+                            SegmentRange.dateToLong("2015-01-01")),
+                    false);
+        }, getProject());
+
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, Sets.newLinkedHashSet(layouts), "ADMIN",
                 RandomUtil.randomUUIDStr());
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, IndexDataConstructor.wait(firstMergeJob));
-        val merger = new AfterMergeOrRefreshResourceMerger(config, getProject());
-        merger.merge(firstMergeJob.getSparkMergingStep());
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val merger = new AfterMergeOrRefreshResourceMerger(KylinConfig.getInstanceFromEnv(), getProject());
+            merger.merge(firstMergeJob.getSparkMergingStep());
+            return null;
+        }, getProject());
 
         /**
          * validate cube segment info
@@ -170,7 +180,7 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
                 .collect(Collectors.toSet());
     }
 
-    private void buildFourSegementAndMerge(String dfName) throws Exception {
+    protected void buildFourSegementAndMerge(String dfName) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NDataflowManager dsMgr = NDataflowManager.getInstance(config, getProject());
         ExecutableManager execMgr = ExecutableManager.getInstance(config, getProject());
@@ -181,7 +191,11 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
         // cleanup all segments first
         NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dsMgr.updateDataflow(update);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject()).updateDataflow(update);
+            return null;
+        }, getProject());
+
         /**
          * Round1. Build 4 segment
          */
@@ -209,27 +223,44 @@ public class NManualBuildAndQueryTest extends NLocalWithSparkSessionTest {
         /**
          * Round2. Merge two segments
          */
-        df = dsMgr.getDataflow(dfName);
-        NDataSegment firstMergeSeg = dsMgr.mergeSegments(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2010-01-01"), SegmentRange.dateToLong("2013-01-01")), false);
+        NDataSegment firstMergeSeg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    getProject());
+            return dataflowManager.mergeSegments(dataflowManager.getDataflow(dfName),
+                    new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2010-01-01"),
+                            SegmentRange.dateToLong("2013-01-01")),
+                    false);
+        }, getProject());
+
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, Sets.newLinkedHashSet(layouts), "ADMIN",
                 RandomUtil.randomUUIDStr());
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, IndexDataConstructor.wait(firstMergeJob));
-        val merger = new AfterMergeOrRefreshResourceMerger(config, getProject());
-        merger.merge(firstMergeJob.getSparkMergingStep());
+
+        NDataSegment secondMergeSeg = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    getProject());
+            val merger = new AfterMergeOrRefreshResourceMerger(KylinConfig.getInstanceFromEnv(), getProject());
+            merger.merge(firstMergeJob.getSparkMergingStep());
+            return dataflowManager.mergeSegments(dataflowManager.getDataflow(dfName),
+                    new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2013-01-01"),
+                            SegmentRange.dateToLong("2015-06-01")),
+                    false);
+        }, getProject());
 
         df = dsMgr.getDataflow(dfName);
 
-        NDataSegment secondMergeSeg = dsMgr.mergeSegments(df, new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2013-01-01"), SegmentRange.dateToLong("2015-06-01")), false);
         NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg, Sets.newLinkedHashSet(layouts),
                 "ADMIN", RandomUtil.randomUUIDStr());
         execMgr.addJob(secondMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, IndexDataConstructor.wait(secondMergeJob));
-        merger.merge(secondMergeJob.getSparkMergingStep());
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            val merger = new AfterMergeOrRefreshResourceMerger(KylinConfig.getInstanceFromEnv(), getProject());
+            merger.merge(secondMergeJob.getSparkMergingStep());
+            return null;
+        }, getProject());
 
         /**
          * validate cube segment info

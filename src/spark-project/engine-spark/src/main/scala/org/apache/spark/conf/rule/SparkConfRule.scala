@@ -19,14 +19,15 @@
 package org.apache.spark.conf.rule
 
 
-import java.util
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.cluster.YarnClusterManager
+import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.utils.{LogUtils, SparkConfHelper, SparkConfRuleConstants}
-import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
+
+import java.util
 
 sealed trait SparkConfRule extends Logging {
   def apply(helper: SparkConfHelper): Unit = {

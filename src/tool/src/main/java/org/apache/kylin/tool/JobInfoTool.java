@@ -21,16 +21,16 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.sql.Date;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -77,8 +77,8 @@ public class JobInfoTool extends CancelableTask {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         Path path = new Path(dir + "/" + JOB_INFO_DIR + "/" + project + ZIP_SUFFIX);
         List<JobInfo> jobInfos = Lists.newArrayList();
-        try(ZipInputStream zis = new ZipInputStream(fs.open(path));
-            BufferedReader br = new BufferedReader(new InputStreamReader(zis))) {
+        try (ZipInputStream zis = new ZipInputStream(fs.open(path));
+                BufferedReader br = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8))) {
             while (zis.getNextEntry() != null) {
                 String value = br.readLine();
                 JobInfoHelper jobInfo = JsonUtil.readValue(value, JobInfoHelper.class);
@@ -99,9 +99,7 @@ public class JobInfoTool extends CancelableTask {
     }
 
     public void extractFull(File dir, long startTime, long endTime) {
-        Date startDate = new Date(startTime);
-        Date endDate = new Date(endTime);
-        JobMapperFilter filter = JobMapperFilter.builder().timeRange(Arrays.asList(startDate, endDate)).build();
+        JobMapperFilter filter = JobMapperFilter.builder().timeRange(Arrays.asList(startTime, endTime)).build();
         List<JobInfo> jobs = JobContextUtil.getJobInfoDao(KylinConfig.getInstanceFromEnv())
                 .getJobInfoListByFilter(filter);
         for (JobInfo job : jobs) {
@@ -116,13 +114,13 @@ public class JobInfoTool extends CancelableTask {
         if (!jobs.isEmpty()) {
             saveJobToFile(jobs.get(0), dir);
         } else {
-            throw new IllegalArgumentException(String.format("Job id {%s} not found.", jobId));
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "Job id {%s} not found.", jobId));
         }
     }
 
     private void saveJobToFile(JobInfo job, File dir) {
         File jobFile = new File(dir, job.getJobId());
-        try (OutputStream os = new FileOutputStream(jobFile);
+        try (OutputStream os = Files.newOutputStream(jobFile.toPath());
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os, Charset.defaultCharset()))) {
             bw.write(JsonUtil.writeValueAsString(new JobInfoHelper(job)));
             bw.newLine();
@@ -151,8 +149,8 @@ public class JobInfoTool extends CancelableTask {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         String filePathStr = dir + "/" + project + ZIP_SUFFIX;
         try (FSDataOutputStream fos = fs.create(new Path(filePathStr));
-             ZipOutputStream zos = new ZipOutputStream(fos);
-             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(zos, Charset.defaultCharset()))) {
+                ZipOutputStream zos = new ZipOutputStream(fos);
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(zos, Charset.defaultCharset()))) {
             JobMapperFilter filter = JobMapperFilter.builder().project(project).build();
             List<JobInfo> jobs = JobContextUtil.getJobInfoDao(KylinConfig.getInstanceFromEnv())
                     .getJobInfoListByFilter(filter);
@@ -176,9 +174,12 @@ public class JobInfoTool extends CancelableTask {
                 .getJobInfoListByFilter(filter);
 
         for (JobInfo job : jobs) {
-            try (FileWriter fw = new FileWriter(extractDir + job.getJobId() + ".json")) {
+            String fileName = extractDir + job.getJobId() + ".json";
+            try (BufferedWriter bf = new BufferedWriter(new OutputStreamWriter(
+                    Files.newOutputStream(new File(fileName).toPath()), StandardCharsets.UTF_8))) {
                 String value = JsonUtil.writeValueAsString(new JobInfoHelper(job));
-                fw.write(value);
+                bf.write(value);
+                bf.flush();
             }
         }
     }
@@ -222,8 +223,10 @@ public class JobInfoTool extends CancelableTask {
         }
         File[] jsonFiles = restoreProjectDir.listFiles();
         List<JobInfo> jobInfos = Lists.newArrayList();
+        assert jsonFiles != null;
         for (File jsonFile : jsonFiles) {
-            try (BufferedReader br = new BufferedReader(new FileReader(jsonFile))) {
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(Files.newInputStream(jsonFile.toPath()), StandardCharsets.UTF_8))) {
                 String value = br.readLine();
                 JobInfoHelper jobInfo = JsonUtil.readValue(value, JobInfoHelper.class);
                 jobInfo.setJobContent();

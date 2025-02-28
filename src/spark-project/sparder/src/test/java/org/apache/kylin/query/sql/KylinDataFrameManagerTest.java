@@ -21,6 +21,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataSegmentManager;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -80,14 +81,15 @@ class KylinDataFrameManagerTest {
             val batchModelId = fusionModel.getBatchModel().getUuid();
             val batchDataflow = NDataflowManager.getInstance(config, dataflow.getProject()).getDataflow(batchModelId);
 
-            dataflowManager.updateDataflow(batchDataflow.getId(), updater -> {
-                updater.getSegments().forEach(seg -> {
+            NDataSegmentManager segmentManager = config.getManager(dataflow.getProject(), NDataSegmentManager.class);
+            batchDataflow.getSegments().forEach(seg -> {
+                segmentManager.update(seg.getUuid(), copyForWrite -> {
                     try {
-                        val timeRange = seg.getTSRange();
+                        val timeRange = copyForWrite.getTSRange();
                         val field = TimeRange.class.getDeclaredField("end");
                         field.setAccessible(true);
                         ReflectionUtils.setField(field, timeRange, Long.MIN_VALUE);
-                        seg.setTimeRange(timeRange);
+                        copyForWrite.setTimeRange(timeRange);
                     } catch (Exception e) {
                         Assertions.fail(e.getMessage());
                     }
@@ -112,7 +114,7 @@ class KylinDataFrameManagerTest {
         val layoutEntity = new LayoutEntity();
         {
             val plan = kylinDataFrameManager.cuboidTable(dataflow, layoutEntity,
-                    "86b5daaa-e295-4e8c-b877-f97bda69bee5");
+                    "027db8f2-145d-4e6c-6a1b-7139bb1fb5bc");
             Assertions.assertEquals(0, plan.output().size());
         }
         ss.stop();

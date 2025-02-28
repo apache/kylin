@@ -1,0 +1,97 @@
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+    <id>package</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>${basedir}/../../../build/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+            <fileMode>0644</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../../../build/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>lib/ext</outputDirectory>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../../../build/sbin</directory>
+            <outputDirectory>sbin</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../../../build/async-profiler-lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <fileMode>0644</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../../../build/spark</directory>
+            <outputDirectory>spark</outputDirectory>
+            <excludes>
+                <exclude>lib/spark-examples-*</exclude>
+                <exclude>examples/**</exclude>
+                <exclude>data/**</exclude>
+                <exclude>R/**</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/src/main/resources/config</directory>
+            <outputDirectory>conf</outputDirectory>
+            <fileMode>0644</fileMode>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <source>target/ke-smart-booter-${project.version}.jar</source>
+            <outputDirectory>server/</outputDirectory>
+            <destName>newten.jar</destName>
+        </file>
+        <file>
+            <source>../assembly/target/ke-assembly-${project.version}-job.jar</source>
+            <outputDirectory>lib/</outputDirectory>
+            <destName>newten-job.jar</destName>
+        </file>
+    </files>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>server/jars/</outputDirectory>
+            <excludes>
+                <exclude>io.kyligence.ke:ke-smart-booter</exclude>
+            </excludes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>spark/jars/</outputDirectory>
+            <includes>
+                <include>*:log4j-*</include>
+                <include>*:kap-sparder*</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

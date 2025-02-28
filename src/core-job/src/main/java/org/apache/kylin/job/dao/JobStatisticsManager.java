@@ -25,13 +25,16 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
@@ -53,7 +56,7 @@ public class JobStatisticsManager {
             Class<? extends JobStatisticsManager> clz = ClassUtil.forName(cls, JobStatisticsManager.class);
             return clz.getConstructor(KylinConfig.class, String.class).newInstance(conf, project);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to init DataModelManager from " + conf, e);
+            throw new KylinRuntimeException("Failed to init DataModelManager from " + conf, e);
         }
     }
 
@@ -61,7 +64,6 @@ public class JobStatisticsManager {
 
     private KylinConfig config;
     private String project;
-
     private CachedCrudAssist<JobStatistics> crud;
 
     public JobStatisticsManager(KylinConfig config, String project) {
@@ -72,8 +74,7 @@ public class JobStatisticsManager {
         this.config = cfg;
         this.project = project;
         final ResourceStore store = ResourceStore.getKylinMetaStore(this.config);
-        String resourceRootPath = "/" + this.project + ResourceStore.JOB_STATISTICS;
-        this.crud = new CachedCrudAssist<JobStatistics>(store, resourceRootPath, JobStatistics.class) {
+        this.crud = new CachedCrudAssist<JobStatistics>(store, MetadataType.JOB_STATS, project, JobStatistics.class) {
             @Override
             protected JobStatistics initEntityAfterReload(JobStatistics jobStatistics, String resourceName) {
                 return jobStatistics;
@@ -91,9 +92,13 @@ public class JobStatisticsManager {
         }
         return crud.copyForWrite(jobStatistics);
     }
+    
+    public JobStatistics get(long date) {
+        return crud.get(JobStatistics.generateResourceName(project, date));
+    }
 
     public JobStatistics updateStatistics(long date, String model, long duration, long byteSize, int deltaCount) {
-        JobStatistics jobStatistics = crud.get(String.valueOf(date));
+        JobStatistics jobStatistics = get(date);
         if (jobStatistics == null) {
             jobStatistics = copyForWrite(new JobStatistics(date, model, duration, byteSize));
             // double check whether jobStatistics already exists.
@@ -108,7 +113,7 @@ public class JobStatisticsManager {
     }
 
     public JobStatistics updateStatistics(long date, long duration, long byteSize, int deltaCount) {
-        JobStatistics jobStatistics = crud.get(String.valueOf(date));
+        JobStatistics jobStatistics = get(date);
         if (jobStatistics == null) {
             // double check whether jobStatistics already exists.
             jobStatistics = copyForWrite(new JobStatistics(date, duration, byteSize));
@@ -122,7 +127,7 @@ public class JobStatisticsManager {
 
     public Pair<Integer, JobStatistics> getOverallJobStats(final long startTime, final long endTime) {
         // filter
-        List<JobStatistics> filteredJobStats = getFilteredJobStatsByTime(crud.listAll(), startTime, endTime);
+        List<JobStatistics> filteredJobStats = getFilteredJobStatsByTime(startTime, endTime);
         // aggregate all job stats
         JobStatistics aggregatedStats = aggregateJobStats(filteredJobStats);
 
@@ -132,9 +137,8 @@ public class JobStatisticsManager {
     public Map<String, Integer> getJobCountByTime(final long startTime, final long endTime,
             final String timeDimension) {
         Map<String, Integer> result = Maps.newHashMap();
-        aggregateJobStatsByTime(startTime, endTime, timeDimension).forEach((key, value) -> {
-            result.put(key, value.getCount());
-        });
+        aggregateJobStatsByTime(startTime, endTime, timeDimension)
+                .forEach((key, value) -> result.put(key, value.getCount()));
         return result;
     }
 
@@ -192,12 +196,10 @@ public class JobStatisticsManager {
             final String timeDimension) {
         Map<String, JobStatisticsBasic> result = Maps.newHashMap();
 
-        List<JobStatistics> qulifiedJobStats = getFilteredJobStatsByTime(crud.listAll(), startTime, endTime);
-
         long startDate = startTime;
         while (startDate <= endTime) {
             long nextDate = nextDate(startDate, timeDimension);
-            List<JobStatistics> list = getFilteredJobStatsByTime(qulifiedJobStats, startDate, nextDate);
+            List<JobStatistics> list = getFilteredJobStatsByTime(startDate, nextDate);
             result.put(formatDateTime(startDate), aggregateJobStats(list));
             startDate = nextDate;
         }
@@ -236,7 +238,7 @@ public class JobStatisticsManager {
     }
 
     private Map<String, JobStatisticsBasic> aggregateStatsByModel(long startTime, long endTime) {
-        return getFilteredJobStatsByTime(crud.listAll(), startTime, endTime).stream()
+        return getFilteredJobStatsByTime(startTime, endTime).stream()
                 .map(JobStatistics::getJobStatisticsByModels).reduce((x, y) -> {
                     // merge two maps
                     Map<String, JobStatisticsBasic> mergedMap = Maps.newHashMap(x);
@@ -248,11 +250,11 @@ public class JobStatisticsManager {
                 }).orElse(Maps.newHashMap());
     }
 
-    private List<JobStatistics> getFilteredJobStatsByTime(final List<JobStatistics> list, final long startTime,
-            final long endTime) {
-        return list.stream()
-                .filter(singleStats -> singleStats.getDate() >= startTime && singleStats.getDate() < endTime)
-                .collect(Collectors.toList());
+    private List<JobStatistics> getFilteredJobStatsByTime(final long startTime, final long endTime) {
+        RawResourceFilter filter = new RawResourceFilter();
+        filter.addConditions("timeOfDay", Collections.singletonList(startTime), RawResourceFilter.Operator.GE)
+                .addConditions("timeOfDay", Collections.singletonList(endTime), RawResourceFilter.Operator.LT);
+        return crud.listByFilter(filter);
     }
 
     private Map<String, Double> calculateDurationPerByte(Map<String, JobStatisticsBasic> totalMetricMap) {

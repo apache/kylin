@@ -26,8 +26,8 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -42,11 +42,11 @@ public class RestfulJobProgressReportTest {
 
     private static MockWebServer server;
 
-    final static Dispatcher dispatcher = new Dispatcher() {
+    static final Dispatcher dispatcher = new Dispatcher() {
 
         @SneakyThrows
         @Override
-        public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+        public MockResponse dispatch(RecordedRequest request) {
             HashMap<String, String> jobStoppedResponse = new HashMap<>();
             jobStoppedResponse.put("code", KylinException.CODE_UNDEFINED);
             jobStoppedResponse.put("data", "");
@@ -84,10 +84,10 @@ public class RestfulJobProgressReportTest {
             HashMap<String, String> params = new HashMap<>();
             params.put(ParamsConstants.TIME_OUT, "3000");
             report.updateSparkJobInfo(params, "/api/jobs/stage/status", "");
-            Assert.fail();
+            Assertions.fail();
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalStateException);
-            Assert.assertTrue(e.getMessage().startsWith(JOB_HAS_STOPPED));
+            Assertions.assertTrue(e instanceof IllegalStateException);
+            Assertions.assertTrue(e.getMessage().startsWith(JOB_HAS_STOPPED));
         }
     }
 
@@ -98,10 +98,10 @@ public class RestfulJobProgressReportTest {
             HashMap<String, String> params = new HashMap<>();
             params.put(ParamsConstants.TIME_OUT, "3000");
             report.updateSparkJobExtraInfo(params, "/api/jobs/stage/status", "default", "a", new HashMap<>());
-            Assert.fail();
+            Assertions.fail();
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalStateException);
-            Assert.assertTrue(e.getMessage().startsWith(JOB_HAS_STOPPED));
+            Assertions.assertTrue(e instanceof IllegalStateException);
+            Assertions.assertTrue(e.getMessage().startsWith(JOB_HAS_STOPPED));
         }
     }
 }

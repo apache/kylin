@@ -1,0 +1,41 @@
+--
+-- Licensed to the Apache Software Foundation (ASF) under one
+-- or more contributor license agreements.  See the NOTICE file
+-- distributed with this work for additional information
+-- regarding copyright ownership.  The ASF licenses this file
+-- to you under the Apache License, Version 2.0 (the
+-- "License"); you may not use this file except in compliance
+-- with the License.  You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+
+select *
+from (select date_format(timestamp '2023-06-08 23:24:25.123', 'year')    as year_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'month')   as month_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'day')     as day_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'hour')    as hour_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'minute')  as minute_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'minutes') as minutes_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'second')  as second_c,
+             date_format(timestamp '2023-06-08 23:24:25.123', 'seconds') as seconds_c,
+             timestamp '2023-06-08 23:24:25.123'                         as val
+      from TEST_KYLIN_FACT limit 1) t1
+union all
+select *
+from (select date_format(timestamp '0023-11-22 03:04:05.123', 'year')    as year_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'month')   as month_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'day')     as day_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'hour')    as hour_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'minute')  as minute_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'minutes') as minutes_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'second')  as second_c,
+             date_format(timestamp '0023-11-22 03:04:05.123', 'seconds') as seconds_c,
+             timestamp '0023-11-22 03:04:05.123'                         as val
+      from TEST_KYLIN_FACT limit 1) t2

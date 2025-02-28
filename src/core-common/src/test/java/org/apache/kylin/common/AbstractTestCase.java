@@ -23,13 +23,12 @@ import static org.apache.kylin.common.util.Unsafe.restoreAllSystemProp;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +43,7 @@ public abstract class AbstractTestCase {
         Unsafe.overwriteSystemProp(BEFORE_CLASS_PROPERTY_MAP, property, name);
     }
 
-    /** Don't overwrite this method in sub-class. */
+    /** Don't define this method in subClass. */
     @AfterClass
     @AfterAll
     public static void restoreSystemPropsOverwriteBeforeClass() {
@@ -56,7 +55,7 @@ public abstract class AbstractTestCase {
         Unsafe.overwriteSystemProp(METHOD_PROPERTY_MAP, property, value);
     }
 
-    /** Don't overwrite this method in sub-class. */
+    /** Don't overwrite this method in subClass. */
     @After
     @AfterEach
     public final void restoreSystemProps() {

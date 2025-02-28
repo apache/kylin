@@ -1,0 +1,89 @@
+{
+  "uuid" : "fe0d0c12-7411-4f1b-9614-82c178249dd0",
+  "last_modified" : 0,
+  "create_time" : 1599523695935,
+  "version" : "4.0.0.0",
+  "name" : "P_LINEORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "LO_ORDERKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "LO_LINENUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "LO_CUSTKEY",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "LO_PARTKEY",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "LO_SUPPKEY",
+    "datatype" : "integer"
+  }, {
+    "id" : "6",
+    "name" : "LO_ORDERDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "7",
+    "name" : "LO_ORDERPRIOTITY",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "8",
+    "name" : "LO_SHIPPRIOTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "LO_QUANTITY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "LO_EXTENDEDPRICE",
+    "datatype" : "bigint"
+  }, {
+    "id" : "11",
+    "name" : "LO_ORDTOTALPRICE",
+    "datatype" : "bigint"
+  }, {
+    "id" : "12",
+    "name" : "LO_DISCOUNT",
+    "datatype" : "bigint"
+  }, {
+    "id" : "13",
+    "name" : "LO_REVENUE",
+    "datatype" : "bigint"
+  }, {
+    "id" : "14",
+    "name" : "LO_SUPPLYCOST",
+    "datatype" : "bigint"
+  }, {
+    "id" : "15",
+    "name" : "LO_TAX",
+    "datatype" : "bigint"
+  }, {
+    "id" : "16",
+    "name" : "LO_COMMITDATE",
+    "datatype" : "date"
+  }, {
+    "id" : "17",
+    "name" : "LO_SHIPMODE",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "18",
+    "name" : "V_REVENUE",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "VIEW",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "SSB"
+}

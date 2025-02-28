@@ -21,7 +21,7 @@ package org.apache.kylin.rest.constant;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 public enum ModelStatusToDisplayEnum {
-    OFFLINE, ONLINE, BROKEN, LAG_BEHIND, WARNING;
+    OFFLINE, ONLINE, BROKEN, WARNING;
 
     public static ModelStatusToDisplayEnum convert(RealizationStatusEnum modelStatus) {
         switch (modelStatus) {
@@ -31,8 +31,6 @@ public enum ModelStatusToDisplayEnum {
             return OFFLINE;
         case BROKEN:
             return BROKEN;
-        case LAG_BEHIND:
-            return LAG_BEHIND;
         default:
             throw new IllegalStateException("error model status");
         }

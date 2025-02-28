@@ -113,6 +113,10 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         return jdbcQueryHisStore.queryByQueryId(queryId);
     }
 
+    public List<QueryHistory> getByQueryIds(List<String> queryIds) {
+        return jdbcQueryHisStore.queryByQueryIds(queryIds);
+    }
+
     @Override
     public Long getQueryHistoryMinQueryTime() {
         return jdbcQueryHisStore.queryQueryHistoryMinQueryTime();

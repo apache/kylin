@@ -26,10 +26,6 @@ import org.apache.calcite.sql.type.NotConstant;
 import org.apache.kylin.common.exception.CalciteNotSupportException;
 
 public class SparkTimeUDF implements NotConstant {
-    public Date TRUNC(@Parameter(name = "date") Object exp1, @Parameter(name = "str2") String exp2)
-            throws CalciteNotSupportException {
-        throw new CalciteNotSupportException();
-    }
 
     public Date ADD_MONTHS(@Parameter(name = "date") Date exp1, @Parameter(name = "num2") Integer exp2)
             throws CalciteNotSupportException {
@@ -46,7 +42,22 @@ public class SparkTimeUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
+    public Long DATEDIFF(@Parameter(name = "endDate") Object endDate, @Parameter(name = "startDate") Object startDate)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
     public Date DATE_ADD(@Parameter(name = "date") Object exp1, @Parameter(name = "num2") Integer exp2)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public String DATE_FORMAT(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Integer DATE_PART(@Parameter(name = "field") Object field, @Parameter(name = "sourece") Object source)
             throws CalciteNotSupportException {
         throw new CalciteNotSupportException();
     }
@@ -56,21 +67,8 @@ public class SparkTimeUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
-    public Date TO_DATE(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
-        throw new CalciteNotSupportException();
-    }
-
-    public Date TO_DATE(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+    public Timestamp DATE_TRUNC(@Parameter(name = "part") String part, @Parameter(name = "date") Object ts)
             throws CalciteNotSupportException {
-        throw new CalciteNotSupportException();
-    }
-
-    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
-            throws CalciteNotSupportException {
-        throw new CalciteNotSupportException();
-    }
-
-    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
         throw new CalciteNotSupportException();
     }
 
@@ -98,7 +96,43 @@ public class SparkTimeUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
+    public Date TO_DATE(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Date TO_DATE(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
     public Timestamp TO_UTC_TIMESTAMP(@Parameter(name = "t1") Object exp1, @Parameter(name = "str2") String exp2)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Date TRUNC(@Parameter(name = "date") Object exp1, @Parameter(name = "str2") String exp2)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Long UNIX_TIMESTAMP() throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Long UNIX_TIMESTAMP(@Parameter(name = "timeExp") Object timeExp) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Long UNIX_TIMESTAMP(@Parameter(name = "timeExp") Object timeExp, @Parameter(name = "format") Object format)
             throws CalciteNotSupportException {
         throw new CalciteNotSupportException();
     }

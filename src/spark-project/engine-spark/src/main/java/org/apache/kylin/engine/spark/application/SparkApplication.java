@@ -18,9 +18,9 @@
 
 package org.apache.kylin.engine.spark.application;
 
+import static org.apache.kylin.engine.spark.job.NSparkExecutable.JOB_LAST_RUNNING_START_TIME;
+import static org.apache.kylin.engine.spark.job.StageEnum.WAIT_FOR_RESOURCE;
 import static org.apache.kylin.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
-import static org.apache.kylin.job.execution.NSparkExecutable.JOB_LAST_RUNNING_START_TIME;
-import static org.apache.kylin.job.execution.stage.StageType.WAITE_FOR_RESOURCE;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,14 +63,16 @@ import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.job.BuildJobInfos;
 import org.apache.kylin.engine.spark.job.EnviromentAdaptor;
 import org.apache.kylin.engine.spark.job.IJobProgressReport;
+import org.apache.kylin.engine.spark.job.InternalTableLoadJob;
+import org.apache.kylin.engine.spark.job.JobConstants;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.engine.spark.job.ParamsConstants;
 import org.apache.kylin.engine.spark.job.ResourceDetect;
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport;
 import org.apache.kylin.engine.spark.job.SegmentBuildJob;
-import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor;
 import org.apache.kylin.engine.spark.scheduler.JobFailed;
@@ -78,9 +80,9 @@ import org.apache.kylin.engine.spark.utils.HDFSUtils;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -129,6 +131,7 @@ public abstract class SparkApplication implements Application {
     protected String project;
     protected int layoutSize = -1;
     protected BuildJobInfos infos;
+    protected String className;
 
     protected ConcurrentHashMap<String, Boolean> skipFollowingStagesMap = new ConcurrentHashMap<>();
     /**
@@ -285,6 +288,7 @@ public abstract class SparkApplication implements Application {
         String hdfsMetalUrl = getParam(NBatchConstants.P_DIST_META_URL);
         jobId = getParam(NBatchConstants.P_JOB_ID);
         project = getParam(NBatchConstants.P_PROJECT_NAME);
+        className = getParam(NBatchConstants.P_CLASS_NAME);
         if (getParam(NBatchConstants.P_LAYOUT_IDS) != null) {
             layoutSize = StringUtils.split(getParam(NBatchConstants.P_LAYOUT_IDS), ",").length;
         }
@@ -304,13 +308,17 @@ public abstract class SparkApplication implements Application {
             monitorSparkMaster();
 
             HadoopUtil.setCurrentConfiguration(HadoopUtil.getCurrentConfiguration());
-            ////////
-            exchangeSparkConf(buildEnv.sparkConf());
+            //////// Do not need to reset the build conf if in retry phase
+            if (infos.getRetryTimes() == 0) {
+                exchangeSparkConf(buildEnv.sparkConf());
+            } else {
+                atomicSparkConf.set(buildEnv.sparkConf());
+            }
 
             TimeZoneUtils.setDefaultTimeZone(config);
 
             /// wait until resource is enough
-            waiteForResource();
+            waitForResource();
 
             ///
             logger.info("Prepare job environment");
@@ -333,12 +341,15 @@ public abstract class SparkApplication implements Application {
             if (!config.isUTEnv()) {
                 Unsafe.setProperty("kylin.env", config.getDeployEnv());
             }
+
+            disableCurrentThreadGlutenIfNeed();
+
             logger.info("Start job");
             infos.startJob();
             // should be invoked after method prepareSparkSession
             extraInit();
 
-            waiteForResourceSuccess();
+            waitForResourceSuccess();
             doExecute();
             // Output metadata to another folder
             val resourceStore = ResourceStore.getKylinMetaStore(config);
@@ -351,9 +362,17 @@ public abstract class SparkApplication implements Application {
             if (infos != null) {
                 infos.jobEnd();
             }
+            ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", null);
             destroySparkSession();
             extraDestroy();
             executeFinish();
+        }
+    }
+
+    public void disableCurrentThreadGlutenIfNeed() {
+        if (!config.buildUseGlutenEnabled() && !className.equals(InternalTableLoadJob.class.getName())) {
+            ss.sparkContext().setLocalProperty("gluten.enabledForCurrentThread", "false");
+            logger.info("Disable current thread gluten for Build Job");
         }
     }
 
@@ -373,7 +392,8 @@ public abstract class SparkApplication implements Application {
     }
 
     // Extract the real root exception that caused the spark job to fail.
-    // For example. Intercepts Spark Job that fail due to  permissions exception to prevent unnecessary retry from wasting resources
+    // For example. Intercepts Spark Job that fail due to  permissions exception
+    // to prevent unnecessary retry from wasting resources
     protected Throwable extractRealRootCauseFromSparkException(Exception e) {
         Throwable rootCause = e.getCause();
         while (rootCause instanceof SparkException) {
@@ -460,7 +480,7 @@ public abstract class SparkApplication implements Application {
     }
 
     protected String calculateRequiredCores() throws Exception {
-        return SparkJobConstants.DEFAULT_REQUIRED_CORES;
+        return JobConstants.DEFAULT_REQUIRED_CORES;
     }
 
     private void autoSetSparkConf(SparkConf sparkConf) throws Exception {
@@ -480,15 +500,15 @@ public abstract class SparkApplication implements Application {
         helper.applySparkConf(sparkConf);
     }
 
-    protected void waiteForResource() {
-        val waiteForResource = WAITE_FOR_RESOURCE.create(this, null, null);
-        infos.recordStageId(waiteForResource.getId());
-        waiteForResource.execute();
+    protected void waitForResource() {
+        val wfr = WAIT_FOR_RESOURCE.createExec(this);
+        infos.recordStageId(wfr.getStageId());
+        wfr.execute();
     }
 
-    protected void waiteForResourceSuccess() throws Exception {
-        val waiteForResource = WAITE_FOR_RESOURCE.create(this, null, null);
-        waiteForResource.onStageFinished(ExecutableState.SUCCEED);
+    protected void waitForResourceSuccess() throws Exception {
+        val wfr = WAIT_FOR_RESOURCE.createExec(this);
+        wfr.onStageFinished(ExecutableState.SUCCEED);
         infos.recordStageId("");
     }
 
@@ -633,10 +653,17 @@ public abstract class SparkApplication implements Application {
         }
     }
 
-    @VisibleForTesting
-    void exchangeSparkConf(SparkConf sparkConf) throws Exception {
+    public Map<String, String> removeGlutenParamsIfNeed(Map<String, String> baseSparkConf) {
+        if (!config.buildUseGlutenEnabled() && !className.equals(InternalTableLoadJob.class.getName())) {
+            return ExecutableUtil.removeGultenParams(baseSparkConf);
+        }
+        return baseSparkConf;
+    }
+
+    public void exchangeSparkConf(SparkConf sparkConf) throws Exception {
         if (isJobOnCluster(sparkConf) && !(this instanceof ResourceDetect)) {
             Map<String, String> baseSparkConf = getSparkConfigOverride(config);
+            baseSparkConf = removeGlutenParamsIfNeed(baseSparkConf);
             if (!baseSparkConf.isEmpty()) {
                 baseSparkConf.forEach(sparkConf::set);
                 String baseSparkConfStr = JsonUtil.writeValueAsString(baseSparkConf);
@@ -662,7 +689,25 @@ public abstract class SparkApplication implements Application {
             }
         }
 
+        addConcreteJobSparkConf(sparkConf);
         atomicSparkConf.set(sparkConf);
+    }
+
+    protected void addConcreteJobSparkConf(SparkConf sparkConf) throws JsonProcessingException {
+        // do nothing
+    }
+
+    /** Append spark conf of index planner, this is not for opensource yet. */
+    protected void appendSparkConfOfIndexPlanner(SparkConf sparkConf) throws JsonProcessingException {
+        boolean indexPlannerEnabled = Boolean.parseBoolean(getParam(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED));
+        if (!indexPlannerEnabled) {
+            return;
+        }
+        // index planner specified spark conf, based on the exchanged spark conf.
+        Map<String, String> hostingIndexSparkConf = config.getIndexPlannerBuildingConfigOverride();
+        hostingIndexSparkConf.forEach(sparkConf::set);
+        String hostingIndexSparkConfStr = JsonUtil.writeValueAsString(hostingIndexSparkConf);
+        logger.info("Override spark build conf using index planner specified sparkConf: {}", hostingIndexSparkConfStr);
     }
 
     private void exchangeSparkSession(SparkConf sparkConf) {
@@ -673,11 +718,7 @@ public abstract class SparkApplication implements Application {
         }
 
         sparkSession = createSpark(sparkConf);
-        if (!config.isUTEnv()) {
-            Map<String, String> extraInfo = getTrackingInfo(sparkSession, config.isTrackingUrlIpAddressEnabled());
-            extraInfo.put("job_last_running_start_time", getParam(JOB_LAST_RUNNING_START_TIME));
-            getReport().updateSparkJobExtraInfo(getReportParams(), "/kylin/api/jobs/spark", project, jobId, extraInfo);
-        }
+        reportSparkJobExtraInfo(sparkSession);
 
         // for spark metrics
         JobMetricsUtils.registerListener(sparkSession);
@@ -689,6 +730,14 @@ public abstract class SparkApplication implements Application {
 
         ///
         atomicSparkSession.set(sparkSession);
+    }
+
+    public void reportSparkJobExtraInfo(SparkSession sparkSession) {
+        if (!config.isUTEnv()) {
+            Map<String, String> extraInfo = getTrackingInfo(sparkSession, config.isTrackingUrlIpAddressEnabled());
+            extraInfo.put("job_last_running_start_time", getParam(JOB_LAST_RUNNING_START_TIME));
+            getReport().updateSparkJobExtraInfo(getReportParams(), "/kylin/api/jobs/spark", project, jobId, extraInfo);
+        }
     }
 
     private void prepareSparkSession() throws NoRetryException {

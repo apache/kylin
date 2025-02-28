@@ -18,12 +18,12 @@
 package org.apache.kylin.query.runtime.plan
 
 import org.apache.calcite.DataContext
-import org.apache.kylin.query.relnode.KapMinusRel
+import org.apache.kylin.query.relnode.OlapMinusRel
 import org.apache.spark.sql.catalyst.plans.logical.{Except, LogicalPlan}
 
 object MinusPlan {
   def minus(plans: Seq[LogicalPlan],
-            rel: KapMinusRel,
+            rel: OlapMinusRel,
             dataContext: DataContext): LogicalPlan = {
     if (rel.all) {
       plans.reduce((p1, p2) => Except(p1, p2, true))

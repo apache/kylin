@@ -115,4 +115,22 @@ public class TimeUtilTest {
         Assert.assertEquals(sevenDaysBeforeInSummerTime, TimeUtil.minusDays(winterTime, 7));
     }
 
+    @MultiTimezoneTest(timezones = { "UTC", "GMT+8", "GMT+15" })
+    public void _ymdint_betweenTest() throws ParseException {
+        val dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT));
+        dateFormat.setTimeZone(TimeZone.getDefault());
+
+        long date1 = dateFormat.parse("1990-04-30").getTime();
+        long date2 = dateFormat.parse("2003-02-05").getTime();
+        Assert.assertEquals("120906", TimeUtil.ymdintBetween(date1, date2));
+        Assert.assertEquals("120905", TimeUtil.ymdintBetween(date2, date1));
+
+        long date3 = dateFormat.parse("2020-01-01").getTime();
+        long date4 = dateFormat.parse("2021-01-01").getTime();
+        Assert.assertEquals("10000", TimeUtil.ymdintBetween(date3, date4));
+
+        long date5 = dateFormat.parse("2022-01-01").getTime();
+        Assert.assertEquals("10000", TimeUtil.ymdintBetween(date4, date5));
+    }
+
 }

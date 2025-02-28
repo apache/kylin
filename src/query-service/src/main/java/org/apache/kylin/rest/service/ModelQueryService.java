@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.FusionModel;
@@ -48,9 +49,6 @@ import org.apache.kylin.rest.util.ModelUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +60,7 @@ public class ModelQueryService extends BasicService implements ModelQuerySupport
     public static final String STORAGE = "storage";
     public static final String QUERY_HIT_COUNT = "queryHitCount";
     public static final String EXPANSION_RATE = "expansionrate";
+    private static final String RECOMMENDATIONS_COUNT_LOWER_CAMEL = "recommendationsCount";
 
     @Autowired
     public AclEvaluate aclEvaluate;
@@ -102,73 +101,62 @@ public class ModelQueryService extends BasicService implements ModelQuerySupport
             modelTripleList.removeIf(t -> !t.getDataModel().getUuid().equals(elem.getModelId()));
         }
 
-        boolean streamingEnabled = KylinConfig.getInstanceFromEnv().streamingEnabled();
+        boolean streamingEnabled = KylinConfig.getInstanceFromEnv().isStreamingEnabled();
         modelTripleList = modelTripleList.parallelStream()
                 .filter(triple -> triple.getDataModel().isAccessible(streamingEnabled)) //
                 .collect(Collectors.toList());
 
         if (!modelAttributeSet.isEmpty()) {
-            val isProjectEnable = SecondStorageUtil.isProjectEnable(elem.getProjectName());
-            modelTripleList = modelTripleList.parallelStream()
-                    .filter(t -> filterModelAttribute(t, modelAttributeSet, isProjectEnable))
+            modelTripleList = modelTripleList.parallelStream().filter(t -> filterModelAttribute(t, modelAttributeSet))
                     .collect(Collectors.toList());
         }
 
         return modelTripleList;
     }
 
-    public boolean filterModelAttribute(ModelTriple modelTriple, Set<ModelAttributeEnum> modelAttributeSet,
-            boolean isProjectEnable) {
+    public boolean filterModelAttribute(ModelTriple modelTriple, Set<ModelAttributeEnum> modelAttributeSet) {
         val modelType = modelTriple.getDataModel().getModelType();
         switch (modelType) {
         case BATCH:
-            return modelAttributeSet.contains(ModelAttributeEnum.BATCH)
-                    || isMatchSecondStorage(modelTriple, isProjectEnable, modelAttributeSet);
+            return modelAttributeSet.contains(ModelAttributeEnum.BATCH);
         case HYBRID:
-            return modelAttributeSet.contains(ModelAttributeEnum.HYBRID)
-                    || isMatchSecondStorage(modelTriple, isProjectEnable, modelAttributeSet);
+            return modelAttributeSet.contains(ModelAttributeEnum.HYBRID);
         case STREAMING:
-            return modelAttributeSet.contains(ModelAttributeEnum.STREAMING)
-                    || isMatchSecondStorage(modelTriple, isProjectEnable, modelAttributeSet);
+            return modelAttributeSet.contains(ModelAttributeEnum.STREAMING);
         default:
             return false;
         }
-    }
-
-    private boolean isMatchSecondStorage(ModelTriple modelTriple, boolean isProjectEnable,
-            Set<ModelAttributeEnum> modelAttributeSet) {
-        boolean secondStorageMatched = false;
-        if (isProjectEnable && modelAttributeSet.contains(ModelAttributeEnum.SECOND_STORAGE)) {
-            secondStorageMatched = SecondStorageUtil.isModelEnable(modelTriple.getDataModel().getProject(),
-                    modelTriple.getDataModel().getId());
-        }
-        return secondStorageMatched;
     }
 
     public List<ModelTriple> sortModels(List<ModelTriple> modelTripleList, String projectName, String sortBy,
             boolean reverse) {
         if (StringUtils.isEmpty(sortBy)) {
             if (getManager(NProjectManager.class).getProject(projectName).isSemiAutoMode()) {
-                return modelTripleList.parallelStream()
-                        .sorted(new ModelTripleComparator(ModelService.REC_COUNT, !reverse, SORT_KEY_DATA_MODEL))
+                return modelTripleList.stream().sorted(
+                        new ModelTripleComparator(RECOMMENDATIONS_COUNT_LOWER_CAMEL, !reverse, SORT_KEY_DATA_MODEL))
                         .collect(Collectors.toList());
             } else {
-                return modelTripleList.parallelStream()
+                return modelTripleList.stream()
                         .sorted(new ModelTripleComparator(LAST_MODIFIED, !reverse, SORT_KEY_DATA_MODEL))
                         .collect(Collectors.toList());
             }
         }
+
         switch (sortBy) {
         case USAGE:
-            return modelTripleList.parallelStream()
+            return modelTripleList.stream()
                     .sorted(new ModelTripleComparator(QUERY_HIT_COUNT, !reverse, SORT_KEY_DATAFLOW))
+                    .collect(Collectors.toList());
+        case ModelService.RECOMMENDATIONS_COUNT_LOWER_UNDERSCORE:
+            return modelTripleList.stream()
+                    .sorted(new ModelTripleComparator(RECOMMENDATIONS_COUNT_LOWER_CAMEL, !reverse, SORT_KEY_DATA_MODEL))
                     .collect(Collectors.toList());
         case STORAGE:
             return sortByStorage(modelTripleList, projectName, reverse);
         case EXPANSION_RATE:
             return sortByExpansionRate(modelTripleList, projectName, reverse);
         default:
-            return modelTripleList.parallelStream()
+            return modelTripleList.stream()
                     .sorted(new ModelTripleComparator(LAST_MODIFIED, !reverse, SORT_KEY_DATA_MODEL))
                     .collect(Collectors.toList());
         }
@@ -186,8 +174,7 @@ public class ModelQueryService extends BasicService implements ModelQuerySupport
         tripleList.parallelStream().filter(t -> !t.getDataModel().isFusionModel())
                 .forEach(t -> t.setCalcObject(t.getDataflow().getStorageBytesSize()));
 
-        return tripleList.parallelStream()
-                .sorted(new ModelTripleComparator("calcObject", !reverse, SORT_KEY_CALC_OBJECT))
+        return tripleList.stream().sorted(new ModelTripleComparator("calcObject", !reverse, SORT_KEY_CALC_OBJECT))
                 .collect(Collectors.toList());
     }
 

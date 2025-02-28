@@ -47,11 +47,11 @@ public class ErrorSuggestion extends AbstractErrorContent {
     }
 
     public static void setMsg(String lang) {
-//        if (StringUtils.equalsIgnoreCase(CN_LANG, lang)) {
-//            FRONT_MAP.set(CN_MAP);
-//        } else {
+        //        if (StringUtils.equalsIgnoreCase(CN_LANG, lang)) {
+        //            FRONT_MAP.set(CN_MAP);
+        //        } else {
         FRONT_MAP.set(EN_MAP);
-//        }
+        //        }
     }
 
     @Override

@@ -25,7 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.lang.SerializationException;
+import org.apache.commons.lang3.SerializationException;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.kylin.common.util.JsonUtil;
@@ -55,8 +55,8 @@ public class AsyncTaskTable extends SqlTable {
     public static class TaskHandler implements TypeHandler<AbstractAsyncTask.TaskAttributes> {
 
         @Override
-        public void setParameter(PreparedStatement ps, int i, AbstractAsyncTask.TaskAttributes parameter, JdbcType jdbcType)
-                throws SQLException {
+        public void setParameter(PreparedStatement ps, int i, AbstractAsyncTask.TaskAttributes parameter,
+                JdbcType jdbcType) throws SQLException {
             Preconditions.checkArgument(parameter != null, "task attributes cannot be null");
             try {
                 ps.setString(i, JsonUtil.writeValueAsString(parameter));

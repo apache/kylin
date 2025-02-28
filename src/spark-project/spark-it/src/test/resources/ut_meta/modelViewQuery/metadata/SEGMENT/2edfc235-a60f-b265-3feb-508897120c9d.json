@@ -1,0 +1,64 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1645772981296,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "1" : {
+      "min" : "59011",
+      "max" : "110752"
+    },
+    "3" : {
+      "min" : "1996-09-13",
+      "max" : "1997-06-06"
+    },
+    "25" : {
+      "min" : "63256.0",
+      "max" : "292618.06"
+    },
+    "5" : {
+      "min" : "87715",
+      "max" : "183746"
+    },
+    "16" : {
+      "min" : "27-587-129-3334",
+      "max" : "34-111-516-5895"
+    },
+    "18" : {
+      "min" : "FURNITURE",
+      "max" : "MACHINERY"
+    },
+    "8" : {
+      "min" : "O",
+      "max" : "O"
+    },
+    "20" : {
+      "min" : "4834.9",
+      "max" : "6518.22"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1645773007000,
+  "source_count" : 2,
+  "source_bytes_size" : 3985624,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "2edfc235-a60f-b265-3feb-508897120c9d",
+  "model_uuid" : "b0fab5a2-7c65-03e6-0dc8-8a396b05d833",
+  "project" : "tpch"
+}

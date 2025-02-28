@@ -68,7 +68,7 @@ public class ConvRownumSqlWriter extends ConvSqlWriter {
         WHERE 1 = 1 AND ROWNUM__ <= LIMIT
         
         */
-        if (this.frame != null && this.frame.getFrameType() == SqlWriter.FrameTypeEnum.ORDER_BY
+        if (this.frame != null && this.frame.frameType == SqlWriter.FrameTypeEnum.ORDER_BY
                 && (frameType == SqlWriter.FrameTypeEnum.SELECT || frameType == SqlWriter.FrameTypeEnum.SETOP
                         || frameType == SqlWriter.FrameTypeEnum.SIMPLE)) {
             this.keyword(masageSqlRowStart());
@@ -83,7 +83,7 @@ public class ConvRownumSqlWriter extends ConvSqlWriter {
 
     @Override
     protected void doWriteRowNum(SqlNode fetch, SqlNode offset) {
-        if (this.frame != null && this.frame.getFrameType() == SqlWriter.FrameTypeEnum.ORDER_BY) {
+        if (this.frame != null && this.frame.frameType == SqlWriter.FrameTypeEnum.ORDER_BY) {
             final SqlWriter.Frame fetchFrame = this.startList(SqlWriter.FrameTypeEnum.FETCH);
             this.newlineAndIndent();
             if (fetch != null) {
@@ -121,11 +121,12 @@ public class ConvRownumSqlWriter extends ConvSqlWriter {
     @Override
     public void writeWith(SqlCall call, int leftPrec, int rightPrec) {
         /*
-        For Oracle <= 11g, to add fetch rows should be:  origin sql => SELECT * FROM  ([origin sql]) WHERE ROWNUM <= [FETCH_SIZE]
+        For Oracle <= 11g, to add fetch rows should be:
+        origin sql => SELECT * FROM  ([origin sql]) WHERE ROWNUM <= [FETCH_SIZE]
         Here we should print "SELECT * FROM (" before print origin sql
         */
         printSelectForRownumInWithCLause = (this.frame != null
-                && this.frame.getFrameType() == SqlWriter.FrameTypeEnum.ORDER_BY);
+                && this.frame.frameType == SqlWriter.FrameTypeEnum.ORDER_BY);
         super.writeWith(call, leftPrec, rightPrec);
     }
 

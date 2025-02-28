@@ -1,0 +1,23 @@
+{
+  "uuid" : "9253cf58-0507-4d28-8429-84ad19288925",
+  "last_modified" : 1494334079254,
+  "version" : "2.0.0",
+  "name" : "REGION",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "R_REGIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "R_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "R_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH",
+  "project" : "newten"
+}

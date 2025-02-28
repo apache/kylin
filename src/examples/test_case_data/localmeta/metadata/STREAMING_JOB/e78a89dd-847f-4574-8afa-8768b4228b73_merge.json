@@ -1,0 +1,29 @@
+{
+  "uuid" : "e78a89dd-847f-4574-8afa-8768b4228b73_merge",
+  "last_modified" : 1614132853305,
+  "create_time" : 1612690025917,
+  "version" : "4.0.0.0",
+  "model_alias" : "stream_merge1",
+  "owner" : "ADMIN",
+  "model_id" : "e78a89dd-847f-4574-8afa-8768b4228b73",
+  "last_start_time" : null,
+  "last_end_time" : null,
+  "last_update_time" : "2021-05-05 14:11:12",
+  "last_batch_count" : null,
+  "subscribe" : "ssb_topic",
+  "fact_table" : "SSB.P_LINEORDER_STR",
+  "job_status" : "STOPPED",
+  "job_type" : "STREAMING_MERGE",
+  "yarn_app_id" : null,
+  "yarn_app_url" : null,
+  "params" : {
+    "spark.executor.memory" : "1g",
+    "kylin.streaming.segment-max-size" : "32m",
+    "spark.master" : "yarn-client",
+    "spark.driver.memory" : "512m",
+    "kylin.streaming.segment-merge-threshold" : "3",
+    "spark.executor.cores" : "2",
+    "spark.executor.instances" : "1"
+  },
+  "project" : "streaming_test"
+}

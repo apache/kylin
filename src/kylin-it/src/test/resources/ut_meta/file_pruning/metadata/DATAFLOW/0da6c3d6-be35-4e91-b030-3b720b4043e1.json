@@ -1,0 +1,19 @@
+{
+  "uuid" : "0da6c3d6-be35-4e91-b030-3b720b4043e1",
+  "last_modified" : 1591685156109,
+  "create_time" : 1591340605696,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1591340605696,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "file_pruning",
+  "segment_uuids" : [ ]
+}

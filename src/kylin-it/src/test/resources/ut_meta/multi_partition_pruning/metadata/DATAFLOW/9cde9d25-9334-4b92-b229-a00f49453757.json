@@ -1,0 +1,14 @@
+{
+  "uuid" : "9cde9d25-9334-4b92-b229-a00f49453757",
+  "last_modified" : 1522545367929,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "owner" : "test_owner",
+  "mp_values" : null,
+  "create_time_utc" : 1509791792901,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "project" : "multi_partition_pruning",
+  "segment_uuids" : [ ]
+}

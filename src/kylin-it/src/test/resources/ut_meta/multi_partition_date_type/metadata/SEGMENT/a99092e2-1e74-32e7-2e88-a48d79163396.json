@@ -1,0 +1,87 @@
+{
+  "name" : "20211025000000_20211026000000",
+  "create_time_utc" : 1641379936949,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1635138000000,
+    "date_range_end" : 1635224400000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "'abc_4_52046'",
+      "max" : "'abc_4_9959'"
+    },
+    "1" : {
+      "min" : "10009096",
+      "max" : "10095858"
+    },
+    "12" : {
+      "min" : "2021-10-25",
+      "max" : "2021-10-25"
+    },
+    "2" : {
+      "min" : "2021-10-25 00:00:01.0",
+      "max" : "2021-10-25 23:59:28.0"
+    },
+    "3" : {
+      "min" : "9096",
+      "max" : "95858"
+    },
+    "4" : {
+      "min" : "92",
+      "max" : "960"
+    },
+    "5" : {
+      "min" : "90969096",
+      "max" : "9585895858"
+    },
+    "6" : {
+      "min" : "2021-10-25 00:00:01",
+      "max" : "2021-10-25 23:59:28"
+    },
+    "7" : {
+      "min" : "10009096",
+      "max" : "10095858"
+    },
+    "10" : {
+      "min" : "92.0",
+      "max" : "960.0"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1641383188300,
+  "source_count" : 2592,
+  "source_bytes_size" : 14623650,
+  "column_source_bytes" : {
+    "TEST_DB.DATE_TIMESTAMP_TABLE.INT_1" : 20736,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.DOUBLE_5" : 0,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.STRING_8" : 33696,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.DATE_6" : 25920,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.DATE_7" : 0,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.TIMESTAMP_10" : 54432,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.INT_0" : 12960,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.STRING_9" : 49248,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.BIGINT_12" : 0,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.BIGINT_3" : 7776,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.ID" : 25920,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.TIMESTAMP_11" : 0,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.BIGINT_2" : 20736,
+    "TEST_DB.DATE_TIMESTAMP_TABLE.DOUBLE_4" : 12960
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "a99092e2-1e74-32e7-2e88-a48d79163396",
+  "model_uuid" : "3718b614-5191-2254-77e9-f4c5ca64e311",
+  "project" : "multi_partition_date_type"
+}

@@ -44,10 +44,12 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -77,7 +79,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.ttl.TtlRunnable;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -312,8 +313,10 @@ public class NAsyncQueryController extends NBasicController {
         AsyncQueryResponse asyncQueryResponse;
         switch (queryStatus) {
         case SUCCESS:
-            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.SUCCESSFUL,
-                    "await fetching results");
+            AsyncQueryUtil.SuccessFileContent content = AsyncQueryUtil.getSuccessFileContent(project, queryId);
+            ErrorCodeServer code = content == null ? null : ErrorCodeServer.of(content.getCode());
+            String info = code == null ? "await fetching results" : code.getErrorMsg().getLocalizedString();
+            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.SUCCESSFUL, info);
             break;
         case RUNNING:
             asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.RUNNING, "still running");

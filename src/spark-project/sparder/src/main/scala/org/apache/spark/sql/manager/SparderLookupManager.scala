@@ -44,12 +44,6 @@ object SparderLookupManager extends Logging {
     val tableName = names.apply(1)
     val metaMgr = NTableMetadataManager.getInstance(kylinConfig, projectName)
     val tableDesc = metaMgr.getTableDesc(tableName)
-    val cols = tableDesc.getColumns.toList
-
-    var columns = cols.filter(col => !col.getName.equals(tableDesc.getSnapshotPartitionCol))
-    if (tableDesc.getSnapshotPartitionCol != null) {
-      columns = columns :+ tableDesc.findColumnByName(tableDesc.getSnapshotPartitionCol)
-    }
     val dfTableName = Integer.toHexString(System.identityHashCode(name))
 
     val orderedCol = new ListBuffer[(ColumnDesc, Int)]
@@ -61,32 +55,36 @@ object SparderLookupManager extends Logging {
         partitionCol = (col, index)
       }
     }
-    val options = new scala.collection.mutable.HashMap[String, String]
-    if (partitionCol != null) {
-      orderedCol.append(partitionCol)
-      options.put(PARTITION_COL, tableDesc.getSnapshotPartitionCol)
-      options.put(PARTITIONS, String.join(",", tableDesc.getSnapshotPartitions.keySet()))
-      options.put("mapreduce.input.pathFilter.class", "org.apache.kylin.query.util.PartitionsFilter")
-    }
 
-    val originSchema = StructType(orderedCol.map { case (col, index) => StructField(col.getName, SparderTypeUtil.toSparkType(col.getType)) })
+    val originSchema = StructType(orderedCol.map { case (col, _) => StructField(col.getName, SparderTypeUtil.toSparkType(col.getType)) })
+    val sparkSession = SparderEnv.getSparkSession
+    val plan = if (sourcePath.contains("/Internal/")) {
+      val sql = f"select * from INTERNAL_CATALOG.$projectName.$tableName"
+      sparkSession.sql(sql).queryExecution.analyzed
+    } else {
+      val options = new scala.collection.mutable.HashMap[String, String]
+      if (partitionCol != null) {
+        orderedCol.append(partitionCol)
+        options.put(PARTITION_COL, tableDesc.getSnapshotPartitionCol)
+        options.put(PARTITIONS, String.join(",", tableDesc.getSnapshotPartitions.keySet()))
+        options.put("mapreduce.input.pathFilter.class", "org.apache.kylin.query.util.PartitionsFilter")
+      }
+      // create relation
+      val resourcePath = new Path(KapConfig.getInstanceFromEnv.getReadHdfsWorkingDirectory + sourcePath)
+      val fileIndex = new InMemoryFileIndex(sparkSession, Seq(resourcePath), options.toMap, Option(originSchema))
+      val fsRelation = HadoopFsRelation(
+        fileIndex,
+        partitionSchema = fileIndex.partitionSchema,
+        dataSchema = originSchema,
+        bucketSpec = None,
+        new ParquetFileFormat,
+        options.toMap)(sparkSession)
+      LogicalRelation(fsRelation)
+    }
     val aliasCols = orderedCol.map {
       case (c, index) =>
         col(c.getName).as(DeriveTableColumnInfo(dfTableName, index, c.getName).toString)
     }
-    val resourcePath = new Path(KapConfig.getInstanceFromEnv.getReadHdfsWorkingDirectory + sourcePath)
-
-    val sparkSession = SparderEnv.getSparkSession
-
-    val fileIndex = new InMemoryFileIndex(sparkSession, Seq(resourcePath), options.toMap, Option(originSchema))
-    val fsRelation = HadoopFsRelation(
-      fileIndex,
-      partitionSchema = fileIndex.partitionSchema,
-      dataSchema = originSchema,
-      bucketSpec = None,
-      new ParquetFileFormat,
-      options.toMap)(sparkSession)
-    val plan = LogicalRelation(fsRelation)
     SparkOperation.project(aliasCols, plan)
   }
 

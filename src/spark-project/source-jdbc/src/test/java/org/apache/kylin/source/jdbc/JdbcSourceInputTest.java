@@ -20,20 +20,19 @@ package org.apache.kylin.source.jdbc;
 import java.sql.SQLException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class JdbcSourceInputTest extends JdbcTestBase {
     private static SparkSession ss;

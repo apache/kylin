@@ -20,7 +20,6 @@ package org.apache.kylin.measure.dim;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class DimCountDistinctCounter {

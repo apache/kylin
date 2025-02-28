@@ -91,6 +91,10 @@ public class QueryTrace {
                 duration));
     }
 
+    public void appendSpanFromRequest(String name, long duration) {
+        spans.add(new Span(name, 0, duration));
+    }
+
     public void amendLast(String name, long endAt) {
         for (int i = spans.size() - 1; i >= 0; i--) {
             if (spans.get(i).name.equals(name)) {

@@ -1,0 +1,179 @@
+{
+  "uuid" : "24c8796b-d502-458d-a448-6dbb1f129a33",
+  "last_modified" : 1644401051341,
+  "create_time" : 1633515718533,
+  "version" : "4.0.0.0",
+  "name" : "PNL_TREE_VD",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "BUSINESS_DATE",
+    "datatype" : "date",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "CALCULATION_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "DATA_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "IS_ALT_NODE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "IS_LEAF",
+    "datatype" : "boolean",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "IS_ORTHOGONAL",
+    "datatype" : "boolean",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "JOB_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "MANAGEMENT_PNL_ELIGIBLE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "MEGDP_TENANT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "MEASURE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "NODE_LEVEL",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "NODE_ORDINAL",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "NODE_TYPE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "PARENT_NODE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "PNL_NODE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "ROOT_NODE",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "RUN_CONTEXT",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "RUN_VERSION",
+    "datatype" : "integer",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "SOURCE_SYSTEM",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "SOURCE_SYSTEM_ID",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "UPDATE_TIME",
+    "datatype" : "timestamp",
+    "comment" : "",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "PNL_TREE_KEY",
+    "datatype" : "varchar(1000)",
+    "comment" : "",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "Coriander_PnL_Reporting/table_snapshot/CRS.PNL_TREE_VD/8959ee73-76c7-4d7e-af53-f0c85ab6007e",
+  "last_snapshot_size" : 993363,
+  "snapshot_last_modified" : 1644583982030,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 61013,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "CRS",
+  "project" : "original_project_cc_linebreak"
+}

@@ -24,18 +24,17 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.kylin.common.exception.KylinException;
-
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public enum StreamingJobActionEnum {
 
     START, STOP, FORCE_STOP, RESTART;
 
-    private static Set<String> actionEnums = Sets.newHashSet(START.name(), STOP.name(), FORCE_STOP.name(),
+    private static final Set<String> ACTIONS = Sets.newHashSet(START.name(), STOP.name(), FORCE_STOP.name(),
             RESTART.name());
 
     public static void validate(String action) {
-        if (!actionEnums.contains(action.toUpperCase(Locale.ROOT))) {
+        if (!ACTIONS.contains(action.toUpperCase(Locale.ROOT))) {
             throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "action", "START, STOP, FORCE_STOP, RESTART");
         }
     }

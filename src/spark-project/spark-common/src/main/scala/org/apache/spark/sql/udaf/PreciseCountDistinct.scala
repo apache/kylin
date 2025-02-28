@@ -23,11 +23,13 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, _}
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.udaf.BitmapFuncType.BitmapFuncType
 import org.apache.spark.unsafe.types.UTF8String
 import org.roaringbitmap.longlong.Roaring64NavigableMap
+
+import scala.collection.convert.ImplicitConversions.`iterator asScala`
 
 // scalastyle:off
 @ExpressionDescription(usage = "PreciseCountDistinct(expr)")
@@ -404,4 +406,95 @@ case class PreciseBitmapBuildPushDown(child: Expression,
 
   override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
     super.legacyWithNewChildren(newChildren)
+}
+
+@SerialVersionUID(1)
+case class BitmapUuidFunc(child: Expression,
+                          limit: Int, offset: Int,
+                          returnDataType: DataType,
+                          funcType: BitmapFuncType,
+                          mutableAggBufferOffset: Int = 0,
+                          inputAggBufferOffset: Int = 0)
+  extends BasicPreciseCountDistinct(child, mutableAggBufferOffset, inputAggBufferOffset) {
+
+  def this(child: Expression, limit: Int, offset: Int,
+           returnDataType: DataType, funcType: BitmapFuncType) =
+    this(child, limit, offset, returnDataType, funcType, 0, 0)
+
+  override val prettyName: String = "bitmap_uuid_func"
+  private var _limit: Int = limit
+  private val _offset: Int = offset
+  override def dataType: DataType = returnDataType
+
+  override def createAggregationBuffer(): Roaring64NavigableMap = new PlaceHolderBitmap()
+  override def update(buffer: Roaring64NavigableMap, input: InternalRow): Roaring64NavigableMap = {
+    val bitmapbyte = child.eval(input).asInstanceOf[Array[Byte]]
+    val bitmap: Roaring64NavigableMap = BitmapSerAndDeSer.get().deserialize(bitmapbyte)
+    if (buffer.isInstanceOf[PlaceHolderBitmap]) return bitmap
+    funcType match {
+      case BitmapFuncType.INTERSECT => buffer.and(bitmap)
+      case BitmapFuncType.UNION => buffer.or(bitmap)
+      case _ => throw new UnsupportedOperationException(s"Unsupported funcType")
+    }
+    buffer
+  }
+
+  override def merge(buffer: Roaring64NavigableMap, input: Roaring64NavigableMap): Roaring64NavigableMap = {
+    if (buffer.isInstanceOf[PlaceHolderBitmap]) return input
+    if (input.isInstanceOf[PlaceHolderBitmap]) return buffer
+    funcType match {
+      case BitmapFuncType.INTERSECT => buffer.and(input)
+      case BitmapFuncType.UNION => buffer.or(input)
+      case _ => throw new UnsupportedOperationException(s"Unsupported funcType")
+    }
+    buffer
+  }
+
+  override def eval(buffer: Roaring64NavigableMap): Any = {
+    returnDataType match {
+      case IntegerType => buffer.getIntCardinality
+      case ArrayType(LongType, false) =>
+        val cardinality = buffer.getIntCardinality
+        var id = 0
+        val iterator = buffer.iterator()
+        if (_limit >= 0) { // need page
+          if(_limit == 0 || _offset > cardinality){
+            return new GenericArrayData(new Array[Long](0))
+          }
+          val size = cardinality - _offset
+          if(size < _limit ){
+            _limit = size
+          }
+          val page = new Array[Long](_limit)
+          val inter = iterator.toIterator.slice(_offset, _offset + _limit)
+          while (inter.hasNext) {
+            page(id) = inter.next()
+            id += 1
+          }
+          return new GenericArrayData(page)
+        }
+        // no page, return all
+        val longs = new Array[Long](cardinality)
+        while (iterator.hasNext) {
+          longs(id) = iterator.next()
+          id += 1
+        }
+        new GenericArrayData(longs)
+      case BinaryType => BitmapSerAndDeSer.get().serialize(buffer)
+      case _ => throw new UnsupportedOperationException(s"Unsupported returnDataType")
+    }
+  }
+
+  override def withNewMutableAggBufferOffset(newMutableAggBufferOffset: Int): ImperativeAggregate =
+    copy(mutableAggBufferOffset = newMutableAggBufferOffset)
+
+  override def withNewInputAggBufferOffset(newInputAggBufferOffset: Int): ImperativeAggregate =
+    copy(inputAggBufferOffset = newInputAggBufferOffset)
+
+  override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
+    super.legacyWithNewChildren(newChildren)
+}
+object BitmapFuncType extends Enumeration {
+  type BitmapFuncType = Value
+  val INTERSECT, UNION = Value
 }

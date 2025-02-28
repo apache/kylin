@@ -20,9 +20,9 @@ package org.apache.kylin.metadata.favorite;
 
 import java.util.Map;
 
-import org.apache.kylin.metadata.asynctask.AbstractAsyncTask;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.asynctask.AbstractAsyncTask;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

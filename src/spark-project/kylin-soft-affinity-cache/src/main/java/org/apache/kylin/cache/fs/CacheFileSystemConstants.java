@@ -46,4 +46,6 @@ public class CacheFileSystemConstants {
     public static final String PARAMS_KEY_LOCAL_CACHE_FOR_CURRENT_FILES = "spark.kylin.local-cache.for.current.files";
 
     public static final String PARAMS_KEY_ACCEPT_CACHE_TIME = "spark.kylin.local-cache.accept-cache-time";
+
+    public static final String PARAMS_KEY_ACCEPT_CACHE_TIME_FOR_GLUTEN = "spark.gluten.sql.columnar.backend.ch.runtime_settings.spark.kylin.local-cache.accept-cache-time";
 }

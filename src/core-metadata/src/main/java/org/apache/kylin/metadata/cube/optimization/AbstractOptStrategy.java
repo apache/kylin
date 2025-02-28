@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -44,7 +44,7 @@
                 </el-tooltip>
               </template>
             </template>
-            
+
           </div>
           <div class="result-content" :class="{'is-no-footer': !hasLeftFooter}">
             <div v-for="item in pagedModelColumns" :key="item.id" class="result-content_item">
@@ -137,7 +137,13 @@
                 <el-tooltip placement="top" :content="$t('dragToMove')" v-show="draggable&&!searchVar">
                   <i class="el-ksd-n-icon-grab-dots-outlined" :class="{'is-alive': draggable&&!searchVar}"></i>
                 </el-tooltip><el-tooltip :content="$t('excludedTableIconTip')" effect="dark" placement="top"><i class="excluded_table-icon el-icon-ksd-exclude" v-if="it.excluded"></i></el-tooltip>
-                <el-button type="primary" size="mini" class="shardby is-shardby" v-if="it.isShared" text icon="el-ksd-n-icon-symbol-s-circle-filled"></el-button>
+                <el-button
+                  type="primary"
+                  size="mini"
+                  class="shardby is-shardby"
+                  v-if="it.isShared&&showShardBy"
+                  text
+                  icon="el-ksd-n-icon-symbol-s-circle-filled"></el-button>
                 <span class="top-icon ignore-drag" v-if="topColAble"><el-button type="primary" size="mini" v-if="getIndex(it.key) !== 0" text @click.native="topColumn($event, it.key)" icon="el-ksd-n-icon-top-filled"></el-button></span>
                 <span class="ksd-nobr-text">{{it.label}}</span>
               </p>
@@ -156,9 +162,9 @@
                   </div>
                   <i class="el-ksd-n-icon-info-circle-outlined ksd-ml-5"></i>
                 </el-tooltip>
-                <el-tooltip placement="top" v-if="!it.isShared&sharedByAble" :content="shardByIndex !== -1 ? $t('replaceShardBy') : $t('setShardBy')">
+                <el-tooltip placement="top" v-if="!it.isShared&sharedByAble&&showShardBy" :content="shardByIndex !== -1 ? $t('replaceShardBy') : $t('setShardBy')">
                   <el-button type="primary" size="mini" class="shardby"  @click.stop="setShardBy(it.key)" text icon="el-ksd-n-icon-symbol-s-circle-filled"></el-button>
-                </el-tooltip><el-tooltip placement="top" v-if="it.isShared&sharedByAble"  :content="$t('removeShardBy')">
+                </el-tooltip><el-tooltip placement="top" v-if="showShardBy&&it.isShared&&sharedByAble"  :content="$t('removeShardBy')">
                   <el-button type="primary" size="mini" class="shardby is-shardby" text @click.stop="unSetSharyBy(it.key)" icon="el-ksd-n-icon-symbol-s-circle-filled"></el-button>
                 </el-tooltip><el-tooltip placement="top" :content="$t('remove')">
                   <i class="el-ksd-n-icon-close-outlined close-btn" @click.stop="removeColumn(it)"></i>
@@ -185,11 +191,15 @@
   import { objectClone, indexOfObjWithSomeKey, kylinConfirm } from 'util'
   import Sortable, { AutoScroll } from 'sortablejs/modular/sortable.core.esm.js'
   import EmptyData from '../EmptyData/EmptyData'
-  
+
   Sortable.mount(new AutoScroll())
-  
+
   @Component({
     props: {
+      showShardBy: {
+        type: Boolean,
+        default: true
+      },
       allModelColumns: {
         type: Array,
         default () {
@@ -341,17 +351,17 @@
       }
     }
     hasDragSuccess = false
-  
+
     get leftStyle () {
       return {
         width: this.dragData.width + 'px'
       }
     }
-  
+
     get hasLeftFooter () {
       return !!this.$slots['left-footer'] && this.$slots['left-footer'].length
     }
-  
+
     get alertItems () {
       let items = []
       if (this.alertTips && this.alertTips.length > 0) {
@@ -367,11 +377,11 @@
       }
       return items
     }
-  
+
     get columnTypes () {
       return [...new Set(this.allModelColumns.filter(it => it.type).map(it => it.type))]
     }
-  
+
     get pagedModelColumns () {
       return this.filterModelColumns.slice(0, (this.pagination.left.pageOffset + 1) * this.pagination.left.pageSize)
     }
@@ -379,15 +389,15 @@
     get filterTypeOptionSelectedColumns () {
       return this.typeOptions.length ? this.filterSelectedColumns.filter(it => this.typeOptions.includes(it.type)) : this.filterSelectedColumns
     }
-  
+
     getIndex (key) {
       return indexOfObjWithSomeKey(this.selectedData, 'key', key)
     }
-  
+
     get pagedSelectedColumns () {
       return this.filterSelectedColumns.slice(0, (this.pagination.right.pageOffset + 1) * this.pagination.right.pageSize)
     }
-  
+
     get filterSelectedColumns () {
       let selectedColumns = objectClone(this.selectedData)
       if (this.searchVar) {
@@ -396,7 +406,7 @@
       }
       return selectedColumns
     }
-  
+
     get filterModelColumns () {
       // let allModelColumns = this.allModelColumns.filter(it => !this.selectedColumns.includes(it.key)).map(item => ({...item, selected: false}))
       let allModelColumns = this.allModelColumns.map(item => ({...item, selected: this.selectedColumns.includes(item.key)}))
@@ -413,7 +423,7 @@
         }
       } else {
         this.$set(this.pagination.left, 'pageOffset', 0)
-  
+
         // const selectedColumns = allModelColumns.filter(it => this.selectedColumns.includes(it.key))
         const results = [...allModelColumns.filter(it => this.typeOptions.includes(it.type))]
         if (!this.columnSort) {
@@ -425,20 +435,20 @@
       this.$set(this.pagination.left, 'totalSize', resultDatas.length)
       return resultDatas
     }
-  
+
     get isAnyCardinalityCol () {
       return this.selectedData.length && this.selectedData.filter((c) => !!c.cardinality).length > 0
     }
-  
+
     get isPartCardinalityCol () {
       const cardinalityNum = this.selectedData.filter((c) => !!c.cardinality).length
       return this.selectedData.length && cardinalityNum > 0 && cardinalityNum < this.selectedData.length
     }
-  
+
     get unSelectedData () {
       return this.allModelColumns
     }
-  
+
     get selectedData () {
       let sData = []
       if (this.selectedColumns.length) {
@@ -461,16 +471,16 @@
       this.$set(this.pagination.right, 'totalSize', sData.length)
       return sData
     }
-  
+
     get shardByIndex () {
       return indexOfObjWithSomeKey(this.selectedData, 'isShared', true)
     }
-  
+
     created () {
       this.pagination.left.totalSize = this.filterModelColumns.length
       this.pagination.right.totalSize = this.selectedData.length
     }
-  
+
     mounted () {
       const $unSelectPage = this.$el.querySelector('.result-content')
       const $selectedPage = this.$el.querySelector('.selected-results_layout')
@@ -528,7 +538,7 @@
         }
       }
     }
-  
+
     debounce (fn, dom, scrollType, delay) {
       let timer = null
       return function () {
@@ -540,14 +550,14 @@
         }, delay)
       }
     }
-  
+
     destroyed () {
       const $unSelectPage = this.$el.querySelector('.result-content')
       const $selectedPage = this.$el.querySelector('.selected-results_layout')
       $unSelectPage && $unSelectPage.removeEventListener('scroll', this.handleScroll)
       $selectedPage && $selectedPage.removeEventListener('scroll', this.handleScroll)
     }
-  
+
     handleScroll (dom, scrollType) {
       const scrollBoxDom = this.$el.querySelector(dom)
       const scrollT = scrollBoxDom.scrollTop
@@ -557,11 +567,11 @@
         this.scrollLoad(scrollType)
       }
     }
-  
+
     handleTableIndexRecognize () {
       this.$emit('handleTableIndexRecognize')
     }
-  
+
     selectAll () {
       let selectedList = objectClone(this.selectedColumns)
       // 除去disabled的列，
@@ -579,7 +589,7 @@
       this.handleEmitEvent('setSelectedColumns', selectedList)
       this.setSelectedColumns()
     }
-  
+
     showLoadMore (type) {
       const { left, right } = this.pagination
       if (type === 'left') {
@@ -588,33 +598,33 @@
         return (right.pageOffset + 1) * right.pageSize < right.totalSize
       }
     }
-  
+
     scrollLoad (type) {
       if (this.showLoadMore(type)) {
         this.addPagination(type)
       }
     }
-  
+
     addPagination (type) {
       const page = this.pagination[type].pageOffset + 1
       this.$set(this.pagination[type], 'pageOffset', page)
     }
-  
+
     handleEmitEvent (name, value) {
       this.$emit(name, value)
     }
-  
+
     handleSortCommand (sort) {
       this.columnSort = sort
     }
-  
+
     setSelectedColumns () {
       this.$nextTick(() => {
         const selectedList = this.selectedData.map(d => d.key)
         this.handleEmitEvent('setSelectedColumns', selectedList)
       })
     }
-  
+
     async handleSortSelectedCommand (sort) {
       if (this.hasDragSuccess) {
         await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
@@ -624,7 +634,7 @@
       this.setSelectedColumns()
       this.hasDragSuccess = false
     }
-  
+
     async handleSortCardinality (sort) {
       if (this.hasDragSuccess) {
         await kylinConfirm(' ', {confirmButtonText: this.$t('remove'), type: 'warning'}, this.$t('cofirmRemoveSort'))
@@ -634,11 +644,11 @@
       this.setSelectedColumns()
       this.hasDragSuccess = false
     }
-  
+
     goToDataSource () {
       this.$router.push('/studio/source')
     }
-  
+
     handleIndexColumnChange (v) {
       const selectedList = objectClone(this.selectedColumns)
       if (v.selected) {
@@ -650,14 +660,14 @@
       this.handleEmitEvent('setSelectedColumns', selectedList)
       this.setSelectedColumns()
     }
-  
+
     removeColumn (v) {
       const selectedList = objectClone(this.selectedColumns)
       const index = selectedList.indexOf(v.key)
       index > -1 && selectedList.splice(index, 1)
       this.handleEmitEvent('setSelectedColumns', selectedList)
     }
-  
+
     async topColumn (e, key) {
       e.stopPropagation()
       e.preventDefault()
@@ -680,7 +690,7 @@
       this.hasDragSuccess = true
       this.$message({ type: 'success', message: this.$t('topColSuccess') })
     }
-  
+
     setShardBy (key) {
       let message = ''
       if (this.shardByIndex !== -1) {
@@ -692,7 +702,7 @@
       this.handleEmitEvent('setShardbyCol', this.selectedData[index].label)
       this.$message({ type: 'success', message: message || this.$t('setShardBySuccess') })
     }
-  
+
     unSetSharyBy (key) {
       const index = indexOfObjWithSomeKey(this.selectedData, 'key', key)
       this.selectedData[index].isShared = false

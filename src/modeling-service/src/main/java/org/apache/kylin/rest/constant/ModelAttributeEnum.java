@@ -22,18 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.rest.response.NDataModelResponse;
 
 public enum ModelAttributeEnum {
-    SECOND_STORAGE {
-        @Override
-        public List<NDataModel> filter(List<NDataModel> models) {
-            return models.stream().filter(model -> {
-                NDataModelResponse modelResponse = (NDataModelResponse) model;
-                return modelResponse.isSecondStorageEnabled();
-            }).collect(Collectors.toList());
-        }
-    },
 
     STREAMING {
         @Override

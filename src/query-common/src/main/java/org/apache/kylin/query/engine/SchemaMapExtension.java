@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.common.extension.KylinExtension;
+import org.apache.kylin.metadata.model.TableDesc;
 
 public interface SchemaMapExtension extends KylinExtension {
 

@@ -19,27 +19,33 @@
 package org.apache.kylin.metadata.model;
 
 import static java.util.stream.Collectors.groupingBy;
+import static org.apache.kylin.common.persistence.RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.table.ATable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,8 +95,8 @@ public class NTableMetadataManager {
     // ============================================================================
 
     private void initSrcTable() {
-        String resourceRootPath = "/" + project + ResourceStore.TABLE_RESOURCE_ROOT;
-        this.srcTableCrud = new CachedCrudAssist<TableDesc>(getStore(), resourceRootPath, TableDesc.class) {
+        this.srcTableCrud = new CachedCrudAssist<TableDesc>(getStore(), MetadataType.TABLE_INFO, project,
+                TableDesc.class) {
             @Override
             protected TableDesc initEntityAfterReload(TableDesc t, String resourceName) {
                 t.init(project);
@@ -126,31 +132,38 @@ public class NTableMetadataManager {
         return ret;
     }
 
-    public List<TableDesc> getAllIncrementalLoadTables() {
-        List<TableDesc> result = Lists.newArrayList();
-
-        for (TableDesc table : srcTableCrud.listAll()) {
-            if (table.isIncrementLoading())
-                result.add(table);
-        }
-
-        return result;
-    }
-    
     public List<String> getTableNamesByFuzzyKey(String fuzzyKey) {
-        return srcTableCrud.listAll().stream()
-                .filter(tableDesc -> StringUtils.containsIgnoreCase(tableDesc.getIdentity(), fuzzyKey))
-                .map(tableDesc -> tableDesc.getIdentity()).collect(Collectors.toList());
+        String[] keys = fuzzyKey.split("\\.", -1);
+        if (keys.length == 2) {
+            RawResourceFilter filter = new RawResourceFilter();
+            if (!keys[0].isEmpty()) {
+                filter.addConditions("dbName", Collections.singletonList(keys[0]), LIKE_CASE_INSENSITIVE);
+            }
+            if (!keys[1].isEmpty()) {
+                filter.addConditions("name", Collections.singletonList(keys[1]), LIKE_CASE_INSENSITIVE);
+
+            }
+            return srcTableCrud.listByFilter(filter).stream().map(ATable::getIdentity)
+                    .filter(identity -> StringUtils.containsIgnoreCase(identity, fuzzyKey))
+                    .collect(Collectors.toList());
+        } else {
+            RawResourceFilter dbFilter = RawResourceFilter.simpleFilter(LIKE_CASE_INSENSITIVE, "dbName", fuzzyKey);
+            RawResourceFilter tableFilter = RawResourceFilter.simpleFilter(LIKE_CASE_INSENSITIVE, "name", fuzzyKey);
+            return Stream
+                    .concat(srcTableCrud.listByFilter(dbFilter).stream(),
+                            srcTableCrud.listByFilter(tableFilter).stream())
+                    .map(ATable::getIdentity).distinct().collect(Collectors.toList());
+        }
     }
 
     /**
      * Get TableDesc by name and project
      */
-    public TableDesc getTableDesc(String tableName) {
-        if (StringUtils.isEmpty(tableName)) {
+    public TableDesc getTableDesc(String identity) {
+        if (StringUtils.isEmpty(identity)) {
             return null;
         }
-        return srcTableCrud.get(tableName);
+        return srcTableCrud.get(TableDesc.generateResourceName(project, identity));
     }
 
     public TableDesc copy(TableDesc tableDesc) {
@@ -173,7 +186,7 @@ public class NTableMetadataManager {
      */
     @Deprecated
     public void saveSourceTable(TableDesc srcTable) {
-        if (srcTableCrud.contains(srcTable.getIdentity())) {
+        if (srcTableCrud.contains(srcTable.resourceName())) {
             updateTableDesc(srcTable.getIdentity(), srcTable::copyPropertiesTo);
         } else {
             createTableDesc(srcTable);
@@ -204,17 +217,17 @@ public class NTableMetadataManager {
         updateTableDesc(tableDesc.getIdentity(), tableDesc::copyPropertiesTo);
     }
 
-    public void updateTableDesc(String tableName, TableDescUpdater updater) {
-        TableDesc cached = getTableDesc(tableName);
+    public void updateTableDesc(String identityName, TableDescUpdater updater) {
+        TableDesc cached = getTableDesc(identityName);
         if (cached == null) {
-            throw new IllegalStateException("tableDesc " + tableName + " does not exist");
+            throw new IllegalStateException("tableDesc " + identityName + " does not exist");
         }
         TableDesc copy = copyForWrite(cached);
         updater.modify(copy);
         copy.init(project);
         srcTableCrud.save(copy);
     }
-    
+
     public void createTableDesc(TableDesc srcTable) {
         srcTable.init(project);
         TableDesc copy = copyForWrite(srcTable);
@@ -230,8 +243,8 @@ public class NTableMetadataManager {
     // ============================================================================
 
     private void initSrcExt() {
-        this.srcExtCrud = new CachedCrudAssist<TableExtDesc>(getStore(),
-                "/" + project + ResourceStore.TABLE_EXD_RESOURCE_ROOT, TableExtDesc.class) {
+        this.srcExtCrud = new CachedCrudAssist<TableExtDesc>(getStore(), MetadataType.TABLE_EXD, project,
+                TableExtDesc.class) {
             @Override
             protected TableExtDesc initEntityAfterReload(TableExtDesc t, String resourceName) {
                 // convert old tableExt json to new one
@@ -260,7 +273,7 @@ public class NTableMetadataManager {
     }
 
     public TableExtDesc getOrCreateTableExt(TableDesc t) {
-        TableExtDesc result = srcExtCrud.get(t.getIdentity());
+        TableExtDesc result = srcExtCrud.get(TableExtDesc.generateResourceName(project, t.getIdentity()));
 
         // avoid returning null, since the TableDesc exists
         if (null == result) {
@@ -274,7 +287,20 @@ public class NTableMetadataManager {
     }
 
     public TableExtDesc getTableExtIfExists(TableDesc t) {
-        return srcExtCrud.get(t.getIdentity());
+        return srcExtCrud.get(TableDesc.generateResourceName(project, t.getIdentity()));
+    }
+
+    public boolean isHighCardinalityDim(TblColRef colRef) {
+        String tableIdentity = colRef.getTableRef().getTableIdentity();
+        TableDesc tableDesc = getTableDesc(tableIdentity);
+        TableExtDesc tableExtIfExists = getOrCreateTableExt(tableDesc);
+        TableExtDesc.ColumnStats columnStats = tableExtIfExists.getColumnStatsByName(colRef.getName());
+
+        if (Objects.isNull(columnStats)) {
+            return false;
+        }
+
+        return (double) (columnStats.getCardinality()) / tableExtIfExists.getTotalRows() > 0.2;
     }
 
     // for test mostly
@@ -287,7 +313,7 @@ public class NTableMetadataManager {
      */
     @Deprecated
     public void saveTableExt(TableExtDesc tableExt) {
-        if (srcExtCrud.contains(tableExt.getIdentity())) {
+        if (srcExtCrud.contains(tableExt.resourceName())) {
             updateTableExt(tableExt.getIdentity(), tableExt::copyPropertiesTo);
         } else {
             createTableExt(tableExt);
@@ -300,6 +326,8 @@ public class NTableMetadataManager {
             copyForWrite.setSampleRows(other.getSampleRows());
             copyForWrite.setTotalRows(other.getTotalRows());
             copyForWrite.setJodID(other.getJodID());
+            copyForWrite.setExcluded(other.isExcluded());
+            copyForWrite.setExcludedColumns(other.getExcludedColumns());
             if (other.getOriginalSize() != -1) {
                 copyForWrite.setOriginalSize(other.getOriginalSize());
             }

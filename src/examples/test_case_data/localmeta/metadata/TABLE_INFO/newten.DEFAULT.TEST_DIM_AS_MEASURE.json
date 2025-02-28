@@ -1,0 +1,50 @@
+{
+  "uuid" : "fef38e84-8385-a0e8-3fc3-b515aabbe461",
+  "last_modified" : 0,
+  "create_time" : 1687780438849,
+  "version" : "4.0.0.0",
+  "name" : "TEST_DIM_AS_MEASURE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "PRO_MT_SEASON",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "pro_mt_season"
+  }, {
+    "id" : "2",
+    "name" : "ARRIVAL_TRANSIT_IN_PRM_AMT",
+    "datatype" : "decimal(18,4)",
+    "case_sensitive_name" : "arrival_transit_in_prm_amt"
+  }, {
+    "id" : "3",
+    "name" : "BIG_REGION_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "big_region_name"
+  }, {
+    "id" : "4",
+    "name" : "REGION_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "region_name"
+  } ],
+  "source_type" : 9,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "default",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "table_comment" : null,
+  "project" : "newten"
+}

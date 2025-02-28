@@ -18,6 +18,9 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.persistence.ResourceStore.GLOBAL_PROJECT;
+import static org.apache.kylin.job.execution.ExecutableState.SUCCEED;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
@@ -27,14 +30,20 @@ import static org.mockito.Mockito.doThrow;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.junit.annotation.OverwriteProp;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.cluster.MockClusterManager;
 import org.apache.kylin.rest.constant.Constant;
+import org.awaitility.Duration;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +51,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -53,7 +63,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.var;
@@ -72,13 +81,16 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
     private ScheduleService scheduleService = Mockito.spy(ScheduleService.class);
 
     @Mock
+    private ApplicationContext applicationContext = Mockito.spy(ApplicationContext.class);
+
+    @Mock
     private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setup() throws JsonProcessingException {
+    public void setUp() throws JsonProcessingException {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         createTestMetadata();
         SecurityContextHolder.getContext()
@@ -96,6 +108,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
 
     @After
     public void tearDown() {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }
 
@@ -108,18 +121,36 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
                 throw new IOException("backup exception");
             }
         });
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.updateAllEpochs();
-        scheduleService.doRoutineTask();
+        scheduleService.doRoutineTaskForGlobal();
     }
 
     @Test
     public void testRoutineTask() throws Exception {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "300000ms");
-        doNothing().when(projectService).garbageCleanup(anyLong());
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.updateAllEpochs();
+        doNothing().when(projectService).garbageCleanup(anyString(), anyLong());
+        scheduleService.doRoutineTaskForProject("default");
+    }
+
+    @Test
+    public void testRunRoutineJob() {
+        prepareBeans(scheduleService);
+
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        conf.setProperty("kylin.job.max-concurrent-jobs", "0");
+        NProjectManager.getInstance(conf).updateProject("default", copyForWrite -> {
+            copyForWrite.putOverrideKylinProps("kylin.job.max-concurrent-jobs", "1");
+        });
+        await().atMost(Duration.TEN_SECONDS)
+                .until(() -> JobContextUtil.getJobContext(conf).getJobScheduler().isMaster());
+        ExecutableManager globalExecManager = ExecutableManager.getInstance(conf, GLOBAL_PROJECT);
+        ExecutableManager defaultExecManager = ExecutableManager.getInstance(conf, "default");
+        Assert.assertTrue(globalExecManager.getAllJobs().isEmpty() && defaultExecManager.getAllJobs().isEmpty());
         scheduleService.routineTask();
+        Assert.assertFalse(globalExecManager.getAllJobs().isEmpty() || defaultExecManager.getAllJobs().isEmpty());
+        log.info("Start to check job status, at " + System.currentTimeMillis());
+        await().atMost(Duration.ONE_MINUTE)
+                .until(() -> globalExecManager.getAllExecutables().get(0).getStatus() == SUCCEED
+                        && defaultExecManager.getAllExecutables().get(0).getStatus() == SUCCEED);
     }
 
     @Test
@@ -134,10 +165,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
                 return null;
             }
         });
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.updateAllEpochs();
-        doNothing().when(projectService).garbageCleanup(anyLong());
-        scheduleService.routineTask();
+        scheduleService.doRoutineTaskForGlobal();
     }
 
     @Test
@@ -152,10 +180,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
                 return null;
             }
         });
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.updateAllEpochs();
-        doNothing().when(projectService).garbageCleanup(anyLong());
         doThrow(TimeoutException.class).when(scheduleService).executeTask(any(), anyString(), anyLong());
-        scheduleService.routineTask();
+        scheduleService.doRoutineTaskForGlobal();
     }
 }

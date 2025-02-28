@@ -18,11 +18,11 @@
 package org.apache.kylin.engine.spark.utils
 
 
-import org.apache.kylin.guava30.shaded.common.io.Files
-import org.apache.kylin.engine.spark.cleanup.SnapshotChecker
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.cleanup.SnapshotChecker
+import org.apache.kylin.guava30.shaded.common.io.Files
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.junit.Assert
 

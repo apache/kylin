@@ -169,8 +169,6 @@ public class JobDiagInfoTool extends AbstractInfoExtractorTool {
         exportCandidateLog(exportDir, recordTime, project, startTime, endTime);
         exportKgLogs(exportDir, startTime, endTime, recordTime);
 
-        exportTieredStorage(project, exportDir, startTime, endTime, recordTime);
-
         exportInfluxDBMetrics(exportDir, recordTime);
 
         executeTimeoutTask(taskQueue);

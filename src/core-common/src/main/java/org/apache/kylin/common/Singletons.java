@@ -72,13 +72,20 @@ public class Singletons implements Serializable {
     }
 
     <T> T getInstance0(Class<T> clz, Creator<T> creator) {
-        Object singleton = instances == null ? null : instances.get(clz);
+        return getInstance0(clz, clz, creator);
+    }
+
+    <T> T getInstance0(Class<T> clz, Class<?> keyClass, Creator<T> creator) {
+        if (keyClass == null) {
+            keyClass = clz;
+        }
+        Object singleton = instances == null ? null : instances.get(keyClass);
         if (singleton != null)
             return (T) singleton;
 
-        synchronized (clz) {
+        synchronized (keyClass) {
 
-            singleton = instances.get(clz);
+            singleton = instances.get(keyClass);
             if (singleton != null)
                 return (T) singleton;
 
@@ -88,20 +95,27 @@ public class Singletons implements Serializable {
                 throw new RuntimeException(e);
             }
             if (singleton != null) {
-                instances.put(clz, singleton);
+                instances.put(keyClass, singleton);
             }
         }
         return (T) singleton;
     }
 
     <T> T getInstance0(String project, Class<T> clz, Creator<T> creator) {
-        ConcurrentHashMap<String, Object> instanceMap = (null == instancesByPrj) ? null : instancesByPrj.get(clz);
+        return getInstance0(project, clz, clz, creator);
+    }
+
+    <T> T getInstance0(String project, Class<T> clz, Class<?> keyClass, Creator<T> creator) {
+        if (keyClass == null) {
+            keyClass = clz;
+        }
+        ConcurrentHashMap<String, Object> instanceMap = (null == instancesByPrj) ? null : instancesByPrj.get(keyClass);
         Object singleton = (null == instanceMap) ? null : instanceMap.get(project);
         if (singleton != null)
             return (T) singleton;
 
-        synchronized (clz) {
-            instanceMap = instancesByPrj.get(clz);
+        synchronized (keyClass) {
+            instanceMap = instancesByPrj.get(keyClass);
             if (instanceMap == null)
                 instanceMap = new ConcurrentHashMap<>();
 
@@ -117,7 +131,7 @@ public class Singletons implements Serializable {
             if (singleton != null) {
                 instanceMap.put(project, singleton);
             }
-            instancesByPrj.put(clz, instanceMap);
+            instancesByPrj.put(keyClass, instanceMap);
         }
         return (T) singleton;
     }

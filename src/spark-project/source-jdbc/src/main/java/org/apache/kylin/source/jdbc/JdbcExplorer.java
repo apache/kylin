@@ -17,34 +17,39 @@
  */
 package org.apache.kylin.source.jdbc;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.sql.rowset.CachedRowSet;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SupportsSparkCatalog;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeployer, Serializable {
+public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeployer, SupportsSparkCatalog, Serializable {
 
     private JdbcConnector dataSource;
 
@@ -88,16 +93,44 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     @Override
     public List<String> listDatabases() throws Exception {
-        return dataSource.listDatabases();
+        List<String> databases = dataSource.listDatabases();
+        if (KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled()) {
+            String logicalViewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+            databases.forEach(db -> {
+                if (db.equalsIgnoreCase(logicalViewDB)) {
+                    throw new KylinException(DDL_CHECK_ERROR,
+                            "Logical view database should not be duplicated " + "with normal hive database!!!");
+                }
+            });
+            List<String> databasesWithLogicalDB = Lists.newArrayList();
+            databasesWithLogicalDB.add(logicalViewDB);
+            databasesWithLogicalDB.addAll(databases);
+            databases = databasesWithLogicalDB;
+        }
+        return databases;
+    }
+
+    public static boolean isJdbcLogicalViewDataBase(String database) {
+        String logicalViewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+        return database.equals(logicalViewDB) && KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled();
     }
 
     @Override
     public List<String> listTables(String database) throws Exception {
+        if (isJdbcLogicalViewDataBase(database)) {
+            return SourceFactory.getSparkSource().getSourceMetadataExplorer().listTables(database);
+        }
         return dataSource.listTables(database);
     }
 
     @Override
     public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj) throws Exception {
+        if (isJdbcLogicalViewDataBase(database)) {
+            Pair<TableDesc, TableExtDesc> pair = SourceFactory.getSparkSource().getSourceMetadataExplorer()
+                    .loadTableMetadata(database, table, prj);
+            pair.getFirst().setSourceType(ISourceAware.ID_JDBC);
+            return pair;
+        }
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NTableMetadataManager metaMgr = NTableMetadataManager.getInstance(config, prj);
         TableDesc tableDesc = metaMgr.getTableDesc(database + "." + table);
@@ -181,5 +214,15 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     @Override
     public Set<String> getTablePartitions(String database, String table, String prj, String partitionCols) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String addCatalog(KylinConfig kylinConfig, String sql, String project) {
+        return dataSource.addCatalog(kylinConfig, sql, project);
+    }    
+    
+    @Override
+    public Map<String, String> getSourceCatalogConf(KylinConfig kylinConfig, String project) {
+        return dataSource.getSourceCatalogConf(kylinConfig, project);
     }
 }

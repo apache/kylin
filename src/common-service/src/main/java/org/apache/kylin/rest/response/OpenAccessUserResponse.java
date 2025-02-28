@@ -20,9 +20,9 @@ package org.apache.kylin.rest.response;
 
 import java.util.List;
 
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

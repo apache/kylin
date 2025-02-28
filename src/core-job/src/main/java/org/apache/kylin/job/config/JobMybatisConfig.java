@@ -20,22 +20,24 @@ package org.apache.kylin.job.config;
 
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.condition.JobModeCondition;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Conditional;
@@ -46,7 +48,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import lombok.val;
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -54,12 +55,24 @@ import lombok.extern.slf4j.Slf4j;
 @Conditional(JobModeCondition.class)
 public class JobMybatisConfig implements InitializingBean {
 
+    private static final String CREATE_JOB_INFO_TABLE = "create.job.info.table";
+
+    private static final String CREATE_JOB_LOCK_TABLE = "create.job.lock.table";
+
+    private static final String CREATE_JOB_INFO_INDEX_1 = "create.job.info.index1";
+
+    private static final String CREATE_JOB_INFO_INDEX_2 = "create.job.info.index2";
+
+    public static final String JOB_INFO_SUFFIX = "_job_info_v2";
+
+    public static final String JOB_LOCK_SUFFIX = "_job_lock_v2";
+
     private DataSource dataSource;
 
     private String database;
 
-    public static String JOB_INFO_TABLE = "job_info";
-    public static String JOB_LOCK_TABLE = "job_lock";
+    private String jobInfoTableName = "job_info";
+    private String jobLockTableName = "job_lock";
 
     public String getDatabase() {
         return database;
@@ -70,22 +83,32 @@ public class JobMybatisConfig implements InitializingBean {
         setupJobTables();
     }
 
+    public String getJobInfoTableName() {
+        return jobInfoTableName;
+    }
+
+    public String getJobLockTableName() {
+        return jobLockTableName;
+    }
+
     public void setupJobTables() throws Exception {
         val url = KylinConfig.getInstanceFromEnv().getMetadataUrl();
-        val props = JdbcUtil.datasourceParameters(url);
-        dataSource = JdbcDataSource.getDataSource(props);
-
+        if (null == dataSource) {
+            val props = JdbcUtil.datasourceParameters(url);
+            dataSource = JdbcDataSource.getDataSource(props);
+        }
         String keIdentified = url.getIdentifier();
-        if (StringUtils.isEmpty(url.getScheme())){
+        if (FileSystemMetadataStore.FILE_SCHEME.equals(url.getScheme())) {
             log.info("metadata from file");
             keIdentified = "file";
+            if (KylinConfig.getInstanceFromEnv().isUTEnv()) {
+                String uuid = RandomUtil.randomUUIDStr().replace("-", "_");
+                keIdentified = "UT_" + uuid;
+            }
         }
-        JOB_INFO_TABLE = keIdentified + "_job_info";
-        JOB_LOCK_TABLE = keIdentified + "_job_lock";
+        jobInfoTableName = keIdentified + JOB_INFO_SUFFIX;
+        jobLockTableName = keIdentified + JOB_LOCK_SUFFIX;
         database = Database.MYSQL.databaseId;
-
-        String jobInfoFile = "script/schema_job_info_mysql.sql";
-        String jobLockFile = "script/schema_job_lock_mysql.sql";
 
         Method[] declaredMethods = ReflectionUtils.getDeclaredMethods(dataSource.getClass());
         List<Method> getDriverClassNameMethodList = Arrays.stream(declaredMethods)
@@ -100,40 +123,65 @@ public class JobMybatisConfig implements InitializingBean {
                 log.info("driver class name = {}, is mysql", driverClassName);
             } else if (driverClassName.startsWith("org.postgresql")) {
                 log.info("driver class name = {}, is postgresql", driverClassName);
-                jobInfoFile = "script/schema_job_info_postgresql.sql";
-                jobLockFile = "script/schema_job_lock_postgresql.sql";
                 database = Database.POSTGRESQL.databaseId;
             } else if (driverClassName.equals("org.h2.Driver")) {
                 log.info("driver class name = {}, is H2 ", driverClassName);
-                jobInfoFile = "script/schema_job_info_h2.sql";
-                jobLockFile = "script/schema_job_lock_h2.sql";
                 database = Database.H2.databaseId;
             } else {
-                String errorMsg = String.format("driver class name = %s, should add support", driverClassName);
+                String errorMsg = String.format(Locale.ROOT, "driver class name = %s, should add support",
+                        driverClassName);
                 log.error(errorMsg);
-                throw new RuntimeException(errorMsg);
+                throw new KylinRuntimeException(errorMsg);
             }
         }
+
+        Properties sqlProperties = JdbcUtil.getProperties((BasicDataSource) dataSource);
+        checkAndCreateTable(sqlProperties);
+        checkAndCreateTableIndex(sqlProperties);
+    }
+
+    private void checkAndCreateTable(Properties sqlProperties) {
         try {
-            if (!isTableExists(dataSource.getConnection(), JOB_INFO_TABLE)) {
-                createTableIfNotExist(keIdentified, jobInfoFile);
+            if (!isTableExists(dataSource.getConnection(), jobInfoTableName)) {
+                String jobInfoTableSql = String.format(Locale.ROOT, sqlProperties.getProperty(CREATE_JOB_INFO_TABLE),
+                        jobInfoTableName);
+                executeSql(jobInfoTableSql);
             }
 
-            if (!isTableExists(dataSource.getConnection(), JOB_LOCK_TABLE)) {
-                createTableIfNotExist(keIdentified, jobLockFile);
+            if (!isTableExists(dataSource.getConnection(), jobLockTableName)) {
+                String jobLockTableSql = String.format(Locale.ROOT, sqlProperties.getProperty(CREATE_JOB_LOCK_TABLE),
+                        jobLockTableName);
+                executeSql(jobLockTableSql);
             }
-        } catch (SQLException | IOException e) {
-            throw new RuntimeException(e);
+
+        } catch (SQLException e) {
+            throw new KylinRuntimeException(e);
         }
     }
 
-    private void createTableIfNotExist(String keIdentified, String sql) throws IOException {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+    private void checkAndCreateTableIndex(Properties sqlProperties) {
+        try {
+            String jobInfoIndex1 = jobInfoTableName + "_ix";
+            if (!JdbcUtil.isIndexExists(dataSource.getConnection(), jobInfoTableName, jobInfoIndex1)) {
+                String jobInfoIndex1Sql = String.format(Locale.ROOT, sqlProperties.getProperty(CREATE_JOB_INFO_INDEX_1),
+                        jobInfoIndex1, jobInfoTableName);
+                executeSql(jobInfoIndex1Sql);
+            }
 
-        var sessionScript = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(sql),
-                StandardCharsets.UTF_8);
-        sessionScript = sessionScript.replaceAll("KE_IDENTIFIED", keIdentified);
-        populator.addScript(new InMemoryResource(sessionScript));
+            String jobInfoIndex2 = jobInfoTableName + "_project_model_id_ix";
+            if (!JdbcUtil.isIndexExists(dataSource.getConnection(), jobInfoTableName, jobInfoIndex2)) {
+                String jobInfoIndex2Sql = String.format(Locale.ROOT, sqlProperties.getProperty(CREATE_JOB_INFO_INDEX_2),
+                        jobInfoIndex2, jobInfoTableName);
+                executeSql(jobInfoIndex2Sql);
+            }
+        } catch (Exception e) {
+            log.warn("Check and create index for job info table failed.", e);
+        }
+    }
+
+    private void executeSql(String sql) {
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        populator.addScript(new InMemoryResource(sql));
         populator.setContinueOnError(false);
         DatabasePopulatorUtils.execute(populator, dataSource);
     }
@@ -143,16 +191,13 @@ public class JobMybatisConfig implements InitializingBean {
     }
 
     enum Database {
-        MYSQL("mysql"),
-        POSTGRESQL("postgresql"),
-        H2("h2");
+        MYSQL("mysql"), POSTGRESQL("postgresql"), H2("h2");
 
         String databaseId;
 
         Database(String databaseId) {
             this.databaseId = databaseId;
         }
-
 
     }
 }

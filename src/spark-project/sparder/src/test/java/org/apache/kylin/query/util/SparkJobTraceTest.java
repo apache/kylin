@@ -19,8 +19,8 @@
 package org.apache.kylin.query.util;
 
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;

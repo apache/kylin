@@ -18,11 +18,9 @@
 
 package org.apache.kylin.tool.garbage;
 
-import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
-
 import java.util.List;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.apache.kylin.metadata.sourceusage.SourceUsageRecord;
@@ -68,7 +66,7 @@ public class SourceUsageCleanerTest extends NLocalFileMetadataTestCase {
         SourceUsageRecord record = new SourceUsageRecord();
         record.setCreateTime(0);
         SourceUsageRecord record1 = new SourceUsageRecord();
-        record1.setResPath(ResourceStore.HISTORY_SOURCE_USAGE + PATH_DELIMITER + "aaa.json");
+        record1.setResPath(MetadataType.mergeKeyWithType("aaa", MetadataType.HISTORY_SOURCE_USAGE));
         record1.setCreateTime(1);
         manager.updateSourceUsage(record);
         manager.updateSourceUsage(record1);

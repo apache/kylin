@@ -326,8 +326,8 @@ export default class DropdownFilter extends Vue {
           type="datetimerange"
           align="left"
           ref="$datePicker"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
+          start-placeholder={this.$t('startDatePlaceholder')}
+          end-placeholder={this.$t('endDatePlaceholder')}
           onInput={this.handleInput}
           picker-options={pickerOptions}
           onBlur={() => this.handleSetDropdown(false)}

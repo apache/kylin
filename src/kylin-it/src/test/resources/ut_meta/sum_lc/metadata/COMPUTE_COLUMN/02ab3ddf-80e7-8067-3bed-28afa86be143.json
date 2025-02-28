@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.SUMLC_CC_TEST",
+  "tableAlias" : "SUMLC_CC_TEST",
+  "columnName" : "TIME_COMPOSE_CC",
+  "expression" : "concat(SUMLC_CC_TEST.YEAR_DATA,'-',SUMLC_CC_TEST.MONTH_DATA,'-',SUMLC_CC_TEST.DAY_DATA)",
+  "innerExpression" : "concat(`SUMLC_CC_TEST`.`YEAR_DATA`, '-', `SUMLC_CC_TEST`.`MONTH_DATA`, '-', `SUMLC_CC_TEST`.`DAY_DATA`)",
+  "datatype" : "VARCHAR",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "02ab3ddf-80e7-8067-3bed-28afa86be143",
+  "project" : "sum_lc"
+}

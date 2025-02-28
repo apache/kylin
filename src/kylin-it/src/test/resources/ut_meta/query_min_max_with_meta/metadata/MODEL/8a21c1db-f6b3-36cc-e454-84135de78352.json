@@ -1,0 +1,255 @@
+{
+  "uuid" : "8a21c1db-f6b3-36cc-e454-84135de78352",
+  "last_modified" : 1678693307837,
+  "create_time" : 1678693303624,
+  "version" : "4.0.0.0",
+  "alias" : "lineorder_join_dates",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.LINEORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "SSB.DATES",
+    "kind" : "LOOKUP",
+    "alias" : "DATES",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "DATES.D_DATEKEY" ],
+      "foreign_key" : [ "LINEORDER.LO_ORDERDATE" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_ORDERKEY",
+    "column" : "LINEORDER.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LO_PARTKEY",
+    "column" : "LINEORDER.LO_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "LO_DISCOUNT",
+    "column" : "LINEORDER.LO_DISCOUNT"
+  }, {
+    "id" : 3,
+    "name" : "LO_SUPPLYCOST",
+    "column" : "LINEORDER.LO_SUPPLYCOST"
+  }, {
+    "id" : 4,
+    "name" : "LO_COMMITDATE",
+    "column" : "LINEORDER.LO_COMMITDATE"
+  }, {
+    "id" : 5,
+    "name" : "LO_EXTENDEDPRICE",
+    "column" : "LINEORDER.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 6,
+    "name" : "LO_TAX",
+    "column" : "LINEORDER.LO_TAX"
+  }, {
+    "id" : 7,
+    "name" : "LO_SUPPKEY",
+    "column" : "LINEORDER.LO_SUPPKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "LO_ORDTOTALPRICE",
+    "column" : "LINEORDER.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 9,
+    "name" : "LO_REVENUE",
+    "column" : "LINEORDER.LO_REVENUE"
+  }, {
+    "id" : 10,
+    "name" : "LO_ORDERDATE",
+    "column" : "LINEORDER.LO_ORDERDATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "LO_ORDERPRIOTITY",
+    "column" : "LINEORDER.LO_ORDERPRIOTITY"
+  }, {
+    "id" : 12,
+    "name" : "LO_SHIPPRIOTITY",
+    "column" : "LINEORDER.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 13,
+    "name" : "LO_QUANTITY",
+    "column" : "LINEORDER.LO_QUANTITY"
+  }, {
+    "id" : 14,
+    "name" : "LO_SHIPMODE",
+    "column" : "LINEORDER.LO_SHIPMODE"
+  }, {
+    "id" : 15,
+    "name" : "LO_LINENUMBER",
+    "column" : "LINEORDER.LO_LINENUMBER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "LO_CUSTKEY",
+    "column" : "LINEORDER.LO_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "D_WEEKNUMINYEAR",
+    "column" : "DATES.D_WEEKNUMINYEAR"
+  }, {
+    "id" : 18,
+    "name" : "D_LASTDAYINWEEKFL",
+    "column" : "DATES.D_LASTDAYINWEEKFL"
+  }, {
+    "id" : 19,
+    "name" : "D_LASTDAYINMONTHFL",
+    "column" : "DATES.D_LASTDAYINMONTHFL"
+  }, {
+    "id" : 20,
+    "name" : "D_DAYOFWEEK",
+    "column" : "DATES.D_DAYOFWEEK"
+  }, {
+    "id" : 21,
+    "name" : "D_MONTHNUMINYEAR",
+    "column" : "DATES.D_MONTHNUMINYEAR"
+  }, {
+    "id" : 22,
+    "name" : "D_YEARMONTHNUM",
+    "column" : "DATES.D_YEARMONTHNUM"
+  }, {
+    "id" : 23,
+    "name" : "D_YEARMONTH",
+    "column" : "DATES.D_YEARMONTH"
+  }, {
+    "id" : 24,
+    "name" : "D_DAYNUMINMONTH",
+    "column" : "DATES.D_DAYNUMINMONTH"
+  }, {
+    "id" : 25,
+    "name" : "D_SELLINGSEASON",
+    "column" : "DATES.D_SELLINGSEASON"
+  }, {
+    "id" : 26,
+    "name" : "D_WEEKDAYFL",
+    "column" : "DATES.D_WEEKDAYFL"
+  }, {
+    "id" : 27,
+    "name" : "D_YEAR",
+    "column" : "DATES.D_YEAR"
+  }, {
+    "id" : 28,
+    "name" : "D_HOLIDAYFL",
+    "column" : "DATES.D_HOLIDAYFL"
+  }, {
+    "id" : 29,
+    "name" : "D_DAYNUMINWEEK",
+    "column" : "DATES.D_DAYNUMINWEEK"
+  }, {
+    "id" : 30,
+    "name" : "D_DAYNUMINYEAR",
+    "column" : "DATES.D_DAYNUMINYEAR"
+  }, {
+    "id" : 31,
+    "name" : "D_DATE",
+    "column" : "DATES.D_DATE"
+  }, {
+    "id" : 32,
+    "name" : "D_MONTH",
+    "column" : "DATES.D_MONTH"
+  }, {
+    "id" : 33,
+    "name" : "D_DATEKEY",
+    "column" : "DATES.D_DATEKEY"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LO_REVENUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "LINEORDER.LO_REVENUE"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LO_SUPPLYCOST_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "LINEORDER.LO_SUPPLYCOST"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "LINEORDER" : {
+        "x" : 376.22219509548614,
+        "y" : 305.61109754774304,
+        "width" : 200.0,
+        "height" : 230.0
+      },
+      "DATES" : {
+        "x" : 758.4444173177084,
+        "y" : 195.61109754774307,
+        "width" : 200.0,
+        "height" : 230.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ ],
+  "project" : "min_max"
+}

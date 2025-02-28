@@ -16,5 +16,4 @@
 -- limitations under the License.
 --
 
-
 select PRICE from test_kylin_fact where LSTG_FORMAT_NAME = 'ABIN'

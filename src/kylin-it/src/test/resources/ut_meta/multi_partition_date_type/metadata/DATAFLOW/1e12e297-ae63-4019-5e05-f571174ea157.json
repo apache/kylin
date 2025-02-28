@@ -1,0 +1,15 @@
+{
+  "uuid" : "1e12e297-ae63-4019-5e05-f571174ea157",
+  "last_modified" : 1701409748365,
+  "create_time" : 1701409605894,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "project" : "multi_partition_date_type",
+  "segment_uuids" : [ "f69eea91-0c16-47f4-957e-e4d1e9064e2a", "1132bdcb-ac2b-8886-427a-ee0e3b7f8c63", "904964d7-b4b4-c8f5-187d-fa9b0c7bf6bf", "9b3e9c1d-1c41-9d6f-5aa4-1b70c5a3591e", "4b3130a3-dc14-e0f9-6a9a-819db188b6b6" ]
+}

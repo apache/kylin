@@ -1,0 +1,63 @@
+{
+  "uuid" : "89af4ee2-2cdb-4b07-b39e-4c29856309ab",
+  "last_modified" : 1509531215483,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "indexes" : [ {
+    "id" : 1000000,
+    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36 ],
+    "measures" : [ 100000, 100001, 100002, 100003, 100004, 100005, 100007, 100008, 100009, 100010, 100011, 100012, 100013, 100014, 100015, 100016, 100017 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 0,
+    "dimensions" : [ 0, 1 ],
+    "measures" : [ 100000, 100003, 100012, 100013, 100014 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 10000,
+    "dimensions" : [ 0, 1, 2 ],
+    "measures" : [ 100000, 100003, 100012, 100013, 100014 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 20000,
+    "dimensions" : [ 0, 1, 2, 3 ],
+    "measures" : [ 100000, 100003, 100012, 100013, 100014 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 30000,
+    "dimensions" : [ 0, 1, 2, 3, 4 ],
+    "measures" : [ 100000, 100003, 100005, 100012, 100013, 100014 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 20000000000,
+    "dimensions" : [ 0, 1, 2, 4, 11 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 20000010000,
+    "dimensions" : [ 0, 1, 2 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 20000020000,
+    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 48 ],
+    "layouts" : [ ]
+  }, {
+    "id" : 20000030000,
+    "dimensions" : [ 0, 1, 38 ],
+    "layouts" : [ ]
+  } ],
+  "dictionaries" : [ {
+    "id" : 26,
+    "builder" : "org.apache.kylin.dict.NGlobalDictionaryBuilder2"
+  } ],
+  "next_aggregation_index_id" : 1010000,
+  "next_table_index_id" : 20000040000,
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : null,
+  "status_need_notify" : [ ],
+  "engine_type" : 0,
+  "project" : "infer_filter"
+}

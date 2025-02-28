@@ -18,63 +18,45 @@
 
 package org.apache.kylin.tool.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.nio.file.Paths;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.job.util.JobInfoUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.rest.delegate.ModelMetadataBaseInvoker;
-import org.mockito.Mockito;
 
+import lombok.SneakyThrows;
 
 public class JobMetadataWriter {
 
-    public static void writeJobMetaData(KylinConfig config, List<RawResource> metadata) {
+    public static void writeJobMetaData(KylinConfig config, RawResource jobMeta, String project) {
         JobContextUtil.cleanUp();
         JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(config);
-        ModelMetadataBaseInvoker modelMetadataBaseInvoker = Mockito.mock(ModelMetadataBaseInvoker.class);
-        Mockito.when(modelMetadataBaseInvoker.getModelNameById(Mockito.anyString(), Mockito.anyString()))
-                .thenReturn("test");
 
-        metadata.forEach(rawResource -> {
-            String path = rawResource.getResPath();
-            if (!path.equals("/calories/execute/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5")) {
-                return;
-            }
-            long updateTime = rawResource.getTimestamp();
-            ExecutablePO executablePO = parseExecutablePO(rawResource.getByteSource(), updateTime, "calories");
-            jobInfoDao.addJob(executablePO);
-        });
+        long updateTime = jobMeta.getTs();
+        ExecutablePO executablePO = parseExecutablePO(jobMeta.getByteSource(), updateTime, project);
+        jobInfoDao.addJob(executablePO);
     }
 
+    @SneakyThrows
     public static void writeJobMetaData(KylinConfig config) {
-        JobContextUtil.cleanUp();
-        JobInfoDao jobInfoDao = JobContextUtil.getJobInfoDao(config);
-        ModelMetadataBaseInvoker modelMetadataBaseInvoker = Mockito.mock(ModelMetadataBaseInvoker.class);
-        Mockito.when(modelMetadataBaseInvoker.getModelNameById(Mockito.anyString(), Mockito.anyString())).thenReturn("test");
-
-        ResourceStore resourceStore = ResourceStore.getKylinMetaStore(config);
-        List<String> allMetadataKey = resourceStore.collectResourceRecursively("/", "");
-        NProjectManager projectManager = NProjectManager.getInstance(config);
-        List<String> projectNames = projectManager.listAllProjects().stream().map(projectInstance -> projectInstance.getName()).collect(Collectors.toList());
-        for (String projectName : projectNames) {
-            String prefix = "/" + projectName + "/execute/";
-            List<String> jobKeyList = allMetadataKey.stream().filter(key -> key.startsWith(prefix)).collect(Collectors.toList());
-            for (String jobKey : jobKeyList) {
-                RawResource jobRawResource = resourceStore.getResource(jobKey);
-                long updateTime = jobRawResource.getTimestamp();
-                ExecutablePO executablePO = parseExecutablePO(jobRawResource.getByteSource(), updateTime, projectName);
-                jobInfoDao.addJob(executablePO);
-            }
+        String jobId = "dd5a6451-0743-4b32-b84d-2ddc8052429f";
+        File jobMeta = Paths.get("src/test/resources/ut_job_exec", jobId).toFile();
+        RawResource jobRaw = new RawResource();
+        try (FileInputStream fis = new FileInputStream(jobMeta)) {
+            byte[] content = IOUtils.toByteArray(fis);
+            jobRaw.setContent(content);
+            jobRaw.setTs(jobMeta.lastModified());
+            jobRaw.setMvcc(0);
         }
+        JobMetadataWriter.writeJobMetaData(config, jobRaw, "newten");
     }
 
     private static ExecutablePO parseExecutablePO(ByteSource byteSource, long updateTime, String projectName) {

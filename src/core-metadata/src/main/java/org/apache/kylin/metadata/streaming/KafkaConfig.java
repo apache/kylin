@@ -23,14 +23,13 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Data;
 
@@ -94,22 +93,22 @@ public class KafkaConfig extends RootPersistentEntity implements Serializable {
     }
 
     public String getIdentity() {
-        return resourceName();
-    }
-
-    @Override
-    public String resourceName() {
         String originIdentity = String.format(Locale.ROOT, "%s.%s", this.database, this.name);
         return originIdentity.toUpperCase(Locale.ROOT);
     }
 
-    public String getResourcePath() {
-        return concatResourcePath(resourceName(), project);
+    @Override
+    public String resourceName() {
+        return generateResourceName(getProject(), getIdentity());
     }
 
-    public static String concatResourcePath(String name, String project) {
-        return new StringBuilder().append("/").append(project).append(ResourceStore.KAFKA_RESOURCE_ROOT).append("/")
-                .append(name).append(MetadataConstants.FILE_SURFIX).toString();
+    public static String generateResourceName(String project, String identity) {
+        return project + "." + identity;
+    }
+
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.KAFKA_CONFIG;
     }
 
     public String getBatchTableAlias() {

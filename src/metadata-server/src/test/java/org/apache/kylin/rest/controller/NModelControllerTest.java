@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
@@ -56,8 +55,6 @@ import org.apache.kylin.rest.request.ModelUpdateRequest;
 import org.apache.kylin.rest.request.ModelValidationRequest;
 import org.apache.kylin.rest.request.MultiPartitionMappingRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
-import org.apache.kylin.rest.request.PartitionColumnRequest;
-import org.apache.kylin.rest.request.UnlinkModelRequest;
 import org.apache.kylin.rest.request.UpdateMultiPartitionValueRequest;
 import org.apache.kylin.rest.response.IndicesResponse;
 import org.apache.kylin.rest.response.ModelConfigResponse;
@@ -71,7 +68,6 @@ import org.apache.kylin.rest.service.ModelTdsService;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,9 +77,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -95,12 +89,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({SecondStorageUtil.class})
-@PowerMockIgnore({"javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*", "javax.script.*"})
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 public class NModelControllerTest extends NLocalFileMetadataTestCase {
 
     private MockMvc mockMvc;
@@ -238,8 +232,6 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
         when(modelSpy3.getModelType()).thenReturn(NDataModel.ModelType.STREAMING);
         mockedModels.add(new NDataModelResponse(modelSpy3));
         NDataModelResponse modelSpy4 = Mockito.spy(new NDataModelResponse(new NDataModel()));
-        when(modelSpy4.isSecondStorageEnabled()).thenReturn(true);
-        mockedModels.add(modelSpy4);
 
         when(modelService.getModels("model1", "default", true, "ADMIN", Arrays.asList("ONLINE"), "last_modify", true,
                 null, null, null)).thenReturn(mockedModels);
@@ -247,27 +239,13 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
                 .param("offset", "0").param("project", "default").param("model_name", "model1").param("limit", "10")
                 .param("exact", "true").param("table", "").param("owner", "ADMIN").param("status", "ONLINE")
                 .param("sortBy", "last_modify").param("reverse", "true")
-                .param("model_attributes", "BATCH,STREAMING,HYBRID,SECOND_STORAGE")
+                .param("model_attributes", "BATCH,STREAMING,HYBRID")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Mockito.verify(nModelController).getModels(null, "model1", true, "default", "ADMIN", Arrays.asList("ONLINE"),
                 "", 0, 10, "last_modify", true, null, Arrays.asList(ModelAttributeEnum.BATCH,
-                        ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID, ModelAttributeEnum.SECOND_STORAGE),
+                        ModelAttributeEnum.STREAMING, ModelAttributeEnum.HYBRID),
                 null, null, true, false);
-    }
-
-    @Test
-    public void testGetRelatedModels() throws Exception {
-
-        when(modelService.getRelateModels("default", "TEST_KYLIN_FACT", "model1")).thenReturn(mockRelatedModels());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/models").contentType(MediaType.APPLICATION_JSON)
-                .param("offset", "0").param("project", "default").param("model_name", "model1").param("limit", "10")
-                .param("exact", "true").param("owner", "ADMIN").param("status", "ONLINE").param("sortBy", "last_modify")
-                .param("reverse", "true").param("table", "TEST_KYLIN_FACT")
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
-        Mockito.verify(nModelController).getModels(null, "model1", true, "default", "ADMIN", Arrays.asList("ONLINE"),
-                "TEST_KYLIN_FACT", 0, 10, "last_modify", true, null, null, null, null, true, false);
     }
 
     @Test
@@ -582,29 +560,6 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(nModelController).updateSemantic(Mockito.any(ModelRequest.class));
     }
 
-    @Test
-    public void testUpdateModelSemantics_WithSecondStoragePartitionCheck() throws Exception {
-        ModelRequest request = makeModelRequest(makePartition("TEST_KYLIN_FACT.ORDER_ID"));
-        PowerMockito.mockStatic(SecondStorageUtil.class);
-        PowerMockito.when(SecondStorageUtil.isModelEnable(request.getProject(), request.getUuid())).thenReturn(true);
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/semantic").contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtil.writeValueAsString(request))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-
-        ModelRequest request1 = makeModelRequest(makePartition("TEST_KYLIN_FACT.PRICE"));
-        MvcResult mvcResult = mockMvc
-                .perform(MockMvcRequestBuilders.put("/api/models/semantic").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(request1))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
-        Assert.assertEquals(ErrorCodeServer.MODEL_SECOND_STORAGE_PARTITION_INVALID.getMsg(),
-                mvcResult.getResolvedException().getMessage());
-
-        Mockito.verify(nModelController, Mockito.times(2)).updateSemantic(Mockito.any(ModelRequest.class));
-    }
-
     private ModelRequest makeModelRequest(PartitionDesc partitionDesc) {
         ModelRequest request = new ModelRequest();
         String project = "default";
@@ -619,69 +574,6 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
         PartitionDesc partitionDesc = new PartitionDesc();
         partitionDesc.setPartitionDateColumn(column);
         return partitionDesc;
-    }
-
-    @Test
-    public void testUpdatePartition_withSecondStoragePartitionCheck() throws Exception {
-        String project = "default";
-        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-        PowerMockito.mockStatic(SecondStorageUtil.class);
-        PowerMockito.when(SecondStorageUtil.isModelEnable(project, modelId)).thenReturn(true);
-        PartitionColumnRequest request = new PartitionColumnRequest();
-        request.setProject(project);
-
-        request.setPartitionDesc(makePartition("TEST_KYLIN_FACT.ORDER_ID"));
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/{model}/partition", modelId)
-                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nModelController).updatePartitionSemantic(modelId, request);
-
-        request.setPartitionDesc(makePartition("TEST_KYLIN_FACT.PRICE"));
-        MvcResult mvcResult = mockMvc
-                .perform(MockMvcRequestBuilders.put("/api/models/{model}/partition", modelId)
-                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
-        Assert.assertEquals(ErrorCodeServer.PARTITION_SECOND_STORAGE_PARTITION_INVALID.getMsg(),
-                mvcResult.getResolvedException().getMessage());
-        Mockito.verify(nModelController).updatePartitionSemantic(modelId, request);
-    }
-
-    @Test
-    public void testCheckBeforeModelSave_withSecondStoragePartitionCheck() throws Exception {
-        ModelRequest request = makeModelRequest(makePartition("TEST_KYLIN_FACT.ORDER_ID"));
-        PowerMockito.mockStatic(SecondStorageUtil.class);
-        PowerMockito.when(SecondStorageUtil.isModelEnable(request.getProject(), request.getUuid())).thenReturn(true);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/model_save/check")
-                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-
-        ModelRequest request1 = makeModelRequest(makePartition("TEST_KYLIN_FACT.PRICE"));
-        MvcResult mvcResult = mockMvc
-                .perform(MockMvcRequestBuilders.post("/api/models/model_save/check")
-                        .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request1))
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
-        Assert.assertEquals(ErrorCodeServer.MODEL_SECOND_STORAGE_PARTITION_INVALID.getMsg(),
-                mvcResult.getResolvedException().getMessage());
-        Mockito.verify(nModelController, Mockito.times(2)).checkBeforeModelSave(Mockito.any(ModelRequest.class));
-    }
-
-    @Test
-    public void testUnlinkModel() throws Exception {
-        UnlinkModelRequest request = new UnlinkModelRequest();
-        request.setProject("default");
-        Mockito.doNothing().when(modelService).unlinkModel("default", "nmodel_basci");
-        mockMvc.perform(MockMvcRequestBuilders
-                .put("/api/models/{model}/management_type", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
-                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nModelController).unlinkModel(eq("89af4ee2-2cdb-4b07-b39e-4c29856309aa"),
-                Mockito.any(UnlinkModelRequest.class));
     }
 
     @Test

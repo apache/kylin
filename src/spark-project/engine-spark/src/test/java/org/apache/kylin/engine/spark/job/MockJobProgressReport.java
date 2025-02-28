@@ -21,15 +21,16 @@ package org.apache.kylin.engine.spark.job;
 import java.util.Map;
 
 public class MockJobProgressReport implements IJobProgressReport {
-  @Override
-  public boolean updateSparkJobInfo(Map<String, String> params, String url, String json) {
-    // do nothing
-    return true;
-  }
+    @Override
+    public boolean updateSparkJobInfo(Map<String, String> params, String url, String json) {
+        // do nothing
+        return true;
+    }
 
-  @Override
-  public boolean updateSparkJobExtraInfo(Map<String, String> params, String url, String project, String jobId, Map<String, String> extraInfo) {
-    // do nothing
-    return true;
-  }
+    @Override
+    public boolean updateSparkJobExtraInfo(Map<String, String> params, String url, String project, String jobId,
+            Map<String, String> extraInfo) {
+        // do nothing
+        return true;
+    }
 }

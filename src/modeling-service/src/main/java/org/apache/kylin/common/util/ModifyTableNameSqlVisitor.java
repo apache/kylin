@@ -22,8 +22,7 @@ import java.util.Locale;
 
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
-
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 public class ModifyTableNameSqlVisitor extends SqlBasicVisitor<Object> {
     private final String oldAliasName;

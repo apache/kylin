@@ -26,11 +26,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  * used to store hex values like "1A2BFF"
@@ -42,7 +41,8 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
  * 2. "AB" will become "AB00"
  *
  * <p>
- * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
+ * Due to these limitations hex representation of hash values(with no padding,
+ * better with even characters) is more suitable
  */
 public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -119,8 +119,8 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
     private int hexLength;
     private int bytelen;
 
-    transient private int avoidVerbose = 0;
-    transient private int avoidVerbose2 = 0;
+    private transient int avoidVerbose = 0;
+    private transient int avoidVerbose2 = 0;
 
     //no-arg constructor is required for Externalizable
     public FixedLenHexDimEnc() {

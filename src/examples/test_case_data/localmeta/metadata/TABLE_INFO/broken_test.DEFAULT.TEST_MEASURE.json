@@ -1,0 +1,100 @@
+{
+  "uuid" : "3ec8adfc-ba70-4112-bfe6-eb96634e9a99",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "name" : "TEST_MEASURE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ID1",
+    "datatype" : "bigint",
+    "data_gen" : "ID"
+  }, {
+    "id" : "2",
+    "name" : "ID2",
+    "datatype" : "bigint",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "ID3",
+    "datatype" : "bigint",
+    "index" : "T"
+  }, {
+    "id" : "4",
+    "name" : "ID4",
+    "datatype" : "integer",
+    "index" : "T"
+  }, {
+    "id" : "5",
+    "name" : "PRICE1",
+    "datatype" : "float",
+    "index" : "T"
+  }, {
+    "id" : "6",
+    "name" : "PRICE2",
+    "datatype" : "double",
+    "index" : "T"
+  }, {
+    "id" : "7",
+    "name" : "PRICE3",
+    "datatype" : "decimal(19,6)",
+    "index" : "T"
+  }, {
+    "id" : "8",
+    "name" : "PRICE5",
+    "datatype" : "smallint",
+    "index" : "T"
+  }, {
+    "id" : "9",
+    "name" : "PRICE6",
+    "datatype" : "tinyint",
+    "index" : "T"
+  }, {
+    "id" : "10",
+    "name" : "PRICE7",
+    "datatype" : "smallint",
+    "index" : "T"
+  }, {
+    "id" : "11",
+    "name" : "NAME1",
+    "datatype" : "varchar(256)",
+    "index" : "T"
+  }, {
+    "id" : "12",
+    "name" : "NAME2",
+    "datatype" : "varchar(254)",
+    "index" : "T"
+  }, {
+    "id" : "13",
+    "name" : "NAME3",
+    "datatype" : "char(255)",
+    "index" : "T"
+  }, {
+    "id" : "14",
+    "name" : "NAME4",
+    "datatype" : "tinyint",
+    "index" : "T"
+  }, {
+    "id" : "15",
+    "name" : "TIME1",
+    "datatype" : "date",
+    "index" : "T"
+  }, {
+    "id" : "16",
+    "name" : "TIME2",
+    "datatype" : "timestamp",
+    "index" : "T"
+  }, {
+    "id" : "17",
+    "name" : "FLAG",
+    "datatype" : "boolean",
+    "index" : "T"
+  } ],
+  "source_type" : 9,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "1",
+  "increment_loading" : false,
+  "database" : "DEFAULT",
+  "project" : "broken_test"
+}

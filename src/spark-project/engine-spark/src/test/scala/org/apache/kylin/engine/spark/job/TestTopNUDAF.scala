@@ -18,13 +18,13 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.sql.{Date, Timestamp}
-
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
+import java.sql.{Date, Timestamp}
 
 class TestTopNUDAF extends SparderBaseFunSuite with SharedSparkSession {
   test("basic") {

@@ -18,14 +18,15 @@
 
 package org.apache.kylin.query.util
 
-import java.util.concurrent._
-import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
 import org.apache.kylin.common.util.DaemonThreadFactory
 import org.apache.kylin.common.{KapConfig, QueryTrace}
 import org.apache.kylin.engine.spark.utils.LogEx
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
 import org.apache.kylin.query.util.SparkJobTrace.{jobTraceThreadPool, sparkJobTraceCache}
 import org.apache.spark.SparkContext
 import org.apache.spark.metrics.AppStatus
+
+import java.util.concurrent._
 
 /**
  * helper class for tracing the spark job execution time during query

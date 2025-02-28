@@ -26,8 +26,8 @@ import java.io.File;
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
 import org.apache.kylin.tool.util.DiagnosticFilesChecker;
 import org.joda.time.DateTime;
@@ -168,8 +168,6 @@ public class DiagClientTool extends AbstractInfoExtractorTool {
         exportCandidateLog(exportDir, recordTime, startTime, endTime);
 
         exportKgLogs(exportDir, startTime, endTime, recordTime);
-
-        exportTieredStorage(null, exportDir, startTime, endTime, recordTime);
 
         exportSystemUsageInfo(recordTime, DateTime.now().minusDays(useInfoBeforeDay).withTimeAtStartOfDay().getMillis(),
                 Long.MAX_VALUE);

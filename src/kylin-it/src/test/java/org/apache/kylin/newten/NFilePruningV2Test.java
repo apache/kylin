@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.ArrayList;
@@ -83,8 +82,10 @@ public class NFilePruningV2Test extends NLocalWithSparkSessionTest {
         SparderEnv.setSparkSession(ss);
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/file_pruning");
 
         JobContextUtil.cleanUp();
@@ -97,10 +98,16 @@ public class NFilePruningV2Test extends NLocalWithSparkSessionTest {
         instance.updateDataModel("9cde9d25-9334-4b92-b229-a00f49453757", write -> write.setStorageType(2));
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/file_pruning" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -111,8 +118,8 @@ public class NFilePruningV2Test extends NLocalWithSparkSessionTest {
         NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
         NDataflow df = dsMgr.getDataflow(dfName);
         val layouts = df.getIndexPlan().getAllLayouts();
-        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfName, new SegmentRange.TimePartitionedSegmentRange(start, end),
+                Sets.newLinkedHashSet(layouts), true);
         assertResultsAndScanFiles(base, 0);
     }
 

@@ -1,0 +1,41 @@
+{
+  "uuid" : "6150cbb6-9a29-4b24-9524-72cb0e873ad6",
+  "last_modified" : 1493191191378,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.NATION",
+  "last_build_job_id" : "66b6a656-a208-46ed-9439-d2b9c3a7dfa2",
+  "columns_stats" : [ {
+    "max_value" : "24",
+    "min_value" : "0",
+    "max_length_value" : "10",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "VIETNAM",
+    "min_value" : "ALGERIA",
+    "max_length_value" : "UNITED KINGDOM",
+    "min_length_value" : "IRAN",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "4",
+    "min_value" : "0",
+    "max_length_value" : "0",
+    "min_length_value" : "0",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be",
+    "min_value" : " haggle. carefully final deposits detect slyly agai",
+    "max_length_value" : " slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull",
+    "min_length_value" : "ven packages wake quickly. regu",
+    "null_count" : 0,
+    "cardinality" : 24
+  } ],
+  "sample_rows" : [ [ "0", "2", "4", "6", "8", "10", "12", "14", "16", "18" ], [ "ALGERIA", "BRAZIL", "EGYPT", "FRANCE", "INDIA", "IRAN", "JAPAN", "KENYA", "MOZAMBIQUE", "CHINA" ], [ "0", "1", "4", "3", "2", "4", "2", "0", "0", "2" ], [ " haggle. carefully final deposits detect slyly agai", "y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special ", "y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d", "refully final requests. regular, ironi", "ss excuses cajole slyly across the packages. deposits print aroun", "efully alongside of the slyly final dependencies. ", "ously. final, express gifts cajole a", " pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t", "s. ironic, unusual asymptotes wake blithely r", "c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos" ] ],
+  "last_modified_time" : "0",
+  "total_rows" : "25",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

@@ -18,10 +18,6 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
@@ -32,7 +28,7 @@ import org.junit.Test;
 public class BitmapSerializerTest {
 
     @Test
-    public void testBitmapSerDe() throws IOException {
+    public void testBitmapSerDe() {
         BitmapSerializer serializer = new BitmapSerializer(DataType.ANY);
 
         BitmapCounter counter = RoaringBitmapCounterFactory.INSTANCE.newBitmap(1, 1234, 5678, 100000);
@@ -42,24 +38,24 @@ public class BitmapSerializerTest {
         int size = buffer.position();
         buffer.flip();
 
-        assertEquals(0, buffer.position()); // peek doesn't change buffer
+        Assert.assertEquals(0, buffer.position()); // peek doesn't change buffer
 
         BitmapCounter counter2 = serializer.deserialize(buffer);
-        assertEquals(size, buffer.position()); // deserialize advance positions to next record
-        assertEquals(4, counter2.getCount());
+        Assert.assertEquals(size, buffer.position()); // deserialize advance positions to next record
+        Assert.assertEquals(4, counter2.getCount());
 
         buffer.flip();
         for (int i = 0; i < size; i++) {
             buffer.put((byte) 0); // clear buffer content
         }
-        assertEquals(4, counter2.getCount());
+        Assert.assertEquals(4, counter2.getCount());
 
         buffer = ByteBuffer.allocate(size - 1);
         try {
             serializer.serialize(counter, buffer);
             Assert.fail();
         } catch (Exception e) {
-            assertTrue(e instanceof BufferOverflowException);
+            Assert.assertTrue(e instanceof BufferOverflowException);
         }
     }
 }

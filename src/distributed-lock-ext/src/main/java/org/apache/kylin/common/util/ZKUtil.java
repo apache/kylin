@@ -26,15 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.ZookeeperConfig;
-import org.apache.zookeeper.KeeperException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.guava30.shaded.common.cache.Cache;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.RemovalNotification;
-
 import org.apache.kylin.shaded.curator.org.apache.curator.RetryPolicy;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
@@ -42,6 +37,9 @@ import org.apache.kylin.shaded.curator.org.apache.curator.framework.imps.Curator
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.shaded.curator.org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZKUtil {
     private static final Logger logger = LoggerFactory.getLogger(ZKUtil.class);

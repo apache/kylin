@@ -18,17 +18,16 @@
 
 package org.apache.kylin.source.jdbc
 
-import java.sql.{Connection, SQLException}
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.execution.datasources.jdbc.JDBCOptions
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils.getSchema
-import org.apache.spark.sql.execution.datasources.jdbc.{JDBCOptions, JdbcUtils}
 import org.apache.spark.sql.jdbc.JdbcDialects
 import org.apache.spark.sql.sources.{BaseRelation, Filter, PrunedFilteredScan}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{Row, SQLContext, SparkSession}
 
+import java.sql.{Connection, SQLException}
 import scala.collection.mutable
 
 abstract class AbstractJdbcRelation(jdbcOptions: JDBCOptions)(@transient val sparkSession: SparkSession) extends BaseRelation

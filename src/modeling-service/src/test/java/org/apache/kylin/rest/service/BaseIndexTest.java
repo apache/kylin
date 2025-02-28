@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -85,9 +86,9 @@ public class BaseIndexTest extends SourceTestCase {
     protected IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
 
     @Before
-    public void setup() {
+    public void setUp() {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
-        super.setup();
+        super.setUp();
         indexPlanService.setSemanticUpater(semanticService);
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(indexPlanService, "aclEvaluate", aclEvaluate);
@@ -104,8 +105,8 @@ public class BaseIndexTest extends SourceTestCase {
     @After
     public void tearDown() {
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "false");
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -125,22 +126,6 @@ public class BaseIndexTest extends SourceTestCase {
         modelRequest.setMeasures(modelRequest.getAllMeasures().subList(0, 0));
         String modelId = modelService.createModel(modelRequest.getProject(), modelRequest).getId();
         modelService.updateDataModelSemantic(getProject(), modelRequest);
-        LayoutEntity baseAggLayout = LayoutBuilder.builder().colOrder(10000).build();
-        LayoutEntity baseTableLayout = null;
-        compareBaseIndex(getModelIdFrom(modelRequest.getAlias()), baseTableLayout, baseAggLayout);
-    }
-
-    @Test
-    public void testCreateEmptyBaseTableLayoutWithSecondStorage() {
-        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
-        ModelRequest modelRequest = FormModel(modelManager.getDataModelDesc(COMMON_MODEL_ID));
-        modelRequest.setDimensions(Lists.newArrayList());
-        modelRequest.setMeasures(modelRequest.getAllMeasures().subList(0, 0));
-        String modelId = modelService.createModel(modelRequest.getProject(), modelRequest).getId();
-        modelRequest.setWithSecondStorage(true);
-        BaseIndexUpdateHelper baseIndexUpdater = new BaseIndexUpdateHelper(modelRequest, true);
-        baseIndexUpdater.setSecondStorageEnabled(true);
-        BuildBaseIndexResponse baseIndexResponse = baseIndexUpdater.update(indexPlanService);
         LayoutEntity baseAggLayout = LayoutBuilder.builder().colOrder(10000).build();
         LayoutEntity baseTableLayout = null;
         compareBaseIndex(getModelIdFrom(modelRequest.getAlias()), baseTableLayout, baseAggLayout);
@@ -375,7 +360,8 @@ public class BaseIndexTest extends SourceTestCase {
     public void testUpdateBuiltBaseIndex() {
         CreateBaseIndexRequest request = new CreateBaseIndexRequest();
         request.setModelId(COMMON_MODEL_ID);
-        indexPlanService.createBaseIndex(getProject(), request);
+        UnitOfWork.doInTransactionWithRetry(() -> indexPlanService.createBaseIndex(getProject(), request),
+                getProject());
         Assert.assertThat(needUpdateBaseIndex(getProject(), COMMON_MODEL_ID), is(false));
 
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");

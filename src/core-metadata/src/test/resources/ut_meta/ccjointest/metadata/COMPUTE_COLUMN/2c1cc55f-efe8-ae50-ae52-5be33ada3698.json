@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_22",
+  "expression" : "MONTH(CALCS.DATE1)",
+  "innerExpression" : "MONTH(CALCS.DATE1)",
+  "datatype" : "INTEGER",
+  "comment" : "Auto suggested from: MONTH(CALCS.DATE1)",
+  "uuid" : "2c1cc55f-efe8-ae50-ae52-5be33ada3698",
+  "project" : "tdvt"
+}

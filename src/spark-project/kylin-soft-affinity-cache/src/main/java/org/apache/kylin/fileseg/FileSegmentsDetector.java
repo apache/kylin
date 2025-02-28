@@ -92,7 +92,6 @@ public class FileSegmentsDetector {
     private boolean inited;
     private Map<String, Set<String>> findings;
 
-
     public FileSegmentsDetector(String project) {
         this.project = project;
     }
@@ -128,7 +127,8 @@ public class FileSegmentsDetector {
             try {
                 findingConsumer.accept(new Finding(project, model.getId(), loc, ImmutableList.copyOf(fileHashs)));
             } catch (Exception ex) {
-                log.error("Tolerate error while model {} consuming detected file segments {}", project + "/" + model.getAlias(), fileHashs, ex);
+                log.error("Tolerate error while model {} consuming detected file segments {}",
+                        project + "/" + model.getAlias(), fileHashs, ex);
             }
         }
     }

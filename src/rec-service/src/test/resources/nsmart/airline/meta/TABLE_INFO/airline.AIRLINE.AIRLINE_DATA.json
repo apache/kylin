@@ -1,0 +1,556 @@
+{
+  "uuid" : "e1a46be9-4eb7-4e70-9ff0-331c9683b32a",
+  "last_modified" : 1493261929121,
+  "version" : "2.0.0",
+  "name" : "AIRLINE_DATA",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "YEAR",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "2",
+    "name" : "QUARTER",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "3",
+    "name" : "MONTH",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "4",
+    "name" : "DAYOFMONTH",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "5",
+    "name" : "DAYOFWEEK",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "6",
+    "name" : "FLIGHTDATE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "7",
+    "name" : "UNIQUECARRIER",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "8",
+    "name" : "AIRLINEID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "9",
+    "name" : "CARRIER",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "10",
+    "name" : "TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "11",
+    "name" : "FLIGHTNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "12",
+    "name" : "ORIGINAIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "13",
+    "name" : "ORIGINAIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "14",
+    "name" : "ORIGINCITYMARKETID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "15",
+    "name" : "ORIGIN",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "16",
+    "name" : "ORIGINCITYNAME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "17",
+    "name" : "ORIGINSTATE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "18",
+    "name" : "ORIGINSTATEFIPS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "19",
+    "name" : "ORIGINSTATENAME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "20",
+    "name" : "ORIGINWAC",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "21",
+    "name" : "DESTAIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "22",
+    "name" : "DESTAIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "23",
+    "name" : "DESTCITYMARKETID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "24",
+    "name" : "DEST",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "25",
+    "name" : "DESTCITYNAME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "26",
+    "name" : "DESTSTATE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "27",
+    "name" : "DESTSTATEFIPS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "28",
+    "name" : "DESTSTATENAME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "29",
+    "name" : "DESTWAC",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "30",
+    "name" : "CRSDEPTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "31",
+    "name" : "DEPTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "32",
+    "name" : "DEPDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "33",
+    "name" : "DEPDELAYMINUTES",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "34",
+    "name" : "DEPDEL15",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "35",
+    "name" : "DEPARTUREDELAYGROUPS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "36",
+    "name" : "DEPTIMEBLK",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "37",
+    "name" : "TAXIOUT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "38",
+    "name" : "WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "39",
+    "name" : "WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "40",
+    "name" : "TAXIIN",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "41",
+    "name" : "CRSARRTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "42",
+    "name" : "ARRTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "43",
+    "name" : "ARRDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "44",
+    "name" : "ARRDELAYMINUTES",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "45",
+    "name" : "ARRDEL15",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "46",
+    "name" : "ARRIVALDELAYGROUPS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "47",
+    "name" : "ARRTIMEBLK",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "48",
+    "name" : "CANCELLED",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "49",
+    "name" : "CANCELLATIONCODE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "50",
+    "name" : "DIVERTED",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "51",
+    "name" : "CRSELAPSEDTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "52",
+    "name" : "ACTUALELAPSEDTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "53",
+    "name" : "AIRTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "54",
+    "name" : "FLIGHTS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "55",
+    "name" : "DISTANCE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "56",
+    "name" : "DISTANCEGROUP",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "57",
+    "name" : "CARRIERDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "58",
+    "name" : "WEATHERDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "59",
+    "name" : "NASDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "60",
+    "name" : "SECURITYDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "61",
+    "name" : "LATEAIRCRAFTDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "62",
+    "name" : "FIRSTDEPTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "63",
+    "name" : "TOTALADDGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "64",
+    "name" : "LONGESTADDGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "65",
+    "name" : "DIVAIRPORTLANDINGS",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "66",
+    "name" : "DIVREACHEDDEST",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "67",
+    "name" : "DIVACTUALELAPSEDTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "68",
+    "name" : "DIVARRDELAY",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "69",
+    "name" : "DIVDISTANCE",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "70",
+    "name" : "DIV1AIRPORT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "71",
+    "name" : "DIV1AIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "72",
+    "name" : "DIV1AIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "73",
+    "name" : "DIV1WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "74",
+    "name" : "DIV1TOTALGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "75",
+    "name" : "DIV1LONGESTGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "76",
+    "name" : "DIV1WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "77",
+    "name" : "DIV1TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "78",
+    "name" : "DIV2AIRPORT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "79",
+    "name" : "DIV2AIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "80",
+    "name" : "DIV2AIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "81",
+    "name" : "DIV2WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "82",
+    "name" : "DIV2TOTALGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "83",
+    "name" : "DIV2LONGESTGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "84",
+    "name" : "DIV2WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "85",
+    "name" : "DIV2TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "86",
+    "name" : "DIV3AIRPORT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "87",
+    "name" : "DIV3AIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "88",
+    "name" : "DIV3AIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "89",
+    "name" : "DIV3WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "90",
+    "name" : "DIV3TOTALGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "91",
+    "name" : "DIV3LONGESTGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "92",
+    "name" : "DIV3WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "93",
+    "name" : "DIV3TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "94",
+    "name" : "DIV4AIRPORT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "95",
+    "name" : "DIV4AIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "96",
+    "name" : "DIV4AIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "97",
+    "name" : "DIV4WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "98",
+    "name" : "DIV4TOTALGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "99",
+    "name" : "DIV4LONGESTGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "100",
+    "name" : "DIV4WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "101",
+    "name" : "DIV4TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "102",
+    "name" : "DIV5AIRPORT",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "103",
+    "name" : "DIV5AIRPORTID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "104",
+    "name" : "DIV5AIRPORTSEQID",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "105",
+    "name" : "DIV5WHEELSON",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "106",
+    "name" : "DIV5TOTALGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "107",
+    "name" : "DIV5LONGESTGTIME",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "108",
+    "name" : "DIV5WHEELSOFF",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  }, {
+    "id" : "109",
+    "name" : "DIV5TAILNUM",
+    "datatype" : "varchar(256)",
+    "comment" : "from deserializer"
+  } ],
+  "source_type" : 0,
+  "table_type" : "EXTERNAL_TABLE",
+  "database" : "AIRLINE",
+  "project" : "airline"
+}

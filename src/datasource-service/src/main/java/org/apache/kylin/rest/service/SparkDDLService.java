@@ -22,10 +22,10 @@ import static org.apache.spark.ddl.DDLConstant.CREATE_LOGICAL_VIEW;
 import static org.apache.spark.ddl.DDLConstant.DROP_LOGICAL_VIEW;
 import static org.apache.spark.ddl.DDLConstant.REPLACE_LOGICAL_VIEW;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +35,9 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.LogicalViewBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.ddl.SourceTableCheck;
@@ -43,16 +45,13 @@ import org.apache.kylin.rest.ddl.ViewCheck;
 import org.apache.kylin.rest.request.ViewRequest;
 import org.apache.kylin.rest.response.LogicalViewResponse;
 import org.apache.kylin.rest.util.AclPermissionUtil;
-
 import org.apache.spark.ddl.DDLCheck;
 import org.apache.spark.ddl.DDLCheckContext;
 import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
-
+import org.apache.spark.sql.SparkSession;
 import org.springframework.stereotype.Service;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -61,104 +60,108 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class SparkDDLService extends BasicService {
 
-  private final List<DDLCheck> ddlChecks = Lists.newArrayList(new SourceTableCheck(), new ViewCheck());
+    private final List<DDLCheck> allChecks = Lists.newArrayList(new SourceTableCheck(), new ViewCheck());
 
-  public String executeSQL(ViewRequest request) {
-    if (!KylinConfig.getInstanceFromEnv().isDDLEnabled()) {
-      throw new KylinException(DDL_CHECK_ERROR, "DDL function has not been turned on.");
-    }
-    LogicalViewLoader.checkConfigIfNeed();
-    val groups = getCurrentUserGroups();
-    val context = new DDLCheckContext(request.getSql(), request.getDdlProject(), request.getRestrict(),
-        AclPermissionUtil.getCurrentUsername(),
-        groups, UserGroupInformation.isSecurityEnabled());
+    public String executeSQL(ViewRequest request) {
+        if (!KylinConfig.getInstanceFromEnv().isDDLEnabled()) {
+            throw new KylinException(DDL_CHECK_ERROR, "DDL function has not been turned on.");
+        }
+        LogicalViewLoader.checkConfigIfNeed();
+        val groups = getCurrentUserGroups();
+        val context = new DDLCheckContext(request.getSql(), request.getDdlProject(), request.getRestrict(),
+                AclPermissionUtil.getCurrentUsername(), groups, UserGroupInformation.isSecurityEnabled());
 
-    ArrayList<DDLCheck> ddlCheckers = Lists.newArrayList(this.ddlChecks.iterator());
-    Collections.sort(ddlCheckers);
-    for (DDLCheck checker : ddlCheckers) {
-      checker.check(context);
+        List<DDLCheck> ddlCheckers = getFilterChecks(request.getDdlProject());
+        Collections.sort(ddlCheckers);
+        for (DDLCheck checker : ddlCheckers) {
+            checker.check(context);
+        }
+        final StringBuilder result = new StringBuilder();
+        SparkSession session = SparderEnv.getSparkSession();
+        String sql = LogicalViewLoader.addCatalog(request.getSql(), context.getProject(), session);
+        List<Row> rows = session.sql(sql).collectAsList();
+        rows.forEach(row -> result.append(row.get(0).toString()).append("\n"));
+        if (context.isLogicalViewCommand()) {
+            /**
+             * Request MUST be handled by global owner node.
+             */
+            switch (context.getCommandType()) {
+            case REPLACE_LOGICAL_VIEW:
+            case CREATE_LOGICAL_VIEW:
+                saveLogicalView(context);
+                break;
+            case DROP_LOGICAL_VIEW:
+                dropLogicalView(context);
+                break;
+            default:
+                break;
+            }
+            EventBusFactory.getInstance().postAsync(new LogicalViewBroadcastNotifier());
+        }
+        return result.toString();
     }
-    final StringBuilder result = new StringBuilder();
-    List<Row> rows = SparderEnv.getSparkSession().sql(request.getSql()).collectAsList();
-    rows.forEach(row -> result.append(row.get(0).toString()).append("\n"));
-    if (context.isLogicalViewCommand()) {
-      /**
-       * Request MUST be handled by global owner node.
-       */
-      switch (context.getCommandType()) {
-        case REPLACE_LOGICAL_VIEW:
-        case CREATE_LOGICAL_VIEW:
-          saveLogicalView(context);
-          break;
-        case DROP_LOGICAL_VIEW:
-          dropLogicalView(context);
-          break;
-        default:
-          break;
-      }
-      EventBusFactory.getInstance().postAsync(new LogicalViewBroadcastNotifier());
-    }
-    return result.toString();
-  }
 
-  public List<List<String>> pluginsDescription(String project, String pageType) {
-    if (!KylinConfig.getInstanceFromEnv().isDDLEnabled()) {
-      throw new KylinException(DDL_CHECK_ERROR, "DDL function has not been turned on.");
+    private List<DDLCheck> getFilterChecks(String project) {
+        String skips = NProjectManager.getProjectConfig(project).getDDLCheckToSkip();
+        return allChecks.stream().filter(check -> !skips.contains(check.getClass().getName()))
+                .collect(Collectors.toList());
     }
-    LogicalViewLoader.checkConfigIfNeed();
-    List<String> descriptionEN = Lists.newArrayList();
-    List<String> descriptionCN = Lists.newArrayList();
-    for (DDLCheck checker : ddlChecks) {
-      String[] description = checker.description(project, pageType);
-      descriptionEN.addAll(Arrays.asList(description[0].split("\t")));
-      descriptionCN.addAll(Arrays.asList(description[1].split("\t")));
+
+    public List<List<String>> pluginsDescription(String project, String pageType) {
+        if (!KylinConfig.getInstanceFromEnv().isDDLEnabled()) {
+            throw new KylinException(DDL_CHECK_ERROR, "DDL function has not been turned on.");
+        }
+        LogicalViewLoader.checkConfigIfNeed();
+        List<String> descriptionEN = Lists.newArrayList();
+        List<String> descriptionCN = Lists.newArrayList();
+        List<DDLCheck> ddlCheckers = getFilterChecks(project);
+        for (DDLCheck checker : ddlCheckers) {
+            String[] description = checker.description(project, pageType);
+            descriptionEN.addAll(Arrays.asList(description[0].split("\t")));
+            descriptionCN.addAll(Arrays.asList(description[1].split("\t")));
+        }
+        return Lists.newArrayList(descriptionEN, descriptionCN);
     }
-    return Lists.newArrayList(descriptionEN, descriptionCN);
-  }
 
-  private void saveLogicalView(DDLCheckContext context) {
-    EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-      LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
-      LogicalView logicalView = new LogicalView(context.getLogicalViewName(), context.getSql(), context.getUserName(),
-          context.getProject());
-      manager.update(logicalView);
-      return null;
-    }, UnitOfWork.GLOBAL_UNIT);
-    LogicalViewLoader.loadView(context.getLogicalViewName(), false, SparderEnv.getSparkSession());
-  }
-
-  private void dropLogicalView(DDLCheckContext context) {
-    EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-      LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
-      manager.delete(context.getLogicalViewName());
-      return null;
-    }, UnitOfWork.GLOBAL_UNIT);
-    LogicalViewLoader.unloadView(context.getLogicalViewName(), SparderEnv.getSparkSession());
-  }
-
-  public List<LogicalViewResponse> listAll(String project, String tableName) {
-    List<LogicalView> logicalViews = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv()).list();
-    if (StringUtils.isNotBlank(tableName)) {
-      logicalViews = logicalViews.stream()
-          .filter(table -> table.getTableName().toLowerCase().contains(tableName.toLowerCase()))
-          .collect(Collectors.toList());
+    private void saveLogicalView(DDLCheckContext context) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
+            LogicalView logicalView = new LogicalView(context.getLogicalViewName(), context.getLogicalViewPersistSql(),
+                    context.getUserName(), context.getProject());
+            manager.update(logicalView);
+            return null;
+        }, UnitOfWork.GLOBAL_UNIT);
+        LogicalViewLoader.loadView(context.getLogicalViewName(), false, SparderEnv.getSparkSession());
     }
-    List<LogicalViewResponse> viewResponses = Lists.newArrayList();
-    List<LogicalViewResponse> viewResponsesInProject =
-        logicalViews.stream()
-            .filter(table -> table.getCreatedProject().equalsIgnoreCase(project))
-            .map(LogicalViewResponse::new)
-            .collect(Collectors.toList());
-    List<LogicalViewResponse> viewResponsesNotInProject =
-        logicalViews.stream()
-            .filter(table -> !table.getCreatedProject().equalsIgnoreCase(project))
-            .map(LogicalViewResponse::new)
-            .collect(Collectors.toList());
-    viewResponsesNotInProject.forEach(table -> table.setCreatedSql("***"));
-    Collections.sort(viewResponsesInProject);
-    Collections.sort(viewResponsesNotInProject);
-    viewResponses.addAll(viewResponsesInProject);
-    viewResponses.addAll(viewResponsesNotInProject);
-    return viewResponses;
-  }
+
+    private void dropLogicalView(DDLCheckContext context) {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
+            manager.delete(context.getLogicalViewName());
+            return null;
+        }, UnitOfWork.GLOBAL_UNIT);
+        LogicalViewLoader.unloadView(context.getLogicalViewName(), SparderEnv.getSparkSession());
+    }
+
+    public List<LogicalViewResponse> listAll(String project, String tableName) {
+        List<LogicalView> logicalViews = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv()).list();
+        if (StringUtils.isNotBlank(tableName)) {
+            logicalViews = logicalViews.stream().filter(
+                    table -> table.getTableName().toLowerCase(Locale.ROOT).contains(tableName.toLowerCase(Locale.ROOT)))
+                    .collect(Collectors.toList());
+        }
+        List<LogicalViewResponse> viewResponses = Lists.newArrayList();
+        List<LogicalViewResponse> viewResponsesInProject = logicalViews.stream()
+                .filter(table -> table.getCreatedProject().equalsIgnoreCase(project)).map(LogicalViewResponse::new)
+                .collect(Collectors.toList());
+        List<LogicalViewResponse> viewResponsesNotInProject = logicalViews.stream()
+                .filter(table -> !table.getCreatedProject().equalsIgnoreCase(project)).map(LogicalViewResponse::new)
+                .collect(Collectors.toList());
+        viewResponsesNotInProject.forEach(table -> table.setCreatedSql("***"));
+        Collections.sort(viewResponsesInProject);
+        Collections.sort(viewResponsesNotInProject);
+        viewResponses.addAll(viewResponsesInProject);
+        viewResponses.addAll(viewResponsesNotInProject);
+        return viewResponses;
+    }
 }

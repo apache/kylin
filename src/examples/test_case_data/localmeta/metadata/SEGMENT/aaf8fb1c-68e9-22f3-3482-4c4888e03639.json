@@ -1,0 +1,48 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1709176855907,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "1",
+      "max" : "60000"
+    },
+    "14" : {
+      "min" : "AIR",
+      "max" : "TRUCK"
+    },
+    "15" : {
+      "min" : "1",
+      "max" : "7"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1709176966180,
+  "source_count" : 60175,
+  "source_bytes_size" : 0,
+  "column_source_bytes" : {
+    "SSB.LINEORDER.LO_ORDERKEY" : 172702,
+    "SSB.LINEORDER.LO_LINENUMBER" : 60175,
+    "SSB.LINEORDER.LO_SHIPMODE" : 261701
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "aaf8fb1c-68e9-22f3-3482-4c4888e03639",
+  "model_uuid" : "5e67c064-46d1-7893-7620-95d27f8cacee",
+  "project" : "TestBuildV2Dict"
+}

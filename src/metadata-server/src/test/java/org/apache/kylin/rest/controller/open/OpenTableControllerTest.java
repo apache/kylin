@@ -28,6 +28,8 @@ import java.util.Map;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -58,9 +60,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 
@@ -123,7 +122,8 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String tableName = "TEST_KYLIN_FACT";
             String database = "DEFAULT";
 
-            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(9), 10))
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false,
+                    Collections.singletonList(9), 10))
                     .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
@@ -140,7 +140,8 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String tableName = "P_LINEORDER_STR";
             String database = "SSB";
 
-            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(1), 10))
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false,
+                    Collections.singletonList(1), 10))
                     .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
@@ -162,7 +163,7 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String databaseUppercase = "SSB";
 
             Mockito.when(tableService.getTableDesc(project, true, tableNameUppercase, databaseUppercase, false,
-                            Collections.singletonList(9), 10))
+                    Collections.singletonList(9), 10))
                     .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //

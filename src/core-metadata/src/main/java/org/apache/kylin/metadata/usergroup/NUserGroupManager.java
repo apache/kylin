@@ -20,29 +20,30 @@ package org.apache.kylin.metadata.usergroup;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_USERGROUP_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.USERGROUP_NOT_EXIST;
-import static org.apache.kylin.common.persistence.ResourceStore.USER_GROUP_ROOT;
+import static org.apache.kylin.common.persistence.RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE;
+import static org.apache.kylin.common.persistence.RawResourceFilter.Operator.LIKE_CASE_INSENSITIVE;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.NavigableSet;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NUserGroupManager {
     private static final Logger logger = LoggerFactory.getLogger(NUserGroupManager.class);
@@ -63,7 +64,7 @@ public class NUserGroupManager {
         if (!UnitOfWork.isAlreadyInTransaction())
             logger.info("Initializing NUserGroupManager with KylinConfig Id: {}", System.identityHashCode(config));
         this.config = config;
-        this.crud = new CachedCrudAssist<UserGroup>(getStore(), USER_GROUP_ROOT, "", UserGroup.class) {
+        this.crud = new CachedCrudAssist<UserGroup>(getStore(), MetadataType.USER_GROUP, null, UserGroup.class) {
             @Override
             protected UserGroup initEntityAfterReload(UserGroup userGroup, String resourceName) {
                 return userGroup;
@@ -77,7 +78,7 @@ public class NUserGroupManager {
     }
 
     public List<String> getAllGroupNames() {
-        NavigableSet<String> userGroups = getStore().listResources(USER_GROUP_ROOT);
+        NavigableSet<String> userGroups = getStore().listResources(MetadataType.USER_GROUP.name());
         if (Objects.isNull(userGroups)) {
             return Collections.emptyList();
         }
@@ -91,8 +92,10 @@ public class NUserGroupManager {
         return ImmutableList.copyOf(crud.listAll());
     }
 
-    public List<UserGroup> getAllGroups(Predicate<String> predicate) {
-        return ImmutableList.copyOf(crud.listPartial(predicate));
+    public List<UserGroup> getGroupsByName(String groupName, boolean isFuzzy) {
+        RawResourceFilter filter = RawResourceFilter.simpleFilter(isFuzzy ? LIKE_CASE_INSENSITIVE : EQUAL_CASE_INSENSITIVE,
+                "groupName", groupName);
+        return ImmutableList.copyOf(crud.listByFilter(filter));
     }
 
     public boolean exists(String name) {

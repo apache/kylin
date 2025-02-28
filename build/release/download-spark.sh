@@ -25,7 +25,6 @@ source build/release/functions.sh
 rm -rf build/spark
 
 spark_version_pom=`mvn -f pom.xml help:evaluate -Dexpression=spark.version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
-spark_version_pom=3.2.0-kylin-4.6.9.0
 spark_pkg_name=spark-newten-"`echo ${spark_version_pom}| sed "s/-kylin//g"`"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 

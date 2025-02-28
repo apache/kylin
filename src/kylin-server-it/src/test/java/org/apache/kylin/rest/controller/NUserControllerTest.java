@@ -21,6 +21,8 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.rest.constant.Constant.GROUP_ALL_USERS;
 import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.nio.charset.StandardCharsets;
@@ -31,6 +33,7 @@ import java.util.Locale;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.metadata.usergroup.NUserGroupManager;
@@ -39,8 +42,11 @@ import org.apache.kylin.rest.request.UserRequest;
 import org.apache.kylin.server.AbstractMVCIntegrationTestCase;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -49,6 +55,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 public class NUserControllerTest extends AbstractMVCIntegrationTestCase {
 
     static BCryptPasswordEncoder pwdEncoder = new BCryptPasswordEncoder();
+
+    @SpyBean
+    SessionRegistry sessionRegistry;
 
     UserRequest request;
     String username = "test_user";
@@ -98,6 +107,7 @@ public class NUserControllerTest extends AbstractMVCIntegrationTestCase {
 
     @Test
     public void testUpdateUserPasswordWithBase64EncodePwd() throws Exception {
+        Mockito.doReturn(Lists.newArrayList()).when(sessionRegistry).getAllSessions(any(), anyBoolean());
 
         String newPassword = "kylin@2020";
 
@@ -105,7 +115,6 @@ public class NUserControllerTest extends AbstractMVCIntegrationTestCase {
         passwordChangeRequest.setUsername(username);
         passwordChangeRequest.setPassword(Base64.encodeBase64String(password.getBytes("utf-8")));
         passwordChangeRequest.setNewPassword(Base64.encodeBase64String(newPassword.getBytes("utf-8")));
-
         mockMvc.perform(MockMvcRequestBuilders.put("/api/user/password").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(passwordChangeRequest))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))

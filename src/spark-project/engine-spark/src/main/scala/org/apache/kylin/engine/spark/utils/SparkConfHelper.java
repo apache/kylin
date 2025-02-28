@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.spark.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -39,9 +42,7 @@ import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class SparkConfHelper {
     protected static final Logger logger = LoggerFactory.getLogger(SparkConfHelper.class);

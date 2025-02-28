@@ -24,33 +24,44 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 
+@Getter
 public enum JobTypeEnum {
     INDEX_REFRESH(Category.BUILD), //
     INDEX_MERGE(Category.BUILD), //
     INDEX_BUILD(Category.BUILD), //
     INC_BUILD(Category.BUILD), //
+    LAYOUT_DATA_OPTIMIZE(Category.OTHER), //
     SUB_PARTITION_BUILD(Category.BUILD), // 
     SUB_PARTITION_REFRESH(Category.BUILD), //
 
+    INDEX_PLAN_OPT(Category.REC), //
+
     SNAPSHOT_BUILD(Category.SNAPSHOT), //
     SNAPSHOT_REFRESH(Category.SNAPSHOT), //
+
+    INTERNAL_TABLE_BUILD(Category.INTERNAL), //
+    INTERNAL_TABLE_REFRESH(Category.INTERNAL), //
+    INTERNAL_TABLE_DELETE_PARTITION(Category.INTERNAL), //
 
     STREAMING_MERGE(Category.STREAMING), //
     STREAMING_BUILD(Category.STREAMING), //
 
     ASYNC_QUERY(Category.ASYNC_QUERY), //
 
-    EXPORT_TO_SECOND_STORAGE(Category.SECOND_STORAGE), //
-    SECOND_STORAGE_MODEL_CLEAN(Category.SECOND_STORAGE), //
-    SECOND_STORAGE_NODE_CLEAN(Category.SECOND_STORAGE), //
-    SECOND_STORAGE_SEGMENT_CLEAN(Category.SECOND_STORAGE), //
-    SECOND_STORAGE_INDEX_CLEAN(Category.SECOND_STORAGE), //
-    SECOND_STORAGE_REFRESH_SECONDARY_INDEXES(Category.SECOND_STORAGE), //
+    TABLE_SAMPLING(Category.OTHER), //
+    STAGE(Category.OTHER), //
 
-    TABLE_SAMPLING(Category.OTHER), STAGE(Category.OTHER);
+    ROUTINE(Category.CRON), //
+    META(Category.CRON), //
+    SOURCE_USAGE(Category.CRON), //
+    AUTO_REFRESH(Category.CRON), //
+    SPRING_SESSION_CLEAN_EXPIRED(Category.CRON);
 
-    @Getter
     private final String category;
+
+    public static final List<String> BUILD_JOB_TYPES = Arrays.stream(JobTypeEnum.values())
+            .filter(e -> !e.getCategory().equals(Category.CRON) && !e.getCategory().equals(Category.ASYNC_QUERY))
+            .map(Enum::name).collect(Collectors.toList());
 
     JobTypeEnum(String category) {
         this.category = category;
@@ -59,10 +70,13 @@ public enum JobTypeEnum {
     public static class Category {
         public static final String BUILD = "BUILD";
         public static final String SNAPSHOT = "SNAPSHOT";
+        public static final String INTERNAL = "INTERNAL";
         public static final String STREAMING = "STREAMING";
-        public static final String SECOND_STORAGE = "SECOND_STORAGE";
         public static final String ASYNC_QUERY = "ASYNC_QUERY";
+        public static final String CRON = "CRON";
         public static final String OTHER = "OTHER";
+        public static final String ALL = "ALL";
+        public static final String REC = "REC";
 
         private Category() {
         }

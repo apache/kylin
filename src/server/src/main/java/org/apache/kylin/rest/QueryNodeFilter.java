@@ -21,7 +21,6 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CONNECT_CATALOG;
 import static org.apache.kylin.common.exception.ServerErrorCode.NO_ACTIVE_ALL_NODE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeSystem.MAINTENANCE_MODE_WRITE_FAILED;
 import static org.apache.kylin.common.exception.code.ErrorCodeSystem.QUERY_NODE_API_INVALID;
 
 import java.io.IOException;
@@ -47,7 +46,6 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.interceptor.ProjectInfoParser;
@@ -86,10 +84,12 @@ public class QueryNodeFilter extends BaseFilter {
         // jdbc, odbc, query, maintain
         notRoutePostApiSet.add("/kylin/api/query");
         notRoutePostApiSet.add("/kylin/api/async_query");
+        notRoutePostApiSet.add("/kylin/api/query/if_big_query");
         notRoutePostApiSet.add("/kylin/api/query/prestate");
         notRoutePostApiSet.add("/kylin/api/user/authentication");
         notRoutePostApiSet.add("/kylin/api/system/maintenance_mode");
         notRouteDeleteApiSet.add("/kylin/api/query");
+        notRouteDeleteApiSet.add("/kylin/api/query/if_big_query");
 
         notRoutePostApiSet.add("/kylin/api/kg/health/instance_info");
         notRoutePostApiSet.add("/kylin/api/kg/health/instance_service/query_up_grade");
@@ -154,6 +154,13 @@ public class QueryNodeFilter extends BaseFilter {
 
         // spark report job stage status
         notRoutePutApiSet.add("/kylin/api/jobs/stage/status");
+        notRoutePutApiSet.add("/kylin/api/jobs/spark");
+        notRoutePutApiSet.add("/kylin/api/jobs/wait_and_run_time");
+
+        // gluten cache
+        notRoutePostApiSet.add("/kylin/api/jobs/gluten_cache");
+        notRoutePostApiSet.add("/kylin/api/cache/gluten_cache");
+        notRoutePostApiSet.add("/kylin/api/cache/gluten_cache_async");
     }
 
     @Autowired
@@ -206,7 +213,7 @@ public class QueryNodeFilter extends BaseFilter {
 
                 request = projectInfo.getSecond();
 
-                if (checkServer(request, response, chain, servletRequest, kylinConfig, project, contentType))
+                if (checkServer(request, response, chain, kylinConfig, contentType))
                     return;
 
                 if (checkNeedToMultiTenantFilter(servletRequest)) {
@@ -226,17 +233,10 @@ public class QueryNodeFilter extends BaseFilter {
     }
 
     private boolean checkServer(ServletRequest request, ServletResponse response, FilterChain chain,
-            HttpServletRequest servletRequest, KylinConfig kylinConfig, String project, String contentType)
-            throws IOException, ServletException {
-        if (checkProcessLocal(kylinConfig, project, contentType)) {
+            KylinConfig kylinConfig, String contentType) throws IOException, ServletException {
+        if (checkProcessLocal(kylinConfig, contentType)) {
             log.info("process local caused by project owner");
             chain.doFilter(request, response);
-            return true;
-        }
-
-        if (EpochManager.getInstance().isMaintenanceMode()) {
-            servletRequest.setAttribute(ERROR, new KylinException(MAINTENANCE_MODE_WRITE_FAILED));
-            servletRequest.getRequestDispatcher(API_ERROR).forward(servletRequest, response);
             return true;
         }
 
@@ -262,8 +262,7 @@ public class QueryNodeFilter extends BaseFilter {
                 || (method.equals("PUT") && notRoutePutApiSet.contains(uri))
                 || (method.equals("DELETE") && notRouteDeleteApiSet.contains(uri))
                 || TRUE.equalsIgnoreCase(servletRequest.getHeader(ROUTED))
-                || TRUE.equals(servletRequest.getAttribute(FILTER_PASS))
-                || KylinConfig.getInstanceFromEnv().isUTEnv();
+                || TRUE.equals(servletRequest.getAttribute(FILTER_PASS)) || KylinConfig.getInstanceFromEnv().isUTEnv();
     }
 
     /**
@@ -284,16 +283,12 @@ public class QueryNodeFilter extends BaseFilter {
         return false;
     }
 
-    private boolean checkProcessLocal(KylinConfig kylinConfig, String project, String contentType) {
+    private boolean checkProcessLocal(KylinConfig kylinConfig, String contentType) {
         if (kylinConfig.isDevOrUT()) {
             return true;
         }
 
         if (kylinConfig.isQueryNodeOnly()) {
-            return false;
-        }
-
-        if (!EpochManager.getInstance().checkEpochOwner(project)) {
             return false;
         }
 

@@ -18,8 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.metadata.query.QueryMetrics.QUERY_RESPONSE_TIME;
+
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -28,25 +33,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.query.util.SparkJobTrace;
 import org.apache.kylin.query.util.SparkJobTraceMetric;
-import org.apache.kylin.rest.util.SpringContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 
 public class QueryHistoryScheduler {
 
@@ -56,7 +59,6 @@ public class QueryHistoryScheduler {
 
     private long sparkJobTraceTimeoutMs;
     private boolean isQuerySparkJobTraceEnabled;
-    private boolean isSecondStorageQueryMetricCollect;
 
     public QueryHistoryScheduler() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -77,7 +79,6 @@ public class QueryHistoryScheduler {
         KylinConfig kyinConfig = KylinConfig.getInstanceFromEnv();
         writeQueryHistoryScheduler.scheduleWithFixedDelay(new WriteQueryHistoryRunner(), 1,
                 kyinConfig.getQueryHistorySchedulerInterval(), TimeUnit.SECONDS);
-        isSecondStorageQueryMetricCollect = KylinConfig.getInstanceFromEnv().getSecondStorageQueryMetricCollect();
     }
 
     public void offerQueryHistoryQueue(QueryMetrics queryMetrics) {
@@ -109,21 +110,51 @@ public class QueryHistoryScheduler {
                 queryMetricsQueue.drainTo(metrics);
                 List<QueryMetrics> insertMetrics;
                 if (isQuerySparkJobTraceEnabled && metrics.size() > 0) {
-                    insertMetrics = metrics.stream().filter(queryMetrics -> {
+                    insertMetrics = metrics.stream().filter(qm -> !qm.isUpdateMetrics()).filter(queryMetrics -> {
                         String queryId = queryMetrics.getQueryId();
                         SparkJobTraceMetric sparkJobTraceMetric = SparkJobTrace.getSparkJobTraceMetric(queryId);
                         return isCollectedFinished(queryId, sparkJobTraceMetric, queryMetrics);
                     }).collect(Collectors.toList());
                 } else {
-                    insertMetrics = metrics;
+                    insertMetrics = metrics.stream().filter(qm -> !qm.isUpdateMetrics()).collect(Collectors.toList());
                 }
-                collectSecondStorageMetric(insertMetrics);
-                queryHistoryDAO.insert(insertMetrics);
+                if (CollectionUtils.isNotEmpty(insertMetrics)) {
+                    queryHistoryDAO.insert(insertMetrics);
+                }
+                List<QueryMetrics> updateMetrics = metrics.stream().filter(QueryMetrics::isUpdateMetrics)
+                        .collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(updateMetrics)) {
+                    updateQueryMetricsTrace(updateMetrics);
+                }
             } catch (Exception th) {
                 logger.error("Error when write query history", th);
             }
         }
 
+        private void updateQueryMetricsTrace(List<QueryMetrics> updateMetrics) {
+            List<String> queryIds = updateMetrics.stream().map(QueryMetrics::getQueryId).collect(Collectors.toList());
+            Map<String, List<QueryMetrics>> metricsMap = updateMetrics.stream()
+                    .collect(Collectors.groupingBy(QueryMetrics::getQueryId));
+
+            List<QueryHistory> queryHistories = queryHistoryDAO.getByQueryIds(queryIds);
+
+            List<Pair<Long, QueryHistoryInfo>> idToQHInfoList = queryHistories.stream().map(hs -> {
+                Optional<QueryHistoryInfo.QueryTraceSpan> maxQueryTraceSpan = metricsMap.get(hs.getQueryId()).stream()
+                        .flatMap(qm -> qm.getQueryHistoryInfo().getTraces().stream())
+                        .filter(span -> QUERY_RESPONSE_TIME.equals(span.getName()))
+                        .max(Comparator.comparingLong(QueryHistoryInfo.QueryTraceSpan::getDuration));
+
+                if (maxQueryTraceSpan.isPresent()) {
+                    QueryHistoryInfo.QueryTraceSpan trace = maxQueryTraceSpan.get();
+                    QueryHistoryInfo qhi = hs.getQueryHistoryInfo();
+                    qhi.getTraces().add(trace);
+                    return new Pair<>(hs.getId(), qhi);
+                }
+                return null;
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+
+            queryHistoryDAO.batchUpdateQueryHistoriesInfo(idToQHInfoList);
+        }
     }
 
     public boolean isCollectedFinished(String queryId, SparkJobTraceMetric sparkJobTraceMetric,
@@ -158,40 +189,6 @@ public class QueryHistoryScheduler {
         } else {
             offerQueryHistoryQueue(queryMetrics);
             return false;
-        }
-    }
-
-    public void collectSecondStorageMetric(List<QueryMetrics> metrics) {
-        if (!isSecondStorageQueryMetricCollect) {
-            return;
-        }
-
-        if (!SecondStorageUtil.isGlobalEnable()) {
-            return;
-        }
-
-        SecondStorageUpdater updater = SpringContext.getBean(SecondStorageUpdater.class);
-
-        for (QueryMetrics metric : metrics) {
-            try {
-                if (metric.isSecondStorage() && SecondStorageUtil.isProjectEnable(metric.getProjectName())) {
-                    Map<String, Object> secondStorageMetrics = updater.getQueryMetric(metric.getProjectName(), metric.getQueryId());
-
-                    if (secondStorageMetrics.containsKey(QueryMetrics.TOTAL_SCAN_BYTES)) {
-                        metric.setTotalScanBytes((long) secondStorageMetrics.get(QueryMetrics.TOTAL_SCAN_BYTES));
-                    }
-
-                    if (secondStorageMetrics.containsKey(QueryMetrics.TOTAL_SCAN_COUNT)) {
-                        metric.setTotalScanCount((long) secondStorageMetrics.get(QueryMetrics.TOTAL_SCAN_COUNT));
-                    }
-
-                    if (secondStorageMetrics.containsKey(QueryMetrics.SOURCE_RESULT_COUNT)) {
-                        metric.getQueryHistoryInfo().setSourceResultCount((long) secondStorageMetrics.get(QueryMetrics.SOURCE_RESULT_COUNT));
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Get tired storage metric fail. query_id: {}, message: {}", metric.getQueryId(), e.getMessage());
-            }
         }
     }
 }

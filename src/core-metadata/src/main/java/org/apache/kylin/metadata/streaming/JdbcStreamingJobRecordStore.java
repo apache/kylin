@@ -43,6 +43,7 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.metadata.streaming.util.StreamingJobRecordStoreUtil;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.SqlBuilder;
@@ -50,8 +51,6 @@ import org.mybatis.dynamic.sql.delete.render.DeleteStatementProvider;
 import org.mybatis.dynamic.sql.insert.render.InsertStatementProvider;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.Getter;
 import lombok.val;

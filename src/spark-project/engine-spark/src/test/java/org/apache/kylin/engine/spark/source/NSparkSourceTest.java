@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.source;
 
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -32,8 +33,6 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.SparderTypeUtil;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @SuppressWarnings("serial")
 public class NSparkSourceTest extends NLocalWithSparkSessionTestBase {

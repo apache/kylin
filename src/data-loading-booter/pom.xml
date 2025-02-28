@@ -19,12 +19,12 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Kylin - Data loading Booter</name>
+    <name>Kylin - Data Loading Booter</name>
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin-data-loading-booter</artifactId>
 
@@ -61,10 +61,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -144,7 +140,7 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -210,6 +206,17 @@
                     <groupId>com.squareup.okhttp3</groupId>
                     <artifactId>okhttp</artifactId>
                     <version>${okhttp.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.squareup.okio</groupId>
+                            <artifactId>okio</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.squareup.okio</groupId>
+                    <artifactId>okio</artifactId>
+                    <version>${okio.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.squareup.okhttp3</groupId>

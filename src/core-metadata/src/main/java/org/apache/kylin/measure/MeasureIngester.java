@@ -25,7 +25,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-abstract public class MeasureIngester<V> implements java.io.Serializable {
+public abstract class MeasureIngester<V> implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     public static MeasureIngester<?> create(MeasureDesc measure) {
@@ -41,7 +41,7 @@ abstract public class MeasureIngester<V> implements java.io.Serializable {
         return result;
     }
 
-    abstract public V valueOf(String[] values, MeasureDesc measureDesc,
+    public abstract V valueOf(String[] values, MeasureDesc measureDesc,
             Map<TblColRef, Dictionary<String>> dictionaryMap);
 
     public void reset() {

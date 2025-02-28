@@ -18,24 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.code.ssm.jmemcached.plugin.AbstractJmemcachedMojo;
-import com.google.code.ssm.jmemcached.plugin.JmemcachedStartMojo;
-import com.google.code.ssm.jmemcached.plugin.Server;
-import net.spy.memcached.ConnectionFactory;
-import net.spy.memcached.ConnectionFactoryBuilder;
-import net.spy.memcached.DefaultHashAlgorithm;
-import net.spy.memcached.FailureMode;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.NodeLocator;
-import net.spy.memcached.ops.LinkedOperationQueueFactory;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationQueueFactory;
-import net.spy.memcached.transcoders.SerializingTranscoder;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.cache.memcached.CacheStats;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
@@ -59,8 +48,21 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.google.code.ssm.jmemcached.plugin.AbstractJmemcachedMojo;
+import com.google.code.ssm.jmemcached.plugin.JmemcachedStartMojo;
+import com.google.code.ssm.jmemcached.plugin.Server;
+
+import net.spy.memcached.ConnectionFactory;
+import net.spy.memcached.ConnectionFactoryBuilder;
+import net.spy.memcached.DefaultHashAlgorithm;
+import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.NodeLocator;
+import net.spy.memcached.ops.LinkedOperationQueueFactory;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationQueueFactory;
+import net.spy.memcached.transcoders.SerializingTranscoder;
 
 @Ignore
 public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase {
@@ -131,8 +133,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         int timeToLive = 7 * 24 * 3600;
         MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
 
-        ConnectionFactory connectionFactory = builder
-                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+        ConnectionFactory connectionFactory = builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                 .setHashAlg(DefaultHashAlgorithm.KETAMA_HASH)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
@@ -140,8 +141,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
                 .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
-        MemcachedClient memcachedClient = new MemcachedClient(factory,
-                MemcachedCache.getResolvedAddrList(hostStr));
+        MemcachedClient memcachedClient = new MemcachedClient(factory, MemcachedCache.getResolvedAddrList(hostStr));
         MemcachedCache cache = new MemcachedCache(memcachedClient, config, memcachedPrefix, timeToLive);
         cache.put(cacheKey, cacheVal);
         cache.put("", cacheVal);
@@ -165,8 +165,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         String hostStr = "localhost:11211";
         MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
 
-        ConnectionFactory connectionFactory = builder
-                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+        ConnectionFactory connectionFactory = builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                 .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
@@ -174,8 +173,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
                 .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
-        MemcachedClient memcachedClient = new MemcachedClient(factory,
-                MemcachedCache.getResolvedAddrList(hostStr));
+        MemcachedClient memcachedClient = new MemcachedClient(factory, MemcachedCache.getResolvedAddrList(hostStr));
         List<MemcachedNode> nodeList = new ArrayList<>(memcachedClient.getNodeLocator().getReadonlyCopy().getAll());
         NodeLocator nodeLocator = memcachedClient.getNodeLocator();
         memcachedClient.getNodeLocator().updateLocator(nodeList);
@@ -195,8 +193,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         String hostStr = "localhost:11211";
         MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
 
-        ConnectionFactory connectionFactory = builder
-                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+        ConnectionFactory connectionFactory = builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                 .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
@@ -204,8 +201,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
                 .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
-        MemcachedClient memcachedClient = new MemcachedClient(factory,
-                MemcachedCache.getResolvedAddrList(hostStr));
+        MemcachedClient memcachedClient = new MemcachedClient(factory, MemcachedCache.getResolvedAddrList(hostStr));
         List<MemcachedNode> nodeList = new ArrayList<>(memcachedClient.getNodeLocator().getReadonlyCopy().getAll());
         nodeList.forEach(node -> {
             Assert.assertThrows(UnsupportedOperationException.class, node::setupResend);
@@ -220,21 +216,26 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
 
     @Test()
     public void testTypeAsNull() {
-        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache
+                .getInstance();
         Assert.assertNotNull(compositeMemcachedCache);
-        Assert.assertThrows(NullPointerException.class, () -> compositeMemcachedCache.put(null, PROJECT, CACHE_KEY, CACHE_VAL));
+        Assert.assertThrows(NullPointerException.class,
+                () -> compositeMemcachedCache.put(null, PROJECT, CACHE_KEY, CACHE_VAL));
     }
 
     @Test()
     public void testUnsupportedCacheType() {
-        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache
+                .getInstance();
         Assert.assertNotNull(compositeMemcachedCache);
-        Assert.assertThrows(IllegalArgumentException.class, () -> compositeMemcachedCache.put(TYPE, PROJECT, CACHE_KEY, CACHE_VAL));
+        Assert.assertThrows(IllegalArgumentException.class,
+                () -> compositeMemcachedCache.put(TYPE, PROJECT, CACHE_KEY, CACHE_VAL));
     }
 
     @Test
     public void testCompositeMemcachedCache() {
-        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache
+                .getInstance();
         Assert.assertNotNull(compositeMemcachedCache);
         Object mockItem = mock(Object.class);
         when(mockItem.toString()).thenReturn(mockItem.getClass().getName());
@@ -248,11 +249,11 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
 
         compositeMemcachedCache.put(type, PROJECT, CACHE_KEY, CACHE_VAL);
         Object result2 = compositeMemcachedCache.get(type, PROJECT, CACHE_KEY);
-        Assert.assertEquals("test_val", (String)result2);
+        Assert.assertEquals("test_val", (String) result2);
 
         compositeMemcachedCache.update(type, PROJECT, CACHE_KEY, "update_val");
         Object result3 = compositeMemcachedCache.get(type, PROJECT, CACHE_KEY);
-        Assert.assertEquals("update_val", (String)result3);
+        Assert.assertEquals("update_val", (String) result3);
 
         compositeMemcachedCache.clearAll();
     }
@@ -294,8 +295,8 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
     }
 
     private void testCacheStatus() {
-        CacheStats cacheStats = ((CompositeMemcachedCache)queryCacheManager.getCache()).getCacheStats("StorageCache");
-        String name = ((CompositeMemcachedCache)queryCacheManager.getCache()).getName("StorageCache");
+        CacheStats cacheStats = ((CompositeMemcachedCache) queryCacheManager.getCache()).getCacheStats("StorageCache");
+        String name = ((CompositeMemcachedCache) queryCacheManager.getCache()).getName("StorageCache");
         System.out.println("Cache name is: " + name);
         System.out.println("AvgGetTime is: " + cacheStats.getAvgGetTime());
         System.out.println("HitRate is: " + cacheStats.hitRate());

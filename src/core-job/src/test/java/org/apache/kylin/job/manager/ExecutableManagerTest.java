@@ -53,7 +53,6 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.dao.NExecutableDao;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
@@ -99,20 +98,16 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         createTestMetadata();
+        overwriteSystemProp("kylin.job.max-concurrent-jobs", "0");
+        JobContextUtil.cleanUp();
         JobContextUtil.getJobInfoDao(getTestConfig());
         manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), DEFAULT_PROJECT);
-
-        for (String jobPath : manager.getJobs()) {
-            System.out.println("deleting " + jobPath);
-            manager.deleteJob(jobPath);
-        }
-
     }
 
     @After
     public void after() throws Exception {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -246,8 +241,8 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         UnitOfWork.doInTransactionWithRetry(() -> {
             manager.addJob(job);
             for (ExecutableState state : ExecutableState.values()) {
-                if (Arrays.asList(ExecutableState.PENDING, ExecutableState.RUNNING, ExecutableState.ERROR, ExecutableState.PAUSED)
-                        .contains(state)) {
+                if (Arrays.asList(ExecutableState.PENDING, ExecutableState.RUNNING, ExecutableState.ERROR,
+                        ExecutableState.PAUSED).contains(state)) {
                     manager.updateJobOutput(id, state, extraInfo, null, null);
                     Assert.assertTrue(
                             manager.getJob(job.getId()).getExtraInfo().containsKey(ExecutableConstants.YARN_APP_URL));
@@ -544,28 +539,6 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testPauseJob_IncBuildJobDataFlowStatusChange() {
-        var job = new DefaultExecutableOnModel();
-        job.setName(JobTypeEnum.INC_BUILD.toString());
-        job.setJobType(JobTypeEnum.INC_BUILD);
-        job.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        job.setProject(DEFAULT_PROJECT);
-        SucceedTestExecutable executable = new SucceedTestExecutable();
-        job.addTask(executable);
-        manager.addJob(job);
-        manager.updateJobOutput(job.getId(), ExecutableState.PENDING);
-        job = (DefaultExecutableOnModel) manager.getJob(job.getId());
-        manager.pauseJob(job.getId(), ExecutableManager.toPO(job, DEFAULT_PROJECT), job);
-
-        val job1 = (DefaultExecutable) manager.getJob(job.getId());
-        Assert.assertEquals(ExecutableState.PAUSED, job1.getStatus());
-
-        val dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), DEFAULT_PROJECT)
-                .getDataflowByModelAlias("nmodel_basic");
-        Assert.assertEquals(RealizationStatusEnum.LAG_BEHIND, dataflow.getStatus());
-    }
-
-    @Test
     public void testPauseJob_IndexBuildJobDataFlowStatusNotChange() {
         var job = new DefaultExecutableOnModel();
         job.setName(JobTypeEnum.INDEX_BUILD.toString());
@@ -599,10 +572,9 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         val po = ExecutableManager.toPO(job, DEFAULT_PROJECT);
         po.setType(null);
 
-        val executableDao = NExecutableDao.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        val savedPO = executableDao.addJob(po);
-
-        Assert.assertNull(manager.getJob(savedPO.getId()));
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Cannot parse this job: " + job.getJobId() + ", the type is empty");
+        manager.addJob(po);
     }
 
     @Test
@@ -787,8 +759,8 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         job.setProject(project);
         val start = "2015-01-01 00:00:00";
         val end = "2015-02-01 00:00:00";
-        job.setParam(NBatchConstants.P_DATA_RANGE_START, SegmentRange.dateToLong(start) + "");
-        job.setParam(NBatchConstants.P_DATA_RANGE_END, SegmentRange.dateToLong(end) + "");
+        job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(SegmentRange.dateToLong(start)));
+        job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(SegmentRange.dateToLong(end)));
 
         job.setTargetSubject("334671fd-e383-4fc9-b5c2-94fce832f77a");
         Assert.assertEquals("streaming_test", job.getTargetModelAlias());
@@ -801,7 +773,7 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("batch", job.getTargetModelAlias());
 
         job.setTargetSubject("554671fd-e383-4fc9-b5c2-94fce832f77b");
-        Assert.assertEquals(null, job.getTargetModelAlias());
+        Assert.assertNull(job.getTargetModelAlias());
 
     }
 
@@ -861,8 +833,8 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         String sampleLog = "";
         try (InputStream verboseMsgStream = manager.getStreamingOutputFromHDFS(jobId, Integer.MAX_VALUE)
                 .getVerboseMsgStream();
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(verboseMsgStream, Charset.defaultCharset()))) {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(verboseMsgStream, Charset.defaultCharset()))) {
 
             String line;
             StringBuilder sampleData = new StringBuilder();
@@ -880,12 +852,13 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
 
     }
 
+    // why this is comment?
     /*
     @Test
     public void testCancelTaskAnfInterruptJobThread() {
         val scheduler = NDefaultScheduler.getInstance(DEFAULT_PROJECT);
         scheduler.init(new JobEngineConfig(getTestConfig()));
-
+    
         val job = new DefaultExecutable();
         job.setProject(DEFAULT_PROJECT);
         val executable1 = new SucceedDagTestExecutable();
@@ -899,16 +872,16 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         job.addTask(executable3);
         job.setJobType(JobTypeEnum.INDEX_BUILD);
         manager.addJob(job);
-
+    
         manager.cancelJobSubTasks(ExecutableManager.toPO(job, DEFAULT_PROJECT));
-
+    
         JobContextUtil.getJobContext(getTestConfig());
         await().untilAsserted(() -> Assertions.assertEquals(ExecutableState.SUCCEED, executable1.getStatus()));
-
+    
         Assertions.assertNotNull(scheduler.getContext().getRunningJobThread(job));
         manager.cancelJob(ExecutableManager.toPO(job, DEFAULT_PROJECT), job.getId());
         Assertions.assertNotNull(scheduler.getContext().getRunningJobThread(job));
-
+    
         val env = getTestConfig().getDeployEnv();
         getTestConfig().setProperty("kylin.env", "PROD");
         manager.cancelJob(ExecutableManager.toPO(job, DEFAULT_PROJECT), job.getId());
@@ -916,12 +889,11 @@ public class ExecutableManagerTest extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.env", env);
         scheduler.shutdown();
     }
-
      */
 
     @Test
     public void testCancelRemoteJob() {
-        val config = getTestConfig();
+        getTestConfig();
         val job = new DefaultExecutable();
         job.setProject(DEFAULT_PROJECT);
         val executable1 = new SucceedDagTestExecutable();

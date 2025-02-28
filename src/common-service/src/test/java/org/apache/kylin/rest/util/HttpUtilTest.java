@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.util;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.rest.util.HttpUtil.formatRequest;
 import static org.apache.kylin.rest.util.HttpUtil.formatSession;
 import static org.apache.kylin.rest.util.HttpUtil.getFullRequestUrl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +43,7 @@ import org.springframework.mock.web.MockHttpSession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class HttpUtilTest {
+public class HttpUtilTest extends NLocalFileMetadataTestCase {
     private static final MockHttpServletRequest REQUEST_SAMPLE = new MockHttpServletRequest();
 
     private static final MockHttpSession DEFAULT_SESSION = new MockHttpSession();
@@ -57,6 +60,7 @@ public class HttpUtilTest {
         REQUEST_SAMPLE.setContentType(MediaType.APPLICATION_JSON_VALUE);
         REQUEST_SAMPLE.setContent("{\"sample\": true}".getBytes(StandardCharsets.UTF_8));
         REQUEST_SAMPLE.setAttribute("traceId", "1");
+        createTestMetadata();
     }
 
     @Test
@@ -80,8 +84,8 @@ public class HttpUtilTest {
         assertTrue(response.getContentLength() > 0);
 
         ObjectMapper mapper = new ObjectMapper();
-        ErrorResponse errorResponse =
-                mapper.reader().readValue(mapper.createParser(response.getContentAsString()), ErrorResponse.class);
+        ErrorResponse errorResponse = mapper.reader().readValue(mapper.createParser(response.getContentAsString()),
+                ErrorResponse.class);
 
         assertEquals(errorResponse.getUrl(), getFullRequestUrl(REQUEST_SAMPLE));
         assertEquals(KylinException.CODE_UNDEFINED, errorResponse.getCode());
@@ -97,11 +101,8 @@ public class HttpUtilTest {
         request.setSession(DEFAULT_SESSION);
         assertNotNull(request.getSession());
 
-        String expected = "Url: " + getFullRequestUrl(request) + "\n"
-                + "Headers: []\n"
-                + "RemoteAddr: 127.0.0.1\n"
-                + "RemoteUser: null\n"
-                + "Session: " + formatSession(request.getSession()) + "\n";
+        String expected = "Url: " + getFullRequestUrl(request) + "\n" + "Headers: []\n" + "RemoteAddr: 127.0.0.1\n"
+                + "RemoteUser: null\n" + "Session: " + formatSession(request.getSession()) + "\n";
         assertEquals(expected, formatRequest(request));
     }
 
@@ -109,11 +110,40 @@ public class HttpUtilTest {
     public void testFormatRequest() {
         assertNotNull(REQUEST_SAMPLE.getSession());
         String expected = "Url: " + getFullRequestUrl(REQUEST_SAMPLE) + "\n"
-                + "Headers: [Content-Type:\"application/json\", Content-Length:\"16\"]\n"
-                + "RemoteAddr: 127.0.0.1\n"
-                + "RemoteUser: null\n"
-                + "Session: " + formatSession(REQUEST_SAMPLE.getSession()) + "\n"
+                + "Headers: [Content-Type:\"application/json\", Content-Length:\"16\"]\n" + "RemoteAddr: 127.0.0.1\n"
+                + "RemoteUser: null\n" + "Session: " + formatSession(REQUEST_SAMPLE.getSession()) + "\n"
                 + "TraceId: 1\n";
         assertEquals(expected, formatRequest(REQUEST_SAMPLE));
+    }
+
+    @Test
+    public void testErrorResponseWithoutStackTrace() throws IOException {
+        overwriteSystemProp("kylin.server.stack-interception-enabled", "true");
+        // RuntimeException
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        HttpUtil.setErrorResponse(REQUEST_SAMPLE, response, 200, new RuntimeException("Empty"));
+
+        ObjectMapper mapper = new ObjectMapper();
+        ErrorResponse errorResponse = mapper.reader().readValue(mapper.createParser(response.getContentAsString()),
+                ErrorResponse.class);
+
+        assertEquals(errorResponse.getUrl(), getFullRequestUrl(REQUEST_SAMPLE));
+        assertEquals(KylinException.CODE_UNDEFINED, errorResponse.getCode());
+        assertEquals(ErrorResponse.STACK_MSG, errorResponse.getStacktrace());
+        assertFalse(errorResponse.getMsg().isEmpty());
+
+        // KylinException
+        response = new MockHttpServletResponse();
+        HttpUtil.setErrorResponse(REQUEST_SAMPLE, response, 200,
+                new KylinException(PERMISSION_DENIED, "Operation failed, unknown permission."));
+
+        mapper = new ObjectMapper();
+        errorResponse = mapper.reader().readValue(mapper.createParser(response.getContentAsString()),
+                ErrorResponse.class);
+
+        assertEquals(errorResponse.getUrl(), getFullRequestUrl(REQUEST_SAMPLE));
+        assertEquals(KylinException.CODE_UNDEFINED, errorResponse.getCode());
+        assertEquals(ErrorResponse.STACK_MSG, errorResponse.getStacktrace());
+        assertFalse(errorResponse.getMsg().isEmpty());
     }
 }

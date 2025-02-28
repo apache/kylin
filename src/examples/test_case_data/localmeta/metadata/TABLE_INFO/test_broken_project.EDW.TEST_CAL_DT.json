@@ -1,0 +1,529 @@
+{
+  "uuid" : "712aa0d6-e7f4-4fc7-e8d5-9c890d2c8ea6",
+  "last_modified" : 1646045454104,
+  "create_time" : 1646037529139,
+  "version" : "4.0.0.0",
+  "name" : "TEST_CAL_DT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CAL_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "cal_dt"
+  }, {
+    "id" : "2",
+    "name" : "YEAR_BEG_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "year_beg_dt"
+  }, {
+    "id" : "3",
+    "name" : "QTR_BEG_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "qtr_beg_dt"
+  }, {
+    "id" : "4",
+    "name" : "MONTH_BEG_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "month_beg_dt"
+  }, {
+    "id" : "5",
+    "name" : "WEEK_BEG_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "week_beg_dt"
+  }, {
+    "id" : "6",
+    "name" : "AGE_FOR_YEAR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_year_id"
+  }, {
+    "id" : "7",
+    "name" : "AGE_FOR_QTR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_qtr_id"
+  }, {
+    "id" : "8",
+    "name" : "AGE_FOR_MONTH_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_month_id"
+  }, {
+    "id" : "9",
+    "name" : "AGE_FOR_WEEK_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_week_id"
+  }, {
+    "id" : "10",
+    "name" : "AGE_FOR_DT_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_dt_id"
+  }, {
+    "id" : "11",
+    "name" : "AGE_FOR_RTL_YEAR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_rtl_year_id"
+  }, {
+    "id" : "12",
+    "name" : "AGE_FOR_RTL_QTR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_rtl_qtr_id"
+  }, {
+    "id" : "13",
+    "name" : "AGE_FOR_RTL_MONTH_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_rtl_month_id"
+  }, {
+    "id" : "14",
+    "name" : "AGE_FOR_RTL_WEEK_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_rtl_week_id"
+  }, {
+    "id" : "15",
+    "name" : "AGE_FOR_CS_WEEK_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "age_for_cs_week_id"
+  }, {
+    "id" : "16",
+    "name" : "DAY_OF_CAL_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "day_of_cal_id"
+  }, {
+    "id" : "17",
+    "name" : "DAY_OF_YEAR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "day_of_year_id"
+  }, {
+    "id" : "18",
+    "name" : "DAY_OF_QTR_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "day_of_qtr_id"
+  }, {
+    "id" : "19",
+    "name" : "DAY_OF_MONTH_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "day_of_month_id"
+  }, {
+    "id" : "20",
+    "name" : "DAY_OF_WEEK_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "day_of_week_id"
+  }, {
+    "id" : "21",
+    "name" : "WEEK_OF_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "week_of_year_id"
+  }, {
+    "id" : "22",
+    "name" : "WEEK_OF_CAL_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "week_of_cal_id"
+  }, {
+    "id" : "23",
+    "name" : "MONTH_OF_QTR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "month_of_qtr_id"
+  }, {
+    "id" : "24",
+    "name" : "MONTH_OF_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "month_of_year_id"
+  }, {
+    "id" : "25",
+    "name" : "MONTH_OF_CAL_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "month_of_cal_id"
+  }, {
+    "id" : "26",
+    "name" : "QTR_OF_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "qtr_of_year_id"
+  }, {
+    "id" : "27",
+    "name" : "QTR_OF_CAL_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "qtr_of_cal_id"
+  }, {
+    "id" : "28",
+    "name" : "YEAR_OF_CAL_ID",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "year_of_cal_id"
+  }, {
+    "id" : "29",
+    "name" : "YEAR_END_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "year_end_dt"
+  }, {
+    "id" : "30",
+    "name" : "QTR_END_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "qtr_end_dt"
+  }, {
+    "id" : "31",
+    "name" : "MONTH_END_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "month_end_dt"
+  }, {
+    "id" : "32",
+    "name" : "WEEK_END_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_end_dt"
+  }, {
+    "id" : "33",
+    "name" : "CAL_DT_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_name"
+  }, {
+    "id" : "34",
+    "name" : "CAL_DT_DESC",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_desc"
+  }, {
+    "id" : "35",
+    "name" : "CAL_DT_SHORT_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_short_name"
+  }, {
+    "id" : "36",
+    "name" : "YTD_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "ytd_yn_id"
+  }, {
+    "id" : "37",
+    "name" : "QTD_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "qtd_yn_id"
+  }, {
+    "id" : "38",
+    "name" : "MTD_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "mtd_yn_id"
+  }, {
+    "id" : "39",
+    "name" : "WTD_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "wtd_yn_id"
+  }, {
+    "id" : "40",
+    "name" : "SEASON_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "season_beg_dt"
+  }, {
+    "id" : "41",
+    "name" : "DAY_IN_YEAR_COUNT",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "day_in_year_count"
+  }, {
+    "id" : "42",
+    "name" : "DAY_IN_QTR_COUNT",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "day_in_qtr_count"
+  }, {
+    "id" : "43",
+    "name" : "DAY_IN_MONTH_COUNT",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "day_in_month_count"
+  }, {
+    "id" : "44",
+    "name" : "DAY_IN_WEEK_COUNT",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "day_in_week_count"
+  }, {
+    "id" : "45",
+    "name" : "RTL_YEAR_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "rtl_year_beg_dt"
+  }, {
+    "id" : "46",
+    "name" : "RTL_QTR_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "rtl_qtr_beg_dt"
+  }, {
+    "id" : "47",
+    "name" : "RTL_MONTH_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "rtl_month_beg_dt"
+  }, {
+    "id" : "48",
+    "name" : "RTL_WEEK_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "rtl_week_beg_dt"
+  }, {
+    "id" : "49",
+    "name" : "CS_WEEK_BEG_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cs_week_beg_dt"
+  }, {
+    "id" : "50",
+    "name" : "CAL_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_date"
+  }, {
+    "id" : "51",
+    "name" : "DAY_OF_WEEK",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "day_of_week"
+  }, {
+    "id" : "52",
+    "name" : "MONTH_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "month_id"
+  }, {
+    "id" : "53",
+    "name" : "PRD_DESC",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "prd_desc"
+  }, {
+    "id" : "54",
+    "name" : "PRD_FLAG",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "prd_flag"
+  }, {
+    "id" : "55",
+    "name" : "PRD_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "prd_id"
+  }, {
+    "id" : "56",
+    "name" : "PRD_IND",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "prd_ind"
+  }, {
+    "id" : "57",
+    "name" : "QTR_DESC",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "qtr_desc"
+  }, {
+    "id" : "58",
+    "name" : "QTR_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "qtr_id"
+  }, {
+    "id" : "59",
+    "name" : "QTR_IND",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "qtr_ind"
+  }, {
+    "id" : "60",
+    "name" : "RETAIL_WEEK",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "retail_week"
+  }, {
+    "id" : "61",
+    "name" : "RETAIL_YEAR",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "retail_year"
+  }, {
+    "id" : "62",
+    "name" : "RETAIL_START_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "retail_start_date"
+  }, {
+    "id" : "63",
+    "name" : "RETAIL_WK_END_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "retail_wk_end_date"
+  }, {
+    "id" : "64",
+    "name" : "WEEK_IND",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_ind"
+  }, {
+    "id" : "65",
+    "name" : "WEEK_NUM_DESC",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_num_desc"
+  }, {
+    "id" : "66",
+    "name" : "WEEK_BEG_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_beg_date"
+  }, {
+    "id" : "67",
+    "name" : "WEEK_END_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_end_date"
+  }, {
+    "id" : "68",
+    "name" : "WEEK_IN_YEAR_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_in_year_id"
+  }, {
+    "id" : "69",
+    "name" : "WEEK_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_id"
+  }, {
+    "id" : "70",
+    "name" : "WEEK_BEG_END_DESC_MDY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_beg_end_desc_mdy"
+  }, {
+    "id" : "71",
+    "name" : "WEEK_BEG_END_DESC_MD",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "week_beg_end_desc_md"
+  }, {
+    "id" : "72",
+    "name" : "YEAR_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "year_id"
+  }, {
+    "id" : "73",
+    "name" : "YEAR_IND",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "year_ind"
+  }, {
+    "id" : "74",
+    "name" : "CAL_DT_MNS_1YEAR_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_1year_dt"
+  }, {
+    "id" : "75",
+    "name" : "CAL_DT_MNS_2YEAR_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_2year_dt"
+  }, {
+    "id" : "76",
+    "name" : "CAL_DT_MNS_1QTR_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_1qtr_dt"
+  }, {
+    "id" : "77",
+    "name" : "CAL_DT_MNS_2QTR_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_2qtr_dt"
+  }, {
+    "id" : "78",
+    "name" : "CAL_DT_MNS_1MONTH_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_1month_dt"
+  }, {
+    "id" : "79",
+    "name" : "CAL_DT_MNS_2MONTH_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_2month_dt"
+  }, {
+    "id" : "80",
+    "name" : "CAL_DT_MNS_1WEEK_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_1week_dt"
+  }, {
+    "id" : "81",
+    "name" : "CAL_DT_MNS_2WEEK_DT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_mns_2week_dt"
+  }, {
+    "id" : "82",
+    "name" : "CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_1year_yn_id"
+  }, {
+    "id" : "83",
+    "name" : "CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_2year_yn_id"
+  }, {
+    "id" : "84",
+    "name" : "CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_1qtr_yn_id"
+  }, {
+    "id" : "85",
+    "name" : "CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_2qtr_yn_id"
+  }, {
+    "id" : "86",
+    "name" : "CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_1month_yn_id"
+  }, {
+    "id" : "87",
+    "name" : "CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_2month_yn_id"
+  }, {
+    "id" : "88",
+    "name" : "CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_1week_yn_ind"
+  }, {
+    "id" : "89",
+    "name" : "CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "curr_cal_dt_mns_2week_yn_ind"
+  }, {
+    "id" : "90",
+    "name" : "RTL_MONTH_OF_RTL_YEAR_ID",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "rtl_month_of_rtl_year_id"
+  }, {
+    "id" : "91",
+    "name" : "RTL_QTR_OF_RTL_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "rtl_qtr_of_rtl_year_id"
+  }, {
+    "id" : "92",
+    "name" : "RTL_WEEK_OF_RTL_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "rtl_week_of_rtl_year_id"
+  }, {
+    "id" : "93",
+    "name" : "SEASON_OF_YEAR_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "season_of_year_id"
+  }, {
+    "id" : "94",
+    "name" : "YTM_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "ytm_yn_id"
+  }, {
+    "id" : "95",
+    "name" : "YTQ_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "ytq_yn_id"
+  }, {
+    "id" : "96",
+    "name" : "YTW_YN_ID",
+    "datatype" : "tinyint",
+    "case_sensitive_name" : "ytw_yn_id"
+  }, {
+    "id" : "97",
+    "name" : "CAL_DT_CRE_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_cre_date"
+  }, {
+    "id" : "98",
+    "name" : "CAL_DT_CRE_USER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_cre_user"
+  }, {
+    "id" : "99",
+    "name" : "CAL_DT_UPD_DATE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_upd_date"
+  }, {
+    "id" : "100",
+    "name" : "CAL_DT_UPD_USER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "cal_dt_upd_user"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 1646045280021,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 731,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : true,
+  "database" : "EDW",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "test_broken_project"
+}

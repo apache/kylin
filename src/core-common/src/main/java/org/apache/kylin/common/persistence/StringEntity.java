@@ -18,36 +18,40 @@
 
 package org.apache.kylin.common.persistence;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @SuppressWarnings("serial")
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class StringEntity extends RootPersistentEntity {
 
-    public static final Serializer<StringEntity> serializer = new Serializer<StringEntity>() {
-        @Override
-        public void serialize(StringEntity obj, DataOutputStream out) throws IOException {
-            out.writeUTF(obj.str);
-        }
-
-        @Override
-        public StringEntity deserialize(DataInputStream in) throws IOException {
-            String str = in.readUTF();
-            return new StringEntity(str);
-        }
-    };
+    public static final Serializer<StringEntity> serializer = new JsonSerializer<>(StringEntity.class);
 
     @Getter
     @Setter
+    @JsonProperty("str")
     private String str;
+    
+    @Getter
+    @Setter
+    @JsonProperty("name")
+    private String name;
+
+    public StringEntity() {
+        // do nothing. only used by jackson.
+    }
 
     public StringEntity(String str) {
+        this("tmp", str);
+    }
+
+    public StringEntity(String name, String str) {
+        this.name = name;
         this.str = str;
     }
 

@@ -18,6 +18,11 @@
           <el-form :model="queryForm" :inline="true" ref="queryForm" @submit.native.prevent class="demo-form-inline">
             <el-form-item v-show="showHtrace">
               <el-checkbox class="ksd-mt-4" v-model="queryForm.isHtrace" @change="changeTrace">{{$t('trace')}}</el-checkbox>
+            </el-form-item><el-form-item v-show="currentSelectedProjectInternalTableEnabled">
+              <el-checkbox class="ksd-mt-4" v-model="queryForm.queryInternalTable">{{$t('queryInternalTable')}}</el-checkbox>
+            <el-tooltip effect="dark" :content="$t('queryInternalTableTips')" placement="top">
+              <i class="el-ksd-icon-more_info_16 icon ksd-fs-16 query-inernal-table-tips"></i>
+            </el-tooltip>
             </el-form-item><el-form-item>
               <el-checkbox class="ksd-mt-4" v-model="queryForm.hasLimit" @change="changeLimit">Limit</el-checkbox>
             </el-form-item><el-form-item :rules="limitRule" prop="listRows" :show-message="false">
@@ -84,7 +89,8 @@ import { kylinConfirm, handleSuccess, handleError } from '../../util/business'
   },
   computed: {
     ...mapGetters([
-      'currentSelectedProject'
+      'currentSelectedProject',
+      'currentSelectedProjectInternalTableEnabled'
     ]),
     ...mapState({
       config: state => state.config
@@ -107,7 +113,9 @@ import { kylinConfirm, handleSuccess, handleError } from '../../util/business'
       htraceTips: 'Please make sure Zipkin server is properly deployed according to the manual of performance diagnose package.',
       queryError: 'The query fails.',
       queryTimeOut: 'The request timeout, please check the network situation and Kylin service instance status.',
-      queryTimeOutInCloud: 'The request timeout, please check the network situation and Kylin 5 service instance status.'
+      queryTimeOutInCloud: 'The request timeout, please check the network situation and Kylin 5 service instance status.',
+      queryInternalTable: 'Query Internal Table',
+      queryInternalTableTips: 'After it is checked, the model matching phase is skipped and the internal table data is directly queried'
     }
   }
 })
@@ -115,7 +123,8 @@ export default class QueryTab extends Vue {
   queryForm = {
     hasLimit: true,
     listRows: 500,
-    isHtrace: false
+    isHtrace: false,
+    queryInternalTable: false
   }
   sourceSchema = ''
   saveQueryFormVisible = false
@@ -230,7 +239,8 @@ export default class QueryTab extends Vue {
           offset: 0,
           project: this.currentSelectedProject,
           sql: querySql,
-          stopId: this.activeQueryId
+          stopId: this.activeQueryId,
+          forcedToPushDown: this.queryForm.queryInternalTable
         }
         this.$emit('addTab', 'query', queryObj)
       } else {
@@ -385,6 +395,11 @@ export default class QueryTab extends Vue {
       margin-left: 15px;
       position: relative;
       top: -2px;
+    }
+    .query-inernal-table-tips {
+      position: relative;
+      bottom: 3px;
+      margin-left: 4px;
     }
   }
   #queryPanelBox {

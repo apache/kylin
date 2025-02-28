@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "SSB.DATES",
+  "tableAlias" : "DATES",
+  "columnName" : "CC_1",
+  "expression" : "CASE WHEN DATES.D_DAYOFWEEK IN ('1') THEN 1 ELSE NULL END",
+  "innerExpression" : "CASE WHEN `DATES`.`D_DAYOFWEEK` IN ('1') THEN 1 ELSE NULL END",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "e6b85792-e1da-1c37-96e3-96882b75f5d6",
+  "project" : "aggindex_priority_answer_withccexpr"
+}

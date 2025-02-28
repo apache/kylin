@@ -22,22 +22,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.QueryableSeg;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPContextProp;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapContextProp;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,12 +43,12 @@ public class Candidate {
     // ============================================================================
 
     IRealization realization;
-    OLAPContext ctx;
+    OlapContext ctx;
 
     @Setter
     CapabilityResult capability;
     @Setter
-    OLAPContextProp rewrittenCtx;
+    OlapContextProp rewrittenCtx;
     @Setter
     Map<String, String> matchedJoinsGraphAliasMap;
 
@@ -69,34 +65,15 @@ public class Candidate {
         }
     }
 
-    public Map<String, Set<Long>> getChSegToLayoutsMap(NDataflow df) {
-        return df.isStreaming() ? Maps.newHashMap() : queryableSeg.getChSegToLayoutsMap();
-    }
-
     public void setPrunedSegments(Segments<NDataSegment> prunedSegments, NDataflow df) {
         if (df.isStreaming()) {
             queryableSeg.setStreamingSegments(prunedSegments);
         } else {
             queryableSeg.setBatchSegments(prunedSegments);
-            fillSecondStorageLayouts(df);
         }
     }
 
-    private void fillSecondStorageLayouts(NDataflow df) {
-        Map<String, Set<Long>> secondStorageSegmentLayoutMap = Maps.newHashMap();
-        if (SecondStorageUtil.isModelEnable(df.getProject(), df.getId())) {
-            for (NDataSegment segment : queryableSeg.getBatchSegments()) {
-                Set<Long> chEnableLayoutIds = SecondStorageUtil.listEnableLayoutBySegment(df.getProject(), df.getId(),
-                        segment.getId());
-                if (CollectionUtils.isNotEmpty(chEnableLayoutIds)) {
-                    secondStorageSegmentLayoutMap.put(segment.getId(), chEnableLayoutIds);
-                }
-            }
-        }
-        queryableSeg.setChSegToLayoutsMap(secondStorageSegmentLayoutMap);
-    }
-
-    public Candidate(IRealization realization, OLAPContext ctx, Map<String, String> matchedJoinsGraphAliasMap) {
+    public Candidate(IRealization realization, OlapContext ctx, Map<String, String> matchedJoinsGraphAliasMap) {
         this.realization = realization;
         this.ctx = ctx;
         this.matchedJoinsGraphAliasMap = matchedJoinsGraphAliasMap;

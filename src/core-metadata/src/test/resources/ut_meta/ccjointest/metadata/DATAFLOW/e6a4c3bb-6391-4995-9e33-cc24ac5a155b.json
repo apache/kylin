@@ -1,0 +1,18 @@
+{
+  "uuid" : "e6a4c3bb-6391-4995-9e33-cc24ac5a155b",
+  "last_modified" : 1567053799715,
+  "create_time" : 1567053799715,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : null,
+  "mp_values" : [ ],
+  "create_time_utc" : 1567053799715,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "tdvt",
+  "segment_uuids" : [ "256d59bd-ca06-4915-b63b-e493832828a9" ]
+}

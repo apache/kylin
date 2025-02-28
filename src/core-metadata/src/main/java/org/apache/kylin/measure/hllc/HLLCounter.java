@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
-
 import org.apache.kylin.guava30.shaded.common.hash.HashFunction;
 import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 

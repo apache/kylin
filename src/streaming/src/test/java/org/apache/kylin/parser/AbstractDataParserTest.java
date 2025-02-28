@@ -23,13 +23,13 @@ import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PA
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 

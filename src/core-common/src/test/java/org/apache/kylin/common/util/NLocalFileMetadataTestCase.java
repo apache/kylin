@@ -19,7 +19,6 @@
 package org.apache.kylin.common.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,12 +33,14 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.rest.util.SpringContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationContext;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 
 @Deprecated
@@ -53,8 +54,8 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
         overwriteSystemProp("needCheckCC", "true");
     }
 
-    public static File getTempMetadataDirectory() {
-        return tempMetadataDirectory;
+    protected String[] getOverlay() {
+        return new String[] {};
     }
 
     public static ConcurrentHashMap<Class, ConcurrentHashMap<String, Object>> getInstanceByProjectFromSingleton()
@@ -143,11 +144,14 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
     }
 
     public void createTestMetadata(String... overlay) {
+        if (overlay == null || overlay.length == 0) {
+            overlay = getOverlay();
+        }
         staticCreateTestMetadata(overlay);
         val kylinHomePath = new File(getTestConfig().getMetadataUrl().toString()).getParentFile().getAbsolutePath();
         overwriteSystemProp("KYLIN_HOME", kylinHomePath);
         val jobJar = org.apache.kylin.common.util.FileUtils.findFile(
-                new File(kylinHomePath, "../../../assembly/target/").getAbsolutePath(), "ke-assembly(.*?)\\.jar");
+                new File(kylinHomePath, "../../../assembly/target/").getAbsolutePath(), "kylin-assembly(.*?)\\.jar");
         getTestConfig().setProperty("kylin.engine.spark.job-jar", jobJar == null ? "" : jobJar.getAbsolutePath());
         getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
         getTestConfig().setProperty("kylin.streaming.enabled", "true");
@@ -225,17 +229,6 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
 
     }
 
-    public static String getLocalWorkingDirectory() {
-        String dir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
-        if (dir.startsWith("file://"))
-            dir = dir.substring("file://".length());
-        try {
-            return new File(dir).getCanonicalPath();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     protected ResourceStore getStore() {
         return ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
     }
@@ -266,7 +259,7 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
         }
     }
 
-    public void assertRuntimeExeption(UserFunction f, String msg) {
+    public void assertRuntimeException(UserFunction f, String msg) {
         try {
             f.process();
             Assert.fail();
@@ -274,6 +267,18 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
             if (StringUtils.isNotEmpty(msg)) {
                 Assert.assertTrue(e.getMessage().contains(msg));
             }
+        }
+    }
+
+    // provide beans without @RunWith(SpringRunner.class) or @RunWith(SpringJUnit4ClassRunner.class)
+    public void prepareBeans(Object... beans) {
+        ApplicationContext applicationContext = Mockito.spy(ApplicationContext.class);
+        SpringContext.setApplicationContextImpl(applicationContext);
+        for (Object bean : beans) {
+            Class<?> beanType = Mockito.mockingDetails(bean).isMock()
+                    ? Mockito.mockingDetails(bean).getMockCreationSettings().getTypeToMock()
+                    : bean.getClass();
+            Mockito.doReturn(bean).when(applicationContext).getBean(beanType);
         }
     }
 

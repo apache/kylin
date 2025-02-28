@@ -1,0 +1,51 @@
+{
+  "uuid" : "b416320d-da1f-4413-8c4b-c38f7007dc15",
+  "last_modified" : 0,
+  "create_time" : 1601283605109,
+  "version" : "4.0.0.0",
+  "name" : "TEST_ORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000500|10001500",
+    "index" : "T",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "TEST_DATE_ENC",
+    "datatype" : "date",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "TEST_TIME_ENC",
+    "datatype" : "timestamp",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "TEST_EXTENDED_COLUMN",
+    "datatype" : "varchar(4096)",
+    "data_gen" : "RAND",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "defaultTable",
+  "top" : false,
+  "data_gen" : "0.5",
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT",
+  "project" : "scd2"
+}

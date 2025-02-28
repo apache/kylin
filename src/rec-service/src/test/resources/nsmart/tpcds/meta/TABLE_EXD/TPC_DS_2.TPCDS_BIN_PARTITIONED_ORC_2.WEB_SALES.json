@@ -1,0 +1,261 @@
+{
+  "uuid" : "891939a2-9ee8-49b3-bdd5-a4dba419c015",
+  "last_modified" : 1497609480536,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.WEB_SALES",
+  "last_build_job_id" : "8cd181c8-72fd-4064-a315-efebee8cf2ab",
+  "columns_stats" : [ {
+    "max_value" : "86388",
+    "min_value" : "0",
+    "max_length_value" : "42994",
+    "min_length_value" : "0",
+    "null_count" : 351,
+    "cardinality" : 58557
+  }, {
+    "max_value" : "2452762",
+    "min_value" : "2450817",
+    "max_length_value" : "2452141",
+    "min_length_value" : "2452141",
+    "null_count" : 332,
+    "cardinality" : 2002
+  }, {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "22255",
+    "min_length_value" : "2",
+    "null_count" : 0,
+    "cardinality" : 26057
+  }, {
+    "max_value" : "144000",
+    "min_value" : "1",
+    "max_length_value" : "132396",
+    "min_length_value" : "8",
+    "null_count" : 318,
+    "cardinality" : 79033
+  }, {
+    "max_value" : "1920798",
+    "min_value" : "6",
+    "max_length_value" : "1245434",
+    "min_length_value" : "6",
+    "null_count" : 335,
+    "cardinality" : 114579
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "4224",
+    "min_length_value" : "9",
+    "null_count" : 348,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "48534",
+    "min_length_value" : "6",
+    "null_count" : 332,
+    "cardinality" : 57043
+  }, {
+    "max_value" : "143998",
+    "min_value" : "1",
+    "max_length_value" : "107089",
+    "min_length_value" : "1",
+    "null_count" : 352,
+    "cardinality" : 80645
+  }, {
+    "max_value" : "1920783",
+    "min_value" : "12",
+    "max_length_value" : "1595083",
+    "min_length_value" : "90",
+    "null_count" : 350,
+    "cardinality" : 113672
+  }, {
+    "max_value" : "7200",
+    "min_value" : "1",
+    "max_length_value" : "3910",
+    "min_length_value" : "2",
+    "null_count" : 329,
+    "cardinality" : 7520
+  }, {
+    "max_value" : "72000",
+    "min_value" : "1",
+    "max_length_value" : "54078",
+    "min_length_value" : "8",
+    "null_count" : 343,
+    "cardinality" : 56432
+  }, {
+    "max_value" : "74",
+    "min_value" : "1",
+    "max_length_value" : "17",
+    "min_length_value" : "5",
+    "null_count" : 353,
+    "cardinality" : 76
+  }, {
+    "max_value" : "30",
+    "min_value" : "1",
+    "max_length_value" : "25",
+    "min_length_value" : "5",
+    "null_count" : 352,
+    "cardinality" : 30
+  }, {
+    "max_value" : "20",
+    "min_value" : "1",
+    "max_length_value" : "17",
+    "min_length_value" : "7",
+    "null_count" : 341,
+    "cardinality" : 20
+  }, {
+    "max_value" : "5",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 340,
+    "cardinality" : 5
+  }, {
+    "max_value" : "322",
+    "min_value" : "1",
+    "max_length_value" : "231",
+    "min_length_value" : "6",
+    "null_count" : 343,
+    "cardinality" : 330
+  }, {
+    "max_value" : "120000",
+    "min_value" : "1",
+    "max_length_value" : "102074",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 122722
+  }, {
+    "max_value" : "100",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "4",
+    "null_count" : 354,
+    "cardinality" : 100
+  }, {
+    "max_value" : "100.0",
+    "min_value" : "1.0",
+    "max_length_value" : "58.49",
+    "min_length_value" : "1.5",
+    "null_count" : 356,
+    "cardinality" : 9605
+  }, {
+    "max_value" : "300.0",
+    "min_value" : "1.01",
+    "max_length_value" : "264.19",
+    "min_length_value" : "8.2",
+    "null_count" : 359,
+    "cardinality" : 28993
+  }, {
+    "max_value" : "299.16",
+    "min_value" : "0.0",
+    "max_length_value" : "107.25",
+    "min_length_value" : "1.0",
+    "null_count" : 329,
+    "cardinality" : 25657
+  }, {
+    "max_value" : "29317.0",
+    "min_value" : "0.0",
+    "max_length_value" : "10962.28",
+    "min_length_value" : "0.0",
+    "null_count" : 343,
+    "cardinality" : 407525
+  }, {
+    "max_value" : "28592.19",
+    "min_value" : "0.0",
+    "max_length_value" : "14620.16",
+    "min_length_value" : "1.3",
+    "null_count" : 343,
+    "cardinality" : 422774
+  }, {
+    "max_value" : "10000.0",
+    "min_value" : "1.0",
+    "max_length_value" : "4044.64",
+    "min_length_value" : "6.2",
+    "null_count" : 370,
+    "cardinality" : 350544
+  }, {
+    "max_value" : "29970.0",
+    "min_value" : "1.11",
+    "max_length_value" : "12039.14",
+    "min_length_value" : "7.1",
+    "null_count" : 352,
+    "cardinality" : 560645
+  }, {
+    "max_value" : "2433.41",
+    "min_value" : "0.0",
+    "max_length_value" : "1579.82",
+    "min_length_value" : "3.0",
+    "null_count" : 359,
+    "cardinality" : 83018
+  }, {
+    "max_value" : "26909.62",
+    "min_value" : "0.0",
+    "max_length_value" : "11375.63",
+    "min_length_value" : "0.0",
+    "null_count" : 376,
+    "cardinality" : 158235
+  }, {
+    "max_value" : "14446.08",
+    "min_value" : "0.0",
+    "max_length_value" : "11388.77",
+    "min_length_value" : "4.2",
+    "null_count" : 361,
+    "cardinality" : 264717
+  }, {
+    "max_value" : "28538.37",
+    "min_value" : "0.0",
+    "max_length_value" : "15471.36",
+    "min_length_value" : "0.0",
+    "null_count" : 336,
+    "cardinality" : 441061
+  }, {
+    "max_value" : "30821.43",
+    "min_value" : "0.0",
+    "max_length_value" : "16425.13",
+    "min_length_value" : "0.0",
+    "null_count" : 357,
+    "cardinality" : 549319
+  }, {
+    "max_value" : "41222.09",
+    "min_value" : "0.0",
+    "max_length_value" : "27746.92",
+    "min_length_value" : "7.0",
+    "null_count" : 0,
+    "cardinality" : 539318
+  }, {
+    "max_value" : "43505.15",
+    "min_value" : "0.0",
+    "max_length_value" : "13963.08",
+    "min_length_value" : "0.0",
+    "null_count" : 0,
+    "cardinality" : 731780
+  }, {
+    "max_value" : "18864.56",
+    "min_value" : "-9938.0",
+    "max_length_value" : "-1532.28",
+    "min_length_value" : "0.0",
+    "null_count" : 0,
+    "cardinality" : 493175
+  }, {
+    "max_value" : "2452642",
+    "min_value" : "2450816",
+    "max_length_value" : "2451841",
+    "min_length_value" : "2451841",
+    "null_count" : 364,
+    "cardinality" : 1857
+  } ],
+  "sample_rows" : [ [ "66023", "18773", "18773", "18773", "22657", "73022", "74929", "74929", "73022", "73022" ], [ "2451781", "2451785", "2451730", "2451747", "2451755", "2451709", "2451770", "2451802", "2451715", "2451711" ], [ "13693", "2038", "14614", "1274", "25606", "15115", "23728", "7030", "20677", "23780" ], [ "98686", "54670", "54670", "54670", "54670", "54670", "54670", "54670", "54670", "115407" ], [ "1691574", "1658761", "1658761", "246435", "246435", "246435", "246435", "246435", "246435", "246435" ], [ "7133", "3675", "3491", "7133", "3491", "3675", "3491", "7133", "3491", "3491" ], [ "32609", "32609", "11033", "11033", "11033", "11033", "46712", "46712", "46712", "46712" ], [ "135626", "135626", "128861", "128861", "135626", "135626", "135626", "135626", "135626", "32424" ], [ "152199", "443214", "443214", "443214", "443214", "443214", "443214", "1518835", "1518835", "1518835" ], [ "7113", "5723", "6453", "3415", "6453", "6547", "6547", "2975", "3415", "3415" ], [ "61509", "2428", "61509", "61509", "61509", "61509", "2428", "2428", "2428", "28653" ], [ "52", "2", "49", "62", "13", "4", "14", "73", "68", "22" ], [ "17", "13", "2", "23", "20", "14", "17", "11", "19", "11" ], [ "19", "9", "10", "4", "6", "8", "11", "4", "6", "10" ], [ "4", "5", "2", "1", "3", "1", "5", "1", "5", "4" ], [ "83", "33", "225", "219", "310", "51", "106", "174", "252", "155" ], [ "110381", "110381", "110381", "110381", "110381", "110381", "110381", "110381", "117450", "116075" ], [ "54", "7", "77", "33", "63", "78", "31", "53", "94", "72" ], [ "17.19", "39.13", "54.94", "39.38", "56.68", "41.92", "16.96", "62.28", "66.17", "81.07" ], [ "71.88", "18.14", "12.85", "116.62", "7.14", "130.14", "45.09", "72.08", "152.58", "17.39" ], [ "29.71", "89.84", "90.05", "31.4", "40.51", "64.0", "72.37", "62.08", "27.08", "81.61" ], [ "5240.76", "3176.88", "8356.92", "7045.74", "164.1", "94.78", "8.61", "4765.88", "936.8", "616.55" ], [ "1589.6", "743.58", "171.81", "6336.21", "301.6", "2718.08", "1738.1", "964.0", "2286.2", "8002.92" ], [ "4168.88", "1665.6", "2037.34", "740.3", "617.76", "96.74", "6167.92", "2996.63", "3104.16", "6591.75" ], [ "11998.72", "9837.76", "1863.1", "9388.13", "8656.33", "15218.11", "2222.4", "1448.94", "3592.22", "2631.85" ], [ "6.04", "0.0", "14.77", "89.28", "49.08", "10.4", "13.82", "0.62", "0.46", "282.85" ], [ "514.64", "0.0", "0.0", "0.0", "0.0", "0.0", "1144.17", "0.0", "0.0", "0.0" ], [ "304.98", "476.19", "10.92", "2056.0", "623.7", "2538.28", "550.93", "90.04", "6983.49", "295.4" ], [ "2136.98", "2913.14", "182.79", "1279.8", "4437.3", "164.92", "8.61", "896.76", "727.5", "367.4" ], [ "2588.3", "62.91", "754.04", "13.54", "1829.21", "1286.9", "4888.91", "167.16", "1090.27", "7272.99" ], [ "1535.26", "6877.2", "9693.39", "299.7", "5898.55", "1332.66", "2891.35", "4222.82", "9187.71", "2641.32" ], [ "1099.98", "392.16", "1477.38", "625.12", "1711.19", "8456.55", "4483.96", "10004.97", "2974.9", "1492.81" ], [ "-2329.96", "184.62", "-39.2", "-2754.25", "3061.38", "679.68", "1040.76", "-3490.33", "-2863.5", "1586.96" ], [ "2452223", "2452223", "2452223", "2452223", "2452223", "2452223", "2452223", "2452223", "2452223", "2452223" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "1439247",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "0",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/web_sales",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "WS_SOLD_DATE_SK",
+    "owner" : "root",
+    "total_file_number" : "0"
+  },
+  "project" : "TPC_DS_2"
+}

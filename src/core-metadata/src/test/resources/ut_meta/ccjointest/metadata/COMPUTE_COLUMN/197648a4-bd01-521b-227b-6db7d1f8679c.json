@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_11",
+  "expression" : "CASE WHEN CALCS.INT0 > 0 THEN TIMESTAMPDIFF(DAY, CALCS.TIME0, CALCS.TIME1) ELSE NULL END",
+  "innerExpression" : "CASE WHEN CALCS.INT0 > 0 THEN TIMESTAMPDIFF('DAY', CALCS.TIME0, CALCS.TIME1) ELSE NULL END",
+  "datatype" : "BIGINT",
+  "comment" : "Auto suggested from: CASE WHEN CALCS.INT0 > 0 THEN TIMESTAMPDIFF(DAY, CALCS.TIME0, CALCS.TIME1) ELSE NULL END",
+  "uuid" : "197648a4-bd01-521b-227b-6db7d1f8679c",
+  "project" : "tdvt"
+}

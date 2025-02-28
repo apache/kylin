@@ -24,14 +24,13 @@ import java.util.HashSet;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ParserClassLoaderStateTest extends NLocalFileMetadataTestCase {
 

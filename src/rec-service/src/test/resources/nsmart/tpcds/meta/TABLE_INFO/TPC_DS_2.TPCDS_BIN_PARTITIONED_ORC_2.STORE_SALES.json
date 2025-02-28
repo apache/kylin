@@ -1,0 +1,103 @@
+{
+  "uuid" : "fc1f00cb-237a-4d40-bae0-42f7a81799e0",
+  "last_modified" : 1497607294803,
+  "version" : "2.0.0",
+  "name" : "STORE_SALES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SS_SOLD_TIME_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "SS_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "SS_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "SS_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "SS_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "SS_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "SS_STORE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "SS_PROMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "9",
+    "name" : "SS_TICKET_NUMBER",
+    "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "SS_QUANTITY",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "SS_WHOLESALE_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "12",
+    "name" : "SS_LIST_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "13",
+    "name" : "SS_SALES_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "14",
+    "name" : "SS_EXT_DISCOUNT_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "15",
+    "name" : "SS_EXT_SALES_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "16",
+    "name" : "SS_EXT_WHOLESALE_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "17",
+    "name" : "SS_EXT_LIST_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "18",
+    "name" : "SS_EXT_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "19",
+    "name" : "SS_COUPON_AMT",
+    "datatype" : "double"
+  }, {
+    "id" : "20",
+    "name" : "SS_NET_PAID",
+    "datatype" : "double"
+  }, {
+    "id" : "21",
+    "name" : "SS_NET_PAID_INC_TAX",
+    "datatype" : "double"
+  }, {
+    "id" : "22",
+    "name" : "SS_NET_PROFIT",
+    "datatype" : "double"
+  }, {
+    "id" : "23",
+    "name" : "SS_SOLD_DATE_SK",
+    "datatype" : "bigint"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

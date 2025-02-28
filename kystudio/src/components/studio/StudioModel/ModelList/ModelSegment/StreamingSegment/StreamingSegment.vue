@@ -140,15 +140,15 @@
           <span class="label">{{$t('segmentName')}}</span>
           <span class="text">{{detailSegment.name}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('segmentPath')}}</span>
           <span class="text segment-path">{{detailSegment.segmentPath}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('fileNumber')}}</span>
           <span class="text">{{detailSegment.fileNumber}}</span>
         </p>
-        <p class="list">
+        <p class="list" v-if="!isStorageV3">
           <span class="label">{{$t('storageSize1')}}</span>
           <span class="text">{{detailSegment.bytes_size | dataSize}}</span>
         </p>
@@ -295,6 +295,10 @@ export default class StreamingSegment extends Vue {
   refreshLoading = false
   refreshType = 'refreshOrigin'
 
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
+  }
   get filterSegment () {
     return this.segments.filter(item => ['Full Load', '全量加载'].includes(item.startTime) && ['Full Load', '全量加载'].includes(item.endTime)).length
   }

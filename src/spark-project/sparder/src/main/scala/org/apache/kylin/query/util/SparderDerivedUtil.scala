@@ -18,8 +18,6 @@
 
 package org.apache.kylin.query.util
 
-import java.util
-
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate
@@ -28,6 +26,7 @@ import org.apache.kylin.metadata.model.DeriveInfo.DeriveType
 import org.apache.kylin.metadata.model.NonEquiJoinCondition.SimplifiedJoinCondition
 import org.apache.kylin.metadata.model.util.scd2.Scd2Simplifier
 import org.apache.kylin.metadata.model.{DeriveInfo, NDataModel, NTableMetadataManager, TblColRef}
+import org.apache.kylin.metadata.table.InternalTableManager
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.spark.sql.catalyst.plans.JoinType
 import org.apache.spark.sql.catalyst.plans.logical.{Join, JoinHint, LogicalPlan}
@@ -37,6 +36,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.manager.SparderLookupManager
 import org.apache.spark.sql.{Column, SparkOperation}
 
+import java.util
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -168,7 +168,13 @@ case class SparderDerivedUtil(gtInfoTableName: String,
     val pkCols = join.getPrimaryKey
     val tableDesc = metaMgr.getTableDesc(derivedTableName)
     val pkIndex = pkCols.map(pkCol => tableDesc.findColumnByName(pkCol).getZeroBasedIndex)
-    val path = tableDesc.getLastSnapshotPath
+    val path: String = if (dataSeg.getConfig.isInternalTableEnabled && tableDesc.isHasInternal) {
+      InternalTableManager.getInstance(dataSeg.getConfig, dataSeg.getProject)
+        .getInternalTableDesc(tableDesc.getIdentity)
+        .getLocation
+    } else {
+      tableDesc.getLastSnapshotPath
+    }
     if (path == null && deriveInfo.`type` != DeriveType.PK_FK) {
       throw new IllegalStateException(
         "No snapshot for table '" + derivedTableName + "' found on cube segment"

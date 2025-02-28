@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.Arrays;
@@ -38,18 +37,26 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class NCountDistinctWithoutEncodeTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() throws Exception {
-        this.createTestMetadata("src/test/resources/ut_meta/count_distinct_no_encode");
-
+    public void setUp() throws Exception {
+        super.setUp();
         JobContextUtil.cleanUp();
+        setOverlay("src/test/resources/ut_meta/count_distinct_no_encode");
+
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/count_distinct_no_encode" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Override

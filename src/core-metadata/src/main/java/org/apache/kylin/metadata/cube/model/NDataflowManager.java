@@ -47,6 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
@@ -56,7 +57,6 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
@@ -106,8 +106,7 @@ public class NDataflowManager implements IRealizationProvider {
                     System.identityHashCode(cfg), project);
         this.config = cfg;
         this.project = project;
-        String resourceRootPath = "/" + project + NDataflow.DATAFLOW_RESOURCE_ROOT;
-        this.crud = new CachedCrudAssist<NDataflow>(getStore(), resourceRootPath, NDataflow.class) {
+        this.crud = new CachedCrudAssist<NDataflow>(getStore(), MetadataType.DATAFLOW, project, NDataflow.class) {
             @Override
             protected NDataflow initEntityAfterReload(NDataflow df, String resourceName) {
                 IndexPlan plan = NIndexPlanManager.getInstance(config, project).getIndexPlan(df.getUuid());
@@ -247,16 +246,6 @@ public class NDataflowManager implements IRealizationProvider {
         return models;
     }
 
-    public List<NDataModel> getTableOrientedModelsUsingRootTable(TableDesc table) {
-        List<NDataModel> models = new ArrayList<>();
-        for (NDataModel modelDesc : listUnderliningDataModels()) {
-            if (modelDesc.isRootFactTable(table) && modelDesc.getManagementType() == ManagementType.TABLE_ORIENTED) {
-                models.add(modelDesc);
-            }
-        }
-        return models;
-    }
-
     public NDataflow getDataflow(String id) {
         return getDataflow(id, false);
     }
@@ -283,24 +272,7 @@ public class NDataflowManager implements IRealizationProvider {
         copy.getSegments().validate();
         crud.save(copy);
 
-        fillDf(copy);
-
         return copy;
-    }
-
-    public void fillDf(NDataflow df) {
-        // if it's table oriented, create segments at once
-        if (df.getModel().getManagementType() != ManagementType.TABLE_ORIENTED) {
-            return;
-        }
-        val dataLoadingRangeManager = NDataLoadingRangeManager.getInstance(config, project);
-        String tableName = df.getModel().getRootFactTable().getTableIdentity();
-        NDataLoadingRange dataLoadingRange = dataLoadingRangeManager.getDataLoadingRange(tableName);
-        val segmentRanges = dataLoadingRangeManager.getSegRangesToBuildForNewDataflow(dataLoadingRange);
-        if (CollectionUtils.isNotEmpty(segmentRanges)) {
-            fillDfWithNewRanges(df, segmentRanges);
-        }
-
     }
 
     public void fillDfWithNewRanges(NDataflow df, List<SegmentRange> segmentRanges) {
@@ -332,30 +304,30 @@ public class NDataflowManager implements IRealizationProvider {
 
         NDataflowUpdate upd = new NDataflowUpdate(df.getUuid());
         upd.setToAddSegs(newSegment);
-        updateDataflow(upd);
+        df = updateDataflow(upd);
         if (CollectionUtils.isNotEmpty(multiPartitionValues)) {
             newSegment = appendPartitions(df.getId(), newSegment.getId(), multiPartitionValues);
         }
-        return newSegment;
+        return df.getSegment(newSegment.getId()).copy();
     }
 
     public NDataSegment appendPartitions(String dfId, String segId, List<String[]> partitionValues) {
-        updateDataflow(dfId, copyForWrite -> {
-            val segmentCopy = copyForWrite.getSegment(segId);
+        NDataSegmentManager segManager = config.getManager(project, NDataSegmentManager.class);
+        segManager.update(segId, copyForWrite -> {
             partitionValues.forEach(partitionValue -> {
-                if (copyForWrite.getSegment(segmentCopy.getId()).isPartitionOverlap(partitionValue)) {
+                if (copyForWrite.isPartitionOverlap(partitionValue)) {
                     throw new IllegalArgumentException(
                             String.format(Locale.ROOT, "Duplicate partition value [%s] found in segment [%s]",
-                                    Arrays.toString(partitionValue), segmentCopy.getId()));
+                                    Arrays.toString(partitionValue), copyForWrite.getId()));
                 }
             });
             val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             Set<Long> addPartitions = modelManager.addPartitionsIfAbsent(copyForWrite.getModel(), partitionValues);
             addPartitions.forEach(partition -> {
-                segmentCopy.getMultiPartitions().add(new SegmentPartition(partition));
+                copyForWrite.getMultiPartitions().add(new SegmentPartition(partition));
             });
         });
-        return copy(getDataflow(dfId)).getSegment(segId);
+        return getDataflow(dfId).getSegment(segId).copy();
     }
 
     public NDataSegment appendSegmentForStreaming(NDataflow df, SegmentRange segRange) {
@@ -424,11 +396,64 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public NDataSegment mergeSegments(NDataflow dataflow, SegmentRange segRange, boolean force) {
-        return mergeSegments(dataflow, segRange, force, null, null);
+        return doMergeSegments(dataflow, segRange, force, null, null, null);
+    }
+
+    @VisibleForTesting
+    public NDataSegment mergeSegmentsWithDimRange(NDataflow dataflow, SegmentRange<Long> segRange, boolean force,
+            Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        return doMergeSegments(dataflow, segRange, force, null, null, dimensionRangeInfoMap);
     }
 
     public NDataSegment mergeSegments(NDataflow dataflow, SegmentRange segRange, boolean force, Integer fileLayer,
             String newSegId) {
+        return doMergeSegments(dataflow, segRange, force, fileLayer, newSegId, null);
+    }
+
+    public void checkForce(Segments<NDataSegment> mergingSegments, NDataSegDetails firstSegDetails, boolean force) {
+        for (int i = 1; i < mergingSegments.size(); i++) {
+            NDataSegment dataSegment = mergingSegments.get(i);
+            NDataSegDetails details = dataSegment.getSegDetails();
+            if (!firstSegDetails.checkLayoutsBeforeMerge(details))
+                throw new KylinException(SEGMENT_MERGE_CHECK_INDEX_ILLEGAL);
+        }
+        if (!force) {
+            for (int i = 0; i < mergingSegments.size() - 1; i++) {
+                if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
+                    throw new KylinException(SEGMENT_MERGE_CONTAINS_GAPS);
+            }
+
+            List<String> emptySegment = Lists.newArrayList();
+            for (NDataSegment seg : mergingSegments) {
+                if (seg.getSegDetails().getTotalRowCount() == 0) {
+                    emptySegment.add(seg.getName());
+                }
+            }
+            if (!emptySegment.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: "
+                                + emptySegment);
+            }
+        }
+    }
+
+    public void checkFirstSegAndFileLayer(NDataSegment first, NDataSegment last, NDataSegment newSegment,
+            NDataflow dataflowCopy, SegmentRange<Long> segRange, Integer fileLayer) {
+        if (first.isOffsetCube()) {
+            newSegment.setSegmentRange(segRange);
+        } else {
+            newSegment.setTimeRange(new TimeRange(first.getTSRange().getStart(), last.getTSRange().getEnd()));
+        }
+        // for streaming merge
+        if (fileLayer != null) {
+            newSegment.getAdditionalInfo().put("file_layer", String.valueOf(fileLayer));
+        } else {
+            validateNewSegments(dataflowCopy, newSegment);
+        }
+    }
+
+    public NDataSegment doMergeSegments(NDataflow dataflow, SegmentRange<Long> segRange, boolean force, Integer fileLayer,
+            String newSegId, Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
         NDataflow dataflowCopy = dataflow.copy();
         if (dataflowCopy.getSegments().isEmpty())
             throw new IllegalArgumentException(dataflow + " has no segments");
@@ -436,7 +461,8 @@ public class NDataflowManager implements IRealizationProvider {
 
         checkCubeIsPartitioned(dataflowCopy);
 
-        NDataSegment newSegment = newSegment(dataflowCopy, segRange);
+        NDataSegment newSegment = dimensionRangeInfoMap == null ? newSegment(dataflowCopy, segRange)
+                : newSegment(dataflowCopy, segRange, dimensionRangeInfoMap);
         NDataflowUpdate update = new NDataflowUpdate(dataflowCopy.getUuid());
 
         //  for streaming merge
@@ -444,7 +470,7 @@ public class NDataflowManager implements IRealizationProvider {
             if (!StringUtils.isEmpty(newSegId)) {
                 newSegment.setId(newSegId);
                 if (dataflowCopy.getSegment(newSegId) != null) {
-                    return dataflowCopy.getSegment(newSegment.getId());
+                    return dataflowCopy.getSegment(newSegment.getId()).copy();
                 }
             }
             val segments = dataflow.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING).stream()
@@ -459,52 +485,18 @@ public class NDataflowManager implements IRealizationProvider {
         }
 
         Segments<NDataSegment> mergingSegments = dataflowCopy.getMergingSegments(newSegment);
+        mergingSegments = new Segments<>(mergingSegments.stream().map(NDataSegment::copy).collect(Collectors.toList()));
         if (mergingSegments.size() <= 1)
             throw new IllegalArgumentException("Range " + newSegment.getSegRange()
                     + " must contain at least 2 segments, but there is " + mergingSegments.size());
 
         NDataSegment first = mergingSegments.get(0);
-        NDataSegDetails firstSegDetails = first.getSegDetails();
-        for (int i = 1; i < mergingSegments.size(); i++) {
-            NDataSegment dataSegment = mergingSegments.get(i);
-            NDataSegDetails details = dataSegment.getSegDetails();
-            if (!firstSegDetails.checkLayoutsBeforeMerge(details))
-                throw new KylinException(SEGMENT_MERGE_CHECK_INDEX_ILLEGAL);
-        }
-
-        if (!force) {
-            for (int i = 0; i < mergingSegments.size() - 1; i++) {
-                if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
-                    throw new KylinException(SEGMENT_MERGE_CONTAINS_GAPS);
-            }
-
-            List<String> emptySegment = Lists.newArrayList();
-            for (NDataSegment seg : mergingSegments) {
-                if (seg.getSegDetails().getTotalRowCount() == 0) {
-                    emptySegment.add(seg.getName());
-                }
-            }
-            if (emptySegment.size() > 0) {
-                throw new IllegalArgumentException(
-                        "Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: "
-                                + emptySegment);
-            }
-        }
+        checkForce(mergingSegments, first.getSegDetails(), force);
 
         NDataSegment last = mergingSegments.get(mergingSegments.size() - 1);
         newSegment.setSegmentRange(first.getSegRange().coverWith(last.getSegRange()));
 
-        if (first.isOffsetCube()) {
-            newSegment.setSegmentRange(segRange);
-        } else {
-            newSegment.setTimeRange(new TimeRange(first.getTSRange().getStart(), last.getTSRange().getEnd()));
-        }
-        // for streaming merge
-        if (fileLayer != null) {
-            newSegment.getAdditionalInfo().put("file_layer", String.valueOf(fileLayer));
-        } else {
-            validateNewSegments(dataflowCopy, newSegment);
-        }
+        checkFirstSegAndFileLayer(first, last, newSegment, dataflowCopy, segRange, fileLayer);
         checkMergeSegmentThreshold(config, config.getHdfsWorkingDirectory(),
                 mergingSegments.stream().mapToLong(NDataSegment::getStorageBytesSize).sum());
 
@@ -551,6 +543,14 @@ public class NDataflowManager implements IRealizationProvider {
         return new NDataSegment(df, segRange);
     }
 
+    @VisibleForTesting
+    NDataSegment newSegment(NDataflow df, SegmentRange<Long> segRange,
+            Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        // BREAKING CHANGE: remove legacy caring as in org.apache.kylin.cube.CubeManager.SegmentAssist.newSegment()
+        Preconditions.checkNotNull(segRange);
+        return new NDataSegment(df, segRange, dimensionRangeInfoMap);
+    }
+
     private void validateNewSegments(NDataflow df, NDataSegment newSegments) {
         List<NDataSegment> tobe = df.calculateToBeSegments(newSegments);
         List<NDataSegment> newList = Arrays.asList(newSegments);
@@ -590,18 +590,6 @@ public class NDataflowManager implements IRealizationProvider {
         return crud.copyBySerialization(df);
     }
 
-    public List<NDataflow> getDataflowsByTableAndStatus(String tableName, RealizationStatusEnum status) {
-        val tableManager = NTableMetadataManager.getInstance(config, project);
-        val table = tableManager.getTableDesc(tableName);
-        val models = getTableOrientedModelsUsingRootTable(table);
-        List<NDataflow> dataflows = Lists.newArrayList();
-        for (val model : models) {
-            dataflows.add(getDataflow(model.getUuid()));
-        }
-        return dataflows.stream().filter(dataflow -> dataflow.getStatus() == status).collect(Collectors.toList());
-
-    }
-
     public void fillDfManually(NDataflow df, List<SegmentRange> ranges) {
         Preconditions.checkState(df.getModel().getManagementType() == ManagementType.MODEL_BASED);
         if (CollectionUtils.isEmpty(ranges)) {
@@ -617,9 +605,6 @@ public class NDataflowManager implements IRealizationProvider {
         }
         NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
         update.setToRemoveSegs(segsToRemove.toArray(new NDataSegment[segsToRemove.size()]));
-        val loadingRangeManager = NDataLoadingRangeManager.getInstance(config, project);
-        val model = df.getModel();
-        loadingRangeManager.updateCoveredRangeAfterRetention(model, segsToRemove.getLastSegment());
         return updateDataflow(update);
     }
 
@@ -637,21 +622,22 @@ public class NDataflowManager implements IRealizationProvider {
      */
     public NDataflow updateDataflow(String dfId, NDataflowUpdater updater) {
         NDataflow cached = getDataflow(dfId);
+        Segments<NDataSegment> existingSegments = cached.getSegments();
         NDataflow copy = copyForWrite(cached);
         updater.modify(copy);
 
         Set<String> copySegIdSet = copy.getSegments().stream().map(NDataSegment::getId).collect(Collectors.toSet());
-        val nDataSegDetailsManager = NDataSegDetailsManager.getInstance(cached.getConfig(), project);
-        for (NDataSegment segment : cached.getSegments()) {
+        val nDataSegDetailsManager = NDataSegDetailsManager.getInstance(copy.getConfig(), project);
+        val dataLayoutDetailsManager = NDataLayoutDetailsManager.getInstance(copy.getConfig(), project);
+        for (NDataSegment segment : existingSegments) {
             if (!copySegIdSet.contains(segment.getId())) {
-                nDataSegDetailsManager.removeForSegment(copy, segment.getId());
+                nDataSegDetailsManager.removeForSegment(segment.getId());
+                if (!cached.getModel().isBroken() && cached.getModel().getStorageType().isV3Storage()) {
+                    dataLayoutDetailsManager.removeFragmentBySegment(copy, segment);
+                }
             }
         }
         return crud.save(copy);
-    }
-
-    public long getDataflowUsage(String dataflowId) {
-        return getDataflow(dataflowId).getQueryHitCount();
     }
 
     public long getDataflowStorageSize(String dataflowId) {
@@ -681,8 +667,8 @@ public class NDataflowManager implements IRealizationProvider {
             }
             copyForWrite.setLayouts(layouts);
         });
-        updateDataflow(seg.getDataflow().getId(),
-                copyForWrite -> updateSegmentStatus(copyForWrite.getSegment(seg.getId())));
+        NDataSegmentManager segManager = config.getManager(project, NDataSegmentManager.class);
+        segManager.update(seg.getUuid(), this::updateSegmentStatus);
     }
 
     public NDataflow updateDataflow(final NDataflowUpdate update) {
@@ -701,15 +687,18 @@ public class NDataflowManager implements IRealizationProvider {
     public void updateDataflowWithoutIndex(final NDataflowUpdate update) {
         updateDataflow(update.getDataflowId(), df -> {
             Segments<NDataSegment> newSegs = (Segments<NDataSegment>) df.getSegments().clone();
+            NDataSegmentManager segManager = config.getManager(project, NDataSegmentManager.class);
 
             Arrays.stream(Optional.ofNullable(update.getToAddSegs()).orElse(new NDataSegment[0])).forEach(seg -> {
                 seg.setDataflow(df);
                 newSegs.add(seg);
+                segManager.createAS(seg);
             });
 
             Arrays.stream(Optional.ofNullable(update.getToUpdateSegs()).orElse(new NDataSegment[0])).forEach(seg -> {
                 seg.setDataflow(df);
                 newSegs.replace(Comparator.comparing(NDataSegment::getId), seg);
+                segManager.update(seg.getUuid(), seg::copyPropertiesTo);
             });
 
             if (update.getToRemoveSegs() != null) {
@@ -721,6 +710,7 @@ public class NDataflowManager implements IRealizationProvider {
                     if (toRemoveIds.contains(currentSeg.getId())) {
                         logger.info("Remove segment {}", currentSeg);
                         iterator.remove();
+                        segManager.delete(currentSeg);
                     }
                 }
             }
@@ -728,7 +718,7 @@ public class NDataflowManager implements IRealizationProvider {
             Arrays.stream(Optional.ofNullable(update.getToRemoveLayouts()).orElse(new NDataLayout[0]))
                     .forEach(removeLayout -> df.getLayoutHitCount().remove(removeLayout.getLayoutId()));
 
-            df.setSegments(newSegs);
+            df.setSegmentUuids(newSegs);
 
             val newStatus = Optional.ofNullable(update.getStatus()).orElse(df.getStatus());
             df.setStatus(newStatus);
@@ -736,19 +726,24 @@ public class NDataflowManager implements IRealizationProvider {
             df.setCost(update.getCost() > 0 ? update.getCost() : df.getCost());
 
             NDataSegDetailsManager.getInstance(df.getConfig(), project).updateDataflow(df, update);
-            newSegs.forEach(this::updateSegmentStatus);
+            newSegs.forEach(seg -> {
+                if (needUpdateSegmentStatus(seg)) {
+                    segManager.update(seg.getUuid(), this::updateSegmentStatus);
+                }
+            });
         });
     }
 
     private void updateSegmentStatus(NDataSegment seg) {
-        NDataSegDetails segDetails = NDataSegDetailsManager.getInstance(seg.getConfig(), project).getForSegment(seg);
-        if (seg.getStatus() == SegmentStatusEnum.WARNING && segDetails != null && segDetails.getAllLayouts().isEmpty()) {
+        if (needUpdateSegmentStatus(seg)) {
             seg.setStatus(SegmentStatusEnum.READY);
         }
     }
 
-    private boolean needUpdateSourceUsage(final NDataflowUpdate update) {
-        return ArrayUtils.isNotEmpty(update.getToRemoveSegs()) || ArrayUtils.isNotEmpty(update.getToRemoveLayouts());
+    private boolean needUpdateSegmentStatus(NDataSegment seg) {
+        NDataSegDetails segDetails = NDataSegDetailsManager.getInstance(seg.getConfig(), project).getForSegment(seg);
+        return seg.getStatus() == SegmentStatusEnum.WARNING && segDetails != null
+                && segDetails.getAllLayouts().isEmpty();
     }
 
     public NDataflow dropDataflow(String dfId) {
@@ -765,6 +760,10 @@ public class NDataflowManager implements IRealizationProvider {
         // delete NDataSegDetails first
         NDataSegDetailsManager segDetailsManager = NDataSegDetailsManager.getInstance(config, project);
         segDetailsManager.removeDetails(df);
+
+        // delete NDataSegment
+        NDataSegmentManager dataSegmentManager = config.getManager(project, NDataSegmentManager.class);
+        df.getSegments().forEach(dataSegmentManager::delete);
 
         // remove NDataflow and update cache
         crud.delete(df);
@@ -816,19 +815,12 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public void removeSegmentPartition(String dfId, Set<Long> toBeDeletedPartIds, Set<String> segments) {
-        updateDataflow(dfId, copyForWrite -> {
-            val updateSegments = new Segments<NDataSegment>();
-            if (CollectionUtils.isEmpty(segments)) {
-                updateSegments.addAll(copyForWrite.getSegments());
-            } else {
-                copyForWrite.getSegments().forEach(segment -> {
-                    if (segments.contains(segment.getId())) {
-                        updateSegments.add(segment);
-                    }
-                });
+        NDataSegmentManager segManager = config.getManager(project, NDataSegmentManager.class);
+        getDataflow(dfId).getSegmentUuids().forEach(segmentUuid -> {
+            if (CollectionUtils.isEmpty(segments) || segments.contains(segmentUuid)) {
+                segManager.update(segmentUuid, copyForWrite -> copyForWrite.getMultiPartitions()
+                        .removeIf(partition -> toBeDeletedPartIds.contains(partition.getPartitionId())));
             }
-            updateSegments.forEach(segment -> segment.getMultiPartitions()
-                    .removeIf(partition -> toBeDeletedPartIds.contains(partition.getPartitionId())));
         });
     }
 
@@ -842,7 +834,7 @@ public class NDataflowManager implements IRealizationProvider {
         }
         val affectedLayouts = Lists.newArrayList();
         for (NDataSegment segment : updateSegments) {
-            val layouts = segment.getSegDetails().getAllLayouts();
+            val layouts = segment.copy().getSegDetails().getAllLayouts();
             layouts.forEach(dataLayout -> {
                 if (dataLayout.removeMultiPartition(toBeDeletedPartIds)) {
                     affectedLayouts.add(dataLayout);
@@ -853,23 +845,6 @@ public class NDataflowManager implements IRealizationProvider {
         dfUpdate.setToAddOrUpdateLayouts(affectedLayouts.toArray(new NDataLayout[0]));
         val detailsManager = NDataSegDetailsManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         detailsManager.updateDataflow(dataflow, dfUpdate);
-    }
-
-    public void appendLayoutPartitions(NDataSegment segment, long layoutId, List<LayoutPartition> addPartitions) {
-        NDataSegDetailsManager detailsManager = NDataSegDetailsManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                project);
-
-        NDataSegDetails segmentDetailCopy = detailsManager.getForSegment(segment);
-        NDataflow df = segmentDetailCopy.getDataflow();
-        NDataLayout layout = segmentDetailCopy.getLayoutById(layoutId);
-        List<Long> partitionIds = addPartitions.stream().map(LayoutPartition::getPartitionId)
-                .collect(Collectors.toList());
-        Preconditions.checkState(layout.getPartitionsByIds(partitionIds).size() == 0);
-        layout.getMultiPartition().addAll(addPartitions);
-
-        NDataflowUpdate update = new NDataflowUpdate(df.getId());
-        update.setToAddOrUpdateLayouts(layout);
-        detailsManager.updateDataflow(df, update);
     }
 
     public boolean isOfflineModel(NDataflow df) {

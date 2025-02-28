@@ -1,0 +1,28 @@
+{
+  "uuid" : "f386e39e-40d7-44c2-9eb3-41b365632231",
+  "project" : "learn_kylin",
+  "name" : "KYLIN_ACCOUNT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "datatype" : "int"
+  }, {
+    "id" : "3",
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "datatype" : "int"
+  }, {
+    "id" : "4",
+    "name" : "ACCOUNT_COUNTRY",
+    "datatype" : "string"
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT_CONTACT",
+    "datatype" : "string"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

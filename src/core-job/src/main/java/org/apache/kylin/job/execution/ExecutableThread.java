@@ -28,6 +28,7 @@ import org.apache.kylin.job.JobContext;
 import lombok.val;
 
 public class ExecutableThread extends Thread {
+    public static final String JOB_THREAD_NAME_PATTERN = "JobWorker(project:%s,jobid:%s)";
     private Map<String, Executable> dagExecutablesMap;
     private JobContext context;
     private DefaultExecutable dagExecutable;
@@ -49,7 +50,7 @@ public class ExecutableThread extends Thread {
         //only the first 8 chars of the job uuid
         val jobIdSimple = dagExecutable.getId().split("-")[0];
         val project = dagExecutable.getProject();
-        try (SetThreadName ignored = new SetThreadName("JobWorker(project:%s,jobid:%s)", project, jobIdSimple);
+        try (SetThreadName ignored = new SetThreadName(JOB_THREAD_NAME_PATTERN, project, jobIdSimple);
              SetLogCategory ignore = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             // context.addRunningJob(executable);
             dagExecutable.executeDagExecutable(dagExecutablesMap, executable, context);

@@ -39,8 +39,8 @@ public class CacheStats {
         final long numTimeouts;
         final long numErrors;
 
-        CacheStatsCounter(long numPut, long numHits, long numMisses,
-                          long numEvictions, long numTimeouts, long numErrors) {
+        CacheStatsCounter(long numPut, long numHits, long numMisses, long numEvictions, long numTimeouts,
+                long numErrors) {
             this.numPut = numPut;
             this.numHits = numHits;
             this.numMisses = numMisses;

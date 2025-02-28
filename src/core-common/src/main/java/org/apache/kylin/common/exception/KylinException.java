@@ -28,9 +28,9 @@ import lombok.Getter;
 @Getter
 public class KylinException extends RuntimeException implements Serializable {
 
-    public final static String CODE_SUCCESS = "000";
-    public final static String CODE_UNAUTHORIZED = "401";
-    public final static String CODE_UNDEFINED = "999";
+    public static final String CODE_SUCCESS = "000";
+    public static final String CODE_UNAUTHORIZED = "401";
+    public static final String CODE_UNDEFINED = "999";
 
     private final ErrorCode errorCode;
     // for example 999

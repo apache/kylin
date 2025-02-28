@@ -18,9 +18,9 @@
 
 package org.apache.kylin.query.util;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class CancelFlag {
     public final AtomicBoolean atomicBoolean;

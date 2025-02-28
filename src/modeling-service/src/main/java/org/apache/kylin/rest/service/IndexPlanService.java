@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.AUTO_INDEX_PLAN_NOT_ENABLED;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_LIST_EMPTY;
@@ -35,7 +36,6 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,13 +44,14 @@ import java.util.stream.Stream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.SegmentOnlineMode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.OutOfMaxCombinationException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.smarter.IndexDependencyParser;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
@@ -70,12 +71,18 @@ import org.apache.kylin.metadata.cube.model.IndexEntity.Source;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.IndexPlan.UpdateRuleImpact;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
+import org.apache.kylin.metadata.cube.model.NDataLayoutDetailsManager;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
+import org.apache.kylin.metadata.favorite.FavoriteRule;
+import org.apache.kylin.metadata.job.JobTokenItem;
+import org.apache.kylin.metadata.job.JobTokenManager;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -84,7 +91,6 @@ import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.model.FuzzyKeySearcher;
@@ -102,11 +108,12 @@ import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.response.IndexGraphResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.IndexStatResponse;
+import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.TableIndexResponse;
 import org.apache.kylin.rest.service.params.IndexPlanParams;
 import org.apache.kylin.rest.service.params.PaginationParams;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.SpringContext;
+import org.apache.kylin.rest.util.ModelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -114,10 +121,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.metadata.Manager;
-import io.kyligence.kap.secondstorage.metadata.TableFlow;
 import lombok.Setter;
 import lombok.val;
 import lombok.var;
@@ -128,8 +131,10 @@ import lombok.extern.slf4j.Slf4j;
 public class IndexPlanService extends BasicService implements TableIndexPlanSupporter {
 
     public static final String DATA_SIZE = "data_size";
+    public static final Integer ROUTINE_REC = 0;
     private static final Logger logger = LoggerFactory.getLogger(IndexPlanService.class);
-
+    @Autowired(required = false)
+    private final List<ModelChangeSupporter> modelChangeSupporters = Lists.newArrayList();
     @Setter
     @Autowired
     private ModelSemanticHelper semanticUpater;
@@ -137,8 +142,12 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
     @Autowired
     private AclEvaluate aclEvaluate;
 
+    @Autowired
+    private ModelBuildService modelBuildService;
     @Autowired(required = false)
-    private final List<ModelChangeSupporter> modelChangeSupporters = Lists.newArrayList();
+    private ModelSmartServiceSupporter modelSmartServiceSupporter;
+    @Autowired
+    private ModelService modelService;
 
     /**
      * expand expand EXPANDABLE measures in index plan request's indexes
@@ -231,7 +240,11 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             newLayout.setId(newLayout.getId() + IndexEntity.INDEX_ID_STEP);
         }
         newLayout.setColOrder(convertColumn(request.getColOrder(), model));
-        newLayout.setStorageType(request.getStorageType());
+        int storageType = request.getStorageType();
+        if (model.getStorageType().isV3Storage() && request.getStorageType() == IStorageAware.ID_NDATA_STORAGE) {
+            storageType = IStorageAware.ID_NDATA_STORAGE;
+        }
+        newLayout.setStorageType(storageType);
         newLayout.setShardByColumns(convertColumn(request.getShardByColumns(), model));
         newLayout.setUpdateTime(System.currentTimeMillis());
         newLayout.setOwner(BasicService.getUsername());
@@ -399,11 +412,13 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             copyForWrite.addRuleBasedBlackList(ruleLayoutIds);
             copyForWrite.removeLayouts(ids, true, true);
             removeAggGroup(invalidDimensions, invalidMeasures, copyForWrite);
+            copyForWrite.getPlannerWhiteList().removeAll(ids);
         });
 
         modelChangeSupporters.forEach(listener -> listener.onUpdate(project, modelId));
-
-        removeSecondStorageIndex(project, modelId, ids);
+        if (indexPlan.getModel().getStorageType().isV3Storage()) {
+            NDataLayoutDetailsManager.getInstance(getConfig(), project).removeDetails(modelId, ids);
+        }
     }
 
     private void removeAggGroup(Set<Integer> invalidDimensions, Set<Integer> invalidMeasures, IndexPlan indexPlan) {
@@ -430,27 +445,10 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             val layout = indexPlan.getLayoutEntity(id);
             Preconditions.checkNotNull(layout);
         }
-
-        Map<Long, Boolean> secondStorageLayoutStatus = getSecondStorageLayoutStatus(project, layoutIds, indexPlan);
-        indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> copyForWrite
-                .markWhiteIndexToBeDelete(indexPlan.getUuid(), Sets.newHashSet(layoutIds), secondStorageLayoutStatus));
+        indexPlanManager.updateIndexPlan(indexPlan.getUuid(),
+                copyForWrite -> copyForWrite.markWhiteIndexToBeDelete(indexPlan.getUuid(), Sets.newHashSet(layoutIds)));
 
         return true;
-    }
-
-    public Map<Long, Boolean> getSecondStorageLayoutStatus(String project, Set<Long> layoutIds, IndexPlan indexPlan) {
-        if (!SecondStorageUtil.isModelEnable(project, indexPlan.getUuid())) {
-            return Collections.emptyMap();
-        }
-        Map<Long, Boolean> secondStorageLayoutStatus = new HashMap<>(layoutIds.size());
-        for (long layoutId : layoutIds) {
-            if (indexPlan.getLayoutEntity(layoutId) != null && indexPlan.getLayoutEntity(layoutId).isBaseIndex()
-                    && indexPlan.getLayoutEntity(layoutId).getIndex().isTableIndex()) {
-                secondStorageLayoutStatus.put(layoutId,
-                        isSecondStorageLayoutReady(project, indexPlan.getUuid(), layoutId));
-            }
-        }
-        return secondStorageLayoutStatus;
     }
 
     public DiffRuleBasedIndexResponse calculateDiffRuleBasedIndex(UpdateRuleBasedCuboidRequest request) {
@@ -750,7 +748,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         long allIndexCountWithoutTobeDel = indexPlan.getAllLayoutsSize(false);
         for (NDataSegment seg : readySegments) {
             val lockedIndexCountInSeg = seg.getLayoutsMap().values().stream()
-                    .filter(nDataLayout -> nDataLayout.getLayout().isToBeDeleted()).count();
+                    .filter(nDataLayout -> nDataLayout.getLayoutByIndexPlan(indexPlan).isToBeDeleted()).count();
             if ((seg.getSegDetails().getAllLayouts().size() - lockedIndexCountInSeg) != allIndexCountWithoutTobeDel) {
                 segmentToComplementCount += 1;
             }
@@ -938,6 +936,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             response.setUsage(dataflow.getLayoutHitCount().get(layoutEntity.getId()).getDateFrequency().values()
                     .stream().mapToInt(Integer::intValue).sum());
         }
+        response.setStorageType(layoutEntity.getStorageType());
         return response;
     }
 
@@ -1242,29 +1241,13 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
                     .collect(Collectors.toSet());
 
             for (long layoutId : needDelete) {
-                if (!effectiveLayouts.contains(layoutId) && !isSecondStorageLayoutReady(project, modelId, layoutId)) {
+                if (!effectiveLayouts.contains(layoutId)) {
                     removeIndex(project, modelId, layoutId);
                 } else {
                     addIndexToBeDeleted(project, modelId, Sets.newHashSet(layoutId));
                 }
             }
         }
-    }
-
-    public boolean isSecondStorageLayoutReady(String project, String modelId, long layoutId) {
-        if (!SecondStorageUtil.isModelEnable(project, modelId)) {
-            return false;
-        }
-        if (!SegmentOnlineMode.ANY.toString().equalsIgnoreCase(NProjectManager.getInstance(getConfig())
-                .getProject(project).getConfig().getKylinEngineSegmentOnlineMode())) {
-            return false;
-        }
-        Optional<Manager<TableFlow>> tableFlowManager = SecondStorageUtil.tableFlowManager(getConfig(), project);
-        if (!tableFlowManager.isPresent()) {
-            return false;
-        }
-        Optional<TableFlow> tableFlow = tableFlowManager.get().get(modelId);
-        return tableFlow.map(flow -> flow.containsLayout(layoutId)).orElse(false);
     }
 
     @Transaction(project = 0)
@@ -1358,12 +1341,68 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         return response;
     }
 
-    @Transaction(project = 0)
-    private void removeSecondStorageIndex(String project, String modelId, Set<Long> layoutIds) {
-        if (SecondStorageUtil.isModelEnable(project, modelId)) {
-            SecondStorageUpdater updater = SpringContext.getBean(SecondStorageUpdater.class);
-            updater.removeIndexByLayoutId(project, modelId, layoutIds);
+    public void checkPartitionDimensionForV3Storage(String project, String modelId, KylinConfig config) {
+        NDataModel model = NDataModelManager.getInstance(config, project).getDataModelDesc(modelId);
+        if (model.getStorageType().isV3Storage() && model.isIncrementBuildOnExpertMode()) {
+            NIndexPlanManager.getInstance(getConfig(), project).updateIndexPlan(modelId, (indexPlan) -> {
+                Integer partitionColumnId = model.getPartitionColumnId();
+                RuleBasedIndex ruleBasedIndex = indexPlan.getRuleBasedIndex();
+                if (ruleBasedIndex != null) {
+                    updateAggregationGroups(ruleBasedIndex, partitionColumnId);
+                    indexPlan.getRuleBasedIndex().setLayoutIdMapping(Lists.newArrayList());
+                }
+                indexPlan.setRuleBasedIndex(ruleBasedIndex);
+                updateIndexPlan(indexPlan, partitionColumnId);
+            });
         }
+    }
+
+    private void updateAggregationGroups(RuleBasedIndex ruleBasedIndex, Integer partitionColumnId) {
+        ruleBasedIndex.getAggregationGroups().forEach(nAggregationGroup -> {
+            if (!Lists.newArrayList(nAggregationGroup.getIncludes()).contains(partitionColumnId)) {
+                updateIncludes(nAggregationGroup, partitionColumnId);
+                updateMandatoryDims(nAggregationGroup, partitionColumnId);
+            }
+        });
+    }
+
+    private void updateIncludes(NAggregationGroup nAggregationGroup, Integer partitionColumnId) {
+        Integer[] newIncludes = new Integer[nAggregationGroup.getIncludes().length + 1];
+        newIncludes[0] = partitionColumnId;
+        System.arraycopy(nAggregationGroup.getIncludes(), 0, newIncludes, 1, nAggregationGroup.getIncludes().length);
+        nAggregationGroup.setIncludes(newIncludes);
+    }
+
+    private void updateMandatoryDims(NAggregationGroup nAggregationGroup, Integer partitionColumnId) {
+        Integer[] mandatoryDims = new Integer[nAggregationGroup.getSelectRule().mandatoryDims.length + 1];
+        mandatoryDims[0] = partitionColumnId;
+        System.arraycopy(nAggregationGroup.getSelectRule().mandatoryDims, 0, mandatoryDims, 1,
+                nAggregationGroup.getSelectRule().mandatoryDims.length);
+        nAggregationGroup.getSelectRule().setMandatoryDims(mandatoryDims);
+    }
+
+    private void updateIndexPlan(IndexPlan indexPlan, Integer partitionColumnId) {
+        List<ImmutableBitSet> indexBitSet = indexPlan.getAllIndexes().stream()
+                .map(index -> index.getDimensionBitset().or(index.getMeasureBitset())).collect(Collectors.toList());
+        List<IndexEntity> indexEntities = indexPlan.getIndexes().stream().map(index -> {
+            if (!index.getDimensions().contains(partitionColumnId)) {
+                if (indexBitSet.contains(index.getDimensionBitset().or(index.getMeasureBitset()))) {
+                    return null;
+                }
+                updateIndex(index, partitionColumnId);
+            }
+            return index;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        indexPlan.setIndexes(indexEntities);
+    }
+
+    private void updateIndex(IndexEntity index, Integer partitionColumnId) {
+        index.getDimensions().add(0, partitionColumnId);
+        index.getLayouts().stream().forEach(layoutEntity -> {
+            List<Integer> newColOrder = Lists.newArrayList(partitionColumnId);
+            newColOrder.addAll(layoutEntity.getColOrder());
+            layoutEntity.setColOrder(newColOrder);
+        });
     }
 
     @Override
@@ -1379,7 +1418,77 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
     @Override
     public Object getIndexUpdateHelper(NDataModel model, boolean createIfNotExist) {
-        val baseIndexUpdater = new BaseIndexUpdateHelper(model, false);
-        return baseIndexUpdater;
+        return new BaseIndexUpdateHelper(model, false);
     }
+
+    public List<String> optIndexPlan(String modelId, Integer instantInitIndexNum, String project, int priority,
+            String yarnQueue, Object tag, Long start, Long end) {
+        aclEvaluate.checkProjectWritePermission(project);
+        // Check whether the smart recommended switch is on
+        if (!checkAutoIndexPlanEnabled(project, modelId)) {
+            throw new KylinException(AUTO_INDEX_PLAN_NOT_ENABLED, MsgPicker.getMsg().getAutoIndexPlanNotEnabled());
+        }
+        List<String> jobIds = Lists.newArrayList();
+        if (Objects.isNull(start) || Objects.isNull(end)) {
+            start = 0L;
+            end = Long.MAX_VALUE - 1;
+        }
+        JobParam jobParam = new JobParam(modelId, getUsername()).withProject(project).withYarnQueue(yarnQueue)
+                .withPriority(priority).withJobTypeEnum(JobTypeEnum.INDEX_PLAN_OPT).withTag(tag)
+                .addExtParams(NBatchConstants.P_DATAFLOW_ID, String.valueOf(modelId))
+                .addExtParams(NBatchConstants.P_PLANNER_DATA_RANGE_START, String.valueOf(start))
+                .addExtParams(NBatchConstants.P_PLANNER_DATA_RANGE_END, String.valueOf(end));
+        setIndexPlannerRelatedParams(jobParam, instantInitIndexNum);
+        jobIds.add(getManager(JobManager.class, project).addJob(jobParam));
+        return jobIds;
+    }
+
+    // full data
+    public List<String> optIndexPlan(String dataflowId, Integer instantInitIndexNum, String project, int priority,
+            String yarnQueue, Object tag) {
+        return optIndexPlan(dataflowId, instantInitIndexNum, project, priority, yarnQueue, tag, null, null);
+    }
+
+    private void setIndexPlannerRelatedParams(JobParam jobParam, Integer initializeCuboidCount) {
+        String project = jobParam.getProject();
+        if (!checkAutoIndexPlanEnabled(jobParam.getProject(), jobParam.getModel())) {
+            throw new KylinException(AUTO_INDEX_PLAN_NOT_ENABLED, MsgPicker.getMsg().getAutoIndexPlanNotEnabled());
+        }
+        Map<String, Object> autoIndexPlanRule = modelSmartServiceSupporter.getAutoIndexPlanRule(jobParam.getModel(),
+                jobParam.getProject());
+
+        NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(jobParam.getModel());
+        IndexPlan indexPlan = getManager(NIndexPlanManager.class, project).getIndexPlan(jobParam.getModel());
+        NDataModelResponse dataModelResponse = modelService.getCube(modelDesc.getAlias(), project);
+        boolean shouldLaunchRoutineRec = ModelUtils.isModelHasAnyData(dataModelResponse, indexPlan);
+
+        if (initializeCuboidCount == null) {
+            initializeCuboidCount = shouldLaunchRoutineRec ? ROUTINE_REC
+                    : Integer.parseInt(
+                            String.valueOf(autoIndexPlanRule.get(FavoriteRule.INDEX_PLANNER_MAX_CHANGE_COUNT)));
+        } else if (initializeCuboidCount > 0 && shouldLaunchRoutineRec) {
+            initializeCuboidCount = ROUTINE_REC;
+        }
+
+        logger.info("prepare launch {} rec job", initializeCuboidCount == 0 ? "routine" : "cold start");
+
+        String token = RandomUtil.randomUUIDStr();
+        JobTokenManager tokenManager = JobTokenManager.getInstance(getConfig());
+        JobTokenItem item = new JobTokenItem(jobParam.getJobId(), //
+                tokenManager.encrypt(token), //
+                System.currentTimeMillis());
+        tokenManager.save(item);
+        jobParam.addExtParams(NBatchConstants.P_PLANNER_INITIALIZE_CUBOID_COUNT, String.valueOf(initializeCuboidCount));
+        jobParam.addExtParams(NBatchConstants.P_PLANNER_MAX_CUBOID_COUNT,
+                String.valueOf(autoIndexPlanRule.get(FavoriteRule.INDEX_PLANNER_MAX_INDEX_COUNT)));
+        jobParam.addExtParams(NBatchConstants.P_PLANNER_MAX_CUBOID_CHANGE_COUNT,
+                String.valueOf(autoIndexPlanRule.get(FavoriteRule.INDEX_PLANNER_MAX_CHANGE_COUNT)));
+        jobParam.addExtParams(NBatchConstants.P_PLANNER_AUTO_APPROVE_ENABLED, String.valueOf(true));
+        jobParam.addExtParams(NBatchConstants.P_PLANNER_OPERATION_TOKEN, token);
+    }
+
+    public boolean checkAutoIndexPlanEnabled(String project, String modelId) {
+        return modelService.isAutoIndexPlanEnabled(project, modelId);
+    }
+
 }

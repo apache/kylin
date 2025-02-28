@@ -16,6 +16,7 @@
 -- limitations under the License.
 --
 
-select lstg_format_name,round(avg(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name),0)
+select lstg_format_name,round(avg(sum(price)) over(partition by lstg_format_name order by cal_dt, lstg_format_name),0) rd
 from test_kylin_fact
 group by cal_dt, lstg_format_name
+order by lstg_format_name,rd

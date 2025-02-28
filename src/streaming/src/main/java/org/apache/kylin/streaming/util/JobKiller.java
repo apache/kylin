@@ -23,13 +23,14 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.ShellException;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.cluster.ClusterManagerFactory;
 import org.apache.kylin.cluster.IClusterManager;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.streaming.app.StreamingEntry;
 import org.apache.kylin.streaming.app.StreamingMergeEntry;
@@ -37,7 +38,6 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
 public class JobKiller {

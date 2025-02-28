@@ -40,6 +40,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -75,9 +77,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -243,8 +242,7 @@ public class NAccessController extends NBasicController {
     @PostMapping(value = "/global/permission/project/{permissionType:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
             HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
-    public EnvelopeResponse<String> addProjectToUserAcl(
-            @PathVariable(value = "permissionType") String permissionType,
+    public EnvelopeResponse<String> addProjectToUserAcl(@PathVariable(value = "permissionType") String permissionType,
             @RequestBody GlobalAccessRequest accessRequest) {
         checkRequiredArg("username", accessRequest.getUsername());
         checkProjectName(accessRequest.getProject());
@@ -280,7 +278,6 @@ public class NAccessController extends NBasicController {
         }
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
-
 
     @ApiOperation(value = "getAllGlobalUsersAccessEntities", tags = { "MID" }, //
             notes = "Update Param: sid")
@@ -440,7 +437,9 @@ public class NAccessController extends NBasicController {
         AclEntity ae = accessService.getAclEntity(entityType, uuid);
         accessService.batchRevoke(ae, requests);
         if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
-            requests.forEach(r -> aclTCRService.remoteRevokeACL(uuid, r.getSid(), r.isPrincipal()));
+            for(AccessRequest r : requests) {
+                aclTCRService.remoteRevokeACL(uuid, r.getSid(), r.isPrincipal());
+            }
         }
         boolean hasAdminProject = CollectionUtils.isNotEmpty(projectService.getAdminProjects());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");

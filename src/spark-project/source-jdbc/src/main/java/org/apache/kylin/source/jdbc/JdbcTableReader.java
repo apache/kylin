@@ -27,12 +27,11 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
 import org.apache.kylin.source.IReadableTable;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.extern.slf4j.Slf4j;
 

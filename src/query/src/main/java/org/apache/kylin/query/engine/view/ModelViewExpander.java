@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.kylin.query.relnode.KapModelViewRel;
+import org.apache.kylin.query.relnode.OlapModelViewRel;
 
 public class ModelViewExpander implements RelOptTable.ViewExpander {
 
@@ -36,7 +36,7 @@ public class ModelViewExpander implements RelOptTable.ViewExpander {
     @Override
     public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
         RelRoot root = expander.expandView(rowType, queryString, schemaPath, viewPath);
-        KapModelViewRel modelViewRel = new KapModelViewRel(root.rel.getCluster(), root.rel.getTraitSet(), root.rel,
+        OlapModelViewRel modelViewRel = new OlapModelViewRel(root.rel.getCluster(), root.rel.getTraitSet(), root.rel,
                 viewPath.get(1));
         return RelRoot.of(modelViewRel, root.kind);
     }

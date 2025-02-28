@@ -26,6 +26,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
 import org.apache.kylin.engine.spark.builder.CreateFlatTable;
+import org.apache.kylin.engine.spark.job.step.ParamPropagation;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -45,8 +47,6 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.SparderTypeUtil;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @SuppressWarnings("serial")
 public class CsvSourceTest extends NLocalWithSparkSessionTestBase {
@@ -96,7 +96,7 @@ public class CsvSourceTest extends NLocalWithSparkSessionTestBase {
 
         NCubeJoinedFlatTableDesc flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan(),
                 new SegmentRange.TimePartitionedSegmentRange(0L, System.currentTimeMillis()), true);
-        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null);
+        CreateFlatTable flatTable = new CreateFlatTable(flatTableDesc, null, null, ss, null, new ParamPropagation());
         Dataset<Row> ds = flatTable.generateDataset(false, true);
         ds.show(10);
 

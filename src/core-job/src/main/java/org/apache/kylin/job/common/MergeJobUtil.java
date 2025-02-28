@@ -26,16 +26,16 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +45,11 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class MergeJobUtil extends ExecutableUtil {
+
+    static {
+        registerImplementation(JobTypeEnum.INDEX_MERGE, new MergeJobUtil());
+    }
+
     @Override
     public void computeLayout(JobParam jobParam) {
         NDataflow df = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), jobParam.getProject())
@@ -53,7 +58,7 @@ public class MergeJobUtil extends ExecutableUtil {
         HashSet<LayoutEntity> layouts = Sets.newHashSet();
         val oldSegs = df.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING).stream()
                 .filter(seg -> seg.getSegRange().overlaps(newSeg.getSegRange())).collect(Collectors.toList());
-        if (oldSegs.size() == 0) {
+        if (oldSegs.isEmpty()) {
             log.warn("JobParam {} is no longer valid because no old segment ready", jobParam);
             throw new KylinException(JOB_CREATE_EXCEPTION);
         }

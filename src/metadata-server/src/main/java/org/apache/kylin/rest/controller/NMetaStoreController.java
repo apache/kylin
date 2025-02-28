@@ -143,7 +143,7 @@ public class NMetaStoreController extends NBasicController {
         if (request.getModels().stream().noneMatch(modelImport -> IMPORT_TYPE.contains(modelImport.getImportType()))) {
             throw new KylinException(EMPTY_MODEL_ID, "At least one model should be selected to import!");
         }
-        if (request.getModels().stream().filter(modelImport -> modelImport.getImportType().equals(NEW))
+        if (request.getModels().stream().filter(modelImport -> modelImport.getImportType() == NEW)
                 .anyMatch(modelImport -> modelImport.getTargetName().length() > Constant.MODEL_ALIAS_LEN_LIMIT)) {
             throw new KylinException(MODEL_NAME_TOO_LONG);
         }

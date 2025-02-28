@@ -18,25 +18,24 @@
 
 package org.apache.kylin.rest.config.initialize;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.asynctask.AbstractAsyncTask;
 import org.apache.kylin.metadata.asynctask.MetadataRestoreTask;
+import org.apache.kylin.metadata.favorite.AsyncTaskManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.reponse.MetadataBackupResponse;
 import org.apache.kylin.rest.service.OpsService;
-import org.apache.kylin.tool.MaintainModeTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 public class OpsAppInitializer {
@@ -45,7 +44,6 @@ public class OpsAppInitializer {
     @EventListener(ApplicationReadyEvent.class)
     public void beforeStarted() throws IOException {
         checkMetadataRestoreTaskStatus();
-        checkMaintainMode();
         checkMetadataBackupTaskStatus();
     }
 
@@ -56,7 +54,7 @@ public class OpsAppInitializer {
         List<AbstractAsyncTask> asyncTask = manger.getAllAsyncTaskByType(AsyncTaskManager.METADATA_RECOVER_TASK);
         for (AbstractAsyncTask abstractAsyncTask : asyncTask) {
             MetadataRestoreTask task = MetadataRestoreTask.copyFromAbstractTask(abstractAsyncTask);
-            if (MetadataRestoreTask.MetadataRestoreStatus.IN_PROGRESS.equals(task.getStatus())) {
+            if (MetadataRestoreTask.MetadataRestoreStatus.IN_PROGRESS == task.getStatus()) {
                 log.info("mark in progress metadata restore task {} as failed.", task.getTaskKey());
                 task.setStatus(MetadataRestoreTask.MetadataRestoreStatus.FAILED);
                 manger.save(task);
@@ -65,28 +63,16 @@ public class OpsAppInitializer {
         log.info("finished check metadata restore task status in {} ms", System.currentTimeMillis() - startTime);
     }
 
-    public void checkMaintainMode() {
-        if (EpochManager.getInstance().isMaintenanceMode()) {
-            log.info("start to exit maintain mode.");
-            long startTime = System.currentTimeMillis();
-            MaintainModeTool maintainModeTool = new MaintainModeTool();
-            maintainModeTool.init();
-            maintainModeTool.releaseEpochs();
-            log.info("finished exit maintain mode in {} ms.", System.currentTimeMillis() - startTime);
-        }
-    }
-
     public void checkMetadataBackupTaskStatus() throws IOException {
         log.info("start to check metadata backup status");
         long startTime = System.currentTimeMillis();
         List<String> projectList = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()
                 .stream().map(ProjectInstance::toString).collect(Collectors.toList());
-        projectList.add(OpsService._GLOBAL);
+        projectList.add(UnitOfWork.GLOBAL_UNIT);
         for (String project : projectList) {
             for (MetadataBackupResponse metadataBackup : OpsService.getMetadataBackupList(project)) {
-                if (OpsService.MetadataBackupStatu.IN_PROGRESS.equals(metadataBackup.getStatus())) {
-                    OpsService.MetadataBackupOperator operator =
-                            new OpsService.MetadataBackupOperator(metadataBackup, project);
+                if (OpsService.MetadataBackupStatus.IN_PROGRESS == metadataBackup.getStatus()) {
+                    OpsService.MetadataBackup operator = new OpsService.MetadataBackup(metadataBackup, project);
                     operator.markFail();
                 }
             }

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_15",
+  "expression" : "QUARTER(CALCS.DATE1)",
+  "innerExpression" : "QUARTER(CALCS.DATE1)",
+  "datatype" : "INTEGER",
+  "comment" : "Auto suggested from: QUARTER(CALCS.DATE1)",
+  "uuid" : "d6cede7f-da71-4817-eb4e-72023e7f861d",
+  "project" : "tdvt"
+}

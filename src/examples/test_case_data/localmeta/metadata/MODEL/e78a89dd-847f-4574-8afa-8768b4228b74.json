@@ -1,0 +1,195 @@
+{
+  "uuid" : "e78a89dd-847f-4574-8afa-8768b4228b74",
+  "last_modified" : 1612690025838,
+  "create_time" : 1612690025838,
+  "version" : "4.0.0.0",
+  "model_type" : "STREAMING",
+  "alias" : "stream_merge2",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.P_LINEORDER_STR",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "SSB.PART",
+    "kind" : "LOOKUP",
+    "alias" : "PART",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "PART.P_PARTKEY" ],
+      "foreign_key" : [ "P_LINEORDER_STR.LO_PARTKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "P_LINEORDER_STR.LO_PARTITIONCOLUMN",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_CUSTKEY",
+    "column" : "P_LINEORDER_STR.LO_CUSTKEY"
+  }, {
+    "id" : 1,
+    "name" : "LO_DISCOUNT",
+    "column" : "P_LINEORDER_STR.LO_DISCOUNT"
+  }, {
+    "id" : 2,
+    "name" : "LO_ORDERKEY",
+    "column" : "P_LINEORDER_STR.LO_ORDERKEY"
+  }, {
+    "id" : 3,
+    "name" : "V_REVENUE",
+    "column" : "P_LINEORDER_STR.V_REVENUE"
+  }, {
+    "id" : 4,
+    "name" : "LO_ORDERDATE",
+    "column" : "P_LINEORDER_STR.LO_ORDERDATE"
+  }, {
+    "id" : 5,
+    "name" : "LO_REVENUE",
+    "column" : "P_LINEORDER_STR.LO_REVENUE"
+  }, {
+    "id" : 6,
+    "name" : "LO_EXTENDEDPRICE",
+    "column" : "P_LINEORDER_STR.LO_EXTENDEDPRICE"
+  }, {
+    "id" : 7,
+    "name" : "LO_SUPPLYCOST",
+    "column" : "P_LINEORDER_STR.LO_SUPPLYCOST"
+  }, {
+    "id" : 8,
+    "name" : "LO_SUPPKEY",
+    "column" : "P_LINEORDER_STR.LO_SUPPKEY"
+  }, {
+    "id" : 9,
+    "name" : "LO_PARTITIONCOLUMN",
+    "column" : "P_LINEORDER_STR.LO_PARTITIONCOLUMN"
+  }, {
+    "id" : 10,
+    "name" : "LO_LINENUMBER",
+    "column" : "P_LINEORDER_STR.LO_LINENUMBER"
+  }, {
+    "id" : 11,
+    "name" : "LO_TAX",
+    "column" : "P_LINEORDER_STR.LO_TAX"
+  }, {
+    "id" : 12,
+    "name" : "LO_SHIPPRIOTITY",
+    "column" : "P_LINEORDER_STR.LO_SHIPPRIOTITY"
+  }, {
+    "id" : 13,
+    "name" : "LO_COMMITDATE",
+    "column" : "P_LINEORDER_STR.LO_COMMITDATE"
+  }, {
+    "id" : 14,
+    "name" : "LO_PARTKEY",
+    "column" : "P_LINEORDER_STR.LO_PARTKEY"
+  }, {
+    "id" : 15,
+    "name" : "LO_ORDERPRIOTITY",
+    "column" : "P_LINEORDER_STR.LO_ORDERPRIOTITY"
+  }, {
+    "id" : 16,
+    "name" : "LO_ORDTOTALPRICE",
+    "column" : "P_LINEORDER_STR.LO_ORDTOTALPRICE"
+  }, {
+    "id" : 17,
+    "name" : "LO_SHIPMODE",
+    "column" : "P_LINEORDER_STR.LO_SHIPMODE"
+  }, {
+    "id" : 18,
+    "name" : "LO_QUANTITY",
+    "column" : "P_LINEORDER_STR.LO_QUANTITY"
+  }, {
+    "id" : 19,
+    "name" : "P_PARTKEY",
+    "column" : "PART.P_PARTKEY"
+  }, {
+    "id" : 20,
+    "name" : "P_CONTAINER",
+    "column" : "PART.P_CONTAINER"
+  }, {
+    "id" : 21,
+    "name" : "P_SIZE",
+    "column" : "PART.P_SIZE"
+  }, {
+    "id" : 22,
+    "name" : "P_NAME",
+    "column" : "PART.P_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "P_CATEGORY",
+    "column" : "PART.P_CATEGORY"
+  }, {
+    "id" : 24,
+    "name" : "P_TYPE",
+    "column" : "PART.P_TYPE"
+  }, {
+    "id" : 25,
+    "name" : "P_MFGR",
+    "column" : "PART.P_MFGR"
+  }, {
+    "id" : 26,
+    "name" : "P_BRAND",
+    "column" : "PART.P_BRAND"
+  }, {
+    "id" : 27,
+    "name" : "P_COLOR",
+    "column" : "PART.P_COLOR"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "P_LINEORDER_STR" : {
+        "x" : 673.2222154405387,
+        "y" : 235.88889227973095,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "PART" : {
+        "x" : 419.8888821072052,
+        "y" : 514.77778116862,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "streaming_test"
+}

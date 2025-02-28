@@ -21,6 +21,8 @@ package org.apache.kylin.metadata.user;
 import java.util.Arrays;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -57,14 +59,11 @@ class NKylinUserManagerTest extends NLocalFileMetadataTestCase {
 
         // admin exists
         Assertions.assertTrue(manager.exists("ADMIN"));
-
-        getTestConfig().setProperty("kylin.metadata.key-case-insensitive", "true");
-        Assertions.assertTrue(manager.exists("ADMIN"));
+        Assertions.assertTrue(manager.exists("admIN"));
 
         // get
         Assertions.assertNotNull(manager.get("ADMIN"));
-        getTestConfig().setProperty("kylin.metadata.key-case-insensitive", "false");
-        Assertions.assertNotNull(manager.get("ADMIN"));
+        Assertions.assertNotNull(manager.get("admIN"));
         Assertions.assertNull(manager.get("notexist"));
         Assertions.assertNull(manager.get(null));
     }

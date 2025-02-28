@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.SnapshotConfigRequest;
@@ -39,7 +40,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 import lombok.var;
 

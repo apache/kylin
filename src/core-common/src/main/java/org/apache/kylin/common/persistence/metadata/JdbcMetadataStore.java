@@ -18,89 +18,72 @@
 package org.apache.kylin.common.persistence.metadata;
 
 import static org.apache.kylin.common.exception.CommonErrorCode.FAILED_UPDATE_METADATA;
-import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
+import static org.apache.kylin.common.persistence.metadata.MetadataMapperFactory.convertConditionsToDSLCompleter;
+import static org.apache.kylin.common.persistence.metadata.MetadataMapperFactory.resetMapperTableNameIfNeed;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
-import static org.apache.kylin.common.persistence.transaction.UnitOfWork.GLOBAL_UNIT;
+import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.CONTENT_FIELD;
+import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.META_KEY_PROPERTIES_NAME;
+import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.MVCC_FIELD;
+import static org.apache.kylin.common.persistence.metadata.mapper.BasicSqlTable.UUID_FIELD;
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.RawResourceCompressProxy;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.VersionedRawResource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
-import org.apache.kylin.common.persistence.metadata.jdbc.RawResourceRowMapper;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.CompressionUtils;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.mybatis.dynamic.sql.BasicColumn;
+import org.mybatis.dynamic.sql.BindableColumn;
+import org.mybatis.dynamic.sql.SqlColumn;
+import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.security.util.InMemoryResource;
 
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.val;
 import lombok.var;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JdbcMetadataStore extends MetadataStore {
 
-    private static final RowMapper<RawResource> RAW_RESOURCE_ROW_MAPPER = new RawResourceRowMapper();
-
-    static final String META_TABLE_KEY = "META_TABLE_KEY";
-    static final String META_TABLE_CONTENT = "META_TABLE_CONTENT";
-    static final String META_TABLE_TS = "META_TABLE_TS";
-    static final String META_TABLE_MVCC = "META_TABLE_MVCC";
-
-    public static final String SELECT_TERM = "select ";
-
-    private static final String SELECT_ALL_KEY_SQL = SELECT_TERM + META_TABLE_KEY + " from %s";
-    private static final String SELECT_BY_RANGE_SQL = SELECT_TERM
-            + Joiner.on(",").join(META_TABLE_KEY, META_TABLE_CONTENT, META_TABLE_TS, META_TABLE_MVCC)
-            + " from %s where " + META_TABLE_KEY + " > '%s' and " + META_TABLE_KEY + " < '%s'";
-    private static final String SELECT_BY_KEY_MVCC_SQL = SELECT_TERM
-            + Joiner.on(",").join(META_TABLE_KEY, META_TABLE_CONTENT, META_TABLE_TS, META_TABLE_MVCC)
-            + " from %s where " + META_TABLE_KEY + "='%s' and " + META_TABLE_MVCC + "=%d";
-    private static final String SELECT_BY_KEY_SQL = SELECT_TERM
-            + Joiner.on(",").join(META_TABLE_KEY, META_TABLE_CONTENT, META_TABLE_TS, META_TABLE_MVCC)
-            + " from %s where " + META_TABLE_KEY + "='%s'";
-
-    private static final String INSERT_SQL = "insert into %s ("
-            + Joiner.on(",").join(META_TABLE_KEY, META_TABLE_CONTENT, META_TABLE_TS, META_TABLE_MVCC)
-            + ") values (?, ?, ?, ?)";
-    private static final String UPDATE_SQL = "update %s set " + META_TABLE_CONTENT + "=?, " + META_TABLE_MVCC + "=?, "
-            + META_TABLE_TS + "=? where " + META_TABLE_KEY + "=? and " + META_TABLE_MVCC + "=?";
-    private static final String DELETE_SQL = "delete from %s where " + META_TABLE_KEY + "=?";
-
-    private static final String UPDATE_KEY_SQL = "update %s set " + META_TABLE_KEY + "='%s', " + META_TABLE_MVCC + "="
-            + META_TABLE_MVCC + 1 + ", " + META_TABLE_TS + "=? where " + META_TABLE_KEY + "=? ";
-
+    @VisibleForTesting
     @Getter
-    private final DataSourceTransactionManager transactionManager;
+    private final SqlSessionFactory sqlSessionFactory;
+
+    @VisibleForTesting
+    @Getter
+    protected final DataSourceTransactionManager transactionManager;
     @Getter
     private final JdbcTemplate jdbcTemplate;
-    private final String table;
     private final boolean isUT;
+
+    @Delegate
+    private final JdbcTransactionHelper helper;
 
     public JdbcMetadataStore(KylinConfig config) throws Exception {
         super(config);
@@ -109,161 +92,129 @@ public class JdbcMetadataStore extends MetadataStore {
         val dataSource = JdbcDataSource.getDataSource(props);
         transactionManager = JdbcDataSource.getTransactionManager(dataSource);
         jdbcTemplate = new JdbcTemplate(dataSource);
-        table = url.getIdentifier();
+        String table = url.getIdentifier();
         isUT = config.isUTEnv();
-        if (config.isMetadataAuditLogEnabled()) {
-            auditLogStore = new JdbcAuditLogStore(config, jdbcTemplate, transactionManager,
-                    table + JdbcAuditLogStore.AUDIT_LOG_SUFFIX);
+        auditLogStore = new JdbcAuditLogStore(config, jdbcTemplate, transactionManager,
+                table + JdbcAuditLogStore.AUDIT_LOG_SUFFIX);
+        sqlSessionFactory = MetadataMapperFactory.getSqlSessionFactory(dataSource);
+        createIfNotExist(table);
+        if (isUT) {
+            resetMapperTableNameIfNeed(url, sqlSessionFactory);
         }
-        epochStore = EpochStore.getEpochStore(config);
-        createIfNotExist();
+        helper = new JdbcTransactionHelper(transactionManager);
     }
 
     @Override
-    protected void save(String path, @Nullable ByteSource bs, long ts, long mvcc, String unitPath, long epochId)
-            throws Exception {
-        withTransaction(transactionManager, new JdbcUtil.Callback<Object>() {
-            @Override
-            public Object handle() {
-                checkEpochModified(unitPath, epochId);
-                if (UnitOfWork.isAlreadyInTransaction() && UnitOfWork.get().isTransparent()) {
-                    throw new IllegalStateException("Transaction is in transparent mode, please use feign api to update core metadata.");
+    public <T extends RawResource> List<T> get(MetadataType type, RawResourceFilter filter, boolean needLock,
+            boolean needContent) {
+        return get(type, filter, needLock, needContent, null);
+    }
+
+    /**
+     * Get metadata by RawResourceFilter
+     * @param type The metadata type
+     * @param filter The Condition includes the operator and left and right variables used for filtering
+     * @param needLock Whether to lock the metadata in record lock mode
+     * @param needContent Whether to get the content field of the metadata
+     * @param provideSelections The fields to be selected. If no provided, should be null
+     * @return The list of RawResource
+     */
+    @VisibleForTesting
+    protected <T extends RawResource> List<T> get(MetadataType type, RawResourceFilter filter, boolean needLock,
+            boolean needContent, List<String> provideSelections) {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            val mapper = MetadataMapperFactory.<T> createFor(type, session);
+            BasicColumn[] selectList = mapper.getSelectList();
+            if (provideSelections != null && !provideSelections.isEmpty()) {
+                Map<String, BasicColumn> selectColumnMap = mapper.getSelectColumnMap();
+                if (needContent && !provideSelections.contains(CONTENT_FIELD)) {
+                    provideSelections.add(CONTENT_FIELD);
                 }
-                int affectedRow;
-                if (bs != null) {
-                    val result = jdbcTemplate.query(
-                            String.format(Locale.ROOT, SELECT_BY_KEY_MVCC_SQL, table, path, mvcc - 1),
-                            RAW_RESOURCE_ROW_MAPPER);
-                    if (CollectionUtils.isEmpty(result)) {
-                        assert isUT || mvcc == 0;
-                        affectedRow = insert(String.format(Locale.ROOT, INSERT_SQL, table), path, bs, ts, mvcc);
-                    } else {
-                        affectedRow = update(String.format(Locale.ROOT, UPDATE_SQL, table), bs, mvcc, ts, path,
-                                mvcc - 1);
+                selectList = provideSelections.stream().map(selectColumnMap::get).filter(Objects::nonNull)
+                        .toArray(BasicColumn[]::new);
+            }
+
+            if (!needContent) {
+                List<BasicColumn> resultList = new ArrayList<>();
+                for (val column : selectList) {
+                    if (CONTENT_FIELD.equals(((SqlColumn<Object>) column).name())) {
+                        continue;
                     }
+                    resultList.add(column);
+                }
+                selectList = resultList.toArray(new BasicColumn[0]);
+            }
+
+            val dsl = convertConditionsToDSLCompleter(filter, mapper.getSelectColumnMap());
+            return needLock
+                    ? MyBatis3Utils.selectList(mapper::selectManyWithRecordLock, selectList, mapper.getSqlTable(), dsl)
+                    : MyBatis3Utils.selectList(mapper::selectMany, selectList, mapper.getSqlTable(), dsl);
+        }
+    }
+
+    /**
+     * Common method for save/update/delete metadata
+     * @param type The metadata type
+     * @param rawResource The metadata
+     * @return The number of affected rows
+     */
+    @Override
+    public int save(MetadataType type, final RawResource rawResource) {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            val mapper = MetadataMapperFactory.createFor(type, session);
+            int affectedRow;
+            long mvcc = rawResource.getMvcc();
+            BindableColumn<String> metaKeyCol = (BindableColumn<String>) mapper.getSqlColumn(META_KEY_PROPERTIES_NAME);
+            BindableColumn<Long> mvccCol = (BindableColumn<Long>) mapper.getSqlColumn(MVCC_FIELD);
+            Optional<RawResource> record;
+            if (rawResource.getContent() != null) {
+                RawResource proxy = RawResourceCompressProxy.createProxy(rawResource);
+                record = mapper
+                        .selectOneWithColumnsAndRecordLock(
+                                c -> c.where(metaKeyCol, isEqualTo(proxy::getMetaKey)).and(mvccCol,
+                                        isEqualTo(proxy.getMvcc() - 1)),
+                                new BasicColumn[] { mapper.getSqlColumn(UUID_FIELD) });
+                if (record.isPresent()) {
+                    affectedRow = mapper.updateByPrimaryKeyAndMvcc(proxy);
                 } else {
-                    val result = jdbcTemplate.query(String.format(Locale.ROOT, SELECT_BY_KEY_SQL, table, path),
-                            RAW_RESOURCE_ROW_MAPPER);
-                    if (CollectionUtils.isEmpty(result)) {
-                        return null;
-                    }
-                    affectedRow = jdbcTemplate.update(String.format(Locale.ROOT, DELETE_SQL, table), path);
+                    assert isUT || mvcc == 0;
+                    affectedRow = mapper.insertOne(proxy);
                 }
-                if (affectedRow == 0) {
-                    throw new KylinException(FAILED_UPDATE_METADATA,
-                            String.format(Locale.ROOT, "Failed to update or insert path: %s, mvcc: %s", path, mvcc));
+            } else {
+                record = mapper.selectOneWithColumnsAndRecordLock(
+                        c -> c.where(metaKeyCol, isEqualTo(rawResource::getMetaKey)),
+                        new BasicColumn[] { mapper.getSqlColumn(UUID_FIELD) });
+                if (!record.isPresent()) {
+                    return -1;
                 }
-                return null;
+                affectedRow = mapper.delete(c -> c.where(metaKeyCol, isEqualTo(rawResource::getMetaKey)));
             }
 
-            @Override
-            public void onError() {
-                try {
-                    log.warn("write {} {} {} failed", path, mvcc,
-                            bs == null ? null : new String(bs.read(), Charset.defaultCharset()));
-                } catch (IOException ignore) {
-                }
+            if (affectedRow == 0) {
+                throw new KylinException(FAILED_UPDATE_METADATA, String.format(Locale.ROOT,
+                        "Failed to update or insert meta key: %s, mvcc: %s", rawResource.getMetaKey(), mvcc));
             }
-        });
-    }
-
-    public void checkEpochModified(String unitPath, long oriEpochId) {
-        if (StringUtils.isNotEmpty(unitPath)) {
-            if (unitPath.startsWith("_") && !unitPath.equalsIgnoreCase(GLOBAL_UNIT)) {
-                return;
-            }
-
-            if (oriEpochId < 0) {
-                return;
-            }
-
-            Epoch epoch = epochStore.getEpoch(unitPath);
-            if (epoch == null) {
-                throw new IllegalStateException("Epoch of key " + unitPath + " has been modified");
-            }
-            long epochId = epoch.getEpochId();
-            if (oriEpochId != epochId)
-                throw new IllegalStateException(String.format(Locale.ROOT,
-                        "EpochId for path %s dose not match, origin epoch id is %s, but epoch id in db is %s.",
-                        unitPath, oriEpochId, epochId));
+            return affectedRow;
         }
     }
 
     @Override
-    public void move(String srcPath, String destPath) throws Exception {
-        withTransaction(transactionManager, new JdbcUtil.Callback<Object>() {
-            @Override
-            public Object handle() {
-                jdbcTemplate.update(String.format(Locale.ROOT, UPDATE_KEY_SQL, table, destPath),
-                        System.currentTimeMillis(), srcPath);
+    public NavigableSet<String> listAll() {
+        throw new NotImplementedException("JdbcMetadataStore doesn't support listAll.");
+    }
+
+    @Override
+    public void dump(ResourceStore store) {
+        withTransaction(transactionManager, () -> {
+            val resources = store.listResourcesRecursively(MetadataType.ALL.name());
+            if (resources == null || resources.isEmpty()) {
+                log.info("there is no resources in rootPath ({}),please check the rootPath.", MetadataType.ALL.name());
                 return null;
             }
-
-            @Override
-            public void onError() {
-                log.warn("move {} to {} failed", srcPath, destPath);
+            for (String resPath : resources) {
+                val raw = store.getResource(resPath);
+                save(raw.getMetaType(), raw);
             }
-        });
-    }
-
-    private int insert(String sql, String path, ByteSource bs, long ts, long mvcc) {
-        return jdbcTemplate.update(sql, ps -> {
-            ps.setString(1, path);
-            try {
-                ps.setBytes(2, CompressionUtils.compress(bs.read()));
-            } catch (IOException e) {
-                log.error("exception: ", e);
-                throw new SQLException(e);
-            }
-            ps.setLong(3, ts);
-            ps.setLong(4, mvcc);
-        });
-    }
-
-    private int update(String sql, ByteSource bs, long ts, long mvcc, String path, long oldMvcc) {
-        return jdbcTemplate.update(sql, ps -> {
-            try {
-                ps.setBytes(1, CompressionUtils.compress(bs.read()));
-            } catch (IOException e) {
-                log.error("exception: ", e);
-                throw new SQLException(e);
-            }
-            ps.setLong(2, ts);
-            ps.setLong(3, mvcc);
-            ps.setString(4, path);
-            ps.setLong(5, oldMvcc);
-        });
-    }
-
-    @Override
-    public NavigableSet<String> list(String rootPath) {
-        val allPaths = withTransaction(transactionManager,
-                () -> jdbcTemplate.queryForList(String.format(Locale.ROOT, SELECT_ALL_KEY_SQL, table), String.class));
-        return Sets.newTreeSet(allPaths);
-    }
-
-    @Override
-    public RawResource load(String path) throws IOException {
-        return withTransaction(transactionManager, () -> jdbcTemplate
-                .queryForObject(String.format(Locale.ROOT, SELECT_BY_KEY_SQL, table, path), RAW_RESOURCE_ROW_MAPPER));
-    }
-
-    @Override
-    public void batchUpdate(UnitMessages unitMessages, boolean skipAuditLog, String unitPath, long epochId)
-            throws Exception {
-        if (CollectionUtils.isEmpty(unitMessages.getMessages())) {
-            return;
-        }
-        withTransaction(transactionManager, () -> {
-            super.batchUpdate(unitMessages, skipAuditLog, unitPath, epochId);
-            return null;
-        });
-    }
-
-    @Override
-    public void dump(ResourceStore store) throws Exception {
-        withTransaction(transactionManager, () -> {
-            super.dump(store);
             return null;
         });
     }
@@ -276,88 +227,51 @@ public class JdbcMetadataStore extends MetadataStore {
         });
     }
 
-    private void restoreProject(MemoryMetaData data, String project) {
-        val rowMapper = new RawResourceRowMapper();
-        var prevKey = "/" + project + "/";
-        val endKey = "/" + project + "/~";
-        val resources = jdbcTemplate.query(String.format(Locale.ROOT, SELECT_BY_RANGE_SQL, table, prevKey, endKey),
-                rowMapper);
-
-        for (RawResource resource : resources) {
-            data.put(resource.getResPath(), new VersionedRawResource(resource));
-        }
-    }
-
-    private void createIfNotExist() throws Exception {
-        if (isTableExists(jdbcTemplate.getDataSource().getConnection(), table)) {
-            return;
-        }
+    /**
+     * @throws Exception
+     */
+    @VisibleForTesting
+    public void createIfNotExist(String table) throws Exception {
         String fileName = "metadata-jdbc-default.properties";
         if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().equals("org.postgresql.Driver")) {
             fileName = "metadata-jdbc-postgresql.properties";
         } else if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName()
                 .equals("com.mysql.jdbc.Driver")) {
             fileName = "metadata-jdbc-mysql.properties";
+        } else if (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().equals("org.h2.Driver")) {
+            fileName = "metadata-jdbc-h2.properties";
         }
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
         Properties properties = new Properties();
         properties.load(is);
         var sql = properties.getProperty("create.metadata.store.table");
-        jdbcTemplate.execute(String.format(Locale.ROOT, sql, table, META_TABLE_KEY, META_TABLE_CONTENT, META_TABLE_TS,
-                META_TABLE_MVCC));
-        log.info("Succeed to create table: {}", table);
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        sql = sql.replace("%s_", table + "_");
+        populator.addScript(new InMemoryResource(sql));
+        populator.setContinueOnError(false);
+        DatabasePopulatorUtils.execute(populator, jdbcTemplate.getDataSource());
+        log.info("Succeed to create table. Prefix is: {}", table + "_");
     }
 
     @Override
     public MemoryMetaData reloadAll() {
-        MemoryMetaData data = MemoryMetaData.createEmpty();
+        val data = MemoryMetaData.createEmpty();
         return withTransaction(transactionManager, () -> {
-            log.debug("start reloadAll");
-            //for lock meta store table
-            jdbcTemplate.queryForObject(String.format(Locale.ROOT, "select max(%s) from %s", META_TABLE_KEY, table),
-                    String.class);
+            log.info("Start jdbc reloadAll");
+            data.getData().keySet().parallelStream().forEach(type -> {
+                // _REC is only appeared in the file based metadata store, skip it
+                if (type != MetadataType.TMP_REC) {
+                    // The needLock parameter set to false, because we use the mysql snapshot read
+                    val rawResourceMap = data.getData().get(type);
+                    get(type, new RawResourceFilter(), false, true)
+                            .forEach(res -> rawResourceMap.put(res.getMetaKey(), new VersionedRawResource(res)));
+                }
+            });
 
-            restoreProject(data, "_global");
-            val projects = listProjects(data);
-            projects.forEach(project -> restoreProject(data, project));
-
-            loadUUIDQuietly(data);
             long offset = getAuditLogStore().getMaxId();
-
-            log.debug("end reloadAll offset is {}", offset);
+            log.info("end reloadAll offset is {}", offset);
             data.setOffset(offset);
             return data;
-        }, TransactionDefinition.ISOLATION_SERIALIZABLE);
-
-    }
-
-    private void loadUUIDQuietly(MemoryMetaData data) {
-        try {
-            val uuidRaw = jdbcTemplate.queryForObject(
-                    String.format(Locale.ROOT, SELECT_BY_KEY_SQL, table, ResourceStore.METASTORE_UUID_TAG),
-                    RAW_RESOURCE_ROW_MAPPER);
-            data.put(uuidRaw.getResPath(), new VersionedRawResource(uuidRaw));
-        } catch (PersistException | EmptyResultDataAccessException e) {
-            if (e instanceof EmptyResultDataAccessException || e.getCause() instanceof EmptyResultDataAccessException) {
-                log.info("Cannot find /UUID in metastore");
-            } else {
-                throw e;
-            }
-        }
-
-    }
-
-    private Set<String> listProjects(MemoryMetaData data) {
-        Set<String> projects = Sets.newTreeSet();
-
-        data.getData().keySet().forEach(path -> {
-            if (path.startsWith("/_global/project/")) {
-                val words = path.split("/");
-                val project = words[words.length - 1].replace(".json", "");
-                projects.add(project);
-            }
         });
-
-        return projects;
     }
 }

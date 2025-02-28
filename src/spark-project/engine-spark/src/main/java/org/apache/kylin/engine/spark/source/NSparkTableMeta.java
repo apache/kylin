@@ -19,39 +19,27 @@ package org.apache.kylin.engine.spark.source;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Builder
+@ToString
 public class NSparkTableMeta {
+
+    @AllArgsConstructor
+    @Getter
+    @ToString
     public static class SparkTableColumnMeta {
         String name;
         String dataType;
         String comment;
-
-        public SparkTableColumnMeta(String name, String dataType, String comment) {
-            this.name = name;
-            this.dataType = dataType;
-            this.comment = comment;
-        }
-
-        @Override
-        public String toString() {
-            return "SparkTableColumnMeta{" + "name='" + name + '\'' + ", dataType='" + dataType + '\'' + ", comment='"
-                    + comment + '\'' + '}';
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getDataType() {
-            return dataType;
-        }
-
-        public String getComment() {
-            return comment;
-        }
     }
 
     String tableName;
-    String sdLocation;//sd is short for storage descriptor
+    String sdLocation; // sd is short for storage descriptor
     String sdInputFormat;
     String sdOutputFormat;
     String owner;
@@ -62,6 +50,7 @@ public class NSparkTableMeta {
     long fileSize;
     long fileNum;
     boolean isNative;
+    @Getter
     List<SparkTableColumnMeta> allColumns;
     List<SparkTableColumnMeta> partitionColumns;
     boolean isTransactional;
@@ -73,46 +62,6 @@ public class NSparkTableMeta {
 
     String tableComment;
 
-    public List<SparkTableColumnMeta> getAllColumns() {
-        return allColumns;
-    }
-
-    public NSparkTableMeta(String tableName, String sdLocation, String sdInputFormat, String sdOutputFormat,
-            String owner, String provider, String tableType, String createTime, String lastAccessTime, long fileSize,
-            long fileNum, boolean isNative, List<SparkTableColumnMeta> allColumns,
-            List<SparkTableColumnMeta> partitionColumns, boolean isTransactional, boolean isRangePartition,
-            String roleArn, String endpoint, String region, String tableComment) {
-        this.tableName = tableName;
-        this.sdLocation = sdLocation;
-        this.sdInputFormat = sdInputFormat;
-        this.sdOutputFormat = sdOutputFormat;
-        this.owner = owner;
-        this.provider = provider;
-        this.tableType = tableType;
-        this.createTime = createTime;
-        this.lastAccessTime = lastAccessTime;
-        this.fileSize = fileSize;
-        this.fileNum = fileNum;
-        this.isNative = isNative;
-        this.allColumns = allColumns;
-        this.partitionColumns = partitionColumns;
-        this.isTransactional = isTransactional;
-        this.isRangePartition = isRangePartition;
-        this.roleArn = roleArn;
-        this.endpoint = endpoint;
-        this.region = region;
-        this.tableComment = tableComment;
-    }
-
-    @Override
-    public String toString() {
-        return "SparkTableMeta{" + "tableName='" + tableName + '\'' + ", sdLocation='" + sdLocation + '\''
-                + ", sdInputFormat='" + sdInputFormat + '\'' + ", sdOutputFormat='" + sdOutputFormat + '\''
-                + ", owner='" + owner + ", provider='" + provider + '\'' + ", tableType='" + tableType
-                + ", createTime='" + createTime + '\'' + ", lastAccessTime=" + lastAccessTime + ", fileSize=" + fileSize
-                + ", fileNum=" + fileNum + ", isNative=" + isNative + ", allColumns=" + allColumns
-                + ", partitionColumns=" + partitionColumns + ", isTransactional=" + isTransactional
-
-                + ", isRangePartition=" + isRangePartition + ", roleArn=" + roleArn + ", endpoint=" + endpoint + ", tableComment=" + tableComment + '}';
-    }
+    @Setter
+    int sourceType;
 }

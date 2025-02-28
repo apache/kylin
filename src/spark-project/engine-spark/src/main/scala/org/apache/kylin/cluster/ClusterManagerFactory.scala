@@ -18,10 +18,11 @@
 
 package org.apache.kylin.cluster
 
-import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
-import org.apache.kylin.guava30.shaded.common.util.concurrent.SimpleTimeLimiter
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.guava30.shaded.common.util.concurrent.SimpleTimeLimiter
 import org.apache.spark.util.KylinReflectUtils
+
+import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
 
 object ClusterManagerFactory {
 

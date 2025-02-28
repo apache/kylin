@@ -43,6 +43,7 @@ public class QueryHistoryTable extends SqlTable {
     public final SqlColumn<String> sql = column("sql_text", JDBCType.VARCHAR);
     public final SqlColumn<String> sqlPattern = column("sql_pattern", JDBCType.VARCHAR);
     public final SqlColumn<Long> queryTime = column("query_time", JDBCType.BIGINT);
+    public final SqlColumn<String> month_h2 = column("`month`", JDBCType.VARCHAR);
     public final SqlColumn<String> month = column("month", JDBCType.VARCHAR);
     public final SqlColumn<Long> queryFirstDayOfMonth = column("query_first_day_of_month", JDBCType.BIGINT);
     public final SqlColumn<Long> queryFirstDayOfWeek = column("query_first_day_of_week", JDBCType.BIGINT);

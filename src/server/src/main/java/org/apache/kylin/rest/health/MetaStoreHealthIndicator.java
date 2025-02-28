@@ -24,29 +24,29 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-
 @Component
+@ConditionalOnEnabledHealthIndicator("metaStore")
 public class MetaStoreHealthIndicator implements HealthIndicator, ApplicationListener<AfterMetadataReadyEvent> {
     private static final Logger logger = LoggerFactory.getLogger(MetaStoreHealthIndicator.class);
 
     private static final String UNIT_NAME = "_health";
-    private static final String HEALTH_ROOT_PATH = "/" + UNIT_NAME;
-    private static final String UUID_PATH = "/UUID";
     private static final int MAX_RETRY = 3;
     private static final ScheduledExecutorService META_STORE_HEALTH_EXECUTOR = Executors.newScheduledThreadPool(1,
             new NamedThreadFactory("MetaStoreHealthChecker"));
@@ -117,17 +117,17 @@ public class MetaStoreHealthIndicator implements HealthIndicator, ApplicationLis
                     }
 
                     String uuid = RandomUtil.randomUUIDStr();
-                    String resourcePath = HEALTH_ROOT_PATH + "/" + uuid;
+                    String resourcePath = MetadataType.mergeKeyWithType(uuid, MetadataType.SYSTEM);
                     long start;
                     String op;
 
+                    UnitOfWork.get().getCopyForWriteItems().add(resourcePath);
                     // test write
                     op = "Writing metadata (40 bytes)";
                     logger.trace(op);
                     start = System.currentTimeMillis();
                     try {
-
-                        store.checkAndPutResource(resourcePath, new StringEntity(uuid), StringEntity.serializer);
+                        store.checkAndPutResource(resourcePath, new StringEntity("health_check", uuid), StringEntity.serializer);
                         checkTime(start, op);
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to write metadata", e);
@@ -181,7 +181,8 @@ public class MetaStoreHealthIndicator implements HealthIndicator, ApplicationLis
                     logger.trace(op);
                     start = System.currentTimeMillis();
                     try {
-                        StringEntity value = store.getResource(UUID_PATH, StringEntity.serializer);
+                        StringEntity value = store.getResource(ResourceStore.METASTORE_UUID_TAG,
+                                StringEntity.serializer);
                         checkTime(start, op);
                         if (Objects.isNull(value)) {
                             throw new RuntimeException("Metadata store failed to read a resource.");

@@ -46,7 +46,9 @@ import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.metadata.favorite.AsyncTaskMapper;
 import org.apache.kylin.metadata.favorite.FavoriteRuleMapper;
+import org.apache.kylin.metadata.favorite.ModelFavoriteRuleMapper;
 import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetMapper;
+import org.apache.kylin.metadata.job.JobTokenMapper;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -56,17 +58,23 @@ public class MetadataStoreUtil {
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     public static final String CREATE_OFFSET_TABLE = "create.queryhistoryoffset.store.table";
     public static final String CREATE_FAVORITE_RULE_TABLE = "create.favoriterule.store.table";
+    public static final String CREATE_MODEL_FAVORITE_RULE_TABLE = "create.model.favoriterule.store.table";
     public static final String CREATE_ASYNC_TASK_TABLE = "create.asynctask.store.table";
+    public static final String CREATE_REC_TABLE = "create.job-token.table";
 
     private static final Map<TableType, String> SQL_TEMPLATE_MAP = new EnumMap<>(TableType.class);
     private static final Map<TableType, Class<?>> TABLE_MAPPER_MAP = new EnumMap<>(TableType.class);
     static {
         SQL_TEMPLATE_MAP.put(TableType.FAVORITE_RULE, CREATE_FAVORITE_RULE_TABLE);
+        SQL_TEMPLATE_MAP.put(TableType.MODEL_FAVORITE_RULE, CREATE_MODEL_FAVORITE_RULE_TABLE);
         SQL_TEMPLATE_MAP.put(TableType.QUERY_HISTORY_OFFSET, CREATE_OFFSET_TABLE);
         SQL_TEMPLATE_MAP.put(TableType.ASYNC_TASK, CREATE_ASYNC_TASK_TABLE);
+        SQL_TEMPLATE_MAP.put(TableType.JOB_TOKEN, CREATE_REC_TABLE);
         TABLE_MAPPER_MAP.put(TableType.FAVORITE_RULE, FavoriteRuleMapper.class);
+        TABLE_MAPPER_MAP.put(TableType.MODEL_FAVORITE_RULE, ModelFavoriteRuleMapper.class);
         TABLE_MAPPER_MAP.put(TableType.QUERY_HISTORY_OFFSET, QueryHistoryIdOffsetMapper.class);
         TABLE_MAPPER_MAP.put(TableType.ASYNC_TASK, AsyncTaskMapper.class);
+        TABLE_MAPPER_MAP.put(TableType.JOB_TOKEN, JobTokenMapper.class);
     }
 
     public static SqlSessionFactory getSqlSessionFactory(DataSource dataSource, String tableName, TableType type) {
@@ -110,6 +118,6 @@ public class MetadataStoreUtil {
     }
 
     public enum TableType {
-        FAVORITE_RULE, QUERY_HISTORY_OFFSET, ASYNC_TASK
+        FAVORITE_RULE, MODEL_FAVORITE_RULE, QUERY_HISTORY_OFFSET, ASYNC_TASK, JOB_TOKEN
     }
 }

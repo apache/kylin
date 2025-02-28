@@ -17,7 +17,6 @@
  */
 package org.apache.kylin.newten;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -65,8 +64,10 @@ public class SpecialColumnNamesTest extends NLocalWithSparkSessionTest {
         SparderEnv.setSparkSession(ss);
     }
 
+    @Override
     @Before
-    public void setup() throws IOException {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         this.createTestMetadata("src/test/resources/ut_meta/special_column_names");
 
@@ -74,8 +75,14 @@ public class SpecialColumnNamesTest extends NLocalWithSparkSessionTest {
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/special_column_names" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }

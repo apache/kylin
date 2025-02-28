@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.cache.fs;
 
-import alluxio.client.file.FileInStream;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import alluxio.client.file.FileInStream;
 
 public final class MockFileInStream extends FileInStream {
     private final ByteArrayInputStream mStream;
@@ -73,8 +73,7 @@ public final class MockFileInStream extends FileInStream {
     }
 
     @Override
-    public int positionedRead(long position, byte[] buffer, int offset, int length)
-            throws IOException {
+    public int positionedRead(long position, byte[] buffer, int offset, int length) throws IOException {
         throw new UnsupportedOperationException("positionedRead not implemented for mock FileInStream");
     }
 

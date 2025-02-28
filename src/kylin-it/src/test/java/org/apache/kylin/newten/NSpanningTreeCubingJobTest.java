@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
@@ -35,20 +35,27 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 public class NSpanningTreeCubingJobTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() {
-        this.createTestMetadata("src/test/resources/ut_meta/spanning_tree_build");
+    public void setUp() throws Exception {
+        super.setUp();
         ss.sparkContext().setLogLevel("ERROR");
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("kylin.engine.spark.cache-threshold", "2");
+
+        this.createTestMetadata("src/test/resources/ut_meta/spanning_tree_build");
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/spanning_tree_build" };
+    }
+
+    @Override
     @After
-    public void after() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 

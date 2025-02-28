@@ -17,11 +17,11 @@
  */
 package org.apache.kylin.engine.spark.builder
 
-import java.util
-
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.engine.spark.job.{CuboidAggregator, UdfManager}
 import org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList
 import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
@@ -29,12 +29,14 @@ import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager.NIndexPlanUpdater
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.NDataModel.Measure
-import org.apache.kylin.metadata.model.{FunctionDesc, ManagementType, NDataModel, NDataModelManager, ParameterDesc, SegmentRange, TblColRef}
+import org.apache.kylin.metadata.model._
 import org.apache.spark.dict.{NGlobalDictBuilderAssist, NGlobalDictionaryV2}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.{Dataset, Row}
 import org.junit.Assert
 
+import java.util
+import java.util.Collections
 import scala.collection.JavaConverters._
 
 // scalastyle:off
@@ -57,8 +59,13 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     val df: NDataflow = dsMgr.getDataflow(CUBE_ID1)
     var indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(getTestConfig, DEFAULT_PROJECT)
-    val dfCopy = df.copy()
-    checkFlatTableEncoding(dfCopy.getUuid, dfCopy.getLastSegment, 0)
+    val seg = df.getLastSegment
+    dsMgr.updateDataflowDetailsLayouts(seg, new util.ArrayList[java.lang.Long](seg.getLayoutIds), Collections.emptyList())
+    checkFlatTableEncoding(df.getUuid, dsMgr.getDataflow(CUBE_ID1).getLastSegment, 1)
+    dsMgr.updateDataflowDetailsLayouts(seg, Collections.emptyList(), new util.ArrayList[java.lang.Long](seg.getLayoutIds))
+    dsMgr.updateDataflow(df.getUuid, (copyForWrite: NDataflow) => {
+      copyForWrite.getLastSegment.setDictReady(false)
+    })
 
     var modelMgr: NDataModelManager = NDataModelManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     var model: NDataModel = modelMgr.getDataModelDesc(MODEL_ID)
@@ -87,7 +94,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
       }
     })
 
-    checkFlatTableEncoding(dfCopy.getUuid, dfCopy.getLastSegment, 1)
+    checkFlatTableEncoding(df.getUuid, dsMgr.getDataflow(CUBE_ID1).getLastSegment, 1)
   }
 
   test("[INDEX_BUILD] - Check if the number of columns in the encode matches the number of columns in agg") {
@@ -125,22 +132,24 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
 
   test("[INC_BUILD] - check df chooser and cuboid agg") {
     UdfManager.create(spark)
-    val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
     Assert.assertTrue(getTestConfig.getHdfsWorkingDirectory.startsWith("file:"))
-    val df: NDataflow = dsMgr.getDataflow(CUBE_ID2)
-    val dfCopy: NDataflow = df.copy()
-    // cleanup all segments first
-    val update = new NDataflowUpdate(dfCopy.getUuid)
-    for (seg <- dfCopy.getSegments.asScala) {
-      update.setToRemoveSegs(seg)
-    }
-    dsMgr.updateDataflow(update)
-    val seg1 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
-    checkCuboidAgg(checkFlatTableEncoding(dfCopy.getUuid, seg1, 1), seg1)
-    val seg2 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(1356019200000L, 1376019200000L))
-    checkCuboidAgg(checkFlatTableEncoding(dfCopy.getUuid, seg2, 1), seg2)
-    val seg3 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(1376019200000L, 1496019200000L))
-    checkCuboidAgg(checkFlatTableEncoding(dfCopy.getUuid, seg3, 1), seg3)
+    val segments = UnitOfWork.doInTransactionWithRetry(() => {
+      val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
+      val df: NDataflow = dsMgr.getDataflow(CUBE_ID2)
+      var dfCopy: NDataflow = df.copy()
+      // cleanup all segments first
+      val update = new NDataflowUpdate(dfCopy.getUuid)
+      update.setToRemoveSegsWithArray(dfCopy.getSegments.asScala.toArray)
+      dfCopy = dsMgr.updateDataflow(update)
+      val seg1 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
+      val seg2 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(1356019200000L, 1376019200000L))
+      val seg3 = dsMgr.appendSegment(dfCopy, new SegmentRange.TimePartitionedSegmentRange(1376019200000L, 1496019200000L))
+      util.Arrays.asList(seg1, seg2, seg3)
+    }, DEFAULT_PROJECT)
+
+    checkCuboidAgg(checkFlatTableEncoding(CUBE_ID2, segments.get(0), 1), segments.get(0))
+    checkCuboidAgg(checkFlatTableEncoding(CUBE_ID2, segments.get(1), 1), segments.get(1))
+    checkCuboidAgg(checkFlatTableEncoding(CUBE_ID2, segments.get(2), 1), segments.get(2))
   }
 
   // Check that the number of columns generated by flattable is equal to the number of dims plus the number of encodings required.
@@ -153,7 +162,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
 
     val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan, seg.getSegRange, true)
     val encodeColSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(seg, nSpanningTree.getAllIndexEntities)
-    val flatTable = new CreateFlatTable(flatTableDesc, seg, nSpanningTree, spark, null)
+    val flatTable = new CreateFlatTable(flatTableDesc, seg, nSpanningTree, spark, null, new ParamPropagation)
     val afterJoin = flatTable.generateDataset(true)
     dictColSet.asScala.foreach(
       col => {

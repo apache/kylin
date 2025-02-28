@@ -27,6 +27,6 @@ public class KafkaCondition implements Condition {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        return config.streamingEnabled();
+        return config.isStreamingEnabled();
     }
 }

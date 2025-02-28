@@ -1,0 +1,72 @@
+{
+  "uuid" : "d96ac006-2da8-45d8-8a81-a82b42ee13a2",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "description" : "",
+  "index_plan_override_encodings" : {
+    "0" : {
+      "name" : "date"
+    },
+    "1" : {
+      "name" : "integer:4"
+    },
+    "2" : {
+      "name" : "integer:8"
+    },
+    "3" : {
+      "name" : "dict"
+    },
+    "4" : {
+      "name" : "integer:4"
+    },
+    "5" : {
+      "name" : "integer:8"
+    },
+    "6" : {
+      "name" : "dict"
+    },
+    "7" : {
+      "name" : "integer:4"
+    },
+    "8" : {
+      "name" : "integer:2"
+    },
+    "9" : {
+      "name" : "dict"
+    },
+    "10" : {
+      "name" : "integer:8"
+    }
+  },
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ 0, 3 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 1,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 0, 3, 100000, 100001, 100002 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 0,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ]
+  } ],
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 10000,
+  "next_table_index_id" : 20000000000,
+  "project" : "index_missing_measure"
+}

@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.view;
 import java.io.Serializable;
 import java.util.Locale;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -65,7 +65,7 @@ public class LogicalView extends RootPersistentEntity implements Serializable {
   }
 
   @Override
-  public String getResourcePath() {
-    return ResourceStore.VIEW_ROOT + "/" + resourceName();
+  public MetadataType resourceType() {
+    return MetadataType.LOGICAL_VIEW;
   }
 }

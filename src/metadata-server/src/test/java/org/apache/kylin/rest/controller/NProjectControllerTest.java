@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -365,7 +366,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testUpdateProjectGeneralInfo() throws Exception {
         val request = new ProjectGeneralInfoRequest();
-        request.setSemiAutoMode(true);
+        request.setIsSemiAutoMode(true);
         Mockito.doNothing().when(projectService).updateProjectGeneralInfo("default", request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/project_general_info", "default")
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
@@ -386,6 +387,84 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Assert.assertTrue(mvcResult.getResponse().getContentAsString().contains("\"semi_automatic_mode\":false"));
         Mockito.verify(nProjectController).getProjectConfig("default");
+    }
+
+    @Test
+    public void testUpdateProjectConfigOpenApi() throws Exception {
+        {
+            Map<String, String> map = new HashMap<>();
+            map.put("a", "b");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/config", "default")
+                    .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(map))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+
+            Mockito.verify(nProjectController).updateProjectConfig("default", map);
+
+            map.put("kylin.source.default", "1");
+
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/config", "default")
+                    .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(map))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.doThrow(KylinException.class).when(nProjectController).updateProjectConfig("default", map);
+        }
+        {
+            Map<String, String> map = new HashMap<>();
+            getTestConfig().setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
+            map.put("kylin.job.retry", "1");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/config", "default")
+                    .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(map))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.doThrow(KylinException.class).when(nProjectController).updateProjectConfig("default", map);
+        }
+        {
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/config", "default")
+                    .contentType(MediaType.APPLICATION_JSON).content("{}")
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.doThrow(KylinException.class).when(nProjectController).updateProjectConfig("default",
+                    new HashMap<>());
+        }
+    }
+
+    @Test
+    public void testDeleteProjectConfigOpenApi() throws Exception {
+        {
+            mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{project}/config", "default")
+                    .param("config_name", "a").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+
+            Mockito.verify(nProjectController).deleteProjectConfig("default", "a");
+        }
+        {
+            mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{project}/config", "default")
+                    .param("config_name", "kylin.source.default")
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+            Mockito.doThrow(KylinException.class).when(nProjectController).deleteProjectConfig("default",
+                    "kylin.source.default");
+        }
+        {
+            getTestConfig().setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
+            mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{project}/config", "default")
+                    .param("config_name", "kylin.job.retry")
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+            Mockito.doThrow(KylinException.class).when(nProjectController).deleteProjectConfig("default",
+                    "kylin.job.retry");
+        }
+        {
+            getTestConfig().setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
+            mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{project}/config", "default")
+                    .param("config_name", "").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+            Mockito.doThrow(KylinException.class).when(nProjectController).deleteProjectConfig("default", "");
+        }
     }
 
     @Test

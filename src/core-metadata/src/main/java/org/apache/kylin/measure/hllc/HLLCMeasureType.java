@@ -21,6 +21,7 @@ package org.apache.kylin.measure.hllc;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -30,8 +31,6 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class HLLCMeasureType extends MeasureType<HLLCounter> {
     private static final long serialVersionUID = 1L;
@@ -136,8 +135,7 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(FUNC_COUNT_DISTINCT,
-            HLLDistinctCountAggFunc.class);
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(FUNC_COUNT_DISTINCT, HLLDistinctCountAggFunc.class);
 
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {

@@ -37,6 +37,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -70,9 +72,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -130,7 +129,7 @@ public class OpenAccessController extends NBasicController {
         List<AccessRequest> accessRequests = convertBatchPermissionRequestToAccessRequests(ae, permissionRequest);
         accessService.checkAccessRequestList(accessRequests);
 
-        accessService.remoteBatchGrantAccess(accessRequests, ae);
+        accessService.batchGrantAccess(accessRequests, ae);
         aclTCRService.updateAclTCR(projectUuid, accessRequests);
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -154,7 +153,7 @@ public class OpenAccessController extends NBasicController {
 
         String projectUuid = getProjectUuid(permissionRequest.getProject());
         AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
-        accessService.remoteGrantAccess(ae, accessRequest.getSid(), accessRequest.isPrincipal(),
+        accessService.grantAccess(ae, accessRequest.getSid(), accessRequest.isPrincipal(),
                 accessRequest.getPermission());
 
         aclTCRService.updateAclTCR(projectUuid, Lists.newArrayList(accessRequest));
@@ -178,7 +177,7 @@ public class OpenAccessController extends NBasicController {
             accessService.checkGlobalAdmin(name);
         }
         AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
-        accessService.remoteRevokeAccess(ae, name, principal);
+        accessService.revokeAccess(ae, name, principal);
         aclTCRService.revokeAclTCR(projectUuid, name, principal);
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -267,7 +266,8 @@ public class OpenAccessController extends NBasicController {
     }
 
     /**
-     * This method will not check project, user must prepare illegal project name which the same as ProjectInstance#getName
+     * This method will not check project, user must prepare illegal project name
+     * which the same as ProjectInstance#getName
      */
     private String getProjectUuid(String project) {
         NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -333,7 +333,7 @@ public class OpenAccessController extends NBasicController {
             }
             extPermissionList = CollectionUtils.isEmpty(aclResponse.getExtPermissions()) ? Collections.EMPTY_LIST
                     : aclResponse.getExtPermissions().stream().map(ExternalAclProvider::convertToExternalPermission)
-                    .collect(Collectors.toList());
+                            .collect(Collectors.toList());
             String externalPermission = ExternalAclProvider.convertToExternalPermission(aclResponse.getPermission());
             responseList
                     .add(new ProjectPermissionResponse(type, userOrGroupName, externalPermission, extPermissionList));

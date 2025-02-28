@@ -37,25 +37,29 @@ import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.query.util.SqlFunctionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = false)
 @Data
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class ComputedColumnDesc implements Serializable {
+public class ComputedColumnDesc extends RootPersistentEntity implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(ComputedColumnDesc.class);
 
     private static final String CC_PREFIX = "_CC_";
@@ -73,15 +77,16 @@ public class ComputedColumnDesc implements Serializable {
     @JsonProperty
     private String expression;
     @JsonProperty
+    @EqualsAndHashCode.Exclude
     private String innerExpression; // QueryUtil massaged expression
     @JsonProperty
     private String datatype;
     @JsonProperty
     @EqualsAndHashCode.Exclude
     private String comment;
-    @JsonProperty("rec_uuid")
+    @JsonProperty
     @EqualsAndHashCode.Exclude
-    private String uuid;
+    private String expressionMD5; // the md5 of subJoinGraph & ccRexStr
 
     public void init(NDataModel model, String rootFactTableName) {
         Map<String, TableRef> aliasMap = model.getAliasMap();
@@ -130,6 +135,11 @@ public class ComputedColumnDesc implements Serializable {
         }
     }
 
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.COMPUTE_COLUMN;
+    }
+
     @VisibleForTesting
     public static String getComputedColumnInternalNamePrefix() {
         return CC_PREFIX;
@@ -139,10 +149,6 @@ public class ComputedColumnDesc implements Serializable {
         return ccNameWithPrefix.startsWith(ComputedColumnDesc.CC_PREFIX)
                 ? ccNameWithPrefix.replaceFirst(ComputedColumnDesc.CC_PREFIX, "")
                 : ccNameWithPrefix;
-    }
-
-    public String getInternalCcName() {
-        return ComputedColumnDesc.CC_PREFIX + columnName;
     }
 
     public String getIdentityCcName() {
@@ -175,7 +181,8 @@ public class ComputedColumnDesc implements Serializable {
             }
 
             @Override
-            public Object visit(SqlCall call) {
+            public Object visit(SqlCall unresolvedCall) {
+                SqlCall call = SqlFunctionUtil.resolveCallIfNeed(unresolvedCall);
                 if (call instanceof SqlBasicCall) {
                     if (call.getOperator() instanceof SqlAsOperator) {
                         throw new IllegalArgumentException("Computed column expression should not contain keyword AS");
@@ -215,7 +222,7 @@ public class ComputedColumnDesc implements Serializable {
     }
 
     public String getUniqueContent() {
-        return String.format("%s_%s", innerExpression, tableIdentity);
+        return String.format(Locale.ROOT, "%s_%s", innerExpression, tableIdentity);
     }
 
     public boolean isAutoCC() {

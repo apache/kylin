@@ -7,6 +7,7 @@
       <div class="ksd-fright">
         <div class="ky-no-br-space model-list-header">
           <el-dropdown
+            v-guide.addModelBtn
             split-button
             class="ksd-fleft"
             type="primary"
@@ -17,6 +18,11 @@
             v-if="datasourceActions.includes('modelActions')"
             @click="showAddModelDialog">{{$t('kylinLang.common.new')}}
             <el-dropdown-menu slot="dropdown" class="model-actions-dropdown">
+              <el-dropdown-item
+                v-if="$store.state.project.isSemiAutomatic && datasourceActions.includes('modelActions')"
+                @click="showGenerateModelDialog">
+                {{$t('kylinLang.model.generateModel')}}
+              </el-dropdown-item>
               <el-dropdown-item
                 v-if="metadataActions.includes('executeModelMetadata')"
                 @click="handleImportModels">
@@ -83,7 +89,16 @@
           </el-input>
         </div>
       </div>
+      <p v-if="$store.state.config.platform === 'iframe'" class="ksd-mb-10">
+        <el-alert
+          :title="$t('guideToAcceptRecom')"
+          type="info"
+          show-icon
+          :closable="false">
+        </el-alert>
+      </p>
       <el-table class="model_list_table"
+        v-guide.scrollModelTable
         v-scroll-shadow
         :data="modelArray"
         :empty-text="emptyText"
@@ -107,8 +122,22 @@
           <template slot-scope="scope">
             <model-title-description :modelData="scope.row" @openSegment="openComplementSegment" @autoFix="autoFix" source="modelList" />
             <!-- 工具栏 -->
-            <model-actions :currentModel="scope.row" @loadModelsList="loadModelsList"/>
+            <model-actions :currentModel="scope.row" @loadModelsList="loadModelsList" @jump:recommendation="jumpToRecommendation"/>
 
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          width="150px"
+          sortable="custom"
+          prop="recommendations_count"
+          :label="$t('recommendationsTiTle')"
+          v-if="$store.state.project.isSemiAutomatic && (datasourceActions.includes('accelerationActions') || isAdvancedOperatorUser())">
+          <template slot-scope="scope">
+            <template v-if="!(scope.row.status !== 'BROKEN' && ('visible' in scope.row && scope.row.visible)) || scope.row.model_type === 'HYBRID'">-</template>
+            <el-tooltip effect="dark" :content="$t('recommendationsTiTle')" placement="bottom" v-else>
+              <el-button type="primary" class="rec-btn" text icon="el-ksd-icon-wizard_22" @click.stop="jumpToRecommendation(scope.row)">{{scope.row.recommendations_count}}</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column :label="$t('kylinLang.common.fact')" width="180">
@@ -136,6 +165,7 @@
           prop="model_type"
           show-overflow-tooltip
           width="150px"
+          v-if="$store.state.config.platform !== 'iframe'"
           :label="$t('modelType')">
           <template slot-scope="scope">
             <span>{{$t(scope.row.model_type)}}</span>
@@ -147,7 +177,7 @@
           align="right"
           sortable="custom"
           show-overflow-tooltip
-          :info-tooltip="$t('usageTip', {mode: 'model'})"
+          :info-tooltip="$t('usageTip', {mode: $t('model')})"
           :label="$t('usage')">
         </el-table-column>
         <el-table-column
@@ -209,6 +239,8 @@
     <ModelCloneModal/>
     <!-- 模型添加 -->
     <ModelAddModal/>
+    <!-- 推荐模型 -->
+    <UploadSqlModel v-on:reloadModelList="loadModelsList"/>
     <!-- 选择去构建的segment -->
     <ConfirmSegment v-on:reloadModelAndSegment="reloadModelAndSegment"/>
   </div>
@@ -221,8 +253,8 @@ import dayjs from 'dayjs'
 import { NamedRegex, pageRefTags, pageCount } from '../../../../config'
 import { ModelStatusTagType } from '../../../../config/model.js'
 import locales from './locales'
-import { handleError, kylinMessage, jumpToJobs } from 'util/business'
-import { sliceNumber, transToServerGmtTime } from 'util'
+import { handleError, kylinMessage, jumpToJobs } from '../../../../util/business'
+import { handleSuccessAsync, sliceNumber, transToServerGmtTime } from '../../../../util'
 import TableIndex from '../TableIndex/index.vue'
 import ModelSegment from './ModelSegment/index.vue'
 import SegmentTabs from './ModelSegment/SegmentTabs.vue'
@@ -236,6 +268,7 @@ import ConfirmSegment from './ConfirmSegment/ConfirmSegment.vue'
 import ModelPartition from './ModelPartition/index.vue'
 import ModelJson from './ModelJson/modelJson.vue'
 import ModelSql from './ModelSql/ModelSql.vue'
+import UploadSqlModel from '../../../common/UploadSql/UploadSql.vue'
 import { mockSQL } from './mock'
 import DropdownFilter from '../../../common/DropdownFilter/DropdownFilter.vue'
 import ModelOverview from './ModelOverview/ModelOverview.vue'
@@ -308,6 +341,9 @@ function getDefaultFilters (that) {
       streamingEnabled: state => state.system.streamingEnabled
     })
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   methods: {
     ...mapActions({
       loadModels: 'LOAD_MODEL_LIST',
@@ -317,6 +353,7 @@ function getDefaultFilters (that) {
       fetchSegments: 'FETCH_SEGMENTS',
       downloadModelsMetadata: 'DOWNLOAD_MODELS_METADATA',
       downloadModelsMetadataBlob: 'DOWNLOAD_MODELS_METADATA_BLOB',
+      getFavoriteRules: 'GET_FAVORITE_RULES',
       autoFixSegmentHoles: 'AUTO_FIX_SEGMENT_HOLES'
     }),
     ...mapActions('DetailDialogModal', {
@@ -330,6 +367,12 @@ function getDefaultFilters (that) {
     }),
     ...mapActions('ConfirmSegment', {
       callConfirmSegmentModal: 'CALL_MODAL'
+    }),
+    ...mapActions('ModelRecommendModal', {
+      callModelRecommendDialog: 'CALL_MODAL'
+    }),
+    ...mapActions('UploadSqlModel', {
+      showUploadSqlDialog: 'CALL_MODAL'
     }),
     ...mapActions('ModelsImportModal', {
       callModelsImportModal: 'CALL_MODAL'
@@ -355,13 +398,19 @@ function getDefaultFilters (that) {
     ModelPartition,
     ModelJson,
     ModelSql,
+    UploadSqlModel,
     DropdownFilter,
     ModelOverview,
     ModelActions,
     ModelERDiagram,
     ModelTitleDescription
   },
-  locales
+  locales,
+  provide () {
+    return {
+      getFavoriteRules: this.getFavoriteRulesContext
+    }
+  }
 })
 export default class ModelList extends Vue {
   pageRefTags = pageRefTags
@@ -404,6 +453,12 @@ export default class ModelList extends Vue {
   // 获取模型 E-R 图数据
   getER (row) {
     return this.dataGenerator.generateModel(row)
+  }
+
+  showGenerateModelDialog () {
+    this.showUploadSqlDialog({
+      isGenerateModel: true
+    })
   }
   needShowBuildTips (uuid) {
     this.buildVisible[uuid] = !localStorage.getItem('hideBuildTips')
@@ -826,6 +881,17 @@ export default class ModelList extends Vue {
     scrollDom.nextSibling.querySelector('.aggregate-view').scrollIntoView({block: 'center', inline: 'nearest', behavior: 'smooth'})
   }
 
+  async getFavoriteRulesContext () {
+    try {
+      const results = await this.getFavoriteRules({ project: this.currentSelectedProject })
+      const res = await handleSuccessAsync(results)
+      return res
+    } catch (err) {
+      handleError(err)
+      return {}
+    }
+  }
+
   async willAddIndex (alias) {
     this.$refs['segmentComp' + alias] && await this.$refs['segmentComp' + alias].$emit('willAddIndex')
   }
@@ -843,6 +909,10 @@ export default class ModelList extends Vue {
         this.$refs.erDiagram && this.$refs.erDiagram.exchangePosition()
       })
     })
+  }
+  // 跳转至指定模型优化建议界面
+  jumpToRecommendation (model) {
+    this.$router.push({ name: 'ModelDetails', params: { modelName: model.alias, jump: 'recommendation' }, query: { modelListFilters: JSON.stringify(this.filterArgs) } })
   }
   handleAnimateChanged (event) {
     const { className } = event.target
@@ -956,6 +1026,17 @@ export default class ModelList extends Vue {
     }
     .rec-btn {
       color: @ke-color-primary;
+      button-text {
+        min-width: initial;
+      }
+    }
+    .recommendation-layout {
+      display: inline-block;
+      padding: 5px 10px;
+      border: 1px solid @ke-border-secondary;
+      border-radius: 6px;
+      color: @ke-color-primary;
+      cursor: pointer;
     }
     .build-disabled > .el-ksd-icon-build_index_22 {
       color: @color-text-disabled;
@@ -1161,6 +1242,33 @@ export default class ModelList extends Vue {
       cursor: default;
     }
   }
+  .recommend {
+    font-size: 12px;
+    line-height: 18px;
+    float: left;
+    color: @color-primary;
+    i {
+      color: @text-disabled-color;
+      cursor: default;
+    }
+  }
+  .recommend-count {
+    height: 18px;
+    border-radius: 4px;
+    background-color: @base-color-4;
+    color: @fff;
+    padding: 1px 5px;
+    line-height: 16px;
+    font-weight: bold;
+    margin-left: 2px;
+    cursor: pointer;
+
+    b {
+      position: relative;
+      transform: scale(0.833333);
+      display: inline-block;
+    }
+  }
   .streaming {
     float: left;
     font-size: 12px;
@@ -1256,6 +1364,17 @@ export default class ModelList extends Vue {
     &.WARNING {
       background-color: @color-warning;
     }
+  }
+}
+.recommend-tooltip {
+  min-width: unset;
+  transform: translate(-5px, 5px);
+  .popper__arrow {
+    left: 5px !important;
+  }
+  .recommend-link {
+    color: @color-primary;
+    cursor: pointer;
   }
 }
 .model-actions-dropdown {

@@ -1,0 +1,115 @@
+{
+  "uuid" : "a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94",
+  "alias" : "test_encoding",
+  "fact_table" : "DEFAULT.TEST_ENCODING",
+  "owner" : "ADMIN",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "int_dict",
+    "column" : "TEST_ENCODING.int_dict",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "double_dict",
+    "column" : "TEST_ENCODING.double_dict",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "str_dict",
+    "column" : "TEST_ENCODING.str_dict",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "date_dict",
+    "column" : "TEST_ENCODING.date_dict",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "time_dict",
+    "column" : "TEST_ENCODING.time_dict",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "str_bool",
+    "column" : "TEST_ENCODING.str_bool",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "standard_bool",
+    "column" : "TEST_ENCODING.standard_bool",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "int_bool",
+    "column" : "TEST_ENCODING.int_bool",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "fix_len",
+    "column" : "TEST_ENCODING.fix_len",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "fix_len_hex",
+    "column" : "TEST_ENCODING.fix_len_hex",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "standard_int",
+    "column" : "TEST_ENCODING.standard_int",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "str_int",
+    "column" : "TEST_ENCODING.str_int",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "date_in_int",
+    "column" : "TEST_ENCODING.date_in_int",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "standard_date",
+    "column" : "TEST_ENCODING.standard_date",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "date_in_time",
+    "column" : "TEST_ENCODING.date_in_time",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "date_in_time_ms",
+    "column" : "TEST_ENCODING.date_in_time_ms",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "standard_time",
+    "column" : "TEST_ENCODING.standard_time",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "id" : 100000,
+    "name" : "CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    }
+  } ],
+  "column_correlations" : [ ],
+  "partition_desc" : {
+    "partition_date_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "multilevel_partition_cols" : [ ],
+  "computed_column_uuids" : [ ],
+  "project" : "default"
+}

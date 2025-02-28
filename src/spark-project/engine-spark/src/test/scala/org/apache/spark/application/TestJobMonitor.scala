@@ -18,16 +18,13 @@
 
 package org.apache.spark.application
 
-import java.util
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicBoolean
 import com.amazonaws.services.s3.model.AmazonS3Exception
-import org.apache.hadoop.security.AccessControlException
 import org.apache.kylin.cluster.{AvailableResource, IClusterManager, ResourceInfo}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.kylin.engine.spark.utils.SparkConfHelper._
+import org.apache.spark.dict.IllegalDictEncodeValueException
 import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.scheduler.KylinJobEventLoop
 import org.apache.spark.sql.SparkSession
@@ -36,6 +33,10 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.util.Utils
 import org.mockito.Mockito
 import org.scalatest.BeforeAndAfterEach
+
+import java.util
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TestJobMonitor extends SparderBaseFunSuite with BeforeAndAfterEach {
   private val config = Mockito.mock(classOf[KylinConfig])
@@ -360,6 +361,29 @@ class TestJobMonitor extends SparderBaseFunSuite with BeforeAndAfterEach {
     }
   }
 
+  test("test encode flat table error") {
+    withEventLoop { eventLoop =>
+      Mockito.when(config.getSparkEngineMaxRetryTime).thenReturn(1)
+      val env = KylinBuildEnv.getOrCreate(config)
+      new JobMonitor(eventLoop)
+      val memory = "2000MB"
+      val overhead = "400MB"
+      env.sparkConf.set(EXECUTOR_MEMORY, memory)
+      env.sparkConf.set(EXECUTOR_OVERHEAD, overhead)
+      val countDownLatch = new CountDownLatch(2)
+      val listener = new KylinJobListener {
+        override def onReceive(event: KylinJobEvent): Unit = {
+          countDownLatch.countDown()
+        }
+      }
+      eventLoop.registerListener(listener)
+      eventLoop.post(ResourceLack(new RuntimeException(new IllegalDictEncodeValueException("Dict encode value error"))))
+      countDownLatch.await()
+      assert(env.sparkConf.get(EXECUTOR_MEMORY) == memory)
+      assert(env.sparkConf.get(EXECUTOR_OVERHEAD) == overhead)
+      eventLoop.unregisterListener(listener)
+    }
+  }
 }
 
 class MockClusterManager extends IClusterManager {

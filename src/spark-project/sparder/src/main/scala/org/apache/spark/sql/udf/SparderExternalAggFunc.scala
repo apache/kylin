@@ -17,8 +17,6 @@
  */
 package org.apache.spark.sql.udf
 
-import java.nio.ByteBuffer
-
 import org.apache.kylin.measure.bitmap.intersect.{IntersectBitmapCounter, IntersectSerializer}
 import org.apache.kylin.measure.bitmap.{BitmapCounter, BitmapSerializer}
 import org.apache.kylin.metadata.datatype
@@ -26,7 +24,9 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
-import org.apache.spark.sql.types.{DataType, _}
+import org.apache.spark.sql.types._
+
+import java.nio.ByteBuffer
 
 @java.lang.Deprecated
 class SparderExternalAggFunc(dateType: String) extends UserDefinedAggregateFunction with Logging {

@@ -48,22 +48,22 @@ public class SparderInitSQLConfTest extends NLocalFileMetadataTestCase {
     }
 
     @Before
-    public void setup() {
+    public void setUp() {
         createTestMetadata();
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         cleanupTestMetadata();
     }
 
     @Test
     public void testGetOrCreateKylinSession() {
         SparkConf sparkConf = getSparkConf();
-        SparkSession.Builder sessionBuilder = SparkSession.builder()
-                .enableHiveSupport().config(sparkConf)
+        SparkSession.Builder sessionBuilder = SparkSession.builder().enableHiveSupport().config(sparkConf)
                 .config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
-        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster().getOrCreateKylinSession();
+        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster()
+                .getOrCreateKylinSession();
         Assert.assertTrue(session.sessionState().conf().ansiEnabled());
         Assert.assertTrue(SQLConf.get().ansiEnabled());
         session.close();
@@ -72,10 +72,10 @@ public class SparderInitSQLConfTest extends NLocalFileMetadataTestCase {
     @Test
     public void testCloneSession() {
         SparkConf sparkConf = getSparkConf();
-        SparkSession.Builder sessionBuilder = SparkSession.builder()
-                .enableHiveSupport().config(sparkConf)
+        SparkSession.Builder sessionBuilder = SparkSession.builder().enableHiveSupport().config(sparkConf)
                 .config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
-        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster().getOrCreateKylinSession();
+        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster()
+                .getOrCreateKylinSession();
         session = session.cloneSession();
         Assert.assertTrue(session.sessionState().conf().ansiEnabled());
         Assert.assertTrue(SQLConf.get().ansiEnabled());
@@ -85,10 +85,10 @@ public class SparderInitSQLConfTest extends NLocalFileMetadataTestCase {
     @Test
     public void testNewSession() {
         SparkConf sparkConf = getSparkConf();
-        SparkSession.Builder sessionBuilder = SparkSession.builder()
-                .enableHiveSupport().config(sparkConf)
+        SparkSession.Builder sessionBuilder = SparkSession.builder().enableHiveSupport().config(sparkConf)
                 .config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
-        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster().getOrCreateKylinSession();
+        SparkSession session = KylinSession$.MODULE$.KylinBuilder(sessionBuilder).buildCluster()
+                .getOrCreateKylinSession();
         session = session.newSession();
         Assert.assertTrue(session.sessionState().conf().ansiEnabled());
         Assert.assertTrue(SQLConf.get().ansiEnabled());

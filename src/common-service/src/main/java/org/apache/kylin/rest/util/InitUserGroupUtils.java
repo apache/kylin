@@ -21,10 +21,10 @@ package org.apache.kylin.rest.util;
 import static org.apache.kylin.rest.util.CreateAdminUserUtils.PROFILE_DEFAULT;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.usergroup.NUserGroupManager;
+import org.apache.kylin.rest.constant.Constant;
 import org.springframework.core.env.Environment;
 
 import lombok.extern.slf4j.Slf4j;

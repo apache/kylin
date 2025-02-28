@@ -98,7 +98,18 @@
     </div>
     <div v-show="!isStop" class="result-block">
       <el-tabs v-model="activeResultType" class="ksd-mt-16" type="button" :class="{'en-model': $lang==='en'}" @tab-click="changeDataType">
-          <el-tab-pane :label="$t('dataBtn')" name="data">
+            <el-tab-pane v-if="extraoption.explain" :label="$t('explainTab')" name="explain">
+              <div>
+                <div class="explain-title">{{$t('explainCalcitePlanTitle')}}</div>
+                <div class="explain-content">{{extraoption.query_plan.calcite_plan}}</div>
+              </div>
+
+              <div>
+                <div class="explain-title">{{$t('explainSparkPlanTitle')}}</div>
+                <div class="explain-content">{{extraoption.query_plan.spark_plan}}</div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane v-if="!extraoption.explain" :label="$t('dataBtn')" name="data">
             <div class="grid-box narrowTable">
               <template v-if="!isStop">
                 <el-table
@@ -282,7 +293,10 @@ import IndexDetails from '../studio/StudioModel/ModelList/ModelAggregate/indexDe
       refreshLater: 'No results, please try again later',
       fetchError: 'Can\'t get the result as the record is missing',
       buildIndexAlertTip: 'No model index built. Build model index to speed up query.',
-      gotoBuild: 'Go to build'
+      gotoBuild: 'Go to build',
+      explainTab: 'Explain',
+      explainCalcitePlanTitle: 'Calcite Plan',
+      explainSparkPlanTitle: 'Spark Plan'
     }
   },
   filters: {
@@ -311,7 +325,7 @@ export default class queryResult extends Vue {
   pageSizeX = 30
   hasClickExportBtn = false
   isShowDetail = false
-  activeResultType = 'data'
+  activeResultType = this.extraoption.explain ? 'explain' : 'data'
   charts = {
     type: 'lineChart',
     dimension: '',
@@ -622,7 +636,7 @@ export default class queryResult extends Vue {
         this.tableData[i][m] = showNull(trans)
       }
     }
-    this.pagerTableData = Object.assign([], this.tableData)
+    this.pagerTableData = Object.assign([], this.tableData.map(array => ({ ...array })))
     this.$nextTick(() => {
       this.$refs.tableLayout && this.$refs.tableLayout.doLayout()
     })
@@ -900,5 +914,17 @@ export default class queryResult extends Vue {
     white-space: pre;
     color: @text-normal-color;
     font-family: Lato,"Noto Sans S Chinese",sans-serif;
+  }
+  .explain-title {
+    font-weight: bold;
+    margin-top: 12px;
+  }
+  .explain-content {
+    white-space: pre;
+    overflow: auto;
+    border: 1px solid #e6ebf4;
+    border-radius: 6px;
+    padding: 8px;
+    max-height: 400px;
   }
 </style>

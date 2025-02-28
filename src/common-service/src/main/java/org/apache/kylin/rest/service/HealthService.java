@@ -20,12 +20,11 @@ package org.apache.kylin.rest.service;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.rest.response.HealthResponse;
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Component("healthService")
 public class HealthService extends BasicService {

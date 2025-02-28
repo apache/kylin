@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.handler;
 
-
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -40,21 +39,14 @@ public class TableSamplingJobHandler extends AbstractJobHandler {
 
     @Getter
     public static class TableSamplingJobBuildParam extends JobFactory.JobBuildParams {
-        private String table;
-        private String project;
-        private int row;
+        private final String table;
+        private final String project;
+        private final int row;
 
         public TableSamplingJobBuildParam(JobParam jobParam) {
-            super(null,
-                    jobParam.getDeleteLayouts(),
-                    jobParam.getOwner(),
-                    jobParam.getJobTypeEnum(),
-                    jobParam.getJobId(),
-                    jobParam.getDeleteLayouts(),
-                    jobParam.getIgnoredSnapshotTables(),
-                    jobParam.getTargetPartitions(),
-                    jobParam.getTargetBuckets(),
-                    jobParam.getExtParams());
+            super(null, jobParam.getDeleteLayouts(), jobParam.getOwner(), jobParam.getJobTypeEnum(),
+                    jobParam.getJobId(), jobParam.getDeleteLayouts(), jobParam.getIgnoredSnapshotTables(),
+                    jobParam.getTargetPartitions(), jobParam.getTargetBuckets(), jobParam.getExtParams());
             this.table = jobParam.getTable();
             this.project = jobParam.getProject();
             this.row = Integer.parseInt(jobParam.getExtParams().get(NBatchConstants.P_SAMPLING_ROWS));
@@ -72,10 +64,11 @@ public class TableSamplingJobHandler extends AbstractJobHandler {
         String project = jobParam.getProject();
         String table = jobParam.getTable();
         List<JobInfo> existingJobs = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
-                .fetchNotFinalJobsByTypes(project, Lists.newArrayList(JobTypeEnum.TABLE_SAMPLING.name()), Lists.newArrayList(table));
+                .fetchNotFinalJobsByTypes(project, Lists.newArrayList(JobTypeEnum.TABLE_SAMPLING.name()),
+                        Lists.newArrayList(table));
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         if (CollectionUtils.isNotEmpty(existingJobs)) {
-            existingJobs.stream().forEach(jobInfo -> execMgr.discardJob(jobInfo.getJobId()));
+            existingJobs.forEach(jobInfo -> execMgr.discardJob(jobInfo.getJobId()));
         }
         JobManager.checkStorageQuota(project);
     }

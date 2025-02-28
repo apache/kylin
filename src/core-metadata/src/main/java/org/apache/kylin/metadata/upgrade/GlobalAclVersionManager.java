@@ -17,9 +17,8 @@
  */
 package org.apache.kylin.metadata.upgrade;
 
-import static org.apache.kylin.common.persistence.ResourceStore.UPGRADE;
-
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
@@ -46,7 +45,7 @@ public class GlobalAclVersionManager {
         if (!UnitOfWork.isAlreadyInTransaction())
             logger.info("Initializing AclVersionManager with KylinConfig Id: {}", System.identityHashCode(config));
         this.config = config;
-        this.crud = new CachedCrudAssist<GlobalAclVersion>(getStore(), UPGRADE, GlobalAclVersion.class) {
+        this.crud = new CachedCrudAssist<GlobalAclVersion>(getStore(), MetadataType.SYSTEM, null, GlobalAclVersion.class) {
             @Override
             protected GlobalAclVersion initEntityAfterReload(GlobalAclVersion globalAclVersion, String resourceName) {
                 return globalAclVersion;

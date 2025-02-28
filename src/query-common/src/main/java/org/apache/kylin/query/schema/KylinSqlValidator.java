@@ -29,23 +29,23 @@ import org.apache.calcite.sql.SqlInsert;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.validate.SelectScope;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
-import org.apache.kylin.query.engine.KECalciteConfig;
+import org.apache.kylin.query.engine.KylinConnectionConfig;
 
 public class KylinSqlValidator extends SqlValidatorImpl {
 
     public KylinSqlValidator(SqlValidatorImpl calciteSqlValidator) {
         super(calciteSqlValidator.getOperatorTable(), calciteSqlValidator.getCatalogReader(),
-                calciteSqlValidator.getTypeFactory(), calciteSqlValidator.getConformance());
+                calciteSqlValidator.getTypeFactory(), calciteSqlValidator.config());
     }
 
     @Override
     protected boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,
-            List<Map.Entry<String, RelDataType>> types, boolean includeSystemVars, SelectScope scope, SqlIdentifier id,
+            List<Map.Entry<String, RelDataType>> fields, boolean includeSystemVars, SelectScope scope, SqlIdentifier id,
             RelDataTypeField field) {
         if (isInternalFiled(field)) {
             return false;
         }
-        return super.addOrExpandField(selectItems, aliases, types, includeSystemVars, scope, id, field);
+        return super.addOrExpandField(selectItems, aliases, fields, includeSystemVars, scope, id, field);
     }
 
     private boolean isInternalFiled(RelDataTypeField field) {
@@ -53,7 +53,7 @@ public class KylinSqlValidator extends SqlValidatorImpl {
                 && KylinRelDataTypeFieldImpl.ColumnType.CC_FIELD == ((KylinRelDataTypeFieldImpl) field)
                         .getColumnType()) {
             // if exposeComputedColumn=true, regard CC columns as non-internal field
-            return !KECalciteConfig.current().exposeComputedColumn();
+            return !KylinConnectionConfig.current().exposeComputedColumn();
         }
         return field.getName().startsWith("_KY_");
     }

@@ -46,6 +46,7 @@ class ZookeeperConfigTest {
 
     @Test
     @OverwriteProp.OverwriteProps({ //
+            @OverwriteProp(key = "kylin.server.node-registry.type", value = "zookeeper"),
             @OverwriteProp(key = "kylin.env.zookeeper-acl-enabled", value = "true"),
             @OverwriteProp(key = "kylin.env.zookeeper.zk-auth", value = "digest:ADMIN:KYLIN"),
             @OverwriteProp(key = "kylin.env.zookeeper.zk-acl", value = "world:anyone:rwcda") })

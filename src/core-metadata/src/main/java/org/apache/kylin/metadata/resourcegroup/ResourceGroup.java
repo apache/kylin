@@ -22,12 +22,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.annotation.Clarification;
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
@@ -55,13 +54,10 @@ public class ResourceGroup extends RootPersistentEntity {
         return RESOURCE_GROUP;
     }
 
-    @Override
-    public String getResourcePath() {
-        return concatResourcePath(RESOURCE_GROUP);
-    }
 
-    public static String concatResourcePath(String name) {
-        return ResourceStore.RESOURCE_GROUP + "/" + name + MetadataConstants.FILE_SURFIX;
+    @Override
+    public MetadataType resourceType() {
+        return MetadataType.RESOURCE_GROUP;
     }
 
     public boolean isResourceGroupEnabled() {

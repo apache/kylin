@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.util.Unsafe;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -38,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UpdateAuditLogTableColumnLengthCLI {
     private static final String SHOW_TABLE = "SHOW TABLES LIKE '%s'";
     private static final String UPDATE_COL_TO_TABLE_SQL = "alter table %s modify column %s %s";
-    private static final String TABLE_SUFFIX = "_audit_log";
+    private static final String TABLE_SUFFIX = JdbcAuditLogStore.AUDIT_LOG_SUFFIX;
     private static final String AUDIT_LOG_TABLE_OPERATOR = "operator";
     private static final int COLUMN_LENGTH = 200;
 

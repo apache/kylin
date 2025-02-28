@@ -20,12 +20,11 @@ package org.apache.kylin.event;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
@@ -35,8 +34,6 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRange;
-import org.apache.kylin.metadata.cube.model.NDataLoadingRangeManager;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -45,7 +42,6 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
@@ -79,7 +75,6 @@ public class ModelSemanticTest extends AbstractMVCIntegrationTestCase {
 
     public static final String MODEL_ID = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
     protected ExecutableManager executableManager;
-    NIndexPlanManager indexPlanManager;
     NDataflowManager dataflowManager;
 
     protected static SparkConf sparkConf;
@@ -108,58 +103,46 @@ public class ModelSemanticTest extends AbstractMVCIntegrationTestCase {
     }
 
     @Before
-    public void setupHandlers() {
+    public void setUp() throws Exception {
+        JobContextUtil.cleanUp();
+        super.setUp();
         overwriteSystemProp("kylin.job.event.poll-interval-second", "1");
         overwriteSystemProp("kylin.engine.spark.build-class-name",
                 "org.apache.kylin.engine.spark.job.MockedDFBuildJob");
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
 
-        val dfManager = NDataflowManager.getInstance(getTestConfig(), getProject());
-        var df = dfManager.getDataflow(MODEL_ID);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            val dfManager = NDataflowManager.getInstance(getTestConfig(), getProject());
+            var df = dfManager.getDataflow(MODEL_ID);
 
-        String tableName = df.getModel().getRootFactTable().getTableIdentity();
-        NDataLoadingRange dataLoadingRange = new NDataLoadingRange();
-        dataLoadingRange.setUuid(RandomUtil.randomUUIDStr());
-        dataLoadingRange.setTableName(tableName);
-        dataLoadingRange.setColumnName(df.getModel().getPartitionDesc().getPartitionDateColumn());
-        dataLoadingRange.setCoveredRange(new SegmentRange.TimePartitionedSegmentRange(
-                SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("2012-05-01")));
-        NDataLoadingRangeManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
-                .createDataLoadingRange(dataLoadingRange);
+            val update = new NDataflowUpdate(df.getUuid());
+            update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
+            dfManager.updateDataflow(update);
 
-        val tableMgr = NTableMetadataManager.getInstance(getTestConfig(), getProject());
-        val table = tableMgr.getTableDesc(tableName);
-        table.setIncrementLoading(true);
-        tableMgr.updateTableDesc(table);
+            dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-01-01"), SegmentRange.dateToLong("2012-03-01")));
+            df = dfManager.getDataflow(MODEL_ID);
+            dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    SegmentRange.dateToLong("2012-03-01"), SegmentRange.dateToLong("2012-05-01")));
 
-        val update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dfManager.updateDataflow(update);
-
-        dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2012-01-01"),
-                SegmentRange.dateToLong("2012-03-01")));
-        df = dfManager.getDataflow(MODEL_ID);
-        dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(SegmentRange.dateToLong("2012-03-01"),
-                SegmentRange.dateToLong("2012-05-01")));
-
-        val modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
-        modelManager.updateDataModel(MODEL_ID, copyForWrite -> {
-            copyForWrite.setAllMeasures(
-                    copyForWrite.getAllMeasures().stream().filter(m -> m.getId() != 1011).collect(Collectors.toList()));
-            copyForWrite.setManagementType(ManagementType.MODEL_BASED);
-        });
+            val modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
+            modelManager.updateDataModel(MODEL_ID, copyForWrite -> {
+                copyForWrite.setAllMeasures(copyForWrite.getAllMeasures().stream().filter(m -> m.getId() != 1011)
+                        .collect(Collectors.toList()));
+                copyForWrite.setManagementType(ManagementType.MODEL_BASED);
+            });
+            return true;
+        }, getProject());
 
         ExecutableManager originExecutableManager = ExecutableManager.getInstance(getTestConfig(), getProject());
         executableManager = Mockito.spy(originExecutableManager);
-        indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         dataflowManager = NDataflowManager.getInstance(getTestConfig(), getProject());
     }
 
     @After
-    public void tearDown() throws IOException {
-        super.tearDown();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     public String getProject() {
@@ -188,12 +171,15 @@ public class ModelSemanticTest extends AbstractMVCIntegrationTestCase {
         changeModelRequest();
         executableManager.getJobs().forEach(jobId -> waitForJobFinish(jobId, 600 * 1000));
 
-        indexPlanManager.updateIndexPlan(MODEL_ID, copyForWrite -> {
-            List<IndexEntity> indexes = copyForWrite.getIndexes() //
-                    .stream().filter(x -> x.getId() != 1000000) //
-                    .collect(Collectors.toList());
-            copyForWrite.setIndexes(indexes);
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NIndexPlanManager.getInstance(getTestConfig(), getProject()).updateIndexPlan(MODEL_ID, copyForWrite -> {
+                List<IndexEntity> indexes = copyForWrite.getIndexes() //
+                        .stream().filter(x -> x.getId() != 1000000) //
+                        .collect(Collectors.toList());
+                copyForWrite.setIndexes(indexes);
+            });
+            return true;
+        }, getProject());
 
         // update measure
         updateMeasureRequest();
@@ -269,10 +255,12 @@ public class ModelSemanticTest extends AbstractMVCIntegrationTestCase {
                 .perform(MockMvcRequestBuilders.put("/api/models/semantic").contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.writeValueAsString(getModelRequest()))
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn().getResponse().getContentAsString();
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn().getResponse()
+                .getContentAsString();
 
-        Assert.assertTrue(errorMessage.contains("The measure SUM_DEAL_AMOUNT is referenced by indexes or aggregate groups. "
-                + "Please go to the Data Asset - Model - Index page to view, delete referenced aggregate groups and indexes."));
+        Assert.assertTrue(
+                errorMessage.contains("The measure SUM_DEAL_AMOUNT is referenced by indexes or aggregate groups. "
+                        + "Please go to the Data Asset - Model - Index page to view, delete referenced aggregate groups and indexes."));
     }
 
     private ModelRequest getModelRequest() throws Exception {

@@ -127,13 +127,17 @@ public class ColExcludedChecker {
     }
 
     public boolean isExcludedCol(@NonNull TblColRef tblColRef) {
-        if (excludedCols.contains(tblColRef.getColumnDesc())) {
-            return true;
-        }
-        return isExcludedCC(tblColRef);
+        return excludedCols.contains(tblColRef.getColumnDesc()) || isExcludedCC(tblColRef);
     }
 
     private boolean isExcludedCC(@NonNull TblColRef tblColRef) {
+        ColumnDesc columnDesc = tblColRef.getColumnDesc();
+        if (columnDesc != null && columnDesc.isComputedColumn()) {
+            boolean value = isExcludedCC(columnDesc.getComputedColumnExpr());
+            if (value) {
+                return true;
+            }
+        }
         List<TblColRef> operands = tblColRef.getOperands();
         if (operands == null) {
             return false;

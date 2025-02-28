@@ -27,12 +27,11 @@ import org.apache.kylin.common.exception.DistributedLockException;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.lock.curator.CuratorDistributedLock.LockEntry;
 import org.apache.kylin.common.util.ZKUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionState;
 import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings({ "WeakerAccess" })
 public class CuratorDistributedLockFactory extends DistributedLockFactory {

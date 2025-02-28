@@ -26,9 +26,10 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.util.QueryUtil;
@@ -201,9 +202,13 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         val realizations = cached.getNativeRealizations();
         String project = sqlRequest.getProject();
         for (NativeQueryRealization nativeQueryRealization : realizations) {
-            val modelId = nativeQueryRealization.getModelId();
-            val dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getDataflow(modelId);
-            nativeQueryRealization.setModelAlias(dataflow.getModelAlias());
+            if (nativeQueryRealization.getType().equals(QueryMetrics.AGG_INDEX)
+                    || nativeQueryRealization.getType().equals(QueryMetrics.TABLE_INDEX)) {
+                val modelId = nativeQueryRealization.getModelId();
+                val dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                        .getDataflow(modelId);
+                nativeQueryRealization.setModelAlias(dataflow.getModelAlias());
+            }
         }
 
         return cached;

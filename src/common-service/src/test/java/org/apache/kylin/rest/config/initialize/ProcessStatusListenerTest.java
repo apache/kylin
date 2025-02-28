@@ -33,7 +33,6 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
@@ -43,6 +42,8 @@ public class ProcessStatusListenerTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         createTestMetadata();
+        getTestConfig().setProperty("kylin.engine.spark.cluster-manager-class-name",
+                "org.apache.kylin.rest.config.initialize.MockClusterManager");
     }
 
     @After
@@ -52,9 +53,8 @@ public class ProcessStatusListenerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    @Ignore
     public void testKillProcess() {
-        EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
+        EventBusFactory.getInstance().register(ProcessStatusListener.getInstance(), true);
         val executableManager = ExecutableManager.getInstance(getTestConfig(), "default");
         final String jobId = "job000000001";
         final String execCmd = "nohup sleep 30 & sleep 30";

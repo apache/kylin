@@ -45,6 +45,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.loader.AddToClassPathAction;
 import org.apache.kylin.loader.ParserClassLoaderState;
 import org.apache.kylin.metadata.jar.JarInfo;
@@ -60,7 +61,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

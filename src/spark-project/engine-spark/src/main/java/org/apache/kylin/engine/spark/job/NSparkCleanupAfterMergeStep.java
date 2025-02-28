@@ -28,14 +28,11 @@ import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.execution.NSparkExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 
 public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
 
@@ -57,25 +54,18 @@ public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NDataflow dataflow = NDataflowManager.getInstance(config, getProject()).getDataflow(name);
 
-        boolean timeMachineEnabled = KylinConfig.getInstanceFromEnv().getTimeMachineEnabled();
-
         for (String segmentId : segmentIds) {
             String path = dataflow.getSegmentHdfsPath(segmentId);
-            if (!SecondStorageUtil.isModelEnable(dataflow.getProject(), dataflow.getModel().getUuid())) {
-                if (!timeMachineEnabled) {
-                    try {
-                        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
-                        logger.info("The segment {} in dataflow {} has been successfully deleted, path : {}", //
-                                segmentId, name, path);
-                    } catch (IOException e) {
-                        logger.warn("Can not delete segment {} in dataflow {}." //
-                                + " Please try workaround thru garbage clean manually.", segmentId, name, e);
-                    }
-                }
-            } else {
-                logger.info("ClickHouse is enabled for the model, please delete segments {} in dataflow {} manually.", //
-                        segmentIds, name);
+
+            try {
+                HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
+                logger.info("The segment {} in dataflow {} has been successfully deleted, path : {}", //
+                        segmentId, name, path);
+            } catch (IOException e) {
+                logger.warn("Can not delete segment {} in dataflow {}." //
+                        + " Please try workaround thru garbage clean manually.", segmentId, name, e);
             }
+
         }
 
         return ExecuteResult.createSucceed();

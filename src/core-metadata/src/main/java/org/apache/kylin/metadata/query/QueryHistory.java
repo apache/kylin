@@ -24,11 +24,12 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.FusionModelManager;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -60,6 +61,7 @@ public class QueryHistory {
     public static final String SQL_TEXT = "sql_text";
     public static final String SQL_PATTERN = "sql_pattern";
     public static final String QUERY_DURATION = "duration";
+    public static final String CPU_TIME = "cpu_time";
     public static final String TOTAL_SCAN_BYTES = "total_scan_bytes";
     public static final String TOTAL_SCAN_COUNT = "total_scan_count";
     public static final String RESULT_ROW_COUNT = "result_row_count";
@@ -104,6 +106,9 @@ public class QueryHistory {
 
     @JsonProperty(QUERY_DURATION)
     private long duration;
+
+    @JsonProperty(CPU_TIME)
+    private Long cpuTime;
 
     // this field is composed of modelId, layout id and index type
     // it's written as modelId#layoutId#indexType
@@ -210,7 +215,6 @@ public class QueryHistory {
                     metrics.indexType == null || metrics.indexType.equals("null") ? null : metrics.indexType,
                     metrics.snapshots == null || metrics.snapshots.isEmpty() ? Lists.newArrayList()
                             : metrics.snapshots);
-            realization.setSecondStorage(metrics.isSecondStorage);
             realization.setStreamingLayout(metrics.isStreamingLayout);
             String modelId = fusionModelManager.getModelId(realization);
             realization.setModelId(modelId);
@@ -256,6 +260,18 @@ public class QueryHistory {
             realizations.add(new NativeQueryRealization(info[0],
                     info[1].equalsIgnoreCase("null") ? null : Long.parseLong(info[1]),
                     info[2].equalsIgnoreCase("null") ? null : info[2], snapshots));
+        }
+    }
+
+    public void setQueryHistoryInfo(QueryHistoryInfo info) {
+        this.queryHistoryInfo = info;
+        if (info == null || info.getQueryMetrics() == null) {
+            return;
+        }
+        for (QueryMetrics.QueryMetric queryMetric : queryHistoryInfo.getQueryMetrics()) {
+            if (CPU_TIME.equals(queryMetric.getName())) {
+                this.cpuTime = Long.parseLong(queryMetric.getValue().toString());
+            }
         }
     }
 

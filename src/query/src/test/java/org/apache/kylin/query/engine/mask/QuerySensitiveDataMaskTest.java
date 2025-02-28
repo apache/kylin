@@ -24,19 +24,18 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.acl.SensitiveDataMask;
 import org.apache.kylin.metadata.acl.SensitiveDataMaskInfo;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.mask.QuerySensitiveDataMask;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QuerySensitiveDataMaskTest extends NLocalFileMetadataTestCase {
 
@@ -193,7 +192,7 @@ public class QuerySensitiveDataMaskTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("0.0", mask.defaultMaskResultToString(makeDatatype(SqlTypeName.REAL)));
         Assert.assertEquals("1970-01-01", mask.defaultMaskResultToString(makeDatatype(SqlTypeName.DATE)));
         Assert.assertEquals("1970-01-01 00:00:00", mask.defaultMaskResultToString(makeDatatype(SqlTypeName.TIMESTAMP)));
-        Assert.assertEquals(null, mask.defaultMaskResultToString(makeDatatype(SqlTypeName.TIME)));
+        Assert.assertNull(mask.defaultMaskResultToString(makeDatatype(SqlTypeName.TIME)));
     }
 
     @Test

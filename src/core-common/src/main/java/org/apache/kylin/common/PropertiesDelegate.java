@@ -32,7 +32,6 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 
 import org.apache.kylin.common.util.CompositeMapView;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;

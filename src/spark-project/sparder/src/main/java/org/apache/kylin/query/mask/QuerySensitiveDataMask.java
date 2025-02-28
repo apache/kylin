@@ -38,13 +38,15 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.acl.SensitiveDataMask;
 import org.apache.kylin.metadata.acl.SensitiveDataMaskInfo;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.query.relnode.KapTableScan;
-import org.apache.kylin.query.relnode.KapWindowRel;
+import org.apache.kylin.query.relnode.OlapTableScan;
+import org.apache.kylin.query.relnode.OlapWindowRel;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -52,9 +54,6 @@ import org.apache.spark.sql.catalyst.expressions.Cast;
 import org.apache.spark.sql.catalyst.expressions.Literal;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.unsafe.types.UTF8String;
-
-import org.apache.kylin.guava30.shaded.common.base.Strings;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import scala.Option;
 
@@ -116,7 +115,7 @@ public class QuerySensitiveDataMask implements QueryResultMask {
                         new Cast(new Literal(UTF8String.fromString(defaultMaskResultToString(i)), DataTypes.StringType),
                                 dfWithIndexedCol.schema().fields()[i].dataType(),
                                 Option.apply(TimeZone.getDefault().toZoneId().getId())))
-                                        .as(dfWithIndexedCol.columns()[i]);
+                        .as(dfWithIndexedCol.columns()[i]);
                 masked = true;
                 break;
             case AS_NULL:
@@ -184,7 +183,7 @@ public class QuerySensitiveDataMask implements QueryResultMask {
             return getProjectSensitiveCols((Project) relNode);
         } else if (relNode instanceof SetOp) {
             return getUnionSensitiveCols((SetOp) relNode);
-        } else if (relNode instanceof KapWindowRel) {
+        } else if (relNode instanceof OlapWindowRel) {
             return getWindowSensitiveCols((Window) relNode);
         } else {
             List<SensitiveDataMask.MaskType> masks = new ArrayList<>();
@@ -231,9 +230,9 @@ public class QuerySensitiveDataMask implements QueryResultMask {
 
     private List<SensitiveDataMask.MaskType> getProjectSensitiveCols(Project project) {
         List<SensitiveDataMask.MaskType> inputMasks = getSensitiveCols(project.getInput(0));
-        SensitiveDataMask.MaskType[] masks = new SensitiveDataMask.MaskType[project.getChildExps().size()];
-        for (int i = 0; i < project.getChildExps().size(); i++) {
-            RexNode expr = project.getChildExps().get(i);
+        SensitiveDataMask.MaskType[] masks = new SensitiveDataMask.MaskType[project.getProjects().size()];
+        for (int i = 0; i < project.getProjects().size(); i++) {
+            RexNode expr = project.getProjects().get(i);
             for (Integer input : RelOptUtil.InputFinder.bits(expr)) {
                 if (inputMasks.get(input) != null) {
                     masks[i] = inputMasks.get(input).merge(masks[i]);
@@ -274,7 +273,7 @@ public class QuerySensitiveDataMask implements QueryResultMask {
         String tableName = tableScan.getTable().getQualifiedName().get(1);
         List<SensitiveDataMask.MaskType> masks = new ArrayList<>();
         for (RelDataTypeField field : tableScan.getRowType().getFieldList()) {
-            ColumnDesc columnDesc = ((KapTableScan) tableScan).getOlapTable().getSourceColumns().get(field.getIndex());
+            ColumnDesc columnDesc = ((OlapTableScan) tableScan).getOlapTable().getSourceColumns().get(field.getIndex());
             if (columnDesc.isComputedColumn()) {
                 masks.add(getCCMask(columnDesc.getComputedColumnExpr()));
             } else {

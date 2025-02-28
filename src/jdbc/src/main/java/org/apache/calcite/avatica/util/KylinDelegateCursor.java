@@ -41,7 +41,8 @@ public class KylinDelegateCursor extends AbstractCursor {
     }
 
     @Override
-    protected Accessor createAccessor(ColumnMetaData columnMetaData, Getter getter, Calendar localCalendar, ArrayImpl.Factory factory) {
+    protected Accessor createAccessor(ColumnMetaData columnMetaData, Getter getter, Calendar localCalendar,
+            ArrayImpl.Factory factory) {
         if (columnMetaData.type.id == Types.DATE && columnMetaData.type.rep == ColumnMetaData.Rep.JAVA_SQL_DATE) {
             return new KylinDateAccessor(getter);
         }
@@ -71,17 +72,17 @@ public class KylinDelegateCursor extends AbstractCursor {
                 return 0.0D;
             } else {
                 if (obj instanceof Double) {
-                    return (Double)obj;
+                    return (Double) obj;
                 } else if (obj instanceof BigDecimal) {
-                    return ((BigDecimal)obj).doubleValue();
+                    return ((BigDecimal) obj).doubleValue();
                 } else {
-                    return Double.valueOf(obj.toString());
+                    return Double.parseDouble(obj.toString());
                 }
             }
         }
     }
 
-    private class KylinNumberAccessor extends NumberAccessor {
+    private static class KylinNumberAccessor extends NumberAccessor {
 
         KylinNumberAccessor(AbstractCursor.Getter getter, int scale) {
             super(getter, scale);

@@ -18,13 +18,17 @@
 package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
@@ -104,5 +108,43 @@ public class JdbcSourceTest extends JdbcTestBase {
         aware.getConfig().setProperty("kylin.source.jdbc.convert-to-lowercase", "true");
         ISource lowerCaseSource = SourceFactory.getSource(aware);
         Assert.assertNotEquals(source, lowerCaseSource);
+    }
+
+    @Test
+    public void testSeparateSourceByProject() {
+        ISource source1 = checkAndGetISource("test_project_1", 1, 2, 3);
+        ISource source2 = checkAndGetISource("test_project_2", 4, 5, 6);
+        Assert.assertNotEquals(source1, source2);
+    }
+
+    private ISource checkAndGetISource(String project, int maxTotal, int maxIdle, int minIdle) {
+        ISourceAware sourceAware = createSourceAwareByProject(project, maxTotal, maxIdle, minIdle);
+        ISource source = SourceFactory.getSource(sourceAware);
+        Assert.assertTrue(source instanceof JdbcSource);
+        AbstractJdbcAdaptor adaptor = ((JdbcSource) source).getDataSource().getAdaptor();
+        Assert.assertEquals(project, adaptor.getConfig().getOptions().get("kylin.source.jdbc.extend"));
+        Assert.assertEquals(minIdle, adaptor.getDataSource().getMinIdle());
+        Assert.assertEquals(maxIdle, adaptor.getDataSource().getMaxIdle());
+        Assert.assertEquals(maxTotal, adaptor.getDataSource().getMaxTotal());
+        return source;
+    }
+
+    private ISourceAware createSourceAwareByProject(String project, int maxTotal, int maxIdle, int minIdle) {
+        return new ISourceAware() {
+            @Override
+            public int getSourceType() {
+                return ISourceAware.ID_JDBC;
+            }
+
+            @Override
+            public KylinConfig getConfig() {
+                Map<String, String> override = Maps.newHashMap();
+                override.put("kylin.source.jdbc.extend", project);
+                getTestConfig().setProperty("kylin.query.pushdown.jdbc.pool-max-total", Integer.toString(maxTotal));
+                getTestConfig().setProperty("kylin.query.pushdown.jdbc.pool-max-idle", Integer.toString(maxIdle));
+                getTestConfig().setProperty("kylin.query.pushdown.jdbc.pool-min-idle", Integer.toString(minIdle));
+                return KylinConfigExt.createInstance(getTestConfig(), override);
+            }
+        };
     }
 }

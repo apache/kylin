@@ -25,6 +25,7 @@ public interface NBatchConstants {
     String P_JOB_TYPE = "jobType";
     String P_JOB_ENABLE_PLANNER = "enablePlanner";
     String P_LAYOUT_IDS = "layoutIds";
+    String P_LAYOUTS_DELETABLE_AFTER_BUILD = "layoutsDeletableAfterBuild";
     String P_TO_BE_DELETED_LAYOUT_IDS = "toBeDeletedLayoutIds";
     String P_CLASS_NAME = "className";
     String P_JARS = "jars";
@@ -59,6 +60,26 @@ public interface NBatchConstants {
     String P_WARNING_CODE = "warning_code";
     /** value like : { "segmentId1": 1223, "segmentId2": 1223 } */
     String P_WAITE_TIME = "waiteTime";
+    String P_OPTIMIZE_LAYOUT_DATA_PARAM = "optimize_layout_data_param";
+
+    // for internal table
+    String P_OUTPUT_MODE = "outputMode";
+    String P_START_DATE = "startTime";
+    String P_END_DATE = "endTime";
+    String P_PRIMARY_KEY = "primaryKey";
+    String P_ORDER_BY_KEY = "orderByKey";
+    String P_DELETE_PARTITION_VALUES = "deletePartitionValues";
+    String P_DELETE_PARTITION = "deletePartition";
+
+
+    /** index planner job parameters */
+    String P_PLANNER_INITIALIZE_CUBOID_COUNT = "kylin.planner.initializeCuboidCount";
+    String P_PLANNER_MAX_CUBOID_COUNT = "kylin.planner.maxCuboidCount";
+    String P_PLANNER_MAX_CUBOID_CHANGE_COUNT = "kylin.planner.maxCuboidChangeCount";
+    String P_PLANNER_DATA_RANGE_START = "kylin.planner.dataRangeStart";
+    String P_PLANNER_DATA_RANGE_END = "kylin.planner.dataRangeEnd";
+    String P_PLANNER_AUTO_APPROVE_ENABLED = "kylin.planner.autoApproveEnabled";
+    String P_PLANNER_OPERATION_TOKEN = "kylin.planner.operationToken";
 
     // ut only
     String P_BREAK_POINT_LAYOUTS = "breakPointLayouts";

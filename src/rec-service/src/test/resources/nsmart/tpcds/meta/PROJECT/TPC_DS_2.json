@@ -1,0 +1,12 @@
+{
+  "uuid" : "6eb53e79-a02b-4900-84ba-7eed492df2e4",
+  "last_modified" : 1501828619712,
+  "version" : "2.0.0",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1497607236338,
+  "last_update_time" : null,
+  "description" : "",
+  "ext_filters" : [ ],
+  "override_kylin_properties" : { }
+}

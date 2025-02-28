@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.net.BindException;
 import java.util.Locale;
 
+import org.apache.calcite.util.CancelFlag;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.util.Shell;
@@ -35,14 +36,18 @@ import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.optimizer.ConvertInnerJoinToSemiJoin;
+import org.apache.spark.sql.common.GlutenTestConfig;
+import org.apache.spark.sql.execution.datasource.KylinDeltaSourceStrategy;
 import org.apache.spark.sql.internal.StaticSQLConf;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
@@ -53,17 +58,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 import lombok.extern.slf4j.Slf4j;
+import scala.Option;
 
 @Slf4j
 public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase implements Serializable {
 
     private static final String CSV_TABLE_DIR = TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv";
-
+    private static final String GLUTEN_CH_LIB_PATH_KEY = "clickhouse.lib.path";
     protected static final String KYLIN_SQL_BASE_DIR = "../kylin-it/src/test/resources/query";
 
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
     private TestingServer zkTestServer;
+
+    private String[] overlay = new String[0];
 
     protected static void ensureSparkConf() {
         if (sparkConf == null) {
@@ -108,11 +116,31 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
         sparkConf.set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog");
         sparkConf.set("spark.databricks.delta.retentionDurationCheck.enabled", "false");
         sparkConf.set("spark.databricks.delta.vacuum.parallelDelete.enabled", "true");
+
+        sparkConf.set("spark.sql.catalog.INTERNAL_CATALOG",
+                "org.apache.spark.sql.execution.datasources.v2.kyinternal.KyinternalCatalog");
+
+        GlutenTestConfig.configGluten(sparkConf);
+        cleanupAnyExistingSession();
         ss = SparkSession.builder().withExtensions(ext -> {
             ext.injectOptimizerRule(ss -> new ConvertInnerJoinToSemiJoin());
+            ext.injectPlannerStrategy(ss -> new KylinDeltaSourceStrategy());
             return null;
         }).config(sparkConf).getOrCreate();
         SparderEnv.setSparkSession(ss);
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
+    }
+
+    static void cleanupAnyExistingSession() {
+        Option<SparkSession> session = SparkSession.getActiveSession();
+        if (!session.isDefined()) {
+            session = SparkSession.getDefaultSession();
+        }
+        if (session.isDefined()) {
+            session.get().stop();
+            SparkSession.clearActiveSession();
+            SparkSession.clearDefaultSession();
+        }
     }
 
     @AfterClass
@@ -121,17 +149,21 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
             ss.close();
         }
         FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
+        // see https://olapio.atlassian.net/browse/KE-42054
+        // After the completion of setting the CancelFlag flag in Calcite, certain optimization rules will be canceled,
+        // which can affect the execution of subsequent query scenarios in the module. It is necessary to reset the
+        // CancelFlag flag after the completion of this particular use case execution.
+        CancelFlag.getContextCancelFlag().clearCancel();
     }
-
 
     @Before
     public void setUp() throws Exception {
-        overwriteSystemProp("calcite.keep-in-clause", "true");
+        JobContextUtil.cleanUp();
+        init();
         overwriteSystemProp("kylin.build.resource.consecutive-idle-state-num", "1");
         overwriteSystemProp("kylin.build.resource.state-check-interval-seconds", "1s");
         overwriteSystemProp("kylin.engine.spark.build-job-progress-reporter", //
                 "org.apache.kylin.engine.spark.job.MockJobProgressReport");
-        this.createTestMetadata();
         SparkJobFactoryUtils.initJobFactory();
         for (int i = 0; i < 100; i++) {
             try {
@@ -143,6 +175,7 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
         }
         overwriteSystemProp("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
         overwriteSystemProp("kylin.source.provider.9", "org.apache.kylin.engine.spark.mockup.CsvSource");
+        JobContextUtil.getJobContext(getTestConfig());
     }
 
     @After
@@ -157,9 +190,13 @@ public class NLocalWithSparkSessionTestBase extends NLocalFileMetadataTestCase i
         return "default";
     }
 
+    protected void setOverlay(String... overlay) {
+        this.overlay = overlay;
+    }
+
     protected void init() throws Exception {
         overwriteSystemProp("calcite.keep-in-clause", "true");
-        this.createTestMetadata();
+        this.createTestMetadata(overlay);
 
         JobContextUtil.getJobContext(getTestConfig());
     }

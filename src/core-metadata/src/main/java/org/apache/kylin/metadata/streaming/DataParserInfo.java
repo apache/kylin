@@ -20,15 +20,14 @@ package org.apache.kylin.metadata.streaming;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Locale;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Data;
 
@@ -57,16 +56,15 @@ public class DataParserInfo extends RootPersistentEntity implements Serializable
 
     @Override
     public String resourceName() {
-        return this.className;
+        return generateResourcePath(project, className);
+    }
+
+    public static String generateResourcePath(String project, String className) {
+        return project + "." + className;
     }
 
     @Override
-    public String getResourcePath() {
-        return concatResourcePath(resourceName(), project);
-    }
-
-    public static String concatResourcePath(String name, String project) {
-        return String.format(Locale.ROOT, "/%s%s/%s%s", project, ResourceStore.DATA_PARSER_RESOURCE_ROOT, name,
-                MetadataConstants.FILE_SURFIX);
+    public MetadataType resourceType() {
+        return MetadataType.DATA_PARSER;
     }
 }

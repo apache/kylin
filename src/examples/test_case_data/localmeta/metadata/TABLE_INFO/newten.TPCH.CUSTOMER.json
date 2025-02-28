@@ -1,0 +1,43 @@
+{
+  "uuid" : "01f55058-97f2-474e-a198-6bae8ac5563c",
+  "last_modified" : 1494334079209,
+  "version" : "2.0.0",
+  "name" : "CUSTOMER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "C_CUSTKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "C_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "C_ADDRESS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "C_NATIONKEY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "C_PHONE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "C_ACCTBAL",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "C_MKTSEGMENT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "C_COMMENT",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCH",
+  "project" : "newten"
+}

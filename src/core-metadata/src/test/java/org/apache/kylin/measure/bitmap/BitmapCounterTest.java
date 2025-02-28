@@ -55,5 +55,4 @@ public class BitmapCounterTest {
         counter2.clear();
         assertEquals(0, counter2.getCount());
     }
-
 }

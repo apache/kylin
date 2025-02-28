@@ -1,0 +1,10 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "LEFTJOIN_SELLER_COUNTRY_ABBR",
+  "expression" : "SUBSTR(SELLER_ACCOUNT.ACCOUNT_COUNTRY,0,1)",
+  "datatype" : "string",
+  "comment" : "first char of country of seller account",
+  "uuid" : "6fb8f80d-33fa-9b7a-6c6b-49bf348b8b5e",
+  "project" : "infer_filter"
+}

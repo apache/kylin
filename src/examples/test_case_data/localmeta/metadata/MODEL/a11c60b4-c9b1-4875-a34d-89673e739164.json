@@ -1,0 +1,359 @@
+{
+  "uuid" : "a11c60b4-c9b1-4875-a34d-89673e739164",
+  "last_modified" : 1601283776831,
+  "create_time" : 1601283776831,
+  "version" : "4.0.0.0",
+  "alias" : "same_scd2_dim_tables",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_SCD2",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_SCD2",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "TEST_SCD2.ORDER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.TRANS_ID" ],
+      "non_equi_join_condition" : {
+        "type" : "EXPRESSION",
+        "data_type" : {
+          "type_name" : "BOOLEAN",
+          "precision" : 1,
+          "scale" : -2147483648
+        },
+        "op" : "AND",
+        "op_name" : "AND",
+        "operands" : [ {
+          "type" : "EXPRESSION",
+          "data_type" : {
+            "type_name" : "BOOLEAN",
+            "precision" : 1,
+            "scale" : -2147483648
+          },
+          "op" : "GREATER_THAN_OR_EQUAL",
+          "op_name" : ">=",
+          "operands" : [ {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_KYLIN_FACT.CAL_DT",
+            "expr" : null
+          }, {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_SCD2.START_DATE",
+            "expr" : null
+          } ],
+          "value" : null,
+          "expr" : null
+        }, {
+          "type" : "EXPRESSION",
+          "data_type" : {
+            "type_name" : "BOOLEAN",
+            "precision" : 1,
+            "scale" : -2147483648
+          },
+          "op" : "LESS_THAN",
+          "op_name" : "<",
+          "operands" : [ {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_KYLIN_FACT.CAL_DT",
+            "expr" : null
+          }, {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_SCD2.END_DATE",
+            "expr" : null
+          } ],
+          "value" : null,
+          "expr" : null
+        } ],
+        "value" : null,
+        "expr" : "\"TEST_KYLIN_FACT\".\"TRANS_ID\" = \"TEST_SCD2\".\"ORDER_ID\" AND \"TEST_KYLIN_FACT\".\"CAL_DT\" >= \"TEST_SCD2\".\"START_DATE\" AND \"TEST_KYLIN_FACT\".\"CAL_DT\" < \"TEST_SCD2\".\"END_DATE\""
+      },
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "DEFAULT.TEST_SCD2",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_SCD2_1",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "TEST_SCD2_1.BUYER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.SELLER_ID" ],
+      "non_equi_join_condition" : {
+        "type" : "EXPRESSION",
+        "data_type" : {
+          "type_name" : "BOOLEAN",
+          "precision" : 1,
+          "scale" : -2147483648
+        },
+        "op" : "AND",
+        "op_name" : "AND",
+        "operands" : [ {
+          "type" : "EXPRESSION",
+          "data_type" : {
+            "type_name" : "BOOLEAN",
+            "precision" : 1,
+            "scale" : -2147483648
+          },
+          "op" : "GREATER_THAN_OR_EQUAL",
+          "op_name" : ">=",
+          "operands" : [ {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_KYLIN_FACT.CAL_DT",
+            "expr" : null
+          }, {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_SCD2_1.START_DATE",
+            "expr" : null
+          } ],
+          "value" : null,
+          "expr" : null
+        }, {
+          "type" : "EXPRESSION",
+          "data_type" : {
+            "type_name" : "BOOLEAN",
+            "precision" : 1,
+            "scale" : -2147483648
+          },
+          "op" : "LESS_THAN",
+          "op_name" : "<",
+          "operands" : [ {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_KYLIN_FACT.CAL_DT",
+            "expr" : null
+          }, {
+            "type" : "COLUMN",
+            "data_type" : {
+              "type_name" : "DATE",
+              "precision" : 0,
+              "scale" : -2147483648
+            },
+            "op" : "INPUT_REF",
+            "op_name" : null,
+            "operands" : [ ],
+            "value" : "TEST_SCD2_1.END_DATE",
+            "expr" : null
+          } ],
+          "value" : null,
+          "expr" : null
+        } ],
+        "value" : null,
+        "expr" : "\"TEST_KYLIN_FACT\".\"SELLER_ID\" = \"TEST_SCD2_1\".\"BUYER_ID\" AND \"TEST_KYLIN_FACT\".\"CAL_DT\" >= \"TEST_SCD2_1\".\"START_DATE\" AND \"TEST_KYLIN_FACT\".\"CAL_DT\" < \"TEST_SCD2_1\".\"END_DATE\""
+      },
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID"
+  }, {
+    "id" : 1,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 2,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  }, {
+    "id" : 3,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 4,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID"
+  }, {
+    "id" : 5,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+  }, {
+    "id" : 7,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 8,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL"
+  }, {
+    "id" : 9,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 10,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE"
+  }, {
+    "id" : 12,
+    "name" : "ORDER_ID",
+    "column" : "TEST_SCD2.ORDER_ID"
+  }, {
+    "id" : 13,
+    "name" : "END_DATE",
+    "column" : "TEST_SCD2.END_DATE"
+  }, {
+    "id" : 14,
+    "name" : "BUYER_ID",
+    "column" : "TEST_SCD2.BUYER_ID"
+  }, {
+    "id" : 15,
+    "name" : "START_DATE",
+    "column" : "TEST_SCD2.START_DATE"
+  }, {
+    "id" : 16,
+    "name" : "FLAG",
+    "column" : "TEST_SCD2.FLAG",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "TEST_SCD2_1_ORDER_ID",
+    "column" : "TEST_SCD2_1.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "END_DATE",
+    "column" : "TEST_SCD2_1.END_DATE"
+  }, {
+    "id" : 19,
+    "name" : "BUYER_ID",
+    "column" : "TEST_SCD2_1.BUYER_ID"
+  }, {
+    "id" : 20,
+    "name" : "START_DATE",
+    "column" : "TEST_SCD2_1.START_DATE"
+  }, {
+    "id" : 21,
+    "name" : "FLAG",
+    "column" : "TEST_SCD2_1.FLAG"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 278.3333333333333,
+        "y" : 203.66667005750872,
+        "width" : 259.99999999999994,
+        "height" : 553.3333333333333
+      },
+      "TEST_SCD2" : {
+        "x" : 832.7777777777778,
+        "y" : 133.6666700575087,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "TEST_SCD2_1" : {
+        "x" : 765.0000000000001,
+        "y" : 498.1111145019531,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "scd2"
+}

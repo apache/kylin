@@ -22,7 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.job.service.JobResourceService;
+import org.apache.kylin.rest.service.JobResourceService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

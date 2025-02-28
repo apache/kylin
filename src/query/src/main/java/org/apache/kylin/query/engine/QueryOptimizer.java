@@ -33,7 +33,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
-import io.kyligence.kap.query.optrule.KapProjectJoinTransposeRule;
+import org.apache.kylin.query.optrule.OlapProjectJoinTransposeRule;
 
 public class QueryOptimizer {
 
@@ -62,7 +62,7 @@ public class QueryOptimizer {
                 if (node instanceof Union) {
                     // @see https://olapio.atlassian.net/browse/AL-2127
                     // the optimize step is extremely slow with this rule
-                    planner.removeRule(KapProjectJoinTransposeRule.INSTANCE);
+                    planner.removeRule(OlapProjectJoinTransposeRule.INSTANCE);
                 }
                 super.visit(node, ordinal, parent);
             }

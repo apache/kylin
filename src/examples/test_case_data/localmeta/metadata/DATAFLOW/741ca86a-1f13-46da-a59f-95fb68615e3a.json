@@ -1,0 +1,15 @@
+{
+  "uuid" : "741ca86a-1f13-46da-a59f-95fb68615e3a",
+  "last_modified" : 1522136133330,
+  "version" : "2.3.0.20500",
+  "description" : "test_description",
+  "owner" : "test_owner",
+  "mp_values" : null,
+  "create_time_utc" : 1509791792901,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 4,
+  "storage_location_identifier" : null,
+  "project" : "default",
+  "segment_uuids" : [ "ef783e4d-e35f-4bd9-8afd-efd64336f04d" ]
+}

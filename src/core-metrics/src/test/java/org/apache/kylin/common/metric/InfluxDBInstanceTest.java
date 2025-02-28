@@ -22,13 +22,8 @@ import java.net.URL;
 import java.util.Map;
 
 import org.apache.kylin.common.metrics.service.InfluxDBInstance;
-import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.Assert;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.shaded.influxdb.okhttp3.Interceptor;
 import org.apache.kylin.shaded.influxdb.okhttp3.MediaType;
 import org.apache.kylin.shaded.influxdb.okhttp3.OkHttpClient;
@@ -39,6 +34,9 @@ import org.apache.kylin.shaded.influxdb.okhttp3.ResponseBody;
 import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBFactory;
 import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @MetadataInfo(onlyProps = true)
 public class InfluxDBInstanceTest {

@@ -1,0 +1,52 @@
+{
+  "name" : "20120701000000_20130101000000",
+  "create_time_utc" : 1630402145995,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1341072000000,
+    "date_range_end" : 1356969600000
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "1" : {
+      "min" : "2012-07-01",
+      "max" : "2012-12-31"
+    },
+    "17" : {
+      "min" : "20000031",
+      "max" : "20010936"
+    },
+    "7" : {
+      "min" : "0.0232",
+      "max" : "99.9249"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1630403443384,
+  "source_count" : 2510,
+  "source_bytes_size" : 998009,
+  "column_source_bytes" : {
+    "DEFAULT.KYLIN_SALES.ITEM_COUNT" : 3875,
+    "DEFAULT.KYLIN_SALES.BUYER_ID" : 20080,
+    "DEFAULT.KYLIN_SALES.PART_DT" : 25100,
+    "DEFAULT.KYLIN_ACCOUNT.ACCOUNT_ID" : 80000,
+    "DEFAULT.KYLIN_ACCOUNT.ACCOUNT_SELLER_LEVEL" : 10000,
+    "DEFAULT.KYLIN_SALES.PRICE" : 17276,
+    "DEFAULT.KYLIN_SALES.SELLER_ID" : 20080
+  },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "2805396d-4fe5-4541-8bc0-944caacaa1a3",
+  "model_uuid" : "3f2860d5-0a4c-4f52-b27b-2627caafe769",
+  "project" : "heterogeneous_segment_2"
+}

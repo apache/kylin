@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_COUNT_DISTINCT",
+  "tableAlias" : "TEST_COUNT_DISTINCT",
+  "columnName" : "SMALLINT_ID",
+  "expression" : "cast (test_count_distinct.string_id as smallint)",
+  "innerExpression" : "cast (test_count_distinct.string_id as smallint)",
+  "datatype" : "smallint",
+  "comment" : null,
+  "uuid" : "cf04e848-56d2-0828-b439-335cc530fee8",
+  "project" : "count_distinct_no_encode"
+}

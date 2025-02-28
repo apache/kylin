@@ -35,6 +35,7 @@ public class QueryRealization implements Serializable {
     private String modelAlias;
     private Long layoutId;
     private String indexType;
+    private int storageType;
     private boolean isPartialMatchModel;
     private boolean isValid = true;
     private List<String> snapshots;

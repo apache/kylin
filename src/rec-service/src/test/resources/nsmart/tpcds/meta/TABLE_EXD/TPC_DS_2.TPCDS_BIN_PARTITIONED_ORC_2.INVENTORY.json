@@ -1,0 +1,51 @@
+{
+  "uuid" : "0456eebb-3fa4-4aa7-9e9d-a349bb8b232b",
+  "last_modified" : 1497608415591,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.INVENTORY",
+  "last_build_job_id" : "1bcf39b5-b48e-4486-8bc7-56fc7f3b9c72",
+  "columns_stats" : [ {
+    "max_value" : "26000",
+    "min_value" : "1",
+    "max_length_value" : "23348",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 26057
+  }, {
+    "max_value" : "5",
+    "min_value" : "1",
+    "max_length_value" : "4",
+    "min_length_value" : "4",
+    "null_count" : 0,
+    "cardinality" : 5
+  }, {
+    "max_value" : "1000",
+    "min_value" : "0",
+    "max_length_value" : "1000",
+    "min_length_value" : "4",
+    "null_count" : 848982,
+    "cardinality" : 1010
+  }, {
+    "max_value" : "2452635",
+    "min_value" : "2450815",
+    "max_length_value" : "2452040",
+    "min_length_value" : "2452040",
+    "null_count" : 0,
+    "cardinality" : 263
+  } ],
+  "sample_rows" : [ [ "6209", "6215", "6219", "6223", "6227", "6231", "6235", "6239", "6243", "6247" ], [ "1", "1", "1", "1", "1", "1", "1", "1", "1", "1" ], [ "807", "694", "76", "260", "733", "986", "386", "578", "466", "618" ], [ "2451179", "2451179", "2451179", "2451179", "2451179", "2451179", "2451179", "2451179", "2451179", "2451179" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "16966305",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "0",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/inventory",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "INV_DATE_SK",
+    "owner" : "root",
+    "total_file_number" : "0"
+  },
+  "project" : "TPC_DS_2"
+}

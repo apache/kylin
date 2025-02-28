@@ -19,8 +19,8 @@ package org.apache.kylin.streaming.request;
 
 import java.util.List;
 
-import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.model.SegmentRange;
 
 import lombok.Data;
 

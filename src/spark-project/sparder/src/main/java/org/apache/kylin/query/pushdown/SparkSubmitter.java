@@ -19,9 +19,9 @@
 package org.apache.kylin.query.pushdown;
 
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ClassLoaderUtils;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;

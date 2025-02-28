@@ -46,6 +46,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -56,11 +61,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -144,7 +144,8 @@ public class FunctionDesc implements Serializable {
 
     private static void checkSumLCTimeColDataType(String dataTypeName) {
         DataType dataType = DataType.getType(dataTypeName);
-        if (dataType.isTinyInt() || dataType.isFloat() || dataType.isDouble() || dataType.isDecimal() || dataType.isBoolean()) {
+        if (dataType.isTinyInt() || dataType.isFloat() || dataType.isDouble() || dataType.isDecimal()
+                || dataType.isBoolean()) {
             throw new KylinException(MODEL_SUM_LC_INVALID_TIMESTAMP_TYPE, dataType);
         }
     }
@@ -164,6 +165,14 @@ public class FunctionDesc implements Serializable {
     public static final String FUNC_INTERSECT_VALUE_V2 = "INTERSECT_VALUE_V2";
     public static final String FUNC_INTERSECT_BITMAP_UUID_V2 = "INTERSECT_BITMAP_UUID_V2";
     public static final String FUNC_BITMAP_BUILD = "BITMAP_BUILD";
+    public static final String FUNC_INTERSECT_BITMAP_UUID_DISTINCT = "INTERSECT_BITMAP_UUID_DISTINCT";
+    public static final String FUNC_INTERSECT_BITMAP_UUID_COUNT = "INTERSECT_BITMAP_UUID_COUNT";
+    public static final String FUNC_INTERSECT_BITMAP_UUID_VALUE = "INTERSECT_BITMAP_UUID_VALUE";
+    public static final String FUNC_INTERSECT_BITMAP_UUID_VALUE_ALL = "INTERSECT_BITMAP_UUID_VALUE_ALL";
+    public static final String FUNC_UNION_BITMAP_UUID_DISTINCT = "UNION_BITMAP_UUID_DISTINCT";
+    public static final String FUNC_UNION_BITMAP_UUID_COUNT = "UNION_BITMAP_UUID_COUNT";
+    public static final String FUNC_UNION_BITMAP_UUID_VALUE = "UNION_BITMAP_UUID_VALUE";
+    public static final String FUNC_UNION_BITMAP_UUID_VALUE_ALL = "UNION_BITMAP_UUID_VALUE_ALL";
     public static final String FUNC_CORR = "CORR";
     public static final String FUNC_COUNT_DISTINCT_HLLC10 = "hllc(10)";
     public static final String FUNC_COUNT_DISTINCT_BIT_MAP = "bitmap";
@@ -380,9 +389,9 @@ public class FunctionDesc implements Serializable {
         return !this.isCount() && CollectionUtils.isNotEmpty(parameters) && parameters.get(0).isConstantParameterDesc();
     }
 
-    public boolean isCountConstant() {//count(*) and count(1)
-        return FUNC_COUNT.equalsIgnoreCase(expression)
-                && (CollectionUtils.isEmpty(parameters) || parameters.get(0).isConstant());
+    public boolean isCountConstant() {//count(*) and count(1) and count(constant_udf_expression)
+        return FUNC_COUNT.equalsIgnoreCase(expression) && (CollectionUtils.isEmpty(parameters)
+                || parameters.get(0).isConstant() || parameters.get(0).isConstantParameterDesc());
     }
 
     public boolean isCountDistinct() {
@@ -488,7 +497,8 @@ public class FunctionDesc implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + ((isCount() || CollectionUtils.isEmpty(parameters)) ? 0 : parameters.hashCode());
+        boolean isConstant = isCountConstant() || CollectionUtils.isEmpty(parameters);
+        result = prime * result + (isConstant ? 0 : parameters.hashCode());
         // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return result;
     }
@@ -537,6 +547,17 @@ public class FunctionDesc implements Serializable {
             sb.setLength(sb.length() - 1);
         return "FunctionDesc [expression=" + expression + ", parameter=" + sb.toString() + ", returnType=" + returnType
                 + "]";
+    }
+
+    public String toStringWithoutAlias() {
+        StringBuilder sb = new StringBuilder();
+        parameters.forEach(parameter -> {
+            sb.append(parameter.toStringWithoutAlias());
+            sb.append(",");
+        });
+        if (sb.length() > 0)
+            sb.setLength(sb.length() - 1);
+        return "FunctionDesc [expression=" + expression + ", parameter=" + sb + ", returnType=" + returnType + "]";
     }
 
     private boolean parametersEqualInArbitraryOrder(List<ParameterDesc> parameters,

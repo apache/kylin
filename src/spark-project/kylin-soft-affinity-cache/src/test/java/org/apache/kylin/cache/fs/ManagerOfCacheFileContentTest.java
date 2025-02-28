@@ -52,8 +52,9 @@ public class ManagerOfCacheFileContentTest {
         cacheManager.markFilePageCached(pageId2);
         cacheManager.markFilePageCached(pageId3);
 
-        ConcurrentHashMap<String, ManagerOfCacheFileContent.FileMeta> fileMetas = (ConcurrentHashMap<String, ManagerOfCacheFileContent.FileMeta>) ReflectionTestUtils
-                .getField(cacheManager, "fileMetas");
+        ConcurrentHashMap<String, ManagerOfCacheFileContent.FileMeta> fileMetas //
+                = (ConcurrentHashMap<String, ManagerOfCacheFileContent.FileMeta>) ReflectionTestUtils
+                        .getField(cacheManager, "fileMetas");
         ManagerOfCacheFileContent.FileMeta fileMeta1 = fileMetas.get("fileId1");
         ManagerOfCacheFileContent.FileMeta fileMeta2 = fileMetas.get("fileId2");
 

@@ -21,15 +21,16 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.metadata.datatype.DataType;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -44,7 +45,7 @@ public class TblColRef implements Serializable {
     public static final String DYNAMIC_DATA_TYPE = "_dynamic_type";
     public static final String UNKNOWN_ALIAS = "UNKNOWN_ALIAS";
 
-    // used by projection rewrite, see OLAPProjectRel
+    // used by projection rewrite, see OlapProjectRel
     public enum InnerDataTypeEnum {
 
         LITERAL("_literal_type"), DERIVED("_derived_type"), AGGREGATION_TYPE("_aggregation_type");
@@ -96,12 +97,12 @@ public class TblColRef implements Serializable {
 
     }
 
-    // used by projection rewrite, see OLAPProjectRel
+    // used by projection rewrite, see OlapProjectRel
     public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType) {
         return newInnerColumn(columnName, dataType, null);
     }
 
-    // used by projection rewrite, see OLAPProjectRel
+    // used by projection rewrite, see OlapProjectRel
     public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType, String parserDescription) {
         return newInnerColumn(columnName, dataType, parserDescription, null, null);
     }
@@ -270,6 +271,12 @@ public class TblColRef implements Serializable {
         return getTableAlias() + "." + getName();
     }
 
+    public String getTableAliasColName() {
+        return table == null ? null
+                : String.format(Locale.ROOT, "%s.%s.%s", table.getTableDesc().getDatabase(), getTableAlias(),
+                        getName());
+    }
+
     public String getTableDotName() {
         return column.getTable().getName() + "." + getName();
     }
@@ -328,15 +335,13 @@ public class TblColRef implements Serializable {
             return false;
         if (!StringUtils.equals(column.getName(), other.column.getName()))
             return false;
-        if (!(table == null ? other.table == null : table.equals(other.table)))
+        if (!(Objects.equals(table, other.table)))
             return false;
         //#9121 self-join's agg pushdown sql's left and right OlapContext have identical table,
         //backupTable, containing olapContext's info, should be compared when both is not null
         if (backupTable != null && other.backupTable != null && !backupTable.equals(other.backupTable))
             return false;
-        if (this.isInnerColumn() != other.isInnerColumn())
-            return false;
-        return true;
+        return this.isInnerColumn() == other.isInnerColumn();
     }
 
     public String getIdentity() {

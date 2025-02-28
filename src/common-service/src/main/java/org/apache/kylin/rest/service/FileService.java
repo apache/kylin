@@ -41,7 +41,6 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -141,10 +140,9 @@ public class FileService extends BasicService {
         }
     }
 
-    public String downloadMetadataBackTmpFile(String tmpFilePath, Long tmpFileSize, String resourceGroupId)
-            throws JsonProcessingException {
-        val host = EpochManager.getInstance().getEpochOwner(EpochManager.GLOBAL);
-        val url = String.format(Locale.ROOT, "http://%s/kylin/api/system/metadata_backup_tmp_file", host);
+    public String downloadMetadataBackTmpFile(String tmpFilePath, Long tmpFileSize, String resourceGroupId,
+            String fromHost) throws JsonProcessingException {
+        val url = String.format(Locale.ROOT, "http://%s/kylin/api/system/metadata_backup_tmp_file", fromHost);
         val req = Maps.newHashMap();
         req.put("resource_group_id", resourceGroupId);
         req.put("tmp_file_path", tmpFilePath);
@@ -161,10 +159,11 @@ public class FileService extends BasicService {
         });
     }
 
-    public void saveBroadcastMetadataBackup(String backupDir, String filePath, Long fileSize, String resourceGroupId) {
+    public void saveBroadcastMetadataBackup(String backupDir, String filePath, Long fileSize, String resourceGroupId,
+            String fromHost) {
         var tmpFilePath = "";
         try {
-            tmpFilePath = downloadMetadataBackTmpFile(filePath, fileSize, resourceGroupId);
+            tmpFilePath = downloadMetadataBackTmpFile(filePath, fileSize, resourceGroupId, fromHost);
             log.info("tmpFilePath is [{}]", tmpFilePath);
             val path = StringUtils.appendIfMissing(HadoopUtil.getBackupFolder(KylinConfig.getInstanceFromEnv()),
                     BACKSLASH) + backupDir + BACKSLASH + METADATA_FILE;

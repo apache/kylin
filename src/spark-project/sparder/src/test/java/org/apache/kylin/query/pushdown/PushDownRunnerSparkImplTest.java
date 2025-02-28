@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
@@ -35,8 +36,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
 
@@ -61,12 +60,35 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
         schema = schema.add("TEST_COUNT_DISTINCT_BITMAP", DataTypes.StringType, false);
         ss.read().schema(schema).csv("../../examples/test_case_data/localmeta/data/DEFAULT.TEST_KYLIN_FACT.csv")
                 .createOrReplaceTempView("TEST_KYLIN_FACT");
+        schema = new StructType();
+        schema = schema.add("col1", DataTypes.createDecimalType(12, 5), true);
+        schema = schema.add("col2", DataTypes.createDecimalType(12, 6), true);
+        ss.read().schema(schema).csv("../../examples/test_case_data/localmeta/data/DEFAULT.TEST_DECIMAL.csv")
+                .createOrReplaceTempView("TEST_DECIMAL");
     }
 
     @After
     public void after() throws Exception {
         ss.stop();
         cleanupTestMetadata();
+    }
+
+    @Test
+    public void testDecimalCase() throws SQLException {
+        PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
+        pushDownRunnerSpark.init(null, "tpch");
+
+        List<List<String>> returnRows = Lists.newArrayList();
+        List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
+
+        String sql = "select sum(coalesce(col1 + col2 + 1.75, col1)) as test from TEST_DECIMAL";
+        pushDownRunnerSpark.executeQuery(sql, returnRows, returnColumnMeta, "tpch");
+
+        Assert.assertEquals(1, returnRows.size());
+        Assert.assertEquals("549.986000", returnRows.get(0).get(0));
+        Assert.assertEquals(1, returnColumnMeta.size());
+        Assert.assertEquals("test", returnColumnMeta.get(0).getName());
+        Assert.assertEquals(QueryContext.PUSHDOWN_HIVE, pushDownRunnerSpark.getName());
     }
 
     @Test

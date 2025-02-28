@@ -1,0 +1,741 @@
+{
+  "uuid" : "4b93b131-824e-6966-c4dd-5a4268d27095",
+  "last_modified" : 1646045123303,
+  "create_time" : 1646045109617,
+  "version" : "4.0.0.0",
+  "alias" : "test_broken_cube_00001",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "EDW.TEST_CAL_DT",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_CAL_DT",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "TEST_CAL_DT.CAL_DT_000" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.CAL_DT" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "IS_EFFECTUAL",
+    "column" : "TEST_KYLIN_FACT.IS_EFFECTUAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "CAL_DT_CRE_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_DATE"
+  }, {
+    "id" : 13,
+    "name" : "CAL_DT_MNS_1YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1YEAR_DT"
+  }, {
+    "id" : 14,
+    "name" : "CAL_DT_000",
+    "column" : "TEST_CAL_DT.CAL_DT_000",
+    "status" : "TOMB"
+  }, {
+    "id" : 15,
+    "name" : "YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.YEAR_BEG_DT"
+  }, {
+    "id" : 16,
+    "name" : "DAY_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_YEAR_ID"
+  }, {
+    "id" : 17,
+    "name" : "WEEK_BEG_END_DESC_MD",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MD"
+  }, {
+    "id" : 18,
+    "name" : "YEAR_END_DT",
+    "column" : "TEST_CAL_DT.YEAR_END_DT"
+  }, {
+    "id" : 19,
+    "name" : "CAL_DT_UPD_DATE",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_DATE"
+  }, {
+    "id" : 20,
+    "name" : "WTD_YN_ID",
+    "column" : "TEST_CAL_DT.WTD_YN_ID"
+  }, {
+    "id" : 21,
+    "name" : "DAY_IN_WEEK_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_WEEK_COUNT"
+  }, {
+    "id" : 22,
+    "name" : "CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2YEAR_YN_ID"
+  }, {
+    "id" : 23,
+    "name" : "CAL_DT_MNS_2MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2MONTH_DT"
+  }, {
+    "id" : 24,
+    "name" : "AGE_FOR_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_MONTH_ID"
+  }, {
+    "id" : 25,
+    "name" : "PRD_ID",
+    "column" : "TEST_CAL_DT.PRD_ID"
+  }, {
+    "id" : 26,
+    "name" : "PRD_FLAG",
+    "column" : "TEST_CAL_DT.PRD_FLAG"
+  }, {
+    "id" : 27,
+    "name" : "WEEK_IND",
+    "column" : "TEST_CAL_DT.WEEK_IND"
+  }, {
+    "id" : 28,
+    "name" : "WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DT"
+  }, {
+    "id" : 29,
+    "name" : "RETAIL_YEAR",
+    "column" : "TEST_CAL_DT.RETAIL_YEAR"
+  }, {
+    "id" : 30,
+    "name" : "QTD_YN_ID",
+    "column" : "TEST_CAL_DT.QTD_YN_ID"
+  }, {
+    "id" : 31,
+    "name" : "RETAIL_START_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_START_DATE"
+  }, {
+    "id" : 32,
+    "name" : "RETAIL_WEEK",
+    "column" : "TEST_CAL_DT.RETAIL_WEEK"
+  }, {
+    "id" : 33,
+    "name" : "MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.MONTH_BEG_DT"
+  }, {
+    "id" : 34,
+    "name" : "MONTH_END_DT",
+    "column" : "TEST_CAL_DT.MONTH_END_DT"
+  }, {
+    "id" : 35,
+    "name" : "MONTH_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_QTR_ID"
+  }, {
+    "id" : 36,
+    "name" : "RTL_WEEK_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_WEEK_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 37,
+    "name" : "QTR_END_DT",
+    "column" : "TEST_CAL_DT.QTR_END_DT"
+  }, {
+    "id" : 38,
+    "name" : "PRD_IND",
+    "column" : "TEST_CAL_DT.PRD_IND"
+  }, {
+    "id" : 39,
+    "name" : "AGE_FOR_CS_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_CS_WEEK_ID"
+  }, {
+    "id" : 40,
+    "name" : "WEEK_IN_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_IN_YEAR_ID"
+  }, {
+    "id" : 41,
+    "name" : "YEAR_ID",
+    "column" : "TEST_CAL_DT.YEAR_ID"
+  }, {
+    "id" : 42,
+    "name" : "RETAIL_WK_END_DATE",
+    "column" : "TEST_CAL_DT.RETAIL_WK_END_DATE"
+  }, {
+    "id" : 43,
+    "name" : "WEEK_BEG_END_DESC_MDY",
+    "column" : "TEST_CAL_DT.WEEK_BEG_END_DESC_MDY"
+  }, {
+    "id" : 44,
+    "name" : "QTR_DESC",
+    "column" : "TEST_CAL_DT.QTR_DESC"
+  }, {
+    "id" : 45,
+    "name" : "YTD_YN_ID",
+    "column" : "TEST_CAL_DT.YTD_YN_ID"
+  }, {
+    "id" : 46,
+    "name" : "WEEK_ID",
+    "column" : "TEST_CAL_DT.WEEK_ID"
+  }, {
+    "id" : 47,
+    "name" : "WEEK_END_DT",
+    "column" : "TEST_CAL_DT.WEEK_END_DT"
+  }, {
+    "id" : 48,
+    "name" : "YEAR_IND",
+    "column" : "TEST_CAL_DT.YEAR_IND"
+  }, {
+    "id" : 49,
+    "name" : "CAL_DT_MNS_1QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1QTR_DT"
+  }, {
+    "id" : 50,
+    "name" : "WEEK_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_CAL_ID"
+  }, {
+    "id" : 51,
+    "name" : "PRD_DESC",
+    "column" : "TEST_CAL_DT.PRD_DESC"
+  }, {
+    "id" : 52,
+    "name" : "YTM_YN_ID",
+    "column" : "TEST_CAL_DT.YTM_YN_ID"
+  }, {
+    "id" : 53,
+    "name" : "CAL_DT_CRE_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_CRE_USER"
+  }, {
+    "id" : 54,
+    "name" : "WEEK_BEG_DATE",
+    "column" : "TEST_CAL_DT.WEEK_BEG_DATE"
+  }, {
+    "id" : 55,
+    "name" : "RTL_MONTH_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_MONTH_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 56,
+    "name" : "RTL_QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_QTR_BEG_DT"
+  }, {
+    "id" : 57,
+    "name" : "DAY_OF_WEEK",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK"
+  }, {
+    "id" : 58,
+    "name" : "QTR_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_YEAR_ID"
+  }, {
+    "id" : 59,
+    "name" : "MTD_YN_ID",
+    "column" : "TEST_CAL_DT.MTD_YN_ID"
+  }, {
+    "id" : 60,
+    "name" : "SEASON_BEG_DT",
+    "column" : "TEST_CAL_DT.SEASON_BEG_DT"
+  }, {
+    "id" : 61,
+    "name" : "CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1YEAR_YN_ID"
+  }, {
+    "id" : 62,
+    "name" : "WEEK_END_DATE",
+    "column" : "TEST_CAL_DT.WEEK_END_DATE"
+  }, {
+    "id" : 63,
+    "name" : "CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1WEEK_YN_IND"
+  }, {
+    "id" : 64,
+    "name" : "CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2WEEK_YN_IND"
+  }, {
+    "id" : 65,
+    "name" : "AGE_FOR_DT_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_DT_ID"
+  }, {
+    "id" : 66,
+    "name" : "DAY_IN_YEAR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_YEAR_COUNT"
+  }, {
+    "id" : 67,
+    "name" : "MONTH_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_YEAR_ID"
+  }, {
+    "id" : 68,
+    "name" : "CAL_DT_MNS_2QTR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2QTR_DT"
+  }, {
+    "id" : 69,
+    "name" : "CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2QTR_YN_ID"
+  }, {
+    "id" : 70,
+    "name" : "SEASON_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.SEASON_OF_YEAR_ID"
+  }, {
+    "id" : 71,
+    "name" : "RTL_YEAR_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_YEAR_BEG_DT"
+  }, {
+    "id" : 72,
+    "name" : "QTR_IND",
+    "column" : "TEST_CAL_DT.QTR_IND"
+  }, {
+    "id" : 73,
+    "name" : "CAL_DT_UPD_USER",
+    "column" : "TEST_CAL_DT.CAL_DT_UPD_USER"
+  }, {
+    "id" : 74,
+    "name" : "CAL_DT_MNS_1WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1WEEK_DT"
+  }, {
+    "id" : 75,
+    "name" : "YTQ_YN_ID",
+    "column" : "TEST_CAL_DT.YTQ_YN_ID"
+  }, {
+    "id" : 76,
+    "name" : "AGE_FOR_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_YEAR_ID"
+  }, {
+    "id" : 77,
+    "name" : "RTL_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_WEEK_BEG_DT"
+  }, {
+    "id" : 78,
+    "name" : "QTR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.QTR_OF_CAL_ID"
+  }, {
+    "id" : 79,
+    "name" : "YTW_YN_ID",
+    "column" : "TEST_CAL_DT.YTW_YN_ID"
+  }, {
+    "id" : 80,
+    "name" : "DAY_OF_MONTH_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_MONTH_ID"
+  }, {
+    "id" : 81,
+    "name" : "CAL_DT_MNS_1MONTH_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_1MONTH_DT"
+  }, {
+    "id" : 82,
+    "name" : "DAY_OF_WEEK_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_WEEK_ID"
+  }, {
+    "id" : 83,
+    "name" : "AGE_FOR_YEAR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_YEAR_ID"
+  }, {
+    "id" : 84,
+    "name" : "CS_WEEK_BEG_DT",
+    "column" : "TEST_CAL_DT.CS_WEEK_BEG_DT"
+  }, {
+    "id" : 85,
+    "name" : "DAY_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_CAL_ID"
+  }, {
+    "id" : 86,
+    "name" : "AGE_FOR_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_WEEK_ID"
+  }, {
+    "id" : 87,
+    "name" : "MONTH_ID",
+    "column" : "TEST_CAL_DT.MONTH_ID"
+  }, {
+    "id" : 88,
+    "name" : "CAL_DT_MNS_2YEAR_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2YEAR_DT"
+  }, {
+    "id" : 89,
+    "name" : "QTR_ID",
+    "column" : "TEST_CAL_DT.QTR_ID"
+  }, {
+    "id" : 90,
+    "name" : "CAL_DT_SHORT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_SHORT_NAME"
+  }, {
+    "id" : 91,
+    "name" : "DAY_OF_QTR_ID",
+    "column" : "TEST_CAL_DT.DAY_OF_QTR_ID"
+  }, {
+    "id" : 92,
+    "name" : "CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1QTR_YN_ID"
+  }, {
+    "id" : 93,
+    "name" : "AGE_FOR_RTL_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_QTR_ID"
+  }, {
+    "id" : 94,
+    "name" : "DAY_IN_MONTH_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_MONTH_COUNT"
+  }, {
+    "id" : 95,
+    "name" : "RTL_QTR_OF_RTL_YEAR_ID",
+    "column" : "TEST_CAL_DT.RTL_QTR_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 96,
+    "name" : "CAL_DT_NAME",
+    "column" : "TEST_CAL_DT.CAL_DT_NAME"
+  }, {
+    "id" : 97,
+    "name" : "QTR_BEG_DT",
+    "column" : "TEST_CAL_DT.QTR_BEG_DT"
+  }, {
+    "id" : 98,
+    "name" : "MONTH_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.MONTH_OF_CAL_ID"
+  }, {
+    "id" : 99,
+    "name" : "AGE_FOR_RTL_WEEK_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_WEEK_ID"
+  }, {
+    "id" : 100,
+    "name" : "AGE_FOR_RTL_MONTH_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_RTL_MONTH_ID"
+  }, {
+    "id" : 101,
+    "name" : "RTL_MONTH_BEG_DT",
+    "column" : "TEST_CAL_DT.RTL_MONTH_BEG_DT"
+  }, {
+    "id" : 102,
+    "name" : "DAY_IN_QTR_COUNT",
+    "column" : "TEST_CAL_DT.DAY_IN_QTR_COUNT"
+  }, {
+    "id" : 103,
+    "name" : "WEEK_OF_YEAR_ID",
+    "column" : "TEST_CAL_DT.WEEK_OF_YEAR_ID"
+  }, {
+    "id" : 104,
+    "name" : "CAL_DT_MNS_2WEEK_DT",
+    "column" : "TEST_CAL_DT.CAL_DT_MNS_2WEEK_DT"
+  }, {
+    "id" : 105,
+    "name" : "CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_1MONTH_YN_ID"
+  }, {
+    "id" : 106,
+    "name" : "AGE_FOR_QTR_ID",
+    "column" : "TEST_CAL_DT.AGE_FOR_QTR_ID"
+  }, {
+    "id" : 107,
+    "name" : "YEAR_OF_CAL_ID",
+    "column" : "TEST_CAL_DT.YEAR_OF_CAL_ID"
+  }, {
+    "id" : 108,
+    "name" : "CAL_DT_DESC",
+    "column" : "TEST_CAL_DT.CAL_DT_DESC"
+  }, {
+    "id" : 109,
+    "name" : "CAL_DATE",
+    "column" : "TEST_CAL_DT.CAL_DATE"
+  }, {
+    "id" : 110,
+    "name" : "WEEK_NUM_DESC",
+    "column" : "TEST_CAL_DT.WEEK_NUM_DESC"
+  }, {
+    "id" : 111,
+    "name" : "CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "column" : "TEST_CAL_DT.CURR_CAL_DT_MNS_2MONTH_YN_ID"
+  }, {
+    "id" : 112,
+    "name" : "CC_AUTO__1646045110865_0",
+    "column" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_0"
+  }, {
+    "id" : 113,
+    "name" : "CC_AUTO__1646045110865_1",
+    "column" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_1"
+  }, {
+    "id" : 114,
+    "name" : "CC_AUTO__1646045110865_2",
+    "column" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_2"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "TRANS_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "ORDER_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LEAF_CATEG_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100003,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LSTG_SITE_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100004,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "SLR_SEGMENT_CD",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100005,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "SELLER_ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.SELLER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100006,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "PRICE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(29,4)"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100007,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "ITEM_COUNT",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100008,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "CORR_02",
+    "function" : {
+      "expression" : "CORR",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.TRANS_ID"
+      }, {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100009,
+    "type" : "EXPANDABLE",
+    "internal_ids" : [ 100001, 100002, 100010, 100011, 100012 ]
+  }, {
+    "name" : "CORR_02_SUM_TEST_KYLIN_FACT_CC_AUTO__1646045110865_0_0",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_0"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100010,
+    "type" : "INTERNAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "CORR_02_SUM_TEST_KYLIN_FACT_CC_AUTO__1646045110865_1_1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100011,
+    "type" : "INTERNAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "CORR_02_SUM_TEST_KYLIN_FACT_CC_AUTO__1646045110865_2_2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.CC_AUTO__1646045110865_2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100012,
+    "type" : "INTERNAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 523.8333468967014,
+        "y" : 122.3888905843099,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "TEST_CAL_DT" : {
+        "x" : 557.1666802300348,
+        "y" : 414.61111280653216,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "broken_reason" : "SCHEMA",
+  "handled_after_broken" : true,
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ "4e986b54-21c9-f2e2-c200-73f718d3321b", "c86a77d7-c933-4ed4-3ddf-9dc43ecf5939", "db098e90-125c-9d51-34b8-cacf97ef5c8e" ],
+  "project" : "test_broken_project"
+}

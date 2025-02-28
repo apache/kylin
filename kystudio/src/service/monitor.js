@@ -47,8 +47,14 @@ export default {
   loadJobChartData: (para) => {
     return Vue.resource(apiUrl + 'jobs/statistics/count').get(para)
   },
-  loadJobBulidChartData: (para) => {
-    return Vue.resource(apiUrl + 'jobs/statistics/duration_per_byte').get(para)
+  loadStreamingJobsList: (para) => {
+    return Vue.resource(apiUrl + 'streaming_jobs{?job_types}{&model_names}').get(para)
+  },
+  getStreamingJobRecords: (para) => {
+    return Vue.resource(apiUrl + 'streaming_jobs/records').get(para)
+  },
+  updateStreamingJobs: (para) => {
+    return Vue.resource(apiUrl + 'streaming_jobs/status').update(para)
   },
   getStreamingChartData: (para) => {
     return Vue.resource(apiUrl + `streaming_jobs/stats/${para.job_id}`).get(para)

@@ -1,0 +1,132 @@
+{
+  "uuid" : "acfde546-2cc9-4eec-bc92-e3bd46d4e2bf",
+  "alias" : "test_table_index_2",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "owner" : "ADMIN",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_ORDER",
+    "join" : {
+      "type" : "LEFT",
+      "primary_key" : [ "TEST_ORDER.ORDER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ]
+    }
+  } ],
+  "all_named_columns" : [ {
+    "id" : 2,
+    "name" : "TEST_KYLIN_FACT_ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "TEST_KYLIN_FACT_LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "TEST_KYLIN_FACT_SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "TEST_KYLIN_FACT_PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "TEST_ORDER_ORDER_ID",
+    "column" : "TEST_ORDER.ORDER_ID",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  }, {
+    "name" : "SUM_ORDERID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100001
+  }, {
+    "name" : "MAX_ORDERID",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100002
+  }, {
+    "name" : "MIN_ORDERID",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100003
+  }, {
+    "name" : "COUNT_ORDERID",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100004
+  }, {
+    "name" : "COUNT_DISTINCT_ORDERID",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ORDER_ID"
+      } ],
+      "returntype" : "hllc(10)"
+    },
+    "id" : 100005
+  } ],
+  "column_correlations" : [ ],
+  "last_modified" : 1422435345352,
+  "filter_condition" : null,
+  "partition_desc" : {
+    "partition_date_column" : "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start" : 0,
+    "partition_type" : "APPEND"
+  },
+  "computed_column_uuids" : [ ],
+  "project" : "table_index"
+}

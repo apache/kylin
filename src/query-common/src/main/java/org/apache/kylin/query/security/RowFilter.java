@@ -19,7 +19,6 @@
 package org.apache.kylin.query.security;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -39,11 +38,11 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang.text.StrBuilder;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.query.IQueryTransformer;
@@ -52,7 +51,7 @@ import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import lombok.Getter;
 
 public class RowFilter implements IQueryTransformer, IPushDownConverter {
     private static final Logger logger = LoggerFactory.getLogger(RowFilter.class);
@@ -104,10 +103,9 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
 
     private static String afterInsertSQL(String inputSQL, List<Pair<Integer, String>> toBeInsertedPosAndExprs) {
         // latter replace position in the front of the list.
-        Collections.sort(toBeInsertedPosAndExprs,
-                (Pair<Integer, String> o1, Pair<Integer, String> o2) -> -(o1.getFirst() - o2.getFirst()));
+        toBeInsertedPosAndExprs.sort((o1, o2) -> o2.getFirst() - o1.getFirst());
 
-        StrBuilder convertedSQL = new StrBuilder(inputSQL);
+        StringBuilder convertedSQL = new StringBuilder(inputSQL);
         for (Pair<Integer, String> toBeInserted : toBeInsertedPosAndExprs) {
             int insertPos = toBeInserted.getFirst();
             convertedSQL.insert(insertPos, toBeInserted.getSecond());
@@ -143,10 +141,11 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
         int finalPos = pos.getSecond();
         int bracketNum = 0;
         //move the pos to the rightest ")", if has.
-        //bracketNum if for the situation like that: "from ( select * from t where t.a > 0 )", the rightest ")" is not belong to where clause
+        //bracketNum if for the situation like that:
+        //  "from ( select * from t where t.a > 0 )", the rightest ")" is not belong to where clause
         for (int j = pos.getFirst() - 1;; j--) {
             if (inputSQL.charAt(j) == ' ' || inputSQL.charAt(j) == '\t' || inputSQL.charAt(j) == '\n') {
-                continue;
+                // do nothing
             } else if (inputSQL.charAt(j) == '(') {
                 bracketNum++;
             } else {
@@ -156,7 +155,7 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
 
         for (int i = pos.getSecond(); i < inputSQL.length() && bracketNum > 0; i++) {
             if (inputSQL.charAt(i) == ' ' || inputSQL.charAt(i) == '\t' || inputSQL.charAt(i) == '\n') {
-                continue;
+                // do nothing
             } else if (inputSQL.charAt(i) == ')') {
                 finalPos = i + 1;
                 bracketNum--;
@@ -212,9 +211,9 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
         Map<SqlSelect, List<Table>> selectWithTables = new HashMap<>();
 
         for (SqlSelect select : SelectClauseFinder.getSelectClauses(inputSQL, project)) {
-            List<Table> tblsWithAlias = getTblWithAlias(schema, select);
-            if (tblsWithAlias.size() > 0) {
-                selectWithTables.put(select, tblsWithAlias);
+            List<Table> tblWithAliasList = getTblWithAlias(schema, select);
+            if (!tblWithAliasList.isEmpty()) {
+                selectWithTables.put(select, tblWithAliasList);
             }
         }
         return selectWithTables;
@@ -283,19 +282,18 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
 
     /*visitor classes.Get all select nodes, include select clause in subquery*/
     static class SelectClauseFinder extends SqlBasicVisitor<SqlNode> {
-        private List<SqlSelect> selects;
+        private final List<SqlSelect> selects;
 
         SelectClauseFinder() {
             this.selects = new ArrayList<>();
         }
 
-        static List<SqlSelect> getSelectClauses(String inputSQL, String project) {
-            SqlNode node = null;
+        static List<SqlSelect> getSelectClauses(String inputSql, String project) {
+            SqlNode node;
             try {
-                node = CalciteParser.parse(inputSQL, project);
+                node = CalciteParser.parse(inputSql, project);
             } catch (SqlParseException e) {
-                throw new KylinRuntimeException(
-                        "Failed to parse SQL \'" + inputSQL + "\', please make sure the SQL is valid");
+                throw new KylinRuntimeException("Failed to parse invalid SQL: " + inputSql);
             }
             SelectClauseFinder sv = new SelectClauseFinder();
             node.accept(sv);
@@ -333,7 +331,8 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
     /*visitor classes.Get select clause 's all tablesWithAlias and skip the subquery*/
     static class NonSubqueryTablesFinder extends SqlBasicVisitor<SqlNode> {
         // '{table:alias,...}'
-        private List<Table> tablesWithAlias;
+        @Getter
+        private final List<Table> tablesWithAlias;
 
         private NonSubqueryTablesFinder() {
             this.tablesWithAlias = new ArrayList<>();
@@ -343,11 +342,7 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
         static List<Table> getTblsWithAlias(SqlNode fromNode) {
             NonSubqueryTablesFinder sv = new NonSubqueryTablesFinder();
             fromNode.accept(sv);
-            return sv.getTblsWithAlias();
-        }
-
-        private List<Table> getTblsWithAlias() {
-            return tablesWithAlias;
+            return sv.getTablesWithAlias();
         }
 
         @Override
@@ -357,19 +352,20 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
 
         @Override
         public SqlNode visit(SqlCall call) {
-            // skip subquery in the from clause
+            // skip subQuery in the `from` clause
             if (call instanceof SqlSelect) {
                 // do nothing.
             } else if (call instanceof SqlBasicCall) {
                 // for the case table alias like "from t t1".The only SqlBasicCall in from clause is "AS".
-                // the instanceof SqlIdentifier is for the case that "select * from (select * from t2) t1".subquery as table.
+                // the instanceof SqlIdentifier is for the case that
+                // "select * from (select * from t2) t1".subquery as table.
                 SqlBasicCall node = (SqlBasicCall) call;
-                if (node.getOperator() instanceof SqlAsOperator && node.getOperands()[0] instanceof SqlIdentifier) {
-                    SqlIdentifier id0 = (SqlIdentifier) ((SqlBasicCall) call).getOperands()[0];
-                    SqlIdentifier id1 = (SqlIdentifier) ((SqlBasicCall) call).getOperands()[1];
+                if (node.getOperator() instanceof SqlAsOperator && node.operand(0) instanceof SqlIdentifier) {
+                    SqlIdentifier id0 = (SqlIdentifier) ((SqlBasicCall) call).operand(0);
+                    SqlIdentifier id1 = (SqlIdentifier) ((SqlBasicCall) call).operand(1);
                     String table = id0.toString(); //DB.TABLE OR TABLE
-                    String alais = CalciteParser.getLastNthName(id1, 1);
-                    tablesWithAlias.add(new Table(table, alais));
+                    String alias = CalciteParser.getLastNthName(id1, 1);
+                    tablesWithAlias.add(new Table(table, alias));
                 }
             } else if (call instanceof SqlJoin) {
                 SqlJoin node = (SqlJoin) call;
@@ -388,7 +384,7 @@ public class RowFilter implements IQueryTransformer, IPushDownConverter {
         @Override
         public SqlNode visit(SqlIdentifier id) {
             // if table has no alias, will come into this method.Put table name as alias
-            String[] dotSplits = id.toString().toUpperCase(Locale.ROOT).split("\\.");
+            String[] dotSplits = StringUtils.upperCase(id.toString()).split("\\.");
             String table = dotSplits[dotSplits.length - 1];
             tablesWithAlias.add(new Table(id.toString().toUpperCase(Locale.ROOT), table));
             return null;

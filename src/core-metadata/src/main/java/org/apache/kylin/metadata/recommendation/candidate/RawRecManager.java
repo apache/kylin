@@ -151,6 +151,10 @@ public class RawRecManager {
         return jdbcRawRecStore.chooseTopNCandidates(project, model, limit, 0, RawRecItem.RawRecState.RECOMMENDED);
     }
 
+    public List<RawRecItem> queryIndexPlannerRecItems(String project, String model) {
+        return jdbcRawRecStore.chooseIndexPlannerCandidates(project, model);
+    }
+
     public List<RawRecItem> queryImportedRawRecItems(String project, String model) {
         return jdbcRawRecStore.queryImportedRawRecItems(project, model, RawRecItem.RawRecState.RECOMMENDED);
     }
@@ -161,8 +165,7 @@ public class RawRecManager {
         int existCandidateCount = rawRecManager.clearExistingCandidates(project, model);
         OptRecV2 optRecV2 = new OptRecV2(project, model, false);
         List<RawRecItem> topNCandidates = Lists.newArrayList();
-        int minCost = Integer.parseInt(
-                FavoriteRuleManager.getInstance(project).getValue(MIN_HIT_COUNT));
+        int minCost = Integer.parseInt(FavoriteRuleManager.getInstance(project).getValue(MIN_HIT_COUNT));
         RawRecItem.CostMethod costMethod = RawRecItem.CostMethod.getCostMethod(project);
         minCost = costMethod == RawRecItem.CostMethod.HIT_COUNT ? minCost : -1;
         int offset = 0;
@@ -257,7 +260,7 @@ public class RawRecManager {
     }
 
     public RawRecItem getRawRecItemByUniqueFlag(String project, String modelId, String uniqueFlag,
-                                                Integer semanticVersion) {
+            Integer semanticVersion) {
         return jdbcRawRecStore.queryByUniqueFlag(project, modelId, uniqueFlag, semanticVersion);
     }
 

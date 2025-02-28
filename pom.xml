@@ -28,7 +28,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 
     <name>Apache Kylin 5</name>
     <url>http://kylin.apache.org/5.0</url>
@@ -99,8 +99,8 @@
         <maven-model.version>3.3.9</maven-model.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <arthas.version>3.6.7-kyarthas-r3</arthas.version>
-        <tomcat-embed.version>9.0.76</tomcat-embed.version>
+        <arthas.version>3.6.8</arthas.version>
+        <tomcat-embed.version>9.0.90</tomcat-embed.version>
 
         <!-- Keep same order with dependencyManagement -->
 
@@ -111,13 +111,13 @@
         <hadoop.cloud.version>${hadoop.version}</hadoop.cloud.version>
 
         <!-- Hive versions -->
-        <hive.version>2.3.9</hive.version>
-        <hive-hcatalog.version>2.3.9</hive-hcatalog.version>
+        <hive.version>2.3.10</hive.version>
+        <hive-hcatalog.version>2.3.10</hive-hcatalog.version>
         <hive-storage-api.version>2.7.2</hive-storage-api.version>
 
         <!-- soft affinity -->
         <alluxio.version>2.7.4</alluxio.version>
-        <libthrift.version>0.12.0</libthrift.version>
+        <libthrift.version>0.14.0</libthrift.version>
         <libfb303.version>0.9.3</libfb303.version>
 
         <!-- soft affinity -->
@@ -128,8 +128,15 @@
         <kafka.version>2.8.2</kafka.version>
 
         <!-- Spark versions -->
-        <spark.version>3.3.0-kylin-4.6.17.0</spark.version>
-        <delta.version>2.1.0</delta.version>
+        <spark.version>3.3.0-kylin-5.2.2-SNAPSHOT</spark.version>
+        <delta.version>2.3.0</delta.version>
+        <delta-standalone.version>0.6.0</delta-standalone.version>
+        <iceberg.version>1.4.1</iceberg.version>
+
+        <gluten.version>1.3.0-kylin-250110-SNAPSHOT</gluten.version>
+        <gluten.deps.scope>compile</gluten.deps.scope>
+        <substrait.version>0.5.0</substrait.version>
+        <celeborn.version>0.3.0-incubating</celeborn.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -138,8 +145,9 @@
         <scala-retry>0.3.0</scala-retry>
 
         <!-- Calcite Version -->
-        <calcite.version>1.116.0-kylin-4.x-r036</calcite.version>
-        <avatica.version>4.x_1.10-r01</avatica.version>
+        <calcite.version>1.30.0-kylin-4.x-r10</calcite.version>
+        <avatica.version>1.22.0</avatica.version>
+        <immutables.version>2.8.8</immutables.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
         <zookeeper.version>3.4.14</zookeeper.version>
@@ -155,7 +163,7 @@
         <commons-math3.version>3.4.1</commons-math3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-codec.version>1.15</commons-codec.version>
-        <commons-compress.version>1.21</commons-compress.version>
+        <commons-compress.version>1.26.1</commons-compress.version>
         <gson.version>2.8.9</gson.version>
         <fastutil.version>7.0.13</fastutil.version>
 
@@ -164,8 +172,8 @@
         <junit-pioneer.version>1.5.0</junit-pioneer.version>
         <scalatest.version>3.2.0</scalatest.version>
         <dbunit.version>2.5.2</dbunit.version>
-        <h2.version>1.4.197</h2.version>
-        <jetty.version>9.4.43.v20210629</jetty.version>
+        <h2.version>2.2.220</h2.version>
+        <jetty.version>9.4.53.v20231009</jetty.version>
         <jamm.version>0.3.1</jamm.version>
         <mockito.version>3.12.4</mockito.version>
         <powermock.version>2.0.9</powermock.version>
@@ -181,7 +189,7 @@
         <!-- Utility -->
         <mssql-jdbc.version>6.1.0.jre7</mssql-jdbc.version>
         <mysql-connector.version>8.0.28</mysql-connector.version>
-        <postgresql.version>42.4.1</postgresql.version>
+        <postgresql.version>42.4.4</postgresql.version>
         <commons-dbcp.version>2.9.0</commons-dbcp.version>
         <lmax.disruptor.versoin>3.4.2</lmax.disruptor.versoin>
         <log4j2.version>2.18.0</log4j2.version>
@@ -201,14 +209,14 @@
         <snakeyaml.version>1.32</snakeyaml.version>
 
         <mybatis.version>3.5.6</mybatis.version>
-        <mybatis-sql.version>1.3.1</mybatis-sql.version>
+        <mybatis-sql.version>1.5.0</mybatis-sql.version>
         <mybatis-spring-boot-starter.version>2.2.2</mybatis-spring-boot-starter.version>
         <mybatis-sprint.version>2.0.7</mybatis-sprint.version>
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>
         <cors.version>2.5</cors.version>
         <t-digest.version>3.1.1-kylin-r1</t-digest.version>
-        <jsonpath.version>2.3.0</jsonpath.version>
+        <jsonpath.version>2.7.0</jsonpath.version>
         <lombok.version>1.18.2</lombok.version>
         <forbiddenapis.version>3.1</forbiddenapis.version>
         <javassist.version>3.20.0-GA</javassist.version>
@@ -221,12 +229,13 @@
         <dropwizard.version>4.1.1</dropwizard.version>
 
         <spring.cloud.version>2021.0.6</spring.cloud.version>
-        <spring.boot.version>2.7.12</spring.boot.version>
+        <spring.boot.version>2.7.18</spring.boot.version>
         <spring-boot-admin.version>2.6.10</spring-boot-admin.version>
-        <spring-session.version>2.6.1-kylin-r4</spring-session.version>
-        <spring.framework.security.config.version>5.7.10</spring.framework.security.config.version>
+        <spring-session.version>2.6.1-kylin-r5</spring-session.version>
+        <spring.framework.security.config.version>5.7.12</spring.framework.security.config.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
-        <spring-webmvc.version>5.3.26</spring-webmvc.version>
+        <spring-web.version>5.3.33</spring-web.version>
+        <spring-webmvc.version>5.3.31</spring-webmvc.version>
         <opensaml.version>2.6.6</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
         <unboundid-ldapsdk.version>3.1.1</unboundid-ldapsdk.version>
@@ -242,7 +251,7 @@
 
         <groovy-all.version>2.4.21</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
-        <protobuf-java.version>3.16.3</protobuf-java.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
 
         <!-- Sonar -->
         <sonar.scala.version>${scala.version}</sonar.scala.version>
@@ -253,8 +262,6 @@
             org/apache/kylin/**/tools/**:**/*CLI.java,
             **/org/apache/kylin/query/optrule/*,
             org/apache/kylin/query/exec/*,
-            org/apache/kylin/query/relnode/KapOLAPToEnumerableConverter.java,
-            **/org/apache/kylin/query/relnode/OLAP*Rel.java,
             **/org/apache/kylin/tool/kerberos/DelegationTokenManager.java,
             **/org/apache/kylin/tool/kerberos/KerberosLoginTask.java,
             **/org/apache/kylin/tool/kerberos/KerberosLoginUtil.java,
@@ -276,10 +283,12 @@
             **/org/apache/kylin/tool/garbage/IndexCleaner.java,
             **/io/kyligence/kap/cache/utils/Hadoop3CompaUtil.java,
             **/io/kyligence/hive/serde2/lazy/LazyQuoteAwareSerDe.java,
-            **/org/apache/kylin/engine/spark/job/stage/build/MaterializedFactTableView.scala,
+            **/org/apache/kylin/engine/spark/job/stage/build/MaterializeFactView.scala,
             **/org/apache/spark/sql/hive/KylinHiveSessionStateBuilder.scala,
             **/org/apache/kylin/rest/service/ModelService.java,
-            **/org/apache/kylin/spark/common/logging/SparkExecutorHdfsLogAppender.java
+            **/org/apache/kylin/spark/common/logging/SparkExecutorHdfsLogAppender.java,
+            **/org/apache/spark/sql/udaf/PreciseCountDistinct.scala,
+            **/org/apache/spark/sql/catalyst/expressions/KapExpresssions.scala
         </sonar.jacoco.excludes>
         <sonar.coverage.exclusions>
             **/org/apache/kylin/**/*Exception.java,
@@ -336,10 +345,12 @@
             **/org/apache/kylin/tool/garbage/IndexCleaner.java,
             **/io/kyligence/kap/cache/utils/Hadoop3CompaUtil.java,
             **/io/kyligence/hive/serde2/lazy/LazyQuoteAwareSerDe.java,
-            **/org/apache/kylin/engine/spark/job/stage/build/MaterializedFactTableView.scala,
+            **/org/apache/kylin/engine/spark/job/stage/build/MaterializeFactView.scala,
             **/org/apache/spark/sql/hive/KylinHiveSessionStateBuilder.scala,
             **/org/apache/kylin/rest/service/ModelService.java,
-            **/org/apache/kylin/spark/common/logging/SparkExecutorHdfsLogAppender.java
+            **/org/apache/kylin/spark/common/logging/SparkExecutorHdfsLogAppender.java,
+            **/org/apache/spark/sql/udaf/PreciseCountDistinct.scala,
+            **/org/apache/spark/sql/catalyst/expressions/KapExpresssions.scala
         </sonar.coverage.exclusions>
         <sonar.organization>kylin</sonar.organization>
         <!--suppress UnresolvedMavenProperty -->
@@ -354,7 +365,7 @@
         <fastPFOR.version>0.0.13</fastPFOR.version>
         <parquet.version>1.12.2-kylin-r6</parquet.version>
         <quartz.version>2.1.1</quartz.version>
-        <janino.version>3.0.9</janino.version>
+        <janino.version>3.1.6</janino.version>
 
         <!-- AWS versions -->
         <aws-java-sdk-s3.version>1.11.791</aws-java-sdk-s3.version>
@@ -381,12 +392,6 @@
         <!-- Apache POI -->
         <poi.version>4.1.2</poi.version>
 
-        <!-- clickhouse -->
-        <clickhouse-native-jdbc.version>2.6.5</clickhouse-native-jdbc.version>
-        <clickhouse-jdbc.version>0.2.4</clickhouse-jdbc.version>
-        <clickhouse.group>ru.yandex.clickhouse</clickhouse.group>
-        <clickhouse.artifact>clickhouse-jdbc</clickhouse.artifact>
-
         <external.version>5.0.0</external.version>
         <iam-user-manager.version>2.1.0</iam-user-manager.version>
 
@@ -397,6 +402,7 @@
         <ant.version>1.10.11</ant.version>
         <netty3.version>3.10.6.Final</netty3.version>
         <netty-handler.version>4.1.94.Final</netty-handler.version>
+        <netty-codec-http2.version>4.1.108.Final</netty-codec-http2.version>
         <servo-core.version>0.13.2</servo-core.version>
         <apache-api.version>1.0.3</apache-api.version>
 
@@ -406,11 +412,15 @@
         <jersey.version>2.35</jersey.version>
         <validation.api.version>2.0.1.Final</validation.api.version>
         <jackson-databind.version>2.13.4.2</jackson-databind.version>
-        <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.37.2</nimbus-jose-jwt.version>
         <system-lambda.version>1.2.1</system-lambda.version>
         <okhttp.version>3.12.12</okhttp.version>
+        <okio.version>3.4.0</okio.version>
+        <license.version>5.0.8</license.version>
         <snappy-java.version>1.1.10.4</snappy-java.version>
-        <avro.version>1.11.3</avro.version>
+        <avro.version>1.11.4</avro.version>
+        <stax2-api.version>4.2.1</stax2-api.version>
+        <zjsonpatch.version>0.4.16</zjsonpatch.version>
     </properties>
 
     <modules>
@@ -424,6 +434,7 @@
         <module>src/core-metrics</module>
         <module>src/source-hive</module>
         <module>src/server</module>
+        <module>src/spark-project/kylin-internal-catalog</module>
         <module>src/spark-project/kylin-soft-affinity-cache</module>
         <module>src/spark-project/spark-common</module>
         <module>src/spark-project/sparder</module>
@@ -436,11 +447,9 @@
         <module>src/tool</module>
         <module>src/datasource-sdk</module>
         <module>src/streaming-sdk</module>
-        <module>outdated/second-storage/core</module>
-<!--        <module>src/second-storage/core-ui</module>-->
-<!--        <module>src/second-storage/clickhouse</module>-->
-<!--        <module>src/second-storage/clickhouse-it</module>-->
         <module>src/modeling-service</module>
+        <module>src/rec-service</module>
+        <module>src/rec-server</module>
         <module>src/query-service</module>
         <module>src/datasource-service</module>
         <module>src/data-loading-service</module>
@@ -463,7 +472,7 @@
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>
-        <module>src/metadata-feign-api</module>
+        <module>src/rec-booter</module>
         <module>src/jdbc</module>
     </modules>
 
@@ -512,6 +521,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-external-jackson-datatype-guava</artifactId>
+                <version>${external.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-external-influxdb</artifactId>
                 <version>${external.version}</version>
             </dependency>
@@ -540,42 +554,6 @@
                 <artifactId>kylin-engine-build-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-metadata-feign-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <!-- second storage -->
-<!--            <dependency>-->
-<!--                <groupId>org.apache.kylin</groupId>-->
-<!--                <artifactId>kap-second-storage-clickhouse</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kap-second-storage-core</artifactId>
-<!--                <version>5.0.0-beta</version>-->
-                <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.kylin</groupId>
-                        <artifactId>kylin-core-job</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.kylin</groupId>
-                        <artifactId>kylin-core-common</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.kylin</groupId>
-                        <artifactId>kylin-spark-common</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.apache.kylin</groupId>-->
-<!--                <artifactId>kap-second-storage-ui</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-common-service</artifactId>
@@ -648,6 +626,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-internal-catalog</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-common-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -671,11 +654,25 @@
                 <artifactId>kylin-core-metrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>2.3.31</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-rec-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-rec-booter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-rec-server</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- arthas -->
@@ -729,37 +726,6 @@
                 <version>${mssql-jdbc.version}</version>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>com.github.housepower</groupId>
-                <artifactId>clickhouse-native-jdbc</artifactId>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.lz4</groupId>
-                        <artifactId>lz4-java</artifactId>
-                    </exclusion>
-                </exclusions>
-                <version>${clickhouse-native-jdbc.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ru.yandex.clickhouse</groupId>
-                <artifactId>clickhouse-jdbc</artifactId>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>jackson-databind</artifactId>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>net.jpountz.lz4</groupId>
-                        <artifactId>lz4</artifactId>
-                    </exclusion>
-                </exclusions>
-                <version>${clickhouse-jdbc.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-common</artifactId>
@@ -839,7 +805,13 @@
                 <version>${lettuce.version}</version>
             </dependency>
 
-            <!--KAP test scope-->
+            <!--kylin test scope-->
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-rec-service</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-it</artifactId>
@@ -868,12 +840,6 @@
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-modeling-service</artifactId>
                 <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kap-second-storage-clickhouse</artifactId>
-                <version>5.0.0-beta</version>
                 <type>test-jar</type>
             </dependency>
             <dependency>
@@ -958,6 +924,12 @@
 
             <!-- Hadoop2 dependencies -->
             <dependency>
+                <groupId>org.codehaus.woodstox</groupId>
+                <artifactId>stax2-api</artifactId>
+                <version>${stax2-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${hadoop.version}</version>
@@ -1003,16 +975,16 @@
                         <groupId>org.codehaus.jackson</groupId>
                         <artifactId>jackson-mapper-asl</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.cedarsoftware</groupId>
+                        <artifactId>json-io</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-hdfs</artifactId>
                 <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>netty-codec-haproxy</artifactId>
-                    </exclusion>
                     <exclusion>
                         <groupId>com.sun.jersey</groupId>
                         <artifactId>*</artifactId>
@@ -1457,6 +1429,10 @@
                         <groupId>io.netty</groupId>
                         <artifactId>netty</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.cedarsoftware</groupId>
+                        <artifactId>json-io</artifactId>
+                    </exclusion>
                 </exclusions>
                 <version>${hive.version}</version>
             </dependency>
@@ -1640,6 +1616,10 @@
                     <exclusion>
                         <groupId>org.apache.calcite</groupId>
                         <artifactId>calcite</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.calcite.avatica</groupId>
+                        <artifactId>avatica</artifactId>
                     </exclusion>
                 </exclusions>
                 <scope>provided</scope>
@@ -1875,6 +1855,10 @@
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-api</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-core</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1953,6 +1937,10 @@
                         <groupId>org.apache.thrift</groupId>
                         <artifactId>libfb303</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.cedarsoftware</groupId>
+                        <artifactId>json-io</artifactId>
+                    </exclusion>
                 </exclusions>
                 <scope>provided</scope>
             </dependency>
@@ -1998,6 +1986,10 @@
                         <groupId>org.codehaus.jackson</groupId>
                         <artifactId>jackson-mapper-asl</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.cedarsoftware</groupId>
+                        <artifactId>json-io</artifactId>
+                    </exclusion>
                 </exclusions>
                 <version>${hadoop-yarn-server-resourcemanager.version}</version>
             </dependency>
@@ -2039,6 +2031,11 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.immutables</groupId>
+                <artifactId>value-annotations</artifactId>
+                <version>${immutables.version}</version>
             </dependency>
 
             <!-- Spark dependency -->
@@ -2219,6 +2216,21 @@
                 <version>${delta.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.delta</groupId>
+                <artifactId>delta-standalone_2.12</artifactId>
+                <version>${delta-standalone.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-core</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-spark-runtime-3.3_2.12</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.hipjim</groupId>
                 <artifactId>scala-retry_2.12</artifactId>
                 <version>${scala-retry}</version>
@@ -2240,6 +2252,7 @@
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
                 <version>${jsonpath.version}</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -2341,6 +2354,14 @@
                         <groupId>junit</groupId>
                         <artifactId>junit</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.xmlbeans</groupId>
+                        <artifactId>xmlbeans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.poi</groupId>
+                        <artifactId>poi-ooxml</artifactId>
+                    </exclusion>
                 </exclusions>
                 <scope>test</scope>
             </dependency>
@@ -2376,7 +2397,6 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>${h2.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>xerces</groupId>
@@ -2558,7 +2578,28 @@
                 <artifactId>tomcat-embed-core</artifactId>
                 <version>${tomcat-embed.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-annotations-api</artifactId>
+                <version>${tomcat-embed.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${tomcat-embed.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${tomcat-embed.version}</version>
+            </dependency>
 
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>${spring-web.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
@@ -2569,6 +2610,11 @@
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-config</artifactId>
+                <version>${spring.framework.security.config.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-core</artifactId>
                 <version>${spring.framework.security.config.version}</version>
             </dependency>
             <dependency>
@@ -2723,10 +2769,6 @@
                 <artifactId>spark-core_2.12</artifactId>
                 <exclusions>
                     <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>netty-codec-haproxy</artifactId>
-                    </exclusion>
-                    <exclusion>
                         <artifactId>jetty-plus</artifactId>
                         <groupId>org.eclipse.jetty</groupId>
                     </exclusion>
@@ -2803,10 +2845,6 @@
                 <type>test-jar</type>
                 <scope>test</scope>
                 <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>netty-codec-haproxy</artifactId>
-                    </exclusion>
                     <exclusion>
                         <artifactId>jetty-plus</artifactId>
                         <groupId>org.eclipse.jetty</groupId>
@@ -2959,6 +2997,11 @@
                 <version>${netty-handler.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>${netty-codec-http2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.codehaus.janino</groupId>
                 <artifactId>janino</artifactId>
                 <version>${janino.version}</version>
@@ -3023,71 +3066,22 @@
                 <version>${transmittable-thread-local.version}</version>
             </dependency>
 
-            <!-- Introduced for clickhouse test  -->
-            <dependency>
-                <groupId>org.eclipse.jetty.toolchain</groupId>
-                <artifactId>jetty-test-helper</artifactId>
-                <version>${jetty.toolchain.test-helper.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-                    </exclusion>
-                </exclusions>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${test.container.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-api</artifactId>
-                    </exclusion>
-                </exclusions>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>jdbc</artifactId>
-                <version>${test.container.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>clickhouse</artifactId>
-                <version>${test.container.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-                    </exclusion>
-                </exclusions>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>nginx</artifactId>
-                <version>${test.container.version}</version>
-                <scope>test</scope>
-            </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>${aws-java-sdk-s3.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>software.amazon.ion</groupId>
+                        <artifactId>ion-java</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <version>${validation.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson-databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.directory.api</groupId>
@@ -3115,6 +3109,11 @@
                 <version>${jersey.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-databind.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
                 <artifactId>system-lambda</artifactId>
                 <version>${system-lambda.version}</version>
@@ -3136,6 +3135,16 @@
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.flipkart.zjsonpatch</groupId>
+                <artifactId>zjsonpatch</artifactId>
+                <version>${zjsonpatch.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -3564,11 +3573,33 @@
                             **/org/apache/spark/sql/execution/columnar/ColumnarCachedBatchSerializer$FromCachedBatch.class
                         </exclude>
                         <exclude>**/org/apache/kylin/tool/kerberos/DelegationTokenManager.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/controller/BaseController.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/controller/NBasicController.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/QueryNodeFilter.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/BaseFilter.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/util/HttpUtil.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/util/SparkUIUtil.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/util/SparderUIUtil.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/filter/SegmentsRequestFilter.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/interceptor/ReloadAuthoritiesInterceptor.class</exclude>
+                        <exclude>**/org/apache/kylin/spark/common/logging/AbstractHdfsLogAppender.class</exclude>
+                        <exclude>**/org/apache/kylin/jdbc/LogInitializer.class</exclude>
+                        <exclude>**/org/apache/kylin/jdbc/QueryCLI.class</exclude>
+                        <exclude>**/org/apache/kylin/jdbc/Driver.class</exclude>
+                        <exclude>**/org/apache/kylin/common/SystemPropertiesCache.class</exclude>
                     </excludes>
                     <signaturesFiles>
                         <signaturesFile>${user.dir}/dev-support/forbidden-signatures.txt</signaturesFile>
                     </signaturesFiles>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                            <!--<goal>testCheck</goal>-->
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

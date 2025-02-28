@@ -38,6 +38,7 @@ import java.util.Objects;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -228,7 +229,8 @@ class FileServiceTest {
         ReflectionTestUtils.setField(fileService, "restTemplate", restTemplate);
         Mockito.doReturn("123").when(restTemplate).execute(anyString(), any(HttpMethod.class),
                 ArgumentMatchers.<RequestCallback> any(), ArgumentMatchers.<ResponseExtractor<String>> any());
-        val result = fileService.downloadMetadataBackTmpFile(tmpFilePath, 3L, RandomUtil.randomUUIDStr());
+        val result = fileService.downloadMetadataBackTmpFile(tmpFilePath, 3L, RandomUtil.randomUUIDStr(),
+                AddressUtil.getLocalInstance());
         assertEquals("123", result);
     }
 
@@ -246,7 +248,8 @@ class FileServiceTest {
                 ArgumentMatchers.<RequestCallback> any(), ArgumentMatchers.<ResponseExtractor<String>> any());
 
         val backupDIr = RandomUtil.randomUUIDStr();
-        fileService.saveBroadcastMetadataBackup(backupDIr, tmpFilePath, 3L, RandomUtil.randomUUIDStr());
+        fileService.saveBroadcastMetadataBackup(backupDIr, tmpFilePath, 3L, RandomUtil.randomUUIDStr(),
+                AddressUtil.getLocalInstance());
         val fileSystem = HadoopUtil.getWorkingFileSystem();
         val path = new Path(HadoopUtil.getBackupFolder(KylinConfig.getInstanceFromEnv()),
                 new Path(backupDIr, METADATA_FILE));

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import java.util.List;
@@ -38,18 +37,26 @@ import org.sparkproject.guava.collect.Sets;
 import lombok.val;
 
 public class NTopNResultTest extends NLocalWithSparkSessionTest {
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.createTestMetadata("src/test/resources/ut_meta/multiple_topn");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/multiple_topn" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Override
@@ -58,7 +65,7 @@ public class NTopNResultTest extends NLocalWithSparkSessionTest {
     }
 
     @Test
-    public void testTopNWithtwoSameMeasure() throws Exception {
+    public void testWithTwoSameMeasuresOfTopN() throws Exception {
         String dfID1 = "d9f564ce-bf63-498e-b346-db982fcf91f9";
         String dfID2 = "c6381db2-802f-4a25-98f0-bfe021c304eg";
         String sqlHitCube = "select sum(price)  from TEST_KYLIN_FACT group by TRANS_ID order by sum(price)  desc limit 10";
@@ -72,10 +79,10 @@ public class NTopNResultTest extends NLocalWithSparkSessionTest {
         NDataflowManager dsMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
         NDataflow df = dsMgr.getDataflow(dfID);
         val layouts = df.getIndexPlan().getAllLayouts();
-        indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(), Sets.newLinkedHashSet(layouts),
-                true);
+        indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
+                Sets.newLinkedHashSet(layouts), true);
 
-        return ExecAndComp.queryModelWithoutCompute(getProject(), sqlHitCube).collectAsList().stream().map(Row::toString)
-                .collect(Collectors.toList());
+        return ExecAndComp.queryModelWithoutCompute(getProject(), sqlHitCube).collectAsList().stream()
+                .map(Row::toString).collect(Collectors.toList());
     }
 }

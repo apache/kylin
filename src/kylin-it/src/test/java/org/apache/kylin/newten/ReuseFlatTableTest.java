@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.newten;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -35,14 +36,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 public class ReuseFlatTableTest extends NLocalWithSparkSessionTest {
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.engine.persist-flattable-enabled", "true");
-        this.createTestMetadata("src/test/resources/ut_meta/reuse_flattable");
+        setOverlay("src/test/resources/ut_meta/reuse_flattable");
 
         JobContextUtil.cleanUp();
         JobContextUtil.getJobContext(getTestConfig());
@@ -50,10 +51,16 @@ public class ReuseFlatTableTest extends NLocalWithSparkSessionTest {
         populateSSWithCSVData(getTestConfig(), getProject(), ss);
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/reuse_flattable" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
+        super.tearDown();
     }
 
     @Override
@@ -68,22 +75,26 @@ public class ReuseFlatTableTest extends NLocalWithSparkSessionTest {
         NDataflowManager dfManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
         NDataflow dataflow = dfManager.getDataflow(dfID);
         NDataSegment firstSegment = dataflow.getFirstSegment();
-        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                getProject());
-        indexPlanManager.updateIndexPlan(dfID, copyForWrite -> {
-            IndexEntity indexEntity = new IndexEntity();
-            indexEntity.setId(200000);
-            indexEntity.setDimensions(Lists.newArrayList(2));
-            indexEntity.setMeasures(Lists.newArrayList(100000, 100001));
-            LayoutEntity layout = new LayoutEntity();
-            layout.setId(200001);
-            layout.setColOrder(Lists.newArrayList(2, 100000, 100001));
-            layout.setIndex(indexEntity);
-            layout.setAuto(true);
-            layout.setUpdateTime(0);
-            indexEntity.setLayouts(Lists.newArrayList(layout));
-            copyForWrite.setIndexes(Lists.newArrayList(indexEntity));
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    getProject());
+            indexPlanManager.updateIndexPlan(dfID, copyForWrite -> {
+                IndexEntity indexEntity = new IndexEntity();
+                indexEntity.setId(200000);
+                indexEntity.setDimensions(Lists.newArrayList(2));
+                indexEntity.setMeasures(Lists.newArrayList(100000, 100001));
+                LayoutEntity layout = new LayoutEntity();
+                layout.setId(200001);
+                layout.setColOrder(Lists.newArrayList(2, 100000, 100001));
+                layout.setIndex(indexEntity);
+                layout.setAuto(true);
+                layout.setUpdateTime(0);
+                indexEntity.setLayouts(Lists.newArrayList(layout));
+                copyForWrite.setIndexes(Lists.newArrayList(indexEntity));
+            });
+            return null;
+        }, getProject());
+
         indexDataConstructor.buildSegment(dfID, firstSegment,
                 Sets.newLinkedHashSet(dfManager.getDataflow(dfID).getIndexPlan().getAllLayouts()), true, null);
         String query = "select count(distinct trans_id) from TEST_KYLIN_FACT";

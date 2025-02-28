@@ -17,10 +17,14 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
+
 import java.io.File;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -66,8 +70,8 @@ public class MetadataBackupServiceTest extends NLocalFileMetadataTestCase {
         kylinConfig.setMetadataUrl("metadata_backup_ut_test");
         val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
 
-        if (!resourceStore.exists("/UUID")) {
-            resourceStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()),
+        if (!resourceStore.exists(METASTORE_UUID_TAG)) {
+            resourceStore.checkAndPutResource(METASTORE_UUID_TAG, new StringEntity(RandomUtil.randomUUIDStr()),
                     StringEntity.serializer);
         }
 
@@ -79,7 +83,9 @@ public class MetadataBackupServiceTest extends NLocalFileMetadataTestCase {
         //2.execute backup()
         var backupFolder = metadataBackupService.backupAll();
 
-        //3.assert there is a metadata dir in root metadata dir after backup,the metadata dir location is junitFolder.getAbsolutePath()/metadata_backup_ut_test/backup/LocalDateTime/metadata
+        //3.assert there is a metadata dir in root metadata dir after backup,
+        // the metadata dir location is
+        // junitFolder.getAbsolutePath()/metadata_backup_ut_test/backup/LocalDateTime/metadata
         val rootMetadataPath = new Path(kylinConfig.getHdfsWorkingDirectory() + "/_backup");
         val rootMetadataFS = HadoopUtil.getWorkingFileSystem();
         Assertions.assertThat(rootMetadataFS.listStatus(rootMetadataPath)).hasSize(1);
@@ -89,9 +95,16 @@ public class MetadataBackupServiceTest extends NLocalFileMetadataTestCase {
         Assertions.assertThat(rootMetadataChildrenPath.getName()).isEqualTo(backupFolder.getSecond());
         val coreMetadataPath = new Path(rootMetadataChildrenPath, "core_meta");
         Assertions.assertThat(rootMetadataFS.listStatus(coreMetadataPath)).hasSize(2).contains(
-                rootMetadataFS.getFileStatus(new Path(coreMetadataPath.toString() + File.separator + "UUID")),
                 rootMetadataFS
-                        .getFileStatus(new Path(coreMetadataPath.toString() + File.separator + "_image")));
+                        .getFileStatus(new Path(coreMetadataPath + File.separator + MetadataType.SYSTEM)),
+                rootMetadataFS.getFileStatus(new Path(coreMetadataPath + File.separator + "kylin.properties")));
+
+        Assertions.assertThat(rootMetadataFS.listStatus(new Path(coreMetadataPath, MetadataType.SYSTEM.name())))
+                .hasSize(2).contains(
+                        rootMetadataFS.getFileStatus(
+                                new Path(coreMetadataPath + File.separator + METASTORE_UUID_TAG + ".json")),
+                        rootMetadataFS.getFileStatus(
+                                new Path(coreMetadataPath + File.separator + METASTORE_IMAGE + ".json")));
 
     }
 
@@ -106,16 +119,16 @@ public class MetadataBackupServiceTest extends NLocalFileMetadataTestCase {
 
         int metadataBackupCountThreshold = kylinConfig.getMetadataBackupCountThreshold();
         for (int i = 0; i < metadataBackupCountThreshold - 1; i++) {
-            fs.mkdirs(new Path(rootMetadataPath.toString() + "/test" + i));
+            fs.mkdirs(new Path(rootMetadataPath + "/test" + i));
         }
         Assertions.assertThat(fs.listStatus(rootMetadataPath)).hasSize(6);
 
         HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
-        fs.mkdirs(new Path(rootMetadataPath.toString() + "/test" + (metadataBackupCountThreshold - 1)));
+        fs.mkdirs(new Path(rootMetadataPath + "/test" + (metadataBackupCountThreshold - 1)));
         Assertions.assertThat(fs.listStatus(rootMetadataPath)).hasSize(7);
 
         HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
-        fs.mkdirs(new Path(rootMetadataPath.toString() + "/test" + metadataBackupCountThreshold));
+        fs.mkdirs(new Path(rootMetadataPath + "/test" + metadataBackupCountThreshold));
         Assertions.assertThat(fs.listStatus(rootMetadataPath)).hasSize(7);
 
         kylinConfig.setProperty("kylin.metadata.backup-count-threshold", "3");

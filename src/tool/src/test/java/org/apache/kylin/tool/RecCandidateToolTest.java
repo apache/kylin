@@ -94,7 +94,7 @@ public class RecCandidateToolTest extends NLocalFileMetadataTestCase {
     @After
     public void teardown() {
         if (jdbcTemplate != null) {
-            jdbcTemplate.batchUpdate("DROP ALL OBJECTS");
+            jdbcTemplate.batchUpdate("SHUTDOWN;");
         }
         cleanupTestMetadata();
     }
@@ -131,7 +131,7 @@ public class RecCandidateToolTest extends NLocalFileMetadataTestCase {
     @Test
     public void testExtractFull() {
         HashMap<String, Integer> map = new HashMap<>();
-        map.put("broken_test", 4);
+        map.put("broken_test", 3);
         map.put("gc_test", 2);
         map.put("cc_test", 2);
 
@@ -175,7 +175,8 @@ public class RecCandidateToolTest extends NLocalFileMetadataTestCase {
         jdbcRawRecStore.deleteAll();
         assertEquals(0, jdbcRawRecStore.queryAll().size());
         tool = new RecCandidateTool();
-        tool.execute(new String[] { "-restore", "-dir", file.getAbsolutePath(), "-table", "test_opt_rec_candidate" });
+        tool.execute(
+                new String[] { "-restore", "-dir", file.getAbsolutePath(), "-table", "test_opt_rec_candidate_v2" });
         assertEquals(3, jdbcRawRecStore.queryAll().size());
     }
 
@@ -197,7 +198,8 @@ public class RecCandidateToolTest extends NLocalFileMetadataTestCase {
         jdbcRawRecStore.deleteAll();
         assertEquals(0, jdbcRawRecStore.queryAll().size());
         tool = new RecCandidateTool();
-        tool.execute(new String[] { "-restore", "-dir", file.getAbsolutePath(), "-table", "test_opt_rec_candidate" });
+        tool.execute(
+                new String[] { "-restore", "-dir", file.getAbsolutePath(), "-table", "test_opt_rec_candidate_v2" });
         assertEquals(3, jdbcRawRecStore.queryAll().size());
     }
 

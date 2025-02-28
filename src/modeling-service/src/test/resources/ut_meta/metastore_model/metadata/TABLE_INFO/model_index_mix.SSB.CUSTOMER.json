@@ -1,0 +1,59 @@
+{
+  "uuid" : "8ba90059-dbe8-4eb1-9a0b-f9c6bc0499ce",
+  "last_modified" : 1611208717922,
+  "create_time" : 1611120803903,
+  "version" : "4.0.0.0",
+  "name" : "CUSTOMER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "C_CUSTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "C_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "C_ADDRESS",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "C_CITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "C_NATION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "C_REGION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "C_PHONE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "C_MKTSEGMENT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "project_2/table_snapshot/SSB.CUSTOMER/7c537b76-647c-4707-87cb-4303c5c01a1b",
+  "query_hit_count" : 0,
+  "database" : "SSB",
+  "project" : "model_index_mix"
+}

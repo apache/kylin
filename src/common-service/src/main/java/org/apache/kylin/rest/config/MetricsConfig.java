@@ -31,6 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.metrics.MetricsController;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.cluster.ClusterManager;
@@ -39,8 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,8 +61,8 @@ public class MetricsConfig {
             MetricsRegistry.registerGlobalPrometheusMetrics();
 
             METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(() -> {
-                Set<String> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()
-                        .stream().map(ProjectInstance::getName).collect(Collectors.toSet());
+                Set<String> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                        .listAllProjects().stream().map(ProjectInstance::getName).collect(Collectors.toSet());
 
                 MetricsRegistry.refreshProjectLongRunningJobs(KylinConfig.getInstanceFromEnv(), allProjects);
                 Sets.SetView<String> newProjects = Sets.difference(allProjects, allControlledProjects);
@@ -109,6 +108,9 @@ public class MetricsConfig {
             for (String outDatedProject : outDatedProjects) {
                 log.info("Remove project metrics for {}", outDatedProject);
                 MetricsGroup.removeProjectMetrics(outDatedProject);
+                if (KylinConfig.getInstanceFromEnv().isPrometheusMetricsEnabled()) {
+                    MetricsRegistry.deletePrometheusProjectMetrics(outDatedProject);
+                }
                 MetricsRegistry.removeProjectFromStorageSizeMap(outDatedProject);
             }
 
@@ -117,9 +119,10 @@ public class MetricsConfig {
 
         }, 0, 1, TimeUnit.MINUTES);
 
-        METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(MetricsRegistry::refreshTotalStorageSize,
-                0, 10, TimeUnit.MINUTES);
+        METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(MetricsRegistry::refreshTotalStorageSize, 0, 10,
+                TimeUnit.MINUTES);
 
-        METRICS_SCHEDULED_EXECUTOR.execute(() -> MetricsController.startReporters(KapConfig.wrap(KylinConfig.getInstanceFromEnv())));
+        METRICS_SCHEDULED_EXECUTOR
+                .execute(() -> MetricsController.startReporters(KapConfig.wrap(KylinConfig.getInstanceFromEnv())));
     }
 }

@@ -1,0 +1,9 @@
+{
+  "uuid" : "7388eda1-75ce-a139-2374-c049a2907eff",
+  "last_modified" : 0,
+  "create_time" : 1657009683496,
+  "version" : "4.0.0.0",
+  "dataflow" : "8c08822f-296a-b097-c910-e38d8934b6f9",
+  "layout_instances" : [ ],
+  "project" : "special_character_in_column"
+}

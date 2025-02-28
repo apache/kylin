@@ -20,11 +20,6 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.RUNNING;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.SUCCESS;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
@@ -33,13 +28,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +56,8 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.engine.QueryExec;
@@ -81,8 +78,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,18 +87,15 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
 import lombok.val;
 
 public class AysncQueryServiceTest extends ServiceTestBase {
 
-    private Logger logger = LoggerFactory.getLogger(AysncQueryServiceTest.class);
+    private final Logger logger = LoggerFactory.getLogger(AysncQueryServiceTest.class);
 
     private static String TEST_BASE_DIR;
     private static File BASE;
-    private static String PROJECT = "default";
+    private static final String PROJECT = "default";
 
     protected static SparkSession ss = SparderEnv.getSparkSession();
 
@@ -118,13 +110,13 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     final String fileNameDefault = "result";
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         TEST_BASE_DIR = KapConfig.getInstanceFromEnv().getAsyncResultBaseDir(PROJECT);
         BASE = new File(TEST_BASE_DIR);
         FileUtil.setWritable(BASE, true);
         FileUtil.fullyDelete(BASE);
-        assertFalse(BASE.exists());
+        Assert.assertFalse(BASE.exists());
     }
 
     @After
@@ -132,7 +124,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         cleanupTestMetadata();
         FileUtil.setWritable(BASE, true);
         FileUtil.fullyDelete(BASE);
-        assertFalse(BASE.exists());
+        Assert.assertFalse(BASE.exists());
     }
 
     @Test
@@ -145,7 +137,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         if (sqlResponse.isException()) {
             AsyncQueryUtil.createErrorFlag(PROJECT, queryId, sqlResponse.getExceptionMessage());
         }
-        assertEquals(PROJECT, asyncQueryService.searchQueryResultProject(queryId));
+        Assert.assertEquals(PROJECT, asyncQueryService.searchQueryResultProject(queryId));
     }
 
     @Test
@@ -158,9 +150,9 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         if (sqlResponse.isException()) {
             AsyncQueryUtil.createErrorFlag(PROJECT, queryId, sqlResponse.getExceptionMessage());
         }
-        assertEquals(AsyncQueryService.QueryStatus.FAILED, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertEquals(AsyncQueryService.QueryStatus.FAILED, asyncQueryService.queryStatus(PROJECT, queryId));
         String ret = asyncQueryService.retrieveSavedQueryException(PROJECT, queryId);
-        assertEquals("some error!!!", ret);
+        Assert.assertEquals("some error!!!", ret);
     }
 
     @Test
@@ -183,7 +175,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String sql = "select '123\"','123'";
         queryContext.setProject(PROJECT);
         ResultPlan.getResult(ss.sql(sql), null);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
 
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
@@ -196,7 +188,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
+        Assert.assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
 
         // download asyncQuery result
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -221,7 +213,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         new QueryExec(PROJECT, getTestConfig()).executeQuery(sql);
 
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
@@ -232,7 +224,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
         List<String> result = Lists.newArrayList();
-        rowList.stream().forEach(row -> {
+        rowList.forEach(row -> {
             val list = row.toSeq().toList();
             for (int i = 0; i < list.size(); i++) {
                 Object cell = list.apply(i);
@@ -240,8 +232,8 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("EXPR$0" + "EXPR$1", result.get(0) + result.get(1));
-        assertEquals("123\"\"" + "123", result.get(2) + result.get(3));
+        Assert.assertEquals("EXPR$0" + "EXPR$1", result.get(0) + result.get(1));
+        Assert.assertEquals("123\"\"" + "123", result.get(2) + result.get(3));
 
         // download asyncQuery result
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -265,12 +257,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         queryContext.setProject(PROJECT);
 
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
 
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
         List<String> result = Lists.newArrayList();
-        rowList.stream().forEach(row -> {
+        rowList.forEach(row -> {
             val list = row.toSeq().toList();
             for (int i = 0; i < list.size(); i++) {
                 Object cell = list.apply(i);
@@ -278,7 +270,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
+        Assert.assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
 
         // download asyncQuery pushDown result
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -302,12 +294,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         queryContext.setProject(PROJECT);
 
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
 
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
         List<String> result = Lists.newArrayList();
-        rowList.stream().forEach(row -> {
+        rowList.forEach(row -> {
             val list = row.toSeq().toList();
             for (int i = 0; i < list.size(); i++) {
                 Object cell = list.apply(i);
@@ -315,8 +307,8 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("123\"" + "123", result.get(0) + result.get(1));
-        assertEquals("123\"\"" + "123", result.get(2) + result.get(3));
+        Assert.assertEquals("123\"" + "123", result.get(0) + result.get(1));
+        Assert.assertEquals("123\"\"" + "123", result.get(2) + result.get(3));
 
         // download asyncQuery pushDown result
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -342,12 +334,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         new QueryExec(PROJECT, getTestConfig()).executeQuery(sql);
 
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
 
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
         List<String> result = Lists.newArrayList();
-        rowList.stream().forEach(row -> {
+        rowList.forEach(row -> {
             val list = row.toSeq().toList();
             for (int i = 0; i < list.size(); i++) {
                 Object cell = list.apply(i);
@@ -355,7 +347,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
+        Assert.assertEquals("123\"\"" + "123", result.get(0) + result.get(1));
 
         // download asyncQuery result
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -384,13 +376,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
 
         SparderEnv.getSparkSession().sqlContext().setConf("spark.sql.parquet.columnNameCheck.enabled", "false");
@@ -398,7 +387,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .parquet(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
         List<String> result = Lists.newArrayList();
-        rowList.stream().forEach(row -> {
+        rowList.forEach(row -> {
             val list = row.toSeq().toList();
             for (int i = 0; i < list.size(); i++) {
                 Object cell = list.apply(i);
@@ -406,7 +395,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 result.add(column);
             }
         });
-        assertEquals("(123)" + "123", result.get(0) + result.get(1));
+        Assert.assertEquals("(123)" + "123", result.get(0) + result.get(1));
     }
 
     @Test
@@ -421,18 +410,15 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String sql = "select '123\"' as col1,'123' as col2, date'2021-02-01' as col3";
         queryContext.setProject(PROJECT);
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
     }
 
@@ -447,18 +433,15 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String sql = "select '123\"' as col1,'123' as col2";
         queryContext.setProject(PROJECT);
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
     }
 
@@ -473,7 +456,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String sql = "select '123\"' as col1,'123' as col2";
         queryContext.setProject(PROJECT);
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
@@ -489,7 +472,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         List<String> list = getXlsxResult(queryId, file);
         Files.delete(file.toPath());
         logger.info("Temp File status createTempFileStatus:{}", createTempFileStatus);
-        assertEquals("123\",123", list.get(0));
+        Assert.assertEquals("123\",123", list.get(0));
     }
 
     @Test
@@ -504,7 +487,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String sql = "select '123\"' as col1,'123' as col2";
         queryContext.setProject(PROJECT);
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ByteArrayOutputStream outputStream = mockOutputStream(response);
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, "xlsx", encodeDefault);
@@ -514,8 +497,8 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         List<String> list = getXlsxResult(queryId, file);
         Files.delete(file.toPath());
         logger.info("Temp File status createTempFileStatus:{}", createTempFileStatus);
-        assertEquals("col1,col2", list.get(0));
-        assertEquals("123\",123", list.get(1));
+        Assert.assertEquals("col1,col2", list.get(0));
+        Assert.assertEquals("123\",123", list.get(1));
     }
 
     private static String getString(XSSFCell xssfCell) {
@@ -537,23 +520,20 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         when(sqlResponse.isException()).thenReturn(false);
         String queryId = RandomUtil.randomUUIDStr();
         mockResultFile(queryId, false, true);
-        assertEquals(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertEquals(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
 
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, formatDefault, encodeDefault);
 
-        assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
+        Assert.assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
     }
 
     @Test
@@ -563,7 +543,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String queryId = RandomUtil.randomUUIDStr();
         mockMetadata(queryId, false);
         mockResultFile(queryId, false, true);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -576,7 +556,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, formatDefault, encodeDefault);
 
-        assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
+        Assert.assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
     }
 
     @Test
@@ -586,7 +566,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String queryId = RandomUtil.randomUUIDStr();
         mockMetadata(queryId, false);
         mockResultFile(queryId, false, true);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -599,32 +579,29 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, formatDefault, encodeDefault);
 
-        assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
+        Assert.assertEquals("a1,b1,c1\r\n" + "a2,b2,c2\r\n", baos.toString(StandardCharsets.UTF_8.name()));
     }
 
     @Test
-    public void testSuccessQueryAndDownloadJsonResult() throws IOException, InterruptedException {
+    public void testSuccessQueryAndDownloadJsonResult() throws IOException {
         SQLResponse sqlResponse = mock(SQLResponse.class);
         when(sqlResponse.isException()).thenReturn(false);
         String queryId = RandomUtil.randomUUIDStr();
         mockJsonResultFile(queryId);
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
 
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, "json", encodeDefault);
 
-        assertEquals("[\"{'column1':'a1', 'column2':'b1'}\",\"{'column1':'a2', 'column2':'b2'}\"]",
+        Assert.assertEquals("[\"{'column1':'a1', 'column2':'b1'}\",\"{'column1':'a2', 'column2':'b2'}\"]",
                 baos.toString(StandardCharsets.UTF_8.name()));
     }
 
@@ -633,9 +610,9 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String queryId = RandomUtil.randomUUIDStr();
         mockResultFile(queryId, false, true);
         Path resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
-        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
         asyncQueryService.deleteAllFolder();
-        assertTrue(!AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertFalse(AsyncQueryUtil.getFileSystem().exists(resultPath));
     }
 
     @Test
@@ -643,10 +620,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         String queryId = RandomUtil.randomUUIDStr();
         mockResultFile(queryId, false, true);
         Path resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
-        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
         val request = new MockHttpServletRequest();
         asyncQueryService.deleteAllFolder(request);
-        assertFalse(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertFalse(AsyncQueryUtil.getFileSystem().exists(resultPath));
     }
 
     @Test
@@ -656,7 +633,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         // before delete
         Path resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
-        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
 
         // after delete
         asyncQueryService.deleteByQueryId(PROJECT, queryId);
@@ -670,7 +647,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testDeleteByQueryIdWhenQueryNotExist() throws IOException, InterruptedException {
+    public void testDeleteByQueryIdWhenQueryNotExist() {
         try {
             asyncQueryService.deleteByQueryId(PROJECT, "123");
         } catch (Exception e) {
@@ -688,10 +665,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         // before delete
         Path resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
-        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
         asyncQueryService.deleteOldQueryResult(PROJECT, time - 1000 * 60);
         resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
-        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        Assert.assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
 
         // after delete
         asyncQueryService.deleteOldQueryResult(PROJECT, time + 1000 * 60);
@@ -720,44 +697,38 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     @Test
     public void testQueryStatus() throws IOException, InterruptedException {
         final String queryId = RandomUtil.randomUUIDStr();
-        final Exchanger<Boolean> exchanger = new Exchanger<Boolean>();
+        final Exchanger<Boolean> exchanger = new Exchanger<>();
 
-        Thread queryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mockResultFile(queryId, true, true);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+        Thread queryThread = new Thread(() -> {
+            try {
+                mockResultFile(queryId, true, true);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
         });
-        Thread client = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    boolean hasRunning = false;
-                    for (int i = 0; i < 10; i++) {
-                        await().atMost(Duration.ONE_SECOND);
-                        AsyncQueryService.QueryStatus queryStatus = asyncQueryService.queryStatus(PROJECT, queryId);
-                        if (queryStatus == RUNNING) {
-                            hasRunning = true;
-                        }
+        Thread client = new Thread(() -> {
+            try {
+                boolean hasRunning = false;
+                for (int i = 0; i < 10; i++) {
+                    await().pollDelay(Duration.ONE_SECOND).until(() -> true);
+                    AsyncQueryService.QueryStatus queryStatus = asyncQueryService.queryStatus(PROJECT, queryId);
+                    if (queryStatus == RUNNING) {
+                        hasRunning = true;
                     }
-                    exchanger.exchange(hasRunning);
-                } catch (Throwable e) {
                 }
+                exchanger.exchange(hasRunning);
+            } catch (Throwable e) {
             }
         });
         queryThread.start();
         client.start();
         Boolean hasRunning = exchanger.exchange(false);
-        assertTrue(hasRunning);
-        await().atMost(Duration.ONE_SECOND);
+        Assert.assertTrue(hasRunning);
+        await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         AsyncQueryService.QueryStatus queryStatus = asyncQueryService.queryStatus(PROJECT, queryId);
-        assertEquals(AsyncQueryService.QueryStatus.SUCCESS, queryStatus);
+        Assert.assertEquals(AsyncQueryService.QueryStatus.SUCCESS, queryStatus);
         long l = asyncQueryService.fileStatus(PROJECT, queryId);
-        assertEquals(20, l);
+        Assert.assertEquals(20, l);
     }
 
     @Test
@@ -774,7 +745,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testCheckStatusFailedHappyPass() throws IOException, InterruptedException {
+    public void testCheckStatusFailedHappyPass() throws IOException {
         String queryId = RandomUtil.randomUUIDStr();
         SQLResponse sqlResponse = mock(SQLResponse.class);
         when(sqlResponse.isException()).thenReturn(true);
@@ -787,7 +758,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testCheckStatusException() throws IOException {
+    public void testCheckStatusException() {
         String queryId = RandomUtil.randomUUIDStr();
         try {
             asyncQueryService.checkStatus(queryId, AsyncQueryService.QueryStatus.SUCCESS, PROJECT, "");
@@ -806,13 +777,13 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     @Test
     public void testGetUserNameNoResult() throws IOException {
         String queryId = RandomUtil.randomUUIDStr();
-        Assert.assertEquals(null, asyncQueryService.getQueryUsername(queryId, PROJECT));
+        Assert.assertNull(asyncQueryService.getQueryUsername(queryId, PROJECT));
     }
 
     @Test
     public void testHasPermissionWhenIsAdmin() throws IOException {
         String queryId = RandomUtil.randomUUIDStr();
-        Assert.assertEquals(true, asyncQueryService.hasPermission(queryId, PROJECT));
+        Assert.assertTrue(asyncQueryService.hasPermission(queryId, PROJECT));
     }
 
     @Test
@@ -867,27 +838,27 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     public void testHasPermissionWhenIsSelf() throws IOException {
         String queryId = RandomUtil.randomUUIDStr();
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
-        Assert.assertEquals(true, asyncQueryService.hasPermission(queryId, PROJECT));
+        Assert.assertTrue(asyncQueryService.hasPermission(queryId, PROJECT));
     }
 
     @Test
     public void testBatchDeleteAll() throws Exception {
-        Assert.assertEquals(true, asyncQueryService.batchDelete(null, null, null));
+        Assert.assertTrue(asyncQueryService.batchDelete(null, null, null));
     }
 
     @Test
     public void testBatchDeleteOlderResult() throws Exception {
         String queryId = RandomUtil.randomUUIDStr();
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
-        Assert.assertEquals(true, asyncQueryService.batchDelete(PROJECT, "2011-11-11 11:11:11", null));
+        Assert.assertTrue(asyncQueryService.batchDelete(PROJECT, "2011-11-11 11:11:11", null));
     }
 
     @Test
     public void testBatchDeleteOlderFalse() throws Exception {
         String queryId = RandomUtil.randomUUIDStr();
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
-        Assert.assertEquals(false, asyncQueryService.batchDelete(PROJECT, null, null));
-        Assert.assertEquals(false, asyncQueryService.batchDelete(null, "2011-11-11 11:11:11", null));
+        Assert.assertFalse(asyncQueryService.batchDelete(PROJECT, null, null));
+        Assert.assertFalse(asyncQueryService.batchDelete(null, "2011-11-11 11:11:11", null));
     }
 
     @Test
@@ -907,10 +878,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
         AsyncQueryUtil.saveFileInfo(PROJECT, formatDefault, encodeDefault, fileNameDefault, queryId, "sep");
         AsyncQueryService.FileInfo fileInfo = asyncQueryService.getFileInfo(PROJECT, queryId);
-        assertEquals(formatDefault, fileInfo.getFormat());
-        assertEquals(encodeDefault, fileInfo.getEncode());
-        assertEquals(fileNameDefault, fileInfo.getFileName());
-        assertEquals("sep", fileInfo.getSeparator());
+        Assert.assertEquals(formatDefault, fileInfo.getFormat());
+        Assert.assertEquals(encodeDefault, fileInfo.getEncode());
+        Assert.assertEquals(fileNameDefault, fileInfo.getFileName());
+        Assert.assertEquals("sep", fileInfo.getSeparator());
     }
 
     @Test
@@ -928,10 +899,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
             osw.write("foo" + "\n");
         }
         AsyncQueryService.FileInfo fileInfo = asyncQueryService.getFileInfo(PROJECT, queryId);
-        assertEquals(formatDefault, fileInfo.getFormat());
-        assertEquals(encodeDefault, fileInfo.getEncode());
-        assertEquals("foo", fileInfo.getFileName());
-        assertEquals(",", fileInfo.getSeparator());
+        Assert.assertEquals(formatDefault, fileInfo.getFormat());
+        Assert.assertEquals(encodeDefault, fileInfo.getEncode());
+        Assert.assertEquals("foo", fileInfo.getFileName());
+        Assert.assertEquals(",", fileInfo.getSeparator());
     }
 
     @Test
@@ -940,8 +911,8 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         mockResultFile(queryId, false, true);
         mockMetadata(queryId, false);
         List<List<String>> metaData = asyncQueryService.getMetaData(PROJECT, queryId);
-        assertArrayEquals(columnNames.toArray(), metaData.get(0).toArray());
-        assertArrayEquals(dataTypes.toArray(), metaData.get(1).toArray());
+        Assert.assertArrayEquals(columnNames.toArray(), metaData.get(0).toArray());
+        Assert.assertArrayEquals(dataTypes.toArray(), metaData.get(1).toArray());
     }
 
     @Test
@@ -962,7 +933,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
         new QueryExec(PROJECT, getTestConfig()).executeQuery(sql);
 
-        assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        Assert.assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
         String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
@@ -984,11 +955,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         List<String> row2 = Lists.newArrayList("a2", "b2", "c2");
         FileSystem fileSystem = AsyncQueryUtil.getFileSystem();
         Path asyncQueryResultDir = asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId);
-        if (!fileSystem.exists(asyncQueryResultDir)) {
-            fileSystem.mkdirs(asyncQueryResultDir);
+        if (fileSystem.exists(asyncQueryResultDir)) {
+            fileSystem.delete(asyncQueryResultDir, true);
         }
+        fileSystem.mkdirs(asyncQueryResultDir);
         if (block) {
-            await().atMost(Duration.FIVE_SECONDS);
+            await().pollDelay(Duration.FIVE_SECONDS).until(() -> true);
         }
 
         try (FSDataOutputStream os = fileSystem.create(new Path(asyncQueryResultDir, "m00")); //
@@ -1085,13 +1057,10 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         ServletOutputStream servletOutputStream = mock(ServletOutputStream.class);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         when(response.getOutputStream()).thenReturn(servletOutputStream);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] arguments = invocationOnMock.getArguments();
-                baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] arguments = invocationOnMock.getArguments();
+            baos.write((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
+            return null;
         }).when(servletOutputStream).write(any(byte[].class), anyInt(), anyInt());
         return baos;
     }
@@ -1106,7 +1075,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
                 continue;
             }
             fileSystem.copyToLocalFile(f.getPath(), new Path(file.getPath()));
-            try (InputStream is = new FileInputStream(file.getAbsolutePath());
+            try (InputStream is = Files.newInputStream(Paths.get(file.getAbsolutePath()));
                     XSSFWorkbook sheets = new XSSFWorkbook(is)) {
                 XSSFSheet sheetAt = sheets.getSheetAt(0);
                 for (int i = 0; i < sheetAt.getPhysicalNumberOfRows(); i++) {

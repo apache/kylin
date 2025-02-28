@@ -1,0 +1,95 @@
+{
+  "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
+  "name" : "TEST_MEASURE",
+  "data_gen" : "1",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ID1",
+    "datatype" : "bigint",
+    "data_gen" : "ID"
+  }, {
+    "id" : "2",
+    "name" : "ID2",
+    "datatype" : "bigint",
+    "index" : "T"
+  }, {
+    "id" : "3",
+    "name" : "ID3",
+    "datatype" : "long",
+    "index" : "T"
+  }, {
+    "id" : "4",
+    "name" : "ID4",
+    "datatype" : "int",
+    "index" : "T"
+  }, {
+    "id" : "5",
+    "name" : "price1",
+    "datatype" : "float",
+    "index" : "T"
+  }, {
+    "id" : "6",
+    "name" : "price2",
+    "datatype" : "double",
+    "index" : "T"
+  }, {
+    "id" : "7",
+    "name" : "price3",
+    "datatype" : "decimal(19,4)",
+    "index" : "T"
+  }, {
+    "id" : "8",
+    "name" : "price5",
+    "datatype" : "short",
+    "index" : "T"
+  }, {
+    "id" : "9",
+    "name" : "price6",
+    "datatype" : "tinyint",
+    "index" : "T"
+  }, {
+    "id" : "10",
+    "name" : "price7",
+    "datatype" : "smallint",
+    "index" : "T"
+  }, {
+    "id" : "11",
+    "name" : "name1",
+    "datatype" : "string",
+    "index" : "T"
+  }, {
+    "id" : "12",
+    "name" : "name2",
+    "datatype" : "varchar(254)",
+    "index" : "T"
+  }, {
+    "id" : "13",
+    "name" : "name3",
+    "datatype" : "char",
+    "index" : "T"
+  }, {
+    "id" : "14",
+    "name" : "name4",
+    "datatype" : "byte",
+    "index" : "T"
+  }, {
+    "id" : "15",
+    "name" : "time1",
+    "datatype" : "date",
+    "index" : "T"
+  }, {
+    "id" : "16",
+    "name" : "time2",
+    "datatype" : "timestamp",
+    "index" : "T"
+  }, {
+    "id" : "17",
+    "name" : "flag",
+    "datatype" : "boolean",
+    "index" : "T"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "project" : "timezone"
+}

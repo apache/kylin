@@ -1,0 +1,84 @@
+{
+  "name" : "FULL_BUILD",
+  "create_time_utc" : 1679548043516,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 0,
+    "date_range_end" : 9223372036854775807
+  },
+  "timeRange" : null,
+  "dimension_range_info_map" : {
+    "0" : {
+      "min" : "0.0",
+      "max" : "10000"
+    },
+    "1" : {
+      "min" : "10.00002",
+      "max" : "201.323523"
+    },
+    "2" : {
+      "min" : "0.3255242",
+      "max" : "085208.3241"
+    },
+    "3" : {
+      "min" : "2001-01-01",
+      "max" : "2004-04-17"
+    },
+    "4" : {
+      "min" : "2004-04-01 00:00:00.0",
+      "max" : "2004-04-17 00:32:23.32"
+    },
+    "5" : {
+      "min" : "0",
+      "max" : "9"
+    },
+    "6" : {
+      "min" : "-128",
+      "max" : "127"
+    },
+    "7" : {
+      "min" : "abcd",
+      "max" : "zzzz"
+    },
+    "8" : {
+      "min" : "false",
+      "max" : "true"
+    },
+    "9" : {
+      "min" : "2132",
+      "max" : "2147483647"
+    },
+    "10" : {
+      "min" : "aaaaaaaa",
+      "max" : "xxxxxxxxxxxxxxxxxxxxx"
+    },
+    "11" : {
+      "min" : "2147483648",
+      "max" : "21474836483289"
+    },
+    "12" : {
+      "min" : "abc",
+      "max" : "xyz"
+    }
+  },
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 1679548122080,
+  "source_count" : 0,
+  "source_bytes_size" : 0,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_realtime_segment" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : -1,
+  "uuid" : "67ffb57f-8231-0534-93b1-a8239ffd26ab",
+  "model_uuid" : "c19de21a-c43a-ad7b-9eec-3928da617025",
+  "project" : "min_max"
+}

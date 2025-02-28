@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,13 +25,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
@@ -41,10 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -53,10 +48,6 @@ import lombok.val;
 
 public class QueryMetricsListenerTest extends NLocalFileMetadataTestCase {
 
-    @Mock
-    private final AclUtil aclUtil = Mockito.spy(AclUtil.class);
-    @Mock
-    private final AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
     @InjectMocks
     private QueryMetricsListener queryMetricsListener;
     @InjectMocks
@@ -75,10 +66,12 @@ public class QueryMetricsListenerTest extends NLocalFileMetadataTestCase {
         List<String> sqls = Lists.newArrayList("select * from A", "select A.a, B.b from A join B on A.a2=B.b2",
                 "Select sum(a), b from A group by b", "select * from A as c limit 1");
 
-        List<String> expectedFormattedSqls = Lists.newArrayList("SELECT\n  *\nFROM \"A\"",
-                "SELECT\n  \"A\".\"A\",\n  \"B\".\"B\"\nFROM \"A\"\n  INNER JOIN \"B\" ON \"A\".\"A2\" = \"B\".\"B2\"",
-                "SELECT\n  SUM(\"A\"),\n  \"B\"\nFROM \"A\"\nGROUP BY\n  \"B\"",
-                "SELECT\n  *\nFROM \"A\" AS \"C\"\nLIMIT 1");
+        // see https://olapio.atlassian.net/browse/KE-42029
+        // Calcite 1.30 SQL format changes, not exceptions do not need to be adjusted
+        List<String> expectedFormattedSqls = Lists.newArrayList("SELECT *\nFROM \"A\"",
+                "SELECT \"A\".\"A\",\n  \"B\".\"B\"\nFROM \"A\"\n  INNER JOIN \"B\" ON \"A\".\"A2\" = \"B\".\"B2\"",
+                "SELECT SUM(\"A\"),\n  \"B\"\nFROM \"A\"\nGROUP BY \"B\"",
+                "SELECT *\nFROM \"A\" AS \"C\"\nLIMIT 1");
         val formated = queryService.format(sqls);
 
         Assert.assertEquals(sqls.size(), formated.size());
@@ -95,8 +88,10 @@ public class QueryMetricsListenerTest extends NLocalFileMetadataTestCase {
                 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA from A");
 
-        List<String> expectedFormattedSqls = Lists.newArrayList("SELECT\n"
-                + "  \"A\".\"A\" AS \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        // see https://olapio.atlassian.net/browse/KE-42029
+        // Calcite 1.30 SQL format changes, not exceptions do not need to be adjusted
+        List<String> expectedFormattedSqls = Lists.newArrayList("SELECT "
+                + "\"A\".\"A\" AS \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n" + "FROM \"A\"");
@@ -212,26 +207,7 @@ public class QueryMetricsListenerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(1, meters5.size());
         Assert.assertEquals(1, meters6.size());
         Assert.assertEquals(1, meters7.size());
-
-        Mockito.when(queryMetrics.isSecondStorage()).thenReturn(true);
-        queryMetricsListener.recordQueryPrometheusMetric(queryMetrics, modelManager, meterRegistry);
         Collection<Meter> meters8 = meterRegistry.find(PrometheusMetrics.QUERY_SECONDS.getValue()).meters();
         Assert.assertNotEquals(0, meters8.size());
-    }
-
-    @Test
-    public void testSecondStorageQueryPrometheusMetric() {
-        QueryMetrics queryMetrics = new QueryMetrics("111111");
-        List<QueryMetrics.RealizationMetrics> realizationList = new ArrayList<>();
-        QueryHistoryInfo queryHistoryInfo1 = new QueryHistoryInfo(true, 3, true);
-        queryHistoryInfo1.setRealizationMetrics(realizationList);
-        queryMetrics.setQueryHistoryInfo(queryHistoryInfo1);
-        Assert.assertEquals(false, queryMetrics.isSecondStorage());
-
-        QueryMetrics.RealizationMetrics realization = new QueryMetrics.RealizationMetrics("20000001", "TABLE_INDEX",
-                "111111", null);
-        realization.setSecondStorage(true);
-        realizationList.add(realization);
-        Assert.assertEquals(true, queryMetrics.isSecondStorage());
     }
 }

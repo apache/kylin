@@ -89,6 +89,9 @@
               @refreshModel="refreshModelData"
               v-if="currentIndexTab === 'indexOverview'" />
           </el-tab-pane>
+          <el-tab-pane class="tab-pane-item" :label="$t('recommendationsBtn')" name="recommendations" v-if="$store.state.project.isSemiAutomatic && (datasourceActions.includes('accelerationActions') || isAdvancedOperatorUser()) && currentModelRow.model_type !== 'HYBRID'">
+            <recommendations v-if="currentIndexTab==='recommendations'" @refreshModel="refreshModelData" :modelDesc="currentModelRow" />
+          </el-tab-pane>
           <el-tab-pane class="tab-pane-item" v-if="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()" :label="$t('aggregateGroup')" name="aggGroup">
             <ModelAggregateView
               :model="currentModelRow"
@@ -132,9 +135,9 @@
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
 import { mapState, mapGetters, mapActions } from 'vuex'
-import { handleError, jumpToJobs } from 'util/business'
-import { transToServerGmtTime, handleSuccessAsync } from 'util'
-import { pageCount } from 'config'
+import { handleError, jumpToJobs } from '../../../../../util/business'
+import {getQueryString, transToServerGmtTime, handleSuccessAsync } from '../../../../../util'
+import { pageCount } from '../../../../../config'
 import locales from './locales'
 import ModelOverview from '../ModelOverview/ModelOverview.vue'
 import ModelSegment from '../ModelSegment/index.vue'
@@ -153,6 +156,7 @@ import ModelActions from '../ModelActions/modelActions'
 import ModelRenameModal from '../ModelRenameModal/rename.vue'
 import ModelCloneModal from '../ModelCloneModal/clone.vue'
 import ModelPartition from '../ModelPartition/index.vue'
+import Recommendations from '../ModelAggregate/sub/recommendations.vue'
 import ModelTitleDescription from '../Components/ModelTitleDescription'
 
 @Component({
@@ -162,7 +166,7 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
       if (to.query.modelListFilters || getQueryString('modelListFilters')) {
         vm.modelListFilters = JSON.parse(to.query.modelListFilters) || JSON.parse(getQueryString('modelListFilters'))
       }
-  
+
       if (from.name === 'ModelList') {
         vm.filterData = vm.modelListFilters
       } else if (to.query.filterData) {
@@ -222,6 +226,7 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
     ModelRenameModal,
     ModelCloneModal,
     ModelPartition,
+    Recommendations,
     ModelTitleDescription
   },
   locales
@@ -334,10 +339,13 @@ export default class ModelLayout extends Vue {
       // 能通过模型名称获取到模型数据，说明该模型存在
       if (value.length) {
         if (type === 'init') {
-          const { tabTypes, createSecStorageIndex, indexTab } = this.$route.params
-          this.showCreateOrEditSecStorageIndex = createSecStorageIndex ?? false
+          const { jump, tabTypes, indexTab } = this.$route.params
           this.currentIndexTab = indexTab ?? 'indexOverview'
-          this.currentModelRow = {tabTypes: typeof tabTypes !== 'undefined' ? tabTypes : 'overview', ...value[0]}
+          const isNeedJumpToRecommendation = (jump && jump === 'recommendation') || (this.platform === 'iframe' && getQueryString('jump') === 'recommendation')
+          this.currentModelRow = { tabTypes: isNeedJumpToRecommendation ? 'second' : (typeof tabTypes !== 'undefined' ? tabTypes : 'overview'), ...value[0] }
+          if (isNeedJumpToRecommendation) {
+            this.jumpToRecommendation()
+          }
           if (this.currentModelRow.tabTypes === 'second' && localStorage.getItem('isFirstSaveModel') === 'true') {
             this.showGuide()
           }
@@ -478,6 +486,14 @@ export default class ModelLayout extends Vue {
 
   async willAddIndex (alias) {
     this.$refs['segmentComp' + alias] && await this.$refs['segmentComp' + alias].$emit('willAddIndex')
+  }
+
+  // 跳转并展示优化建议界面
+  jumpToRecommendation () {
+    this.$nextTick(() => {
+      this.currentIndexTab = 'recommendations'
+      // this.$refs.modelAggregateItem && (this.$refs.modelAggregateItem.switchIndexValue = 'rec')
+    })
   }
 
   // 更改模型名称

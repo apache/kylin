@@ -22,12 +22,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.rest.constant.Constant;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public class StaticUserGroupService extends OpenUserGroupService {
     @Override

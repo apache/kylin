@@ -28,18 +28,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.cluster.ClusterManagerFactory;
 import org.apache.kylin.cluster.IClusterManager;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.apache.kylin.streaming.util.JobKiller;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

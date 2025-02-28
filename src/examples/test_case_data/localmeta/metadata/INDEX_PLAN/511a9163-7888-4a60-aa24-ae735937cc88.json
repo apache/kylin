@@ -1,0 +1,38 @@
+{
+  "uuid" : "511a9163-7888-4a60-aa24-ae735937cc88",
+  "last_modified" : 0,
+  "create_time" : 1575870240331,
+  "version" : "4.0.0.0",
+  "description" : "",
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ 59, 54 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 1,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 54, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819109,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 120000,
+  "next_table_index_id" : 20000000000,
+  "project" : "streaming_test"
+}

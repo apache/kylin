@@ -1,0 +1,28 @@
+{
+  "name" : "19911231160000_19920101160000",
+  "create_time_utc" : 1605705591280,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 694195200000,
+    "date_range_end" : 694281600000
+  },
+  "timeRange" : null,
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : -1,
+  "source_bytes_size" : -1,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : { },
+  "additionalInfo" : { },
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "uuid" : "3344711f-e6e8-227e-4699-ebb73f2a9ce2",
+  "model_uuid" : "6e444b80-0019-430d-93ad-9eea3923c810",
+  "project" : "original_project"
+}

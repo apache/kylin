@@ -23,13 +23,13 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.CUSTOM_PARS
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 
@@ -40,6 +40,7 @@ public class JarInfoManager {
 
     private KylinConfig kylinConfig;
     private CachedCrudAssist<JarInfo> crud;
+    private final String project;
 
     public static JarInfoManager getInstance(KylinConfig kylinConfig, String project) {
         return kylinConfig.getManager(project, JarInfoManager.class);
@@ -55,8 +56,8 @@ public class JarInfoManager {
 
     private JarInfoManager(KylinConfig kylinConfig, String project) {
         this.kylinConfig = kylinConfig;
-        String resourceRootPath = String.format(Locale.ROOT, "/%s%s", project, ResourceStore.JAR_RESOURCE_ROOT);
-        this.crud = new CachedCrudAssist<JarInfo>(getStore(), resourceRootPath, JarInfo.class) {
+        this.project = project;
+        this.crud = new CachedCrudAssist<JarInfo>(getStore(), MetadataType.JAR_INFO, project, JarInfo.class) {
             @Override
             protected JarInfo initEntityAfterReload(JarInfo entity, String resourceName) {
                 return entity;
@@ -69,11 +70,7 @@ public class JarInfoManager {
         if (StringUtils.isEmpty(jarName) ) {
             return null;
         }
-        return crud.get(getResourceName(jarTypeEnum, jarName));
-    }
-
-    private String getResourceName(JarTypeEnum jarTypeEnum, String jarName) {
-        return String.format(Locale.ROOT, "%s_%s", jarTypeEnum, jarName);
+        return crud.get(JarInfo.concatResourceName(project, jarTypeEnum, jarName));
     }
 
     private JarInfo copyForWrite(JarInfo jarInfo) {
@@ -90,14 +87,6 @@ public class JarInfoManager {
         }
         copy.updateRandomUuid();
         return crud.save(copy);
-    }
-
-    /**
-     * @deprecated Use updateJarInfo(JarTypeEnum jarTypeEnum, String jarName, JarInfoUpdater updater) instead.
-     */
-    @Deprecated
-    public JarInfo updateJarInfo(JarInfo jarInfo) {
-        return updateJarInfo(jarInfo.getJarType(), jarInfo.getJarName(), jarInfo::copyPropertiesTo);
     }
 
     public JarInfo updateJarInfo(JarTypeEnum jarTypeEnum, String jarName, JarInfoUpdater updater) {

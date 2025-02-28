@@ -19,21 +19,28 @@
 package org.apache.kylin.query.runtime.plan;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.exception.BigQueryException;
 import org.apache.kylin.common.exception.NewQueryRefuseException;
 import org.apache.kylin.common.state.StateSwitchConstant;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.metadata.state.QueryShareStateManager;
 import org.apache.kylin.query.MockContext;
+import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.exception.UserStopQueryException;
+import org.apache.kylin.query.pushdown.SparkSqlClient;
 import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.spark.SparkConf;
 import org.apache.spark.scheduler.JobFailed;
@@ -64,6 +71,7 @@ public class TestResultPlan extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.query.share-state-switch-implement", "jdbc");
         getTestConfig().setProperty("kylin.query.big-query-source-scan-rows-threshold", "100000000");
         ss = SparkSession.builder().appName("local").master("local[1]").getOrCreate();
+        SparderEnv.registerListener(ss.sparkContext());
         SparderEnv.setSparkSession(ss);
         StructType schema = new StructType();
         schema = schema.add("TRANS_ID", DataTypes.LongType, false);
@@ -108,6 +116,7 @@ public class TestResultPlan extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCancelQuery() throws InterruptedException {
+        overwriteSystemProp("kylin.query.use-iterable-collect", "true");
         AtomicReference<SparkListenerJobEnd> sparkJobEnd = new AtomicReference<>();
         CountDownLatch isJobEnd = new CountDownLatch(1);
         ss.sparkContext().addSparkListener(new SparkListener() {
@@ -247,6 +256,70 @@ public class TestResultPlan extends NLocalFileMetadataTestCase {
         String sql = "select * from TEST_KYLIN_FACT";
         val resultType = MockContext.current().getRelDataType();
         ResultPlan.getResult(ss.sql(sql), resultType);
+    }
+
+    @Test
+    public void testBigQueryException() {
+        QueryShareStateManager.getInstance().setState(Collections.singletonList(AddressUtil.concatInstanceName()),
+                StateSwitchConstant.QUERY_LIMIT_STATE, "true");
+        QueryContext queryContext = QueryContext.current();
+        queryContext.setIfBigQuery(true);
+        queryContext.getMetrics()
+                .addAccumSourceScanRows(KapConfig.getInstanceFromEnv().getBigQuerySourceScanRowsThreshold() + 1);
+        String sql = "select * from TEST_KYLIN_FACT";
+        try {
+            ResultPlan.getResult(ss.sql(sql), null);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof BigQueryException);
+        }
+    }
+
+    @Test
+    public void testNoBigQueryException() {
+        QueryContext queryContext = QueryContext.current();
+        queryContext.setIfBigQuery(true);
+        queryContext.getMetrics()
+                .addAccumSourceScanRows(KapConfig.getInstanceFromEnv().getBigQuerySourceScanRowsThreshold() + 1);
+        String sql = "select * from TEST_KYLIN_FACT";
+        try {
+            ResultPlan.getResult(ss.sql(sql), null);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof BigQueryException);
+        }
+    }
+    @Test
+    public void testSparkSqlClient() {
+
+        QueryContext queryContext = QueryContext.current();
+        NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).createProject("test", "ADMIN", "des",
+                new LinkedHashMap<String, String>());
+        String sql = "select * from TEST_KYLIN_FACT";
+        overwriteSystemProp("kylin.query.use-iterable-collect", "true");
+        val reuslt1 = SparkSqlClient.executeSqlToIterable(ss, sql, UUID.randomUUID(), "test");
+        val queryResult1 = new QueryResult(reuslt1._1(), (int) reuslt1._2(), reuslt1._3());
+
+        overwriteSystemProp("kylin.query.use-iterable-collect", "false");
+        val reuslt2 = SparkSqlClient.executeSqlToIterable(ss, sql, UUID.randomUUID(), "test");
+        val queryResult2 = new QueryResult(reuslt2._1(), (int) reuslt2._2(), reuslt2._3());
+        CollectionUtils.isEqualCollection(queryResult1.getRows(), queryResult2.getRows());
+    }
+
+    @Test
+    public void testSparkEnvDeleteBlock() {
+        QueryContext queryContext = QueryContext.current();
+        NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).createProject("test", "ADMIN", "des",
+                new LinkedHashMap<String, String>());
+        String sql = "select * from TEST_KYLIN_FACT t1 left join (select * from TEST_KYLIN_FACT limit 10) t2 on 1=1  ";
+        overwriteSystemProp("kylin.query.use-iterable-collect", "true");
+        val reuslt1 = SparkSqlClient.executeSqlToIterable(ss, sql, UUID.randomUUID(), "test");
+        SparderEnv.deleteQueryTaskResultBlock(queryContext.getExecutionID());
+        try {
+            while (reuslt1._1().iterator().hasNext()) {
+                reuslt1._1().iterator().next();
+            }
+        }catch (Exception e){
+            assert e.getMessage().contains("Failed to fetch block after 1 fetch failures");
+        }
     }
 
 }

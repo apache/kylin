@@ -21,6 +21,7 @@ package org.apache.kylin.measure.percentile;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -29,8 +30,6 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     // compression ratio saved in DataType.precision

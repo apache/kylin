@@ -23,24 +23,31 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.source.SourceFactory;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.SparderTypeUtil;
 
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 public class JdbcSourceInput implements NSparkCubingEngine.NSparkCubingSource {
     @Override
     public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
+        if (table.getIdentity().contains(table.getConfig().getDDLLogicalViewDB())) {
+            LogicalViewLoader.addCatalogConfByJdbc(ss, table.getProject());
+            return SourceFactory.getSparkSource().adaptToBuildEngine(NSparkCubingEngine.NSparkCubingSource.class)
+                    .getSourceData(table, ss, parameters);
+        }
         ColumnDesc[] columnDescs = table.getColumns();
         List<String> tblColNames = Lists.newArrayListWithCapacity(columnDescs.length);
         StructType kylinSchema = new StructType();
@@ -65,6 +72,11 @@ public class JdbcSourceInput implements NSparkCubingEngine.NSparkCubingSource {
 
     @Override
     public Long getSourceDataCount(TableDesc table, SparkSession ss, Map<String, String> parameters) {
+        if (table.getIdentity().contains(table.getConfig().getDDLLogicalViewDB())) {
+            LogicalViewLoader.addCatalogConfByJdbc(ss, table.getProject());
+            return SourceFactory.getSparkSource().adaptToBuildEngine(NSparkCubingEngine.NSparkCubingSource.class)
+                    .getSourceDataCount(table, ss, parameters);
+        }
         String sql = String.format(Locale.ROOT, "select count(*) from %s", table.getIdentity());
         KylinConfig config = table.getConfig();
         ISourceConnector connector = (ISourceConnector) ClassUtil.newInstance(config.getJdbcSourceConnector());
@@ -73,4 +85,5 @@ public class JdbcSourceInput implements NSparkCubingEngine.NSparkCubingSource {
         Dataset<Row> dataset = connector.getCountData(config, ss, sql, parameters);
         return dataset.first().getLong(0);
     }
+
 }

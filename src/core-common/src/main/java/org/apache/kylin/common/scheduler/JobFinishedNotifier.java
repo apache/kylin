@@ -46,7 +46,8 @@ public class JobFinishedNotifier extends SchedulerEventNotifier {
 
     public JobFinishedNotifier(String jobId, String project, String subject, long duration, String jobState,
             String jobType, Set<String> segmentIds, Set<Long> layoutIds, Set<Long> partitionIds, long waitTime,
-            String jobClass, String owner, boolean result, long startTime, long endTime, Object tag, Throwable throwable) {
+            String jobClass, String owner, boolean result, long startTime, long endTime, Object tag,
+            Throwable throwable) {
         setProject(project);
         setSubject(subject);
         this.jobId = jobId;

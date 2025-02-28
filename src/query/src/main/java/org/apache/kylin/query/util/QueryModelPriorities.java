@@ -22,41 +22,64 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class QueryModelPriorities {
+
+    private static final Logger log = LoggerFactory.getLogger(QueryModelPriorities.class);
+    private static final Pattern MODEL_PRIORITY_PATTERN = Pattern.compile("MODEL_PRIORITY\\([^()]*\\)");
 
     private QueryModelPriorities() {
     }
 
-    private static final Pattern MODEL_PRIORITY_PATTERN = Pattern.compile("SELECT\\W+/\\*\\+\\W*([^*/]+)\\*/");
-
-    private static String getHint(String sql) {
-        Matcher matcher = MODEL_PRIORITY_PATTERN.matcher(sql.toUpperCase(Locale.ROOT));
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        } else {
-            return "";
-        }
-    }
-
     public static String[] getModelPrioritiesFromComment(String sql) {
-        String[] models = doGetModelPrioritiesFromComment(sql);
-        if (models.length > 0) {
-            return models;
+        String[] models = new String[0];
+        try {
+            RawSql rawSql = new RawSqlParser(sql).parse();
+            models = getModelPrioritiesFromHintStr(rawSql.getFirstHintString());
+        } catch (Throwable t) {
+            log.error("Error on parse sql when invoking getModelPrioritiesFromComment", t);
         }
-        return loadCubePriorityFromComment(sql);
+
+        if (models.length == 0) {
+            // for backward compatibility with KE3
+            models = loadCubePriorityFromComment(sql);
+        }
+
+        return models;
     }
 
-    static String[] doGetModelPrioritiesFromComment(String sql) {
-        String hint = getHint(sql).toUpperCase(Locale.ROOT);
-        if (hint.isEmpty() || hint.indexOf("MODEL_PRIORITY(") != 0) {
+    public static String[] getModelPrioritiesFromHintStrOrComment(String hintStr, String sql) {
+        String[] models = getModelPrioritiesFromHintStr(hintStr);
+        if (models.length == 0) {
+            // for backward compatibility with KE3
+            models = loadCubePriorityFromComment(sql);
+        }
+        return models;
+    }
+
+    public static String[] getModelPrioritiesFromHintStr(String hintStr) {
+        if (StringUtils.isNotBlank(hintStr)) {
+            Matcher matcher = MODEL_PRIORITY_PATTERN.matcher(hintStr);
+            if (matcher.find(0)) {
+                String modelPriorityHint = matcher.group().toUpperCase(Locale.ROOT);
+                return extractModelPriorityModelNames(modelPriorityHint);
+            }
+        }
+        return new String[0];
+    }
+
+    private static String[] extractModelPriorityModelNames(String modelPriorityHint) {
+        if (StringUtils.isBlank(modelPriorityHint) || modelPriorityHint.indexOf("MODEL_PRIORITY(") != 0) {
             return new String[0];
         }
-
-        String[] modelHints = hint.replace("MODEL_PRIORITY(", "").replace(")", "").split(",");
-        for (int i = 0; i < modelHints.length; i++) {
-            modelHints[i] = modelHints[i].trim();
+        String[] modelNames = modelPriorityHint.replace("MODEL_PRIORITY(", "").replace(")", "").split(",");
+        for (int i = 0; i < modelNames.length; i++) {
+            modelNames[i] = modelNames[i].trim();
         }
-        return modelHints;
+        return modelNames;
     }
 
     private static final Pattern CUBE_PRIORITY_PATTERN = Pattern

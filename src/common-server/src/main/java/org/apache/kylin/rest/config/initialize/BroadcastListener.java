@@ -31,11 +31,9 @@ import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier
 import org.apache.kylin.common.persistence.transaction.AddCredentialToSparkBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AuditLogBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
-import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.LogicalViewBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.broadcaster.BroadcastEventHandler;
 import org.apache.kylin.rest.broadcaster.Broadcaster;
@@ -91,6 +89,7 @@ public class BroadcastListener implements BroadcastEventHandler {
         broadcaster.close();
         broadcaster.unregister();
     }
+
     @Subscribe
     public void onEventReady(BroadcastEventReadyNotifier notifier) {
         broadcaster.announce(notifier);
@@ -102,32 +101,30 @@ public class BroadcastListener implements BroadcastEventHandler {
             auditLogService.notifyCatchUp();
         } else if (notifier instanceof StopQueryBroadcastEventNotifier) {
             queryService.stopQuery(notifier.getSubject());
-        } else if (notifier instanceof EpochCheckBroadcastNotifier) {
-            EpochManager.getInstance().updateAllEpochs();
         } else if (notifier instanceof AclGrantEventNotifier) {
             aclTCRService.updateAclFromRemote((AclGrantEventNotifier) notifier, null);
         } else if (notifier instanceof AclRevokeEventNotifier) {
             aclTCRService.updateAclFromRemote(null, (AclRevokeEventNotifier) notifier);
         } else if (notifier instanceof AccessGrantEventNotifier) {
-            accessService.updateAccessFromRemote((AccessGrantEventNotifier) notifier, null, null);
+            accessService.updateAccess((AccessGrantEventNotifier) notifier, null, null);
         } else if (notifier instanceof AccessBatchGrantEventNotifier) {
-            accessService.updateAccessFromRemote(null, (AccessBatchGrantEventNotifier) notifier, null);
+            accessService.updateAccess(null, (AccessBatchGrantEventNotifier) notifier, null);
         } else if (notifier instanceof AccessRevokeEventNotifier) {
-            accessService.updateAccessFromRemote(null, null, (AccessRevokeEventNotifier) notifier);
+            accessService.updateAccess(null, null, (AccessRevokeEventNotifier) notifier);
         } else if (notifier instanceof AclTCRRevokeEventNotifier) {
             AclTCRRevokeEventNotifier aclTCRRevokeEventNotifier = (AclTCRRevokeEventNotifier) notifier;
             aclTCRService.revokeAclTCR(aclTCRRevokeEventNotifier.getSid(), aclTCRRevokeEventNotifier.isPrinciple());
         } else if (notifier instanceof AddCredentialToSparkBroadcastEventNotifier) {
-            AddCredentialToSparkBroadcastEventNotifier credentialNotifier = (AddCredentialToSparkBroadcastEventNotifier) notifier;
-            SparderEnv.addCredential(
-                    new TableExtDesc.RoleCredentialInfo(credentialNotifier.getBucket(),
-                            credentialNotifier.getRole(), credentialNotifier.getEndpoint(), credentialNotifier.getType(), credentialNotifier.getRegion()),
-                    SparderEnv.getSparkSession());
+            AddCredentialToSparkBroadcastEventNotifier credentialNotifier //
+                    = (AddCredentialToSparkBroadcastEventNotifier) notifier;
+            SparderEnv.addCredential(new TableExtDesc.RoleCredentialInfo(credentialNotifier.getBucket(),
+                    credentialNotifier.getRole(), credentialNotifier.getEndpoint(), credentialNotifier.getType(),
+                    credentialNotifier.getRegion()), SparderEnv.getSparkSession());
         } else if (notifier instanceof AdminUserSyncEventNotifier) {
             AdminUserSyncEventNotifier adminUserSyncEventNotifier = (AdminUserSyncEventNotifier) notifier;
             userAclService.syncAdminUserAcl(adminUserSyncEventNotifier.getAdminUserList(),
                     adminUserSyncEventNotifier.isUseEmptyPermission());
-        } else if(notifier instanceof LogicalViewBroadcastNotifier) {
+        } else if (notifier instanceof LogicalViewBroadcastNotifier) {
             LogicalViewLoader.syncViewAsync();
         }
     }

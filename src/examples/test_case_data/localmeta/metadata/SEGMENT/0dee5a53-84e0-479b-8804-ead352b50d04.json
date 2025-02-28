@@ -1,0 +1,19 @@
+{
+  "name" : "20120109000000_20120110000000",
+  "create_time_utc" : 1546952007621,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1326067200000,
+    "date_range_end" : 1326153600000
+  },
+  "timeRange" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : -1,
+  "additionalInfo" : { },
+  "uuid" : "0dee5a53-84e0-479b-8804-ead352b50d04",
+  "model_uuid" : "f1bb4bbd-a638-442b-a276-e301fde0d7f6",
+  "project" : "broken_test"
+}

@@ -19,15 +19,17 @@
 package org.apache.kylin.metadata.resourcegroup;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.AddressUtil;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +49,7 @@ public class ResourceGroupManager {
 
     private ResourceGroupManager(KylinConfig cfg) {
         this.config = cfg;
-        crud = new CachedCrudAssist<ResourceGroup>(getStore(), ResourceStore.RESOURCE_GROUP, ResourceGroup.class) {
+        crud = new CachedCrudAssist<ResourceGroup>(getStore(), MetadataType.RESOURCE_GROUP, null, ResourceGroup.class) {
             @Override
             protected ResourceGroup initEntityAfterReload(ResourceGroup entity, String resourceName) {
                 return entity;
@@ -63,15 +65,11 @@ public class ResourceGroupManager {
      * @return There is only one resource group metadata.
      */
     public ResourceGroup getResourceGroup() {
-        List<ResourceGroup> resourceGroup = crud.listAll();
-        if (CollectionUtils.isEmpty(resourceGroup)) {
-            return null;
-        }
-        return resourceGroup.get(0);
+        return crud.get(ResourceGroup.RESOURCE_GROUP);
     }
 
     public boolean resourceGroupInitialized() {
-        return CollectionUtils.isNotEmpty(crud.listAll());
+        return getResourceGroup() != null;
     }
 
     public boolean isProjectBindToResourceGroup(String project) {
@@ -106,24 +104,33 @@ public class ResourceGroupManager {
         updater.modify(copy);
         return updateResourceGroup(copy);
     }
-
-    public boolean hasPermissionToProject(String project) {
-        return instanceHasPermissionToOwnEpochTarget(project, AddressUtil.getLocalInstance());
+    
+    public List<String> getInstancesForProject(String project) {
+        ResourceGroup resourceGroup = getResourceGroup();
+        List<String> ids = resourceGroup.getResourceGroupMappingInfoList().stream()
+                .filter(mapping -> project.equalsIgnoreCase(mapping.getProject())
+                        && mapping.getRequestType() == RequestTypeEnum.BUILD)
+                .map(ResourceGroupMappingInfo::getResourceGroupId).distinct().collect(Collectors.toList());
+        return resourceGroup.getKylinInstances().stream()
+                .filter(instance -> ids.contains(instance.getResourceGroupId())).map(KylinInstance::getInstance)
+                .collect(Collectors.toList());
     }
 
-    public boolean instanceHasPermissionToOwnEpochTarget(String epochTarget, String server) {
-        if (UnitOfWork.GLOBAL_UNIT.equals(epochTarget) || !isResourceGroupEnabled()) {
-            return true;
+    public List<String> listProjectWithPermission() {
+        if (!isResourceGroupEnabled()) {
+            return NProjectManager.getInstance(config).listAllProjects().stream().map(ProjectInstance::getName)
+                    .collect(Collectors.toList());
         }
         // when resource group enabled, project owner must be in the build resource group
         ResourceGroup resourceGroup = getResourceGroup();
-        String epochServerResourceGroupId = resourceGroup.getKylinInstances().stream()
+        String server = AddressUtil.getLocalInstance();
+        String currentServerResourceGroupId = resourceGroup.getKylinInstances().stream()
                 .filter(instance -> instance.getInstance().equals(server)).map(KylinInstance::getResourceGroupId)
                 .findFirst().orElse(null);
         return resourceGroup.getResourceGroupMappingInfoList().stream()
-                .filter(mappingInfo -> mappingInfo.getProject().equalsIgnoreCase(epochTarget))
-                .filter(mappingInfo -> mappingInfo.getRequestType() == RequestTypeEnum.BUILD)
-                .anyMatch(mappingInfo -> mappingInfo.getResourceGroupId().equals(epochServerResourceGroupId));
+                .filter(mappingInfo -> mappingInfo.getRequestType() == RequestTypeEnum.BUILD
+                        && mappingInfo.getResourceGroupId().equals(currentServerResourceGroupId))
+                .map(ResourceGroupMappingInfo::getProject).distinct().collect(Collectors.toList());
     }
 
     private ResourceGroup copyForWrite(ResourceGroup resourceGroup) {

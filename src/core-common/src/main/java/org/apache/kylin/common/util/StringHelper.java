@@ -19,15 +19,14 @@
 package org.apache.kylin.common.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
@@ -35,47 +34,10 @@ public class StringHelper {
 
     public static final char QUOTE = '\'';
     public static final char DOUBLE_QUOTE = '"';
+    public static final char SLASH = '\\';
     public static final char BACKTICK = '`';
 
     private StringHelper() {
-    }
-
-    public static String[] filterSystemArgs(String[] args) {
-        List<String> whatsLeft = Lists.newArrayList();
-        for (String a : args) {
-            if (a.startsWith("-D")) {
-                String key;
-                String value;
-                int cut = a.indexOf('=');
-                if (cut < 0) {
-                    key = a.substring(2);
-                    value = "";
-                } else {
-                    key = a.substring(2, cut);
-                    value = a.substring(cut + 1);
-                }
-                Unsafe.setProperty(key, value);
-            } else {
-                whatsLeft.add(a);
-            }
-        }
-        return whatsLeft.toArray(new String[0]);
-    }
-
-    /**
-     * Returns a substring by removing the specified suffix. If the given string
-     * does not ends with the suffix, the string is returned without change.
-     *
-     * @param str
-     * @param suffix
-     * @return
-     */
-    public static String trimSuffix(String str, String suffix) {
-        if (str.endsWith(suffix)) {
-            return str.substring(0, str.length() - suffix.length());
-        } else {
-            return str;
-        }
     }
 
     public static String join(Iterable<String> parts, String separator) {
@@ -96,10 +58,6 @@ public class StringHelper {
                 }
             }
         }
-    }
-
-    public static String noBlank(String str, String dft) {
-        return StringUtils.isBlank(str) ? dft : str;
     }
 
     public static String dropSuffix(String str, String suffix) {
@@ -160,19 +118,6 @@ public class StringHelper {
         return result;
     }
 
-    public static void appendWithSeparator(StringBuilder src, String append) {
-        if (src == null) {
-            throw new IllegalArgumentException();
-        }
-        if (src.length() > 0 && !src.toString().endsWith(",")) {
-            src.append(",");
-        }
-
-        if (!StringUtils.isBlank(append)) {
-            src.append(append);
-        }
-    }
-
     public static String[] splitAndTrim(String str, String splitBy) {
         String[] split = str.split(splitBy);
         ArrayList<String> r = new ArrayList<>(split.length);
@@ -202,6 +147,10 @@ public class StringHelper {
 
     public static boolean validateUrl(String s) {
         return Pattern.compile("^(http(s)?://)?[a-zA-Z0-9._-]+(:[0-9]+)?(/[a-zA-Z0-9._-]+)*/?$").matcher(s).matches();
+    }
+
+    public static boolean validateHost(String s) {
+        return Pattern.compile("^(http(s)?://)?[a-zA-Z0-9._-]+(:[0-9]+)?").matcher(s).matches();
     }
 
     public static boolean validateDbName(String s) {
@@ -274,11 +223,21 @@ public class StringHelper {
         return convert(expression, StringHelper.DOUBLE_QUOTE, StringHelper.BACKTICK);
     }
 
-    private static String convert(String expression, char srcQuote, char targetQuote) {
+    private static String convert(String expression, char srcDelimiter, char dstDelimiter) {
         char[] chars = expression.toCharArray();
-        List<Integer> indexList = StringHelper.findQuoteIndexes(srcQuote, expression);
+        List<Integer> quoteIndexes = new ArrayList<>();
+        List<Integer> indexList = StringHelper.findDelimiterIndexes(srcDelimiter, expression, quoteIndexes);
         for (Integer integer : indexList) {
-            chars[integer] = targetQuote;
+            chars[integer] = dstDelimiter;
+        }
+
+        for (Integer quoteIndex : quoteIndexes) {
+            // change the escape character
+            if (dstDelimiter == DOUBLE_QUOTE) {
+                chars[quoteIndex - 1] = QUOTE;
+            } else if (dstDelimiter == BACKTICK) {
+                chars[quoteIndex - 1] = SLASH;
+            }
         }
         return new String(chars);
     }
@@ -294,12 +253,13 @@ public class StringHelper {
     }
 
     /**
-     * Search identifier quotes in the sql string.
-     * @param key the char to search
+     * Search delimiters in the sql string.
+     * @param key the delimiter to search
      * @param str the input string
+     * @param quoteIndexes the index of all the quote characters
      * @return index list of {@code key}
      */
-    public static List<Integer> findQuoteIndexes(char key, String str) {
+    public static List<Integer> findDelimiterIndexes(char key, String str, List<Integer> quoteIndexes) {
         Preconditions.checkState(key == BACKTICK || key == DOUBLE_QUOTE);
         char[] chars = str.toCharArray();
         List<Integer> indexList = Lists.newArrayList();
@@ -314,7 +274,8 @@ public class StringHelper {
             }
 
             // The toMatchTokens is not empty, try to collect
-            Character ex = toMatchTokens.get(toMatchTokens.size() - 1).getSecond();
+            Pair<Integer, Character> exPair = toMatchTokens.get(toMatchTokens.size() - 1);
+            Character ex = exPair.getSecond();
             if (ch == ex && ch == key) {
                 toMatchTokens.add(new Pair<>(i, ex));
                 Preconditions.checkState(toMatchTokens.size() == 2);
@@ -322,16 +283,43 @@ public class StringHelper {
                 indexList.add(toMatchTokens.get(1).getFirst());
                 toMatchTokens.clear();
             } else if (ch == ex && ch == QUOTE) {
-                // There are two kind of single quote in the char array.
-                // One kind has two successive single quote '', we need to clear the toMatchTokens.
-                // Another kind has a form of \', just ignore it and go on match the next char.
+                // There are two kind of method to escape the quote character in the char array.
+                // One uses quote escapes {{@code ''}}, which need record the index of the second quote.
+                // The other uses slash escapes {{@code \'}}, which need record the index of the quote.
+                // ------
+                // Given that the i-th character is not a slash-escaped quotation, we mark it 
+                // as a delimiter and continue to examine the next character. If the next one
+                // is also a quotation, then the i-th character serves only as an escape, 
+                // and the (i+1)-th character is considered the actual quotation.
                 Preconditions.checkState(toMatchTokens.size() == 1);
-                if (chars[i - 1] != '\\') {
+                boolean isDelimiter = isQuoteDelimiter(i, chars);
+                if (isDelimiter && i + 1 < chars.length && chars[i + 1] == QUOTE) {
+                    i++;
+                    quoteIndexes.add(i);
+                } else if (isDelimiter) {
                     toMatchTokens.clear();
+                } else {
+                    quoteIndexes.add(i);
                 }
             }
         }
         Preconditions.checkState(indexList.size() % 2 == 0);
         return indexList;
     }
+
+    /**
+     * Determines if the i-th character is a quote character or delimiter.
+     */
+    private static boolean isQuoteDelimiter(int i, char[] chars) {
+        int num = 0;
+        for (int j = i - 1; j > 0; j--) {
+            if (chars[j] == SLASH) {
+                num++;
+            } else {
+                break;
+            }
+        }
+        return num % 2 == 0;
+    }
+
 }

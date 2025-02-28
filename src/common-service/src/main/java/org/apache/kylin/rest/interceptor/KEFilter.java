@@ -21,6 +21,7 @@ package org.apache.kylin.rest.interceptor;
 import static org.apache.kylin.common.constant.Constants.TRACE_ID;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -57,7 +58,8 @@ public class KEFilter extends OncePerRequestFilter {
         ErrorSuggestion.setMsg(lang);
 
         if (("/kylin/api/query".equals(request.getRequestURI())
-                || "/kylin/api/async_query".equals(request.getRequestURI()))) {
+                || "/kylin/api/async_query".equals(request.getRequestURI()))
+                || "/kylin/api/query/if_big_query".equals(request.getRequestURI())) {
             QueryContext.reset(); // reset it anyway
             QueryContext.current(); // init query context to set the timer
             QueryContext.currentTrace().startSpan(QueryTrace.HTTP_RECEPTION);
@@ -65,7 +67,7 @@ public class KEFilter extends OncePerRequestFilter {
 
         // Set traceId for KE
         String traceId = RandomUtil.randomUUIDStr();
-        ThreadContext.put(TRACE_ID, String.format(TRACE_ID + ": %s ", traceId));
+        ThreadContext.put(TRACE_ID, String.format(Locale.ROOT, TRACE_ID + ": %s ", traceId));
 
         filterChain.doFilter(request, response);
 

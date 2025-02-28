@@ -1,0 +1,248 @@
+{
+  "uuid" : "511a9163-7888-4a60-aa24-ae735937cc87",
+  "last_modified" : 0,
+  "create_time" : 1575870240331,
+  "version" : "4.0.0.0",
+  "description" : "",
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ 59, 7, 22, 26, 55, 25, 53 ],
+    "measures" : [ 100000, 100001, 100002 ],
+    "layouts" : [ {
+      "id" : 1,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 7, 22, 26, 55, 25, 53, 100000, 100001, 100002 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819109,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 10000,
+    "dimensions" : [ 59, 7, 22, 29, 57, 26, 55 ],
+    "measures" : [ 100000, 100001, 100002 ],
+    "layouts" : [ {
+      "id" : 10001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 7, 22, 29, 57, 26, 55, 100000, 100001, 100002 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819110,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000,
+    "dimensions" : [ 59, 25, 57, 22 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 20001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 25, 57, 22, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819112,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 20002,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 57, 25, 22, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819115,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 3
+  }, {
+    "id" : 30000,
+    "dimensions" : [ 59, 7, 57, 22, 5, 55 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 30001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 7, 57, 22, 5, 55, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819113,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 40000,
+    "dimensions" : [ 59, 1, 53, 22 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 40001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 1, 53, 22, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819113,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 50000,
+    "dimensions" : [ 59, 22, 36, 44 ],
+    "measures" : [ 100000, 100003 ],
+    "layouts" : [ {
+      "id" : 50001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 22, 36, 44, 100000, 100003 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819114,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 60000,
+    "dimensions" : [ 59, 1, 23, 53, 22 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 60001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 1, 23, 53, 22, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819114,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 70000,
+    "dimensions" : [ 59, 24, 36, 44 ],
+    "measures" : [ 100000, 100003 ],
+    "layouts" : [ {
+      "id" : 70001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 24, 36, 44, 100000, 100003 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819115,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 80000,
+    "dimensions" : [ 59, 21, 22, 36, 44 ],
+    "measures" : [ 100000, 100003 ],
+    "layouts" : [ {
+      "id" : 80001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 21, 22, 36, 44, 100000, 100003 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819116,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 90000,
+    "dimensions" : [ 59, 26, 57, 22, 25 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 90001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 26, 57, 22, 25, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819116,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 100000,
+    "dimensions" : [ 59, 7, 29, 57, 5, 22 ],
+    "measures" : [ 100000, 100001, 100002 ],
+    "layouts" : [ {
+      "id" : 100001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 7, 29, 57, 5, 22, 100000, 100001, 100002 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819116,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 110000,
+    "dimensions" : [ 59, 5, 55, 22, 1, 53 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 110001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 59, 5, 55, 22, 1, 53, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1576661819117,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 120000,
+  "next_table_index_id" : 20000000000,
+  "project" : "streaming_test"
+}

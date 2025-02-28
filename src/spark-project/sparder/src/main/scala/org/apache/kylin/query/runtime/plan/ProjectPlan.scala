@@ -20,7 +20,7 @@ package org.apache.kylin.query.runtime.plan
 import org.apache.calcite.DataContext
 import org.apache.calcite.rex.RexInputRef
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.kylin.query.relnode.KapProjectRel
+import org.apache.kylin.query.relnode.OlapProjectRel
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.KapFunctions.k_lit
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
@@ -31,11 +31,11 @@ import scala.collection.JavaConverters._
 object ProjectPlan extends LogEx {
 
   def select(plan: LogicalPlan,
-             rel: KapProjectRel,
+             rel: OlapProjectRel,
              dataContext: DataContext): LogicalPlan = {
     val duplicatedColumnsCount = collection.mutable.Map[Column, Int]()
 
-    val selectedColumns = rel.rewriteProjects.asScala
+    val selectedColumns = rel.getRewriteProjects.asScala
       .map(rex => {
         val visitor = new SparderRexVisitor(plan,
           rel.getInput.getRowType,

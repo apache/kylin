@@ -27,14 +27,14 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @JacksonXmlRootElement(localName = "DATASOURCE_DEF")
 public class DataSourceDef {
@@ -65,7 +65,8 @@ public class DataSourceDef {
 
     // calculated members
     private Map<String, SqlNode> functionDefSqlNodeMap; // defId <---> SqlCall or SqlIdentifier
-    private Map<String, List<String>> functionNameDefMap; // name <---> defId[], because multiple function_def may share same name.
+    // name <---> defId[], because multiple function_def may share same name.
+    private Map<String, List<String>> functionNameDefMap;
     private Map<String, TypeDef> typeDefMap; // id <---> TypeDef
     private Map<String, List<TypeDef>> typeNameDefMap; // Name <---> TypeDef
     private Map<String, PropertyDef> propertyDefMap;
@@ -114,11 +115,7 @@ public class DataSourceDef {
                     if (parsed instanceof SqlCall || parsed instanceof SqlIdentifier) {
                         String name = parsed instanceof SqlCall ? ((SqlCall) parsed).getOperator().getName()
                                 : parsed.toString();
-                        List<String> defIds = functionNameDefMap.get(name);
-                        if (defIds == null) {
-                            defIds = Lists.newLinkedList();
-                            functionNameDefMap.put(name, defIds);
-                        }
+                        List<String> defIds = functionNameDefMap.computeIfAbsent(name, k -> Lists.newLinkedList());
                         defIds.add(function.getId());
                         functionNameDefMap.put(name, defIds);
                         functionDefSqlNodeMap.put(function.getId(), parsed);
@@ -136,11 +133,7 @@ public class DataSourceDef {
             for (TypeDef type : types) {
                 try {
                     type.init();
-                    List<TypeDef> defs = typeNameDefMap.get(type.getName());
-                    if (defs == null) {
-                        defs = Lists.newLinkedList();
-                        typeNameDefMap.put(type.getName(), defs);
-                    }
+                    List<TypeDef> defs = typeNameDefMap.computeIfAbsent(type.getName(), k -> Lists.newLinkedList());
                     defs.add(type);
                     typeDefMap.put(type.getId(), type);
                 } catch (Throwable e) {

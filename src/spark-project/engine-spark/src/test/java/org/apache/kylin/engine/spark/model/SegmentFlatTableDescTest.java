@@ -18,8 +18,10 @@
 
 package org.apache.kylin.engine.spark.model;
 
+import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
 
-import lombok.val;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -30,9 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
+import lombok.val;
 
 public class SegmentFlatTableDescTest extends NLocalFileMetadataTestCase {
 
@@ -40,10 +40,12 @@ public class SegmentFlatTableDescTest extends NLocalFileMetadataTestCase {
     KylinConfig testConfig;
 
     @Before
-    public void setup() throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException, InstantiationException {
+    public void setup() throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException,
+            InstantiationException {
         createTestMetadata();
         testConfig = getTestConfig();
-        testConfig.setProperty("kylin.query.engine.sparder-additional-files", "../../../build/conf/spark-executor-log4j.xml");
+        testConfig.setProperty("kylin.query.engine.sparder-additional-files",
+                "../../../build/conf/spark-executor-log4j.xml");
         val dfMgr = NDataflowManager.getInstance(testConfig, "default");
         val df = dfMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         val seg = df.getSegments().getFirstSegment();

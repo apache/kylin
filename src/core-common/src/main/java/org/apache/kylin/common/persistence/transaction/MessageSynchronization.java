@@ -17,17 +17,19 @@
  */
 package org.apache.kylin.common.persistence.transaction;
 
+import static org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore.HDFS_SCHEME;
+
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 
 import lombok.Setter;
 import lombok.val;
@@ -63,16 +65,10 @@ public class MessageSynchronization {
             return;
         }
 
-        UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().processor(() -> {
-            if (Thread.interrupted()) {
-                throw new InterruptedException("skip this replay");
-            }
-            replayInTransaction(messages);
-            return null;
-        }).maxRetry(1).unitName(messages.getKey()).useSandbox(false).build());
+        replayInTransaction(messages);
     }
 
-    void replayInTransaction(UnitMessages messages) {
+    synchronized void replayInTransaction(UnitMessages messages) {
         UnitOfWork.replaying.set(true);
         messages.getMessages().forEach(event -> {
             if (event instanceof ResourceCreateOrUpdateEvent) {
@@ -97,43 +93,58 @@ public class MessageSynchronization {
         log.trace("replay update for res {}, with new version: {}", event.getResPath(),
                 event.getCreatedOrUpdated().getMvcc());
         val raw = event.getCreatedOrUpdated();
-        val oldRaw = resourceStore.getResource(raw.getResPath());
-        if (!config.isJobNode()) {
-            resourceStore.putResourceWithoutCheck(raw.getResPath(), raw.getByteSource(), raw.getTimestamp(),
-                    raw.getMvcc());
+        val resPath = event.getResPath();
+        val oldRaw = resourceStore.getResource(resPath);
+        if (!config.isJobNode() && raw.getContentDiff() == null) {
+            resourceStore.putResourceWithoutCheck(resPath, raw.getByteSource(), raw.getTs(), raw.getMvcc());
             return;
         }
 
         if (oldRaw == null) {
-            resourceStore.putResourceWithoutCheck(raw.getResPath(), raw.getByteSource(), raw.getTimestamp(),
-                    raw.getMvcc());
+            if (raw.getContentDiff() != null) {
+                throw new IllegalStateException("No pre-update data found, unable to calculate json diff! metaKey: "
+                        + raw.getMetaKey());
+            }
+            resourceStore.putResourceWithoutCheck(resPath, raw.getByteSource(), raw.getTs(), raw.getMvcc());
         } else {
-            resourceStore.checkAndPutResource(raw.getResPath(), raw.getByteSource(), raw.getTimestamp(),
-                    raw.getMvcc() - 1);
+            ByteSource byteSource = raw.getContentDiff() != null ? RawResource.applyContentDiffFromRaw(oldRaw, raw)
+                    : raw.getByteSource();
+            if (resourceStore.getMetadataStore() instanceof FileSystemMetadataStore) {
+                resourceStore.putResourceWithoutCheck(resPath, byteSource, raw.getTs(), raw.getMvcc(), true);
+            } else {
+                resourceStore.checkAndPutResource(resPath, byteSource, raw.getTs(), raw.getMvcc() - 1);
+            }
         }
     }
 
     public void replayAllMetadata(boolean needCloseReplay) throws IOException {
-        val lockKeys = Lists.newArrayList(TransactionManagerInstance.INSTANCE.getProjectLocksForRead().keySet());
-        lockKeys.sort(Comparator.naturalOrder());
         val resourceStore = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
+        String curMetaUrl = null;
+        boolean needResetUrl = !config.isJobNode() && config.getMetadataStoreType().equals(HDFS_SCHEME)
+                && !config.isAuditLogOnlyOriginalEnabled();
+        if (needResetUrl) {
+            curMetaUrl = config.getMetadataUrl().toString();
+            // For hdfs, use scheme of jdbc to reload because json diff cannot do exception recovery based
+            // on hdfs reload results
+            config.setMetadataUrl(config.getCoreMetadataDBUrl().toString());
+            log.info("Replay all metadata by jdbc url");
+        }
         try {
             EventBusFactory.getInstance().postSync(new AuditLogReplayWorker.StartReloadEvent());
             if (needCloseReplay) {
                 resourceStore.getAuditLogStore().pause();
             }
-            for (String lockKey : lockKeys) {
-                TransactionManagerInstance.INSTANCE.getProjectLock(lockKey).lock();
-            }
+            // TODO lockAll
             log.info("Acquired all locks, start to reload");
 
             resourceStore.reload();
             log.info("Reload finished");
         } finally {
-            Collections.reverse(lockKeys);
-            for (String lockKey : lockKeys) {
-                TransactionManagerInstance.INSTANCE.getProjectLock(lockKey).unlock();
+            if (needResetUrl) {
+                config.setMetadataUrl(curMetaUrl);
+                log.info("Finished replay, reset metadata url to {}", curMetaUrl);
             }
+            // TODO unlock
             if (needCloseReplay) {
                 // if not stop, reinit return directly
                 resourceStore.getAuditLogStore().reInit();

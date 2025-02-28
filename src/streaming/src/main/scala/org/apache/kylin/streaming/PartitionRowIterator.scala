@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.streaming
 
-import org.apache.kylin.guava30.shaded.common.base.{Preconditions, Throwables}
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.apache.commons.lang3.{ObjectUtils, StringUtils}
 import org.apache.kylin.common.util.DateFormat
+import org.apache.kylin.guava30.shaded.common.base.{Preconditions, Throwables}
 import org.apache.kylin.parser.AbstractDataParser
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
@@ -100,7 +100,7 @@ class PartitionRowIterator(iter: Iterator[Row],
         case FloatType => lang.Float.parseFloat(strValue)
         case BooleanType => lang.Boolean.parseBoolean(strValue)
         case TimestampType => processTimestamp(colName, strValue)
-        case DateType => new Date(DateUtils.parseDate(strValue, DATE_PATTERN).getTime)
+        case DateType => new Date(DateUtils.parseDate(strValue, DATE_PATTERN: _*).getTime)
         case DecimalType() => BigDecimal(strValue)
         case _ => value
       }
@@ -108,7 +108,7 @@ class PartitionRowIterator(iter: Iterator[Row],
   }
 
   def processTimestamp(colName: String, value: String): Timestamp = {
-    val timestamp = DateUtils.parseDate(value, DATE_PATTERN).getTime
+    val timestamp = DateUtils.parseDate(value, DATE_PATTERN: _*).getTime
     if (colName.equalsIgnoreCase(partitionColumn)) {
       Preconditions.checkArgument(timestamp >= 0, "invalid value %s", value)
     }

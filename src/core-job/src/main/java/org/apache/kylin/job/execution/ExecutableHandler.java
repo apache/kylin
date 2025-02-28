@@ -19,11 +19,10 @@
 package org.apache.kylin.job.execution;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.manager.JobManager;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -87,6 +86,6 @@ public abstract class ExecutableHandler {
     }
 
     public enum HandlerType {
-        ADD_CUBOID, ADD_SEGMENT, MERGE_OR_REFRESH, SAMPLING, SNAPSHOT;
+        ADD_CUBOID, ADD_SEGMENT, MERGE_OR_REFRESH, SAMPLING, SNAPSHOT, LOAD_INTERNAL_TABLE
     }
 }

@@ -1,0 +1,62 @@
+{
+  "uuid" : "2e49e295-0432-4952-ae07-50c9c79da952",
+  "last_modified" : 1493191151021,
+  "version" : "1.6.1",
+  "table_name" : "TPCH_FLAT_ORC_2.SUPPLIER",
+  "last_build_job_id" : "ef07f30e-b204-4426-91fd-c718c130e713",
+  "columns_stats" : [ {
+    "max_value" : "1000",
+    "min_value" : "1",
+    "max_length_value" : "1000",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 1010
+  }, {
+    "max_value" : "Supplier#000001000",
+    "min_value" : "Supplier#000000001",
+    "max_length_value" : "Supplier#000000001",
+    "min_length_value" : "Supplier#000000001",
+    "null_count" : 0,
+    "cardinality" : 994
+  }, {
+    "max_value" : "zzfDhdtZcvmVzA8rNFU,Yctj1zBN",
+    "min_value" : " 0L8yoIwSCP4EJyESI 6bVH9k",
+    "max_length_value" : "Z5mLuAoTUEeKY5v22VnnA4D87Ao6jF2LvMYnlX8h",
+    "min_length_value" : "cqjyB5h1nV",
+    "null_count" : 0,
+    "cardinality" : 1007
+  }, {
+    "max_value" : "24",
+    "min_value" : "0",
+    "max_length_value" : "17",
+    "min_length_value" : "5",
+    "null_count" : 0,
+    "cardinality" : 25
+  }, {
+    "max_value" : "34-998-900-4911",
+    "min_value" : "10-108-564-6160",
+    "max_length_value" : "27-918-335-1736",
+    "min_length_value" : "27-918-335-1736",
+    "null_count" : 0,
+    "cardinality" : 994
+  }, {
+    "max_value" : "9993.46",
+    "min_value" : "-966.2",
+    "max_length_value" : "5755.94",
+    "min_length_value" : "21.18",
+    "null_count" : 0,
+    "cardinality" : 991
+  }, {
+    "max_value" : "ymptotes. blithely regular theodolites are slyly according to the ",
+    "min_value" : " according to the bravely quick dolphins. deposit",
+    "max_length_value" : "ely regular deposits. carefully regular sauternes engage furiously above the regular accounts. idly ",
+    "min_length_value" : ". slyly regular pinto bea",
+    "null_count" : 0,
+    "cardinality" : 968
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "Supplier#000000001", "Supplier#000000003", "Supplier#000000005", "Supplier#000000007", "Supplier#000000009", "Supplier#000000011", "Supplier#000000013", "Supplier#000000015", "Supplier#000000017", "Supplier#000000019" ], [ " N kD4on9OM Ipw3,gf0JBoQDd7tgrzrddZ", "q1,G3Pj6OjIuUYfUoH18BFTKP5aU9bEV3", "Gcdm2rJRzl5qlTVzc", "s,4TicNGB4uO6PaSqNBUq", "1KhUgZegwM3ua7dsYmekYBsK", "JfwTs,LZrV, M,9C", "HK71HQyWoqRWOX8GI FpgAifW,2PoH", "olXVbNBfVzRqgokr1T,Ie", "c2d,ESHRSkK3WYnxpgw6aOqN0q", "edZT3es,nBFD8lBXTGeTl" ], [ "17", "1", "11", "23", "10", "18", "3", "8", "19", "24" ], [ "27-918-335-1736", "11-383-516-1199", "21-151-690-3663", "33-990-965-2201", "20-403-398-8662", "28-613-996-1505", "13-727-620-7813", "18-453-357-6394", "29-601-884-9219", "34-278-310-2731" ], [ "5755.94", "4192.4", "-283.84", "6820.35", "5302.37", "3393.08", "9107.22", "308.56", "1687.81", "6150.38" ], [ "each slyly above the careful", "blithely silent requests after the express dependencies are sl", ". slyly regular pinto bea", "s unwind silently furiously regular courts. final requests are deposits. requests wake quietly blit", "s. unusual, even requests along the furiously regular pac", "y ironic packages. slyly ironic accounts affix furiously; ironically unusual excuses across the flu", "requests engage regularly instructions. furiously special requests ar", " across the furiously regular platelets wake even deposits. quickly express she", "eep against the furiously bold ideas. fluffily bold packa", "refully final foxes across the dogged theodolites sleep slyly abou" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "1000",
+  "data_source_properties" : { },
+  "project" : "tpch"
+}

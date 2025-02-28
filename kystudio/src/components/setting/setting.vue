@@ -11,6 +11,9 @@
         <el-tab-pane :label="$t('advanced')" :name="viewTypes.ADVANCED">
           <SettingAdvanced :project="projectSettings" @reload-setting="getCurrentSettings" @form-changed="handleFormChanged"></SettingAdvanced>
         </el-tab-pane>
+        <el-tab-pane :label="$t('internalTable')" :name="viewTypes.INTERNAL_TABLE">
+          <SettingInternalTable :project="projectSettings" @reload-setting="getCurrentSettings" @form-changed="handleFormChanged"></SettingInternalTable>
+        </el-tab-pane>
         <el-tab-pane :label="modelSetting" :name="viewTypes.MODEL">
           <SettingModel :project="currentProjectData"></SettingModel>
         </el-tab-pane>
@@ -31,6 +34,7 @@ import { viewTypes } from './handler'
 import { handleError, handleSuccessAsync, cacheSessionStorage } from '../../util'
 import SettingBasic from './SettingBasic/SettingBasic.vue'
 import SettingAdvanced from './SettingAdvanced/SettingAdvanced.vue'
+import SettingInternalTable from './SettingInternalTable/SettingInternalTable.vue'
 import SettingModel from './SettingModel/SettingModel.vue'
 
 @Component({
@@ -51,6 +55,7 @@ import SettingModel from './SettingModel/SettingModel.vue'
   components: {
     SettingBasic,
     SettingAdvanced,
+    SettingInternalTable,
     SettingModel
   },
   locales
@@ -62,7 +67,8 @@ export default class Setting extends Vue {
   projectSettings = null
   changedForm = {
     isBasicSettingChange: false,
-    isAdvanceSettingChange: false
+    isAdvanceSettingChange: false,
+    isInternalTableSettingChange: false
   }
   get modelSetting () {
     return this.$t('model')

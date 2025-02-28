@@ -31,6 +31,8 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,8 +40,6 @@ import org.springframework.http.HttpMethod;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -62,7 +62,7 @@ public class CheckSourceTableRunnable extends AbstractSchedulerRunnable {
                     config.getServerAddress());
             val req = Maps.newHashMap();
             req.put("project", project);
-            val length=split.length;
+            val length = split.length;
             int databaseStartIndex = 0;
             if (length > 2) {
                 //Include catalog name

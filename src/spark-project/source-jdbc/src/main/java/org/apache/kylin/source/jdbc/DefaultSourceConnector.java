@@ -50,7 +50,8 @@ public class DefaultSourceConnector extends DefaultAdaptor implements ISourceCon
     }
 
     @Override
-    public Dataset<Row> getCountData(KylinConfig kylinConfig, SparkSession sparkSession, String sql, Map<String, String> params) {
+    public Dataset<Row> getCountData(KylinConfig kylinConfig, SparkSession sparkSession, String sql,
+            Map<String, String> params) {
         return getSourceData(kylinConfig, sparkSession, sql, params);
     }
 

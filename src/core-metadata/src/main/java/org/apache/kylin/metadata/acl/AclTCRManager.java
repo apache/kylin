@@ -33,18 +33,11 @@ import java.util.stream.Stream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang.text.StrBuilder;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
-import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.ArrayListMultimap;
@@ -53,6 +46,13 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Multimap;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.val;
 
@@ -73,9 +73,7 @@ public class AclTCRManager {
     private final KylinConfig config;
     private final String project;
 
-    private CachedCrudAssist<AclTCR> userCrud;
-
-    private CachedCrudAssist<AclTCR> groupCrud;
+    private CachedCrudAssist<AclTCR> crud;
 
     public AclTCRManager(KylinConfig config, String project) {
         if (!UnitOfWork.isAlreadyInTransaction())
@@ -85,61 +83,35 @@ public class AclTCRManager {
         this.project = project;
 
         ResourceStore metaStore = ResourceStore.getKylinMetaStore(this.config);
-        userCrud = new CachedCrudAssist<AclTCR>(metaStore, String.format(Locale.ROOT, "/%s/acl/user", project),
-                AclTCR.class) {
+        crud = new CachedCrudAssist<AclTCR>(metaStore, MetadataType.ACL, project, AclTCR.class) {
             @Override
             protected AclTCR initEntityAfterReload(AclTCR acl, String resourceName) {
-                acl.init(resourceName, project, true);
+                // resourceName format is {project}.{u|g}.{sid}, u means user & g means group.
+                acl.init(resourceName, project, resourceName.contains(".u."));
                 return acl;
             }
         };
-        userCrud.reloadAll();
-
-        groupCrud = new CachedCrudAssist<AclTCR>(metaStore, String.format(Locale.ROOT, "/%s/acl/group", project),
-                AclTCR.class) {
-            @Override
-            protected AclTCR initEntityAfterReload(AclTCR acl, String resourceName) {
-                acl.init(resourceName, project, false);
-                return acl;
-            }
-        };
-        groupCrud.reloadAll();
+        crud.reloadAll();
     }
 
     public void unloadTable(String dbTblName) {
-        userCrud.listAll().forEach(aclTCR -> {
+        crud.listAll().forEach(aclTCR -> {
             if (Objects.isNull(aclTCR.getTable())) {
                 return;
             }
-            AclTCR copied = userCrud.copyForWrite(aclTCR);
+            AclTCR copied = crud.copyForWrite(aclTCR);
             copied.getTable().remove(dbTblName);
-            userCrud.save(copied);
-        });
-
-        groupCrud.listAll().forEach(aclTCR -> {
-            if (Objects.isNull(aclTCR.getTable())) {
-                return;
-            }
-            AclTCR copied = groupCrud.copyForWrite(aclTCR);
-            copied.getTable().remove(dbTblName);
-            groupCrud.save(copied);
+            crud.save(copied);
         });
     }
 
     public AclTCR getAclTCR(String sid, boolean principal) {
-        if (principal) {
-            return userCrud.get(sid);
-        }
-        return groupCrud.get(sid);
+        return crud.get(AclTCR.generateResourceName(project, sid, principal));
     }
 
     public void updateAclTCR(AclTCR updateTo, String sid, boolean principal) {
-        updateTo.init(sid, project, principal);
-        if (principal) {
-            doUpdate(updateTo, userCrud);
-        } else {
-            doUpdate(updateTo, groupCrud);
-        }
+        updateTo.init(AclTCR.generateResourceName(project, sid, principal), project, principal);
+        doUpdate(updateTo, crud);
     }
 
     private void doUpdate(AclTCR updateTo, CachedCrudAssist<AclTCR> crud) {
@@ -152,27 +124,23 @@ public class AclTCRManager {
     }
 
     public void revokeAclTCR(String sid, boolean principal) {
-        if (principal) {
-            userCrud.delete(sid);
-        } else {
-            groupCrud.delete(sid);
-        }
+        crud.delete(AclTCR.generateResourceName(project, sid, principal));
     }
 
     public List<AclTCR> getAclTCRs(String username, Set<String> groups) {
         final List<AclTCR> result = Lists.newArrayList();
         if (StringUtils.isNotEmpty(username)) {
-            result.add(userCrud.get(username));
+            result.add(crud.get(AclTCR.generateResourceName(project, username, true)));
         }
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         boolean batchEnabled = kylinConfig.isBatchGetRowAclEnabled();
         if (CollectionUtils.isNotEmpty(groups)) {
             if (batchEnabled) {
-                List<AclTCR> allAclTCR = groupCrud.listAll();
-                result.addAll(
-                        allAclTCR.stream().filter(t -> groups.contains(t.resourceName())).collect(Collectors.toList()));
+                RawResourceFilter filter = RawResourceFilter.equalFilter("project", project);
+                filter.addConditions("metaKey", Arrays.asList(groups.toArray()), RawResourceFilter.Operator.IN);
+                result.addAll(crud.listByFilter(filter));
             } else {
-                groups.forEach(g -> result.add(groupCrud.get(g)));
+                groups.forEach(g -> result.add(crud.get(AclTCR.generateResourceName(project, g, false))));
             }
         }
         return result.stream().filter(Objects::nonNull).collect(Collectors.toList());
@@ -371,7 +339,7 @@ public class AclTCRManager {
 
             final Map<String, String> columnType = Optional.ofNullable(tableDesc.getColumns()).map(Arrays::stream)
                     .orElseGet(Stream::empty)
-                    .map(columnDesc -> new AbstractMap.SimpleEntry<>(columnDesc.getName().toUpperCase(),
+                    .map(columnDesc -> new AbstractMap.SimpleEntry<>(StringUtils.upperCase(columnDesc.getName()),
                             columnDesc.getTypeName()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -401,13 +369,12 @@ public class AclTCRManager {
         final ColumnToConds columnConditions = new ColumnToConds();
         principalRF.getRowSets().stream().filter(r -> columnType.containsKey(r.getColumnName()))
                 .forEach(r -> columnConditions.put(r.getColumnName(),
-                        r.getValues().stream()
-                                .map(v -> new ColumnToConds.Cond(v, ColumnToConds.Cond.IntervalType.CLOSED))
+                        r.getValues().stream().map(v -> new ColumnToConds.Cond(v, ColumnToConds.IntervalType.CLOSED))
                                 .collect(Collectors.toList())));
         final ColumnToConds columnLikeConditions = new ColumnToConds();
         principalRF.getLikeRowSets().stream().filter(r -> columnType.containsKey(r.getColumnName()))
                 .forEach(r -> columnLikeConditions.put(r.getColumnName(),
-                        r.getValues().stream().map(v -> new ColumnToConds.Cond(v, ColumnToConds.Cond.IntervalType.LIKE))
+                        r.getValues().stream().map(v -> new ColumnToConds.Cond(v, ColumnToConds.IntervalType.LIKE))
                                 .collect(Collectors.toList())));
         return ColumnToConds.concatConds(columnConditions, columnLikeConditions, columnType);
     }
@@ -423,11 +390,11 @@ public class AclTCRManager {
             return null;
         }
 
-        StrBuilder result = new StrBuilder();
+        StringBuilder result = new StringBuilder();
         result.append("(");
         principalRF.getRowFilter().stream().filter(filterGroup -> MapUtils.isNotEmpty(filterGroup.getFilters()))
                 .forEach(filterGroup -> {
-                    if (result.endsWith(")")) {
+                    if (result.charAt(result.length() - 1) == ')') {
                         result.append(" ").append(filterGroup.getType()).append(" ");
                     }
 
@@ -439,7 +406,7 @@ public class AclTCRManager {
                                 String columnName = entry.getKey();
                                 AclTCR.FilterItems filterItems = entry.getValue();
 
-                                if (result.endsWith(")")) {
+                                if (result.charAt(result.length() - 1) == ')') {
                                     result.append(" ").append(filterItems.getType()).append(" ");
                                 }
 
@@ -456,7 +423,7 @@ public class AclTCRManager {
                                 }
 
                                 if (CollectionUtils.isNotEmpty(filterItems.getLikeItems())) {
-                                    if (result.endsWith(")")) {
+                                    if (result.charAt(result.length() - 1) == ')') {
                                         result.append(" OR ");
                                     }
 

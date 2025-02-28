@@ -32,6 +32,7 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AsyncQuerySQLRequestV2;
 import org.apache.kylin.rest.response.SQLResponse;
@@ -190,6 +191,7 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
     public void testInqueryStatusSuccess() throws Exception {
         Mockito.doReturn(true).when(asyncQueryService).hasPermission(Mockito.anyString(), Mockito.anyString());
         Mockito.doReturn(SUCCESS).when(asyncQueryService).queryStatus(Mockito.anyString(), Mockito.anyString());
+        AsyncQueryUtil.createSuccessFlag(PROJECT, "123");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id}/status", "123")
                 .contentType(MediaType.APPLICATION_JSON)

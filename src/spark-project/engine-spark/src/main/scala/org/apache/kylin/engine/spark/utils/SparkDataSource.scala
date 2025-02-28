@@ -20,8 +20,8 @@ package org.apache.kylin.engine.spark.utils
 
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
-import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.model.TableDesc
+import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.source.SourceFactory
 import org.apache.spark.sql.{DataFrame, SparkSession}
 

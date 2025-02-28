@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.cube.CubeTestUtils;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.junit.After;
@@ -103,7 +104,8 @@ public class NSpanningTreeTest extends NLocalFileMetadataTestCase {
     public void testFindDirectChildrenByIndex() {
         val mgr = NIndexPlanManager.getInstance(getTestConfig(), projectDefault);
         val dfMgr = NDataflowManager.getInstance(getTestConfig(), projectDefault);
-        val segs = dfMgr.getDataflow("0674f455-c7bd-4d8c-b0e3-374f3d26c315").getSegments();
+        NDataflow dataflow = dfMgr.getDataflow("0674f455-c7bd-4d8c-b0e3-374f3d26c315");
+        val segs = dataflow.getSegments();
         Assert.assertEquals(1, segs.size());
 
         val plan = mgr.getIndexPlanByModelAlias("test_spanning_tree");

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_CAST_LO_ORDERKEY",
+  "expression" : "{fn convert(lineorder.lo_orderkey, double)}",
+  "innerExpression" : "cast(`lineorder`.`lo_orderkey` as double)",
+  "datatype" : "INTEGER",
+  "comment" : null,
+  "uuid" : "3031c916-9432-9b6d-b3df-c392960698e2",
+  "project" : "cc_test"
+}

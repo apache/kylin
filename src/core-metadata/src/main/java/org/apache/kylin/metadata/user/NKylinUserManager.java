@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.user;
 
-import static org.apache.kylin.common.persistence.ResourceStore.USER_ROOT;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -60,7 +59,7 @@ public class NKylinUserManager {
         if (!UnitOfWork.isAlreadyInTransaction())
             logger.info("Initializing NKylinUserManager with KylinConfig Id: {}", System.identityHashCode(config));
         this.config = config;
-        this.crud = new CachedCrudAssist<ManagedUser>(getStore(), USER_ROOT, "", ManagedUser.class) {
+        this.crud = new CachedCrudAssist<ManagedUser>(getStore(), MetadataType.USER_INFO, null, ManagedUser.class) {
             @Override
             protected ManagedUser initEntityAfterReload(ManagedUser user, String resourceName) {
                 return user;
@@ -89,13 +88,7 @@ public class NKylinUserManager {
         if (StringUtils.isEmpty(name)) {
             return null;
         }
-        ManagedUser user = crud.get(name);
-        if (getConfig().isMetadataKeyCaseInSensitiveEnabled()) {
-            return user;
-        }
-        return Objects.nonNull(user) ? user
-                : crud.listPartial(path -> StringUtils.endsWithIgnoreCase(path, name)).stream()
-                        .filter(u -> StringUtils.equalsIgnoreCase(u.getUsername(), name)).findAny().orElse(null);
+        return crud.get(name);
     }
 
     public List<ManagedUser> list() {

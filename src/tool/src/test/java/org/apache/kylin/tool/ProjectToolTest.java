@@ -45,7 +45,7 @@ public class ProjectToolTest extends NLocalFileMetadataTestCase {
     public void testProjectTool() {
         String errorMsg = "";
         try {
-            ProjectTool.main(new String[]{});
+            ProjectTool.main(new String[] {});
         } catch (Exception e) {
             errorMsg = e.getMessage();
         }

@@ -25,12 +25,13 @@ import javax.validation.Valid;
 
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.response.SQLResponseV2;
+import org.apache.kylin.rest.service.QueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,8 +39,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -60,7 +59,6 @@ public class NQueryControllerV2 extends NBasicController {
         sqlRequest.setProject(projectName);
         return queryService.queryWithCache(sqlRequest);
     }
-
 
     @ApiOperation(value = "query", tags = { "QE" })
     @PostMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_V2_JSON })

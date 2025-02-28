@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,9 +30,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hystrix.NCircuitBreaker;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.lock.MemoryLockUtils;
-import org.apache.kylin.common.persistence.lock.ModuleLockEnum;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
@@ -67,11 +68,10 @@ public class NProjectManager {
         if (!UnitOfWork.isAlreadyInTransaction())
             logger.info("Initializing NProjectManager with KylinConfig Id: {}", System.identityHashCode(config));
         this.config = config;
-        this.projectLoader = new NProjectLoader(this);
-        crud = new CachedCrudAssist<ProjectInstance>(getStore(), ResourceStore.PROJECT_ROOT, ProjectInstance.class) {
+        this.projectLoader = new NProjectLoader(config);
+        crud = new CachedCrudAssist<ProjectInstance>(getStore(), MetadataType.PROJECT, null, ProjectInstance.class) {
             @Override
             protected ProjectInstance initEntityAfterReload(ProjectInstance entity, String projectName) {
-                entity.setName(projectName);
                 entity.init(config);
                 return entity;
             }
@@ -91,16 +91,11 @@ public class NProjectManager {
     }
 
     public ProjectInstance getProject(String projectName) {
-        ProjectInstance project = crud.get(projectName);
-        return project != null ? project
-                : crud.listAll().stream()
-                        .filter(projectInstance -> projectInstance.getName().equalsIgnoreCase(projectName)).findAny()
-                        .orElse(null);
+        return crud.get(projectName);
     }
 
     public ProjectInstance getProjectById(String projectId) {
-        return crud.listAll().stream().filter(projectInstance -> projectInstance.getId().equals(projectId)).findAny()
-                .orElse(null);
+        return crud.listByFilter(RawResourceFilter.equalFilter("uuid", projectId)).stream().findAny().orElse(null);
     }
 
     public ProjectInstance createProject(String projectName, String owner, String description,
@@ -109,7 +104,6 @@ public class NProjectManager {
 
         ProjectInstance currentProject = getProject(projectName);
         if (currentProject == null) {
-            MemoryLockUtils.manuallyLockModule("_global", ModuleLockEnum.PROJECT, getStore());
             //circuit breaker
             NCircuitBreaker.verifyProjectCreation(listAllProjects().size());
 
@@ -201,16 +195,13 @@ public class NProjectManager {
         return projectLoader.listAllRealizations(project);
     }
 
-    public Set<IRealization> getRealizationsByTable(String project, String tableName) {
-        return projectLoader.getRealizationsByTable(project, tableName.toUpperCase(Locale.ROOT));
-    }
-
     public List<NDataModel> listHealthyModels(String project) {
-        return listAllRealizations(project).stream().map(IRealization::getModel).collect(Collectors.toList());
+        return listAllRealizations(project).stream().map(IRealization::getModel).filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
-        return projectLoader.listEffectiveRewriteMeasures(project, factTable.toUpperCase(Locale.ROOT), true);
+        return projectLoader.listEffectiveRewriteMeasures(project, factTable);
     }
 
     KylinConfig getConfig() {
@@ -230,10 +221,15 @@ public class NProjectManager {
         if (projectInstance == null) {
             throw new IllegalStateException("The project named " + project + " does not exist");
         }
-        val paths = Optional.ofNullable(getStore().listResourcesRecursively(project)).orElse(Sets.newTreeSet());
-        for (val path : paths) {
-            getStore().deleteResource(path);
-        }
+        RawResourceFilter filter = RawResourceFilter.simpleFilter(RawResourceFilter.Operator.EQUAL_CASE_INSENSITIVE,
+                "project", project);
+        MetadataType.NON_GLOBAL_METADATA_TYPE.forEach(type -> {
+            val paths = Optional.ofNullable(getStore().listResourcesRecursively(type.name(), filter))
+                    .orElse(Sets.newTreeSet());
+            for (val path : paths) {
+                getStore().deleteResource(path);
+            }
+        });
         crud.delete(project);
     }
 
@@ -256,5 +252,9 @@ public class NProjectManager {
         }
         ProjectInstance projectInstance = NProjectManager.getInstance(envConfig).getProject(project);
         return projectInstance == null ? envConfig : projectInstance.getConfig();
+    }
+
+    public static Set<IRealization> getRealizations(KylinConfig config, String project, String tableName) {
+        return getInstance(config).projectLoader.getRealizationsByTable(project, tableName.toUpperCase(Locale.ROOT));
     }
 }

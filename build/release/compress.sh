@@ -81,18 +81,29 @@ for log_conf in `find conf -name "*-log4j.xml"`; do
 done
 cp -rf conf/kylin.properties ${package_name}/conf/kylin.properties
 cp -rf conf/setenv.sh ${package_name}/conf/setenv.sh.template
+cp -rf conf/kylin.properties.withoutGluten  ${package_name}/conf/
 cp -rf bin/ ${package_name}/bin/
 cp -rf sbin/ ${package_name}/sbin/
 
 spark_version_pom=`mvn -f ../pom.xml help:evaluate -Dexpression=spark.version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
 echo "Prepare download spark scripts for end user with version ${spark_version_pom}."
-sed -i "s/SPARK_VERSION_IN_BINARY/${spark_version_pom}/g" ../build/sbin/download-spark-user.sh
+echo "$spark_version_pom" >  ${package_name}/SPARK_VERSION
 
 rm -rf ext lib commit_SHA1 VERSION # keep the spark folder on purpose
 
 cp -rf server/webapp/dist ${package_name}/server/public
 cp -rf server/newten.jar ${package_name}/server/
 cp -rf server/jars ${package_name}/server/
+
+gluten_version=$(sed -n 's:.*<gluten.version>\(.*\)</gluten.version>.*:\1:p'  ./../pom.xml)
+echo "$gluten_version" > ${package_name}/GLUTEN_VERSION
+if [[ "${WITH_GLUTEN}" = "1" ]]; then
+    mkdir -p ${package_name}/lib/gluten/
+    cp -rf gluten/jars/spark33/* ${package_name}/lib/gluten/
+    mv spark/libch.so ${package_name}/server/
+    cp spark/jars/gluten.jar ${package_name}/lib/ext/
+fi
+
 # cp -rf deploy/.keystore ${package_name}/server/
 # mv ${package_name}/server/jars/log4j* ${package_name}/spark/jars/
 rm -rf server/

@@ -46,6 +46,6 @@ public class ModelImportRequest {
     }
 
     public enum ImportType {
-        NEW, OVERWRITE, UN_IMPORT;
+        NEW, OVERWRITE, UN_IMPORT
     }
 }

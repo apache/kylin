@@ -25,7 +25,6 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import org.apache.kylin.common.util.BytesUtil;
-
 import org.apache.kylin.guava30.shaded.common.hash.HashFunction;
 import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 
@@ -294,7 +293,7 @@ public class HLLCounterOld implements Serializable, Comparable<HLLCounterOld> {
     /*public void writeRegistersArray(final ByteBuffer out) {
         out.put(this.registers);
     }
-
+    
     public void readRegistersArray(ByteBuffer in) {
         in.get(registers, 0, m);
         singleBucket = Integer.MIN_VALUE;

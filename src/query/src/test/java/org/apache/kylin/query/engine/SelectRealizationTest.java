@@ -33,7 +33,7 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexExecutorImpl;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
@@ -64,7 +64,7 @@ class SelectRealizationTest {
     @Test
     void testDerivedFromSameContext() throws SqlParseException {
         val kylinConfig = getTestConfig();
-        val config = KECalciteConfig.fromKapConfig(kylinConfig);
+        val config = KylinConnectionConfig.fromKapConfig(kylinConfig);
         String prj = "default";
         val schemaFactory = new ProjectSchemaFactory(prj, kylinConfig);
         val rootSchema = schemaFactory.createProjectRootSchema();
@@ -74,7 +74,7 @@ class SelectRealizationTest {
         SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),
                 kylinConfig);
         planner.setExecutor(new RexExecutorImpl(dataContext));
-        val sqlConverter = SQLConverter.createConverter(config, planner, catalogReader);
+        val sqlConverter = QueryExec.createConverter(config, planner, catalogReader);
         val queryOptimizer = new QueryOptimizer(planner);
         RelRoot relRoot = sqlConverter
                 .convertSqlToRelNode("SELECT count(1)\n" + "FROM \"SSB\".\"LINEORDER\" \"LINEORDER\"\n"
@@ -82,8 +82,7 @@ class SelectRealizationTest {
                         + "FROM \"SSB\".\"LINEORDER\" \"LINEORDER\"\n" + "GROUP BY 1.1000000000000001 ) \"t0\"\n"
                         + "ON LINEORDER.LO_ORDERDATE = t0.X_measure__0\n" + "GROUP BY 1.1000000000000001");
         RelNode node = queryOptimizer.optimize(relRoot).rel;
-        val olapContexts = QueryContextCutter.selectRealization(prj, node,
-                BackdoorToggles.getIsQueryFromAutoModeling());
+        val olapContexts = QueryContextCutter.selectRealization(prj, node, QueryContext.current().isForModeling());
         Assertions.assertNotNull(olapContexts);
         Assertions.assertFalse(olapContexts.isEmpty());
     }

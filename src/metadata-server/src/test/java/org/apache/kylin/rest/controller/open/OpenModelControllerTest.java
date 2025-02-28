@@ -25,6 +25,9 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PAR
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -36,6 +39,8 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
@@ -44,10 +49,13 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.NModelController;
+import org.apache.kylin.rest.request.ModelCloneRequest;
+import org.apache.kylin.rest.request.ModelConfigRequest;
 import org.apache.kylin.rest.request.ModelParatitionDescRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.ModelUpdateRequest;
 import org.apache.kylin.rest.request.MultiPartitionMappingRequest;
+import org.apache.kylin.rest.request.OpenModelConfigRequest;
 import org.apache.kylin.rest.request.OpenModelRequest;
 import org.apache.kylin.rest.request.PartitionColumnRequest;
 import org.apache.kylin.rest.request.UpdateMultiPartitionValueRequest;
@@ -56,6 +64,7 @@ import org.apache.kylin.rest.response.ComputedColumnConflictResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.IndexResponse;
+import org.apache.kylin.rest.response.ModelConfigResponse;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.OpenGetIndexResponse;
@@ -84,9 +93,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -658,5 +664,162 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openModelController).commentsSynchronization(modelRequest);
+    }
+
+    @Test
+    public void testDeleteModel() throws Exception {
+        String project = "default";
+        String modelName = "model1";
+        NDataModel model = Mockito.mock(NDataModel.class);
+
+        Mockito.when(nModelController.deleteModel(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(new EnvelopeResponse<String>(KylinException.CODE_SUCCESS, "", ""));
+        Mockito.when(modelService.getModelWithoutBrokenCheck(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(model);
+        Mockito.when(model.getId()).thenReturn("123");
+        mockMvc.perform(MockMvcRequestBuilders.delete(String.format("/api/models/%s?project=%s", modelName, project))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).deleteModel(modelName, project);
+    }
+
+    @Test
+    public void testCloneModel() throws Exception {
+        String project = "default";
+        String modelAlias = "model1";
+        String cloneModelAlias = "model1_clone";
+        mockGetModelName(modelAlias, project, RandomUtil.randomUUIDStr());
+
+        ModelCloneRequest request = new ModelCloneRequest();
+        request.setNewModelName(cloneModelAlias);
+        request.setProject(project);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/{model_name:.+}/clone", modelAlias)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).cloneModel(modelAlias, request);
+    }
+
+    @Test
+    public void testModelConfig() throws Exception {
+        OpenModelConfigRequest request = new OpenModelConfigRequest();
+        request.setProject("default");
+        request.setModel("model1");
+
+        NDataModelResponse model = new NDataModelResponse();
+        model.setAlias(request.getModel());
+        Mockito.doReturn(model).when(modelService).getModel(request.getModel(), request.getProject());
+
+        ArrayList<ModelConfigResponse> modelConfigs = new ArrayList<>();
+        ModelConfigResponse configResponse = new ModelConfigResponse();
+        configResponse.setModel("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
+        configResponse.setAlias("model1");
+        modelConfigs.add(configResponse);
+        Mockito.doReturn(modelConfigs).when(modelService).getModelConfig("default", "model1");
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/config").param("model", request.getModel())
+                .param("project", request.getProject())
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).getModelConfig(request.getModel(), request.getProject());
+
+        //add
+        request.getCustomSettings().put("test.add.key", "test.add.value");
+        request.getCustomSettings().put("test.add.key2", "10");
+        ModelConfigRequest modelConfigRequest = new ModelConfigRequest();
+        modelConfigRequest.setProject(request.getProject());
+        LinkedHashMap<String, String> props = new LinkedHashMap<>(request.getCustomSettings());
+        modelConfigRequest.setOverrideProps(props);
+
+        Mockito.doNothing().when(modelService).updateModelConfig("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                modelConfigRequest);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).addModelConfig(request);
+
+        //add error check
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        //modify
+        request.getCustomSettings().put("test.add.key", "test.change.value");
+        modelConfigRequest.getOverrideProps().put("test.add.key", "test.change.value");
+        Mockito.doNothing().when(modelService).updateModelConfig("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                modelConfigRequest);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).updateModelConfig(request);
+
+        //test case ignore
+        request.setProject("dEfault");
+        request.setModel("mOdel1");
+        Mockito.doReturn(model).when(modelService).getModel("mOdel1", "default");
+        Mockito.doReturn(modelConfigs).when(modelService).getModelConfig("dEfault", "model1");
+        Mockito.doNothing().when(modelService).updateModelConfig("dEfault", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                modelConfigRequest);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).updateModelConfig(request);
+
+        request.setProject("default");
+        request.setModel("model1");
+        //delete
+        Set<String> set = new HashSet<>();
+        set.add("test.add.key");
+        request.setDeleteCustomSettings(set);
+        modelConfigRequest.getOverrideProps().remove("test.add.key");
+        Mockito.doNothing().when(modelService).updateModelConfig("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                modelConfigRequest);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).deleteModelConfig(request);
+
+        //DeleteCustomSettings empty check
+        request.setDeleteCustomSettings(new HashSet<>());
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        //CustomSettings empty check
+        request.setCustomSettings(new HashMap<>());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        //modify error check
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        //delete error check
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/models/config").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        //project error check
+        request.setProject("11");
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/config").param("model", request.getModel())
+                .param("project", request.getProject())
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        //project error check
+        request.setModel("default");
+        request.setModel("test");
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/config").param("model", request.getModel())
+                .param("project", request.getProject())
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
     }
 }

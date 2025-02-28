@@ -21,14 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -75,8 +74,7 @@ public class SourceUsageRecord extends RootPersistentEntity {
     @Override
     public String resourceName() {
         if (resPath != null) {
-            return resPath.substring(ResourceStore.HISTORY_SOURCE_USAGE.length() + 1,
-                    resPath.length() - MetadataConstants.FILE_SURFIX.length());
+            return resPath.substring(MetadataType.HISTORY_SOURCE_USAGE.name().length() + 1);
         }
         return null;
     }

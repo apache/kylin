@@ -41,13 +41,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.job.service.TableSampleService;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
 import org.apache.kylin.rest.request.AutoMergeRequest;
-import org.apache.kylin.rest.request.PartitionKeyRequest;
-import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
 import org.apache.kylin.rest.request.TableDescRequest;
 import org.apache.kylin.rest.request.TableExclusionRequest;
@@ -64,16 +61,16 @@ import org.apache.kylin.rest.response.NHiveTableNameResponse;
 import org.apache.kylin.rest.response.NInitTablesResponse;
 import org.apache.kylin.rest.response.PreReloadTableResponse;
 import org.apache.kylin.rest.response.PreUnloadTableResponse;
-import org.apache.kylin.rest.response.RefreshAffectedSegmentsResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.TableExtService;
+import org.apache.kylin.rest.service.TableSampleService;
 import org.apache.kylin.rest.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,7 +81,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.View;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
@@ -98,6 +94,7 @@ public class NTableController extends NBasicController {
     private static final String TABLE = "table";
     private static final int MAX_SAMPLING_ROWS = 20_000_000;
     private static final int MIN_SAMPLING_ROWS = 10_000;
+    private static final String DEPRECATED_FUNCTION = "This function is not supported anymore.";
 
     @Autowired
     @Qualifier("tableService")
@@ -197,15 +194,8 @@ public class NTableController extends NBasicController {
     @PostMapping(value = "/partition_key", produces = { HTTP_VND_APACHE_KYLIN_JSON,
             HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
-    public EnvelopeResponse<String> setPartitionKey(@RequestBody PartitionKeyRequest partitionKeyRequest) {
-
-        checkProjectName(partitionKeyRequest.getProject());
-        if (partitionKeyRequest.getPartitionColumnFormat() != null) {
-            validateDateTimeFormatPattern(partitionKeyRequest.getPartitionColumnFormat());
-        }
-        tableService.setPartitionKey(partitionKeyRequest.getTable(), partitionKeyRequest.getProject(),
-                partitionKeyRequest.getColumn(), partitionKeyRequest.getPartitionColumnFormat());
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    public EnvelopeResponse<String> setPartitionKey() {
+        return new EnvelopeResponse<>(KylinException.CODE_UNDEFINED, "", DEPRECATED_FUNCTION);
     }
 
     @ApiOperation(value = "makeTop", tags = { "AI" })
@@ -234,7 +224,8 @@ public class NTableController extends NBasicController {
 
         LoadTableResponse loadTableResponse = tableExtService.loadTablesWithShortCircuit(tableLoadRequest);
 
-        if (!loadTableResponse.getNeedRealSampling().isEmpty() && Boolean.TRUE.equals(tableLoadRequest.getNeedSampling())) {
+        if (!loadTableResponse.getNeedRealSampling().isEmpty()
+                && Boolean.TRUE.equals(tableLoadRequest.getNeedSampling())) {
             checkSamplingRows(tableLoadRequest.getSamplingRows());
             tableSampleService.sampling(loadTableResponse.getNeedRealSampling(), tableLoadRequest.getProject(),
                     tableLoadRequest.getSamplingRows(), tableLoadRequest.getPriority(), tableLoadRequest.getYarnQueue(),
@@ -273,7 +264,8 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, loadTableResponse, "");
     }
 
-    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = { "N/A" }, notes = "Update Body: data_source_properties")
+    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = {
+            "N/A" }, notes = "Update Body: data_source_properties")
     @PutMapping(value = "/ext/prop/aws")
     @ResponseBody
     public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(
@@ -362,29 +354,15 @@ public class NTableController extends NBasicController {
     @GetMapping(value = "/affected_data_range", produces = { HTTP_VND_APACHE_KYLIN_JSON,
             HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
-    public EnvelopeResponse<RefreshAffectedSegmentsResponse> getRefreshAffectedDateRange(
-            @RequestParam(value = "project") String project, @RequestParam(value = "table") String table,
-            @RequestParam(value = "start") String start, @RequestParam(value = "end") String end) {
-        checkProjectName(project);
-        checkRequiredArg(TABLE, table);
-        checkRequiredArg("start", start);
-        checkRequiredArg("end", end);
-        validateRange(start, end);
-        tableService.checkRefreshDataRangeReadiness(project, table, start, end);
-        RefreshAffectedSegmentsResponse response = modelService.getRefreshAffectedSegmentsResponse(project, table,
-                start, end);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+    public EnvelopeResponse<String> getRefreshAffectedDateRange() {
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", DEPRECATED_FUNCTION);
     }
 
     @ApiOperation(value = "updatePushdownMode", tags = { "AI" }, notes = "Update Body: pushdown_range_limited")
     @PutMapping(value = "/pushdown_mode")
     @ResponseBody
-    public EnvelopeResponse<String> setPushdownMode(@RequestBody PushDownModeRequest pushDownModeRequest) {
-        checkProjectName(pushDownModeRequest.getProject());
-        checkRequiredArg(TABLE, pushDownModeRequest.getTable());
-        tableService.setPushDownMode(pushDownModeRequest.getProject(), pushDownModeRequest.getTable(),
-                pushDownModeRequest.isPushdownRangeLimited());
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    public EnvelopeResponse<String> setPushdownMode() {
+        return new EnvelopeResponse<>(KylinException.CODE_UNDEFINED, "", DEPRECATED_FUNCTION);
     }
 
     @ApiOperation(value = "getPushdownMode", tags = { "AI" })
@@ -392,10 +370,7 @@ public class NTableController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<Boolean> getPushdownMode(@RequestParam(value = "project") String project,
             @RequestParam(value = "table") String table) {
-        checkProjectName(project);
-        checkRequiredArg(TABLE, table);
-        boolean result = tableService.getPushDownMode(project, table);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, false, DEPRECATED_FUNCTION);
     }
 
     @ApiOperation(value = "autoMergeConfig", tags = { "DW" })
@@ -409,11 +384,9 @@ public class NTableController extends NBasicController {
         if (StringUtils.isEmpty(modelId) && StringUtils.isEmpty(tableName)) {
             throw new KylinException(EMPTY_PARAMETER, "model name or table name must be specified!");
         }
-        AutoMergeConfigResponse response;
+        AutoMergeConfigResponse response = null;
         if (StringUtils.isNotEmpty(modelId)) {
             response = tableService.getAutoMergeConfigByModel(project, modelId);
-        } else {
-            response = tableService.getAutoMergeConfigByTable(project, tableName);
         }
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
@@ -433,8 +406,6 @@ public class NTableController extends NBasicController {
         }
         if (StringUtils.isNotEmpty(autoMergeRequest.getModel())) {
             tableService.setAutoMergeConfigByModel(autoMergeRequest.getProject(), autoMergeRequest);
-        } else {
-            tableService.setAutoMergeConfigByTable(autoMergeRequest.getProject(), autoMergeRequest);
         }
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
@@ -492,12 +463,18 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, tableService.checkSSBDataBase(), "");
     }
 
+    /**
+     * The interface was migrated to /kylin/api/query/catalog_cache
+     * @param refreshRequest
+     * @return
+     */
     @Deprecated
     @ApiOperation(value = "catalogCache", tags = { "DW" })
     @PutMapping(value = "catalog_cache", produces = { HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
-    public String refreshCatalogCache(final HttpServletRequest refreshRequest) {
-        refreshRequest.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.PERMANENT_REDIRECT);
-        return "redirect:/api/query/catalog_cache";
+    @ResponseBody
+    public EnvelopeResponse refreshCatalogCache(final HttpServletRequest refreshRequest) {
+        TableRefreshAll response = tableService.refreshAllCatalogCache(refreshRequest);
+        return new EnvelopeResponse<>(response.getCode(), response, response.getMsg());
     }
 
     @ApiOperation(value = "modelTables", tags = { "AI" })

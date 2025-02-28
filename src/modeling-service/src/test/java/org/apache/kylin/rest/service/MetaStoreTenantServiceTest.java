@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.metadata.streaming.ReflectionUtils;
 import org.apache.kylin.rest.request.StorageCleanupRequest;
 import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
+import org.apache.kylin.tool.garbage.PriorityExecutor;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpMethod;
@@ -52,6 +54,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest({ HttpMethod.class, ResourceGroupManager.class, KylinConfig.class })
 public class MetaStoreTenantServiceTest {
     @InjectMocks
@@ -77,6 +82,9 @@ public class MetaStoreTenantServiceTest {
         ReflectionUtils.setField(metaStoreService, "routeService", routeService);
         ReflectionUtils.setField(routeService, "restTemplate", restTemplate);
 
+        CleanTaskExecutorService.getInstance()
+                .bindWorkingPool(() -> PriorityExecutor.newWorkingThreadPool("test-pool", 1));
+
         val restResult = JsonUtil.writeValueAsBytes(RestResponse.ok(true));
         val resp = new ResponseEntity<>(restResult, HttpStatus.OK);
         Mockito.when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
@@ -87,12 +95,12 @@ public class MetaStoreTenantServiceTest {
         Mockito.when(rgManager.getResourceGroup())
                 .thenReturn(JsonUtil.readValue(resourceGroupJson, new TypeReference<ResourceGroup>() {
                 }));
-        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(ArgumentMatchers.anyBoolean(), Collections.emptyList(),
-            ArgumentMatchers.anyDouble(), ArgumentMatchers.anyInt());
+        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(ArgumentMatchers.anyBoolean(),
+                Collections.emptyList(), ArgumentMatchers.anyDouble(), ArgumentMatchers.anyInt());
 
         val storageCleanupRequest = new StorageCleanupRequest();
         storageCleanupRequest.setCleanupStorage(false);
-        storageCleanupRequest.setProjectsToClean(new String[]{});
+        storageCleanupRequest.setProjectsToClean(new String[] {});
         val request = new MockHttpServletRequest();
         metaStoreService.cleanupStorage(storageCleanupRequest, request);
 

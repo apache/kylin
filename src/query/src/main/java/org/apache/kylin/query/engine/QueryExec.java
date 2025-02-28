@@ -20,20 +20,16 @@ package org.apache.kylin.query.engine;
 
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
@@ -41,11 +37,11 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Values;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexExecutorImpl;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.kylin.cache.kylin.KylinCacheFileSystem;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
@@ -60,24 +56,31 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
-import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
+import org.apache.kylin.query.calcite.KylinSumSplitter;
 import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.engine.exec.CalcitePlanExec;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
-import org.apache.kylin.query.engine.exec.calcite.CalciteQueryPlanExec;
-import org.apache.kylin.query.engine.exec.sparder.SparderQueryPlanExec;
+import org.apache.kylin.query.engine.exec.SparderPlanExec;
 import org.apache.kylin.query.engine.meta.SimpleDataContext;
+import org.apache.kylin.query.engine.view.ModelViewExpander;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.mask.QueryResultMasks;
+import org.apache.kylin.query.optrule.OlapFilterJoinRule;
+import org.apache.kylin.query.optrule.OlapProjectJoinTransposeRule;
+import org.apache.kylin.query.optrule.SumConstantConvertRule;
+import org.apache.kylin.query.optrule.UnionTypeCastRule;
 import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.KapAggregateRel;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapAggregateRel;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
 import org.apache.kylin.query.util.QueryContextCutter;
+import org.apache.kylin.query.util.QueryHelper;
 import org.apache.kylin.query.util.QueryInterruptChecker;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RelAggPushDownUtil;
+import org.apache.spark.SparkContext;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,11 +101,11 @@ public class QueryExec {
     private String sparderQueryOptimizedExceptionMsg = "";
 
     private final KylinConfig kylinConfig;
-    private final KECalciteConfig config;
+    private final KylinConnectionConfig connectionConfig;
     private final RelOptPlanner planner;
     private final ProjectSchemaFactory schemaFactory;
     private final Prepare.CatalogReader catalogReader;
-    private final SQLConverter sqlConverter;
+    private final SqlConverter sqlConverter;
     private final QueryOptimizer queryOptimizer;
     private final SimpleDataContext dataContext;
     private final boolean allowAlternativeQueryPlan;
@@ -112,13 +115,13 @@ public class QueryExec {
     public QueryExec(String project, KylinConfig kylinConfig, boolean allowAlternativeQueryPlan) {
         this.project = project;
         this.kylinConfig = kylinConfig;
-        config = KECalciteConfig.fromKapConfig(kylinConfig);
+        connectionConfig = KylinConnectionConfig.fromKapConfig(kylinConfig);
         schemaFactory = new ProjectSchemaFactory(project, kylinConfig);
         rootSchema = schemaFactory.createProjectRootSchema();
         String defaultSchemaName = schemaFactory.getDefaultSchema();
-        catalogReader = createCatalogReader(config, rootSchema, defaultSchemaName);
-        planner = new PlannerFactory(kylinConfig).createVolcanoPlanner(config);
-        sqlConverter = SQLConverter.createConverter(config, planner, catalogReader);
+        catalogReader = SqlConverter.createCatalogReader(connectionConfig, rootSchema, defaultSchemaName);
+        planner = new PlannerFactory(kylinConfig).createVolcanoPlanner(connectionConfig);
+        sqlConverter = QueryExec.createConverter(connectionConfig, planner, catalogReader);
         dataContext = createDataContext(rootSchema);
         planner.setExecutor(new RexExecutorImpl(dataContext));
         queryOptimizer = new QueryOptimizer(planner);
@@ -141,9 +144,10 @@ public class QueryExec {
 
         @Override
         public CalcitePrepare.AnalyzeViewResult analyzeView(String sql) throws SqlParseException {
-            Prepare.CatalogReader viewCatalogReader = createCatalogReader(config, rootSchema, defaultSchemaName);
-            RelOptPlanner viewPlanner = new PlannerFactory(kylinConfig).createVolcanoPlanner(config);
-            SQLConverter viewSqlConverter = SQLConverter.createConverter(config, viewPlanner, viewCatalogReader);
+            Prepare.CatalogReader viewCatalogReader = SqlConverter.createCatalogReader(connectionConfig, rootSchema,
+                    defaultSchemaName);
+            RelOptPlanner viewPlanner = new PlannerFactory(kylinConfig).createVolcanoPlanner(connectionConfig);
+            SqlConverter viewSqlConverter = createConverter(connectionConfig, viewPlanner, viewCatalogReader);
             SimpleDataContext viewDataContext = createDataContext(rootSchema);
             viewPlanner.setExecutor(new RexExecutorImpl(viewDataContext));
             return viewSqlConverter.analyzeSQl(sql);
@@ -152,6 +156,14 @@ public class QueryExec {
 
     public QueryExec(String project, KylinConfig kylinConfig) {
         this(project, kylinConfig, false);
+    }
+
+    public static SqlConverter createConverter(KylinConnectionConfig connectionConfig, RelOptPlanner planner,
+            Prepare.CatalogReader catalogReader) {
+        // this could be a bit awkward that SQLConverter and ViewExpander seem to have a cyclical reference
+        SqlConverter sqlConverter = new SqlConverter(connectionConfig, planner, catalogReader);
+        return new SqlConverter(connectionConfig, planner, catalogReader,
+                new ModelViewExpander(sqlConverter::convertSqlToRelNode));
     }
 
     public void plannerRemoveRules(List<RelOptRule> rules) {
@@ -183,7 +195,7 @@ public class QueryExec {
             beforeQuery();
 
             // process cache hint like -- select * from xxx /*+ ACCEPT_CACHE_TIME(158176387682000) */
-            sql = processAcceptCacheTimeInSql(sql);
+            processAcceptCacheTime(queryContext.getFirstHintStr());
 
             QueryContext.currentTrace().startSpan(QueryTrace.SQL_PARSE_AND_OPTIMIZE);
             RelRoot relRoot = sqlConverter.convertSqlToRelNode(sql);
@@ -192,7 +204,8 @@ public class QueryExec {
             queryContext.record("end_calcite_optimize");
 
             List<StructField> resultFields = RelColumnMetaDataExtractor.getColumnMetadata(relRoot.validatedRowType);
-            if (resultFields.isEmpty()) { // result fields size may be 0 because of ACL controls and should return immediately
+            if (resultFields.isEmpty()) {
+                // result fields size may be 0 because of ACL controls and should return immediately
                 QueryContext.fillEmptyResultSetMetrics();
                 return new QueryResult();
             }
@@ -227,20 +240,18 @@ public class QueryExec {
         }
     }
 
-    public List<OLAPContext> deriveOlapContexts(String sql) {
-        List<OLAPContext> contexts = Lists.newArrayList();
+    public List<OlapContext> deriveOlapContexts(String sql) {
+        List<OlapContext> contexts = Lists.newArrayList();
         try {
-            OLAPContext.clearThreadLocalContexts();
+            ContextUtil.clearThreadLocalContexts();
             RelNode relNode = parseAndOptimize(sql);
             QueryContextCutter.analyzeOlapContext(relNode);
-            Collection<OLAPContext> tmp = OLAPContext.getThreadLocalContexts();
-            if (CollectionUtils.isNotEmpty(tmp)) {
-                contexts.addAll(tmp);
-            }
+            Collection<OlapContext> tmp = ContextUtil.getThreadLocalContexts();
+            contexts.addAll(tmp);
         } catch (Exception e) {
             logger.error("Sql Parsing error.", e);
         } finally {
-            OLAPContext.clearThreadLocalContexts();
+            ContextUtil.clearThreadLocalContexts();
         }
         return contexts;
     }
@@ -266,8 +277,12 @@ public class QueryExec {
      */
     public List<RelNode> postOptimize(RelNode node) {
         Collection<RelOptRule> postOptRules = new LinkedHashSet<>();
+        // It will definitely work if it were put here
+        postOptRules.add(SumConstantConvertRule.INSTANCE);
+        postOptRules.add(UnionTypeCastRule.INSTANCE);
         if (kylinConfig.isConvertSumExpressionEnabled()) {
             postOptRules.addAll(HepUtils.SumExprRules);
+            KylinSumSplitter.registerRexImpTable();
         }
         if (kylinConfig.isConvertCountDistinctExpressionEnabled()) {
             postOptRules.addAll(HepUtils.CountDistinctExprRules);
@@ -289,15 +304,16 @@ public class QueryExec {
             postOptRules.addAll(HepUtils.FilterReductionRules);
         }
 
-        if (!postOptRules.isEmpty()) {
-            RelNode transformed = HepUtils.runRuleCollection(node, postOptRules, false);
-            if (transformed != node && allowAlternativeQueryPlan) {
-                return Lists.newArrayList(transformed, node);
-            } else {
-                return Lists.newArrayList(transformed);
-            }
+        postOptRules.add(OlapFilterJoinRule.FILTER_ON_JOIN);
+        // this rule should after sum-expression and count-distinct-expression
+        postOptRules.add(OlapProjectJoinTransposeRule.INSTANCE);
+
+        RelNode transformed = HepUtils.runRuleCollection(node, postOptRules, false);
+        if (transformed != node && allowAlternativeQueryPlan) {
+            return Lists.newArrayList(transformed, node);
+        } else {
+            return Lists.newArrayList(transformed);
         }
-        return Lists.newArrayList(node);
     }
 
     @VisibleForTesting
@@ -342,14 +358,18 @@ public class QueryExec {
 
     private void beforeQuery() {
         Prepare.CatalogReader.THREAD_LOCAL.set(catalogReader);
-        KECalciteConfig.THREAD_LOCAL.set(config);
+        KylinConnectionConfig.THREAD_LOCAL.set(connectionConfig);
     }
 
     private void afterQuery() {
         Prepare.CatalogReader.THREAD_LOCAL.remove();
-        KECalciteConfig.THREAD_LOCAL.remove();
+        KylinConnectionConfig.THREAD_LOCAL.remove();
         FileSegments.clearFileSegFilterLocally();
-        clearAcceptCacheTimeLocally();
+        if (SparkSession.getDefaultSession().isDefined()) {
+            KylinCacheFileSystem.clearAcceptCacheTimeLocally();
+            SparkContext sparkContext = SparkSession.getDefaultSession().get().sparkContext();
+            sparkContext.setLocalProperty("gluten.enabledForCurrentThread", null);
+        }
     }
 
     public void setContextVar(String name, Object val) {
@@ -384,12 +404,13 @@ public class QueryExec {
      * @return
      */
     private ExecuteResult executeQueryPlan(List<RelNode> rels) {
-        boolean routeToCalcite = routeToCalciteEngine(rels.get(0));
+        boolean routeToCalcite = QueryHelper.isConstantQueryAndCalciteEngineCapable(rels.get(0));
         dataContext.setContentQuery(routeToCalcite);
         if (!QueryContext.current().getQueryTagInfo().isAsyncQuery()
                 && KapConfig.wrap(kylinConfig).runConstantQueryLocally() && routeToCalcite) {
             QueryContext.current().getQueryTagInfo().setConstantQuery(true);
-            return new CalciteQueryPlanExec().executeToIterable(rels.get(0), dataContext); // if sparder is not enabled, or the sql can run locally, use the calcite engine
+            // if sparder is not enabled, or the sql can run locally, use the calcite engine
+            return new CalcitePlanExec().executeToIterable(rels.get(0), dataContext);
         } else {
             return sparderQuery(rels);
         }
@@ -399,9 +420,9 @@ public class QueryExec {
         RuntimeException lastException = null;
         for (RelNode rel : rels) {
             try {
-                OLAPContext.clearThreadLocalContexts();
-                OLAPContext.clearParameter();
-                return new SparderQueryPlanExec().executeToIterable(rel, dataContext);
+                ContextUtil.clearThreadLocalContexts();
+                ContextUtil.clearParameter();
+                return new SparderPlanExec(kylinConfig).executeToIterable(rel, dataContext);
             } catch (NoRealizationFoundException e) {
                 ExecuteResult result = tryEnhancedAggPushDown(rel);
                 if (result != null) {
@@ -439,8 +460,8 @@ public class QueryExec {
         if (!QueryContext.current().isEnhancedAggPushDown() && tryTimes > 1) {
             return null;
         }
-        OLAPContext.clearThreadLocalContexts();
-        OLAPContext.clearParameter();
+        ContextUtil.clearThreadLocalContexts();
+        ContextUtil.clearParameter();
         RelAggPushDownUtil.clearCtxRelNode(relNode);
         QueryContext.current().setEnhancedAggPushDown(false);
         RelNode transformed = HepUtils.runRuleCollection(relNode, postOptRules, false);
@@ -448,7 +469,7 @@ public class QueryExec {
                 transformed, logger);
         try {
             RelAggPushDownUtil.clearUnmatchedJoinDigest();
-            return new SparderQueryPlanExec().executeToIterable(transformed, dataContext);
+            return new SparderPlanExec(kylinConfig).executeToIterable(transformed, dataContext);
         } catch (NoRealizationFoundException e) {
             QueryInterruptChecker.checkThreadInterrupted(
                     "Interrupted SparderQueryOptimized NoRealizationFoundException",
@@ -463,14 +484,6 @@ public class QueryExec {
         }
     }
 
-    private Prepare.CatalogReader createCatalogReader(CalciteConnectionConfig connectionConfig,
-            CalciteSchema rootSchema, String defaultSchemaName) {
-        RelDataTypeSystem relTypeSystem = new KylinRelDataTypeSystem();
-        JavaTypeFactory javaTypeFactory = new JavaTypeFactoryImpl(relTypeSystem);
-        return new CalciteCatalogReader(rootSchema, Collections.singletonList(defaultSchemaName), javaTypeFactory,
-                connectionConfig);
-    }
-
     private SimpleDataContext createDataContext(CalciteSchema rootSchema) {
         return new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(), kylinConfig);
     }
@@ -481,6 +494,7 @@ public class QueryExec {
 
     /**
      * search rel node tree to see if there is any table scan node
+     *
      * @param rel
      * @return
      */
@@ -499,21 +513,22 @@ public class QueryExec {
 
     /**
      * Calcite is not capable for some constant queries, need to route to Sparder
-     *
-     * @param rel
-     * @return
      */
     private boolean isCalciteEngineCapable(RelNode rel) {
         if (rel instanceof Project) {
             Project projectRelNode = (Project) rel;
-            if (projectRelNode.getChildExps().stream().filter(pRelNode -> pRelNode instanceof RexCall)
+            if (projectRelNode.getProjects().stream().filter(RexCall.class::isInstance)
                     .anyMatch(pRelNode -> pRelNode.accept(new CalcitePlanRouterVisitor()))) {
+                return false;
+            }
+            if (projectRelNode.getProjects() != null
+                    && projectRelNode.getProjects().stream().anyMatch(this::isPlusString)) {
                 return false;
             }
         }
 
-        if (rel instanceof KapAggregateRel) {
-            KapAggregateRel aggregateRel = (KapAggregateRel) rel;
+        if (rel instanceof OlapAggregateRel) {
+            OlapAggregateRel aggregateRel = (OlapAggregateRel) rel;
             if (aggregateRel.getAggCallList().stream().anyMatch(
                     aggCall -> FunctionDesc.FUNC_BITMAP_BUILD.equalsIgnoreCase(aggCall.getAggregation().getName()))) {
                 return false;
@@ -525,6 +540,28 @@ public class QueryExec {
         }
 
         return rel.getInputs().stream().allMatch(this::isCalciteEngineCapable);
+    }
+
+    /**
+     * calcite not support 'number' + number/'number'
+     *
+     * @param node
+     * @return
+     */
+    private boolean isPlusString(RexNode node) {
+        if (node instanceof RexCall) {
+            RexCall rexCall = (RexCall) node;
+            if ("plus".equals(rexCall.getOperator().getKind().lowerName)) {
+                for (RexNode operand : rexCall.operands) {
+                    if (operand.getType().getFamily() == SqlTypeFamily.STRING
+                            || operand.getType().getFamily() == SqlTypeFamily.CHARACTER) {
+                        return true;
+                    }
+                }
+            }
+            return rexCall.getOperands().stream().anyMatch(this::isPlusString);
+        }
+        return false;
     }
 
     private SQLException newSqlException(String sql, String msg, Throwable e) {
@@ -539,60 +576,45 @@ public class QueryExec {
             StringBuilder diagnosticInfo = new StringBuilder(System.getProperty("line.separator"));
             diagnosticInfo.append("<-------------------- Dry Run Info -------------------->");
 
-            diagnosticInfo.append(SEP)
-                    .append("1. Last Exception :")
-                    .append(SEP).append("  ");
+            diagnosticInfo.append(SEP).append("1. Last Exception :").append(SEP).append("  ");
             diagnosticInfo.append(msg).append(SEP);
 
-            diagnosticInfo.append(SEP)
-                    .append("2. RelNode(with ctx id) :")
-                    .append(SEP).append("  ");
+            diagnosticInfo.append(SEP).append("2. RelNode(with ctx id) :").append(SEP).append("  ");
             diagnosticInfo.append(QueryContext.current().getLastUsedRelNode());
 
-            diagnosticInfo.append(SEP)
-                    .append("3. OLAPContext(s) and matched model(s) :");
-            if (OLAPContext.getThreadLocalContexts() != null) {
-                String olapMatchInfo =
-                        OLAPContext.getNativeRealizations().stream()
-                                .map(r -> String.format(" Ctx=%d, \tMatched=%s, \tIndexType=%s, \tLayoutId=%d",
-                                        r.getCxtId(), r.getModelAlias(), r.getIndexType(), r.getLayoutId()))
-                                .collect(Collectors.joining(SEP));
+            diagnosticInfo.append(SEP).append("3. OLAPContext(s) and matched model(s) :");
+            if (ContextUtil.getThreadLocalContexts() != null) {
+                String olapMatchInfo = ContextUtil.getNativeRealizations().stream()
+                        .map(r -> String.format(Locale.ROOT, " \tMatched=%s, \tIndexType=%s, \tLayoutId=%d",
+                                r.getModelAlias(), r.getType(), r.getLayoutId()))
+                        .collect(Collectors.joining(SEP));
                 if (olapMatchInfo.length() >= 10) {
-                    diagnosticInfo.append(SEP)
-                            .append(olapMatchInfo)
-                            .append(SEP);
+                    diagnosticInfo.append(SEP).append(olapMatchInfo).append(SEP);
                 }
 
-                for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
+                for (OlapContext ctx : ContextUtil.getThreadLocalContexts()) {
                     diagnosticInfo.append(SEP);
-                    diagnosticInfo.append(" Ctx=").append(ctx.id);
-                    if (ctx.realization == null) {
+                    diagnosticInfo.append(" Ctx=").append(ctx.getId());
+                    if (ctx.getRealization() == null) {
                         diagnosticInfo.append(" is not matched by any model/snapshot, expected ")
                                 .append(ctx.tipsForUser());
                     } else {
-                        diagnosticInfo.append(" is matched by ").append(ctx.realization.getCanonicalName())
+                        diagnosticInfo.append(" is matched by ").append(ctx.getRealization().getCanonicalName())
                                 .append(", expected ").append(ctx.tipsForUser());
                     }
-//                    diagnosticInfo.append(", verbose text:").append(ctx);
+                    //                    diagnosticInfo.append(", verbose text:").append(ctx);
                 }
                 diagnosticInfo.append(SEP);
             }
 
-            diagnosticInfo.append(SEP)
-                    .append("4. SQL Text :")
-                    .append(SEP);
-            diagnosticInfo.append(sql)
-                    .append(SEP);
+            diagnosticInfo.append(SEP).append("4. SQL Text :").append(SEP);
+            diagnosticInfo.append(sql).append(SEP);
 
-            diagnosticInfo.append(SEP)
-                    .append("5. Physical plan :")
-                    .append(SEP);
+            diagnosticInfo.append(SEP).append("5. Physical plan :").append(SEP);
             diagnosticInfo.append(plan).append(SEP);
 
-            diagnosticInfo.append(SEP)
-                    .append("<-------------------- Dry Run Info -------------------->");
-            diagnosticInfo.append(SEP)
-                    .append(DRY_RUN_TIP);
+            diagnosticInfo.append(SEP).append("<-------------------- Dry Run Info -------------------->");
+            diagnosticInfo.append(SEP).append(DRY_RUN_TIP);
             diagnosticStr = diagnosticInfo.toString();
             return new SQLException(diagnosticStr, e);
         } else {
@@ -600,12 +622,11 @@ public class QueryExec {
         }
     }
 
-    private String processAcceptCacheTimeInSql(String sql) {
+    private void processAcceptCacheTime(String hintStr) {
         if (kylinConfig.isKylinLocalCacheEnabled() && kylinConfig.isKylinFileStatusCacheEnabled()
                 && SparkSession.getDefaultSession().isDefined()) {
-            return KylinCacheFileSystem.processAcceptCacheTimeInSql(sql);
+            KylinCacheFileSystem.processAcceptCacheTimeInHintStr(hintStr);
         }
-        return sql;
     }
 
     private void clearAcceptCacheTimeLocally() {
@@ -615,10 +636,9 @@ public class QueryExec {
         }
     }
 
-    public final static String SEP = System.getProperty("line.separator");
-    public final static String DRY_RUN_TIP = SEP
-            + "Tip : Dryrun is a experimental feature for user to create proper model."
-            + SEP + "To enable/disable dry run, please set 'kylin.query.dryrun-enabled=true/false'"
-            + SEP + "in Setting -> Advanced Settings -> Custom Project Configuration."
-            + SEP;
+    public static final String SEP = System.lineSeparator();
+    public static final String DRY_RUN_TIP = SEP
+            + "Tip : Dryrun is a experimental feature for user to create proper model." + SEP
+            + "To enable/disable dry run, please set 'kylin.query.dryrun-enabled=true/false'" + SEP
+            + "in Setting -> Advanced Settings -> Custom Project Configuration." + SEP;
 }

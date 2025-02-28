@@ -20,9 +20,9 @@ package org.apache.kylin.rest.util;
 
 import java.util.Locale;
 
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

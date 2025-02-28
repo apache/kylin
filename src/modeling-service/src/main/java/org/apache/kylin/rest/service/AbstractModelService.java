@@ -27,7 +27,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NOT_E
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -46,8 +45,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
@@ -149,20 +146,6 @@ public class AbstractModelService extends BasicService {
         }
     }
 
-    private boolean isHighCardinalityDim(NTableMetadataManager tableManager, TblColRef colRef) {
-        String tableIdentity = colRef.getTableRef().getTableIdentity();
-        TableDesc tableDesc = tableManager.getTableDesc(tableIdentity);
-        TableExtDesc tableExtIfExists = tableManager.getTableExtIfExists(tableDesc);
-        TableExtDesc.ColumnStats columnStats = tableExtIfExists.getColumnStatsByName(colRef.getName());
-
-        // table not sampled
-        if (Objects.isNull(columnStats)) {
-            return false;
-        }
-
-        return (double) (columnStats.getCardinality()) / tableExtIfExists.getTotalRows() > 0.2;
-    }
-
     private boolean needToDeleteLayout(NTableMetadataManager tableManager, NDataModel model, IndexEntity index) {
         int dimSize = index.getDimensions().size();
         if (dimSize > 1) {
@@ -173,7 +156,7 @@ public class AbstractModelService extends BasicService {
             return false;
         }
 
-        return isHighCardinalityDim(tableManager, model.getColRef(index.getDimensions().get(0)));
+        return tableManager.isHighCardinalityDim(model.getColRef(index.getDimensions().get(0)));
     }
 
     private Pair<Boolean, Integer> processIndex(NDataModel model, IndexEntity index,
@@ -222,7 +205,7 @@ public class AbstractModelService extends BasicService {
             List<Integer> measures = index.getMeasures();
             for (Integer dimension : index.getDimensions()) {
                 TblColRef colRef = model.getColRef(dimension);
-                if (isHighCardinalityDim(tableManager, colRef)) {
+                if (tableManager.isHighCardinalityDim(colRef)) {
                     log.warn("The col {} is high cardinality dimension, not recommended as an index", colRef.getName());
                     continue;
                 }

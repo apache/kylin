@@ -23,6 +23,7 @@ import java.util.Locale;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.SecretKeyUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.tool.daemon.CheckResult;
 import org.apache.kylin.tool.daemon.CheckStateEnum;
 import org.apache.kylin.tool.util.ToolUtil;
@@ -31,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

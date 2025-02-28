@@ -33,6 +33,7 @@ import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.KylinTestBase;
@@ -41,28 +42,20 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.SparderEnv;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.val;
 
 public class NBadQueryAndPushDownTest extends NLocalWithSparkSessionTest {
     private static final String PUSHDOWN_RUNNER_KEY = "kylin.query.pushdown.runner-class-name";
     private static final String PUSHDOWN_ENABLED = "kylin.query.pushdown-enabled";
-    private final static String PROJECT_NAME = "bad_query_test";
-    private final static String DEFAULT_PROJECT_NAME = "default";
+    private static final String PROJECT_NAME = "bad_query_test";
+    private static final String DEFAULT_PROJECT_NAME = "default";
 
     @Override
     public String getProject() {
         return PROJECT_NAME;
-    }
-
-    @After
-    public void teardown() {
-        super.cleanupTestMetadata();
     }
 
     @Test

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.request;
 
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +32,7 @@ import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.insensitive.ModelInsensitiveRequest;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -41,6 +41,8 @@ import org.apache.kylin.rest.response.LayoutRecDetailResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
 import org.apache.kylin.rest.util.SCD2SimplificationConvertUtil;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
@@ -82,6 +84,9 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
     @JsonProperty("save_only")
     private boolean saveOnly = false;
 
+    @JsonProperty("with_rec_job")
+    private boolean withRecJob = false;
+
     @JsonProperty("with_segment")
     private boolean withEmptySegment = true;
 
@@ -94,13 +99,22 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
     @JsonProperty("base_index_type")
     private Set<IndexEntity.Source> baseIndexType;
 
-    @JsonProperty("with_second_storage")
-    private boolean withSecondStorage = false;
-
     @JsonProperty("computed_column_name_auto_adjust")
     private boolean computedColumnNameAutoAdjust = false;
 
     private List<SimplifiedJoinTableDesc> simplifiedJoinTableDescs;
+
+    @EqualsAndHashCode.Include
+    @JsonGetter("computed_columns")
+    @JsonInclude(JsonInclude.Include.NON_NULL) // output to frontend
+    public List<ComputedColumnDesc> getComputedColumnDescs() {
+        return this.computedColumnDescs;
+    }
+
+    @JsonSetter("computed_columns")
+    public void setComputedColumnDescs(List<ComputedColumnDesc> computedColumnDescs) {
+        this.computedColumnDescs = computedColumnDescs;
+    }
 
     @JsonProperty("join_tables")
     public void setSimplifiedJoinTableDescs(List<SimplifiedJoinTableDesc> simplifiedJoinTableDescs) {

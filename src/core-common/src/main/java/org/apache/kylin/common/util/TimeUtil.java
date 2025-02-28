@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
@@ -130,4 +131,12 @@ public class TimeUtil {
         return zonedDateTime.minusDays(days).toInstant().toEpochMilli();
     }
 
+    public static String ymdintBetween(long timestamp1, long timestamp2) {
+        ZoneId zoneId = TimeZone.getDefault().toZoneId();
+        LocalDate date1 = Instant.ofEpochMilli(timestamp1).atZone(zoneId).toLocalDate();
+        LocalDate date2 = Instant.ofEpochMilli(timestamp2).atZone(zoneId).toLocalDate();
+        Period between = Period.between(date1, date2);
+        return String.format(Locale.ROOT, "%d%02d%02d", Math.abs(between.getYears()), Math.abs(between.getMonths()),
+                Math.abs(between.getDays()));
+    }
 }

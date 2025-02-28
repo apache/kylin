@@ -20,7 +20,8 @@ package org.apache.kylin.it
 import java.sql.SQLException
 import java.util.TimeZone
 
-import org.apache.kylin.common._
+import org.apache.kylin.common.util.TimeZoneUtils
+import org.apache.kylin.common.{JobSupport, KylinConfig, QuerySupport, SSSource}
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.realization.NoRealizationFoundException
 import org.apache.kylin.query.QueryFetcher
@@ -36,7 +37,6 @@ class TestModelViewQuery
     with LocalMetadata
     with JobSupport
     with QuerySupport
-    with CompareSupport
     with SSSource
     with AdaptiveSparkPlanHelper
     with LogEx {
@@ -59,16 +59,15 @@ class TestModelViewQuery
   override protected def getProject: String = DEFAULT_PROJECT
 
   override def beforeAll(): Unit = {
-    super.beforeAll()
+    appendMetadata("src/test/resources/ut_meta/modelViewQuery")
+    super[SSSource].beforeAll()
     overwriteSystemProp("calcite.keep-in-clause", "true")
     overwriteSystemProp("kylin.dictionary.null-encoding-opt-threshold", "1")
     overwriteSystemProp("kylin.web.timezone", "GMT+8")
     overwriteSystemProp("kylin.query.pushdown.runner-class-name", "")
     overwriteSystemProp("kylin.query.pushdown-enabled", "false")
     overwriteSystemProp("kylin.snapshot.parallel-build-enabled", "true")
-
-    addModels("src/test/resources/view/", modelIds)
-
+    TimeZoneUtils.setDefaultTimeZone(KylinConfig.getInstanceFromEnv)
     build()
   }
 
@@ -100,9 +99,9 @@ class TestModelViewQuery
         runAndCompare(modelSql, getProject, "DEFAULT", sparkSqlPath,
           checkOrder = false, Some(sparkSql),
           (modelResult, _) => {
-            val expectedModels = modelSql.split(';')(0).substring(21).split(",")
+            val expectedModels = modelSql.split(';')(1).substring(512).split(",")
             expectedModels.zip(modelResult.getOlapContexts.asScala).foreach { case (modelAlias, idx) =>
-              assert(idx.getModelAlias == modelAlias, s"$modelSqlPath, view model fails to match")
+              assert(idx.getBoundedModelAlias == modelAlias, s"$modelSqlPath, view model fails to match")
             }
             true
           }

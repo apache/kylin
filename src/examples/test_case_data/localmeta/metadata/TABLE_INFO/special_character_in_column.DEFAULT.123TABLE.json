@@ -1,0 +1,44 @@
+{
+  "uuid" : "46d265b7-2af7-eaa1-dc21-639200807e1e",
+  "last_modified" : 0,
+  "create_time" : 1657009616525,
+  "version" : "4.0.0.0",
+  "name" : "123TABLE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "DAY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "day"
+  }, {
+    "id" : "2",
+    "name" : "DAY#",
+    "datatype" : "integer",
+    "case_sensitive_name" : "day#"
+  }, {
+    "id" : "3",
+    "name" : "中文列",
+    "datatype" : "integer",
+    "case_sensitive_name" : "中文列"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "special_character_in_column"
+}

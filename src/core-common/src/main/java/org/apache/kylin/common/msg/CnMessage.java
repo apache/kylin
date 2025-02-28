@@ -32,7 +32,7 @@ public class CnMessage extends Message {
     private static final String TASK_TIMEOUT = "执行超时";
 
     private static final String PARAMETER_EMPTY = "请输入参数 “%s” 的值。";
-    private static final String PARAMETER_MUST_BE_POSITIVE_NUMBER= "参数 %s 的值必须为非负数。";
+    private static final String PARAMETER_MUST_BE_POSITIVE_NUMBER = "参数 %s 的值必须为非负数.";
 
     protected CnMessage() {
 
@@ -188,6 +188,16 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getGlutenDisabled() {
+        return "查询Gluten开关未开启，请打开后重试。";
+    }
+
+    @Override
+    public String getIncorrectDateformat() {
+        return "时间分区格式 \"%s\" 不正确。";
+    }
+
+    @Override
     public String getCanNotOverwriteModel() {
         return "无法覆盖模型 “%s“，因为该模型不存在。请重新选择后重试。";
     }
@@ -248,6 +258,7 @@ public class CnMessage extends Message {
         return "选择的任务状态无效。请重新选择";
     }
 
+    @Override
     public String getIllegalSortByFilter() {
         return "选择的排序条件\"%s\"无效。请重新选择";
     }
@@ -277,11 +288,6 @@ public class CnMessage extends Message {
     @Override
     public String getProjectAlreadyExist() {
         return "项目名 \"%s\" 已存在。请重新命名。";
-    }
-
-    @Override
-    public String getProjectDropFailedSecondStorageEnabled() {
-        return "无法删除项目 \"%s\"，请先关闭分层存储。";
     }
 
     @Override
@@ -536,6 +542,56 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getAutoCompleteModeNotValid() {
+        return "自动补数的方式应该选择固定日期（ABSOLUTE）或相对日期（RELATIVE）";
+    }
+
+    @Override
+    public String getSemiAutoNotEnabled() {
+        return "需要先开启智能推荐以启用自动索引优化";
+    }
+
+    @Override
+    public String getAutoIndexPlanNotEnabled() {
+        return "You need to enable auto-index-plan before job submission";
+    }
+
+    @Override
+    public String getInvalidDateUnit() {
+        return "预期的日期单位是YEAR/WEEK/MONTH/DAY，输入的是%s";
+    }
+
+    @Override
+    public String getWhiteListNotInExistingIndex() {
+        return "要添加白名单的索引%s不在已有索引列表";
+    }
+
+    @Override
+    public String getIndexesNotInWhiteList() {
+        return "要从白名单的删除的索引%s不在白名单";
+    }
+
+    @Override
+    public String getNotAllowedMultipleAutoIndexPlanJob() {
+        return "不支持同时启用多个包含索引自动优化的任务";
+    }
+
+    @Override
+    public String getInstantInitNotAllowed() {
+        return "模型已有数据，不允许设置初始化索引数";
+    }
+
+    @Override
+    public String getInstantInitTooMuch() {
+        return "最多快速创建至 %d 个索引";
+    }
+
+    @Override
+    public String getInstantInitTooLittle() {
+        return "不能小于当前索引数 %d";
+    }
+
+    @Override
     public String getSqlNumberExceedsLimit() {
         return "最多可同时导入 %s 条 SQL";
     }
@@ -547,7 +603,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getLowLevelLicenseMessage() {
-        return "无法使用分层存储，如需使用请先升级为 Kyligence 高级版";
+        return "如需使用该功能请先升级为 Kyligence 高级版";
     }
 
     @Override
@@ -801,6 +857,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getGlutenCacheTooManyRunning() {
+        return "缓存请求数量超过上限，无法提交。请稍后再试，或联系项目管理员修改设置。";
+    }
+
+    @Override
     public String getAsyncQueryTooManyRunning() {
         return "查询失败，异步查询总数已达到管理员设置的上限，请等候并重试。";
     }
@@ -916,8 +977,88 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getTableOrDatabaseNameCannotEmpty() {
+        return "数据库名与表名不能为空。请检查后重试。";
+    }
+
+    @Override
     public String getTableNotFound() {
         return "无法找到表 \"%s\" 。请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableNotFound() {
+        return "无法找到内表 \"%s\"。 请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableEmpty() {
+        return "无法更新非空内表 \"%s\"。 请检查后重试。";
+    }
+
+    @Override
+    public String getSameInternalTableNameExist() {
+        return "表：\"%s\" 已经存在，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTablePath() {
+        return "创建内表路径失败，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableUnpartitioned() {
+        return "不支持增量构建非分区内表，请检查后重试。";
+    }
+
+    @Override
+    public String getNonTimeInternalTableIncrementalBuild() {
+        return "非时间分区表暂不支持分区增量刷新功能，请指定刷新分区。";
+    }
+
+    @Override
+    public String getTimeOutOfRange() {
+        return "当前时间范围超出已加载数据范围，请检查后重试。";
+    }
+
+    @Override
+    public String getTimeRangeOverlap() {
+        return "无法提交构建任务，时间范围与正在构建任务存在重叠，请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableNullPartitionFormat() {
+        return "日期分区格式不能为空， 请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableNoDataCol() {
+        return "在分区列中无法找到日期列，请检查后重试。";
+    }
+
+    @Override
+    public String getTimeExceedPartitionRange() {
+        return "刷新时间超出已加载范围 :\"%s\" ~ \"%s\"，请检查后重试。 ";
+    }
+
+    @Override
+    public String getInternalTablePartitionNotFound() {
+        return "无法找到内表分区：%s。 请检查后重试。";
+    }
+
+    @Override
+    public String getFailedReloadNoneEmptyInternalTable() {
+        return "无法重载非空内表 \"%s\". 请清理数据后重试.";
+    }
+
+    @Override
+    public String getNotInternalTable() {
+        return "表 \"%s\" 不是一个内表。 请检查后重试。";
+    }
+
+    @Override
+    public String getInternalTableDisabled() {
+        return "内表未开启，请打开后重试。";
     }
 
     @Override
@@ -1275,78 +1416,8 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getSecondStorageJobExists() {
-        return "当前无法关闭分层存储。模型 “%s” 存在正在运行的任务，请检查后再试。\n";
-    }
-
-    @Override
-    public String getSecondStorageConcurrentOperate() {
-        return "存在相关的分层存储的任务正在运行，请稍后重试。";
-    }
-
-    @Override
-    public String getSecondStorageProjectJobExists() {
-        return "当前无法关闭分层存储。项目 “%s” 存在正在运行的任务，请检查后再试。\n";
-    }
-
-    @Override
-    public String getSecondStorageProjectEnabled() {
-        return "项目 %s 未开启分层存储。";
-    }
-
-    @Override
-    public String getSecondStorageModelEnabled() {
-        return "模型 %s 未开启分层存储。";
-    }
-
-    @Override
-    public String getSecondStorageLayoutNotExist() {
-        return "不存在 Layout id %s。";
-    }
-
-    @Override
-    public String getSecondStorageLayoutNotBaseTableIndex() {
-        return "Layout id %s 不是和分层存储一致的基础明细索引。";
-    }
-
-    @Override
-    public String getSecondStorageNotSupportType(String dataType) {
-        return String.format(Locale.ROOT, "Skipping Index不支持'%s'列类型。", dataType);
-    }
-
-    @Override
-    public String getSecondStorageSegmentWithoutBaseIndex() {
-        return "Segment 中缺少基础明细索引，请添加后重试。";
-    }
-
-    @Override
-    public String getSecondStorageDeleteNodeFailed() {
-        return "节点%s存在数据，大小为%d bytes";
-    }
-
-    @Override
-    public String getInvalidLowCardinalityDataType() {
-        return "无效的数据类型，当前仅支持 LowCardinality(Nullable(String)) 或 Nullable(String) 的数据类型。";
-    }
-
-    @Override
-    public String getJobRestartFailed() {
-        return "分层存储任务不支持重启操作。\n";
-    }
-
-    @Override
-    public String getJobResumeFailed() {
-        return "分层存储任务暂时不能恢复，请稍后再试。\n";
-    }
-
-    @Override
     public String getJobPauseFailed() {
         return "该类型任务不支持暂停操作";
-    }
-
-    @Override
-    public String getSegmentDropFailed() {
-        return "Segment 正在导入分层存储中。请稍后重试。\n";
     }
 
     @Override
@@ -1415,21 +1486,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getForcedToTieredstorageAndForceToIndex() {
-        return "“force_to_index=ture“ 时，查询使用分层存储失败时不能下压，“forcedToTieredStorage“=1 或者 conf=1 无效，请修改后重试";
-    }
-
-    @Override
-    public String getForcedToTieredstorageReturnError() {
-        return "查询失败。分层存储不可用，请修复后重试查询";
-    }
-
-    @Override
-    public String getForcedToTieredstorageInvalidParameter() {
-        return "无效的参数值，请修改后重试";
-    }
-
-    @Override
     public String getParameterEmpty() {
         return PARAMETER_EMPTY;
     }
@@ -1437,26 +1493,6 @@ public class CnMessage extends Message {
     @Override
     public String getCannotForceToBothPushdodwnAndIndex() {
         return "不能同时强制下推和击中模型，参数 “forcedToPushDown” 和 “forced_to_index” 不能同时使用。请检查后重试。";
-    }
-
-    @Override
-    public String getSecondStorageNodeNotAvailable() {
-        return "无法添加节点。节点不存在或被其他项目占用，请修改后重试";
-    }
-
-    @Override
-    public String getBaseTableIndexNotAvailable() {
-        return "当前无法开启分层存储。请先创建基础所明细索引。";
-    }
-
-    @Override
-    public String getPartitionColumnNotAvailable() {
-        return "当前无法开启分层存储。请将时间分区列添加到维度，并更新基础明细索引。";
-    }
-
-    @Override
-    public String getProjectLocked() {
-        return "当前项目的分层存储中正在进行数据迁移，请稍后重试。";
     }
 
     @Override
@@ -1565,6 +1601,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getInvalidDateFormat() {
+        return "预期的日期格式是%s，输入的是%s";
+    }
+
+    @Override
     public String getlDapUserDataSourceConnectionFailed() {
         return "LDAP服务异常，请检查用户数据源。";
     }
@@ -1640,26 +1681,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getSecondStorageIndexNotSupport() {
-        return "Order by列和Skipping Index列不支持使用分区列";
-    }
-
-    @Override
-    public String getSecondStorageIndexNotAllowNullable() {
-        return "Order by和Skipping Index不允许列类型为Nullable。";
-    }
-
-    @Override
-    public String getSecondStorageOrderByHasData() {
-        return "在线索引已加载分层存储数据，不支持修改Order by列。如必须修改，请先清空分层存储数据";
-    }
-
-    @Override
-    public String getSecondStorageNodeNotAvailable(String nodeName) {
-        return String.format(Locale.ROOT, "分层存储节点'%s'不可用。", nodeName);
-    }
-
-    @Override
     public String getDDLUnSupported() {
         return "不支持的 DDL 语法，仅支持 `create view`, `drop view`, `alter view`, `show create table` 语法";
     }
@@ -1727,7 +1748,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getIllegalNegative(String parameter) {
-        return String.format(PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
+        return String.format(Locale.ROOT, PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
     }
 
     @Override
@@ -1738,5 +1759,25 @@ public class CnMessage extends Message {
     @Override
     public String getRedisInitFailed() {
         return "Redis初始化失败";
+    }
+
+    @Override
+    public String getModelConfigExist() {
+        return "'%s' 模型参数配置不存在, 请检查模型类型.";
+    }
+
+    @Override
+    public String getModelConfigKeyNotExist() {
+        return "未设置{%s}, 请添加后重试.";
+    }
+
+    @Override
+    public String getModelConfigKeyExist() {
+        return "参数 {%s} 已存在, 请修改后重试.";
+    }
+
+    @Override
+    public String getModelStorageUpdateFailed() {
+        return "更新模型存储类型失败，请确认模型中没有 segment 后重试。";
     }
 }

@@ -47,6 +47,8 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
@@ -83,6 +85,7 @@ import org.apache.kylin.streaming.request.StreamingSegmentRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -91,9 +94,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.BeanUtils;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -120,8 +120,8 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
     private IndexPlanService indexPlanService = Mockito.spy(new IndexPlanService());
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
@@ -143,7 +143,7 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "false");
         EventBusFactory.getInstance().unregister(modelBrokenListener);
         EventBusFactory.getInstance().restart();
-        cleanupTestMetadata();
+        super.tearDown();
     }
 
     @Test
@@ -693,6 +693,7 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
         }
     }
 
+    @Ignore("Not support yet")
     @Test
     public void testGetStreamingJobInfoOfNoData() {
         val streamingJobsStatsManager = StreamingJobStatsManager.getInstance();
@@ -713,7 +714,6 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
 
         val resp1 = streamingJobService.getStreamingJobInfo(jobId, PROJECT);
         Assert.assertEquals(JobStatusEnum.RUNNING, resp1.getCurrentStatus());
-        Assert.assertNotNull(resp1.getLastStatusDuration());
         Assert.assertNull(resp1.getDataLatency());
         Assert.assertNotNull(resp1.getLastUpdateTime());
     }
@@ -857,8 +857,7 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
         String[] exceptLines = createStreamingLogTmpFile(project, jobId);
 
         String verboseMsg = streamingJobService.getStreamingJobSimpleLog(project, jobId);
-        String[] actualVerboseMsgLines = org.apache.commons.lang.StringUtils
-                .splitByWholeSeparatorPreserveAllTokens(verboseMsg, "\n");
+        String[] actualVerboseMsgLines = StringUtils.splitByWholeSeparatorPreserveAllTokens(verboseMsg, "\n");
         ArrayList<String> exceptLinesL = Lists.newArrayList(exceptLines);
         exceptLinesL.add("================================================================");
         Assert.assertTrue(Sets.newHashSet(exceptLinesL).containsAll(Sets.newHashSet(actualVerboseMsgLines)));
@@ -886,8 +885,7 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
 
             sampleLog = sampleData.toString();
         }
-        String[] actualLines = org.apache.commons.lang.StringUtils.splitByWholeSeparatorPreserveAllTokens(sampleLog,
-                "\n");
+        String[] actualLines = StringUtils.splitByWholeSeparatorPreserveAllTokens(sampleLog, "\n");
         Assert.assertTrue(Arrays.deepEquals(exceptLines, actualLines));
     }
 

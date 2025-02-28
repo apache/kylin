@@ -33,6 +33,7 @@ public class JobFilter {
 
     private List<JobStatusEnum> statuses;
 
+    // JobInfo.jobType
     private List<String> jobNames;
 
     private int timeFilter;

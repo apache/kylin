@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JdbcPartialAuditLogStore extends JdbcAuditLogStore {
 
-    public JdbcPartialAuditLogStore(KylinConfig config, Predicate<String> filterByResPath) throws Exception {
+    public JdbcPartialAuditLogStore(KylinConfig config, String modelUuid) throws Exception {
         super(config);
-        replayWorker.setFilterByResPath(filterByResPath);
+        replayWorker.setModelUuid(modelUuid);
     }
 }

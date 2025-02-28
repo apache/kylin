@@ -173,6 +173,46 @@ public class KapConfig {
         return Integer.parseInt(config.getOptional("kylin.storage.columnar.repartition-threshold-size-mb", "128"));
     }
 
+    public boolean isResetMaxPartitionBytes() {
+        return Boolean.parseBoolean(config.getOptional("kylin.storage.columnar.reset-max-partition-bytes", FALSE));
+    }
+
+    public long getQueryParquetFilesThresholdBytes() {
+        // 10 * 1024 * 1024
+        return Long.parseLong(config.getOptional("kylin.storage.columnar.files-threshold-bytes", "10485760"));
+    }
+
+    public long getQueryParquetRowCountThresholdSize() {
+        return Long
+                .parseLong(config.getOptional("kylin.storage.columnar.parquet-row-count-threshold-size", "10000000"));
+    }
+
+    public long getQueryParquetRowCountPerMb() {
+        return Long.parseLong(config.getOptional("kylin.storage.columnar.parquet-row-count-per-mb", "1000000"));
+    }
+
+    public long getQueryFilesMaxPartitionBytes() {
+        // 128 * 1024 * 1024
+        return Long.parseLong(config.getOptional("kylin.storage.columnar.files.max-partition-bytes", "134217728"));
+    }
+
+    public boolean isResetParquetBlockSize() {
+        return Boolean.parseBoolean(config.getOptional("kylin.engine.reset-parquet-block-size", FALSE));
+    }
+
+    public long getParquetRowCountPerMb() {
+        return Long.parseLong(config.getOptional("kylin.engine.parquet-row-count-per-mb", "1000000"));
+    }
+
+    public long getParquetBlockSize() {
+        // 128 * 1024 * 1024
+        return Long.parseLong(config.getOptional("kylin.engine.parquet-conf.parquet.block.size", "134217728"));
+    }
+
+    public long getParquetPageSizeRowCheckMax() {
+        return Long.parseLong(config.getOptional("kylin.engine.parquet-conf.parquet.page.size.row.check.max", "10000"));
+    }
+
     public boolean isProjectInternalDefaultPermissionGranted() {
         return Boolean
                 .parseBoolean(config.getOptional("kylin.acl.project-internal-default-permission-granted", "true"));
@@ -714,6 +754,10 @@ public class KapConfig {
 
     public long getBigQuerySecond() {
         return Long.parseLong(config.getOptional("kylin.query.big-query-second", "10"));
+    }
+
+    public boolean isBigQueryLimitEnable() {
+        return Boolean.parseBoolean(config.getOptional("kylin.query.big-query-limit-enabled", FALSE));
     }
 
     public long getBigQueryThresholdUpdateIntervalSecond() {

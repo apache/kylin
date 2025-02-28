@@ -1,0 +1,71 @@
+{
+  "uuid" : "3bc97da0-a188-9f98-2384-ccf9d11f4283",
+  "last_modified" : 1699338322063,
+  "create_time" : 1699338320348,
+  "version" : "4.0.0.0",
+  "name" : "CUSTOMER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "C_CUSTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "c_custkey"
+  }, {
+    "id" : "2",
+    "name" : "C_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "新的名",
+    "case_sensitive_name" : "c_name"
+  }, {
+    "id" : "3",
+    "name" : "C_ADDRESS",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_address"
+  }, {
+    "id" : "4",
+    "name" : "C_CITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_city"
+  }, {
+    "id" : "5",
+    "name" : "C_NATION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_nation"
+  }, {
+    "id" : "6",
+    "name" : "C_REGION",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_region"
+  }, {
+    "id" : "7",
+    "name" : "C_PHONE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_phone"
+  }, {
+    "id" : "8",
+    "name" : "C_MKTSEGMENT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "c_mktsegment"
+  } ],
+  "source_type" : 9,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "test_jdbc/table_snapshot/SSB.CUSTOMER/7d74ced7-2372-4790-9514-1981ce4522c6",
+  "last_snapshot_size" : 16708,
+  "snapshot_last_modified" : 1699339228353,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 300,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "table_comment" : null,
+  "project" : "test_jdbc"
+}

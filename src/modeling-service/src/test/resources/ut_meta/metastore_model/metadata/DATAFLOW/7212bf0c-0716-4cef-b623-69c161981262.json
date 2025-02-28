@@ -1,0 +1,14 @@
+{
+  "uuid" : "7212bf0c-0716-4cef-b623-69c161981262",
+  "last_modified" : 1509805113773,
+  "version" : "2.3.0.20500",
+  "description" : "used to test cc converter logic",
+  "owner" : "test_owner",
+  "mp_values" : null,
+  "create_time_utc" : 1509791792901,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "storage_location_identifier" : null,
+  "project" : "default",
+  "segment_uuids" : [ ]
+}

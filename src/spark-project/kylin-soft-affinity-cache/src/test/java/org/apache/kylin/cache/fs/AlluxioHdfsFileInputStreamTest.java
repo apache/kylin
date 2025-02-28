@@ -32,10 +32,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.kylin.guava30.shaded.common.io.ByteStreams;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteStreams;
 
 import alluxio.AlluxioURI;
 import alluxio.client.file.cache.CacheManager;

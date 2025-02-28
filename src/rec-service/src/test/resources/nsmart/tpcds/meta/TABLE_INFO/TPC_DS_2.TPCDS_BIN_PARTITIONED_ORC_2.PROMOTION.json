@@ -1,0 +1,87 @@
+{
+  "uuid" : "886476c8-c17f-49a8-8762-48908c81a2cc",
+  "last_modified" : 1497607294897,
+  "version" : "2.0.0",
+  "name" : "PROMOTION",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "P_PROMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "P_PROMO_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "P_START_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "P_END_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "P_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "P_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "P_RESPONSE_TARGET",
+    "datatype" : "integer"
+  }, {
+    "id" : "8",
+    "name" : "P_PROMO_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "P_CHANNEL_DMAIL",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "P_CHANNEL_EMAIL",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "P_CHANNEL_CATALOG",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "P_CHANNEL_TV",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "P_CHANNEL_RADIO",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "P_CHANNEL_PRESS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "P_CHANNEL_EVENT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "P_CHANNEL_DEMO",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "P_CHANNEL_DETAILS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "P_PURPOSE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "P_DISCOUNT_ACTIVE",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

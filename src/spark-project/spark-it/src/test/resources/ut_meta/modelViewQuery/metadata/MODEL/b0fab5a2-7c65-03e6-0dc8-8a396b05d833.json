@@ -1,0 +1,244 @@
+{
+  "uuid" : "b0fab5a2-7c65-03e6-0dc8-8a396b05d833",
+  "last_modified" : 1645772974218,
+  "create_time" : 1645772974040,
+  "version" : "4.0.0.0",
+  "alias" : "orders_join_customer",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "TPCH.ORDERS",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "TPCH.CUSTOMER",
+    "kind" : "LOOKUP",
+    "alias" : "CUSTOMER",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "CUSTOMER.C_CUSTKEY" ],
+      "foreign_key" : [ "ORDERS.O_CUSTKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "TPCH.CUSTOMER",
+    "kind" : "LOOKUP",
+    "alias" : "CUSTOMER_1",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "CUSTOMER_1.C_CUSTKEY" ],
+      "foreign_key" : [ "ORDERS.O_ORDERKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "O_CLERK",
+    "column" : "ORDERS.O_CLERK"
+  }, {
+    "id" : 1,
+    "name" : "O_CUSTKEY",
+    "column" : "ORDERS.O_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "O_SHIPPRIORITY",
+    "column" : "ORDERS.O_SHIPPRIORITY"
+  }, {
+    "id" : 3,
+    "name" : "O_ORDERDATE",
+    "column" : "ORDERS.O_ORDERDATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "O_COMMENT",
+    "column" : "ORDERS.O_COMMENT"
+  }, {
+    "id" : 5,
+    "name" : "O_ORDERKEY",
+    "column" : "ORDERS.O_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "O_TOTALPRICE",
+    "column" : "ORDERS.O_TOTALPRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "O_ORDERPRIORITY",
+    "column" : "ORDERS.O_ORDERPRIORITY"
+  }, {
+    "id" : 8,
+    "name" : "O_ORDERSTATUS",
+    "column" : "ORDERS.O_ORDERSTATUS",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "C_ADDRESS_CUSTOMER",
+    "column" : "CUSTOMER.C_ADDRESS"
+  }, {
+    "id" : 10,
+    "name" : "C_MKTSEGMENT_CUSTOMER",
+    "column" : "CUSTOMER.C_MKTSEGMENT"
+  }, {
+    "id" : 11,
+    "name" : "C_CUSTKEY_CUSTOMER",
+    "column" : "CUSTOMER.C_CUSTKEY"
+  }, {
+    "id" : 12,
+    "name" : "C_ACCTBAL_CUSTOMER",
+    "column" : "CUSTOMER.C_ACCTBAL"
+  }, {
+    "id" : 13,
+    "name" : "C_NAME_CUSTOMER",
+    "column" : "CUSTOMER.C_NAME"
+  }, {
+    "id" : 14,
+    "name" : "C_COMMENT_CUSTOMER",
+    "column" : "CUSTOMER.C_COMMENT"
+  }, {
+    "id" : 15,
+    "name" : "C_NATIONKEY_CUSTOMER",
+    "column" : "CUSTOMER.C_NATIONKEY"
+  }, {
+    "id" : 16,
+    "name" : "C_PHONE_CUSTOMER",
+    "column" : "CUSTOMER.C_PHONE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "C_ADDRESS_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_ADDRESS"
+  }, {
+    "id" : 18,
+    "name" : "C_MKTSEGMENT_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_MKTSEGMENT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "C_CUSTKEY_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_CUSTKEY"
+  }, {
+    "id" : 20,
+    "name" : "C_ACCTBAL_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_ACCTBAL"
+  }, {
+    "id" : 21,
+    "name" : "C_NAME_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_NAME"
+  }, {
+    "id" : 22,
+    "name" : "C_COMMENT_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_COMMENT"
+  }, {
+    "id" : 23,
+    "name" : "C_NATIONKEY_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_NATIONKEY"
+  }, {
+    "id" : 24,
+    "name" : "C_PHONE_CUSTOMER_1",
+    "column" : "CUSTOMER_1.C_PHONE"
+  }, {
+    "id" : 25,
+    "name" : "CC1",
+    "column" : "ORDERS.CC1"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "ORDERS.CC1"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "sum2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CUSTOMER_1.C_ACCTBAL"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "canvas" : {
+    "coordinate" : {
+      "ORDERS" : {
+        "x" : 273.5555521647134,
+        "y" : 104.88889058430985,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "CUSTOMER" : {
+        "x" : 734.6666632758247,
+        "y" : 43.777779473198784,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "CUSTOMER_1" : {
+        "x" : 752.4444410536024,
+        "y" : 429.33333502875433,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null,
+  "computed_column_uuids" : [ "85ac6dd1-e139-392a-38b4-0b6ce97981ad" ],
+  "project" : "tpch"
+}

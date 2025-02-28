@@ -25,6 +25,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.acl.DependentColumn;
 import org.apache.kylin.metadata.acl.DependentColumnInfo;
 import org.apache.kylin.query.QueryExtension;
@@ -34,8 +35,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QueryDependentColumnMaskTest extends NLocalFileMetadataTestCase {
 

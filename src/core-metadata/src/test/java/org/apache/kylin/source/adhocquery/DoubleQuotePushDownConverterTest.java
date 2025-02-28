@@ -112,6 +112,25 @@ public class DoubleQuotePushDownConverterTest extends NLocalFileMetadataTestCase
 
     }
 
+    @Test
+    public void testConvertWithSqlHint() {
+        // Root node after calcite parsed is SqlOrderBy
+        {
+            String sql = "select /*+ REPARTITION(2), AAABBB(1,2,3) */ ACCOUNT_ID, REPARTITION from `DEFAULT`.TEST_ACCOUNT limit 1";
+            String convertSql = DoubleQuotePushDownConverter.convertDoubleQuote(sql);
+            String expectedSql = "select /*+ REPARTITION(2), AAABBB(1,2,3) */ \"ACCOUNT_ID\", \"REPARTITION\" from \"DEFAULT\".\"TEST_ACCOUNT\" limit 1";
+            Assert.assertEquals(expectedSql, convertSql);
+        }
+
+        // Root node after calcite parsed is SqlSelect
+        {
+            String sql = "select /*+ REPARTITION(2), AAABBB(1,2,3) */ ACCOUNT_ID, REPARTITION from `DEFAULT`.TEST_ACCOUNT";
+            String convertSql = DoubleQuotePushDownConverter.convertDoubleQuote(sql);
+            String expectedSql = "select /*+ REPARTITION(2), AAABBB(1,2,3) */ \"ACCOUNT_ID\", \"REPARTITION\" from \"DEFAULT\".\"TEST_ACCOUNT\"";
+            Assert.assertEquals(expectedSql, convertSql);
+        }
+    }
+
     private void testConvertSuccess(List<String> inputArrayList) {
         String convertSql = DoubleQuotePushDownConverter.convertDoubleQuote(inputArrayList.get(0));
         String expectedSql = inputArrayList.get(1);

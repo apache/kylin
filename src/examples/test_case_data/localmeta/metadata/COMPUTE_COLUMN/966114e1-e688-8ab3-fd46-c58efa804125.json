@@ -1,0 +1,10 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_MEASURE",
+  "tableAlias" : "TEST_MEASURE",
+  "columnName" : "CC_PRICE8",
+  "expression" : "TEST_MEASURE1.PRICE7 + 1",
+  "datatype" : "smallint",
+  "comment" : "TEST_MEASURE1.PRICE7 + 1",
+  "uuid" : "966114e1-e688-8ab3-fd46-c58efa804125",
+  "project" : "default"
+}

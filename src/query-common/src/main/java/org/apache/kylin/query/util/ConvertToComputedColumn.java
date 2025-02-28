@@ -29,9 +29,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
@@ -47,6 +47,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
@@ -55,11 +56,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.ThreadUtil;
 import org.apache.kylin.guava30.shaded.common.base.Function;
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
 import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -70,6 +73,7 @@ import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.IQueryTransformer;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,21 +81,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ConvertToComputedColumn implements IQueryTransformer {
 
     private static final String CONVERT_TO_CC_ERROR_MSG = "Something unexpected while ConvertToComputedColumn transforming the query, return original query.";
-    private static final String DOUBLE_QUOTE = Quoting.DOUBLE_QUOTE.string;
 
     private static final LoadingCache<String, String> transformExpressions = CacheBuilder.newBuilder()
             .maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, String>() {
                 @Override
-                public String load(String cc) {
-                    return new EscapeTransformer().transform(cc, null, null);
+                public String load(@Nonnull String cc) {
+                    return QueryUtil.adaptCalciteSyntax(cc);
                 }
             });
-
-    static Pair<String, Integer> replaceComputedColumn(String inputSql, SqlCall selectOrOrderby,
-            List<ComputedColumnDesc> computedColumns, QueryAliasMatchInfo queryAliasMatchInfo) {
-        return new ConvertToComputedColumn().replaceComputedColumn(inputSql, selectOrOrderby, computedColumns,
-                queryAliasMatchInfo, false);
-    }
 
     @SneakyThrows
     private static String transformExpr(String expression) {
@@ -117,9 +114,9 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             collectJoinNodes(inputNodes, (SqlJoin) join.getLeft());
         }
         SqlNode condition = join.getCondition();
-        if (condition.getKind() == SqlKind.EQUALS) {
+        if (condition != null && condition.isA(SqlKind.BINARY_COMPARISON)) {
             SqlBasicCall call = (SqlBasicCall) condition;
-            inputNodes.addAll(call.getOperandList());
+            call.getOperandList().stream().filter(node -> !isSimpleExpression(node)).forEach(inputNodes::add);
         }
         if (join.getRight() instanceof SqlJoin) {
             collectJoinNodes(inputNodes, (SqlJoin) join.getRight());
@@ -165,40 +162,47 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         // if agg node, replace with CC directly
         // otherwise the select node needs to be matched with group by nodes
         for (SqlNode sqlNode : getSelectNodesToReplace(node, groupSet)) {
+            if (isSimpleExpression(sqlNode)) {
+                continue;
+            }
             inputNodes.addAll(getInputTreeNodes(sqlNode));
         }
         return inputNodes;
     }
 
+    static boolean isSimpleExpression(SqlNode sqlNode) {
+        return sqlNode == null || sqlNode instanceof SqlLiteral || sqlNode instanceof SqlIdentifier;
+    }
+
     /**
-     * collect all select nodes that
-     * 1. is a agg call
-     * 2. is equal to any group key
-     * @param selectNode
-     * @param groupKeys
-     * @return
+     * Collect all the selected nodes: the node is an agg call, or the node is equal to any group key.
+     * @param selectExp the selected SqlNode to be replaced
+     * @param groupKeys all the group SqlNodes of the query SqlNode,
+     *                  the raw query without aggregations has empty group keys.
+     * @return the project SqlNode
      */
-    private static List<SqlNode> getSelectNodesToReplace(SqlNode selectNode, SqlNodeList groupKeys) {
+    private static List<SqlNode> getSelectNodesToReplace(SqlNode selectExp, SqlNodeList groupKeys) {
+        // For non-raw queries with grouping expressions,
+        // collect the projectNode only if it is included in the grouping expressions
         for (SqlNode groupNode : groupKeys) {
-            // for non-agg select node, collect it only when there is a equal node in the group set
-            if (selectNode.equalsDeep(groupNode, Litmus.IGNORE)) {
-                return Collections.singletonList(selectNode);
+            if (selectExp.equalsDeep(groupNode, Litmus.IGNORE)) {
+                return Collections.singletonList(selectExp);
             }
         }
-        if (selectNode instanceof SqlCall) {
-            if (((SqlCall) selectNode).getOperator() instanceof SqlAggFunction) {
-                // collect agg node directly
-                return Collections.singletonList(selectNode);
+        if (selectExp instanceof SqlCall) {
+            SqlCall call = SqlFunctionUtil.resolveCallIfNeed(selectExp);
+            if (call.getOperator() instanceof SqlAggFunction) {
+                return Collections.singletonList(selectExp);
             } else {
                 // iterate through sql call's operands
-                // eg case .. when
-                return ((SqlCall) selectNode).getOperandList().stream().filter(Objects::nonNull)
+                // e.g.: case ... when
+                return call.getOperandList().stream().filter(Objects::nonNull)
                         .map(node -> getSelectNodesToReplace(node, groupKeys)).flatMap(Collection::stream)
                         .collect(Collectors.toList());
             }
-        } else if (selectNode instanceof SqlNodeList) {
+        } else if (selectExp instanceof SqlNodeList) {
             // iterate through select list
-            return ((SqlNodeList) selectNode).getList().stream().filter(Objects::nonNull)
+            return ((SqlNodeList) selectExp).getList().stream().filter(Objects::nonNull)
                     .map(node -> getSelectNodesToReplace(node, groupKeys)).flatMap(Collection::stream)
                     .collect(Collectors.toList());
         }
@@ -212,32 +216,6 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         SqlTreeVisitor stv = new SqlTreeVisitor();
         sqlNode.accept(stv);
         return stv.getSqlNodes();
-    }
-
-    private static String getTableAlias(SqlNode node) {
-        if (node instanceof SqlCall) {
-            SqlCall call = (SqlCall) node;
-            return getTableAlias(call.getOperandList());
-        }
-        if (node instanceof SqlIdentifier) {
-            StringBuilder alias = new StringBuilder();
-            List<String> names = ((SqlIdentifier) node).names;
-            if (names.size() >= 2) {
-                for (int i = 0; i < names.size() - 1; i++) {
-                    alias.append(names.get(i)).append(".");
-                }
-            }
-            return alias.toString();
-        }
-        // SqlNodeList, SqlLiteral and other return empty string
-        return StringUtils.EMPTY;
-    }
-
-    private static String getTableAlias(List<SqlNode> operands) {
-        if (operands.isEmpty()) {
-            return StringUtils.EMPTY;
-        }
-        return getTableAlias(operands.get(0));
     }
 
     static List<ComputedColumnDesc> getCCListSortByLength(List<ComputedColumnDesc> computedColumns) {
@@ -268,35 +246,21 @@ public class ConvertToComputedColumn implements IQueryTransformer {
     }
 
     public String transformImpl(String originSql, String project, String defaultSchema) throws SqlParseException {
-        NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        List<NDataModel> dataModelDescs = dataflowManager.listOnlineDataModels().stream()
-                .filter(m -> !m.getComputedColumnDescs().isEmpty()).collect(Collectors.toList());
-        if (dataModelDescs.isEmpty()) {
-            return originSql;
-        }
-        return transformImpl(originSql, project, defaultSchema, dataModelDescs);
-    }
-
-    private String transformImpl(String originSql, String project, String defaultSchema, List<NDataModel> models)
-            throws SqlParseException {
-        if (project == null || originSql == null) {
-            return originSql;
-        }
-
         KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
-        QueryAliasMatcher queryAliasMatcher = new QueryAliasMatcher(project, defaultSchema);
-        if (!projectConfig.isConvertExpressionToCcEnabled()) {
-            return originSql;
-        }
-
-        int maxRecursionTimes = projectConfig.getConvertCcMaxIterations();
         String sql = originSql;
-        for (int i = 0; i < maxRecursionTimes; i++) {
-            Pair<String, Boolean> result = transformImplRecursive(sql, queryAliasMatcher, models);
-            sql = result.getFirst();
-            boolean recursionCompleted = result.getSecond();
-            if (recursionCompleted) {
-                break;
+        if (project != null && sql != null && projectConfig.isConvertExpressionToCcEnabled()) {
+            List<NDataModel> models = NDataflowManager.getInstance(projectConfig, project).listOnlineDataModels()
+                    .stream().filter(m -> !m.getComputedColumnDescs().isEmpty()).collect(Collectors.toList());
+            if (!models.isEmpty()) {
+                QueryAliasMatcher queryAliasMatcher = new QueryAliasMatcher(project, defaultSchema);
+                int maxRecursionTimes = projectConfig.getConvertCcMaxIterations();
+                for (int i = 0; i < maxRecursionTimes; i++) {
+                    Pair<String, Boolean> replacedSqlAndState = transformImplRecursive(sql, queryAliasMatcher, models);
+                    sql = replacedSqlAndState.getFirst();
+                    if (Boolean.TRUE.equals(replacedSqlAndState.getSecond())) {
+                        break;
+                    }
+                }
             }
         }
 
@@ -307,32 +271,29 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             List<NDataModel> models) throws SqlParseException {
         boolean recursionCompleted = true;
         List<SqlCall> selectOrOrderbys = SqlSubqueryFinder.getSubqueries(sql);
-        Pair<String, Integer> choiceForCurrentSubquery = null; //<new sql, number of changes by the model>
+        Pair<String, Integer> choiceOfSubQuery = null; // <new sql, number of changes by the model>
 
-        for (int i = 0; i < selectOrOrderbys.size(); i++) { //subquery will precede
-            if (choiceForCurrentSubquery != null) { //last selectOrOrderby had a matched
+        for (int i = 0; i < selectOrOrderbys.size(); i++) { // subQuery will precede
+            if (choiceOfSubQuery != null) { // last selectOrOrderBy had a matched
                 selectOrOrderbys = SqlSubqueryFinder.getSubqueries(sql);
-                choiceForCurrentSubquery = null;
             }
 
-            SqlCall selectOrOrderby = selectOrOrderbys.get(i);
-
-            ComputedColumnReplacer rewriteChecker = new ComputedColumnReplacer(queryAliasMatcher, models,
-                    recursionCompleted, choiceForCurrentSubquery, selectOrOrderby);
-            rewriteChecker.replace(sql, false);
-            recursionCompleted = rewriteChecker.isRecursionCompleted();
-            choiceForCurrentSubquery = rewriteChecker.getChoiceForCurrentSubquery();
-
-            if (choiceForCurrentSubquery != null) {
-                sql = choiceForCurrentSubquery.getFirst();
+            SqlCall selectOrOrderBy = selectOrOrderbys.get(i);
+            ComputedColumnReplacer ccReplacer = new ComputedColumnReplacer(queryAliasMatcher, models,
+                    recursionCompleted, selectOrOrderBy);
+            ccReplacer.replace(sql);
+            recursionCompleted = ccReplacer.isRecursionCompleted();
+            choiceOfSubQuery = ccReplacer.getChoiceForSubQuery();
+            if (choiceOfSubQuery != null) {
+                sql = choiceOfSubQuery.getFirst();
             }
         }
 
         return Pair.newPair(sql, recursionCompleted);
     }
 
-    private Pair<String, Integer> replaceComputedColumn(String inputSql, SqlCall selectOrOrderby,
-            List<ComputedColumnDesc> computedColumns, QueryAliasMatchInfo queryAliasMatchInfo, boolean replaceCcName) {
+    Pair<String, Integer> replaceComputedColumns(String inputSql, List<SqlNode> toMatchExpressions,
+            List<ComputedColumnDesc> computedColumns, QueryAliasMatchInfo queryAliasMatchInfo) {
 
         if (CollectionUtils.isEmpty(computedColumns)) {
             return Pair.newPair(inputSql, 0);
@@ -341,14 +302,11 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         String result = inputSql;
         List<Pair<ComputedColumnDesc, Pair<Integer, Integer>>> toBeReplacedExp;
         try {
-            toBeReplacedExp = matchComputedColumn(inputSql, selectOrOrderby, computedColumns, queryAliasMatchInfo,
-                    replaceCcName);
+            toBeReplacedExp = matchCcPosition(inputSql, toMatchExpressions, computedColumns, queryAliasMatchInfo);
         } catch (Exception e) {
             log.debug("Convert to computedColumn Fail,parse sql fail ", e);
             return Pair.newPair(inputSql, 0);
         }
-
-        toBeReplacedExp.sort((o1, o2) -> o2.getSecond().getFirst().compareTo(o1.getSecond().getFirst()));
 
         //replace user's input sql
         for (Pair<ComputedColumnDesc, Pair<Integer, Integer>> toBeReplaced : toBeReplacedExp) {
@@ -357,7 +315,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             int end = startEndPos.getSecond();
             ComputedColumnDesc cc = toBeReplaced.getFirst();
 
-            String alias = null;
+            String alias;
             if (queryAliasMatchInfo.isModelView()) {
                 // get alias with model alias
                 // as table of cc in model view is model view table itself
@@ -370,15 +328,10 @@ public class ConvertToComputedColumn implements IQueryTransformer {
                         + " is found in query but its table ref " + cc.getTableAlias() + " is missing in query");
             }
 
-            String expr = inputSql.substring(start, end);
-            String ccColumnName = replaceCcName ? cc.getInternalCcName() : cc.getColumnName();
-            log.debug("Computed column: {} matching {} at [{},{}] using alias in query: {}", cc.getColumnName(), expr,
-                    start, end, alias);
-
-            alias = Character.isAlphabetic(alias.charAt(0)) ? alias : DOUBLE_QUOTE + alias + DOUBLE_QUOTE;
-            ccColumnName = Character.isAlphabetic(ccColumnName.charAt(0)) ? ccColumnName
-                    : DOUBLE_QUOTE + ccColumnName + DOUBLE_QUOTE;
-            result = result.substring(0, start) + alias + "." + ccColumnName + result.substring(end);
+            log.debug("Computed column: {} matching {} at [{},{}] using alias in query: {}", cc.getColumnName(),
+                    inputSql.substring(start, end), start, end, alias);
+            String aliasCcName = StringHelper.doubleQuote(alias) + "." + StringHelper.doubleQuote(cc.getColumnName());
+            result = result.substring(0, start) + aliasCcName + result.substring(end);
         }
         try {
             SqlNode inputNodes = CalciteParser.parse(inputSql);
@@ -392,21 +345,31 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         }
     }
 
-    private List<Pair<ComputedColumnDesc, Pair<Integer, Integer>>> matchComputedColumn(String inputSql,
-            SqlCall selectOrOrderby, List<ComputedColumnDesc> computedColumns, QueryAliasMatchInfo queryAliasMatchInfo,
-            boolean replaceCcName) {
+    private List<Pair<ComputedColumnDesc, Pair<Integer, Integer>>> matchCcPosition(String inputSql,
+            List<SqlNode> toMatchExpressions, List<ComputedColumnDesc> computedColumns,
+            QueryAliasMatchInfo aliasMatchInfo) {
         List<Pair<ComputedColumnDesc, Pair<Integer, Integer>>> toBeReplacedExp = new ArrayList<>();
         for (ComputedColumnDesc cc : computedColumns) {
-            List<SqlNode> matchedNodes = Lists.newArrayList();
-            matchedNodes.addAll(getMatchedNodes(selectOrOrderby, replaceCcName ? cc.getFullName() : cc.getExpression(),
-                    queryAliasMatchInfo));
-
-            String transformedExpression = transformExpr(cc.getExpression());
-            if (!transformedExpression.equals(cc.getExpression())) {
-                matchedNodes.addAll(getMatchedNodes(selectOrOrderby, transformedExpression, queryAliasMatchInfo));
+            if (StringUtils.isBlank(cc.getExpression())) {
+                continue;
+            }
+            List<SqlNode> matchedExpList = Lists.newArrayList();
+            // match with the expression of the ComputedColumn
+            SqlNode ccExpNode = CalciteParser.getExpNode(cc.getExpression());
+            toMatchExpressions.stream().filter(inputNode -> isNodesEqual(aliasMatchInfo, ccExpNode, inputNode))
+                    .forEach(matchedExpList::add);
+            // match with the equivalent expression of the ComputedColumn
+            if (StringUtils.isNotBlank(cc.getInnerExpression())) {
+                String innerCcExp = transformExpr(cc.getInnerExpression());
+                if (!Objects.equals(cc.getExpression(), innerCcExp)) {
+                    SqlNode transformedNode = CalciteParser.getReadonlyExpNode(innerCcExp);
+                    toMatchExpressions.stream()
+                            .filter(inputNode -> isNodesEqual(aliasMatchInfo, transformedNode, inputNode))
+                            .forEach(matchedExpList::add);
+                }
             }
 
-            for (SqlNode node : matchedNodes) {
+            for (SqlNode node : matchedExpList) {
                 Pair<Integer, Integer> startEndPos = CalciteParser.getReplacePos(node, inputSql);
                 int start = startEndPos.getFirst();
                 int end = startEndPos.getSecond();
@@ -419,49 +382,36 @@ public class ConvertToComputedColumn implements IQueryTransformer {
                 toBeReplacedExp.add(Pair.newPair(cc, Pair.newPair(start, end)));
             }
         }
+        toBeReplacedExp.sort((o1, o2) -> o2.getSecond().getFirst().compareTo(o1.getSecond().getFirst()));
         return toBeReplacedExp;
     }
 
-    // Return matched node's position and its alias(if exists).
-    // If we can not find matches, return an empty list
-    private List<SqlNode> getMatchedNodes(SqlCall selectOrOrderby, String ccExp, QueryAliasMatchInfo matchInfo) {
-        if (ccExp == null || ccExp.equals(StringUtils.EMPTY)) {
-            return Collections.emptyList();
-        }
-        ArrayList<SqlNode> matchedNodes = new ArrayList<>();
-        SqlNode ccExpressionNode = CalciteParser.getReadonlyExpNode(ccExp);
-
+    List<SqlNode> collectLatentCcExpList(SqlCall selectOrOrderBy) {
         List<SqlNode> inputNodes = new LinkedList<>();
         if ("LENIENT".equals(KylinConfig.getInstanceFromEnv().getCalciteConformance())) {
-            inputNodes = getInputTreeNodes(selectOrOrderby);
+            inputNodes = getInputTreeNodes(selectOrOrderBy);
         } else {
-
             // for select with group by, if the sql is like 'select expr(A) from tbl group by A'
             // do not replace expr(A) with CC
-            if (selectOrOrderby instanceof SqlSelect && ((SqlSelect) selectOrOrderby).getGroup() != null) {
-                inputNodes.addAll(collectInputNodes((SqlSelect) selectOrOrderby));
-            } else if (selectOrOrderby instanceof SqlOrderBy) {
-                SqlOrderBy sqlOrderBy = (SqlOrderBy) selectOrOrderby;
-                // for sql orderby
+            if (selectOrOrderBy instanceof SqlSelect && ((SqlSelect) selectOrOrderBy).getGroup() != null) {
+                inputNodes.addAll(collectInputNodes((SqlSelect) selectOrOrderBy));
+            } else if (selectOrOrderBy instanceof SqlOrderBy) {
+                SqlOrderBy sqlOrderBy = (SqlOrderBy) selectOrOrderBy;
                 // 1. process order list
                 inputNodes.addAll(collectInputNodes(sqlOrderBy));
 
                 // 2. process query part
                 // pass to getMatchedNodes directly
                 if (sqlOrderBy.query instanceof SqlCall) {
-                    matchedNodes.addAll(getMatchedNodes((SqlCall) sqlOrderBy.query, ccExp, matchInfo));
+                    inputNodes.addAll(collectLatentCcExpList((SqlCall) sqlOrderBy.query));
                 } else {
                     inputNodes.addAll(getInputTreeNodes(sqlOrderBy.query));
                 }
             } else {
-                inputNodes = getInputTreeNodes(selectOrOrderby);
+                inputNodes = getInputTreeNodes(selectOrOrderBy);
             }
         }
-
-        // find whether user input tree node of sql equals defined expression of computed column
-        inputNodes.stream().filter(inputNode -> isNodesEqual(matchInfo, ccExpressionNode, inputNode))
-                .forEach(matchedNodes::add);
-        return matchedNodes;
+        return inputNodes;
     }
 
     private boolean isNodesEqual(QueryAliasMatchInfo matchInfo, SqlNode ccExpressionNode, SqlNode inputNode) {
@@ -475,6 +425,8 @@ public class ConvertToComputedColumn implements IQueryTransformer {
     }
 
     static class SqlTreeVisitor implements SqlVisitor<SqlNode> {
+        private static final Set<String> AGG_FUNCTION_SET = ImmutableSet.of("COUNT", "SUM", "MIN", "MAX", "AVG",
+                "CORR");
         private final List<SqlNode> sqlNodes;
 
         SqlTreeVisitor() {
@@ -487,9 +439,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
 
         @Override
         public SqlNode visit(SqlNodeList nodeList) {
-            sqlNodes.add(nodeList);
-            for (int i = 0; i < nodeList.size(); i++) {
-                SqlNode node = nodeList.get(i);
+            for (SqlNode node : nodeList) {
                 node.accept(this);
             }
             return null;
@@ -497,20 +447,23 @@ public class ConvertToComputedColumn implements IQueryTransformer {
 
         @Override
         public SqlNode visit(SqlLiteral literal) {
-            sqlNodes.add(literal);
             return null;
         }
 
         @Override
         public SqlNode visit(SqlCall call) {
-            sqlNodes.add(call);
+            if ((call instanceof SqlBasicCall || call instanceof SqlCase)
+                    && !AGG_FUNCTION_SET.contains(call.getOperator().getName())) {
+                sqlNodes.add(call);
+            }
             if (call.getOperator() instanceof SqlAsOperator) {
-                call.getOperator().acceptCall(this, call, true, SqlBasicVisitor.ArgHandlerImpl.<SqlNode> instance());
+                call.getOperator().acceptCall(this, call, true, SqlBasicVisitor.ArgHandlerImpl.instance());
             } else {
                 for (SqlNode operand : call.getOperandList()) {
-                    if (operand != null) {
-                        operand.accept(this);
+                    if (ConvertToComputedColumn.isSimpleExpression(operand)) {
+                        continue;
                     }
+                    operand.accept(this);
                 }
             }
             return null;
@@ -518,7 +471,6 @@ public class ConvertToComputedColumn implements IQueryTransformer {
 
         @Override
         public SqlNode visit(SqlIdentifier id) {
-            sqlNodes.add(id);
             return null;
         }
 
@@ -541,29 +493,23 @@ public class ConvertToComputedColumn implements IQueryTransformer {
     private class ComputedColumnReplacer {
         private final QueryAliasMatcher queryAliasMatcher;
         private final List<NDataModel> dataModels;
+        @Getter
         private boolean recursionCompleted;
-        private Pair<String, Integer> choiceForCurrentSubquery;
-        private final SqlCall selectOrOrderby;
+        @Getter
+        private Pair<String, Integer> choiceForSubQuery;
+        private final SqlSelect sqlSelect;
+        private final List<SqlNode> toMatchExpressions;
 
         ComputedColumnReplacer(QueryAliasMatcher queryAliasMatcher, List<NDataModel> dataModels,
-                boolean recursionCompleted, Pair<String, Integer> choiceForCurrentSubquery, SqlCall selectOrOrderby) {
+                boolean recursionCompleted, SqlCall selectOrOrderBy) {
             this.queryAliasMatcher = queryAliasMatcher;
             this.dataModels = dataModels;
             this.recursionCompleted = recursionCompleted;
-            this.choiceForCurrentSubquery = choiceForCurrentSubquery;
-            this.selectOrOrderby = selectOrOrderby;
+            this.sqlSelect = QueryUtil.extractSqlSelect(selectOrOrderBy);
+            toMatchExpressions = collectLatentCcExpList(selectOrOrderBy);
         }
 
-        boolean isRecursionCompleted() {
-            return recursionCompleted;
-        }
-
-        Pair<String, Integer> getChoiceForCurrentSubquery() {
-            return choiceForCurrentSubquery;
-        }
-
-        public void replace(String sql, boolean replaceCcName) {
-            SqlSelect sqlSelect = QueryUtil.extractSqlSelect(selectOrOrderby);
+        public void replace(String sql) {
             if (sqlSelect == null) {
                 return;
             }
@@ -575,22 +521,16 @@ public class ConvertToComputedColumn implements IQueryTransformer {
                 if (info == null) {
                     continue;
                 }
-
-                Set<String> cols = queryAliasMatcher.getChecker().filterRelatedExcludedColumn(model);
-                info.getExcludedColumns().addAll(cols);
+                // move cc into replaceComputedColumn, good design?
                 List<ComputedColumnDesc> computedColumns = getSortedComputedColumnWithModel(model);
-                if (CollectionUtils.isNotEmpty(computedColumns)) {
-                    Pair<String, Integer> ret = replaceComputedColumn(sql, selectOrOrderby, computedColumns, info,
-                            replaceCcName);
+                Pair<String, Integer> ret = replaceComputedColumns(sql, toMatchExpressions, computedColumns, info);
 
-                    if (replaceCcName && !sql.equals(ret.getFirst())) {
-                        choiceForCurrentSubquery = ret;
-                    } else if (ret.getSecond() != 0 //
-                            && (choiceForCurrentSubquery == null
-                                    || ret.getSecond() > choiceForCurrentSubquery.getSecond())) {
-                        choiceForCurrentSubquery = ret;
-                        recursionCompleted = false;
-                    }
+                if (!sql.equals(ret.getFirst())) {
+                    choiceForSubQuery = ret;
+                } else if (ret.getSecond() != 0 //
+                        && (choiceForSubQuery == null || ret.getSecond() > choiceForSubQuery.getSecond())) {
+                    choiceForSubQuery = ret;
+                    recursionCompleted = false;
                 }
             }
         }

@@ -57,8 +57,6 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
             prop.store(new PrintWriter(writer), "kylin properties");
             propString = writer.getBuilder().toString();
         }
-//        InputStream is = IOUtils.toInputStream(propString, Charset.defaultCharset());
-//        resources[0] = new InputStreamResource(is);
 
         ByteArrayResource byteArrayResource = new ByteArrayResource(propString.getBytes(Charset.defaultCharset()));
         resources[0] = byteArrayResource;
@@ -67,8 +65,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     }
 
     private static void printUsage() {
-        System.out.println(
-                "Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
+        System.out.println("Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer "
+                + "<EncryptMethod> <your_password>");
         System.out.println("EncryptMethod: AES or BCrypt");
     }
 
@@ -115,9 +113,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
             try {
                 return EncryptUtil.decrypt(props.getProperty(placeholder));
             } catch (Exception e) {
-                throw new PasswordDecryptionException(
-                        String.format("[%s] Encrypted configuration item decryption failed, please check for errors",
-                                placeholder),
+                throw new PasswordDecryptionException(String.format(Locale.ROOT,
+                        "[%s] Encrypted configuration item decryption failed, please check for errors", placeholder),
                         e.getCause());
             }
         } else {

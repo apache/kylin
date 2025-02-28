@@ -18,13 +18,13 @@
 
 package org.apache.kylin.rest.service
 
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.commons.collections4.{CollectionUtils, MapUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.constant.Constants
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.kylin.job.snapshot.SnapshotJobUtils
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableDesc}
 import org.apache.kylin.rest.model.SnapshotSourceTableStats
@@ -203,7 +203,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
       init(tableName, table.database) {
         val tableIdentity = table.qualifiedName.toLowerCase(Locale.ROOT)
         val locationPath = table.location.getPath
-        val locationFilesStatus: util.List[FileStatus] = snapshotSourceTableStatsService.getLocationFileStatus(locationPath)
+        val locationFilesStatus: util.List[FileStatus] = snapshotSourceTableStatsService.getLocationFileStatus(locationPath, config)
         val snapshotTablesLocationsJson = snapshotSourceTableStatsService.createSnapshotSourceTableStats(locationPath, config,
           locationFilesStatus)
         snapshotSourceTableStatsService.writeSourceTableStats(DEFAULT_PROJECT, tableIdentity, snapshotTablesLocationsJson)
@@ -233,7 +233,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
         try {
           val tableIdentity = table.qualifiedName.toLowerCase(Locale.ROOT)
           val locationPath = table.location.getPath
-          val locationFilesStatus: util.List[FileStatus] = snapshotSourceTableStatsService.getLocationFileStatus(locationPath)
+          val locationFilesStatus: util.List[FileStatus] = snapshotSourceTableStatsService.getLocationFileStatus(locationPath, config)
           val snapshotTablesLocationsJson = snapshotSourceTableStatsService.createSnapshotSourceTableStats(locationPath, config,
             locationFilesStatus)
           snapshotSourceTableStatsService.writeSourceTableStats(DEFAULT_PROJECT, tableIdentity, snapshotTablesLocationsJson)
@@ -319,7 +319,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
         val needCheckPartitions = partitions.asScala.sortBy(partition => partition.createTime).reverse
           .slice(0, config.getSnapshotAutoRefreshFetchPartitionsCount).asJava
 
-        snapshotSourceTableStatsService.putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus)
+        snapshotSourceTableStatsService.putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus, config)
         for (partition <- partitions.asScala) {
           snapshotSourceTableStatsService.createPartitionSnapshotSourceTableStats(partition, needSavePartitionsFilesStatus,
             snapshotTablesLocationsJson, config)
@@ -369,7 +369,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
           val needCheckPartitions = partitions.asScala.sortBy(partition => partition.createTime).reverse
             .slice(0, config.getSnapshotAutoRefreshFetchPartitionsCount).asJava
 
-          snapshotSourceTableStatsService.putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus)
+          snapshotSourceTableStatsService.putNeedSavePartitionsFilesStatus(needCheckPartitions, needSavePartitionsFilesStatus, config)
           for (partition <- partitions.asScala) {
             snapshotSourceTableStatsService.createPartitionSnapshotSourceTableStats(partition, needSavePartitionsFilesStatus,
               snapshotTablesLocationsJson, config)

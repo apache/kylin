@@ -75,7 +75,6 @@ public class DistributedLockFactoryTest {
                 try {
                     lock.lock();
                     int v = count[0];
-                    await().atLeast(1, TimeUnit.MILLISECONDS);
                     count[0] = v + 1;
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);

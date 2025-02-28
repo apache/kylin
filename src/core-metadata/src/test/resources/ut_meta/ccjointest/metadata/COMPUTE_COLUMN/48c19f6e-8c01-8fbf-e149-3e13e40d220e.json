@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_ACCOUNT",
+  "tableAlias" : "BUYER_ACCOUNT",
+  "columnName" : "COUNTRY_UPPER",
+  "expression" : "UPPER(BUYER_ACCOUNT.ACCOUNT_COUNTRY)",
+  "datatype" : "string",
+  "uuid" : "48c19f6e-8c01-8fbf-e149-3e13e40d220e",
+  "project" : "default"
+}

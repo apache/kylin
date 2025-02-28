@@ -1,0 +1,15 @@
+{
+  "uuid" : "ab24c1a0-aaf7-9fba-fe82-a5a060516f79",
+  "last_modified" : 0,
+  "create_time" : 0,
+  "version" : "4.0.0.0",
+  "project" : "storage_v3_test",
+  "dataflow" : "53bb6ab4-8058-4696-bc06-597a5e9a9103",
+  "layout" : 1,
+  "fragment_range_set" : [ {
+    "lowerEndpoint" : 1604332800000,
+    "lowerBoundType" : "CLOSED",
+    "upperEndpoint" : 1605332800000,
+    "upperBoundType" : "OPEN"
+  } ]
+}

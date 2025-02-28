@@ -1,0 +1,95 @@
+{
+  "uuid" : "0d00409b-26be-48de-9431-46b93e960fcb",
+  "last_modified" : 0,
+  "create_time" : 1575958417701,
+  "version" : "4.0.0.0",
+  "name" : "P_LINEORDER",
+  "columns" : [
+    {
+      "id" : "1",
+      "name" : "LO_MINUTES",
+      "datatype": "timestamp"
+    },
+    {
+      "id" : "2",
+      "name" : "LO_ORDERKEY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "3",
+      "name" : "LO_LINENUMBER",
+      "datatype" : "bigint"
+    }, {
+      "id" : "4",
+      "name" : "LO_CUSTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "5",
+      "name" : "LO_PARTKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "6",
+      "name" : "LO_SUPPKEY",
+      "datatype" : "integer"
+    }, {
+      "id" : "7",
+      "name" : "LO_ORDERDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "8",
+      "name" : "LO_ORDERPRIOTITY",
+      "datatype" : "varchar(4096)"
+    }, {
+      "id" : "9",
+      "name" : "LO_SHIPPRIOTITY",
+      "datatype" : "integer"
+    }, {
+      "id" : "10",
+      "name" : "LO_QUANTITY",
+      "datatype" : "bigint"
+    }, {
+      "id" : "11",
+      "name" : "LO_EXTENDEDPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "12",
+      "name" : "LO_ORDTOTALPRICE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "13",
+      "name" : "LO_DISCOUNT",
+      "datatype" : "bigint"
+    }, {
+      "id" : "14",
+      "name" : "LO_REVENUE",
+      "datatype" : "bigint"
+    }, {
+      "id" : "15",
+      "name" : "LO_SUPPLYCOST",
+      "datatype" : "bigint"
+    }, {
+      "id" : "16",
+      "name" : "LO_TAX",
+      "datatype" : "bigint"
+    }, {
+      "id" : "17",
+      "name" : "LO_COMMITDATE",
+      "datatype" : "integer"
+    }, {
+      "id" : "18",
+      "name" : "LO_SHIPMODE",
+      "datatype" : "varchar(4096)"
+    }, {
+      "id" : "19",
+      "name" : "V_REVENUE",
+      "datatype" : "bigint"
+    } ],
+  "source_type" : 1,
+  "kafka_bootstrap_servers": "localhost:19092",
+  "subscribe": "ssb-topic",
+  "starting_offsets": "latest",
+  "table_type" : "VIEW",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "SSB"
+}

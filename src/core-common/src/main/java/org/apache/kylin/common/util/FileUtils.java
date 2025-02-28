@@ -31,11 +31,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
-import org.apache.commons.lang3.StringUtils;
 
 public final class FileUtils {
     public static File findFile(String dir, String ptn) {
@@ -101,21 +101,20 @@ public final class FileUtils {
         }
     }
 
-    public static boolean fileExist(String path){
-        if (StringUtils.isBlank(path)){
+    public static boolean fileExist(String path) {
+        if (StringUtils.isBlank(path)) {
             throw new RuntimeException("path can not be blank");
         }
 
         return new File(path).isFile();
     }
 
-    public static boolean folderExist(String path){
-        if (StringUtils.isBlank(path)){
+    public static boolean folderExist(String path) {
+        if (StringUtils.isBlank(path)) {
             throw new RuntimeException("path can not be blank");
         }
 
         return new File(path).isDirectory();
     }
-
 
 }

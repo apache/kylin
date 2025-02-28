@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.persistence;
 
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,11 +30,9 @@ import java.util.NavigableSet;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ResourceTool {
 
@@ -40,7 +40,7 @@ public class ResourceTool {
     private static String[] excludes = null;
     private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
-    private static final Set<String> IMMUTABLE_PREFIX = Sets.newHashSet("/UUID");
+    private static final Set<String> IMMUTABLE_PREFIX = Sets.newHashSet(METASTORE_UUID_TAG);
 
     public static String[] getIncludes() {
         return includes;
@@ -99,26 +99,28 @@ public class ResourceTool {
         return result;
     }
 
-    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path) throws IOException {
-        copy(srcConfig, dstConfig, path, false);
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String type) throws IOException {
+        copy(srcConfig, dstConfig, type, false);
     }
 
-    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID.
-    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path, boolean copyImmutableResource)
+    // Do not invoke this method directly, unless you want to copy 
+    // and possibly overwrite immutable resources such as UUID.
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String type, boolean copyImmutableResource)
             throws IOException {
         ResourceStore src = ResourceStore.getKylinMetaStore(srcConfig);
         ResourceStore dst = ResourceStore.getKylinMetaStore(dstConfig);
 
         logger.info("Copy from {} to {}", src, dst);
 
-        copyR(src, dst, path, copyImmutableResource);
+        copyR(src, dst, type, copyImmutableResource);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
         copy(srcConfig, dstConfig, paths, false);
     }
 
-    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID.
+    // Do not invoke this method directly, unless you want to copy 
+    // and possibly overwrite immutable resources such as UUID.
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths,
             boolean copyImmutableResource) throws IOException {
         ResourceStore src = ResourceStore.getKylinMetaStore(srcConfig);
@@ -135,28 +137,28 @@ public class ResourceTool {
         copy(srcConfig, dstConfig, false);
     }
 
-    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID.
+    // Do not invoke this method directly, unless you want to copy 
+    // and possibly overwrite immutable resources such as UUID.
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, boolean copyImmutableResource)
             throws IOException {
-        copy(srcConfig, dstConfig, "/", copyImmutableResource);
+        copy(srcConfig, dstConfig, MetadataType.ALL.name(), copyImmutableResource);
     }
 
-    public static void copyR(ResourceStore src, ResourceStore dst, String path, boolean copyImmutableResource)
-            throws IOException {
-
+    public static void copyR(ResourceStore src, ResourceStore dst, String path, boolean copyImmutableResource) {
         if (!copyImmutableResource && IMMUTABLE_PREFIX.contains(path)) {
             return;
         }
 
-        NavigableSet<String> children = src.listResources(path);
-
-        if (children == null) {
-            // case of resource (not a folder)
+        if (MetadataType.ALL_TYPE_STR.contains(path)) {
+            NavigableSet<String> children = src.listResources(path);
+            for (String child : children)
+                copyR(src, dst, child, copyImmutableResource);
+        } else {
             if (matchFilter(path)) {
                 try {
                     RawResource res = src.getResource(path);
                     if (res != null) {
-                        dst.getMetadataStore().putResource(res, null, UnitOfWork.DEFAULT_EPOCH_ID);
+                        dst.getMetadataStore().save(res.getMetaType(), res);
                     } else {
                         System.out.println("Resource not exist for " + path);
                     }
@@ -165,12 +167,7 @@ public class ResourceTool {
                     logger.error(ex.getLocalizedMessage(), ex);
                 }
             }
-        } else {
-            // case of folder
-            for (String child : children)
-                copyR(src, dst, child, copyImmutableResource);
         }
-
     }
 
     private static boolean matchFilter(String path) {
@@ -191,21 +188,17 @@ public class ResourceTool {
         return true;
     }
 
-    public static void reset(KylinConfig config) throws IOException {
+    public static void reset(KylinConfig config) {
         ResourceStore store = ResourceStore.getKylinMetaStore(config);
-        resetR(store, "/");
+        resetR(store, MetadataType.ALL.name());
     }
 
-    public static void resetR(ResourceStore store, String path) {
-        NavigableSet<String> children = store.listResources(path);
-        if (children == null) { // path is a resource (not a folder)
-            if (matchFilter(path)) {
-                store.deleteResource(path);
+    public static void resetR(ResourceStore store, String type) {
+        NavigableSet<String> children = store.listResourcesRecursively(type);
+        for (String child : children)
+            if (matchFilter(child)) {
+                store.deleteResource(child);
             }
-        } else {
-            for (String child : children)
-                resetR(store, child);
-        }
     }
 
     private static void remove(KylinConfig config, String path) {

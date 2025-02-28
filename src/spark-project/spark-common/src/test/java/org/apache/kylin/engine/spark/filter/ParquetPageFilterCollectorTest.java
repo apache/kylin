@@ -39,7 +39,8 @@ public class ParquetPageFilterCollectorTest {
         assertNotNull(ParquetPageFilterCollector.queryFilteredParquetPages.getIfPresent(queryId));
         assertEquals(ParquetPageFilterCollector.queryFilteredParquetPages.getIfPresent(queryId).get(), filteredPages);
         assertNotNull(ParquetPageFilterCollector.queryAfterFilterParquetPages.getIfPresent(queryId));
-        assertEquals(ParquetPageFilterCollector.queryAfterFilterParquetPages.getIfPresent(queryId).get(), afterFilterPages);
+        assertEquals(ParquetPageFilterCollector.queryAfterFilterParquetPages.getIfPresent(queryId).get(),
+                afterFilterPages);
 
         ParquetPageFilterCollector.logParquetPages(queryId);
         assertNull(ParquetPageFilterCollector.queryTotalParquetPages.getIfPresent(queryId));

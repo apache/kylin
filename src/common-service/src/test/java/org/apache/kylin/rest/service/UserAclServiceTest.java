@@ -29,7 +29,6 @@ import java.util.Locale;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.GlobalAccessRequest;
@@ -76,8 +75,8 @@ public class UserAclServiceTest extends ServiceTestBase {
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setup() {
-        super.setup();
+    public void setUp() {
+        super.setUp();
         getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "true");
         ReflectionTestUtils.setField(userAclService, "userService", userService);
         ReflectionTestUtils.setField(aclEvaluate, "userAclService", userAclService);
@@ -258,8 +257,6 @@ public class UserAclServiceTest extends ServiceTestBase {
 
     @Test
     public void testSyncAdminUserAcl() {
-        EpochManager epochManager = EpochManager.getInstance();
-        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         userAclService.syncAdminUserAcl();
         Assert.assertTrue(userAclService.hasUserAclPermission("admin", AclPermission.DATA_QUERY));
     }

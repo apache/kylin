@@ -17,34 +17,28 @@
  */
 package org.apache.kylin.common.persistence.transaction;
 
+import static org.apache.kylin.common.persistence.metadata.JdbcAuditLogStoreTool.createEvents;
+import static org.apache.kylin.common.persistence.metadata.JdbcAuditLogStoreTool.createProjectAuditLog;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
-import java.nio.charset.Charset;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
-import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.junit.annotation.OverwriteProp;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.SneakyThrows;
 import lombok.val;
 
 @MetadataInfo(onlyProps = true)
 public class MessageSynchronizationTest {
-
-    private final Charset charset = Charset.defaultCharset();
 
     @Test
     public void replayTest() {
@@ -52,18 +46,17 @@ public class MessageSynchronizationTest {
         val events = createEvents();
         synchronize.replayInTransaction(new UnitMessages(events));
         val resourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val raw = resourceStore.getResource("/default/abc.json");
-        Assert.assertEquals(1, raw.getMvcc());
-        val empty = resourceStore.getResource("/default/abc3.json");
-        Assert.assertNull(empty);
+        val raw = resourceStore.getResource("PROJECT/abc");
+        Assertions.assertEquals(1, raw.getMvcc());
+        val empty = resourceStore.getResource("PROJECT/abc3");
+        Assertions.assertNull(empty);
     }
 
     @OverwriteProp(key = "kylin.server.mode", value = "query")
     @Test
     public void testKE19979() throws InterruptedException {
         AtomicInteger mvcc = new AtomicInteger(0);
-        val initEvent = new ResourceCreateOrUpdateEvent(
-                new RawResource("/default/abc.json", ByteSource.wrap("version1".getBytes(charset)), 0L, mvcc.get()));
+        val initEvent = (ResourceCreateOrUpdateEvent) Event.fromLog(createProjectAuditLog("abc", 0));
         val synchronize = MessageSynchronization.getInstance(getTestConfig());
         synchronize.replayInTransaction(new UnitMessages(Lists.newArrayList(initEvent)));
         val resourceStore = ResourceStore.getKylinMetaStore(getTestConfig());
@@ -78,8 +71,8 @@ public class MessageSynchronizationTest {
             public void run() {
                 starter.await();
                 while (latch1.getCount() > 0) {
-                    val updateEvent = new ResourceCreateOrUpdateEvent(new RawResource("/default/abc.json",
-                            ByteSource.wrap("version2".getBytes(charset)), 0L, mvcc.incrementAndGet()));
+                    val updateEvent = (ResourceCreateOrUpdateEvent) Event
+                            .fromLog(createProjectAuditLog("abc", mvcc.incrementAndGet()));
                     synchronize.replayInTransaction(new UnitMessages(Lists.newArrayList(updateEvent)));
                     latch1.countDown();
                 }
@@ -91,7 +84,7 @@ public class MessageSynchronizationTest {
             public void run() {
                 starter.await();
                 while (latch2.getCount() > 0) {
-                    if (null == resourceStore.getResource("/default/abc.json")) {
+                    if (null == resourceStore.getResource("PROJECT/abc")) {
                         nullCount.incrementAndGet();
                     }
                     latch2.countDown();
@@ -103,21 +96,7 @@ public class MessageSynchronizationTest {
         starter.countDown();
         latch1.await();
         latch2.await();
-        Assert.assertEquals(0, nullCount.get());
-    }
-
-    private List<Event> createEvents() {
-        val event1 = new ResourceCreateOrUpdateEvent(
-                new RawResource("/default/abc.json", ByteSource.wrap("version1".getBytes(charset)), 0L, 0));
-        val event2 = new ResourceCreateOrUpdateEvent(
-                new RawResource("/default/abc2.json", ByteSource.wrap("abc2".getBytes(charset)), 0L, 0));
-        val event3 = new ResourceCreateOrUpdateEvent(
-                new RawResource("/default/abc.json", ByteSource.wrap("version2".getBytes(charset)), 0L, 1));
-        val event4 = new ResourceCreateOrUpdateEvent(
-                new RawResource("/default/abc3.json", ByteSource.wrap("42".getBytes(charset)), 0L, 0));
-        val event5 = new ResourceDeleteEvent("/default/abc3.json");
-        return Lists.newArrayList(event1, event2, event3, event4, event5).stream().peek(e -> e.setKey("default"))
-                .collect(Collectors.toList());
+        Assertions.assertEquals(0, nullCount.get());
     }
 
 }

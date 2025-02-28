@@ -17,12 +17,13 @@
  */
 package org.apache.kylin.engine.spark.utils
 
-import java.io.FileNotFoundException
-import org.apache.kylin.engine.spark.cleanup.HDFSResourceCheck
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FSDataOutputStream, FileContext, FileStatus, Path}
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.cleanup.HDFSResourceCheck
 import org.apache.spark.internal.Logging
+
+import java.io.FileNotFoundException
 
 object HDFSUtils extends Logging {
 

@@ -504,6 +504,7 @@
         :rightTitleTip="$t('includeDimTips')"
         :isEdit="selectedIncludeDimension.length>0"
         :alertTips="alertTips"
+        :showShardBy="!isStorageV3"
         @setSelectedColumns="(v) => setSelectedColumns(v)"
         @setShardbyCol="(label) => setShardbyCol(label)">
         <template slot="left-footer" v-if="showExcludedTableCheckBox">
@@ -793,6 +794,11 @@ export default class AggregateModal extends Vue {
       }
     }
     return flag
+  }
+
+  // 当前模型的存储版本
+  get isStorageV3 () {
+    return this.model.storage_type === 3
   }
 
   get onlyRealTimeType () {

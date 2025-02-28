@@ -1,0 +1,8 @@
+{
+  "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "override_kylin_properties" : {
+    "kylin.query.slowquery-detect-interval" : "4",
+    "kylin.query.metadata.expose-computed-column" : "FALSE"
+  },
+  "project" : "_global"
+}

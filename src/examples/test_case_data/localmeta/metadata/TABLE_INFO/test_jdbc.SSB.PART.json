@@ -1,0 +1,75 @@
+{
+  "uuid" : "90938129-7a0d-310a-0192-3942d70c1b7f",
+  "last_modified" : 0,
+  "create_time" : 1699338320667,
+  "version" : "4.0.0.0",
+  "name" : "PART",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "P_PARTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "p_partkey"
+  }, {
+    "id" : "2",
+    "name" : "P_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_name"
+  }, {
+    "id" : "3",
+    "name" : "P_MFGR",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_mfgr"
+  }, {
+    "id" : "4",
+    "name" : "P_CATEGORY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_category"
+  }, {
+    "id" : "5",
+    "name" : "P_BRAND",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_brand"
+  }, {
+    "id" : "6",
+    "name" : "P_COLOR",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_color"
+  }, {
+    "id" : "7",
+    "name" : "P_TYPE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_type"
+  }, {
+    "id" : "8",
+    "name" : "P_SIZE",
+    "datatype" : "integer",
+    "case_sensitive_name" : "p_size"
+  }, {
+    "id" : "9",
+    "name" : "P_CONTAINER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_container"
+  } ],
+  "source_type" : 9,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "table_comment" : null,
+  "project" : "test_jdbc"
+}

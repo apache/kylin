@@ -46,14 +46,13 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.tool.metrics.MetricsInfo;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 import org.joda.time.format.DateTimeFormat;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

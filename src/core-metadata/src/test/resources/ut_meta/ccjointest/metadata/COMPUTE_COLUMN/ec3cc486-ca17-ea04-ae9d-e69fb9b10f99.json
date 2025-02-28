@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_ACCOUNT",
+  "tableAlias" : "BUYER_ACCOUNT",
+  "columnName" : "BUYER_ACCOUNT_CASE_WHEN",
+  "expression" : "CASE WHEN TRUE THEN BUYER_ACCOUNT.ACCOUNT_ID ELSE 0 END",
+  "datatype" : "bigint",
+  "uuid" : "ec3cc486-ca17-ea04-ae9d-e69fb9b10f99",
+  "project" : "default"
+}

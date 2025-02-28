@@ -22,12 +22,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.tool.daemon.CheckResult;
 import org.apache.kylin.tool.daemon.CheckStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -21,13 +21,13 @@ package org.apache.kylin.metadata.cube.model;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.SegmentConfig;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentConfig;
 import org.apache.kylin.metadata.project.NProjectManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 
@@ -44,19 +44,9 @@ public class NSegmentConfigHelper {
         switch (managementType) {
         case MODEL_BASED:
             return mergeConfig(segmentConfigInModel, segmentConfigInProject);
-        case TABLE_ORIENTED:
-            val segmentConfigInDataLoadingRange = getTableSegmentConfig(project, dataModel.getRootFactTableName());
-            return mergeConfig(segmentConfigInModel, segmentConfigInDataLoadingRange);
         default:
             return null;
         }
-    }
-
-    public static SegmentConfig getTableSegmentConfig(String project, String table) {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        val segmentConfigInProject = getFromProject(project, kylinConfig);
-        val segmentConfigInDataLoadingRange = getFromDataLoadingRange(project, kylinConfig, table);
-        return mergeConfig(segmentConfigInDataLoadingRange, segmentConfigInProject);
     }
 
     private static SegmentConfig mergeConfig(SegmentConfig firstSegmentConfig, SegmentConfig secondSegmentConfig) {
@@ -79,15 +69,6 @@ public class NSegmentConfigHelper {
             }
         });
         return mapper.convertValue(firstSegmentConfigMap, SegmentConfig.class);
-    }
-
-    private static SegmentConfig getFromDataLoadingRange(String project, KylinConfig kylinConfig, String table) {
-        val dataLoadingRangeManager = NDataLoadingRangeManager.getInstance(kylinConfig, project);
-        val dataLoadingRange = dataLoadingRangeManager.getDataLoadingRange(table);
-        if (dataLoadingRange == null) {
-            return null;
-        }
-        return dataLoadingRange.getSegmentConfig();
     }
 
     private static SegmentConfig getFromProject(String project, KylinConfig kylinConfig) {

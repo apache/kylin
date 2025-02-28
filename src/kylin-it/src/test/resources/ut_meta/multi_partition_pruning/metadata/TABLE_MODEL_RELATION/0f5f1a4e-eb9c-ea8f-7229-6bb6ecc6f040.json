@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_KYLIN_FACT",
+  "model_uuid" : "8c670664-8d05-466a-802f-83c023b56c77",
+  "project" : "multi_partition_pruning",
+  "uuid" : "0f5f1a4e-eb9c-ea8f-7229-6bb6ecc6f040"
+}

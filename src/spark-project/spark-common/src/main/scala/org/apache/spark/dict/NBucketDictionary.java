@@ -17,18 +17,19 @@
  */
 package org.apache.spark.dict;
 
+import static org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED;
+
 import java.io.IOException;
 import java.util.Arrays;
-
-import com.alibaba.nacos.common.JustForTest;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.nacos.common.JustForTest;
+
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-
-import static org.apache.spark.dict.NGlobalDictionaryV2.NO_VERSION_SPECIFIED;
 
 public class NBucketDictionary {
 
@@ -44,17 +45,18 @@ public class NBucketDictionary {
     // Relative dictionary needs to calculate dictionary code according to NGlobalDictMetaInfo's bucketOffsets
     private Object2LongMap<String> relativeDictMap;
 
-    private void initDictMap(int bucketId, NGlobalDictMetaInfo metainfo,
-                             boolean isForColumnEncoding, long buildVersion, NGlobalDictStore globalDictStore) throws IOException {
+    private void initDictMap(int bucketId, NGlobalDictMetaInfo metainfo, boolean isForColumnEncoding, long buildVersion,
+            NGlobalDictStore globalDictStore) throws IOException {
         Long[] versions = globalDictStore.listAllVersions();
         logger.debug("versions.length is {}", versions.length);
         if (versions.length == 0) {
             this.absoluteDictMap = new Object2LongOpenHashMap<>();
         } else if (buildVersion == NO_VERSION_SPECIFIED || !Arrays.asList(versions).contains(buildVersion)) {
-            logger.info("Initializes dict map with the latest version:{}",versions[versions.length - 1]);
-            this.absoluteDictMap = globalDictStore.getBucketDict(versions[versions.length - 1], metainfo, bucketId, isForColumnEncoding);
+            logger.info("Initializes dict map with the latest version:{}", versions[versions.length - 1]);
+            this.absoluteDictMap = globalDictStore.getBucketDict(versions[versions.length - 1], metainfo, bucketId,
+                    isForColumnEncoding);
         } else {
-            logger.info("Initializes dict map with the specified version:{}",buildVersion);
+            logger.info("Initializes dict map with the specified version:{}", buildVersion);
             this.absoluteDictMap = globalDictStore.getBucketDict(buildVersion, metainfo, bucketId, isForColumnEncoding);
         }
         this.relativeDictMap = new Object2LongOpenHashMap<>();
@@ -67,23 +69,23 @@ public class NBucketDictionary {
     }
 
     @JustForTest
-    private void initDictMapForS3Test(String baseDir, int bucketId, NGlobalDictMetaInfo metainfo, boolean isForColumnEncoding, long buildVersion) throws IOException {
+    private void initDictMapForS3Test(String baseDir, int bucketId, NGlobalDictMetaInfo metainfo,
+            boolean isForColumnEncoding, long buildVersion) throws IOException {
         final NGlobalDictStore globalDictStore = new NGlobalDictS3Store(baseDir);
         initDictMap(bucketId, metainfo, isForColumnEncoding, buildVersion, globalDictStore);
     }
 
     @JustForTest
-    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo
-            , boolean isForColumnEncoding, long buildVersion, boolean justForTest)
-            throws IOException {
+    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo,
+            boolean isForColumnEncoding, long buildVersion, boolean justForTest) throws IOException {
         this.workingDir = workingDir;
         this.bucketId = bucketId;
         this.buildVersion = buildVersion;
         initDictMapForS3Test(baseDir, bucketId, metainfo, isForColumnEncoding, this.buildVersion);
     }
 
-    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo, boolean isForColumnEncoding, long buildVersion)
-            throws IOException {
+    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo,
+            boolean isForColumnEncoding, long buildVersion) throws IOException {
         this.workingDir = workingDir;
         this.bucketId = bucketId;
         this.buildVersion = buildVersion;
@@ -112,9 +114,9 @@ public class NBucketDictionary {
 
     public long encode(Object value) {
         long encodeValue = absoluteDictMap.getLong(value.toString());
-        if (encodeValue == 0){
-            throw new IllegalArgumentException(String.format("DFTable encode key:%s with error value:%s",
-                    value.toString(), encodeValue ));
+        if (encodeValue == 0) {
+            throw new IllegalDictEncodeValueException(
+                    String.format(Locale.ROOT, "DFTable encode key:%s with error value:%s", value, encodeValue));
         }
         return encodeValue;
     }

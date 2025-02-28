@@ -25,15 +25,15 @@ import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.ExecutableApplication;
-import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 
 import lombok.val;

@@ -18,83 +18,82 @@
 
 package org.apache.kylin.query.util;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-public class QueryUtilTest extends NLocalFileMetadataTestCase {
+@MetadataInfo
+public class QueryUtilTest {
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-    }
-
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
+    @BeforeAll
+    public static void setUpForClass() {
+        ComputedColumnUtil.setEXTRACTOR(ComputedColumnRewriter::extractCcRexNode);
     }
 
     @Test
-    public void testMaxResultRowsEnabled() {
+    void testMaxResultRowsEnabled() {
         Map<String, String> map = Maps.newHashMap();
         map.put("kylin.query.max-result-rows", "15");
         map.put("kylin.query.force-limit", "14");
         MetadataTestUtils.updateProjectConfig("default", map);
         String result = QueryUtil.appendLimitOffset("default", "select * from table1", 16, 0);
-        assertEquals("select * from table1" + "\n" + "LIMIT 15", result);
+        Assertions.assertEquals("select * from table1" + "\n" + "LIMIT 15", result);
     }
 
     @Test
-    public void testCompareMaxResultRowsAndLimit() {
+    void testCompareMaxResultRowsAndLimit() {
         Map<String, String> map = Maps.newHashMap();
         map.put("kylin.query.max-result-rows", "15");
         map.put("kylin.query.force-limit", "14");
         MetadataTestUtils.updateProjectConfig("default", map);
         String result = QueryUtil.appendLimitOffset("default", "select * from table1", 13, 0);
-        assertEquals("select * from table1" + "\n" + "LIMIT 13", result);
+        Assertions.assertEquals("select * from table1" + "\n" + "LIMIT 13", result);
     }
 
     @Test
-    public void testMassageSql() {
+    void testMassageSql() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.transformers", DefaultQueryTransformer.class.getCanonicalName());
 
         String sql = "SELECT * FROM TABLE1";
         QueryParams queryParams1 = new QueryParams(config, sql, "default", 100, 20, "", true);
         String newSql = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals("SELECT * FROM TABLE1\nLIMIT 100\nOFFSET 20", newSql);
+        Assertions.assertEquals("SELECT * FROM TABLE1\nLIMIT 100\nOFFSET 20", newSql);
 
         String sql2 = "SELECT SUM({fn convert(0, INT)}) from TABLE1";
         QueryParams queryParams2 = new QueryParams(config, sql2, "default", 0, 0, "", true);
         String newSql2 = QueryUtil.massageSql(queryParams2);
-        Assert.assertEquals("SELECT SUM({fn convert(0, INT)}) from TABLE1", newSql2);
+        Assertions.assertEquals("SELECT SUM({fn convert(0, INT)}) from TABLE1", newSql2);
     }
 
     @Test
-    public void testAdaptCubePriority() {
+    void testAdaptCubePriority() {
         {
             String sql = "--CubePriority(m)\nselect price from test_kylin_fact";
             QueryParams queryParams1 = new QueryParams(KylinConfig.getInstanceFromEnv(), sql, "default", 0, 0,
                     "DEFAULT", true);
             String transformed = QueryUtil.massageSql(queryParams1);
-            Assert.assertEquals(sql, transformed);
+            Assertions.assertEquals(sql, transformed);
         }
 
         {
@@ -102,117 +101,40 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
             QueryParams queryParams1 = new QueryParams(KylinConfig.getInstanceFromEnv(), sql, "default", 0, 0,
                     "DEFAULT", true);
             String transformed = QueryUtil.massageSql(queryParams1);
-            Assert.assertEquals(sql, transformed);
+            Assertions.assertEquals(sql, transformed);
         }
     }
 
     @Test
-    public void testMassageWithoutConvertToComputedColumn() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-        // enable ConvertToComputedColumn
-        config.setProperty("kylin.query.transformers", "org.apache.kylin.query.util.ConvertToComputedColumn");
-        QueryParams queryParams1 = new QueryParams(config, "SELECT price * item_count FROM test_kylin_fact", "default",
-                0, 0, "DEFAULT", true);
-        String newSql1 = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals("SELECT TEST_KYLIN_FACT.DEAL_AMOUNT FROM test_kylin_fact", newSql1);
-        QueryParams queryParams2 = new QueryParams(config, "SELECT price * item_count,DEAL_AMOUNT FROM test_kylin_fact",
-                "default", 0, 0, "DEFAULT", true);
-        newSql1 = QueryUtil.massageSql(queryParams2);
-        Assert.assertEquals("SELECT TEST_KYLIN_FACT.DEAL_AMOUNT,DEAL_AMOUNT FROM test_kylin_fact", newSql1);
-
-        // disable ConvertToComputedColumn
-        config.setProperty("kylin.query.transformers", "");
-        QueryParams queryParams3 = new QueryParams(config, "SELECT price * item_count FROM test_kylin_fact", "default",
-                0, 0, "DEFAULT", true);
-        String newSql2 = QueryUtil.massageSql(queryParams3);
-        Assert.assertEquals("SELECT price * item_count FROM test_kylin_fact", newSql2);
-        QueryParams queryParams4 = new QueryParams(config, "SELECT price * item_count,DEAL_AMOUNT FROM test_kylin_fact",
-                "default", 0, 0, "DEFAULT", false);
-        newSql2 = QueryUtil.massageSql(queryParams4);
-        Assert.assertEquals("SELECT price * item_count,DEAL_AMOUNT FROM test_kylin_fact", newSql2);
-    }
-
-    @Test
-    public void testConvertedToComputedColumn() {
-        String modelUuid = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
-        final KylinConfig config = KylinConfig.getInstanceFromEnv();
-        NDataModelManager modelManager = NDataModelManager.getInstance(config, "default");
-        modelManager.updateDataModel(modelUuid, copyForWrite -> {
-            ComputedColumnDesc cc = new ComputedColumnDesc();
-            cc.setTableAlias("TEST_KYLIN_FACT");
-            cc.setTableIdentity("DEFAULT.TEST_KYLIN_FACT");
-            cc.setComment("");
-            cc.setColumnName("TMP_CC");
-            cc.setDatatype("DECIMAL(38,4)");
-            cc.setExpression("TEST_KYLIN_FACT.PRICE + 1");
-            cc.setInnerExpression("TEST_KYLIN_FACT.PRICE + 1");
-            copyForWrite.getComputedColumnDescs().add(cc);
-        });
-
-        config.setProperty("kylin.query.transformers", "org.apache.kylin.query.util.ConvertToComputedColumn");
-
-        // join condition is tableAlias.colName = tableAlias.colName
-        String sql = "select price + 1 from test_kylin_fact left join TEST_CATEGORY_GROUPINGS "
-                + "on TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID and  TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_CATEGORY_GROUPINGS.SITE_ID";
-        String expected = "select TEST_KYLIN_FACT.TMP_CC from test_kylin_fact left join TEST_CATEGORY_GROUPINGS "
-                + "on TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID and  TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_CATEGORY_GROUPINGS.SITE_ID";
-        QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
-        String result = QueryUtil.massageSql(queryParams);
-        Assert.assertEquals(expected, result);
-
-        // join condition is colName = colName
-        String sql2 = "select price + 1 from test_kylin_fact left join TEST_CATEGORY_GROUPINGS "
-                + "on TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID and LSTG_SITE_ID = SITE_ID";
-        String expected2 = "select TEST_KYLIN_FACT.TMP_CC from test_kylin_fact left join TEST_CATEGORY_GROUPINGS "
-                + "on TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID and LSTG_SITE_ID = SITE_ID";
-        QueryParams queryParams2 = new QueryParams(config, sql2, "default", 0, 0, "DEFAULT", true);
-        String result2 = QueryUtil.massageSql(queryParams2);
-        Assert.assertEquals(expected2, result2);
-
-        // join condition is colName = colName
-        String sql3 = "SELECT PRICE + 1 FROM TEST_KYLIN_FACT LEFT JOIN TEST_CATEGORY_GROUPINGS "
-                + "ON \"DEFAULT\".TEST_KYLIN_FACT.LEAF_CATEG_ID = \"DEFAULT\".TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID"
-                + " AND  \"DEFAULT\".TEST_KYLIN_FACT.LSTG_SITE_ID = \"DEFAULT\".TEST_CATEGORY_GROUPINGS.SITE_ID";
-        String expected3 = "SELECT TEST_KYLIN_FACT.TMP_CC FROM TEST_KYLIN_FACT LEFT JOIN TEST_CATEGORY_GROUPINGS "
-                + "ON \"DEFAULT\".TEST_KYLIN_FACT.LEAF_CATEG_ID = \"DEFAULT\".TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID "
-                + "AND  \"DEFAULT\".TEST_KYLIN_FACT.LSTG_SITE_ID = \"DEFAULT\".TEST_CATEGORY_GROUPINGS.SITE_ID";
-        QueryParams queryParams3 = new QueryParams(config, sql3, "default", 0, 0, "DEFAULT", true);
-        String result3 = QueryUtil.massageSql(queryParams3);
-        Assert.assertEquals(expected3, result3);
-    }
-
-    @Test
-    public void testInit() {
+    void testInit() {
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         config.setProperty("kylin.query.transformers", DefaultQueryTransformer.class.getCanonicalName());
         List<IQueryTransformer> transformers = QueryUtil.fetchTransformers(true, config.getQueryTransformers());
-        Assert.assertEquals(1, transformers.size());
-        Assert.assertTrue(transformers.get(0) instanceof DefaultQueryTransformer);
+        Assertions.assertEquals(1, transformers.size());
+        Assertions.assertInstanceOf(DefaultQueryTransformer.class, transformers.get(0));
 
         config.setProperty("kylin.query.transformers", KeywordDefaultDirtyHack.class.getCanonicalName());
         transformers = QueryUtil.fetchTransformers(true, config.getQueryTransformers());
-        Assert.assertEquals(1, transformers.size());
-        Assert.assertTrue(transformers.get(0) instanceof KeywordDefaultDirtyHack);
+        Assertions.assertEquals(1, transformers.size());
+        Assertions.assertInstanceOf(KeywordDefaultDirtyHack.class, transformers.get(0));
 
         transformers = QueryUtil.fetchTransformers(false, config.getQueryTransformers());
-        Assert.assertEquals(1, transformers.size());
-        Assert.assertTrue(transformers.get(0) instanceof KeywordDefaultDirtyHack);
+        Assertions.assertEquals(1, transformers.size());
+        Assertions.assertInstanceOf(KeywordDefaultDirtyHack.class, transformers.get(0));
 
         config.setProperty("kylin.query.transformers", DefaultQueryTransformer.class.getCanonicalName() + ","
                 + ConvertToComputedColumn.class.getCanonicalName());
         transformers = QueryUtil.fetchTransformers(true, config.getQueryTransformers());
-        Assert.assertEquals(2, transformers.size());
+        Assertions.assertEquals(2, transformers.size());
 
         transformers = QueryUtil.fetchTransformers(false, config.getQueryTransformers());
-        Assert.assertEquals(1, transformers.size());
-        Assert.assertTrue(transformers.get(0) instanceof DefaultQueryTransformer);
-
+        Assertions.assertEquals(1, transformers.size());
+        Assertions.assertInstanceOf(DefaultQueryTransformer.class, transformers.get(0));
     }
 
     @Test
-    public void testMakeErrorMsgUserFriendly() {
-        Assert.assertTrue(
+    void testMakeErrorMsgUserFriendly() {
+        Assertions.assertTrue(
                 QueryUtil.makeErrorMsgUserFriendly(new SQLException(new NoSuchTableException("default", "test_ab")))
                         .contains("default"));
 
@@ -220,30 +142,30 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
                 "\tThere is no column\t'age' in table 'test_kylin_fact'.\n"
                         + "Please contact Kylin 5.0 technical support for more details.\n");
         final String errorMsg = QueryUtil.makeErrorMsgUserFriendly(exception);
-        Assert.assertEquals("There is no column\t'age' in table 'test_kylin_fact'.\n"
+        Assertions.assertEquals("There is no column\t'age' in table 'test_kylin_fact'.\n"
                 + "Please contact Kylin 5.0 technical support for more details.", errorMsg);
     }
 
     @Test
-    public void testMakeErrorMsgUserFriendlyForAccessDeniedException() {
+    void testMakeErrorMsgUserFriendlyForAccessDeniedException() {
         String accessDeniedMsg = "Query failed, access DEFAULT.TEST_KYLIN_FACT denied";
         Exception sqlException = new SQLException("exception while executing query",
                 new AccessDeniedException("DEFAULT.TEST_KYLIN_FACT"));
         String errorMessage = QueryUtil.makeErrorMsgUserFriendly(sqlException);
-        Assert.assertEquals(accessDeniedMsg, errorMessage);
+        Assertions.assertEquals(accessDeniedMsg, errorMessage);
     }
 
     @Test
-    public void testErrorMsg() {
+    void testErrorMsg() {
         String errorMsg = "Error while executing SQL \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\": From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'";
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'\n"
                         + "while executing SQL: \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\"",
                 QueryUtil.makeErrorMsgUserFriendly(errorMsg));
     }
 
     @Test
-    public void testJudgeSelectStatementStartsWithParentheses() {
+    void testJudgeSelectStatementStartsWithParentheses() {
         String sql = "(((SELECT COUNT(DISTINCT \"LO_SUPPKEY\"), \"LO_SUPPKEY\", \"LO_ORDERKEY\", \"LO_ORDERDATE\", \"LO_PARTKEY\", \"LO_REVENUE\" "
                 + "FROM \"SSB\".\"LINEORDER\" INNER JOIN \"SSB\".\"CUSTOMER\" ON (\"LO_CUSTKEY\" = \"C_CUSTKEY\") "
                 + "GROUP BY \"LO_SUPPKEY\", \"LO_ORDERKEY\", \"LO_ORDERDATE\", \"LO_PARTKEY\", \"LO_REVENUE\" "
@@ -251,100 +173,106 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
                 + "SELECT COUNT(DISTINCT \"LO_SUPPKEY\"), \"LO_SUPPKEY\", \"LO_ORDERKEY\", \"LO_ORDERDATE\", \"LO_PARTKEY\", \"LO_REVENUE\" "
                 + "FROM \"SSB\".\"LINEORDER\" INNER JOIN \"SSB\".\"CUSTOMER\" ON (\"LO_CUSTKEY\" = \"C_CUSTKEY\") "
                 + "GROUP BY \"LO_SUPPKEY\", \"LO_ORDERKEY\", \"LO_ORDERDATE\", \"LO_PARTKEY\", \"LO_REVENUE\")\n) \n)";
-        Assert.assertTrue(QueryUtil.isSelectStatement(sql));
+        Assertions.assertTrue(QueryUtil.isSelectStatement(sql));
     }
 
     @Test
-    public void testIsSelectStatement() {
-        Assert.assertFalse(QueryUtil.isSelectStatement("insert into person values ('li si', 'beijing');\n;\n"));
-        Assert.assertFalse(QueryUtil.isSelectStatement("update t set name = 'fred' where name = 'lisi' "));
-        Assert.assertFalse(QueryUtil.isSelectStatement("delete from t where name = 'wilson'"));
-        Assert.assertFalse(QueryUtil.isSelectStatement("drop table person"));
-        Assert.assertTrue(QueryUtil.isSelectStatement("with tempName as (select * from t) select * from tempName"));
-        Assert.assertFalse(QueryUtil.isSelectStatement("with tempName "));
-        Assert.assertTrue(QueryUtil.isSelectStatement("explain\n select * from tempName"));
-        Assert.assertFalse(QueryUtil.isSelectStatement("explain\n update t set name = 'fred' where name = 'lisi' "));
+    void testIsSelectStatement() {
+        Assertions.assertFalse(QueryUtil.isSelectStatement("insert into person values ('li si', 'beijing');\n;\n"));
+        Assertions.assertFalse(QueryUtil.isSelectStatement("update t set name = 'fred' where name = 'lisi' "));
+        Assertions.assertFalse(QueryUtil.isSelectStatement("delete from t where name = 'wilson'"));
+        Assertions.assertFalse(QueryUtil.isSelectStatement("drop table person"));
+        Assertions.assertTrue(QueryUtil.isSelectStatement("with tempName as (select * from t) select * from tempName"));
+        Assertions.assertFalse(QueryUtil.isSelectStatement("with tempName "));
+        Assertions.assertTrue(QueryUtil.isSelectStatement("explain\n select * from tempName"));
+        Assertions
+                .assertFalse(QueryUtil.isSelectStatement("explain\n update t set name = 'fred' where name = 'lisi' "));
     }
 
     @Test
-    public void testIsSelectStarStatement() {
-        Assert.assertTrue(QueryUtil.isSelectStarStatement("select * from t"));
-        Assert.assertFalse(QueryUtil.isSelectStarStatement("select a from t"));
-        Assert.assertFalse(QueryUtil.isSelectStarStatement("update t set a = 1"));
+    void testIsSelectStarStatement() {
+        Assertions.assertTrue(QueryUtil.isSelectStarStatement("select * from t"));
+        Assertions.assertFalse(QueryUtil.isSelectStarStatement("select a from t"));
+        Assertions.assertFalse(QueryUtil.isSelectStarStatement("update t set a = 1"));
 
         // not support yet
         String withClause = "with tempName as (select * from t) select * from tempName";
-        Assert.assertFalse(QueryUtil.isSelectStarStatement(withClause));
+        Assertions.assertFalse(QueryUtil.isSelectStarStatement(withClause));
     }
 
     @Test
-    public void testRemoveCommentWithException() {
-        Assert.assertEquals("", QueryUtil.removeCommentInSql(""));
+    void testRemoveCommentWithException() {
+        Assertions.assertEquals("", QueryUtil.removeCommentInSql(""));
     }
 
     @Test
-    public void testRemoveCommentInSql() {
+    void testRemoveCommentInSql() {
         //test remove comment when last comment is --
-        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assertions.assertEquals(
+                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID;  --4 /* 7 */\n--5\n/* 7 */\n--6"));
-        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assertions.assertEquals(
+                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID  --4 /* 7 */\n--5\n/* 7 */\n--6"));
 
         //test remove comment when last comment is /* */
-        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assertions.assertEquals(
+                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID;  --4 /* 7 */\n--5\n/* 7 */"));
-        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assertions.assertEquals(
+                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID  --4 /* 7 */\n--5\n/* 7 */"));
 
         //test remove comment when comment contain ''
-        Assert.assertEquals("select sum(ITEM_COUNT) 'sum_count'\nfrom TEST_KYLIN_FACT 'table'",
+        Assertions.assertEquals("select sum(ITEM_COUNT) 'sum_count'\nfrom TEST_KYLIN_FACT 'table'",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) 'sum_count' -- 'comment' \nfrom TEST_KYLIN_FACT 'table' --comment"));
-        Assert.assertEquals("select sum(ITEM_COUNT)",
+        Assertions.assertEquals("select sum(ITEM_COUNT)",
                 QueryUtil.removeCommentInSql("select sum(ITEM_COUNT) -- 'comment' --"));
 
         //test remove comment when comment contain , \t /
-        Assert.assertEquals("select sum(ITEM_COUNT)",
+        Assertions.assertEquals("select sum(ITEM_COUNT)",
                 QueryUtil.removeCommentInSql("select sum(ITEM_COUNT) -- , --\t --/ --"));
 
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1 --注释"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1 /* 注释 */"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t--注释"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t/* 注释 */"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\n--注释"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t/* 注释 */"));
-        Assert.assertEquals("select 1,\n2", QueryUtil.removeCommentInSql("select 1,--注释\n2"));
-        Assert.assertEquals("select 1,\n2", QueryUtil.removeCommentInSql("select 1,/* 注释 */\n2"));
-        Assert.assertEquals("select 4/\n2", QueryUtil.removeCommentInSql("select 4/-- 注释\n2"));
-        Assert.assertEquals("select 4/\n2", QueryUtil.removeCommentInSql("select 4//* 注释 */\n2"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1 --注释"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1 /* 注释 */"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t--注释"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t/* 注释 */"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\n--注释"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1\t/* 注释 */"));
+        Assertions.assertEquals("select 1,\n2", QueryUtil.removeCommentInSql("select 1,--注释\n2"));
+        Assertions.assertEquals("select 1,\n2", QueryUtil.removeCommentInSql("select 1,/* 注释 */\n2"));
+        Assertions.assertEquals("select 4/\n2", QueryUtil.removeCommentInSql("select 4/-- 注释\n2"));
+        Assertions.assertEquals("select 4/\n2", QueryUtil.removeCommentInSql("select 4//* 注释 */\n2"));
 
-        Assert.assertEquals("select 1 'constant_1'", QueryUtil.removeCommentInSql("select 1 'constant_1'--注释''"));
-        Assert.assertEquals("select 1 'constant_1'", QueryUtil.removeCommentInSql("select 1 'constant_1'/* 注释 */"));
+        Assertions.assertEquals("select 1 'constant_1'", QueryUtil.removeCommentInSql("select 1 'constant_1'--注释''"));
+        Assertions.assertEquals("select 1 'constant_1'", QueryUtil.removeCommentInSql("select 1 'constant_1'/* 注释 */"));
 
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1;--注释"));
-        Assert.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1--注释"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1;--注释"));
+        Assertions.assertEquals("select 1", QueryUtil.removeCommentInSql("select 1--注释"));
 
-        Assert.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'"));
-        Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'"));
-        Assert.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'--注释"));
-        Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'--注释"));
-        Assert.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'/*注释*/"));
-        Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'/*注释*/"));
+        Assertions.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'"));
+        Assertions.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'"));
+        Assertions.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'--注释"));
+        Assertions.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'--注释"));
+        Assertions.assertEquals("select 'abc-1'", QueryUtil.removeCommentInSql("select 'abc-1'/*注释*/"));
+        Assertions.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'/*注释*/"));
 
-        Assert.assertEquals("select 1 \"--注释\"", QueryUtil.removeCommentInSql("select 1 \"--注释\""));
-        Assert.assertEquals("select 1 \"apache's kylin\"", QueryUtil.removeCommentInSql("select 1 \"apache's kylin\""));
+        Assertions.assertEquals("select 1 \"--注释\"", QueryUtil.removeCommentInSql("select 1 \"--注释\""));
+        Assertions.assertEquals("select 1 \"apache's kylin\"",
+                QueryUtil.removeCommentInSql("select 1 \"apache's kylin\""));
     }
 
     @Test
-    public void testMassageAndExpandComputedColumn() {
+    void testMassageAndExpandComputedColumn() {
         String modelUuid = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.optimized-sum-cast-double-rule-enabled", "false");
@@ -365,81 +293,72 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql = "select sum(cast(CC1 as double)) from test_kylin_fact";
         String expected = "select SUM(\"TEST_KYLIN_FACT\".\"PRICE\" + 1) from test_kylin_fact";
         QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
-        Assert.assertEquals(expected, QueryUtil.massageSqlAndExpandCC(queryParams));
+        Assertions.assertEquals(expected, QueryUtil.massageSqlAndExpandCC(queryParams));
     }
 
     @Test
-    public void testAddLimit() {
+    void testAddLimit() {
         String originString = "select t.TRANS_ID from (\n"
                 + "    select * from test_kylin_fact s inner join TEST_ACCOUNT a \n"
                 + "        on s.BUYER_ID = a.ACCOUNT_ID inner join TEST_COUNTRY c on c.COUNTRY = a.ACCOUNT_COUNTRY\n"
                 + "     limit 10000)t\n";
         String replacedString = QueryUtil.addLimit(originString);
-        Assert.assertEquals(originString.trim().concat(" limit 1"), replacedString);
+        Assertions.assertEquals(originString.trim().concat(" limit 1"), replacedString);
     }
 
     @Test
-    public void testAddLimitWithSemicolon() {
+    void testAddLimitWithSemicolon() {
         String origin = "select a from t;;;;\n\t;;;\n;";
-        Assert.assertEquals("select a from t limit 1", QueryUtil.addLimit(origin));
+        Assertions.assertEquals("select a from t limit 1", QueryUtil.addLimit(origin));
 
         origin = "select a from t limit 10;";
-        Assert.assertEquals(origin, QueryUtil.addLimit(origin));
+        Assertions.assertEquals(origin, QueryUtil.addLimit(origin));
 
         origin = "select a from t limit 10; ;\t;\n;";
-        Assert.assertEquals(origin, QueryUtil.addLimit(origin));
+        Assertions.assertEquals(origin, QueryUtil.addLimit(origin));
     }
 
     @Test
-    public void testAddLimitWithEmpty() {
+    void testAddLimitWithEmpty() {
         String origin = "     ";
-        Assert.assertEquals(origin, QueryUtil.addLimit(origin));
+        Assertions.assertEquals(origin, QueryUtil.addLimit(origin));
 
-        Assert.assertNull(QueryUtil.addLimit(null));
+        Assertions.assertNull(QueryUtil.addLimit(null));
     }
 
     @Test
-    public void testAddLimitNonSelect() {
+    void testAddLimitNonSelect() {
         String origin = "aaa";
-        Assert.assertEquals(origin, QueryUtil.addLimit(origin));
+        Assertions.assertEquals(origin, QueryUtil.addLimit(origin));
     }
 
     @Test
-    public void testReplaceCC() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        String sql1 = "select EXTRACT(minute FROM lineorder.lo_orderdate) from lineorder inner join customer on lineorder.lo_custkey = customer.c_custkey";
-        QueryParams queryParams1 = new QueryParams(config, sql1, "cc_test", 0, 0, "ssb", true);
-        String newSql1 = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals(
-                "select LINEORDER.CC_EXTRACT from lineorder inner join customer on lineorder.lo_custkey = customer.c_custkey",
-                newSql1);
-
-        String sql2 = "select {fn convert(lineorder.lo_orderkey, double)} from lineorder inner join customer on lineorder.lo_custkey = customer.c_custkey";
-        QueryParams queryParams2 = new QueryParams(config, sql2, "cc_test", 0, 0, "ssb", true);
-        String newSql2 = QueryUtil.massageSql(queryParams2);
-        Assert.assertEquals(
-                "select LINEORDER.CC_CAST_LO_ORDERKEY from lineorder inner join customer on lineorder.lo_custkey = customer.c_custkey",
-                newSql2);
-    }
-
-    @Test
-    public void testAdaptCalciteSyntax() {
-        Assert.assertEquals("a\"b(", QueryUtil.adaptCalciteSyntax("a\"b("));
-        Assert.assertEquals("  ", QueryUtil.adaptCalciteSyntax("  "));
-        Assert.assertEquals("", QueryUtil.adaptCalciteSyntax(""));
-        Assert.assertEquals("CEIL(col to year)", QueryUtil.adaptCalciteSyntax("ceil_datetime(col, 'year')"));
-        Assert.assertEquals("CEIL(\"t\".\"col\" to year)",
+    void testAdaptCalciteSyntax() {
+        Assertions.assertEquals("'a\"b('", QueryUtil.adaptCalciteSyntax("'a\"b('"));
+        Assertions.assertEquals("  ", QueryUtil.adaptCalciteSyntax("  "));
+        Assertions.assertEquals("", QueryUtil.adaptCalciteSyntax(""));
+        Assertions.assertEquals("CEIL(col to year)", QueryUtil.adaptCalciteSyntax("ceil_datetime(col, 'year')"));
+        Assertions.assertEquals("CEIL(\"t\".\"col\" to year)",
                 QueryUtil.adaptCalciteSyntax("ceil_datetime(`t`.`col`, 'year')"));
-        Assert.assertEquals("TIMESTAMPDIFF(day, t1, t2)", QueryUtil.adaptCalciteSyntax("timestampdiff('day', t1, t2)"));
+        Assertions.assertEquals("TIMESTAMPDIFF(day, t1, t2)",
+                QueryUtil.adaptCalciteSyntax("timestampdiff('day', t1, t2)"));
+
+        Assertions.assertEquals("concat(test_kylin_fact.lstg_format_name, '''''')",
+                QueryUtil.adaptCalciteSyntax("concat(test_kylin_fact.lstg_format_name, '\\\'\\\'')"));
+        Assertions.assertEquals("concat(test_kylin_fact.lstg_format_name, '''''')",
+                QueryUtil.adaptCalciteSyntax("concat(test_kylin_fact.lstg_format_name, '\\'\\'')"));
+        Assertions.assertEquals("concat(test_kylin_fact.lstg_format_name, '''''')",
+                QueryUtil.adaptCalciteSyntax("concat(test_kylin_fact.lstg_format_name, '''''')"));
+
     }
 
     @Test
-    public void testLimitOffsetMatch() {
+    void testLimitOffsetMatch() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         QueryParams queryParams1 = new QueryParams(config, sql1, "default", 5, 2, "DEFAULT", true);
         String newSql1 = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 5\n" + "OFFSET 2",
                 newSql1);
@@ -447,7 +366,7 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql2 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID limit 10 offset 3";
         QueryParams queryParams2 = new QueryParams(config, sql2, "cc_test", 5, 2, "ssb", true);
         String newSql2 = QueryUtil.massageSql(queryParams2);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID "
                         + "limit 10 offset 3",
                 newSql2);
@@ -455,7 +374,7 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql3 = "(select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID)limit 10 offset 3";
         QueryParams queryParams3 = new QueryParams(config, sql3, "cc_test", 5, 2, "ssb", true);
         String newSql3 = QueryUtil.massageSql(queryParams3);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "(select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID)"
                         + "limit 10 offset 3",
                 newSql3);
@@ -463,7 +382,7 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql4 = "select TRANS_ID as test_limit, ORDER_ID as \"limit\" from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         QueryParams queryParams4 = new QueryParams(config, sql4, "cc_test", 5, 2, "ssb", true);
         String newSql4 = QueryUtil.massageSql(queryParams4);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as \"limit\" from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 5\n" + "OFFSET 2",
                 newSql4);
@@ -471,19 +390,19 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql5 = "select '\"`OFFSET`\"'";
         QueryParams queryParams5 = new QueryParams(config, sql5, "cc_test", 1, 4, "ssb", true);
         String newSql5 = QueryUtil.massageSql(queryParams5);
-        Assert.assertEquals("select '\"`OFFSET`\"'\n" + "LIMIT 1\n" + "OFFSET 4", newSql5);
+        Assertions.assertEquals("select '\"`OFFSET`\"'\n" + "LIMIT 1\n" + "OFFSET 4", newSql5);
 
         String sql6 = "select TRANS_ID as \"offset\", \"limit\" as \"offset limit\" from TEST_KYLIN_FACT group by TRANS_ID, \"limit\"";
         QueryParams queryParams6 = new QueryParams(config, sql6, "cc_test", 10, 5, "ssb", true);
         String newSql6 = QueryUtil.massageSql(queryParams6);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as \"offset\", \"limit\" as \"offset limit\" from TEST_KYLIN_FACT group by TRANS_ID, \"limit\"\n"
                         + "LIMIT 10\n" + "OFFSET 5",
                 newSql6);
     }
 
     @Test
-    public void testBigQueryPushDown() {
+    void testBigQueryPushDown() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.share-state-switch-implement", "jdbc");
         config.setProperty("kylin.query.big-query-source-scan-rows-threshold", "10");
@@ -491,20 +410,20 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         QueryParams queryParams1 = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
         String newSql1 = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 10",
                 newSql1);
     }
 
     @Test
-    public void testBigQueryPushDownByParams() {
+    void testBigQueryPushDownByParams() {
         // no limit offset from backend and front-end
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         QueryParams queryParams1 = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
         String newSql1 = QueryUtil.massageSql(queryParams1);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                 newSql1);
 
@@ -512,28 +431,28 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         String sql = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
         String targetSQL = QueryUtil.massageSql(queryParams);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                 targetSQL);
 
         // limit 1 from front-end
         queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
         targetSQL = QueryUtil.massageSql(queryParams);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 1",
                 targetSQL);
     }
 
     @Test
-    public void testAddLimitOffsetBetweenBigQueryPushDownByParamsAndMaxResultRows() {
+    void testAddLimitOffsetBetweenBigQueryPushDownByParamsAndMaxResultRows() {
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         // read project config of `kylin.query.max-result-rows`
         String sql = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
         MetadataTestUtils.updateProjectConfig("default", "kylin.query.max-result-rows", "2");
         QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
         String targetSQL = QueryUtil.massageSql(queryParams);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 2",
                 targetSQL);
@@ -541,17 +460,18 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         // read project config of `kylin.query.max-result-rows=2` but front-end limit has a high priority
         queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
         targetSQL = QueryUtil.massageSql(queryParams);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                         + "LIMIT 1",
                 targetSQL);
     }
 
     @Test
-    public void testAddLimitOffsetBetweenBigQueryPushDownWithForceLimit() {
+    void testAddLimitOffsetBetweenBigQueryPushDownWithForceLimit() {
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         String sql = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
-        // compare the priority of two properties, the `kylin.query.max-result-rows` has higher priority if it is bigger than 0
+        // compare the priority of two properties, the `kylin.query.max-result-rows`
+        // has higher priority if it is bigger than 0
         {
             Map<String, String> map = Maps.newHashMap();
             map.put("kylin.query.max-result-rows", "-1");
@@ -559,14 +479,14 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
             MetadataTestUtils.updateProjectConfig("default", map);
             QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
             String targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals(
+            Assertions.assertEquals(
                     "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                     targetSQL);
 
             // the front-end param has a higher priority
             queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals(
+            Assertions.assertEquals(
                     "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
                             + "LIMIT 1",
                     targetSQL);
@@ -574,17 +494,17 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
             String sql1 = "select * from table1";
             queryParams = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals("select * from table1" + "\n" + "LIMIT 3", targetSQL);
+            Assertions.assertEquals("select * from table1" + "\n" + "LIMIT 3", targetSQL);
             queryParams = new QueryParams(config, sql1, "default", 2, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals("select * from table1" + "\n" + "LIMIT 2", targetSQL);
+            Assertions.assertEquals("select * from table1" + "\n" + "LIMIT 2", targetSQL);
             sql1 = "select * from table1 limit 4";
             queryParams = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals("select * from table1 limit 4", targetSQL);
+            Assertions.assertEquals("select * from table1 limit 4", targetSQL);
             queryParams = new QueryParams(config, sql1, "default", 2, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals("select * from table1 limit 4", targetSQL);
+            Assertions.assertEquals("select * from table1 limit 4", targetSQL);
         }
 
         {
@@ -594,7 +514,7 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
             MetadataTestUtils.updateProjectConfig("default", map);
             QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
             String targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals(
+            Assertions.assertEquals(
                     "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                     targetSQL);
 
@@ -602,9 +522,51 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
             MetadataTestUtils.updateProjectConfig("default", "kylin.query.big-query-pushdown", "true");
             queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
             targetSQL = QueryUtil.massageSql(queryParams);
-            Assert.assertEquals(
+            Assertions.assertEquals(
                     "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                     targetSQL);
         }
+    }
+
+    @Test
+    void testGetSubQueries() throws SqlParseException {
+        String s1 = "WITH customer_total_return AS\n" //
+                + "  (SELECT sr_customer_sk AS ctr_customer_sk, sr_store_sk AS ctr_store_sk, sum(sr_return_amt) AS ctr_total_return\n"
+                + "   FROM store_returns JOIN date_dim ON sr_returned_date_sk = d_date_sk\n" //
+                + "   WHERE d_year = 1998 GROUP BY sr_customer_sk, sr_store_sk),\n" //
+                + "  tmp AS (  SELECT avg(ctr_total_return)*1.2 tmp_avg, ctr_store_sk\n"
+                + "   FROM customer_total_return GROUP BY ctr_store_sk)\n" //
+                + "SELECT c_customer_id FROM customer_total_return ctr1\n" //
+                + "JOIN tmp ON tmp.ctr_store_sk = ctr1.ctr_store_sk\n" //
+                + "JOIN store ON s_store_sk = ctr1.ctr_store_sk\n" //
+                + "JOIN customer ON ctr1.ctr_customer_sk = c_customer_sk\n" //
+                + "WHERE ctr1.ctr_total_return > tmp_avg AND s_state = 'TN'\n" //
+                + "ORDER BY c_customer_id LIMIT 100";
+        String s2 = "WITH a1 AS  (WITH a1 AS (SELECT * FROM t) SELECT a1 FROM t2 ORDER BY c_customer_id)\n"
+                + "SELECT a1 FROM t2 ORDER BY c_customer_id";
+        String s3 = "WITH a1 AS  (SELECT * FROM t)\n" //
+                + "SELECT a1 FROM (WITH a2 AS (SELECT * FROM t)  SELECT a2 FROM t2) ORDER BY c_customer_id";
+
+        Assertions.assertEquals(1, SqlSubqueryFinder.getSubqueries(s1).size());
+        Assertions.assertEquals(3, SqlSubqueryFinder.getSubqueries(s2).size());
+        Assertions.assertEquals(3, SqlSubqueryFinder.getSubqueries(s3).size());
+    }
+
+    @Test
+    void testErrorCase() throws SqlParseException {
+        BiMap<String, String> mockMapping = HashBiMap.create();
+        mockMapping.put("t", "t");
+        QueryAliasMatchInfo queryAliasMatchInfo = new QueryAliasMatchInfo(mockMapping, null);
+
+        //computed column is null or empty
+        String sql = "select a from t";
+        List<ComputedColumnDesc> list = Lists.newArrayList();
+        List<SqlCall> sqlSelects = SqlSubqueryFinder.getSubqueries(sql);
+        ConvertToComputedColumn converter = new ConvertToComputedColumn();
+        Assertions.assertEquals("select a from t", converter.replaceComputedColumns(sql,
+                converter.collectLatentCcExpList(sqlSelects.get(0)), null, queryAliasMatchInfo).getFirst());
+        Assertions.assertEquals("select a from t", converter.replaceComputedColumns(sql,
+                converter.collectLatentCcExpList(sqlSelects.get(0)), list, queryAliasMatchInfo).getFirst());
+
     }
 }

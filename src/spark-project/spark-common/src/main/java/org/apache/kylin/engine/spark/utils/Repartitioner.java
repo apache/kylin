@@ -44,6 +44,9 @@ public class Repartitioner {
     private int MB = 1024 * 1024;
     private int shardSize;
     private int fileLengthThreshold;
+    private boolean needResetRowGroup;
+    private long parquetBlockSize;
+    private long parquetPageSizeRowCheckMax;
     private long totalRowCount;
     private long rowCountThreshold;
     private ContentSummary contentSummary;
@@ -51,11 +54,16 @@ public class Repartitioner {
     private List<Integer> sortByColumns;
     private boolean optimizeShardEnabled;
 
-    public Repartitioner(int shardSize, int fileLengthThreshold, long totalRowCount, long rowCountThreshold,
-                         ContentSummary contentSummary, List<Integer> shardByColumns, List<Integer> sortByColumns,
-                         boolean optimizeShardEnabled) {
+    /** because shardByColumns maybe is null, can't use @AllArgsConstructor to fix sonar error */
+    @SuppressWarnings("squid:S107")
+    public Repartitioner(int shardSize, int fileLengthThreshold, boolean needResetRowGroup, long parquetBlockSize,
+            long parquetPageSizeRowCheckMax, long totalRowCount, long rowCountThreshold, ContentSummary contentSummary,
+            List<Integer> shardByColumns, List<Integer> sortByColumns, boolean optimizeShardEnabled) {
         this.shardSize = shardSize;
         this.fileLengthThreshold = fileLengthThreshold;
+        this.needResetRowGroup = needResetRowGroup;
+        this.parquetBlockSize = parquetBlockSize;
+        this.parquetPageSizeRowCheckMax = parquetPageSizeRowCheckMax;
         this.totalRowCount = totalRowCount;
         this.rowCountThreshold = rowCountThreshold;
         this.contentSummary = contentSummary;
@@ -150,7 +158,16 @@ public class Repartitioner {
                 data = ss.read().parquet(inputPath).repartition(repartitionNum)
                         .sortWithinPartitions(convertIntegerToColumns(sortByColumns));
             }
-            DataFrameWriter<Row> writer = data.write().mode(SaveMode.Overwrite);
+            DataFrameWriter<Row> writer;
+            if (needResetRowGroup) {
+                logger.info("set parquet.block.size={}, parquet.page.size.row.check.max={}", parquetBlockSize,
+                        parquetPageSizeRowCheckMax);
+                writer = data.write().option("parquet.block.size", String.valueOf(parquetBlockSize))
+                        .option("parquet.page.size.row.check.max", String.valueOf(parquetPageSizeRowCheckMax))
+                        .mode(SaveMode.Overwrite);
+            } else {
+                writer = data.write().mode(SaveMode.Overwrite);
+            }
             ParquetBloomFilter.configBloomColumnIfNeed(data, writer);
             writer.parquet(outputPath);
             if (needRepartitionForShardByColumns()) {

@@ -68,7 +68,7 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands) throws NoSuchStatementException {
+    public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands) {
         entry(logger);
         ExecuteBatchResult result = new ExecuteBatchResult(new long[] {});
         exit(logger);

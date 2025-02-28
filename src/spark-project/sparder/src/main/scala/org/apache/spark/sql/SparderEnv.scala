@@ -18,6 +18,12 @@
 
 package org.apache.spark.sql
 
+import java.lang.{Boolean => JBoolean, String => JString}
+import java.security.PrivilegedAction
+import java.util.Map
+import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.{Callable, ExecutorService}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.security.UserGroupInformation
@@ -25,6 +31,7 @@ import org.apache.kylin.common.exception.{KylinException, KylinTimeoutException,
 import org.apache.kylin.common.msg.MsgPicker
 import org.apache.kylin.common.util.{DefaultHostInfoFetcher, FileSystemUtil, HadoopUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
+import org.apache.kylin.engine.spark.QueryCostCollector
 import org.apache.kylin.engine.spark.filter.{BloomFilterSkipCollector, ParquetPageFilterCollector}
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
@@ -35,18 +42,12 @@ import org.apache.spark.sql.KylinSession._
 import org.apache.spark.sql.catalyst.optimizer.ConvertInnerJoinToSemiJoin
 import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, LayoutFileSourceStrategy, RewriteInferFiltersFromConstraints}
+import org.apache.spark.sql.execution.datasource.{KylinDeltaSourceStrategy, KylinSourceStrategy, LayoutFileSourceStrategy, RewriteInferFiltersFromConstraints}
 import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.hive.HiveStorageRule
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.util.{ThreadUtils, Utils}
-import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext}
-
-import java.lang.{Boolean => JBoolean, String => JString}
-import java.security.PrivilegedAction
-import java.util.Map
-import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.{Callable, ExecutorService}
+import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkEnv}
 
 // scalastyle:off
 object SparderEnv extends Logging {
@@ -307,6 +308,7 @@ object SparderEnv extends Logging {
   def injectExtensions(sse: SparkSessionExtensions): Unit = {
     sse.injectPlannerStrategy(_ => KylinSourceStrategy)
     sse.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
+    sse.injectPlannerStrategy(_ => new KylinDeltaSourceStrategy)
     sse.injectPostHocResolutionRule(HiveStorageRule)
     sse.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
     if (KapConfig.getInstanceFromEnv.isConstraintPropagationEnabled) {
@@ -344,6 +346,8 @@ object SparderEnv extends Logging {
               inputMetrics.footerReadNumber)
             ParquetPageFilterCollector.addQueryMetrics(taskEnd.queryId, inputMetrics.totalPagesCount,
               inputMetrics.filteredPagesCount, inputMetrics.afterFilterPagesCount)
+            QueryCostCollector.addQueryMetrics(taskEnd.queryId,taskEnd.taskMetrics.executorCpuTime);
+            QueryCostCollector.addQueryMetrics(taskEnd.queryId,taskEnd.taskMetrics.executorDeserializeCpuTime);
           }
         } catch {
           case e: Throwable => logWarning("error when add metrics for query", e)
@@ -414,5 +418,9 @@ object SparderEnv extends Logging {
   // Return the list of currently active executors
   def getActiveExecutorIds(): Seq[String] = {
     getSparkSession.sparkContext.getExecutorIds()
+  }
+
+  def deleteQueryTaskResultBlock(queryExecutionID: String): Unit = {
+    SparkEnv.get.deleteAllBlockForQueryResult(queryExecutionID)
   }
 }

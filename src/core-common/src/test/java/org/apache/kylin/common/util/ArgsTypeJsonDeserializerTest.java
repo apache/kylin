@@ -23,6 +23,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_C
 import java.util.HashMap;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Data;
 

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "SSB.LINEORDER",
+  "tableAlias" : "LINEORDER",
+  "columnName" : "CC_CNAME",
+  "expression" : "CUSTOMER.C_NAME +'USA'",
+  "innerExpression" : "`CUSTOMER`.`C_NAME` +'USA'",
+  "datatype" : "DOUBLE",
+  "comment" : null,
+  "uuid" : "351ea8db-3258-4ae1-27c5-a810d8d9d905",
+  "project" : "cc_test"
+}

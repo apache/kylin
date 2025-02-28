@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "TDVT.CALCS",
+  "tableAlias" : "CALCS",
+  "columnName" : "CC_AUTO_3",
+  "expression" : "WEEK(CALCS.DATE1)",
+  "innerExpression" : "WEEKOFYEAR(CALCS.DATE1)",
+  "datatype" : "INTEGER",
+  "comment" : "Auto suggested from: WEEK(CALCS.DATE1)",
+  "uuid" : "5f931888-f070-46e5-344a-438b1039b531",
+  "project" : "tdvt"
+}

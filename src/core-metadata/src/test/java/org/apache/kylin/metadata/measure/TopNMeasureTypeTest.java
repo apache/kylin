@@ -31,6 +31,9 @@ import java.util.Map;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.CleanMetadataHelper;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.topn.TopNCounter;
@@ -41,13 +44,9 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.util.Unsafe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class TopNMeasureTypeTest {
 

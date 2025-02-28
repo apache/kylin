@@ -19,7 +19,7 @@
 package org.apache.kylin.streaming.constants;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 
 import lombok.experimental.UtilityClass;
 
@@ -68,7 +68,7 @@ public class StreamingConstants {
 
     // streaming job
     public static final String STREAMING_META_URL = "kylin.streaming.meta-scheme";
-    public static final String STREAMING_META_URL_DEFAULT = HDFSMetadataStore.HDFS_SCHEME;
+    public static final String STREAMING_META_URL_DEFAULT = FileSystemMetadataStore.HDFS_SCHEME;
     public static final String STREAMING_DURATION = "kylin.streaming.duration";
     public static final String STREAMING_CONFIG_PREFIX = "kylin.streaming.spark-conf.";
     public static final String STREAMING_DURATION_DEFAULT = "30";

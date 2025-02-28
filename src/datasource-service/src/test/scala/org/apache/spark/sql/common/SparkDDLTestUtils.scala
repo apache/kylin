@@ -17,16 +17,15 @@
  */
 package org.apache.spark.sql.common
 
-import java.io.File
-
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.kylin.common.util.RandomUtil
-
-import org.apache.spark.sql.{KylinSession, SparderEnv, SparkSession}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.internal.StaticSQLConf
+import org.apache.spark.sql.{KylinSession, SparderEnv, SparkSession}
 import org.apache.spark.util.Utils
+
+import java.io.File
 
 object SparkDDLTestUtils {
 

@@ -1,0 +1,77 @@
+{
+  "uuid" : "193734fa-3ac0-4f27-80a0-6f3071e53202",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "alias" : "AUTO_MODEL_TEST_KYLIN_FACT_1",
+  "owner" : null,
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "TABLE_ORIENTED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : null,
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "all_named_columns" : [ {
+    "id" : 7,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 8,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 9,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 10,
+    "name" : "TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  }, {
+    "name" : "SUM_PRICE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    },
+    "id" : 100001
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "computed_column_uuids" : [ ],
+  "project" : "model_missing_column"
+}

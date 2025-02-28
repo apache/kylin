@@ -18,7 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.metadata.model.PartitionDesc;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -24,13 +24,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.metadata.model.schema.SchemaNode;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 
-import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
 import lombok.val;
 
 public class MultiplePartitionStrategy extends UnOverWritableStrategy {

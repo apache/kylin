@@ -67,6 +67,6 @@ public class SwaggerCompatibilityConfig {
     private boolean shouldRegisterLinksMapping(WebEndpointProperties webEndpointProperties, Environment environment,
             String basePath) {
         return webEndpointProperties.getDiscovery().isEnabled() && (StringUtils.hasText(basePath)
-                || ManagementPortType.get(environment).equals(ManagementPortType.DIFFERENT));
+                || ManagementPortType.get(environment) == ManagementPortType.DIFFERENT);
     }
 }

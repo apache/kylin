@@ -18,6 +18,7 @@
 package org.apache.kylin.streaming.jobs.impl;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.JOB_START_FAILURE;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_IMAGE;
 import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
 
 import java.io.File;
@@ -32,7 +33,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
@@ -60,8 +61,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({ "javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*",
-        "javax.script.*" })
+@PowerMockIgnore({ "com.sun.security.*", "org.w3c.*", "javax.xml.*", "org.xml.*", "org.w3c.dom.*", "org.apache.cxf.*",
+        "javax.management.*", "javax.script.*", "org.apache.hadoop.*", "javax.security.*", "java.security.*",
+        "javax.crypto.*", "javax.net.ssl.*", "org.apache.kylin.profiler.AsyncProfiler" })
 @PrepareForTest(StreamingJobLauncher.class)
 public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
     private static final String PROJECT = "streaming_test";
@@ -424,25 +426,26 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
         launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
 
         val dumpSet = launcher.getMetadataDumpList();
-        Assert.assertEquals(13, dumpSet.size());
+        Assert.assertEquals(18, dumpSet.size());
 
-        Assert.assertTrue(dumpSet.contains("/streaming_test/dataflow/e78a89dd-847f-4574-8afa-8768b4228b72.json"));
-        Assert.assertTrue(dumpSet.contains(
-                "/streaming_test/dataflow_details/e78a89dd-847f-4574-8afa-8768b4228b72/c380dd2a-43b8-4268-b73d-2a5f76236631.json"));
-        Assert.assertTrue(dumpSet.contains(
-                "/streaming_test/dataflow_details/e78a89dd-847f-4574-8afa-8768b4228b72/c380dd2a-43b8-4268-b73d-2a5f76236632.json"));
-        Assert.assertTrue(dumpSet.contains(
-                "/streaming_test/dataflow_details/e78a89dd-847f-4574-8afa-8768b4228b72/c380dd2a-43b8-4268-b73d-2a5f76236633.json"));
-        Assert.assertTrue(dumpSet.contains(
-                "/streaming_test/dataflow_details/e78a89dd-847f-4574-8afa-8768b4228b72/c380dd2a-43b8-4268-b73d-2a5f76236901.json"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/index_plan/e78a89dd-847f-4574-8afa-8768b4228b72.json"));
-        Assert.assertTrue(dumpSet.contains("/_global/project/streaming_test.json"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/model_desc/e78a89dd-847f-4574-8afa-8768b4228b72.json"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/table/SSB.P_LINEORDER_STR.json"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/kafka/SSB.P_LINEORDER_STR.json"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/table/SSB.PART.json"));
-        Assert.assertTrue(dumpSet.contains("/_image"));
-        Assert.assertTrue(dumpSet.contains("/streaming_test/streaming/e78a89dd-847f-4574-8afa-8768b4228b72_build"));
+        Assert.assertTrue(dumpSet.contains("DATAFLOW/e78a89dd-847f-4574-8afa-8768b4228b72"));
+        Assert.assertTrue(dumpSet.contains("SEGMENT/c380dd2a-43b8-4268-b73d-2a5f76236631"));
+        Assert.assertTrue(dumpSet.contains("SEGMENT/c380dd2a-43b8-4268-b73d-2a5f76236632"));
+        Assert.assertTrue(dumpSet.contains("SEGMENT/c380dd2a-43b8-4268-b73d-2a5f76236633"));
+        Assert.assertTrue(dumpSet.contains("SEGMENT/f9a7af68-ba3e-a8d3-2493-8d72fdc63fa4"));
+        Assert.assertTrue(dumpSet.contains("LAYOUT/c380dd2a-43b8-4268-b73d-2a5f76236631"));
+        Assert.assertTrue(dumpSet.contains("LAYOUT/c380dd2a-43b8-4268-b73d-2a5f76236632"));
+        Assert.assertTrue(dumpSet.contains("LAYOUT/c380dd2a-43b8-4268-b73d-2a5f76236633"));
+        Assert.assertTrue(dumpSet.contains("LAYOUT/f9a7af68-ba3e-a8d3-2493-8d72fdc63fa4"));
+        Assert.assertTrue(dumpSet.contains("INDEX_PLAN/e78a89dd-847f-4574-8afa-8768b4228b72"));
+        Assert.assertTrue(dumpSet.contains("PROJECT/streaming_test"));
+        Assert.assertTrue(dumpSet.contains("MODEL/e78a89dd-847f-4574-8afa-8768b4228b72"));
+        Assert.assertTrue(dumpSet.contains("TABLE_INFO/streaming_test.SSB.P_LINEORDER_STR"));
+        Assert.assertTrue(dumpSet.contains("KAFKA_CONFIG/streaming_test.SSB.P_LINEORDER_STR"));
+        Assert.assertTrue(dumpSet.contains("TABLE_INFO/streaming_test.SSB.PART"));
+        Assert.assertTrue(dumpSet.contains(METASTORE_IMAGE));
+        Assert.assertTrue(dumpSet.contains("STREAMING_JOB/e78a89dd-847f-4574-8afa-8768b4228b72_build"));
+        Assert.assertTrue(dumpSet.contains("STREAMING_JOB/e78a89dd-847f-4574-8afa-8768b4228b72_merge"));
 
     }
 
@@ -477,24 +480,7 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
         ReflectionUtils.invokeGetterMethod(launcher, "initStorageUrl");
 
         val storageUrl = (StorageURL) ReflectionUtils.getField(launcher, "distMetaStorageUrl");
-        Assert.assertEquals(HDFSMetadataStore.HDFS_SCHEME, storageUrl.getScheme());
-    }
-
-    @Test
-    public void testAddParserJar() throws Exception {
-        val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
-        val launcher = new StreamingJobLauncher();
-        launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
-        val mockup = new MockupSparkLauncher();
-        ReflectionTestUtils.setField(launcher, "launcher", mockup);
-        val mockLaunch = PowerMockito.spy(launcher);
-        PowerMockito.when(mockLaunch, "getParserName").thenReturn("org.apache.kylin.parser.TimedJsonStreamParser2");
-        DataParserInfo dataParserInfo = new DataParserInfo(PROJECT, DEFAULT_PARSER_NAME, "default");
-        PowerMockito.when(mockLaunch, "getDataParser", Mockito.anyString()).thenReturn(dataParserInfo);
-        PowerMockito.doReturn("default").when(mockLaunch, "getParserJarPath", dataParserInfo);
-        ReflectionTestUtils.invokeMethod(mockLaunch, "addParserJar", mockup);
-        mockup.startApplication();
-        Assert.assertTrue(mockup.jars.contains("default"));
+        Assert.assertEquals(FileSystemMetadataStore.HDFS_SCHEME, storageUrl.getScheme());
     }
 
     @Test
@@ -519,6 +505,23 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(mockup.sparkConf.get("spark.driver.extraJavaOptions"));
         Assert.assertNotNull(mockup.sparkConf.get("spark.executor.extraJavaOptions"));
         Assert.assertNotNull(mockup.sparkConf.get("spark.yarn.am.extraJavaOptions"));
+    }
+
+    @Test
+    public void testAddParserJar() throws Exception {
+        val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
+        val launcher = new StreamingJobLauncher();
+        launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
+        val mockup = new MockupSparkLauncher();
+        ReflectionTestUtils.setField(launcher, "launcher", mockup);
+        val mockLaunch = PowerMockito.spy(launcher);
+        PowerMockito.when(mockLaunch, "getParserName").thenReturn("org.apache.kylin.parser.TimedJsonStreamParser2");
+        DataParserInfo dataParserInfo = new DataParserInfo(PROJECT, DEFAULT_PARSER_NAME, "default");
+        PowerMockito.when(mockLaunch, "getDataParser", Mockito.anyString()).thenReturn(dataParserInfo);
+        PowerMockito.doReturn("default").when(mockLaunch, "getParserJarPath", dataParserInfo);
+        ReflectionTestUtils.invokeMethod(mockLaunch, "addParserJar", mockup);
+        mockup.startApplication();
+        Assert.assertTrue(mockup.jars.contains("default"));
     }
 
     static class MockupSparkLauncher extends SparkLauncher {

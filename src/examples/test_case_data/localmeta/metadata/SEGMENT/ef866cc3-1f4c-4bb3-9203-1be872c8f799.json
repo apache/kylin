@@ -1,0 +1,41 @@
+{
+  "name" : "19920101000000_19950101000000",
+  "create_time_utc" : 1594879974801,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 694195200000,
+    "date_range_end" : 788889600000
+  },
+  "timeRange" : null,
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : {
+    "SSB.CUSTOMER" : "cc_test/table_snapshot/SSB.CUSTOMER/ae29f993-e66f-4df9-aab5-a43f280b590b"
+  },
+  "last_build_time" : 1594882921019,
+  "source_count" : 27687,
+  "source_bytes_size" : 5687314,
+  "column_source_bytes" : {
+    "SSB.LINEORDER.LO_CUSTKEY" : 72982,
+    "SSB.LINEORDER.LO_PARTKEY" : 95437,
+    "SSB.LINEORDER.LO_SUPPKEY" : 43247,
+    "SSB.LINEORDER.LO_ORDERKEY" : 96156,
+    "SSB.CUSTOMER.C_NAME" : 498366,
+    "SSB.CUSTOMER.C_CUSTKEY" : 72982,
+    "SSB.LINEORDER.CC_TOTAL_TAX" : 62240
+  },
+  "ori_snapshot_size" : {
+    "SSB.CUSTOMER" : 22251
+  },
+  "additionalInfo" : { },
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : false,
+  "is_dict_ready" : false,
+  "is_flat_table_ready" : false,
+  "is_fact_view_ready" : false,
+  "selected_columns" : [ ],
+  "uuid" : "ef866cc3-1f4c-4bb3-9203-1be872c8f799",
+  "model_uuid" : "0d146f1a-bdd3-4548-87ac-21c2c6f9a0da",
+  "project" : "cc_test"
+}

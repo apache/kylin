@@ -72,4 +72,9 @@ public class FavoriteRuleUpdateRequest implements Serializable, ProjectInsensiti
     private String effectiveDays;
     @JsonProperty("update_frequency")
     private String updateFrequency;
+    @JsonProperty("frequency_time_window")
+    private String frequencyTimeWindow = "MONTH";
+    @JsonProperty("low_frequency_threshold")
+    private String lowFrequencyThreshold = "0";
+
 }

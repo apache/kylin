@@ -38,6 +38,10 @@ import org.apache.kylin.common.metrics.service.QueryMonitorMetric;
 import org.apache.kylin.common.state.StateSwitchConstant;
 import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
@@ -66,11 +70,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -132,8 +131,8 @@ public class MonitorService extends BasicService implements ApplicationListener<
         if (!kylinConfig.isJobNode() && !kylinConfig.isDataLoadingNode()) {
             return;
         }
-        monitorReporter.submit(
-                new AbstractMonitorCollectTask(Lists.newArrayList(ClusterConstant.ALL, ClusterConstant.JOB)) {
+        monitorReporter
+                .submit(new AbstractMonitorCollectTask(Lists.newArrayList(ClusterConstant.ALL, ClusterConstant.JOB)) {
                     @Override
                     protected MonitorMetric collect() {
                         return collectJobMetric();
@@ -334,8 +333,8 @@ public class MonitorService extends BasicService implements ApplicationListener<
 
     private boolean pendingOnYarn(Set<String> runningOnYarnJobs, AbstractExecutable executable) {
         val parent = (DefaultExecutable) executable;
-        val runningJob = parent.getTasks().stream().filter(e -> e.getStatusInMem() == ExecutableState.RUNNING).findFirst()
-                .orElse(null);
+        val runningJob = parent.getTasks().stream().filter(e -> e.getStatusInMem() == ExecutableState.RUNNING)
+                .findFirst().orElse(null);
         if (runningJob == null) {
             return false;
         }

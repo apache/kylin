@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.recommendation.util;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +47,7 @@ import org.springframework.util.DigestUtils;
 public class RawRecUtil {
 
     public static final String TABLE_COLUMN_SEPARATOR = "\\$";
+    public static final String MEASURE_PARAM_SEPARATOR = "__";
 
     private RawRecUtil() {
     }
@@ -60,11 +62,13 @@ public class RawRecUtil {
         return dependColumn;
     }
 
-    public static String dimensionUniqueContent(TblColRef tblColRef, Map<String, ComputedColumnDesc> ccMap) {
-        return colUniqueName(tblColRef, ccMap);
+    public static String dimensionUniqueContent(TblColRef tblColRef, Map<String, ComputedColumnDesc> ccMap,
+            Set<String> newCcUuids) {
+        return colUniqueName(tblColRef, ccMap, newCcUuids);
     }
 
-    public static String measureUniqueContent(NDataModel.Measure measure, Map<String, ComputedColumnDesc> ccMap) {
+    public static String measureUniqueContent(NDataModel.Measure measure, Map<String, ComputedColumnDesc> ccMap,
+            Set<String> newCcUuids) {
         Set<String> paramNames = Sets.newHashSet();
         List<ParameterDesc> parameters = measure.getFunction().getParameters();
         parameters.forEach(param -> {
@@ -73,21 +77,22 @@ public class RawRecUtil {
                 paramNames.add(String.valueOf(Integer.MAX_VALUE));
                 return;
             }
-            paramNames.add(colUniqueName(colRef, ccMap));
+            paramNames.add(colUniqueName(colRef, ccMap, newCcUuids));
         });
         return String.format(Locale.ROOT, "%s__%s", measure.getFunction().getExpression(),
                 String.join("__", paramNames));
     }
 
-    private static String colUniqueName(TblColRef tblColRef, Map<String, ComputedColumnDesc> ccMap) {
+    private static String colUniqueName(TblColRef tblColRef, Map<String, ComputedColumnDesc> ccMap,
+            Set<String> newCcUuids) {
         final ColumnDesc columnDesc = tblColRef.getColumnDesc();
         String uniqueName;
         if (columnDesc.isComputedColumn()) {
             /* if cc is new, unique_name forward to its uuid,
-             * otherwise table_alias.column_id
+             * otherwise table_alias.column
              */
             ComputedColumnDesc cc = ccMap.get(columnDesc.getIdentity());
-            if (cc.getUuid() != null) {
+            if (newCcUuids.contains(cc.getUuid())) {
                 uniqueName = cc.getUuid();
             } else {
                 uniqueName = tblColRef.getTableRef().getAlias() + "$" + columnDesc.getName();
@@ -136,7 +141,7 @@ public class RawRecUtil {
     }
 
     public static String computeMD5(String content) {
-        return DigestUtils.md5DigestAsHex(content.getBytes());
+        return DigestUtils.md5DigestAsHex(content.getBytes(Charset.defaultCharset()));
     }
 
     public static Map<String, List<String>> uniqueFlagsToMd5Map(Set<String> uniqueFlags) {
@@ -153,11 +158,11 @@ public class RawRecUtil {
     }
 
     public static Pair<String, RawRecItem> getRawRecItemFromMap(String md5, String content,
-                                                                Map<String, List<String>> md5ToFlags, Map<String, RawRecItem> layoutRecommendations) {
+            Map<String, List<String>> md5ToFlags, Map<String, RawRecItem> uniqueRecItemMap) {
         List<String> flags = md5ToFlags.getOrDefault(md5, new ArrayList<>());
         int maxItemId = 0;
         for (String flag : flags) {
-            RawRecItem item = layoutRecommendations.get(flag);
+            RawRecItem item = uniqueRecItemMap.get(flag);
             if (RawRecUtil.getContent(item).equals(content)) {
                 return Pair.newPair(flag, item);
             }
@@ -166,7 +171,7 @@ public class RawRecUtil {
         if (!flags.contains(md5)) {
             return Pair.newPair(md5, null);
         } else {
-            String uniqueFlag = String.format("%s_%d", md5, maxItemId);
+            String uniqueFlag = String.format(Locale.ROOT, "%s_%d", md5, maxItemId);
             return Pair.newPair(uniqueFlag, null);
         }
     }

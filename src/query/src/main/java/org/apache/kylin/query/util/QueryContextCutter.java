@@ -25,28 +25,24 @@ import java.util.Locale;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.exception.KylinRuntimeException;
-import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
-import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.KapRel;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
-import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.relnode.OlapContext;
+import org.apache.kylin.query.relnode.OlapRel;
+import org.apache.kylin.query.relnode.OlapTableScan;
 import org.apache.kylin.query.routing.RealizationChooser;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class QueryContextCutter {
-    private static final int MAX_RETRY_TIMES_OF_CONTEXT_CUT = 10;
 
     private QueryContextCutter() {
     }
@@ -56,7 +52,7 @@ public class QueryContextCutter {
      * @param root The root relNode of a query statement
      */
     public static void analyzeOlapContext(RelNode root) {
-        cutContext(new ContextInitialCutStrategy(), (KapRel) root.getInput(0), root);
+        cutContext(new ContextInitialCutStrategy(), (OlapRel) root.getInput(0), root);
         fillOlapContextPropertiesWithRelTree(root);
     }
 
@@ -70,20 +66,25 @@ public class QueryContextCutter {
      *         to get multiple smaller OlapContexts and use the previous steps to continue matching.
      * @return Each of the returned OlapContexts matches an index, or throws an exception.
      */
-    public static List<OLAPContext> selectRealization(String project, RelNode root, boolean isReCutBanned) {
+    public static List<OlapContext> selectRealization(String project, RelNode root, boolean isReCutBanned) {
         ContextInitialCutStrategy firstRoundStrategy = new ContextInitialCutStrategy();
         ContextReCutStrategy reCutStrategy = new ContextReCutStrategy();
-
-        QueryContextCutter.cutContext(firstRoundStrategy, (KapRel) root.getInput(0), root);
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
+        boolean printPlan = projectConfig.isPrintQueryPlanEnabled();
+        int maxRetryTimesOfContextCut = projectConfig.getMaxRetryTimesOfContextCut();
+        if (printPlan) {
+            log.info("The relNode before cutting:\n{}\n", RelOptUtil.toString(root));
+        }
+        QueryContextCutter.cutContext(firstRoundStrategy, (OlapRel) root.getInput(0), root);
         int retryCutTimes = 0;
-        boolean printPlan = NProjectManager.getProjectConfig(project).isPrintQueryPlanEnabled();
-        while (retryCutTimes++ < MAX_RETRY_TIMES_OF_CONTEXT_CUT) {
+        while (retryCutTimes++ < maxRetryTimesOfContextCut) {
             if (printPlan) {
-                log.info("Cut context {} time(s)\n", RelOptUtil.toString(root));
+                log.info("The {} time{} of cutting OlapContext\n{}\n", retryCutTimes, retryCutTimes > 1 ? "s" : "",
+                        RelOptUtil.toString(root));
             }
             try {
                 fillOlapContextPropertiesWithRelTree(root);
-                List<OLAPContext> olapContexts = chooseCandidate();
+                List<OlapContext> olapContexts = chooseCandidate(project);
                 if (isReCutBanned) {
                     throw new NoRealizationFoundException("There is no need to select realizations for OlapContexts.");
                 }
@@ -91,13 +92,11 @@ public class QueryContextCutter {
             } catch (NoRealizationFoundException | NoStreamingRealizationFoundException e) {
                 throwIfReCutBanned(isReCutBanned, e);
                 reCutStrategy.tryCutToSmallerContexts(root, e);
-            } catch (UserStopQueryException | KylinTimeoutException | KylinRuntimeException e) {
-                throw e;
             } finally {
                 // auto-modeling should invoke unfixModel() because it may select some realizations.
                 if (isReCutBanned) {
                     ContextUtil.listContextsHavingScan().forEach(olapContext -> {
-                        if (olapContext.realization != null) {
+                        if (olapContext.getRealization() != null) {
                             olapContext.unfixModel();
                         }
                     });
@@ -106,7 +105,7 @@ public class QueryContextCutter {
         }
 
         String errorMsg = "too many unmatched joins in this query, please check it or create corresponding realization.";
-        ContextUtil.dumpCalcitePlan("cannot find proper realizations After re-cut " + MAX_RETRY_TIMES_OF_CONTEXT_CUT
+        ContextUtil.dumpCalcitePlan("cannot find proper realizations After re-cut " + maxRetryTimesOfContextCut
                 + " times. \nError: " + errorMsg, root, log);
         throw new NoRealizationFoundException(errorMsg);
     }
@@ -121,24 +120,20 @@ public class QueryContextCutter {
 
     private static void fillOlapContextPropertiesWithRelTree(RelNode queryRoot) {
         // post-order travel children
-        OLAPRel.OLAPImplementor kapImplementor = new OLAPRel.OLAPImplementor();
+        OlapRel.OlapImpl kapImplementor = new OlapRel.OlapImpl();
         kapImplementor.visitChild(queryRoot.getInput(0), queryRoot);
         QueryContext.current().record("collect_olap_context_info");
     }
 
-    private static List<OLAPContext> chooseCandidate() {
-        List<OLAPContext> contexts = ContextUtil.listContextsHavingScan();
+    private static List<OlapContext> chooseCandidate(String project) {
+        List<OlapContext> contexts = ContextUtil.listContextsHavingScan();
         contexts.forEach(olapContext -> {
             olapContext.setHasSelected(true);
-            log.info("Context to be match {},  {}", olapContext.id, olapContext);
+            log.info("Context to be match {},  {}", olapContext.getId(), olapContext);
         });
 
         long selectLayoutStartTime = System.currentTimeMillis();
-        if (contexts.size() > 1) {
-            RealizationChooser.multiThreadSelectLayoutCandidate(contexts);
-        } else {
-            RealizationChooser.selectLayoutCandidate(contexts);
-        }
+        RealizationChooser.selectLayoutCandidate(project, contexts);
         log.info("select layout candidate for {} olapContext cost {} ms", contexts.size(),
                 System.currentTimeMillis() - selectLayoutStartTime);
         QueryContext.current().record("end_select_realization");
@@ -147,7 +142,7 @@ public class QueryContextCutter {
 
     // ============================================================================
 
-    static void cutContext(ICutContextStrategy strategy, OLAPRel rootOfSubCtxTree, RelNode queryRoot) {
+    static void cutContext(ICutContextStrategy strategy, OlapRel rootOfSubCtxTree, RelNode queryRoot) {
         if (strategy.needCutOff(rootOfSubCtxTree)) {
             strategy.cutOffContext(rootOfSubCtxTree, queryRoot);
         }
@@ -159,8 +154,8 @@ public class QueryContextCutter {
     }
 
     private static void checkStreamingTableWithAutoModeling() {
-        for (OLAPContext context : ContextUtil.listContextsHavingScan()) {
-            for (OLAPTableScan tableScan : context.allTableScans) {
+        for (OlapContext context : ContextUtil.listContextsHavingScan()) {
+            for (OlapTableScan tableScan : context.getAllTableScans()) {
                 TableDesc tableDesc = tableScan.getTableRef().getTableDesc();
                 if (ISourceAware.ID_STREAMING == tableDesc.getSourceType()
                         && tableDesc.getKafkaConfig().hasBatchTable()) {

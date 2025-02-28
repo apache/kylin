@@ -21,14 +21,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation;
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 

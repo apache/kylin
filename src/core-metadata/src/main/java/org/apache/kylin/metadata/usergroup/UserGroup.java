@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.metadata.usergroup;
 
+import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -24,8 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import static org.apache.kylin.common.persistence.ResourceStore.USER_GROUP_ROOT;
 
 @SuppressWarnings("serial")
 @Getter
@@ -48,7 +47,7 @@ public class UserGroup extends RootPersistentEntity {
     }
 
     @Override
-    public String getResourcePath() {
-        return USER_GROUP_ROOT + "/" + resourceName();
+    public MetadataType resourceType() {
+        return MetadataType.USER_GROUP;
     }
 }

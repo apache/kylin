@@ -17,13 +17,12 @@
 
 package org.apache.spark.utils
 
-import java.util.concurrent.{ExecutorService, TimeUnit}
-
-import org.apache.spark.util.ThreadUtils
 import org.apache.spark.SparkException
+import org.apache.spark.util.ThreadUtils
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import java.util.concurrent.{ExecutorService, TimeUnit}
 import scala.concurrent.Awaitable
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ProxyThreadUtils {
   @throws(classOf[SparkException])

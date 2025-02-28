@@ -18,9 +18,6 @@
 
 package org.apache.kylin.query.engine;
 
-import static org.apache.kylin.query.relnode.OLAPContext.clearThreadLocalContexts;
-import static org.apache.kylin.query.util.DefaultQueryTransformer.S0;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -35,23 +32,25 @@ import java.util.regex.Pattern;
 
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.exception.NewQueryRefuseException;
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.ThreadUtil;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
@@ -60,7 +59,8 @@ import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.exception.BusyQueryException;
 import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.mask.QueryResultMasks;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.util.PushDownQueryRequestLimits;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryInterruptChecker;
@@ -81,8 +81,9 @@ public class QueryRoutingEngine {
     public static final String SPARK_MEM_LIMIT_EXCEEDED = "Container killed by YARN for exceeding memory limits";
     public static final String SPARK_JOB_FAILED = "Job aborted due to stage failure";
 
+    private static final String S0 = "\\s*";
     private static final Pattern PTN_SUM_LC = Pattern.compile(
-            S0 + "\\bSUM_LC" + S0 + "[(]" + S0 + ".*\\.?.*" + S0 + "[,]" + S0 + ".*\\.?.*" + S0 + "[)]" + S0,
+            S0 + "\\bSUM_LC" + S0 + "\\(" + S0 + ".*\\.?.*" + S0 + "," + S0 + ".*\\.?.*" + S0 + "\\)" + S0,
             Pattern.CASE_INSENSITIVE);
 
     public QueryResult queryWithSqlMassage(QueryParams queryParams) throws Exception {
@@ -104,6 +105,7 @@ public class QueryRoutingEngine {
                 }
 
                 String correctedSql = QueryUtil.massageSql(queryParams);
+                correctedSql = markExplainSql(correctedSql);
 
                 //CAUTION: should not change sqlRequest content!
                 QueryContext.current().getMetrics().setCorrectedSql(correctedSql);
@@ -112,11 +114,12 @@ public class QueryRoutingEngine {
                 logger.info("The corrected query: {}", correctedSql);
 
                 // add extra parameters into olap context, like acceptPartial
+                // seems useless, why not delete this?
                 Map<String, String> parameters = new HashMap<>();
-                parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(queryParams.isAcceptPartial()));
-                OLAPContext.setParameters(parameters);
+                parameters.put(OlapContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(queryParams.isAcceptPartial()));
+                ContextUtil.setParameters(parameters);
                 // force clear the query context before a new query
-                clearThreadLocalContexts();
+                ContextUtil.clearThreadLocalContexts();
 
                 // skip masking if executing user has admin permission
                 if (!queryParams.isACLDisabledOrAdmin()) {
@@ -126,7 +129,7 @@ public class QueryRoutingEngine {
                 }
                 // special case for prepare query.
                 if (BackdoorToggles.getPrepareOnly()) {
-                    return prepareOnly(correctedSql, queryExec, Lists.newArrayList(), Lists.newArrayList());
+                    return prepareOnly(correctedSql, queryExec, Lists.newArrayList());
                 }
                 if (queryParams.isPrepareStatementWithParams()) {
                     for (int i = 0; i < queryParams.getParams().length; i++) {
@@ -147,7 +150,7 @@ public class QueryRoutingEngine {
     }
 
     private QueryResult handleTransactionException(QueryParams queryParams, TransactionException e)
-            throws SQLException {
+            throws SQLException, InterruptedException {
         Throwable cause = e.getCause();
         if (cause instanceof SQLException && cause.getCause() instanceof KylinException) {
             throw (SQLException) cause;
@@ -234,16 +237,9 @@ public class QueryRoutingEngine {
     }
 
     @VisibleForTesting
-    public QueryResult execute(String correctedSql, QueryExec queryExec) throws Exception {
+    public QueryResult execute(String correctedSql, QueryExec queryExec) throws SQLException {
         QueryResult queryResult = queryExec.executeQuery(correctedSql);
-
-        List<QueryContext.NativeQueryRealization> nativeQueryRealizationList = Lists.newArrayList();
-        for (NativeQueryRealization nqReal : OLAPContext.getNativeRealizations()) {
-            nativeQueryRealizationList.add(new QueryContext.NativeQueryRealization(nqReal.getModelId(),
-                    nqReal.getModelAlias(), nqReal.getLayoutId(), nqReal.getIndexType(), nqReal.isPartialMatchModel(),
-                    nqReal.isValid(), nqReal.isLayoutExist(), nqReal.isStreamingLayout(), nqReal.getSnapshots()));
-        }
-        QueryContext.current().setNativeQueryRealizationList(nativeQueryRealizationList);
+        QueryContext.current().setQueryRealizations(ContextUtil.getNativeRealizations());
 
         return queryResult;
     }
@@ -258,7 +254,8 @@ public class QueryRoutingEngine {
         return isPush;
     }
 
-    private QueryResult pushDownQuery(SQLException sqlException, QueryParams queryParams) throws SQLException {
+    private QueryResult pushDownQuery(SQLException sqlException, QueryParams queryParams)
+            throws SQLException, InterruptedException {
         QueryContext.current().getMetrics().setOlapCause(sqlException);
         QueryContext.current().getQueryTagInfo().setPushdown(true);
         if (QueryContext.current().getQueryTagInfo().isQueryDetect()) {
@@ -270,14 +267,22 @@ public class QueryRoutingEngine {
         PushdownResult result = null;
         try {
             result = tryPushDownSelectQuery(queryParams, sqlException, BackdoorToggles.getPrepareOnly());
-        } catch (KylinException e) {
-            logger.error("Pushdown failed with kylin exception ", e);
-            throw e;
-        } catch (Exception e2) {
-            logger.error("Pushdown engine failed current query too", e2);
-            //exception in pushdown, throw it instead of exception in calcite
-            throw new RuntimeException(
-                    "[" + QueryContext.current().getPushdownEngine() + " Exception] " + e2.getMessage());
+        } catch (Exception e) {
+            String msg;
+            if (e instanceof KylinException) {
+                msg = "Pushdown failed with KylinException:\n";
+                ThreadUtil.warnKylinStackTrace(msg + ThreadUtil.getKylinStackTrace());
+                throw e;
+            } else if (e instanceof InterruptedException) {
+                msg = "PushDown failed with InterruptedException\n";
+                ThreadUtil.warnKylinStackTrace(msg + ThreadUtil.getKylinStackTrace());
+                throw e;
+            } else {
+                //exception in pushdown, throw it instead of exception in calcite
+                msg = "[" + QueryContext.current().getPushdownEngine() + " Exception] ";
+                ThreadUtil.warnKylinStackTrace(msg + ThreadUtil.getKylinStackTrace());
+                throw new KylinRuntimeException(msg + e.getMessage());
+            }
         }
 
         if (result == null)
@@ -287,7 +292,7 @@ public class QueryRoutingEngine {
     }
 
     public PushdownResult tryPushDownSelectQuery(QueryParams queryParams, SQLException sqlException, boolean isPrepare)
-            throws Exception {
+            throws SQLException, InterruptedException {
         QueryContext.currentTrace().startSpan(QueryTrace.SQL_PUSHDOWN_TRANSFORMATION);
         Semaphore semaphore = PushDownQueryRequestLimits.getSingletonInstance();
         logger.info("Query: {} Before the current push down counter {}.", QueryContext.current().getQueryId(),
@@ -318,6 +323,7 @@ public class QueryRoutingEngine {
 
             String massagedSql = QueryUtil.appendLimitOffset(queryParams.getProject(), sqlString,
                     queryParams.getLimit(), queryParams.getOffset());
+            massagedSql = markExplainSql(massagedSql);
             if (isPrepareStatementWithParams(queryParams)) {
                 QueryContext.current().getMetrics().setCorrectedSql(massagedSql);
             }
@@ -340,25 +346,30 @@ public class QueryRoutingEngine {
         }
     }
 
+    private String markExplainSql(String massagedSql) {
+        if (StringUtils.startsWithIgnoreCase(massagedSql, "explain ")) {
+            massagedSql = StringUtils.removeStartIgnoreCase(massagedSql, "explain ");
+            QueryContext.current().setExplainSql(true);
+        }
+        return massagedSql;
+    }
+
     private boolean isPrepareStatementWithParams(QueryParams queryParams) {
         KylinConfig projectConfig = NProjectManager.getProjectConfig(queryParams.getProject());
         return (KapConfig.getInstanceFromEnv().enablePushdownPrepareStatementWithParams()
                 || projectConfig.enableReplaceDynamicParams()) && queryParams.isPrepareStatementWithParams();
     }
 
-    private QueryResult prepareOnly(String correctedSql, QueryExec queryExec, List<List<String>> results,
-            List<SelectedColumnMeta> columnMetas) throws SQLException {
+    private QueryResult prepareOnly(String correctedSql, QueryExec queryExec, List<SelectedColumnMeta> columnMetas)
+            throws SQLException {
 
         CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
 
         PreparedStatement preparedStatement = null;
         try {
             List<StructField> fields = queryExec.getColumnMetaData(correctedSql);
-            for (int i = 0; i < fields.size(); ++i) {
-
-                StructField field = fields.get(i);
+            for (StructField field : fields) {
                 String columnName = field.getName();
-
                 if (columnName.startsWith("_KY_")) {
                     continue;
                 }
@@ -375,12 +386,6 @@ public class QueryRoutingEngine {
         }
     }
 
-    /**
-     * @param queryExec
-     * @param index     0 based index
-     * @param param
-     * @throws SQLException
-     */
     @SuppressWarnings("squid:S3776")
     private void setParam(QueryExec queryExec, int index, PrepareSqlStateParam param) {
         boolean isNull = (null == param.getValue());
@@ -442,5 +447,4 @@ public class QueryRoutingEngine {
             queryExec.setPrepareParam(index, isNull ? null : param.getValue());
         }
     }
-
 }

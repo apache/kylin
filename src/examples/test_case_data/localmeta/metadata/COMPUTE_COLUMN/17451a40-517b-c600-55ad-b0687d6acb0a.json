@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "LEFTJOIN_BUYER_COUNTRY_ABBR",
+  "expression" : "SUBSTR(BUYER_ACCOUNT.ACCOUNT_COUNTRY,0,1)",
+  "innerExpression" : "SUBSTRING(`BUYER_ACCOUNT`.`ACCOUNT_COUNTRY`, 0, 1)",
+  "datatype" : "string",
+  "comment" : "first char of country of buyer account",
+  "uuid" : "17451a40-517b-c600-55ad-b0687d6acb0a",
+  "project" : "default"
+}

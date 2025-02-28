@@ -1,0 +1,156 @@
+{
+  "uuid" : "d1b08c10-61bc-4b90-8276-d38d66d6220e",
+  "last_modified" : 1497840739111,
+  "version" : "2.0.0",
+  "table_name" : "TPCDS_BIN_PARTITIONED_ORC_2.PROMOTION",
+  "last_build_job_id" : "de20d520-0f76-47ce-977b-1a4db92dd6f1",
+  "columns_stats" : [ {
+    "max_value" : "322",
+    "min_value" : "1",
+    "max_length_value" : "100",
+    "min_length_value" : "1",
+    "null_count" : 0,
+    "cardinality" : 330
+  }, {
+    "max_value" : "AAAAAAAAPPAAAAAA",
+    "min_value" : "AAAAAAAAAABAAAAA",
+    "max_length_value" : "AAAAAAAABAAAAAAA",
+    "min_length_value" : "AAAAAAAABAAAAAAA",
+    "null_count" : 0,
+    "cardinality" : 323
+  }, {
+    "max_value" : "2450913",
+    "min_value" : "2450100",
+    "max_length_value" : "2450164",
+    "min_length_value" : "2450164",
+    "null_count" : 6,
+    "cardinality" : 272
+  }, {
+    "max_value" : "2450955",
+    "min_value" : "2450132",
+    "max_length_value" : "2450185",
+    "min_length_value" : "2450185",
+    "null_count" : 6,
+    "cardinality" : 267
+  }, {
+    "max_value" : "25984",
+    "min_value" : "212",
+    "max_length_value" : "18481",
+    "min_length_value" : "836",
+    "null_count" : 7,
+    "cardinality" : 309
+  }, {
+    "max_value" : "1000.0",
+    "min_value" : "1000.0",
+    "max_length_value" : "1000.0",
+    "min_length_value" : "1000.0",
+    "null_count" : 6,
+    "cardinality" : 1
+  }, {
+    "max_value" : "1",
+    "min_value" : "1",
+    "max_length_value" : "1",
+    "min_length_value" : "1",
+    "null_count" : 7,
+    "cardinality" : 1
+  }, {
+    "max_value" : "pri",
+    "min_value" : "",
+    "max_length_value" : "ought",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 11
+  }, {
+    "max_value" : "Y",
+    "min_value" : "",
+    "max_length_value" : "Y",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 3
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "Young, valuable companies watch walls. Payments can flour",
+    "min_value" : "",
+    "max_length_value" : "Incentives could not look then excellent relationships. Wari",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 318
+  }, {
+    "max_value" : "Unknown",
+    "min_value" : "",
+    "max_length_value" : "Unknown",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  }, {
+    "max_value" : "N",
+    "min_value" : "",
+    "max_length_value" : "N",
+    "min_length_value" : "",
+    "null_count" : 0,
+    "cardinality" : 2
+  } ],
+  "sample_rows" : [ [ "1", "3", "5", "7", "9", "11", "13", "15", "17", "19" ], [ "AAAAAAAABAAAAAAA", "AAAAAAAADAAAAAAA", "AAAAAAAAFAAAAAAA", "AAAAAAAAHAAAAAAA", "AAAAAAAAJAAAAAAA", "AAAAAAAALAAAAAAA", "AAAAAAAANAAAAAAA", "AAAAAAAAPAAAAAAA", "AAAAAAAABBAAAAAA", "AAAAAAAADBAAAAAA" ], [ "2450164", "2450675", "2450347", "2450123", "2450192", "", "2450316", "", "2450360", "2450623" ], [ "2450185", "2450712", "2450357", "2450132", "2450248", "", "2450365", "", "2450406", "2450640" ], [ "18481", "25471", "2492", "6946", "836", "", "11578", "", "15955", "10402" ], [ "1000.0", "1000.0", "1000.0", "1000.0", "1000.0", "1000.0", "1000.0", "1000.0", "1000.0", "1000.0" ], [ "1", "1", "1", "1", "1", "", "1", "", "1", "1" ], [ "ought", "pri", "anti", "ation", "n st", "ought", "pri", "anti", "ation", "n st" ], [ "Y", "Y", "N", "N", "Y", "", "N", "Y", "Y", "N" ], [ "N", "N", "N", "N", "N", "", "N", "", "N", "N" ], [ "N", "N", "N", "N", "N", "", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "", "N", "N" ], [ "N", "N", "N", "N", "N", "", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ], [ "Men will not say merely. Old, available ", "Companies shall not pr", "Huge, competent structures can remember different pat", "Effects used to prefer however new terms. Usually ava", "External forces shall comprehend ideal, disciplinary stud", "Teachers shall not make up to fair countries. Roya", "Years shall not go later other, given citizens. Excellent, ", "Old elements would shake pre", "Almost old churches ought to occur narrow", "Young families act. Most full prizes avert eastern glasses" ], [ "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown" ], [ "N", "N", "N", "N", "N", "N", "N", "N", "N", "N" ] ],
+  "last_modified_time" : null,
+  "total_rows" : "322",
+  "data_source_properties" : {
+    "hive_inputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+    "total_file_size" : "11283",
+    "location" : "hdfs://master:8020/user/hive/warehouse/tpcds_bin_partitioned_orc_2.db/promotion",
+    "skip_header_line_count" : "0",
+    "last_access_time" : "0",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+    "partition_column" : "",
+    "owner" : "root",
+    "total_file_number" : "1"
+  },
+  "project" : "TPC_DS_2"
+}

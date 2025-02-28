@@ -18,11 +18,11 @@
 
 package org.apache.kylin.query.runtime.plan
 
-import java.util
-
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.junit.Assert
+
+import java.util
 
 class SegmentEmptyTest extends SparderBaseFunSuite with SharedSparkSession with LocalMetadata {
 

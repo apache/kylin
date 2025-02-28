@@ -33,6 +33,9 @@
             <h1 class="table-name" :title="selectedTable.fullName">{{selectedTable.fullName}}</h1>
             <h2 class="table-update-at">{{$t('updateAt')}} {{selectedTable.updateAt | toGMTDate}}</h2>
             <div class="table-actions ky-no-br-space">
+              <el-button type="primary" text icon="el-ksd-n-icon-data-base-outlined" @click="showInternalTableSetting" v-if="currentSelectedProjectInternalTableEnabled && datasourceActions.includes('sampleSourceTable') && [9, 8].includes(selectedTable.datasource)">
+                {{selectedTable.has_Internal ? $t('viewNativeTable') : $t('createNativeTable')}}
+              </el-button>
               <el-button type="primary" text icon="el-ksd-icon-sample_22" @click="sampleTable" v-if="datasourceActions.includes('sampleSourceTable') && [9, 8].includes(selectedTable.datasource)">{{$t('sample')}}</el-button>
               <el-button type="primary" class="ksd-ml-2" text icon="el-ksd-icon-resure_22" :loading="reloadBtnLoading" @click="handleReload" v-if="datasourceActions.includes('reloadSourceTable') && [9, 8].includes(selectedTable.datasource)">{{$t('reload')}}</el-button>
               <el-button type="primary" class="ksd-ml-2" text icon="el-ksd-icon-table_delete_22" :loading="delBtnLoading" v-if="datasourceActions.includes('delSourceTable')" @click="handleDelete">{{$t('delete')}}</el-button>
@@ -59,6 +62,9 @@
           <SourceManagement v-if="isShowSourcePage" :project="currentProjectData" @fresh-tables="handleFreshTable"></SourceManagement>
         </transition>
       </div>
+
+      <InternalTableSetting v-if="selectedTable" :open="this.internalTableSettingVisible" :isCreate="true" :tableInfo="selectedTable" :handleClose="handleInternalSettingClose"/>
+
       <el-dialog
         class="sample-dialog"
         @close="resetSampling"
@@ -114,6 +120,7 @@ import TableSamples from './TableSamples/TableSamples.vue'
 import KafkaCluster from './KafkaCluster/KafkaCluster.vue'
 import SourceManagement from './SourceManagement/SourceManagement.vue'
 import ReloadTable from './TableReload/reload.vue'
+import InternalTableSetting from '../InternalTable/Setting/InternalTableSetting.vue'
 import { handleSuccessAsync, handleError } from '../../../util'
 import { kylinConfirm } from '../../../util/business'
 import { getFormattedTable } from '../../../util/UtilTable'
@@ -126,13 +133,15 @@ import { getFormattedTable } from '../../../util/UtilTable'
     TableSamples,
     KafkaCluster,
     SourceManagement,
-    ReloadTable
+    ReloadTable,
+    InternalTableSetting
   },
   computed: {
     ...mapGetters([
       'currentProjectData',
       'currentSelectedProject',
-      'datasourceActions'
+      'datasourceActions',
+      'currentSelectedProjectInternalTableEnabled'
     ])
   },
   methods: {
@@ -161,6 +170,7 @@ export default class StudioSource extends Vue {
   isShowSourcePage = false
   reloadBtnLoading = false
   sampleVisible = false
+  internalTableSettingVisible = false
   sampleLoading = false
   delBtnLoading = false
   samplingRows = 20000000
@@ -233,6 +243,24 @@ export default class StudioSource extends Vue {
   sampleTable () {
     this.sampleVisible = true
   }
+
+  showInternalTableSetting () {
+    if (this.selectedTable.has_Internal) {
+      this.$router.push('/studio/internal_table')
+      this.internalTableSettingVisible = false
+    } else {
+      this.internalTableSettingVisible = true
+    }
+  }
+
+  async handleInternalSettingClose () {
+    const databaseName = this.selectedTable.database
+    const datasource = this.selectedTable.datasource
+    const tableName = this.selectedTable.name
+    await this.fetchTableDetail({ tableName, databaseName, sourceType: datasource })
+    this.internalTableSettingVisible = false
+  }
+
   cancelSample () {
     this.sampleVisible = false
   }

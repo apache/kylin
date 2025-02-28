@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.kylin.job.mapper.JobInfoMapper">
   <resultMap id="BaseResultMap" type="org.apache.kylin.job.domain.JobInfo">
@@ -11,8 +27,8 @@
     <result column="subject" jdbcType="VARCHAR" property="subject" />
     <result column="model_id" jdbcType="VARCHAR" property="modelId" />
     <result column="priority" javaType="INTEGER" property="priority" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_time" jdbcType="BIGINT" property="updateTime" />
     <result column="job_duration_millis" jdbcType="BIGINT" property="jobDurationMillis" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="org.apache.kylin.job.domain.JobInfo">
@@ -29,14 +45,14 @@
     delete from ${jobInfoTable}
   </delete>
   <insert id="insert" parameterType="org.apache.kylin.job.domain.JobInfo">
-    insert into ${jobInfoTable} (id, job_id, job_type, 
-      job_status, project, subject, 
+    insert into ${jobInfoTable} (id, job_id, job_type,
+      job_status, project, subject,
       model_id, priority, create_time, update_time,
       job_duration_millis, mvcc, job_content)
-    values (#{id,jdbcType=BIGINT}, #{jobId,jdbcType=VARCHAR}, #{jobType,jdbcType=VARCHAR}, 
-      #{jobStatus,jdbcType=VARCHAR}, #{project,jdbcType=VARCHAR}, #{subject,jdbcType=VARCHAR}, 
-      #{modelId,jdbcType=VARCHAR}, #{priority,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP},
-      #{updateTime,jdbcType=TIMESTAMP}, #{jobDurationMillis,jdbcType=BIGINT}, #{mvcc}, #{jobContent,jdbcType=BINARY})
+    values (#{id,jdbcType=BIGINT}, #{jobId,jdbcType=VARCHAR}, #{jobType,jdbcType=VARCHAR},
+      #{jobStatus,jdbcType=VARCHAR}, #{project,jdbcType=VARCHAR}, #{subject,jdbcType=VARCHAR},
+      #{modelId,jdbcType=VARCHAR}, #{priority,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT},
+      #{updateTime,jdbcType=BIGINT}, #{jobDurationMillis,jdbcType=BIGINT}, #{mvcc}, #{jobContent,jdbcType=BINARY})
   </insert>
 
   <delete id="deleteByJobId" parameterType="java.lang.String">
@@ -120,10 +136,10 @@
         #{priority,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
+        #{createTime,jdbcType=BIGINT},
       </if>
       <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
+        #{updateTime,jdbcType=BIGINT},
       </if>
       <if test="jobDurationMillis != null">
         #{jobDurationMillis,jdbcType=BIGINT},
@@ -166,10 +182,10 @@
         priority = #{priority,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
-        create_time = #{createTime,jdbcType=TIMESTAMP},
+        create_time = #{createTime,jdbcType=BIGINT},
       </if>
       <if test="updateTime != null">
-        update_time = #{updateTime,jdbcType=TIMESTAMP},
+        update_time = #{updateTime,jdbcType=BIGINT},
       </if>
       <if test="jobDurationMillis != null">
         job_duration_millis = #{jobDurationMillis,jdbcType=BIGINT},
@@ -241,7 +257,7 @@
     </if>
   </select>
 
-  <select id="getEarliestCreateTime" parameterType="java.lang.String" resultType="java.util.Date">
+  <select id="getEarliestCreateTime" parameterType="java.lang.String" resultType="long">
     select min(create_time)
     from ${jobInfoTable}
     <where>

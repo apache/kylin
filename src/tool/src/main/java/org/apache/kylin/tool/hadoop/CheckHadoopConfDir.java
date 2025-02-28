@@ -20,6 +20,7 @@ package org.apache.kylin.tool.hadoop;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -53,10 +54,12 @@ public class CheckHadoopConfDir {
 
         LocalFileSystem localfs = getLocalFSAndHitUGIForTheFirstTime();
 
-        Configuration conf = new Configuration(false); // don't load defaults, we are only interested in the specified config dir
-        for (File f : hadoopConfDir.listFiles()) {
+        // don't load defaults, we are only interested in the specified config dir
+        Configuration conf = new Configuration(false);
+        for (File f : Objects.requireNonNull(hadoopConfDir.listFiles())) {
             if (f.getName().endsWith("-site.xml")) {
                 Path p = new Path(f.toString());
+                assert localfs != null;
                 p = localfs.makeQualified(p);
                 conf.addResource(p);
                 System.out.println("Load " + p);
@@ -76,7 +79,8 @@ public class CheckHadoopConfDir {
 
     /*
      * Although this is getting a LocalFileSystem, but it triggers Hadoop security check inside.
-     * This is the very first time we hit UGI during the check-env process, and could hit Kerberos exception in a secured Hadoop.
+     * This is the very first time we hit UGI during the check-env process, 
+     * and could hit Kerberos exception in a secured Hadoop.
      * Be careful about the error reporting.
      */
     private static LocalFileSystem getLocalFSAndHitUGIForTheFirstTime() {

@@ -20,12 +20,12 @@
     <packaging>jar</packaging>
     <name>Kylin - Core Job</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Core Job</description>
+    <description>Kylin Core Job</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -74,27 +74,6 @@
                     <artifactId>junit-vintage-engine</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-openfeign-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>logging-interceptor</artifactId>
-            <version>${okhttp.version}</version>
         </dependency>
 
         <!--Env & Test-->
@@ -148,6 +127,7 @@
 
     <build>
         <plugins>
+            <!-- use plugin: mybatis-generator-maven-plugin, need add mybatis-generator-config.xml in resource directory -->
             <plugin>
                 <groupId>org.mybatis.generator</groupId>
                 <artifactId>mybatis-generator-maven-plugin</artifactId>

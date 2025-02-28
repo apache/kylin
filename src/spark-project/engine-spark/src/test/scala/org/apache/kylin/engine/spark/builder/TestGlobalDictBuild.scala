@@ -23,10 +23,10 @@ import org.apache.hadoop.fs.{Path, PathFilter}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.builder.v3dict.GlobalDictionaryBuilderHelper.genRandomData
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.engine.spark.job.step.ParamPropagation
 import org.apache.kylin.metadata.cube.cuboid.{AdaptiveSpanningTree, NSpanningTreeFactory}
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.model.TblColRef
-import org.apache.spark.TaskContext
 import org.apache.spark.application.NoRetryException
 import org.apache.spark.dict.{NGlobalDictMetaInfo, NGlobalDictStoreFactory, NGlobalDictionaryV2}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -34,6 +34,7 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBa
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StringType, StructType}
 import org.apache.spark.sql.{Dataset, Row}
+import org.apache.spark.{SparkException, TaskContext}
 import org.junit.Assert
 import org.scalatest.matchers.must.Matchers.the
 
@@ -63,18 +64,33 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
 
     val dictionaryBuilder = new DFDictionaryBuilder(randomDF, seg, randomDF.sparkSession, dictColSet)
     val colName = dictColSet.iterator().next()
-    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, colName, randomDF)
+    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, colName, randomDF, System.currentTimeMillis())
     val buildVersion = System.currentTimeMillis()
-    dictionaryBuilder.build(colName, bucketPartitionSize, randomDF, buildVersion)
-    val dict = new NGlobalDictionaryV2(seg.getProject,
+    var dict = new NGlobalDictionaryV2(seg.getProject,
       colName.getTable,
       colName.getName,
       seg.getConfig.getHdfsWorkingDirectory,
       buildVersion)
-    val meta1 = dict.getMetaInfo
+    var meta1 = dict.getMetaInfo
+    Assert.assertNull(meta1)
+    val buildParam = new ParamPropagation
+    buildParam.getGlobalDictBuildVersionMap.put(colName.getIdentity, buildVersion)
+    val encode = encodeColumn(randomDF, seg, dictColSet, buildParam)
+    // Use colloct to simulate a save operation
+    Assert.assertThrows(classOf[SparkException], () => encode.collect())
+    // if dict encode value is error, then rebuild dict
+    val rebuildVersion = System.currentTimeMillis()
+    dictionaryBuilder.build(colName, bucketPartitionSize, randomDF, rebuildVersion)
+    encode.collect()
+    dict = new NGlobalDictionaryV2(seg.getProject,
+      colName.getTable,
+      colName.getName,
+      seg.getConfig.getHdfsWorkingDirectory,
+      rebuildVersion)
+    meta1 = dict.getMetaInfo
     Assert.assertEquals(1000, meta1.getDictCount)
-    val encode = encodeColumn(randomDF, seg, dictColSet, buildVersion)
     val rowsWithZero = encode.filter(encode(encode.columns(1)) === 0)
+    encode.select(encode(encode.columns(1))).show()
     Assert.assertEquals(true, rowsWithZero.isEmpty)
     // clean all
     val cleanCol = dictColSet.iterator().next()
@@ -213,7 +229,7 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
     val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, seg, spark, dictColSet)
     val col = dictColSet.iterator().next()
     val ds = randomDataSet.select("26").distinct()
-    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, col, ds)
+    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, col, ds, System.currentTimeMillis())
 
     val originalAQE = spark.conf.get("spark.sql.adaptive.enabled")
 
@@ -246,7 +262,7 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
     val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, seg, randomDataSet.sparkSession, dictColSet)
     val col = dictColSet.iterator().next()
     val ds = randomDataSet.select("26").distinct()
-    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, col, ds)
+    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, col, ds, System.currentTimeMillis())
     val buildVersion = System.currentTimeMillis()
     dictionaryBuilder.build(col, bucketPartitionSize, ds, buildVersion)
     val dict = new NGlobalDictionaryV2(seg.getProject, col.getTable, col.getName,
@@ -255,8 +271,8 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
   }
 
   def encodeColumn(ds: Dataset[Row], dataSegment: NDataSegment,
-                   encodeCols: Set[TblColRef], buildVersion: Long): Dataset[Row] = {
-    val encodeDs = DFTableEncoder.encodeTable(ds, dataSegment, encodeCols, buildVersion)
+                   encodeCols: Set[TblColRef], buildParam: ParamPropagation): Dataset[Row] = {
+    val encodeDs = DFTableEncoder.encodeTable(ds, dataSegment, encodeCols, buildParam.getGlobalDictBuildVersionMap)
     encodeDs
   }
 

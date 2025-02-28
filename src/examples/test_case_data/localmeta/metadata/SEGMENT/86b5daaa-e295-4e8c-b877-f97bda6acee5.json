@@ -1,0 +1,32 @@
+{
+  "name" : "20201102000000_20201103000000",
+  "create_time_utc" : 1604997983129,
+  "status" : "READY",
+  "segRange" : {
+    "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+    "date_range_start" : 1604246400000,
+    "date_range_end" : 1604332800000
+  },
+  "timeRange" : null,
+  "parameters" : null,
+  "dictionaries" : null,
+  "snapshots" : null,
+  "last_build_time" : 0,
+  "source_count" : -1,
+  "source_bytes_size" : 20480,
+  "column_source_bytes" : { },
+  "ori_snapshot_size" : {
+    "DEFAULT.TEST_BANK_LOCATION" : 27
+  },
+  "additionalInfo" : { },
+  "is_encoding_data_skew" : false,
+  "is_snapshot_ready" : true,
+  "is_dict_ready" : true,
+  "is_flat_table_ready" : true,
+  "is_fact_view_ready" : false,
+  "multi_partitions" : [ ],
+  "max_bucket_id" : 29,
+  "uuid" : "86b5daaa-e295-4e8c-b877-f97bda6acee5",
+  "model_uuid" : "7d840904-7b34-4edd-aabd-79df992ef32e",
+  "project" : "storage_v3_test"
+}

@@ -1,0 +1,383 @@
+{
+  "uuid" : "fbe45662-ce4b-4b2f-8c85-f89761ccbce6",
+  "last_modified" : 1644401586439,
+  "create_time" : 1632409811486,
+  "version" : "4.0.0.0",
+  "name" : "REFDATA_BOOK_HIERARCHY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "MEGDP_DESTINATION_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (Platform Field: MEGDP_DESTINATION_CONTEXT_TAGS)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "MEGDP_PLATFORM_REC_TIMESTAMP",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (Platform Field: MEGDP_PLATFORM_REC_TIMESTAMP)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "MEGDP_SOURCE_CONTEXT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (Platform Field: MEGDP_SOURCE_CONTEXT_TAGS)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "MEGDP_TENANT_TAGS",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (Platform Field: MEGDP_TENANT_TAGS)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "BOOK_SOURCESYSTEM",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (8f359a58-7f15-44c3-817e-2810e978479e)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "BOOK_ACCOUNTINGTREATMENT",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (f3a8651d-8e94-4164-8bd7-54243892a508)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "BOOK_BOOKID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (ffcb4a07-8c77-4bc7-a541-484499a8d322)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "BOOK_BOOKNAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (e12a4828-dd1b-45f3-8f23-1d5827f329c5)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "BOOK_BOOKOWNERSHIPREGION",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (e74163ff-f3d7-4b3d-bd06-8a9eab4dc435)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "BOOK_BOOKSTATUS",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (6465ba82-fcbb-4de7-9c75-170117bd253e)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "BOOK_BOOKTYPE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (fb48644c-681c-4aa2-b0d1-6276dba4eb04)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "BOOK_FRTB_REGULATORYCAPITALFLAG",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (6ae100db-f279-4702-af30-e25a1d012ec2)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "BOOK_FRTB_SPECIFICRISKTREATMENT",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (1b08b526-fd24-46ba-918f-c02cf5a551e0)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "BOOK_PRICECUTREGION",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (1ce5f64b-073f-4751-abd4-74daeda8a8de)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "BOOK_REGULATORYCAPITALFLAG",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (cd4f8ead-a291-497b-8bae-0ae86130cff5)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "BOOK_RELEVENTTOFINANCE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (3a745ef4-7396-405c-8b07-1e3ff9c5a600)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "BOOK_RELEVENTTORISK",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (5cda6983-dcbe-4df6-a0e3-544726653725)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "BOOK_SUBFAMILY",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (c7d28835-2e1d-4e18-907a-b329404cef08)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "BOOK_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (ffaed15a-8bab-4a1f-a50f-c95be69049cb)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "BOOK_VALUATIONSYSTEMNAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (d5cd813e-c2c3-4d09-ba5e-9a78803e06a9)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "BUSINESSAREA_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (42c99a7f-0dac-4690-b353-2f596c923200)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "BUSINESSAREA_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (8edaf3c0-ec0e-4679-80fc-a66e730ab1d6)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "BUSINESSAREA_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (4daf2577-d27d-42aa-be67-6d765495e431)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "BUSINESSGROUP_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (cf40d5d3-2a7a-4636-a3ac-95c09972fb03)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "BUSINESSGROUP_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (a1096519-34da-4d0c-bed8-31bcd076b5a5)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "26",
+    "name" : "BUSINESSGROUP_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (fb67df40-8974-4c26-b3a7-d1a7b5aaf85b)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "27",
+    "name" : "BUSINESSUNIT_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (ffb75cb6-4b65-41d6-944c-025e5c41b218)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "28",
+    "name" : "BUSINESSUNIT_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (044e2f0d-a036-46a4-88fd-451a964719ec)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "29",
+    "name" : "BUSINESSUNIT_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (6d209314-6793-466e-bbfb-46b4798ea46e)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "30",
+    "name" : "COSTCENTRE_ALTERNATECENTREID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (906b91ff-326a-48f0-b299-907929331c4a)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "31",
+    "name" : "COSTCENTRE_FXSELLDOWN",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (72e0c713-c75e-447c-9c6a-d68010cecde1)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "32",
+    "name" : "COSTCENTRE_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (314778ef-a61e-40a7-ae99-180eca3fdb05)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "33",
+    "name" : "COSTCENTRE_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (fbf0db95-6da2-4173-b196-f6e8d4661dfc)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "34",
+    "name" : "COSTCENTRE_UBSLEGALENTITYID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (e6fb7f24-2829-46dd-a908-939e2f1b0e90)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "35",
+    "name" : "COSTCENTRE_UBSLEGALENTITYNAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (afc50610-0c65-4187-9c3e-3bab0a36e011)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "36",
+    "name" : "COSTCENTRE_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (bd21d520-df75-4235-8991-f11eb5379bea)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "37",
+    "name" : "COSTCENTER_PRODUCTCONTROLCONTACTID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (30575146-8173-47cf-918f-b90db647a2d4)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "38",
+    "name" : "COSTCENTER_SECONDARYOWNERID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (57d0f6ab-d9a1-4069-bfa4-fe17cd2c472d)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "39",
+    "name" : "COSTCENTER_SUPERVISORID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (c3e22894-1435-4533-ab53-3075e43d725e)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "40",
+    "name" : "DESK_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (5b88f055-bad2-43fc-86be-db53e3afdce2)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "41",
+    "name" : "DESK_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (0054a23e-6082-4c18-846c-45bf02296641)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "42",
+    "name" : "DESK_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (85c8d09f-d719-4959-92da-a13c180f1f60)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "43",
+    "name" : "EVENT_LASTUPDATEDTIME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (556e28b7-c8b2-41a6-bf55-483bcadd8c4e)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "44",
+    "name" : "FRTBDESK_FRTB_DESK_CODE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (10dd4184-e01b-48e8-9914-0e8791ae354c)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "45",
+    "name" : "FRTBDESK_FRTB_DESK_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (61308e81-585e-4835-b0f6-bc0882b3d2ae)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "46",
+    "name" : "FUNCTION_ALTERNATEID",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (65db7c2a-0ab8-4e07-9b0a-3cbacd8c11b7)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "47",
+    "name" : "FUNCTION_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (83f16013-02c1-45a1-ae51-a769a4dcc8f9)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "48",
+    "name" : "FUNCTION_LEGACYBUSINESSAREA",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (c8e697e6-45eb-42a1-a1e0-4935e638dac1)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "49",
+    "name" : "FUNCTION_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (49c402ae-8694-4020-b5ae-c61b734a528b)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "50",
+    "name" : "FUNCTION_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (a5ffce71-a869-443f-99c2-5f54ec76e51d)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "51",
+    "name" : "SECTOR_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (bdf44e7b-a3cc-42f1-9b1b-b125ca4444e8)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "52",
+    "name" : "SECTOR_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (beef44e7-62f1-4c0e-bdee-b56ae2e5a954)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "53",
+    "name" : "SECTOR_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (29452453-ee97-454a-b5e3-adc7ed49f000)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "54",
+    "name" : "SEGMENT_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (3f1e69c0-87fa-461f-96d9-46c1c35452ab)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "55",
+    "name" : "SEGMENT_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (af65fa6d-1b27-4e23-ac3b-0a56347f9a5c)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "56",
+    "name" : "SEGMENT_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (c782e62c-3c24-40c3-8d41-b9535a9d85f3)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "57",
+    "name" : "SUBDESK_ID",
+    "datatype" : "integer",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (d30e8d29-1330-46e1-9089-3cc395388433)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "58",
+    "name" : "SUBDESK_NAME",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (30b65da7-12b6-4ae0-be33-6dbc9616a116)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "59",
+    "name" : "SUBDESK_VALIDFROMDATE",
+    "datatype" : "varchar(1000)",
+    "comment" : "COR_KYL_CALC_REFDATA_BOOKHIERARCHY_FINREP : com.ubs.refdata.book.governed.bookhierarchy.finance (92ccdba2-aa8a-4c90-b94a-1676f5c2471f)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : "Coriander_PnL_Reporting/table_snapshot/REFDATA.REFDATA_BOOK_HIERARCHY/e9f027e4-32f9-4931-ac0b-f7dfe9366812",
+  "last_snapshot_size" : 36367972,
+  "snapshot_last_modified" : 1644584587015,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 274147,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "REFDATA",
+  "project" : "original_project_cc_linebreak"
+}

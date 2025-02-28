@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -93,27 +94,31 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         val jobId = StreamingUtils.getJobId(MODEL_ID, JobTypeEnum.STREAMING_BUILD.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
-        mgr.updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
+        UnitOfWork.doInTransactionWithRetry(() -> StreamingJobManager.getInstance(getTestConfig(), PROJECT)
+                .updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING)),
+                PROJECT);
         val listener = new StreamingJobListener(PROJECT, jobId);
         listener.stateChanged(mockFailedState());
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.ERROR, jobMeta.getCurrentStatus());
 
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            copyForWrite.setCurrentStatus(JobStatusEnum.STOPPING);
-            copyForWrite.setSkipListener(true);
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> StreamingJobManager.getInstance(getTestConfig(), PROJECT)
+                .updateStreamingJob(jobId, copyForWrite -> {
+                    copyForWrite.setCurrentStatus(JobStatusEnum.STOPPING);
+                    copyForWrite.setSkipListener(true);
+                }), PROJECT);
         listener.stateChanged(mockFailedState());
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.STOPPING, jobMeta.getCurrentStatus());
 
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            SimpleDateFormat simpleFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
-                    Locale.getDefault(Locale.Category.FORMAT));
-            Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(System.currentTimeMillis() - 2 * 60 * 1000);
-            copyForWrite.setLastUpdateTime(simpleFormat.format(cal.getTime()));
-        });
+        UnitOfWork.doInTransactionWithRetry(() -> StreamingJobManager.getInstance(getTestConfig(), PROJECT)
+                .updateStreamingJob(jobId, copyForWrite -> {
+                    SimpleDateFormat simpleFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                            Locale.getDefault(Locale.Category.FORMAT));
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTimeInMillis(System.currentTimeMillis() - 2 * 60 * 1000);
+                    copyForWrite.setLastUpdateTime(simpleFormat.format(cal.getTime()));
+                }), PROJECT);
         listener.stateChanged(mockKilledState());
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.STOPPING, jobMeta.getCurrentStatus());
@@ -124,16 +129,19 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         val jobId = StreamingUtils.getJobId(MODEL_ID, JobTypeEnum.STREAMING_BUILD.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
-        mgr.updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
+        UnitOfWork.doInTransactionWithRetry(() -> StreamingJobManager.getInstance(getTestConfig(), PROJECT)
+                .updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING)),
+                PROJECT);
         val listener = new StreamingJobListener(PROJECT, jobId);
         listener.stateChanged(mockKilledState());
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.ERROR, jobMeta.getCurrentStatus());
 
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
+        UnitOfWork.doInTransactionWithRetry(() ->
+                StreamingJobManager.getInstance(getTestConfig(), PROJECT).updateStreamingJob(jobId, copyForWrite -> {
             copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
             copyForWrite.setSkipListener(true);
-        });
+        }), PROJECT);
         listener.stateChanged(mockKilledState());
         jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, jobMeta.getCurrentStatus());
@@ -270,7 +278,7 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         };
     }
 
-    public static abstract class AbstractSparkAppHandle implements SparkAppHandle {
+    public abstract static class AbstractSparkAppHandle implements SparkAppHandle {
         @Override
         public void addListener(Listener listener) {
 

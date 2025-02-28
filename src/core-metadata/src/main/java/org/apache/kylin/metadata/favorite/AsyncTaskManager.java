@@ -44,6 +44,7 @@ public class AsyncTaskManager {
     private final AsyncTaskStore asyncTaskStore;
     private final String project;
 
+    @SuppressWarnings("unused")
     private AsyncTaskManager(String project) throws Exception {
         this.project = project;
         this.asyncTaskStore = new AsyncTaskStore(KylinConfig.getInstanceFromEnv());
@@ -89,7 +90,7 @@ public class AsyncTaskManager {
             asyncTaskStore.update(asyncTask);
         }
     }
-    
+
     public <T extends AbstractAsyncTask> T copyForWrite(T task) {
         // No need to copy, just return the origin object
         // This will be rewrite after metadata is refactored
@@ -105,17 +106,17 @@ public class AsyncTaskManager {
             throw new IllegalArgumentException("TaskType " + taskType + "is not supported!");
         }
         AbstractAsyncTask asyncTask = asyncTaskStore.queryByTypeAndKey(taskType, taskKey);
-        switch(taskType) {
-            case ASYNC_ACCELERATION_TASK:
-                if (asyncTask == null) {
-                    return new AsyncAccelerationTask(false, Maps.newHashMap(), ASYNC_ACCELERATION_TASK);
-                } else {
-                    return AsyncAccelerationTask.copyFromAbstractTask(asyncTask);
-                }
-            case METADATA_RECOVER_TASK:
-                return MetadataRestoreTask.copyFromAbstractTask(asyncTask);
-            default:
-                return asyncTask;
+        switch (taskType) {
+        case ASYNC_ACCELERATION_TASK:
+            if (asyncTask == null) {
+                return new AsyncAccelerationTask(false, Maps.newHashMap(), ASYNC_ACCELERATION_TASK);
+            } else {
+                return AsyncAccelerationTask.copyFromAbstractTask(asyncTask);
+            }
+        case METADATA_RECOVER_TASK:
+            return MetadataRestoreTask.copyFromAbstractTask(asyncTask);
+        default:
+            return asyncTask;
         }
     }
 

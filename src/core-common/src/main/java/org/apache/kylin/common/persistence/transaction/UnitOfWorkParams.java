@@ -17,11 +17,9 @@
  */
 package org.apache.kylin.common.persistence.transaction;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.kylin.common.persistence.event.ResourceRelatedEvent;
-import org.apache.kylin.common.persistence.lock.TransactionLock;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -66,6 +64,9 @@ public class UnitOfWorkParams<T> {
     @Builder.Default
     private boolean skipAuditLog = false;
 
+    @Builder.Default
+    private boolean skipReplay = false;
+
     private String tempLockName;
     
     @Builder.Default
@@ -73,10 +74,6 @@ public class UnitOfWorkParams<T> {
 
     @Builder.Default
     private boolean retryMoreTimeForDeadLockException = false;
-
-    // TODO a temporary workaround for yinglong, this will use original config、skip lock in transaction、skip epoch checker、disable direct writing of metadata.
-    @Builder.Default
-    private boolean transparent = false;
 
     /**
      * only for debug or test
@@ -88,9 +85,7 @@ public class UnitOfWorkParams<T> {
     @Setter
     @AllArgsConstructor
     public static class UnitRetryContext {
-        private List<TransactionLock> retryLock;
         private boolean allowRetryNext;
-        private boolean optimisticLockEnabled;
     }
 
 }

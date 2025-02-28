@@ -1,0 +1,47 @@
+{
+  "uuid" : "e28accf5-7afd-4344-9786-1cc440c23681",
+  "last_modified" : 1497607294750,
+  "version" : "2.0.0",
+  "name" : "CATALOG_PAGE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CP_CATALOG_PAGE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "CP_CATALOG_PAGE_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "CP_START_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "CP_END_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "CP_DEPARTMENT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "CP_CATALOG_NUMBER",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "CP_CATALOG_PAGE_NUMBER",
+    "datatype" : "integer"
+  }, {
+    "id" : "8",
+    "name" : "CP_DESCRIPTION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "CP_TYPE",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

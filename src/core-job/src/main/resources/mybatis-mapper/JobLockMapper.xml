@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.kylin.job.mapper.JobLockMapper">
   <resultMap id="BaseResultMap" type="org.apache.kylin.job.domain.JobLock">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="lock_id" jdbcType="VARCHAR" property="lockId" />
+    <result column="project" jdbcType="VARCHAR" property="project" />
     <result column="lock_node" jdbcType="VARCHAR" property="lockNode" />
     <result column="lock_expire_time" jdbcType="TIMESTAMP" property="lockExpireTime" />
     <result column="priority" jdbcType="INTEGER" property="priority" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_time" jdbcType="BIGINT" property="updateTime" />
   </resultMap>
   <resultMap id="PriorityFistRandomOrderJob" type="org.apache.kylin.job.domain.PriorityFistRandomOrderJob">
     <result column="lock_id" jdbcType="VARCHAR" property="jobId" />
@@ -18,7 +35,7 @@
     id, lock_id, lock_node, lock_expire_time, priority, create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from ${jobLockTable}
     where id = #{id,jdbcType=BIGINT}
@@ -37,11 +54,12 @@
     delete from ${jobLockTable}
   </delete>
   <insert id="insert" parameterType="org.apache.kylin.job.domain.JobLock">
-    insert into ${jobLockTable} (id, lock_id, lock_node, 
-      lock_expire_time, priority, create_time, update_time
+    insert into ${jobLockTable} (id, lock_id, project, lock_node,
+      lock_expire_time, priority, create_time, update_time, job_type
       )
-    values (#{id,jdbcType=BIGINT}, #{lockId,jdbcType=VARCHAR}, #{lockNode,jdbcType=VARCHAR}, 
-      #{lockExpireTime,jdbcType=TIMESTAMP}, #{priority,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+    values (#{id,jdbcType=BIGINT}, #{lockId,jdbcType=VARCHAR}, #{project,jdbcType=VARCHAR}, #{lockNode,jdbcType=VARCHAR},
+      #{lockExpireTime,jdbcType=TIMESTAMP}, #{priority,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT},
+      #{updateTime,jdbcType=BIGINT}, #{jobType,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="org.apache.kylin.job.domain.JobLock">
@@ -52,6 +70,9 @@
       </if>
       <if test="lockId != null">
         lock_id,
+      </if>
+      <if test="project != null">
+        project,
       </if>
       <if test="lockNode != null">
         lock_node,
@@ -68,6 +89,9 @@
       <if test="updateTime != null">
         update_time,
       </if>
+      <if test="jobType != null">
+        job_type,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -75,6 +99,9 @@
       </if>
       <if test="lockId != null">
         #{lockId,jdbcType=VARCHAR},
+      </if>
+      <if test="project != null">
+        #{project,jdbcType=VARCHAR},
       </if>
       <if test="lockNode != null">
         #{lockNode,jdbcType=VARCHAR},
@@ -86,10 +113,13 @@
         #{priority,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
+        #{createTime,jdbcType=BIGINT},
       </if>
       <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
+        #{updateTime,jdbcType=BIGINT},
+      </if>
+      <if test="jobType != null">
+        #{jobType,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -109,7 +139,7 @@
     <if test="database == 'postgresql'">
       lock_expire_time = CURRENT_TIMESTAMP + interval '${renewalSec} second',
     </if>
-    update_time = CURRENT_TIMESTAMP
+    update_time = #{updateTime,jdbcType=BIGINT}
     where lock_id = #{lockId,jdbcType=VARCHAR}
     and (lock_node is null or lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP or lock_node =
     #{lockNode,jdbcType=VARCHAR})
@@ -134,8 +164,16 @@
   <select id="findNonLockIdList" resultMap="PriorityFistRandomOrderJob">
     SELECT lock_id, priority
     FROM ${jobLockTable}
-    WHERE lock_node IS NULL OR lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP
-    ORDER BY priority ASC
+    <where>
+      <if test="projects != null">
+        <foreach close=")" collection="projects" index="index" item="item" open="project in (" separator=",">
+          #{item}
+        </foreach>
+        AND
+      </if>
+      (lock_node IS NULL OR lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP) AND job_type = 'OFFLINE'
+    </where>
+      ORDER BY priority ASC,create_time ASC
     <if test="batchSize&gt;=0">
       LIMIT #{batchSize,jdbcType=INTEGER}
     </if>
@@ -144,15 +182,15 @@
   <select id="getActiveJobLockCount" resultType="int">
     SELECT count(1)
     FROM ${jobLockTable}
-    WHERE lock_id != 'master_scheduler' and lock_expire_time <![CDATA[>=]]> CURRENT_TIMESTAMP
+    WHERE job_type = 'OFFLINE' and lock_expire_time <![CDATA[>=]]> CURRENT_TIMESTAMP
   </select>
 
 
   <select id="findExpiredORNonLockIdList" resultType="java.lang.String">
     SELECT lock_id
     FROM ${jobLockTable}
-    WHERE lock_id != 'master_scheduler' and (lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP OR lock_node IS NULL)
-    ORDER BY create_time
+    WHERE job_type = 'OFFLINE' and (lock_expire_time <![CDATA[<]]> CURRENT_TIMESTAMP OR lock_node IS NULL)
+      ORDER BY priority ASC,create_time ASC
     <if test="batchSize&gt;=0">
       LIMIT #{batchSize,jdbcType=INTEGER}
     </if>

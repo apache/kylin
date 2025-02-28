@@ -138,8 +138,9 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
 
         val config = getTestConfig();
         try {
-            val tableDescList = tableService.getTableDesc(PROJECT, true, "P_LINEORDER_STR", database, false,
-                    Collections.emptyList(), 10).getFirst();
+            val tableDescList = tableService
+                    .getTableDesc(PROJECT, true, "P_LINEORDER_STR", database, false, Collections.emptyList(), 10)
+                    .getFirst();
             Assert.assertEquals(1, tableDescList.size());
             val tableDesc = tableDescList.get(0);
             val tableExtDesc = tableService.getOrCreateTableExt(PROJECT, tableDesc);
@@ -155,8 +156,8 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         val database = "DEFAULT";
 
         try {
-            val tableDescList = tableService.getTableDesc(PROJECT, true, "", database, true,
-                    Collections.emptyList(), 10).getFirst();
+            val tableDescList = tableService
+                    .getTableDesc(PROJECT, true, "", database, true, Collections.emptyList(), 10).getFirst();
             Assert.assertEquals(2, tableDescList.size());
             val tableDesc = tableDescList.get(0);
             val tableExtDesc = tableService.getOrCreateTableExt(PROJECT, tableDesc);

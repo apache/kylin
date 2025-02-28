@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OlapContext;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.QueryLayoutChooser;
 import org.apache.kylin.query.routing.RemoveIncapableRealizationsRule;
@@ -48,8 +48,10 @@ public class NAggIndexPriorityAnswerWithCCExprTest extends NLocalWithSparkSessio
         return "aggindex_priority_answer_withccexpr";
     }
 
+    @Override
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         overwriteSystemProp("kylin.query.use-tableindex-answer-non-raw-query", "true");
         overwriteSystemProp("kylin.query.layout.prefer-aggindex", "true");
         this.createTestMetadata("src/test/resources/ut_meta/aggindex_priority_answer_withccexpr");
@@ -58,8 +60,14 @@ public class NAggIndexPriorityAnswerWithCCExprTest extends NLocalWithSparkSessio
         JobContextUtil.getJobContext(getTestConfig());
     }
 
+    @Override
+    protected String[] getOverlay() {
+        return new String[] { "src/test/resources/ut_meta/aggindex_priority_answer_withccexpr" };
+    }
+
+    @Override
     @After
-    public void after() throws Exception {
+    public void tearDown() throws Exception {
         JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }
@@ -77,12 +85,12 @@ public class NAggIndexPriorityAnswerWithCCExprTest extends NLocalWithSparkSessio
                 + "from (select D_YEAR,D_DAYOFWEEK b from SSB.DATES) group by D_YEAR";
 
         NDataflow dataflow = NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId);
-        OLAPContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+        OlapContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
 
         Map<String, String> sqlAlias2ModelName = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
         NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
-                dataflow.getQueryableSegments(), context.getSQLDigest(), null);
+                dataflow.getQueryableSegments(), context.getSQLDigest());
         assert layoutCandidate != null;
         Assert.assertTrue(layoutCandidate.getCapabilityResult().isCapable());
 

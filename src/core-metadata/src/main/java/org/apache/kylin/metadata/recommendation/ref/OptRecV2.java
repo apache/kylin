@@ -31,6 +31,12 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.favorite.FavoriteRule;
@@ -51,13 +57,6 @@ import org.apache.kylin.metadata.recommendation.entity.CCRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.BiMap;
-import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -107,10 +106,9 @@ public class OptRecV2 {
 
         uniqueFlagToRecItemMap = RawRecManager.getInstance(project).queryNonLayoutRecItems(Sets.newHashSet(uuid));
         uniqueFlagToRecItemMap.forEach((k, recItem) -> {
-                    uniqueFlagToId.put(k, recItem.getId());
-                    uuidToRecItemMap.put(recItem.getRecEntity().getUuid(), recItem);
-                }
-        );
+            uniqueFlagToId.put(k, recItem.getId());
+            uuidToRecItemMap.put(recItem.getRecEntity().getUuid(), recItem);
+        });
         antiFlatChecker = new AntiFlatChecker(getModel().getJoinTables(), getModel());
         excludedChecker = new ColExcludedChecker(config, project, getModel());
         if (!getModel().isBroken()) {
@@ -130,6 +128,7 @@ public class OptRecV2 {
         }
 
         initLayoutRefs(queryBestLayoutRecItems());
+        initLayoutRefs(queryIndexPlannerRecItems());
         initLayoutRefs(queryImportedRawRecItems());
         initRemovalLayoutRefs(queryBestRemovalLayoutRecItems());
 
@@ -260,6 +259,11 @@ public class OptRecV2 {
                 .getOrDefaultByName(FavoriteRule.REC_SELECT_RULE_NAME);
         int topN = Integer.parseInt(((FavoriteRule.Condition) favoriteRule.getConds().get(0)).getRightThreshold());
         return RawRecSelection.getInstance().selectBestLayout(topN, uuid, project);
+    }
+
+    private List<RawRecItem> queryIndexPlannerRecItems() {
+        RawRecManager rawRecManager = RawRecManager.getInstance(project);
+        return rawRecManager.queryIndexPlannerRecItems(project, uuid);
     }
 
     private List<RawRecItem> queryImportedRawRecItems() {

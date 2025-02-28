@@ -18,11 +18,12 @@
 
 package org.apache.kylin.tool.setup;
 
-import com.github.stefanbirkner.systemlambda.SystemLambda;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import com.github.stefanbirkner.systemlambda.SystemLambda;
 
 @RunWith(MockitoJUnitRunner.class)
 class ZstdLibLoadableTestToolTest {
@@ -38,7 +39,7 @@ class ZstdLibLoadableTestToolTest {
     @Test
     public void testLoadFailed() throws Exception {
         int code = SystemLambda.catchSystemExit(() -> {
-            ZstdLibLoadableTestTool.main(new String[] {"/some/non-exists/path"});
+            ZstdLibLoadableTestTool.main(new String[] { "/some/non-exists/path" });
         });
         Assertions.assertEquals(1, code);
     }

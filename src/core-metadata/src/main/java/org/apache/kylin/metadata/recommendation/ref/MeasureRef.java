@@ -22,12 +22,11 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.NDataModel;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.model.ParameterDesc;
 
 import lombok.NoArgsConstructor;
 

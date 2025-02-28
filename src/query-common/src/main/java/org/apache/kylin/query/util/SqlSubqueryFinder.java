@@ -35,9 +35,8 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.util.Litmus;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 //find child inner select first
 public class SqlSubqueryFinder extends SqlBasicVisitor<SqlNode> {

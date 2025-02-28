@@ -1,0 +1,14 @@
+{
+  "uuid" : "14e00a6f-d910-14b6-ee67-e0a5775012c4",
+  "last_modified" : 0,
+  "create_time" : 1631934810436,
+  "version" : "4.0.0.0",
+  "alias" : null,
+  "model_mapping" : {
+    "14e00a6f-d910-14b6-ee67-e0a5775012c4" : null,
+    "3d69e1c0-0165-c144-7dae-8ae5dc0cf16c" : {
+      "DEFAULT.SSB_STREAMING" : "SSB.LINEORDER_HIVE"
+    }
+  },
+  "project" : "streaming_test"
+}

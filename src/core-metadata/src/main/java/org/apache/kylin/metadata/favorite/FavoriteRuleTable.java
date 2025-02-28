@@ -26,7 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.commons.lang.SerializationException;
+import org.apache.commons.lang3.SerializationException;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.kylin.common.util.JsonUtil;
@@ -41,7 +41,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 public class FavoriteRuleTable extends SqlTable {
     public final SqlColumn<Integer> id = column("id", JDBCType.INTEGER);
     public final SqlColumn<String> project = column("project", JDBCType.VARCHAR);
-    public final SqlColumn<List<AbstractCondition>> conds = column("conds", JDBCType.VARCHAR, ConditionsHandler.class.getName());
+    public final SqlColumn<List<AbstractCondition>> conds = column("conds", JDBCType.VARCHAR,
+            ConditionsHandler.class.getName());
     public final SqlColumn<String> name = column("name", JDBCType.VARCHAR);
     public final SqlColumn<Boolean> enabled = column("enabled", JDBCType.BOOLEAN);
     public final SqlColumn<Long> updateTime = column("update_time", JDBCType.BIGINT);

@@ -1,0 +1,114 @@
+{
+  "uuid" : "98284129-b540-26cc-4430-a105eebeab1c",
+  "last_modified" : 1657785486036,
+  "create_time" : 1657768981917,
+  "version" : "4.0.0.0",
+  "name" : "LINEORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "LO_ORDERKEY",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_orderkey"
+  }, {
+    "id" : "2",
+    "name" : "LO_LINENUMBER",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_linenumber"
+  }, {
+    "id" : "3",
+    "name" : "LO_CUSTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lo_custkey"
+  }, {
+    "id" : "4",
+    "name" : "LO_PARTKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lo_partkey"
+  }, {
+    "id" : "5",
+    "name" : "LO_SUPPKEY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lo_suppkey"
+  }, {
+    "id" : "6",
+    "name" : "LO_ORDERDATE",
+    "datatype" : "date",
+    "case_sensitive_name" : "lo_orderdate"
+  }, {
+    "id" : "7",
+    "name" : "LO_ORDERPRIOTITY",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "lo_orderpriotity"
+  }, {
+    "id" : "8",
+    "name" : "LO_SHIPPRIOTITY",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lo_shippriotity"
+  }, {
+    "id" : "9",
+    "name" : "LO_QUANTITY",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_quantity"
+  }, {
+    "id" : "10",
+    "name" : "LO_EXTENDEDPRICE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_extendedprice"
+  }, {
+    "id" : "11",
+    "name" : "LO_ORDTOTALPRICE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_ordtotalprice"
+  }, {
+    "id" : "12",
+    "name" : "LO_DISCOUNT",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_discount"
+  }, {
+    "id" : "13",
+    "name" : "LO_REVENUE",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_revenue"
+  }, {
+    "id" : "14",
+    "name" : "LO_SUPPLYCOST",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_supplycost"
+  }, {
+    "id" : "15",
+    "name" : "LO_TAX",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "lo_tax"
+  }, {
+    "id" : "16",
+    "name" : "LO_COMMITDATE",
+    "datatype" : "date",
+    "case_sensitive_name" : "lo_commitdate"
+  }, {
+    "id" : "17",
+    "name" : "LO_SHIPMODE",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "lo_shipmode"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 1657768983829,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null,
+  "project" : "ssb"
+}

@@ -33,6 +33,7 @@ import org.apache.kylin.rest.cluster.DefaultClusterManager;
 import org.apache.kylin.rest.handler.KapNoOpResponseErrorHandler;
 import org.apache.kylin.rest.interceptor.ReloadAuthoritiesInterceptor;
 import org.apache.kylin.rest.service.QuerySmartSupporter;
+import org.apache.kylin.rest.session.MapIndexedSessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -51,7 +52,10 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.session.MapSessionRepository;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.SessionRepository;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -159,7 +163,7 @@ public class AppConfig implements WebMvcConfigurer {
     @Bean
     @ConditionalOnMissingBean(QuerySmartSupporter.class)
     public QuerySmartSupporter querySmartSupporter() {
-        return (project, queries, manual) -> {
+        return (project, queries) -> {
             // noop
         };
     }
@@ -213,9 +217,14 @@ public class AppConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "spring.session", name = "store-type", havingValue = "NONE")
-    public MapSessionRepository sessionRepository() {
-        return new MapSessionRepository(new ConcurrentHashMap<>());
+    @ConditionalOnProperty(prefix = "spring.session", name = "store-type", havingValue = "NONE", matchIfMissing = true)
+    public SessionRepository sessionRepository() {
+        return new MapIndexedSessionRepository(new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry(SessionRepository sessionRepository) {
+        return new SpringSessionBackedSessionRegistry<>((FindByIndexNameSessionRepository) sessionRepository);
     }
 
     @Bean

@@ -1,0 +1,11 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "DEAL_YEAR",
+  "expression" : "year(TEST_KYLIN_FACT.CAL_DT)",
+  "innerExpression" : "year(`TEST_KYLIN_FACT`.`CAL_DT`)",
+  "datatype" : "INTEGER",
+  "comment" : "the year of the deal",
+  "uuid" : "2e7692d7-46ab-2ae6-153c-6aea8a42fd01",
+  "project" : "default"
+}

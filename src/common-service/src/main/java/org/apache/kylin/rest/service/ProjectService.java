@@ -39,6 +39,11 @@ import static org.apache.kylin.common.exception.ServerErrorCode.PROJECT_DROP_FAI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.CONFIG_NOT_SUPPORT_EDIT;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.CRON;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_ENABLE;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_LEVEL;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_MAX_CHANGE_COUNT;
+import static org.apache.kylin.metadata.favorite.FavoriteRule.INDEX_PLANNER_MAX_INDEX_COUNT;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,12 +78,12 @@ import org.apache.kylin.common.event.ProjectCleanOldQueryResultEvent;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.SourceUsageUpdateNotifier;
 import org.apache.kylin.common.util.EncryptUtil;
-import org.apache.kylin.common.util.JdbcUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
@@ -94,8 +99,9 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cube.storage.ProjectStorageInfoCollector;
 import org.apache.kylin.metadata.cube.storage.StorageInfoEnum;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import org.apache.kylin.metadata.favorite.ModelFavoriteRuleManager;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -105,7 +111,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
 import org.apache.kylin.rest.aspect.Transaction;
-import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.config.initialize.ProjectDropListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ComputedColumnConfigRequest;
@@ -115,8 +120,10 @@ import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
 import org.apache.kylin.rest.request.MultiPartitionConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
+import org.apache.kylin.rest.request.ProjectAutoSemiUpdateRequest;
 import org.apache.kylin.rest.request.ProjectExclusionRequest;
 import org.apache.kylin.rest.request.ProjectGeneralInfoRequest;
+import org.apache.kylin.rest.request.ProjectInternalTableConfigRequest;
 import org.apache.kylin.rest.request.ProjectKerberosInfoRequest;
 import org.apache.kylin.rest.request.PushDownConfigRequest;
 import org.apache.kylin.rest.request.PushDownProjectConfigRequest;
@@ -133,6 +140,7 @@ import org.apache.kylin.rest.security.AclPermissionEnum;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.sdk.datasource.framework.utils.JdbcUtils;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.tool.garbage.MetadataCleaner;
 import org.slf4j.Logger;
@@ -151,7 +159,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -164,7 +171,9 @@ public class ProjectService extends BasicService {
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODE_MINUTE = "MINUTE";
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODES = "DAY, HOURS, MINUTE";
     private static final String KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME = "kylin.query.pushdown.runner-class-name";
-
+    private static final String DEFAULT_VAL = "default";
+    @Autowired
+    UserService userService;
     @Autowired
     private AclEvaluate aclEvaluate;
 
@@ -183,17 +192,6 @@ public class ProjectService extends BasicService {
 
     @Autowired(required = false)
     private ProjectSmartServiceSupporter projectSmartService;
-
-    @Autowired(required = false)
-    private ProjectSmartSupporter projectSmartSupporter;
-
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    private ClusterManager clusterManager;
-
-    private static final String DEFAULT_VAL = "default";
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     @Transaction(project = -1)
@@ -234,11 +232,10 @@ public class ProjectService extends BasicService {
     }
 
     public List<String> getOwnedProjects() {
+        // Since epoch has been removed, just return all projects.
         val config = KylinConfig.getInstanceFromEnv();
-        val epochManager = EpochManager.getInstance();
         return NProjectManager.getInstance(config).listAllProjects().stream() //
                 .map(ProjectInstance::getName) //
-                .filter(epochManager::checkEpochOwner) // project owner
                 .collect(Collectors.toList());
     }
 
@@ -355,40 +352,36 @@ public class ProjectService extends BasicService {
     }
 
     @SneakyThrows
-    public void garbageCleanup(long remainingTime) {
+    public void garbageCleanup(String projectName, long remainingTime) {
         try (SetThreadName ignored = new SetThreadName("GarbageCleanupWorker")) {
             val config = KylinConfig.getInstanceFromEnv();
             val projectManager = NProjectManager.getInstance(config);
-            val epochMgr = EpochManager.getInstance();
-            for (ProjectInstance project : projectManager.listAllProjects()) {
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException("Thread is interrupted: " + Thread.currentThread().getName());
-                }
-                if (!config.isUTEnv() && !epochMgr.checkEpochOwner(project.getName()))
-                    continue;
-                logger.info("Start to cleanup garbage for project<{}>", project.getName());
-                try {
-                    updateStatMetaImmediately(project.getName(), remainingTime);
-                    boolean needAggressiveOpt = Arrays.stream(config.getProjectsAggressiveOptimizationIndex())
-                            .map(StringUtils::lowerCase).collect(Collectors.toList())
-                            .contains(StringUtils.toRootLowerCase(project.getName()));
-                    MetadataCleaner.clean(project.getName(), needAggressiveOpt);
-                    EventBusFactory.getInstance().callService(new ProjectCleanOldQueryResultEvent(project.getName()));
-                } catch (Exception e) {
-                    logger.warn("clean project<" + project.getName() + "> failed", e);
-                }
-                logger.info("Garbage cleanup for project<{}> finished", project.getName());
+            val project = projectManager.getProject(projectName);
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("Thread is interrupted: " + Thread.currentThread().getName());
             }
-            cleanRawRecForDeletedProject(projectManager);
+            logger.info("Start to cleanup garbage for project<{}>", project.getName());
+            try {
+                updateStatMetaImmediately(project.getName(), remainingTime);
+                boolean needAggressiveOpt = Arrays.stream(config.getProjectsAggressiveOptimizationIndex())
+                        .map(StringUtils::lowerCase).collect(Collectors.toList())
+                        .contains(StringUtils.toRootLowerCase(project.getName()));
+                MetadataCleaner.clean(project.getName(), needAggressiveOpt);
+                EventBusFactory.getInstance().callService(new ProjectCleanOldQueryResultEvent(project.getName()));
+            } catch (Exception e) {
+                logger.warn("clean project<" + project.getName() + "> failed", e);
+            }
+            logger.info("Garbage cleanup for project<{}> finished", project.getName());
         }
-
     }
 
-    private void cleanRawRecForDeletedProject(NProjectManager projectManager) {
+    public void cleanRawRecForDeletedProject() {
         if (!KylinConfig.getInstanceFromEnv().isUTEnv()) {
             return;
         }
-        RawRecManager.getInstance(EpochManager.GLOBAL).cleanForDeletedProject(
+        val config = KylinConfig.getInstanceFromEnv();
+        val projectManager = NProjectManager.getInstance(config);
+        RawRecManager.getInstance(ResourceStore.GLOBAL_PROJECT).cleanForDeletedProject(
                 projectManager.listAllProjects().stream().map(ProjectInstance::getName).collect(Collectors.toList()));
     }
 
@@ -452,6 +445,13 @@ public class ProjectService extends BasicService {
             if (Objects.isNull(maxConcurrentJobs) || maxConcurrentJobs < 0)
                 throw new KylinException(INVALID_PARAMETER,
                         MsgPicker.getMsg().getIllegalNegative(KYLIN_JOB_MAX_CONCURRENT_JOBS));
+        }
+        if (overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)) {
+            String url = overrideKylinProps.get(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY);
+            if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                    && !JdbcUtils.validateUrlByWhiteList(url)) {
+                throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
+            }
         }
         encryptJdbcPassInOverrideKylinProps(overrideKylinProps);
         projectManager.updateProject(project, copyForWrite -> copyForWrite.getOverrideKylinProps()
@@ -606,7 +606,7 @@ public class ProjectService extends BasicService {
         response.setJobErrorNotificationEnabled(config.getJobErrorNotificationEnabled());
 
         List<String> jobStatesNotification = config.getJobNotificationStates() == null ? Lists.newArrayList()
-                : Arrays.stream(config.getJobNotificationStates()).map(String::toLowerCase)
+                : Arrays.stream(config.getJobNotificationStates()).map(StringUtils::lowerCase)
                         .collect(Collectors.toList());
         boolean jobErrorNotificationEnabled = config.getJobErrorNotificationEnabled();
         if (jobErrorNotificationEnabled && !jobStatesNotification.contains("error")) {
@@ -616,10 +616,6 @@ public class ProjectService extends BasicService {
 
         response.setJobNotificationEmails(Lists.newArrayList(config.getAdminDls()));
 
-        response.setFrequencyTimeWindow(config.getFrequencyTimeWindowInDays());
-
-        response.setLowFrequencyThreshold(config.getLowFrequencyThreshold());
-
         response.setYarnQueue(config.getOptional(config.getQueueKey(), DEFAULT_VAL));
 
         response.setExposeComputedColumn(config.exposeComputedColumn());
@@ -628,7 +624,16 @@ public class ProjectService extends BasicService {
 
         response.setPrincipal(projectInstance.getPrincipal());
         // return favorite rules
-        response.setFavoriteRules(projectSmartService != null ? projectSmartService.getFavoriteRules(project) : null);
+        if (projectSmartService != null) {
+            Map<String, Object> favoriteRules = projectSmartService.getFavoriteRules(project);
+            if (!favoriteRules.isEmpty()) {
+                response.setFrequencyTimeWindow(Objects.toString(favoriteRules.get("frequency_time_window")));
+                response.setLowFrequencyThreshold(
+                        Integer.parseInt(Objects.toString(favoriteRules.get("low_frequency_threshold"))));
+                response.setFavoriteRules(favoriteRules);
+                setAutoIndexPlanRule(response, projectSmartService.getAutoIndexPlanRule(project));
+            }
+        }
 
         response.setScd2Enabled(config.isQueryNonEquiJoinModelEnabled());
 
@@ -650,18 +655,39 @@ public class ProjectService extends BasicService {
         response.setJdbcSourceDriver(config.getJdbcDriver());
 
         response.setOverrideKylinProps(projectInstance.getOverrideKylinProps());
-        
+
         Pair<String, String> infos = KylinVersion.getGitCommitInfo();
         response.setGitCommit(infos.getFirst());
         response.setPackageVersion(KylinVersion.getCurrentVersion().toString());
         response.setPackageTimestamp(infos.getSecond());
 
-        if (SecondStorageUtil.isGlobalEnable()) {
-            response.setSecondStorageEnabled(SecondStorageUtil.isProjectEnable(project));
-            response.setSecondStorageNodes(SecondStorageUtil.listProjectNodes(project));
-        }
-
         return response;
+    }
+
+    private void setAutoIndexPlanRule(ProjectConfigResponse response, Map<String, Object> autoIndexRule) {
+
+        response.setIndexPlannerEnable(Boolean.parseBoolean(Objects.toString(autoIndexRule.get(INDEX_PLANNER_ENABLE))));
+        response.setIndexPlannerMaxIndexCount(
+                Integer.parseInt(Objects.toString(autoIndexRule.get(INDEX_PLANNER_MAX_INDEX_COUNT))));
+        response.setIndexPlannerMaxChangeCount(
+                Integer.parseInt(Objects.toString(autoIndexRule.get(INDEX_PLANNER_MAX_CHANGE_COUNT))));
+        response.setIndexPlannerLevel(Objects.toString(autoIndexRule.get(INDEX_PLANNER_LEVEL)));
+
+        // ---------------------- Deprecated It will be deleted later ----------------------
+        response.setAutoIndexPlanAutoChangeIndexEnable(
+                Boolean.parseBoolean(Objects.toString(autoIndexRule.get("auto_index_plan_auto_change_index_enable"))));
+        response.setAutoIndexPlanAutoCompleteMode(
+                Objects.toString(autoIndexRule.get("auto_index_plan_auto_complete_mode")));
+        response.setAutoIndexPlanAbsoluteBeginDate(
+                Objects.toString(autoIndexRule.get("auto_index_plan_absolute_begin_date"), null));
+        response.setAutoIndexPlanRelativeTimeUnit(
+                Objects.toString(autoIndexRule.get("auto_index_plan_relative_time_unit"), null));
+        Object timeInterval = autoIndexRule.get("auto_index_plan_relative_time_interval");
+        if (timeInterval != null) {
+            response.setAutoIndexPlanRelativeTimeInterval(Integer.parseInt(Objects.toString(timeInterval)));
+        }
+        response.setAutoIndexPlanSegmentJobEnable(
+                Boolean.parseBoolean(Objects.toString(autoIndexRule.get("auto_index_plan_segment_job_enable"))));
     }
 
     public void setSnapshotAutoRefreshParams(ProjectConfigResponse response, String cron) {
@@ -670,8 +696,8 @@ public class ProjectService extends BasicService {
         }
         val fields = org.springframework.util.StringUtils.tokenizeToStringArray(cron, " ");
         if (fields.length != 6) {
-            throw new IllegalArgumentException(String
-                    .format("Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, cron));
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
+                    "Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, cron));
         }
         if (StringUtils.contains(fields[1], "*/")) {
             response.setSnapshotAutoRefreshTimeMode(SNAPSHOT_AUTO_REFRESH_TIME_MODE_MINUTE);
@@ -915,9 +941,20 @@ public class ProjectService extends BasicService {
     public void updateProjectGeneralInfo(String project, ProjectGeneralInfoRequest projectGeneralInfoRequest) {
         getManager(NProjectManager.class).updateProject(project, copyForWrite -> {
             copyForWrite.setDescription(projectGeneralInfoRequest.getDescription());
-            copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
-                    String.valueOf(projectGeneralInfoRequest.isSemiAutoMode()));
+            // For compatibility with historical versions
+            if (projectGeneralInfoRequest.getIsSemiAutoMode() != null) {
+                copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
+                        String.valueOf(projectGeneralInfoRequest.getIsSemiAutoMode()));
+            }
         });
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
+    @Transaction(project = 0)
+    public void updateAutoSemiConfig(String project, ProjectAutoSemiUpdateRequest projectAutoSemiUpdateRequest) {
+        getManager(NProjectManager.class).updateProject(project,
+                copyForWrite -> copyForWrite.putOverrideKylinProps("kylin.metadata.semi-automatic-mode",
+                        String.valueOf(projectAutoSemiUpdateRequest.isSemiAutoMode())));
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
@@ -944,16 +981,12 @@ public class ProjectService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     @Transaction(project = 0)
     public void dropProject(String project, HttpHeaders headers) {
-        if (SecondStorageUtil.isProjectEnable(project)) {
-            throw new KylinException(PROJECT_DROP_FAILED,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getProjectDropFailedSecondStorageEnabled(), project));
-        }
-
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         List<String> jobIds = executableManager
                 .getExecutablePOsByStatus(Lists.newArrayList(ExecutableState.RUNNING, ExecutableState.PENDING,
                         ExecutableState.READY, ExecutableState.PAUSED))
-                .stream().map(executablePO -> executablePO.getId()).collect(Collectors.toList());
+                .stream().filter(executablePO -> !executablePO.getJobType().getCategory().equals(CRON))
+                .map(RootPersistentEntity::getId).collect(Collectors.toList());
         val streamingJobStatusList = Arrays.asList(JobStatusEnum.STARTING, JobStatusEnum.RUNNING,
                 JobStatusEnum.STOPPING);
         val streamingJobList = getManager(StreamingJobManager.class, project).listAllStreamingJobMeta().stream()
@@ -968,8 +1001,18 @@ public class ProjectService extends BasicService {
 
         NProjectManager prjManager = getManager(NProjectManager.class);
         prjManager.forceDropProject(project);
+        UnitOfWork.get().doAfterUpdate(() -> deleteProjectRelatedMeta(project));
         UnitOfWork.get().doAfterUnit(() -> new ProjectDropListener().onDelete(project, clusterManager, headers));
         EventBusFactory.getInstance().postAsync(new SourceUsageUpdateNotifier());
+    }
+
+    private void deleteProjectRelatedMeta(String project) {
+        // delete query history id offset
+        QueryHistoryIdOffsetManager.getInstance(project).delete();
+        // delete favorite rule
+        FavoriteRuleManager.getInstance(project).deleteByProject();
+        // delete model favorite rule
+        ModelFavoriteRuleManager.getInstance(project).deleteByProject();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
@@ -982,7 +1025,7 @@ public class ProjectService extends BasicService {
         val prjManager = getManager(NProjectManager.class);
         val tableManager = getManager(NTableMetadataManager.class, project);
         if (ProjectInstance.DEFAULT_DATABASE.equals(uppderDB)
-                || tableManager.dbToTablesMap(getConfig().streamingEnabled()).containsKey(uppderDB)) {
+                || tableManager.dbToTablesMap(getConfig().isStreamingEnabled()).containsKey(uppderDB)) {
             final ProjectInstance projectInstance = prjManager.getProject(project);
             if (uppderDB.equals(projectInstance.getDefaultDatabase())) {
                 return;
@@ -1017,6 +1060,7 @@ public class ProjectService extends BasicService {
                 .get(DATASOURCE_TYPE.getValue());
     }
 
+    //TODO low-frequency-threshold & frequency-time-window have been moved to FavoriteRules.
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
     @Transaction(project = 0)
     public void updateGarbageCleanupConfig(String project, GarbageCleanUpConfigRequest garbageCleanUpConfigRequest) {
@@ -1063,6 +1107,9 @@ public class ProjectService extends BasicService {
             break;
         case "table_exclusion_config":
             resetTableExclusionConfig(project);
+            break;
+        case "auto_index_plan_rule":
+            resetAutoIndexPlanConfig(project);
             break;
         default:
             throw new KylinException(INVALID_PARAMETER,
@@ -1114,11 +1161,12 @@ public class ProjectService extends BasicService {
     }
 
     private void resetProjectRecommendationConfig(String project) {
-        FavoriteRuleManager.getInstance(project).resetRule();
+        FavoriteRuleManager.getInstance(project).resetRecommendRule();
         NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project).listAllModels()
                 .forEach(model -> projectModelSupporter.onModelUpdate(project, model.getUuid()));
     }
 
+    //TODO low-frequency-threshold & frequency-time-window have been moved to FavoriteRules.
     private void resetGarbageCleanupConfig(String project) {
         Set<String> toBeRemovedProps = Sets.newHashSet();
         toBeRemovedProps.add("kylin.cube.low-frequency-threshold");
@@ -1130,6 +1178,12 @@ public class ProjectService extends BasicService {
         Set<String> toBeRemovedProps = Sets.newHashSet();
         toBeRemovedProps.add("kylin.metadata.table-exclusion-enabled");
         removeProjectOverrideProps(project, toBeRemovedProps);
+    }
+
+    private void resetAutoIndexPlanConfig(String project) {
+        FavoriteRuleManager.getInstance(project).resetAutoIndexPlanRule();
+        NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project).listAllModels()
+                .forEach(model -> projectModelSupporter.onModelUpdate(project, model.getUuid()));
     }
 
     private void resetSegmentConfig(String project) {
@@ -1242,8 +1296,8 @@ public class ProjectService extends BasicService {
     }
 
     public void updateStatMetaImmediately(String project) {
-        QueryHistoryMetaUpdateScheduler scheduler = QueryHistoryMetaUpdateScheduler.getInstance(project);
-        Future<?> future = scheduler.scheduleImmediately(scheduler.new QueryHistoryMetaUpdateRunner());
+        QueryHistoryMetaUpdateScheduler scheduler = QueryHistoryMetaUpdateScheduler.getInstance();
+        Future<?> future = scheduler.scheduleImmediately(scheduler.new QueryHistoryMetaUpdateRunner(project));
         try {
             future.get();
         } catch (InterruptedException e) {
@@ -1255,9 +1309,9 @@ public class ProjectService extends BasicService {
     }
 
     public void updateStatMetaImmediately(String project, long remainingTime) {
-        QueryHistoryMetaUpdateScheduler scheduler = QueryHistoryMetaUpdateScheduler.getInstance(project);
+        QueryHistoryMetaUpdateScheduler scheduler = QueryHistoryMetaUpdateScheduler.getInstance();
         if (scheduler.hasStarted()) {
-            Future<?> future = scheduler.scheduleImmediately(scheduler.new QueryHistoryMetaUpdateRunner());
+            Future<?> future = scheduler.scheduleImmediately(scheduler.new QueryHistoryMetaUpdateRunner(project));
             waitFuture(future, remainingTime, "updateStatMeta");
         }
     }
@@ -1287,6 +1341,15 @@ public class ProjectService extends BasicService {
             boolean exclusionEnabled = request.isTableExclusionEnabled();
             copyForWrite.putOverrideKylinProps("kylin.metadata.table-exclusion-enabled",
                     String.valueOf(exclusionEnabled));
+        });
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
+    @Transaction(project = 0)
+    public void updateInternalTableConfig(String project, ProjectInternalTableConfigRequest request) {
+        getManager(NProjectManager.class).updateProject(project, copyForWrite -> {
+            boolean internalTableEnabled = request.isInternalTableEnabled();
+            copyForWrite.putOverrideKylinProps("kylin.internal-table-enabled", String.valueOf(internalTableEnabled));
         });
     }
 }

@@ -22,10 +22,9 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.metrics.service.MonitorMetric;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 

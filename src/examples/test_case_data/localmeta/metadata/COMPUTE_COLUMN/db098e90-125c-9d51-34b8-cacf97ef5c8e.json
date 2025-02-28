@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "CC_AUTO__1646045110865_2",
+  "expression" : "TEST_KYLIN_FACT.ORDER_ID * TEST_KYLIN_FACT.ORDER_ID",
+  "innerExpression" : "`TEST_KYLIN_FACT`.`ORDER_ID` * `TEST_KYLIN_FACT`.`ORDER_ID`",
+  "datatype" : "BIGINT",
+  "comment" : "Auto generated for CORR measure",
+  "rec_uuid" : null,
+  "uuid" : "db098e90-125c-9d51-34b8-cacf97ef5c8e",
+  "project" : "test_broken_project"
+}

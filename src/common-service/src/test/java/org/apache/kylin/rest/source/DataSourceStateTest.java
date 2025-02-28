@@ -27,14 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.service.SourceTestCase;
 import org.apache.spark.sql.SparderEnv;
 import org.awaitility.Awaitility;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -42,16 +40,6 @@ public class DataSourceStateTest extends SourceTestCase {
 
     private static final String PROJECT = "default";
     private static final String DATABASE = "SSB";
-
-    @Before
-    public void setUp() {
-        super.setup();
-    }
-
-    @After
-    public void tearDown() {
-        cleanupTestMetadata();
-    }
 
     @Test
     public void testLoadAllSourceInfoToCacheForcedTrue() {

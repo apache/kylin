@@ -15,5 +15,4 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
 select lag(cal_dt,1,CURRENT_DATE) over (partition by seller_id order by cal_dt) from test_kylin_fact

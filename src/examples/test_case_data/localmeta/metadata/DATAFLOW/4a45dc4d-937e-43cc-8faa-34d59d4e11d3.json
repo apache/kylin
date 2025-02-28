@@ -1,0 +1,19 @@
+{
+  "uuid" : "4a45dc4d-937e-43cc-8faa-34d59d4e11d3",
+  "last_modified" : 1595855900785,
+  "create_time" : 1595855900784,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1595855900784,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "storage_location_identifier" : null,
+  "project" : "cc_test",
+  "segment_uuids" : [ ]
+}

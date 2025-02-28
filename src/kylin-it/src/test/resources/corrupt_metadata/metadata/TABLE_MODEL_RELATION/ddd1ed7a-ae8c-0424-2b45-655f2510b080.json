@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.TEST_KYLIN_FACT",
+  "model_uuid" : "4354fb42-3b64-4dc7-b345-d93074ba925e",
+  "project" : "corrupt_colOrder",
+  "uuid" : "ddd1ed7a-ae8c-0424-2b45-655f2510b080"
+}

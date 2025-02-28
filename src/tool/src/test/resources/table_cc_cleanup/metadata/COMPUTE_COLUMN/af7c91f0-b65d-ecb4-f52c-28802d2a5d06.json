@@ -1,0 +1,12 @@
+{
+  "tableIdentity" : "CAP.ST",
+  "tableAlias" : "ST",
+  "columnName" : "CC1",
+  "expression" : "ST.TID + 1",
+  "innerExpression" : "`ST`.`TID` + 1",
+  "datatype" : "DOUBLE",
+  "comment" : null,
+  "rec_uuid" : null,
+  "uuid" : "af7c91f0-b65d-ecb4-f52c-28802d2a5d06",
+  "project" : "AL_4144"
+}

@@ -40,6 +40,9 @@ class BuildJobInfos {
 
   private val mergingSegments: java.util.List[NDataSegment] = new util.LinkedList[NDataSegment]
 
+  // OPTIMIZE
+  private val optimizeLayoutIds: java.util.List[Long] = new util.LinkedList[Long]
+
   // BUCKET
   private val bucketsInfo = new util.HashMap[Long, util.List[Long]]
 
@@ -53,6 +56,8 @@ class BuildJobInfos {
   private val autoSparkConfs: java.util.Map[String, String] = new util.HashMap[String, String]
 
   private val jobRetryInfos: java.util.List[RetryInfo] = new util.LinkedList[RetryInfo]
+
+  private val jobRetryInfosForSegmentParam: util.HashMap[String, String] = new util.HashMap[String, String]
 
   var buildTime: Long = 0L
 
@@ -116,6 +121,14 @@ class BuildJobInfos {
     sparkPlans.clear()
   }
 
+  def clearOptimizeLayoutIds(): Unit = {
+    optimizeLayoutIds.clear()
+  }
+
+  def recordOptimizeLayoutIds(layoutId: Long): Unit = {
+    optimizeLayoutIds.add(layoutId)
+  }
+
   def getSparkPlans: util.List[SparkPlan] = {
     sparkPlans
   }
@@ -148,6 +161,14 @@ class BuildJobInfos {
 
   def recordJobRetryInfos(info: RetryInfo): Unit = {
     jobRetryInfos.add(info)
+  }
+
+  def recordJobRetryInfosForSegmentParam(key: String, value: String): Unit = {
+    jobRetryInfosForSegmentParam.put(key, value)
+  }
+
+  def getJobRetryInfosForSegmentParam: util.HashMap[String, String] = {
+    jobRetryInfosForSegmentParam
   }
 
   def recordRetryTimes(times: Int): Unit = {
@@ -239,6 +260,10 @@ class BuildJobInfos {
     project
   }
 
+  def getOptimizeLayoutIds: util.List[Long] = {
+    optimizeLayoutIds
+  }
+
   def clear(): Unit = {
     seg2cuboidsNumPerLayer.clear()
     seg2SpanningTree.clear()
@@ -248,5 +273,7 @@ class BuildJobInfos {
     abnormalLayouts.clear()
     autoSparkConfs.clear()
     jobRetryInfos.clear()
+    optimizeLayoutIds.clear()
+    jobRetryInfosForSegmentParam.clear()
   }
 }

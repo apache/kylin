@@ -21,11 +21,11 @@ package org.apache.kylin.rest.request;
 import java.util.List;
 
 import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
-
-
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,0 +1,10 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_MEASURE",
+  "tableAlias" : "TEST_MEASURE",
+  "columnName" : "CC_PRICE5",
+  "expression" : "TEST_MEASURE.PRICE5 + 5",
+  "datatype" : "short",
+  "comment" : "TEST_MEASURE.PRICE5 + 5",
+  "uuid" : "141bda10-977a-46cf-cb97-57eb11971706",
+  "project" : "default"
+}

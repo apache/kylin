@@ -17,16 +17,18 @@
  */
 package org.apache.kylin.job.factory;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.job.JobBucket;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -67,6 +69,12 @@ public abstract class JobFactory {
             return null;
         }
         return implementations.get(factory).create(jobBuildParams);
+    }
+    
+    public static AbstractExecutable createJobWithDefaultParams(String factory, JobTypeEnum jobType) {
+        return JobFactory.createJob(factory, new JobFactory.JobBuildParams(Collections.emptySet(),
+                Collections.emptySet(), AclPermissionUtil.getCurrentUsername(), jobType, RandomUtil.randomUUIDStr(),
+                Collections.emptySet(), Collections.emptySet(), Collections.emptySet(), Collections.emptySet()));
     }
 
     protected abstract AbstractExecutable create(JobBuildParams jobBuildParams);

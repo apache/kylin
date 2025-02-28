@@ -27,9 +27,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.util.MathUtil;
-import org.junit.Test;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.junit.Test;
 
 public class PercentileAggregatorTest {
     private static int DEFAULT_COMPRESSION = 100;

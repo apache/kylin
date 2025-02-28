@@ -24,9 +24,10 @@ import java.util.Objects;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.ZipFileUtils;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
@@ -43,8 +44,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -158,7 +157,7 @@ public class QueryDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
         boolean hasMetadataFile = new ZipFile(
                 Objects.requireNonNull(Objects.requireNonNull(mainDir.listFiles())[0].listFiles())[0]).stream()
-                        .anyMatch(zipEntry -> zipEntry.getName().contains("metadata"));
+                .anyMatch(zipEntry -> zipEntry.getName().contains("metadata"));
         Assert.assertTrue(hasMetadataFile);
     }
 
@@ -174,7 +173,7 @@ public class QueryDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
         boolean hasMetadataFile = new ZipFile(
                 Objects.requireNonNull(Objects.requireNonNull(mainDir.listFiles())[0].listFiles())[0]).stream()
-                        .anyMatch(zipEntry -> zipEntry.getName().contains("metadata"));
+                .anyMatch(zipEntry -> zipEntry.getName().contains("metadata"));
 
         Assert.assertFalse(hasMetadataFile);
     }

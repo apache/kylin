@@ -83,17 +83,21 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.JobInfoDao;
 import org.apache.kylin.job.domain.JobInfo;
+import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.rest.JobMapperFilter;
 import org.apache.kylin.job.runners.JobCheckUtil;
+import org.apache.kylin.job.scheduler.JdbcJobScheduler;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.job.util.JobInfoUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,9 +180,9 @@ public class ExecutableManager {
         }
         if (executable instanceof ChainedStageExecutable) {
             Map<String, List<ExecutablePO>> taskMap = Maps.newHashMap();
-            final Map<String, List<StageBase>> tasksMap = Optional
+            final Map<String, List<StageExecutable>> tasksMap = Optional
                     .ofNullable(((ChainedStageExecutable) executable).getStagesMap()).orElse(Maps.newHashMap());
-            for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+            for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                 final List<ExecutablePO> executables = entry.getValue().stream().map(stage -> toPO(stage, project))
                         .collect(Collectors.toList());
                 taskMap.put(entry.getKey(), executables);
@@ -189,11 +193,38 @@ public class ExecutableManager {
         }
         return result;
     }
-    
+
     private ExecutablePO copyForWrite(ExecutablePO po) {
         // No need to copy, just return the origin object
         // This will be rewrite after metadata is refactored
         return po;
+    }
+
+    public void checkAndSubmitCronJob(String factory, JobTypeEnum jobType) {
+        List<JobInfo> processingJobs = fetchJobsByFilter(
+                JobMapperFilter.builder().jobNames(Collections.singletonList(jobType.name())).project(project)
+                        .statuses(Arrays.asList(ExecutableState.PENDING, ExecutableState.READY, ExecutableState.RUNNING,
+                                ExecutableState.PAUSED))
+                        .build());
+        if (processingJobs.size() > 1) {
+            log.warn(
+                    "There are too many jobs in pending/ready/running/paused state, skip submitting job:{} for project:{}",
+                    jobType, project);
+            return;
+        } else if (processingJobs.size() == 1) {
+            log.info("The last job has not finished, skip submitting job:{} for project:{}", jobType, project);
+            return;
+        }
+
+        AbstractExecutable cronJob = JobFactory.createJobWithDefaultParams(factory, jobType);
+        if (cronJob != null) {
+            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+                ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).addJob(cronJob);
+                return null;
+            }, project);
+        } else {
+            log.warn("Cannot create cron job:{} for project:{}", jobType, project);
+        }
     }
 
     // only for test
@@ -288,15 +319,18 @@ public class ExecutableManager {
             if (ExecutableState.READY == newStatus) {
                 Optional.ofNullable(REMOVE_INFO).ifPresent(set -> set.forEach(info::remove));
             }
-            String oldNodeInfo = info.get("node_info");
-            String newNodeInfo = config.getServerAddress();
-            if (Objects.nonNull(oldNodeInfo) && !Objects.equals(oldNodeInfo, newNodeInfo)
-                    && !Objects.equals(taskOrJobId, jobId)) {
-                logger.info("The node running job has changed. Job id: {}, Step name: {}, Switch from {} to {}.", jobId,
-                        taskOrJob.getName(), oldNodeInfo, newNodeInfo);
+            // check if job is running on current node
+            if (hasRunningJob(jobId)) {
+                String oldNodeInfo = info.get("node_info");
+                String newNodeInfo = config.getServerAddress();
+                if (Objects.nonNull(oldNodeInfo) && !Objects.equals(oldNodeInfo, newNodeInfo)
+                        && !Objects.equals(taskOrJobId, jobId)) {
+                    logger.info("The node running job has changed. Job id: {}, Step name: {}, Switch from {} to {}.",
+                            jobId, taskOrJob.getName(), oldNodeInfo, newNodeInfo);
+                }
+                info.put("node_info", newNodeInfo);
+                info.put("host_name", AddressUtil.getHostName());
             }
-            info.put("node_info", newNodeInfo);
-            info.put("host_name", AddressUtil.getHostName());
             jobOutput.setInfo(info);
             String appId = info.get(ExecutableConstants.YARN_APP_ID);
             if (StringUtils.isNotEmpty(appId)) {
@@ -327,6 +361,12 @@ public class ExecutableManager {
             destroyProcess(taskOrJobId);
         }
 
+    }
+
+    private boolean hasRunningJob(String jobId) {
+        JobContext jobContext = JobContextUtil.getJobContext(config);
+        JdbcJobScheduler jobScheduler = jobContext.getJobScheduler();
+        return null != jobScheduler && jobScheduler.getRunningJob().containsKey(jobId);
     }
 
     public static String extractJobId(String taskOrJobId) {
@@ -501,9 +541,9 @@ public class ExecutableManager {
                     if (abstractExecutable instanceof ChainedStageExecutable
                             && MapUtils.isNotEmpty(subTask.getStagesMap())) {
                         for (Map.Entry<String, List<ExecutablePO>> entry : subTask.getStagesMap().entrySet()) {
-                            final List<StageBase> executables = entry.getValue().stream().map(po -> {
+                            final List<StageExecutable> executables = entry.getValue().stream().map(po -> {
                                 final AbstractExecutable executable = fromPO(po);
-                                return (StageBase) executable;
+                                return (StageExecutable) executable;
                             }).collect(Collectors.toList());
                             ((ChainedStageExecutable) abstractExecutable).setStageMapWithSegment(entry.getKey(),
                                     executables);
@@ -528,7 +568,7 @@ public class ExecutableManager {
                 }
             }
             return result;
-        } catch (ReflectiveOperationException e) {
+        } catch (Throwable e) {
             logger.error("Cannot parse this job...", e);
             throw new IllegalStateException("Cannot parse this job: " + executablePO.getId(), e);
         }
@@ -650,7 +690,7 @@ public class ExecutableManager {
             val subTasks = job.getTasks();
             if (null != subTasks) {
                 val errorTaskAndNotFailedStepIdTaskCount = subTasks.stream()
-                        .filter(task -> ExecutableState.valueOf(task.getOutput().getStatus()).equals(ExecutableState.ERROR))
+                        .filter(task -> ExecutableState.valueOf(task.getOutput().getStatus()) == ExecutableState.ERROR)
                         .filter(task -> !StringUtils.startsWith(failedStepId, task.getId())).count();
                 if (errorTaskAndNotFailedStepIdTaskCount != 0) {
                     return false;
@@ -684,7 +724,8 @@ public class ExecutableManager {
 
     public void cancelRemoteJob(ExecutablePO executablePO) {
         if (executablePO.getOutput().getStatus().equalsIgnoreCase(ExecutableState.RUNNING.toString())) {
-            // when start or restart KE, will resumeAllRunningJobs, don't need to interrupt job thread, so job id is null
+            // when start or restart KE, will resumeAllRunningJobs,
+            // don't need to interrupt job thread, so job id is null
             //TODO KE-37319
             // cancelJob(executablePO, null);
         }
@@ -707,10 +748,10 @@ public class ExecutableManager {
                     .forEach(task -> updateJobOutput(task.getId(), ExecutableState.READY));
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
-                            // update running stage to ready
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
+                            // update running step to ready
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream() //
                                     .filter(stage -> stage.getStatusInMem(entry.getKey()) == ExecutableState.RUNNING
@@ -738,15 +779,16 @@ public class ExecutableManager {
                         .forEach(task -> updateJobOutput(task.getId(), ExecutableState.PENDING));
                 tasks.forEach(task -> {
                     if (task instanceof ChainedStageExecutable) {
-                        final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                        final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task)
+                                .getStagesMap();
                         if (MapUtils.isNotEmpty(tasksMap)) {
-                            for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
-                                // update running stage to ready
+                            for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
+                                // update running step to ready
                                 Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                         .stream() //
-                                        .filter(stage -> stage.getStatusInMem(entry.getKey()) == ExecutableState.READY)//
-                                        .forEach(stage -> //
-                                                updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.PENDING, null, null));
+                                        .filter(stage -> stage.getStatusInMem(entry.getKey()) == ExecutableState.READY)
+                                        .forEach(stage -> updateStageStatus(stage.getId(), entry.getKey(),
+                                                ExecutableState.PENDING, null, null));
                             }
                         }
                     }
@@ -757,7 +799,7 @@ public class ExecutableManager {
         });
     }
 
-    /** just used to update stage */
+    /** just used to update step */
     public void updateStageStatus(String taskOrJobId, String segmentId, ExecutableState newStatus,
             Map<String, String> updateInfo, String failedMsg) {
         JobContextUtil.withTxAndRetry(() -> {
@@ -845,7 +887,7 @@ public class ExecutableManager {
                     .parseInt(map.getOrDefault(NBatchConstants.P_INDEX_SUCCESS_COUNT, "0"));
             info.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, String.valueOf(indexSuccessCount));
 
-            // Add warning_code to stage output info if exists
+            // Add warning_code to step output info if exists
             String warningCode;
             if ((warningCode = map.get(NBatchConstants.P_WARNING_CODE)) != null) {
                 info.put(NBatchConstants.P_WARNING_CODE, warningCode);
@@ -908,13 +950,13 @@ public class ExecutableManager {
                     .forEach(task -> updateJobOutput(task.getId(), ExecutableState.READY));
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList()) //
                                     .stream()//
                                     .filter(stage -> stage.getStatusInMem(entry.getKey()) != ExecutableState.READY)
-                                    .forEach(stage -> // when restart, reset stage
+                                    .forEach(stage -> // when restart, reset step
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.READY, null, null, true));
                         }
                     }
@@ -938,9 +980,10 @@ public class ExecutableManager {
                 List<? extends AbstractExecutable> tasks = ((DefaultExecutable) job).getTasks();
                 tasks.forEach(task -> {
                     if (task instanceof ChainedStageExecutable) {
-                        final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                        final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task)
+                                .getStagesMap();
                         if (MapUtils.isNotEmpty(tasksMap)) {
-                            for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                            for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                                 Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                         .forEach(stage -> //
                                 updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.DISCARDED, null,
@@ -1005,9 +1048,9 @@ public class ExecutableManager {
                     .forEach(task -> updateJobOutput(task.getId(), ExecutableState.ERROR));
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream()
                                     .filter(stage -> stage.getStatus(entry.getKey()) != ExecutableState.ERROR
@@ -1028,10 +1071,10 @@ public class ExecutableManager {
             List<? extends AbstractExecutable> tasks = ((DefaultExecutable) job).getTasks();
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
-                            // pause running stage
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
+                            // pause running step
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream() //
                                     .filter(stage -> stage.getStatus(entry.getKey()) == ExecutableState.RUNNING)//
@@ -1059,18 +1102,19 @@ public class ExecutableManager {
                     waiteTime.put(task.getId(), String.valueOf(waitTime + oldWaitTime));
                     if (task instanceof ChainedStageExecutable) {
                         final ChainedStageExecutable stageExecutable = (ChainedStageExecutable) task;
-                        Map<String, List<StageBase>> stageMap = Optional.ofNullable(stageExecutable.getStagesMap())
+                        Map<String, List<StageExecutable>> stageMap = Optional
+                                .ofNullable(stageExecutable.getStagesMap())
                                 .orElse(Maps.newHashMap());
                         val taskStartTime = task.getStartTime();
-                        for (Map.Entry<String, List<StageBase>> entry : stageMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : stageMap.entrySet()) {
                             final String segmentId = entry.getKey();
                             if (waiteTime.containsKey(segmentId)) {
                                 break;
                             }
-                            final List<StageBase> stageBases = Optional.ofNullable(entry.getValue())
+                            final List<StageExecutable> stageExecutables = Optional.ofNullable(entry.getValue())
                                     .orElse(Lists.newArrayList());
-                            if (CollectionUtils.isNotEmpty(stageBases)) {
-                                final StageBase firstStage = stageBases.get(0);
+                            if (CollectionUtils.isNotEmpty(stageExecutables)) {
+                                final StageExecutable firstStage = stageExecutables.get(0);
                                 val firstStageStartTime = getOutput(firstStage.getId(), executablePO, segmentId)
                                         .getStartTime();
                                 val stageWaiteTIme = firstStageStartTime - taskStartTime > 0
@@ -1161,9 +1205,9 @@ public class ExecutableManager {
             List<? extends AbstractExecutable> tasks = ((DefaultExecutable) job).getTasks();
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable && StringUtils.equals(taskOrJobId, task.getId())) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream() //
                                     .filter(stage -> stage.getStatus(entry.getKey()) != ExecutableState.SUCCEED)//
@@ -1193,9 +1237,9 @@ public class ExecutableManager {
             List<? extends AbstractExecutable> tasks = ((DefaultExecutable) job).getTasks();
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable && StringUtils.equals(taskOrJobId, task.getId())) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream() //
                                     .filter(stage -> stage.getStatus(entry.getKey()) == ExecutableState.RUNNING)//
@@ -1679,9 +1723,9 @@ public class ExecutableManager {
                     .forEach(task -> updateJobOutput(task.getId(), ExecutableState.SUICIDAL));
             tasks.forEach(task -> {
                 if (task instanceof ChainedStageExecutable) {
-                    final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+                    final Map<String, List<StageExecutable>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
                     if (MapUtils.isNotEmpty(tasksMap)) {
-                        for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                        for (Map.Entry<String, List<StageExecutable>> entry : tasksMap.entrySet()) {
                             Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
                                     .stream()
                                     .filter(stage -> stage.getStatus(entry.getKey()) != ExecutableState.SUICIDAL
@@ -1696,6 +1740,15 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.SUICIDAL);
 
         job.cancelJob();
+    }
+
+    public void suicideRunningJobByJobType(String project, String targetModelId, List<String> jobType) {
+        List<JobInfo> existingJobs = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .fetchNotFinalJobsByTypes(project, jobType, Lists.newArrayList(targetModelId));
+        ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        if (CollectionUtils.isNotEmpty(existingJobs)) {
+            existingJobs.forEach(jobInfo -> execMgr.suicideJob(jobInfo.getJobId()));
+        }
     }
 
     public void checkSuicideJobOfModel(String project, String modelId) {
@@ -1952,13 +2005,10 @@ public class ExecutableManager {
         return fetchJobsByTypesAndStates(project, jobTypes, subjects, ExecutableState.getNotFinalStates());
     }
 
-    public List<JobInfo> fetchJobsByTypesAndStates(String project, List<String> jobTypes, List<String> subjects, List<ExecutableState> states) {
-        JobMapperFilter mapperFilter = JobMapperFilter.builder()
-                .jobNames(jobTypes)
-                .statuses(states)
-                .subjects(subjects)
-                .project(project)
-                .build();
+    public List<JobInfo> fetchJobsByTypesAndStates(String project, List<String> jobTypes, List<String> subjects,
+            List<ExecutableState> states) {
+        JobMapperFilter mapperFilter = JobMapperFilter.builder().jobNames(jobTypes).statuses(states).subjects(subjects)
+                .project(project).build();
         return jobInfoDao.getJobInfoListByFilter(mapperFilter);
     }
 

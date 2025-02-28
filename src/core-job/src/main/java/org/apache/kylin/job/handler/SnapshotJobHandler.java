@@ -18,12 +18,13 @@
 
 package org.apache.kylin.job.handler;
 
-import lombok.Getter;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.factory.JobFactoryConstant;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+
+import lombok.Getter;
 
 public class SnapshotJobHandler extends AbstractJobHandler {
 
@@ -37,16 +38,9 @@ public class SnapshotJobHandler extends AbstractJobHandler {
         private String partitionsToBuild;
 
         public SnapshotJobBuildParam(JobParam jobParam) {
-            super(null,
-                    jobParam.getDeleteLayouts(),
-                    jobParam.getOwner(),
-                    jobParam.getJobTypeEnum(),
-                    jobParam.getJobId(),
-                    jobParam.getDeleteLayouts(),
-                    jobParam.getIgnoredSnapshotTables(),
-                    jobParam.getTargetPartitions(),
-                    jobParam.getTargetBuckets(),
-                    jobParam.getExtParams());
+            super(null, jobParam.getDeleteLayouts(), jobParam.getOwner(), jobParam.getJobTypeEnum(),
+                    jobParam.getJobId(), jobParam.getDeleteLayouts(), jobParam.getIgnoredSnapshotTables(),
+                    jobParam.getTargetPartitions(), jobParam.getTargetBuckets(), jobParam.getExtParams());
             this.project = jobParam.getProject();
             this.table = jobParam.getTable();
             this.incrementalBuild = jobParam.getExtParams().get(NBatchConstants.P_INCREMENTAL_BUILD);
@@ -57,8 +51,7 @@ public class SnapshotJobHandler extends AbstractJobHandler {
 
     @Override
     protected AbstractExecutable createJob(JobParam jobParam) {
-        return JobFactory.createJob(JobFactoryConstant.SNAPSHOT_JOB_FACTORY,
-                new SnapshotJobBuildParam(jobParam));
+        return JobFactory.createJob(JobFactoryConstant.SNAPSHOT_JOB_FACTORY, new SnapshotJobBuildParam(jobParam));
     }
 
     @Override

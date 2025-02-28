@@ -33,6 +33,7 @@ public class ColumnMetaWithType extends ColumnMeta {
     }
 
     private HashSet<columnTypeEnum> TYPE;
+    private String FULLY_QUALIFIED_COLUMN_NAME;
 
     public static ColumnMetaWithType ofColumnMeta(ColumnMeta columnMeta) {
         return new ColumnMetaWithType(columnMeta.TABLE_CAT, columnMeta.TABLE_SCHEM, columnMeta.TABLE_NAME,
@@ -73,6 +74,16 @@ public class ColumnMetaWithType extends ColumnMeta {
         SOURCE_DATA_TYPE = sOURCE_DATA_TYPE;
         IS_AUTOINCREMENT = iS_AUTOINCREMENT;
         TYPE = new HashSet<columnTypeEnum>();
+        FULLY_QUALIFIED_COLUMN_NAME = null;
+    }
+
+
+    public String getFULLY_QUALIFIED_COLUMN_NAME() {
+        return FULLY_QUALIFIED_COLUMN_NAME;
+    }
+
+    public void setFULLY_QUALIFIED_COLUMN_NAME(String fullyQualifiedName) {
+        this.FULLY_QUALIFIED_COLUMN_NAME = fullyQualifiedName;
     }
 
     public HashSet<columnTypeEnum> getTYPE() {

@@ -1,0 +1,58 @@
+{
+  "uuid" : "daf0115d-089d-0c5f-1dd4-1aabc1b9a624",
+  "last_modified" : 1642749301690,
+  "create_time" : 1642749301690,
+  "version" : "4.0.0.0",
+  "dataflow" : "5fdd33d9-3a8a-acf5-60ec-60c4951d2e1c",
+  "layout_instances" : [ {
+    "layout_id" : 20000000001,
+    "build_job_id" : "5c677978-2e09-811d-5e1e-b9467bf8419b",
+    "rows" : 1,
+    "byte_size" : 865,
+    "file_count" : 1,
+    "source_rows" : 1,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1642749888740,
+    "multi_partition" : [ ]
+  }, {
+    "layout_id" : 1,
+    "build_job_id" : "5c677978-2e09-811d-5e1e-b9467bf8419b",
+    "rows" : 1,
+    "byte_size" : 1117,
+    "file_count" : 1,
+    "source_rows" : 1,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1642749888741,
+    "multi_partition" : [ ]
+  }, {
+    "layout_id" : 20001,
+    "build_job_id" : "5c677978-2e09-811d-5e1e-b9467bf8419b",
+    "rows" : 1,
+    "byte_size" : 911,
+    "file_count" : 1,
+    "source_rows" : 1,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1642749891968,
+    "multi_partition" : [ ]
+  }, {
+    "layout_id" : 10001,
+    "build_job_id" : "5c677978-2e09-811d-5e1e-b9467bf8419b",
+    "rows" : 1,
+    "byte_size" : 917,
+    "file_count" : 1,
+    "source_rows" : 1,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "create_time" : 1642749891968,
+    "multi_partition" : [ ]
+  } ],
+  "dataflow_id" : "5fdd33d9-3a8a-acf5-60ec-60c4951d2e1c",
+  "project" : "test_cache_loader"
+}

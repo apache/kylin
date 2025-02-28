@@ -28,16 +28,15 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
 import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
 import org.apache.kylin.guava30.shaded.common.cache.RemovalListener;
 import org.apache.kylin.guava30.shaded.common.cache.RemovalNotification;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueryRequestLimits implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(QueryRequestLimits.class);
@@ -69,6 +68,7 @@ public class QueryRequestLimits implements AutoCloseable {
                         return true;
                     }
                 } else {
+                    logger.warn("Can’t submit query at the moment as there are {} ongoing queries.", nRunning);
                     return false;
                 }
             }
@@ -98,8 +98,8 @@ public class QueryRequestLimits implements AutoCloseable {
 
     // ============================================================================
 
-    final private String project;
-    final private int maxConcurrentQuery;
+    private final String project;
+    private final int maxConcurrentQuery;
 
     public QueryRequestLimits(String project) {
         this.project = project;

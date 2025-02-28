@@ -19,38 +19,32 @@
 package org.apache.kylin.rest.scheduler;
 
 import static org.apache.kylin.common.constant.Constants.MARK;
+import static org.apache.kylin.job.factory.JobFactoryConstant.AUTO_REFRESH_JOB_FACTORY;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.scheduler.EpochStartedNotifier;
-import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 
 import lombok.Getter;
 import lombok.val;
@@ -73,13 +67,13 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AutoRefreshSnapshotScheduler {
     private static final Integer THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE = 20;
+    static {
+        JobFactory.register(AUTO_REFRESH_JOB_FACTORY, new AutoRefreshJob.AutoRefreshJobFactory());
+    }
     @Autowired
     @Qualifier("projectScheduler")
     private TaskScheduler projectScheduler;
 
-    @Autowired
-    @Qualifier("normalRestTemplate")
-    private RestTemplate restTemplate;
     @Getter
     private final Map<String, Pair<String, ScheduledFuture<?>>> taskFutures = Maps.newConcurrentMap();
     @Getter
@@ -141,10 +135,6 @@ public class AutoRefreshSnapshotScheduler {
         if (projectConfig.isSnapshotManualManagementEnabled() && projectConfig.isSnapshotAutoRefreshEnabled()) {
             val projectName = projectInstance.getName();
 
-            // check epoch owner
-            if (checkEpochOwner(projectName)) {
-                return false;
-            }
             // check future cron
             val scheduledFuturePair = taskFutures.get(projectName);
             val cronFromConfig = projectConfig.getSnapshotAutoRefreshCron();
@@ -153,47 +143,20 @@ public class AutoRefreshSnapshotScheduler {
                 if (future != null && StringUtils.equals(scheduledFuturePair.getFirst(), cronFromConfig)) {
                     log.info("Project[{}] skip schedulerAutoRefresh, because is running, cron[{}]", projectName,
                             cronFromConfig);
-                    checkRefreshRunnerJobPool(projectConfig, projectName);
                     return false;
                 }
             }
             // start/restart cron
-            val autoRefreshSnapshotRunner = AutoRefreshSnapshotRunner.getInstance(projectInstance.getName());
-            autoRefreshSnapshotRunner.setRestTemplate(restTemplate);
-            checkRefreshRunnerJobPool(projectConfig, projectName);
-            startCron(projectName, autoRefreshSnapshotRunner, cronFromConfig);
+            startCron(projectName, () -> submitJob(projectName), cronFromConfig);
             return true;
         }
         return false;
     }
 
-    private boolean checkEpochOwner(String projectName) {
-        val epoch = EpochManager.getInstance().getEpoch(projectName);
-        String currentEpochOwner = epoch.getCurrentEpochOwner();
-
-        val serverInfo = AddressUtil.getLocalInstance();
-        if (currentEpochOwner != null && !currentEpochOwner.split("\\|")[0].equals(serverInfo)) {
-            log.info("EpochOwner[{}] is not Project[{}] epoch owner,and ServerInfo is [{}] ", currentEpochOwner,
-                    projectName, serverInfo);
-            AutoRefreshSnapshotRunner.shutdown(projectName);
-            stopCron(projectName);
-            return true;
-        }
-        return false;
-    }
-
-    public void checkRefreshRunnerJobPool(KylinConfig projectConfig, String projectName) {
-        val autoRefreshSnapshotRunner = AutoRefreshSnapshotRunner.getInstanceByProject(projectName);
-        if (autoRefreshSnapshotRunner != null) {
-            val jobPool = (ThreadPoolExecutor) autoRefreshSnapshotRunner.getJobPool();
-            val corePoolSize = jobPool.getCorePoolSize();
-            val poolSizeFromConfig = projectConfig.getSnapshotAutoRefreshMaxConcurrentJobLimit();
-            if (poolSizeFromConfig != corePoolSize) {
-                jobPool.setCorePoolSize(poolSizeFromConfig);
-                jobPool.setMaximumPoolSize(poolSizeFromConfig);
-                log.info("update AutoRefreshSnapshotRunner job pool size : {} old pool size : {}", poolSizeFromConfig,
-                        corePoolSize);
-            }
+    private void submitJob(String projectName) {
+        if (JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv()).getJobScheduler().isMaster()) {
+            ExecutableManager manager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), projectName);
+            manager.checkAndSubmitCronJob(AUTO_REFRESH_JOB_FACTORY, JobTypeEnum.AUTO_REFRESH);
         }
     }
 
@@ -243,11 +206,6 @@ public class AutoRefreshSnapshotScheduler {
             if (projectConfig.isSnapshotManualManagementEnabled() && projectConfig.isSnapshotAutoRefreshEnabled()) {
                 val projectName = project.getName();
 
-                // check epoch owner
-                if (checkEpochOwner(projectName)) {
-                    continue;
-                }
-
                 val markFilepath = new Path(projectConfig.getSnapshotAutoRefreshDir(projectName) + MARK);
                 if (fs.exists(markFilepath)) {
                     log.error("Project[{}] last cron task was stopped manually, autoRefreshSnapshotRunner doRun",
@@ -258,31 +216,6 @@ public class AutoRefreshSnapshotScheduler {
             } else {
                 deleteProjectSnapshotAutoUpdateDir(project.getName());
             }
-        }
-    }
-}
-
-@Slf4j
-@Configuration
-@Order
-class AutoRefreshSnapshotConfig {
-    @Autowired
-    private AutoRefreshSnapshotScheduler scheduler;
-
-    @PostConstruct
-    public void init() {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (kylinConfig.isJobNode()) {
-            EventBusFactory.getInstance().register(this, false);
-        }
-    }
-
-    @Subscribe
-    public void registerScheduler(EpochStartedNotifier notifier) {
-        try {
-            scheduler.afterPropertiesSet();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         }
     }
 }

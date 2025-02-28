@@ -18,11 +18,11 @@
 
 package org.apache.kylin.metadata.streaming;
 
+import org.apache.kylin.common.NativeQueryRealization;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

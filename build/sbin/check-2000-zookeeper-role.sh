@@ -25,10 +25,15 @@ source ${KYLIN_HOME}/sbin/init-kerberos.sh
 ## init Kerberos if needed
 initKerberosIfNeeded
 
-echo "Checking Zookeeper role..."
+KYLIN_ZOOKEEPER_ENABLED=$("$KYLIN_HOME"/bin/get-properties.sh kylin.env.zookeeper.enabled)
 
-zk_connect_string=`${KYLIN_HOME}/bin/get-properties.sh kylin.env.zookeeper-connect-string`
-
-if [[ -z $zk_connect_string ]]; then
-    quit "Failed: Zookeeper connect string is empty, please set 'kylin.env.zookeeper-connect-string' in {KYLIN_HOME}/conf/kylin.properties"
+if [[ $KYLIN_ZOOKEEPER_ENABLED == "true" ]]; then
+    echo "Checking Zookeeper role..."
+    zk_connect_string=$("${KYLIN_HOME}"/bin/get-properties.sh kylin.env.zookeeper-connect-string)
+    if [[ -z $zk_connect_string ]]; then
+      quit "Failed: Zookeeper connect string is empty, please set 'kylin.env.zookeeper-connect-string' in {KYLIN_HOME}/conf/kylin.properties"
+    fi
+else
+    echo "KYLIN_ZOOKEEPER_ENABLED is ${KYLIN_ZOOKEEPER_ENABLED}. Skip check."
+    exit 3
 fi

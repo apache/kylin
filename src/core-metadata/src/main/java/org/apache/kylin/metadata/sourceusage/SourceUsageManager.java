@@ -18,6 +18,7 @@
 package org.apache.kylin.metadata.sourceusage;
 
 import static org.apache.kylin.common.exception.CommonErrorCode.LICENSE_OVER_CAPACITY;
+import static org.apache.kylin.common.persistence.MetadataType.HISTORY_SOURCE_USAGE;
 import static org.apache.kylin.metadata.sourceusage.SourceUsageRecord.CapacityStatus.OVERCAPACITY;
 
 import java.io.IOException;
@@ -25,42 +26,33 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.constant.Constants;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.mail.MailNotificationType;
 import org.apache.kylin.common.mail.MailNotifier;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.SizeConvertUtil;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.sourceusage.SourceUsageRecord.CapacityStatus;
@@ -71,7 +63,6 @@ import org.slf4j.LoggerFactory;
 
 import lombok.val;
 
-@Clarification(priority = Clarification.Priority.MAJOR, msg = "Enterprise")
 public class SourceUsageManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SourceUsageManager.class);
@@ -93,20 +84,18 @@ public class SourceUsageManager {
 
     private SourceUsageManager(KylinConfig config) {
         this.config = config;
-        this.crud = new CachedCrudAssist<SourceUsageRecord>(getStore(), ResourceStore.HISTORY_SOURCE_USAGE,
+        this.crud = new CachedCrudAssist<SourceUsageRecord>(getStore(), HISTORY_SOURCE_USAGE, null,
                 SourceUsageRecord.class) {
             @Override
             protected SourceUsageRecord initEntityAfterReload(SourceUsageRecord entity, String resourceName) {
-                entity.setResPath(concatResourcePath(resourceName));
+                entity.setResPath(MetadataType.mergeKeyWithType(resourceName, HISTORY_SOURCE_USAGE));
                 return entity;
             }
         };
     }
 
     public SourceUsageRecord getSourceUsageRecord(String resourceName) {
-        return this.crud.listAll().stream()
-                .filter(usage -> usage.getResourcePath().equalsIgnoreCase(concatResourcePath(resourceName))).findAny()
-                .orElse(null);
+        return this.crud.get(resourceName);
     }
 
     public interface SourceUsageRecordUpdater {
@@ -122,7 +111,7 @@ public class SourceUsageManager {
     }
 
     public SourceUsageRecord createSourceUsageRecord(String resourceName, SourceUsageRecord record) {
-        record.setResPath(concatResourcePath(resourceName));
+        record.setResPath(MetadataType.mergeKeyWithType(resourceName, HISTORY_SOURCE_USAGE));
         SourceUsageRecord copy = copyForWrite(record);
         return crud.save(copy);
     }
@@ -135,10 +124,6 @@ public class SourceUsageManager {
         SourceUsageRecord copy = copyForWrite(record);
         updater.modify(copy);
         return crud.save(copy);
-    }
-
-    public static String concatResourcePath(String resourceName) {
-        return ResourceStore.HISTORY_SOURCE_USAGE + "/" + resourceName + MetadataConstants.FILE_SURFIX;
     }
 
     public Map<String, Long> calcAvgColumnSourceBytes(NDataSegment segment) {
@@ -167,50 +152,6 @@ public class SourceUsageManager {
             columnSourceBytes.put(tblColRef.getCanonicalName(), perColumnSize);
         }
         return columnSourceBytes;
-    }
-
-    @VisibleForTesting
-    public Map<String, Long> sumDataflowColumnSourceMap(NDataflow dataflow) {
-        Map<String, Long> dataflowSourceMap = new HashMap<>();
-        Segments<NDataSegment> segments = dataflow.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING);
-        List<NDataSegment> oldSegments = Lists.newArrayList();
-        for (NDataSegment segment : segments) {
-            Map<String, Long> columnSourceBytesMap = segment.getColumnSourceBytes();
-            if (MapUtils.isEmpty(columnSourceBytesMap)) {
-                oldSegments.add(segment);
-            } else {
-                for (Map.Entry<String, Long> sourceMap : columnSourceBytesMap.entrySet()) {
-                    String column = sourceMap.getKey();
-                    long value = dataflowSourceMap.getOrDefault(column, 0L);
-                    dataflowSourceMap.put(column, sourceMap.getValue() + value);
-                }
-            }
-        }
-        if (!oldSegments.isEmpty()) {
-            List<NDataSegment> evaluations = isPartitioned(dataflow) ? oldSegments // all old segments
-                    : Lists.newArrayList(oldSegments.get(oldSegments.size() - 1)); // last old segment
-            for (NDataSegment segment : evaluations) {
-                Map<String, Long> estimateSourceMap = calcAvgColumnSourceBytes(segment);
-                for (Map.Entry<String, Long> sourceMap : estimateSourceMap.entrySet()) {
-                    String column = sourceMap.getKey();
-                    long value = dataflowSourceMap.getOrDefault(column, 0L);
-                    dataflowSourceMap.put(column, sourceMap.getValue() + value);
-                }
-            }
-        }
-        return dataflowSourceMap;
-    }
-
-    private boolean isPartitioned(NDataflow dataflow) {
-        val partDesc = dataflow.getModel().getPartitionDesc();
-        if (Objects.isNull(partDesc)) {
-            return false;
-        }
-        val colRef = partDesc.getPartitionDateColumnRef();
-        if (Objects.isNull(colRef)) {
-            return false;
-        }
-        return colRef.getColumnDesc().isPartitioned();
     }
 
     public SourceUsageRecord updateSourceUsage(SourceUsageRecord sourceUsageRecord) {
@@ -260,13 +201,6 @@ public class SourceUsageManager {
         return ResourceStore.getKylinMetaStore(this.config);
     }
 
-    /**
-     * Read external data source to refresh lookup table row count for a table.
-     */
-    public void refreshLookupTableRowCount(final TableDesc tableDesc, String project) {
-        // no this case currently, because no need to calculate fact table and lookup table without snapshot
-    }
-
     public SourceUsageRecord getLatestRecord() {
         int oneDay = 24;
 
@@ -299,7 +233,8 @@ public class SourceUsageManager {
 
     public List<SourceUsageRecord> getLatestRecordByMs(long msAgo) {
         long from = System.currentTimeMillis() - msAgo;
-        return this.crud.listAll().stream().filter(usage -> usage.getCreateTime() >= from).collect(Collectors.toList());
+        RawResourceFilter filter = RawResourceFilter.simpleFilter(RawResourceFilter.Operator.GT, "createTime", from);
+        return this.crud.listByFilter(filter);
     }
 
     public List<SourceUsageRecord> getAllRecords() {
@@ -309,11 +244,11 @@ public class SourceUsageManager {
     // no init means only use json object
     public List<SourceUsageRecord> getAllRecordsWithoutInit() {
         val resourceStore = ResourceStore.getKylinMetaStore(config);
-        val allResourcePaths = resourceStore.listResources(ResourceStore.HISTORY_SOURCE_USAGE);
+        val allResourcePaths = resourceStore.listResources(HISTORY_SOURCE_USAGE.name());
         if (allResourcePaths == null) {
             return Lists.newArrayList();
         }
-        return allResourcePaths.stream().map(path -> getRecordWithoutInit(path)).collect(Collectors.toList());
+        return allResourcePaths.stream().map(this::getRecordWithoutInit).collect(Collectors.toList());
     }
 
     private SourceUsageRecord getRecordWithoutInit(String path) {
@@ -354,14 +289,6 @@ public class SourceUsageManager {
     // return all records in last one month
     public List<SourceUsageRecord> getLastMonthRecords() {
         return getLatestRecordByDays(30);
-    }
-
-    public List<SourceUsageRecord> getLastQuarterRecords() {
-        return getLatestRecordByDays(90);
-    }
-
-    public List<SourceUsageRecord> getLastYearRecords() {
-        return getLatestRecordByDays(365);
     }
 
     private boolean isNotOk(SourceUsageRecord.CapacityStatus status) {
@@ -475,36 +402,6 @@ public class SourceUsageManager {
             return;
         }
 
-        String currentCapacity = SizeConvertUtil.byteCountToDisplaySize(info.getCurrentCapacity());
-        String capacity = SizeConvertUtil.byteCountToDisplaySize(info.getCapacity());
-
-        if (checkProject) {
-            if (info.getCapacityStatus() == OVERCAPACITY && info.getNodeStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getlicenseProjectSourceNodesOverCapacity(),
-                                currentCapacity, capacity, info.getCurrentNode(), info.getNode()));
-            } else if (info.getCapacityStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getLicenseProjectSourceOverCapacity(), currentCapacity, capacity));
-            } else if (info.getNodeStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getLicenseNodesOverCapacity(), info.getCurrentNode(), info.getNode()));
-            }
-            logger.info("Current capacity status of project: {} is ok", project);
-        } else {
-            if (info.getCapacityStatus() == OVERCAPACITY && info.getNodeStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getLicenseSourceNodesOverCapacity(),
-                                currentCapacity, capacity, info.getCurrentNode(), info.getNode()));
-            } else if (info.getCapacityStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getLicenseSourceOverCapacity(), currentCapacity, capacity));
-            } else if (info.getNodeStatus() == OVERCAPACITY) {
-                throw new KylinException(LICENSE_OVER_CAPACITY, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getLicenseNodesOverCapacity(), info.getCurrentNode(), info.getNode()));
-            }
-            logger.info("Current capacity status is ok");
-        }
     }
 
     public boolean isOverCapacityThreshold(SourceUsageRecord sourceUsageRecord) {
@@ -532,11 +429,4 @@ public class SourceUsageManager {
         T process();
     }
 
-    public double calculateRatio(long amount, long totalAmount) {
-        if (amount > 0d) {
-            // Keep two decimals
-            return (Math.round(((double) amount) / totalAmount * 100d)) / 100d;
-        }
-        return 0d;
-    }
 }

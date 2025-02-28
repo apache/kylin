@@ -16,6 +16,7 @@
         isTextRecognition
         :isEdit="tableIndexMeta.id !== ''"
         :alertTips="alertTips"
+        :showShardBy="!isStorageV3"
         @handleTableIndexRecognize="handleTableIndexRecognize"
         @setSelectedColumns="(v) => setSelectedColumns(v)"
         @setShardbyCol="(label) => setShardbyCol(label)">
@@ -44,11 +45,11 @@
             <i class="el-ksd-n-icon-close-L-outlined" @click="isShowHelp = false"></i>
             <div class="sugession-blocks">
               <p>
-                <el-tag type="info" size="mini" is-light>{{ $t('sugessionLabel1') }}</el-tag>
+                <el-tag v-if="!isStorageV3" class="ksd-mr-8" ype="info" size="mini" is-light>{{ $t('sugessionLabel1') }}</el-tag>
                 <span class="sugession">{{ $t('sugession1') }}</span>
               </p>
-              <p class="ksd-mt-16">
-                <el-tag type="info" size="mini" is-light>{{ $t('sugessionLabel2') }}</el-tag>
+              <p class="ksd-mt-16" v-if="!isStorageV3">
+                <el-tag class="ksd-mr-8" type="info" size="mini" is-light>{{ $t('sugessionLabel2') }}</el-tag>
                 <span class="sugession">{{ $t('sugession2') }}
                   <span class="tips">{{ $t('tips') }}<a class="ky-a-like" @click="goToDataSource">{{ $t('goToDataSource') }}</a></span>
                 </span>
@@ -170,10 +171,15 @@
       return this.modelInstance.selected_columns.length ? this.modelInstance.selected_columns.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
     }
 
+    // 当前模型的存储版本
+    get isStorageV3 () {
+      return this.modelInstance.storage_type === 3
+    }
+
     goToDataSource () {
       this.$router.push('/studio/source')
     }
-  
+
     setSelectedColumns (selectedColumns) {
       this.selectedColumns = selectedColumns
       this.tableIndexMeta.col_order = []
@@ -538,7 +544,7 @@
         display: flex;
         align-items: flex-start;
         .sugession {
-          margin-left: 8px;
+          //margin-left: 8px;
           line-height: 18px;
         }
         .tips {

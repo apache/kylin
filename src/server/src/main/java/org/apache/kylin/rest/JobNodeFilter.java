@@ -21,7 +21,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeSystem.JOB_NODE_AP
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -33,14 +32,13 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,8 +82,7 @@ public class JobNodeFilter implements Filter {
     private boolean checkJobNodeAbandon(KylinConfig kylinConfig, HttpServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
 
-        boolean isJobNodePass = jobNodeAbandonApiSet.stream().filter(request.getRequestURI()::contains)
-                .collect(Collectors.toList()).isEmpty();
+        boolean isJobNodePass = jobNodeAbandonApiSet.stream().filter(request.getRequestURI()::contains).count() == 0;
         if (!isJobNodePass) {
             if (kylinConfig.isQueryNode()) {
                 request.setAttribute(FILTER_PASS, "true");

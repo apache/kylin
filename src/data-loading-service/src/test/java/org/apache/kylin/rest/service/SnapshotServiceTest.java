@@ -42,7 +42,6 @@ import org.apache.kylin.job.exception.JobSubmissionException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.service.SnapshotService;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -100,7 +99,8 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
     protected TableService tableService = Mockito.spy(TableService.class);
 
     @Before
-    public void setup() {
+    public void setUp() {
+        JobContextUtil.cleanUp();
         overwriteSystemProp("HADOOP_USER_NAME", "root");
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
@@ -122,14 +122,13 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
 
         // init snapshot job factory
         new NSparkSnapshotJob();
-        JobContextUtil.cleanUp();
         JobContextUtil.getJobInfoDao(getTestConfig());
     }
 
     @After
     public void tearDown() {
-        cleanupTestMetadata();
         JobContextUtil.cleanUp();
+        cleanupTestMetadata();
     }
 
     @Test
@@ -524,29 +523,25 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
 
         // default sort
         Pair<List<SnapshotInfoResponse>, Integer> projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "", true,
-                Pair.newPair(0, 1));
+                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
         Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
 
         // default sort but reverse
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "", false,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(SnapshotStatus.ONLINE),
+                Sets.newHashSet(), "", false, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
         Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
 
         // sort by table
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(SnapshotStatus.ONLINE),
+                Sets.newHashSet(), "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
         Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
 
         // sort by table not reverse
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "table", false,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(SnapshotStatus.ONLINE),
+                Sets.newHashSet(), "table", false, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
         Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
     }
@@ -562,20 +557,17 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
 
         // status empty
         Pair<List<SnapshotInfoResponse>, Integer> projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(), Sets.newHashSet(), "", true,
-                Pair.newPair(0, 1));
+                Sets.newHashSet(), Sets.newHashSet(), "", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
 
         // sort by table and status broken
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(SnapshotStatus.BROKEN),
+                Sets.newHashSet(), "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(0, projectSnapshots.getFirst().size());
 
         // partitionFilter false and tableSelectedSnapshotPartitionCol is null
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(), Sets.newHashSet(false), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(),
+                Sets.newHashSet(false), "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
 
         // partitionFilter false and tableSelectedSnapshotPartitionCol is not null
@@ -585,21 +577,18 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
                 ImmutableMap.<String, String> builder().put(tableName, partColName).build());
         TableDesc tableDesc = NTableMetadataManager.getInstance(getTestConfig(), PROJECT).getTableDesc(tableName);
         Assert.assertEquals(partColName, tableDesc.getSelectedSnapshotPartitionCol());
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(), Sets.newHashSet(false), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(),
+                Sets.newHashSet(false), "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
 
         // partitionFilter true and tableSelectedSnapshotPartitionCol is null
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(), Sets.newHashSet(true), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(), Sets.newHashSet(true),
+                "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
 
         // partitionFilter true and tableSelectedSnapshotPartitionCol is not null
-        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
-                Sets.newHashSet(), Sets.newHashSet(true), "table", true,
-                Pair.newPair(0, 1));
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB", Sets.newHashSet(), Sets.newHashSet(true),
+                "table", true, Pair.newPair(0, 1));
         Assert.assertEquals(1, projectSnapshots.getFirst().size());
     }
 
@@ -780,8 +769,7 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, PROJECT);
         List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, null,
-                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true,
-                Pair.newPair(0, 10)).getFirst();
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true, Pair.newPair(0, 10)).getFirst();
         Assert.assertEquals(1, responses.size());
     }
 
@@ -841,10 +829,31 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, PROJECT);
         List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, tableName,
-                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true,
-                Pair.newPair(0, 10)).getFirst();
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true, Pair.newPair(0, 10)).getFirst();
         Assert.assertEquals(1, responses.size());
         Assert.assertEquals(10, responses.get(0).getUsage());
+    }
+
+    @Test
+    public void testTableSourceTypeTransformer() {
+        TableDesc table = Mockito.mock(TableDesc.class);
+        overwriteSystemProp("kylin.source.provider-family.9", "3001");
+
+        {
+            // Table source type 3001
+            Mockito.when(table.getSourceType()).thenReturn(3001);
+            SnapshotColResponse res = new SnapshotColResponse("db", "table", null, null, null, 3001);
+            SnapshotColResponse afterTransform = snapshotService.tableSourceTypeTransformer(table).apply(res);
+            Assert.assertEquals(9, afterTransform.getSourceType());
+        }
+
+        {
+            // Table source type 9
+            Mockito.when(table.getSourceType()).thenReturn(9);
+            SnapshotColResponse res = new SnapshotColResponse("db", "table", null, null, null, 9);
+            SnapshotColResponse afterTransform = snapshotService.tableSourceTypeTransformer(table).apply(res);
+            Assert.assertEquals(9, afterTransform.getSourceType());
+        }
     }
 
     private String getSnapshotPath(String tableName) {

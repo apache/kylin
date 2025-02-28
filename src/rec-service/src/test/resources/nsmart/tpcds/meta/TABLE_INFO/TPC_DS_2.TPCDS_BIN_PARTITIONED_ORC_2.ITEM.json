@@ -1,0 +1,99 @@
+{
+  "uuid" : "53853d46-2164-4ed6-9e6d-0b33fd0e0623",
+  "last_modified" : 1497607294918,
+  "version" : "2.0.0",
+  "name" : "ITEM",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "I_ITEM_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "I_ITEM_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "I_REC_START_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "I_REC_END_DATE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "I_ITEM_DESC",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "I_CURRENT_PRICE",
+    "datatype" : "double"
+  }, {
+    "id" : "7",
+    "name" : "I_WHOLESALE_COST",
+    "datatype" : "double"
+  }, {
+    "id" : "8",
+    "name" : "I_BRAND_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "I_BRAND",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "I_CLASS_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "I_CLASS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "I_CATEGORY_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "13",
+    "name" : "I_CATEGORY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "I_MANUFACT_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "15",
+    "name" : "I_MANUFACT",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "I_SIZE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "I_FORMULATION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "I_COLOR",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "I_UNITS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "20",
+    "name" : "I_CONTAINER",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "21",
+    "name" : "I_MANAGER_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "22",
+    "name" : "I_PRODUCT_NAME",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

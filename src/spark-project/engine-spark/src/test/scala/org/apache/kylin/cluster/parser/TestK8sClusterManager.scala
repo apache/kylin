@@ -18,12 +18,12 @@
 
 package org.apache.kylin.cluster.parser
 
-import java.util
-
 import io.fabric8.kubernetes.api.model.{Quantity, ResourceQuota, ResourceQuotaStatus}
 import io.fabric8.volcano.scheduling.v1beta1.{Queue, QueueSpec}
 import org.apache.kylin.cluster.K8sClusterManager
 import org.apache.spark.sql.common.SparderBaseFunSuite
+
+import java.util
 
 class TestK8sClusterManager extends SparderBaseFunSuite {
 

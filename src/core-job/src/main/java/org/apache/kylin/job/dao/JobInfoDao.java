@@ -17,23 +17,28 @@
  */
 package org.apache.kylin.job.dao;
 
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.CRON;
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.INTERNAL;
+import static org.apache.kylin.job.execution.JobTypeEnum.Category.SNAPSHOT;
 import static org.apache.kylin.job.util.JobInfoUtil.JOB_SERIALIZER;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.job.config.JobMybatisConfig;
 import org.apache.kylin.job.domain.JobInfo;
 import org.apache.kylin.job.domain.JobLock;
+import org.apache.kylin.job.exception.ExecuteRuntimeException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -115,8 +120,8 @@ public class JobInfoDao {
             copyForWrite.setLastModified(System.currentTimeMillis());
             int updateAffect = jobInfoMapper.updateByJobIdSelective(constructJobInfo(copyForWrite, jobInfo.getMvcc()));
             if (updateAffect == 0) {
-                String errorMeg = String.format("job_info update fail for mvcc, job_id = %1s, mvcc = %2d", job.getId(),
-                        jobInfo.getMvcc());
+                String errorMeg = String.format(Locale.ROOT, "job_info update fail for mvcc, job_id = %1s, mvcc = %2d",
+                        job.getId(), jobInfo.getMvcc());
                 logger.warn(errorMeg);
                 throw new OptimisticLockingFailureException(errorMeg);
             }
@@ -169,34 +174,40 @@ public class JobInfoDao {
         jobInfo.setPriority(executablePO.getPriority());
 
         String subject = null;
-        if (JobTypeEnum.TABLE_SAMPLING == executablePO.getJobType()) {
-            subject = executablePO.getTargetModel();
-        } else if (JobTypeEnum.SNAPSHOT_REFRESH == executablePO.getJobType()
-                || JobTypeEnum.SNAPSHOT_BUILD == executablePO.getJobType()) {
+        switch (executablePO.getJobType().getCategory()) {
+        case INTERNAL:
+        case SNAPSHOT:
             subject = executablePO.getParams().get(NBatchConstants.P_TABLE_NAME);
-        } else if (JobTypeEnum.SECOND_STORAGE_NODE_CLEAN == executablePO.getJobType()) {
-            subject = jobInfo.getProject();
-        } else if (null != executablePO.getTargetModel() && null != executablePO.getProject()) {
-            if (executablePO.getParams().containsKey(NBatchConstants.P_MODEL_NAME)) {
-                subject = executablePO.getParams().get(NBatchConstants.P_MODEL_NAME);
-            } else {
-                NDataModelManager nDataModelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                        executablePO.getProject());
-                NDataModel nDataModel = nDataModelManager.getDataModelDesc(executablePO.getTargetModel());
-                if (null == nDataModel) {
-                    logger.warn("Can not get modelName by modelId {}, project {}", executablePO.getTargetModel(),
-                            executablePO.getProject());
+            break;
+        case CRON:
+            subject = executablePO.getJobType().name();
+            break;
+        default:
+            if (JobTypeEnum.TABLE_SAMPLING == executablePO.getJobType()
+                    || JobTypeEnum.LAYOUT_DATA_OPTIMIZE == executablePO.getJobType()) {
+                subject = executablePO.getTargetModel();
+            } else if (null != executablePO.getTargetModel() && null != executablePO.getProject()) {
+                if (executablePO.getParams().containsKey(NBatchConstants.P_MODEL_NAME)) {
+                    subject = executablePO.getParams().get(NBatchConstants.P_MODEL_NAME);
                 } else {
-                    subject = nDataModel.getAlias();
+                    NDataModelManager nDataModelManager = NDataModelManager
+                            .getInstance(KylinConfig.getInstanceFromEnv(), executablePO.getProject());
+                    NDataModel nDataModel = nDataModelManager.getDataModelDesc(executablePO.getTargetModel());
+                    if (null == nDataModel) {
+                        logger.warn("Can not get modelName by modelId {}, project {}", executablePO.getTargetModel(),
+                                executablePO.getProject());
+                    } else {
+                        subject = nDataModel.getAlias();
+                    }
                 }
             }
         }
 
         jobInfo.setSubject(subject);
         jobInfo.setModelId(executablePO.getTargetModel());
-        jobInfo.setCreateTime(new Date(executablePO.getCreateTime()));
-        jobInfo.setUpdateTime(new Date(executablePO.getLastModified()));
-        jobInfo.setJobContent(JobInfoUtil.serializeExecutablePO(executablePO));
+        jobInfo.setCreateTime(executablePO.getCreateTime());
+        jobInfo.setUpdateTime(executablePO.getLastModified());
+        jobInfo.setJobContent(checkAndCompressJobContent(JobInfoUtil.serializeExecutablePO(executablePO)));
 
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(),
                 executablePO.getProject());
@@ -207,11 +218,19 @@ public class JobInfoDao {
         return jobInfo;
     }
 
+    private byte[] checkAndCompressJobContent(byte[] jobContent) {
+        try {
+            return CompressionUtils.compress(jobContent);
+        } catch (IOException e) {
+            throw new ExecuteRuntimeException("Compress job content failed.", e);
+        }
+    }
+
     public void deleteJobsByProject(String project) {
         int count = jobInfoMapper.deleteByProject(project);
         logger.info("delete {} jobs for project {}", count, project);
     }
-    
+
     public List<JobLock> fetchAllJobLock() {
         return jobLockMapper.fetchAll();
     }
@@ -222,8 +241,8 @@ public class JobInfoDao {
                 jobInfoMapper.deleteByProject(project);
             }
             for (JobInfo jobInfo : jobInfos) {
+                jobInfo.setJobContent(checkAndCompressJobContent(jobInfo.getJobContent()));
                 JobInfo currentJobInfo = jobInfoMapper.selectByJobId(jobInfo.getJobId());
-                jobInfo.setJobInfoTable(JobMybatisConfig.JOB_INFO_TABLE);
                 if (currentJobInfo == null) {
                     jobInfoMapper.insert(jobInfo);
                 } else {
@@ -241,10 +260,6 @@ public class JobInfoDao {
     }
 
     public Long getEarliestJobCreateTime(String project) {
-        Date result = jobInfoMapper.getEarliestCreateTime(project);
-        if (null == result) {
-            return null;
-        }
-        return result.getTime();
+        return jobInfoMapper.getEarliestCreateTime(project);
     }
 }

@@ -49,16 +49,15 @@ import org.apache.kafka.common.errors.TimeoutException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.kafka.util.KafkaUtils;
 import org.apache.kylin.loader.ParserClassLoaderState;
 import org.apache.kylin.metadata.jar.JarInfoManager;
 import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.parser.AbstractDataParser;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -227,8 +226,7 @@ public class KafkaSourceHandler implements StreamingSourceHandler {
             return;
         }
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        val parserInfo = DataParserManager.getInstance(config, project)
-                .getDataParserInfo(parserName);
+        val parserInfo = DataParserManager.getInstance(config, project).getDataParserInfo(parserName);
         val jarInfo = JarInfoManager.getInstance(config, project).getJarInfo(STREAMING_CUSTOM_PARSER,
                 parserInfo.getJarName());
         if (loaderState.getLoadedJars().contains(jarInfo.getJarPath())) {

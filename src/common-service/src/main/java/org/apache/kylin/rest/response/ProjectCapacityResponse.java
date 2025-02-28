@@ -20,10 +20,10 @@ package org.apache.kylin.rest.response;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.sourceusage.SourceUsageRecord.CapacityStatus;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Data;
 

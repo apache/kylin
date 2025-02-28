@@ -181,6 +181,7 @@
     </EditableBlock>
     <!-- Snapshot -->
     <EditableBlock
+      v-if="!this.currentSelectedProjectInternalTableEnabled"
       :header-content="$t('snapshotTitle')"
       :isEditable="false">
       <div class="setting-item">
@@ -384,7 +385,8 @@ import { pageRefTags, pageCount } from 'config'
       'currentProjectData',
       'settingActions',
       'configList',
-      'isShowSecondStorage'
+      'isShowSecondStorage',
+      'currentSelectedProjectInternalTableEnabled'
     ]),
     ...mapState({
       platform: state => state.config.platform,

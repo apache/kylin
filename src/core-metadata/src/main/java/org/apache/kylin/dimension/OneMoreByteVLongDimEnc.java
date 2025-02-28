@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);
+    private static final Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);
 
     private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL,
             0x7fffffffffffffL, 0x7fffffffffffffffL };
@@ -62,14 +62,14 @@ public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Seriali
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new OneMoreByteVLongDimEnc(Integer.parseInt(args[0]));
         }
-    };
+    }
 
     // ============================================================================
 
     private int fixedLen;
     private int byteLen;
 
-    transient private int avoidVerbose = 0;
+    private transient int avoidVerbose = 0;
 
     //no-arg constructor is required for Externalizable
     public OneMoreByteVLongDimEnc() {

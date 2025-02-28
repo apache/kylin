@@ -62,6 +62,20 @@ class TestCapacitySchedulerParser extends SparderBaseFunSuite {
     assert(sys_kylin_w.max.vCores == Int.MaxValue)
   }
 
+  test("availableResource return correct elastically available resource in target queue") {
+    KylinBuildEnv.clean()
+    val env = KylinBuildEnv.getOrCreate(config)
+    Mockito.when(config.useQueueElasticResource()).thenReturn(true)
+
+    val content = TestUtils.getContent("schedulerInfo/capacitySchedulerInfo.json")
+    val parser = new CapacitySchedulerParser
+    parser.parse(content)
+    val defaultResource = parser.availableResource("default")
+    assert(defaultResource == AvailableResource(ResourceInfo(429496729, 429496729), ResourceInfo(429496729, 429496729)))
+    val devResource = parser.availableResource("dev_test")
+    assert(devResource == AvailableResource(ResourceInfo(53759, 782936739), ResourceInfo(73727, 1073741823)))
+  }
+
   protected override def afterAll(): Unit = {
     KylinBuildEnv.clean()
   }

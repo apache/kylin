@@ -28,7 +28,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -39,7 +38,7 @@ import org.junit.Test;
 public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
 
     @Before
-    public void setup() {
+    public void setUp() {
         createTestMetadata();
     }
 
@@ -69,12 +68,17 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testHandleNodeHdfsMetrics() {
+    public void testHandleNodeHdfsMetrics() throws InterruptedException {
+        overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.common.lock.LocalLockFactory");
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
         HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(getTestConfig());
-        EpochManager.getInstance().tryUpdateEpoch(EpochManager.GLOBAL, true);
-        hdfsCapacityMetrics.handleNodeHdfsMetrics();
-        Assert.assertTrue(hdfsCapacityMetrics.getWorkingDirCapacity().size() > 0);
+        Thread t1 = new Thread(hdfsCapacityMetrics::handleNodeHdfsMetrics);
+        Thread t2 = new Thread(hdfsCapacityMetrics::handleNodeHdfsMetrics);
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        Assert.assertFalse(hdfsCapacityMetrics.getWorkingDirCapacity().isEmpty());
     }
 
     @Test
@@ -90,7 +94,7 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
         }
         Assert.assertTrue(hdfsCapacityMetrics.getWorkingDirCapacity().isEmpty());
         hdfsCapacityMetrics.writeHdfsMetrics();
-        Assert.assertEquals(30, hdfsCapacityMetrics.getWorkingDirCapacity().size());
+        Assert.assertEquals(35, hdfsCapacityMetrics.getWorkingDirCapacity().size());
 
     }
 
@@ -106,7 +110,8 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
             fs.createNewFile(projectPath);
         }
         hdfsCapacityMetrics.writeHdfsMetrics();
-        Assert.assertEquals(hdfsCapacityMetrics.getWorkingDirCapacity().size(), hdfsCapacityMetrics.readHdfsMetrics().size());
+        Assert.assertEquals(hdfsCapacityMetrics.getWorkingDirCapacity().size(),
+                hdfsCapacityMetrics.readHdfsMetrics().size());
     }
 
     @Test
@@ -114,7 +119,6 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
         KylinConfig testConfig = getTestConfig();
         HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(testConfig);
-        EpochManager.getInstance().tryUpdateEpoch(EpochManager.GLOBAL, true);
         Path projectPath = new Path(testConfig.getWorkingDirectoryWithConfiguredFs("newten"));
         FileSystem fs = projectPath.getFileSystem(HadoopUtil.getCurrentConfiguration());
         if (!fs.exists(projectPath)) {
@@ -124,7 +128,7 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
         Thread t1 = new Thread(() -> {
             await().pollDelay(new Duration(1, TimeUnit.SECONDS)).until(() -> true);
             hdfsCapacityMetrics.readHdfsMetrics();
-            Assert.assertTrue(hdfsCapacityMetrics.getWorkingDirCapacity().size() > 0);
+            Assert.assertFalse(hdfsCapacityMetrics.getWorkingDirCapacity().isEmpty());
         });
         t1.start();
         fs.deleteOnExit(projectPath);

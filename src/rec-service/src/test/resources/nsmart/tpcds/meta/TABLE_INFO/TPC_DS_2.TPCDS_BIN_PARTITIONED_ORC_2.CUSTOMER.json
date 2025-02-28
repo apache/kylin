@@ -1,0 +1,83 @@
+{
+  "uuid" : "6a0f3544-205a-4ea9-8d32-dcead87cd00b",
+  "last_modified" : 1497607295036,
+  "version" : "2.0.0",
+  "name" : "CUSTOMER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "C_CUSTOMER_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "C_CUSTOMER_ID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "C_CURRENT_CDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "4",
+    "name" : "C_CURRENT_HDEMO_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "5",
+    "name" : "C_CURRENT_ADDR_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "C_FIRST_SHIPTO_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "7",
+    "name" : "C_FIRST_SALES_DATE_SK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "8",
+    "name" : "C_SALUTATION",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "C_FIRST_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "C_LAST_NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "C_PREFERRED_CUST_FLAG",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "C_BIRTH_DAY",
+    "datatype" : "integer"
+  }, {
+    "id" : "13",
+    "name" : "C_BIRTH_MONTH",
+    "datatype" : "integer"
+  }, {
+    "id" : "14",
+    "name" : "C_BIRTH_YEAR",
+    "datatype" : "integer"
+  }, {
+    "id" : "15",
+    "name" : "C_BIRTH_COUNTRY",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "C_LOGIN",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "C_EMAIL_ADDRESS",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "C_LAST_REVIEW_DATE",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "TPCDS_BIN_PARTITIONED_ORC_2",
+  "project" : "TPC_DS_2"
+}

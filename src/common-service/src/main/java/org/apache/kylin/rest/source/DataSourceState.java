@@ -48,6 +48,9 @@ import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.response.NHiveTableNameResponse;
@@ -55,10 +58,6 @@ import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.spark.sql.SparderEnv;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,6 +119,7 @@ public class DataSourceState implements Runnable {
             SparderEnv.init();
         }
     }
+
     /**
      * load all source info to cache
      */
@@ -208,7 +208,7 @@ public class DataSourceState implements Runnable {
         if (CollectionUtils.isNotEmpty(tableFilterList)) {
             NHiveSourceInfo info = cache.get(cacheKey);
             if (!checkSourceInfoEmpty(sourceInfo) && !checkSourceInfoEmpty(info)) {
-                info.getTables().keySet().stream().forEach(db -> {
+                info.getTables().keySet().forEach(db -> {
                     if (CollectionUtils.isEmpty(sourceInfo.getDatabaseInfo(db))) {
                         if (tableFilterList.contains(db)) {
                             return;

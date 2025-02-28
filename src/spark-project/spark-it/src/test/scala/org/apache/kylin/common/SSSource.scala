@@ -21,26 +21,33 @@ import java.io.{DataInputStream, File}
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Locale
-import com.google.common.base.Preconditions
+
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.persistence.{JsonSerializer, RootPersistentEntity}
 import org.apache.kylin.common.util.TempMetadataBuilder
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
+import org.apache.kylin.job.util.JobContextUtil
 import org.apache.kylin.metadata.cube.model.{IndexPlan, NDataflowManager, NIndexPlanManager}
 import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, NTableMetadataManager}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.util.{PushDownUtil, QueryParams}
+import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
+import org.apache.spark.sql.udf.UdfManager
 import org.scalatest.Suite
 
 trait SSSource extends SharedSparkSession with LocalMetadata {
   self: Suite =>
 
-  val CSV_TABLE_DIR = "../" + TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv"
+  val CSV_TABLE_DIR: String = "../" + TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv"
 
   override def beforeAll() {
+    JobContextUtil.cleanUp()
     super.beforeAll()
+    UdfManager.create(spark)
+    SparderEnv.setSparkSession(spark)
     val project = getProject
     import org.apache.kylin.metadata.project.NProjectManager
     val kylinConf = KylinConfig.getInstanceFromEnv

@@ -18,23 +18,24 @@
 package org.apache.spark.sql.execution
 
 import java.util.concurrent.TimeUnit.NANOSECONDS
-import org.apache.spark.TaskContext
+
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.softaffinity.SoftAffinityManager
+import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.catalog.BucketSpec
-import org.apache.spark.sql.catalyst.expressions.{And, Ascending, Attribute, AttributeReference, BoundReference, DynamicPruningExpression, Expression, FileSourceMetadataAttribute, Literal, PlanExpression, Predicate, SortOrder, UnsafeProjection}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.plans.QueryPlan
 import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partitioning, UnknownPartitioning}
 import org.apache.spark.sql.catalyst.{InternalRow, TableIdentifier}
-import org.apache.spark.sql.execution.datasources.parquet.{ParquetFileFormat => ParquetSource}
 import org.apache.spark.sql.execution.datasources._
+import org.apache.spark.sql.execution.datasources.parquet.{ParquetFileFormat => ParquetSource}
 import org.apache.spark.sql.execution.metric.{SQLMetric, SQLMetrics}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.vectorized.ColumnarBatch
-import org.apache.spark.util.{TaskCompletionListener, Utils}
 import org.apache.spark.util.collection.BitSet
+import org.apache.spark.util.{TaskCompletionListener, Utils}
 
 import scala.collection.mutable.HashMap
 
@@ -53,16 +54,16 @@ import scala.collection.mutable.HashMap
  *                                    [[DisableUnnecessaryBucketedScan]] for details.
  */
 case class LayoutFileSourceScanExec(
-   @transient relation: HadoopFsRelation,
-   output: Seq[Attribute],
-   requiredSchema: StructType,
-   partitionFilters: Seq[Expression],
-   optionalBucketSet: Option[BitSet],
-   optionalNumCoalescedBuckets: Option[Int],
-   dataFilters: Seq[Expression],
-   tableIdentifier: Option[TableIdentifier],
-   disableBucketedScan: Boolean = false,
-   sourceScanRows: Long = 1L)
+                                     @transient relation: HadoopFsRelation,
+                                     output: Seq[Attribute],
+                                     requiredSchema: StructType,
+                                     partitionFilters: Seq[Expression],
+                                     optionalBucketSet: Option[BitSet],
+                                     optionalNumCoalescedBuckets: Option[Int],
+                                     dataFilters: Seq[Expression],
+                                     tableIdentifier: Option[TableIdentifier],
+                                     disableBucketedScan: Boolean = false,
+                                     sourceScanRows: Long = 1L)
   extends DataSourceScanExec {
 
   lazy val metadataColumns: Seq[AttributeReference] =
@@ -503,9 +504,9 @@ case class LayoutFileSourceScanExec(
    * @param fsRelation         [[HadoopFsRelation]] associated with the read.
    */
   def createNonBucketedReadRDD(
-        readFile: (PartitionedFile) => Iterator[InternalRow],
-        selectedPartitions: Array[PartitionDirectory],
-        fsRelation: HadoopFsRelation): RDD[InternalRow] = {
+                                readFile: (PartitionedFile) => Iterator[InternalRow],
+                                selectedPartitions: Array[PartitionDirectory],
+                                fsRelation: HadoopFsRelation): RDD[InternalRow] = {
     val openCostInBytes = fsRelation.sparkSession.sessionState.conf.filesOpenCostInBytes
     val maxSplitBytes =
       FilePartition.maxSplitBytes(fsRelation.sparkSession, selectedPartitions)

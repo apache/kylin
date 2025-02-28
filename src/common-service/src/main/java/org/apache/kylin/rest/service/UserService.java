@@ -31,13 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
 import org.apache.kylin.common.util.CaseInsensitiveStringSet;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.request.CachedUserUpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.UserDetailsManager;
-
-import org.apache.kylin.metadata.user.ManagedUser;
 
 @ThirdPartyDependencies({ @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
         "StaticUserGroupService" }) })
@@ -75,7 +74,8 @@ public interface UserService extends UserDetailsManager {
                 .collect(Collectors.toList());
     }
 
-    //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
+    //For performance consideration, list all users may be incomplete(
+    // e.g. not load user's authorities until authorities has benn used).
     //So it's an extension point that can complete user's information latter.
     //loadUserByUsername() has guarantee that the return user is complete.
     void completeUserInfo(ManagedUser user);

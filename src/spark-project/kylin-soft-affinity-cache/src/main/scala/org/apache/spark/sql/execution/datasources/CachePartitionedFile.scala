@@ -44,7 +44,9 @@ class CacheFileScanRDD(
                         @transient val cacheFilePartitions: Seq[CacheFilePartition],
                         override val readDataSchema: StructType,
                         override val metadataColumns: Seq[AttributeReference] = Seq.empty)
-  extends FileScanRDD(sparkSession, readFunction, Nil, readDataSchema, metadataColumns) {
+  extends FileScanRDD(sparkSession, readFunction, cacheFilePartitions.map { cachePartition =>
+    cachePartition.nativeFilePartition
+  }, readDataSchema, metadataColumns) {
 
   def checkCached(cacheLocations: Array[String]): Boolean = {
     val underscoreExecId = "_" + SparkEnv.get.executorId;

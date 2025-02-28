@@ -1,0 +1,6 @@
+{
+  "table_identity" : "DEFAULT.KYLIN_SALES",
+  "model_uuid" : "6051780b-2b91-81e7-94ba-d7e18e2aec1b",
+  "project" : "test_agg_pushdown",
+  "uuid" : "4f24abd9-394c-fb1a-4f03-10a0f3e29186"
+}

@@ -34,8 +34,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.ZipFileUtils;
+import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.hamcrest.BaseMatcher;
@@ -67,6 +68,7 @@ public class StreamingJobDiagInfoToolTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         createTestMetadata();
+        JobContextUtil.cleanUp();
         copyConf();
         createStreamingExecutorLog(PROJECT, JOB_ID_BUILD);
         createStreamingDriverLog(PROJECT, JOB_ID_BUILD);
@@ -75,6 +77,7 @@ public class StreamingJobDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
     @After
     public void teardown() {
+        JobContextUtil.cleanUp();
         cleanupTestMetadata();
     }
 

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.cube.model;
 
+import static org.apache.kylin.common.persistence.MetadataType.LAYOUT;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,11 +31,12 @@ import java.util.TreeSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.MetadataType;
+import org.apache.kylin.common.persistence.RawResourceFilter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +97,7 @@ class NDataSegDetailsManager {
     }
     
     NDataSegDetails getForSegment(NDataflow df, String segId) {
-        NDataSegDetails instances = getStore().getResource(getResourcePathForSegment(df.getUuid(), segId),
+        NDataSegDetails instances = getStore().getResource(MetadataType.mergeKeyWithType(segId, LAYOUT),
                 DATA_SEG_LAYOUT_INSTANCES_SERIALIZER);
         if (instances != null) {
             instances.setConfig(df.getConfig());
@@ -195,7 +198,7 @@ class NDataSegDetailsManager {
 
     private void removeForSegmentQuietly(NDataflow df, String segId) {
         try {
-            removeForSegment(df, segId);
+            removeForSegment(segId);
         } catch (Exception e) {
             logger.error("Failed to remove NDataSegDetails for segment {}", df + "." + segId, e);
         }
@@ -204,29 +207,21 @@ class NDataSegDetailsManager {
     /**
      * delete the segment from the restore.
      *
-     * @param df
      * @param segId
      */
-    void removeForSegment(NDataflow df, String segId) {
-        if (!getStore().exists(getResourcePathForSegment(df.getUuid(), segId))) {
+    void removeForSegment(String segId) {
+        if (!getStore().exists(MetadataType.mergeKeyWithType(segId, LAYOUT))) {
             return;
         }
 
-        getStore().deleteResource(getResourcePathForSegment(df.getUuid(), segId));
+        getStore().deleteResource(MetadataType.mergeKeyWithType(segId, LAYOUT));
     }
 
     void removeDetails(NDataflow df) {
-        val toBeRemoved = getStore().listResourcesRecursively(getResourcePathForDetails(df.getId()));
+        val toBeRemoved = getStore().collectResourceRecursively(LAYOUT,
+                RawResourceFilter.equalFilter("dataflowId", df.getUuid()));
         if (CollectionUtils.isNotEmpty(toBeRemoved)) {
             toBeRemoved.forEach(path -> getStore().deleteResource(path));
         }
-    }
-
-    private String getResourcePathForSegment(String dfId, String segId) {
-        return getResourcePathForDetails(dfId) + "/" + segId + MetadataConstants.FILE_SURFIX;
-    }
-
-    private String getResourcePathForDetails(String dfId) {
-        return "/" + project + NDataSegDetails.DATAFLOW_DETAILS_RESOURCE_ROOT + "/" + dfId;
     }
 }

@@ -21,6 +21,10 @@ import java.util.LinkedHashMap;
 
 import org.apache.calcite.sql.SqlNode;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.alias.AliasMapping;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
@@ -28,11 +32,6 @@ import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.query.relnode.ColumnRowType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.BiMap;
-import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @MetadataInfo(project = "default")
 class ExpressionComparatorTest {
@@ -149,37 +148,37 @@ class ExpressionComparatorTest {
         SqlNode sn2 = CalciteParser.getOnlySelectNode(sql2);
         SqlNode sn3 = CalciteParser.getOnlySelectNode(sql3);
         {
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    null, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(null, null);
             Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, sn1));
         }
         {
             AliasMapping aliasMapping = new AliasMapping(null);
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    aliasMapping, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(aliasMapping, null);
             Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, sn1));
         }
         {
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    null, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(null, null);
             Assertions.assertTrue(matchInfo.isSqlNodeEqual(sn2, sn3));
         }
         {
             AliasMapping aliasMapping = new AliasMapping(null);
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    aliasMapping, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(aliasMapping, null);
             Assertions.assertTrue(matchInfo.isSqlNodeEqual(sn2, sn3));
         }
 
         {
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    null, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(null, null);
             Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, null));
         }
 
         {
-            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
-                    null, null);
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo //
+                    = new ExpressionComparator.AliasMatchingSqlNodeComparator(null, null);
             Assertions.assertFalse(matchInfo.isSqlNodeEqual(null, sn1));
         }
     }

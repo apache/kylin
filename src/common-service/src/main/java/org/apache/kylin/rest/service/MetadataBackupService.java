@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -32,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.var;
 
 @Service
 public class MetadataBackupService {

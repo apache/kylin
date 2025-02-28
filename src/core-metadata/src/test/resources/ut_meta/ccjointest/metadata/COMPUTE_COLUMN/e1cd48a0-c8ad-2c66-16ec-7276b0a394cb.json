@@ -1,0 +1,9 @@
+{
+  "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+  "tableAlias" : "TEST_KYLIN_FACT",
+  "columnName" : "ORDER_ID_CASE_WHEN1",
+  "expression" : "CASE WHEN TRUE THEN TEST_KYLIN_FACT.ORDER_ID ELSE 0 END",
+  "datatype" : "bigint",
+  "uuid" : "e1cd48a0-c8ad-2c66-16ec-7276b0a394cb",
+  "project" : "default"
+}
