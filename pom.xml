@@ -14,7 +14,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <!-- https://infra.apache.org/publishing-maven-artifacts.html -->
@@ -3390,6 +3391,9 @@
                                 <configLocation>dev-support/checkstyle-apache.xml</configLocation>
                                 <suppressionsLocation>dev-support/checkstyle-apache-suppressions.xml
                                 </suppressionsLocation>
+                                <includes>
+                                    src/main/java/**/*.java,src/main/scala/**/*.scala,src/main/scala/**/*.java,src/test/java/**/*.java,src/test/scala/**/*.scala,src/test/scala/**/*.java
+                                </includes>
                                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
@@ -3972,23 +3976,6 @@
                                 <exclude>**/*.bmp</exclude>
 
                                 <exclude>src/main/codegen/javacc/org/apache/kylin/query/util/CommentParser.jj</exclude>
-
-                                <!-- protobuf generated -->
-                                <exclude>
-                                    src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
-                                </exclude>
-                                <exclude>
-                                    src/main/java/org/apache/kylin/storage/hbase/cube/v1/filter/generated/FilterProtosExt.java
-                                </exclude>
-                                <exclude>
-                                    src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
-                                </exclude>
-                                <exclude>
-                                    storage-hbase/src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
-                                </exclude>
-                                <exclude>
-                                    examples/test_case_data/sample_local/UUID
-                                </exclude>
                             </excludes>
                         </configuration>
                         <executions>

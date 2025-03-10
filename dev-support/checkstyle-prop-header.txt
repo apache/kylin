@@ -14,14 +14,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-driver.name=Apache Kylin JDBC Driver
-driver.version=1.0
-product.name=Kylin
-product.version=1.0
-jdbc.compliant=true
-driver.version.major=0
-driver.version.minor=8
-database.version.major=0
-database.version.minor=8
-build.timestamp=20140918-2017

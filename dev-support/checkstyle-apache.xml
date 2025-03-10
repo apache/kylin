@@ -28,10 +28,17 @@
     </module>
 
     <module name="Header">
-        <property name="headerFile" value="dev-support/checkstyle-apache-header.txt"/>
-        <property name="fileExtensions" value="java"/>
+        <property name="headerFile" value="dev-support/checkstyle-java-header.txt"/>
+        <property name="fileExtensions" value="java, scala"/>
     </module>
-
+    <module name="Header">
+        <property name="headerFile" value="dev-support/checkstyle-prop-header.txt"/>
+        <property name="fileExtensions" value="properties"/>
+    </module>
+    <module name="Header">
+        <property name="headerFile" value="dev-support/checkstyle-xml-header.txt"/>
+        <property name="fileExtensions" value="xml"/>
+    </module>
     <module name="FileTabCharacter"/>
     <module name="SuppressWarningsFilter"/>
     <module name="NewlineAtEndOfFile"/>
