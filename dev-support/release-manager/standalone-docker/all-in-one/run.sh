@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-TAG=5.0.0-GA
+TAG=5.0.2-GA
 
 docker run -d \
     --name Kylin5-Machine \

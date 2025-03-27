@@ -91,25 +91,25 @@ public class KylinVersion implements Comparable {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("5.0-SNAPSHOT");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("5.0.2");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 
     private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
     /*
-     * 1.5.1 is actually compatible with 1.5.0's cube. However, 
+     * 1.5.1 is actually compatible with 1.5.0's cube. However,
      * the "calculate signature" method in 1.5.1 code base somehow
-     * gives different signature values for 1.5.0 cubes. 
+     * gives different signature values for 1.5.0 cubes.
      * To prevent from users having to take care of this mess, as people
      * usually won't expect to take lots of efforts for small upgrade (from 1.5.0 to 1.5.1), a special list of
      * SIGNATURE_INCOMPATIBLE_REVISIONS is introduced to silently take care of such legacy cubes.
      *
-     * We should NEVER add new stuff to SIGNATURE_INCOMPATIBLE_REVISIONS. 
+     * We should NEVER add new stuff to SIGNATURE_INCOMPATIBLE_REVISIONS.
      * "calculate signature" should always return consistent values
-     * to compatible versions. If it's impossible to maintain consistent signatures between upgrade, 
+     * to compatible versions. If it's impossible to maintain consistent signatures between upgrade,
      * we should increase the minor version,
-     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0, 
+     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0,
      * or even to use 2.0.0, as people tends to accept
      * doing more (e.g. Having to use sth like a metastore upgrade tool when upgrading Kylin)
      */

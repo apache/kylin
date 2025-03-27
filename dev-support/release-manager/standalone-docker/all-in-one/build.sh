@@ -18,7 +18,7 @@
 #
 
 
-TAG=5.0.0-GA
+TAG=5.0.2-GA
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${DIR} || exit
@@ -34,12 +34,12 @@ fi
 # 2. Execute sbin/download-spark-user.sh and should have a new spark folder at the root of kylin dir
 # 3. Re-compress kylin folder and put it to the package dir for Dockerfile use
 #
-# wget https://archive.apache.org/dist/kylin/apache-kylin-5.0.0-GA/apache-kylin-5.0.0-GA-bin.tar.gz -P ${DIR}/package/
-# tar zxf apache-kylin-5.0.0-GA-bin.tar.gz
-# cd apache-kylin-5.0.0-GA-bin
+# wget https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-bin.tar.gz -P ${DIR}/package/
+# tar zxf apache-kylin-5.0.0-bin.tar.gz
+# cd apache-kylin-5.0.2-bin
 # bash sbin/download-spark-user.sh
-# tar -czf apache-kylin-5.0.0-GA-bin.tar.gz apache-kylin-5.0.0-GA-bin
-# Notice - For mac tar command use: tar czf apache-kylin-5.0.0-GA-bin.tar.gz --no-mac-metadata apache-kylin-5.0.0-GA-bin
+# tar -czf apache-kylin-5.0.2-bin.tar.gz apache-kylin-5.0.2-bin
+# Notice - For mac tar command use: tar czf apache-kylin-5.0.2-bin.tar.gz --no-mac-metadata apache-kylin-5.0.2-bin
 # to avoid AppleDouble format hidden files inside the compressed file
 
 echo "start to build kylin standalone docker image"

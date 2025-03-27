@@ -102,6 +102,13 @@ if [[ "${WITH_GLUTEN}" = "1" ]]; then
     cp -rf gluten/jars/spark33/* ${package_name}/lib/gluten/
     mv spark/libch.so ${package_name}/server/
     cp spark/jars/gluten.jar ${package_name}/lib/ext/
+    if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' '22a\
+export LD_PRELOAD=${KYLIN_HOME}/server/libch.so
+' ${package_name}/sbin/spark-test.sh
+    else
+        sed -i '22aexport LD_PRELOAD=${KYLIN_HOME}/server/libch.so' ${package_name}/sbin/spark-test.sh
+    fi
 fi
 
 # cp -rf deploy/.keystore ${package_name}/server/

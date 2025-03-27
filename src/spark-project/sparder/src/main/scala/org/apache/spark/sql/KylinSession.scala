@@ -318,25 +318,6 @@ object KylinSession extends Logging {
           sparkConf.set("spark.driver.host", AddressUtil.getLocalHostExactAddress)
         }
 
-        var extraJars = Paths.get(KylinConfig.getInstanceFromEnv.getKylinJobJarPath).getFileName.toString
-        if (KylinConfig.getInstanceFromEnv.queryUseGlutenEnabled) {
-          if (sparkConf.get(SPARK_MASTER).startsWith("yarn")) {
-            val distFiles = sparkConf.get(SPARK_YARN_DIST_FILE)
-            if (distFiles.isEmpty) {
-              sparkConf.set(SPARK_YARN_DIST_FILE,
-                sparkConf.get(SPARK_EXECUTOR_JAR_PATH))
-            } else {
-              sparkConf.set(SPARK_YARN_DIST_FILE,
-                sparkConf.get(SPARK_EXECUTOR_JAR_PATH) + "," + distFiles)
-            }
-            extraJars = "gluten.jar" + File.pathSeparator + extraJars
-          } else {
-            extraJars = sparkConf.get(SPARK_EXECUTOR_JAR_PATH) +
-              File.pathSeparator + extraJars
-          }
-        }
-        sparkConf.set("spark.executor.extraClassPath", extraJars)
-
         val krb5conf = " -Djava.security.krb5.conf=./__spark_conf__/__hadoop_conf__/krb5.conf"
         val executorExtraJavaOptions =
           sparkConf.get("spark.executor.extraJavaOptions", "")

@@ -74,8 +74,8 @@ RUN cp /opt/mysql-connector-j-8.0.33.jar $HIVE_HOME/lib/
 
 # install apache kylin
 RUN mkdir -p /home/kylin
-ADD package/apache-kylin-5.0.0-GA-bin.tar.gz /home/kylin
-ENV KYLIN_HOME=/home/kylin/apache-kylin-5.0.0-GA-bin
+ADD package/apache-kylin-5.0.2-bin.tar.gz /home/kylin
+ENV KYLIN_HOME=/home/kylin/apache-kylin-5.0.2-bin
 RUN cp /opt/mysql-connector-j-8.0.33.jar $KYLIN_HOME/lib/ext/
 COPY conf/kylin/kylin.properties.override $KYLIN_HOME/conf/
 

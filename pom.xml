@@ -120,10 +120,6 @@
         <libthrift.version>0.14.0</libthrift.version>
         <libfb303.version>0.9.3</libfb303.version>
 
-        <!-- soft affinity -->
-        <alluxio.version>2.7.4</alluxio.version>
-        <libthrift.version>0.12.0</libthrift.version>
-
         <!-- Kafka versions -->
         <kafka.version>2.8.2</kafka.version>
 

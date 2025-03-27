@@ -94,7 +94,7 @@ public enum StageEnum {
 
         @Override
         public StageExecutable createExecutable() {
-            return new StageExecutable(ExecutableConstants.STAGE_NAME_MATERIALIZE_FACT_VIEW);
+            return new StageExecutable(ExecutableConstants.STAGE_NAME_MATERIALIZED_FACT_TABLE);
         }
     },
 
@@ -125,7 +125,7 @@ public enum StageEnum {
 
         @Override
         public StageExecutable createExecutable() {
-            return new StageExecutable(ExecutableConstants.STAGE_NAME_MATERIALIZE_FLAT_TABLE);
+            return new StageExecutable(ExecutableConstants.STAGE_NAME_GENERATE_FLAT_TABLE);
         }
     },
 
@@ -156,7 +156,7 @@ public enum StageEnum {
 
         @Override
         public StageExecutable createExecutable() {
-            return new StageExecutable(ExecutableConstants.STAGE_NAME_BUILD_FLAT_TABLE_STATS);
+            return new StageExecutable(ExecutableConstants.STAGE_NAME_GATHER_FLAT_TABLE_STATS);
         }
     },
 
