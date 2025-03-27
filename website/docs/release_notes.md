@@ -15,95 +15,95 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
-## v5.0.2 - 2025-03-07
+## v5.0.2 - 2025-03-31
 
 __New Feature__
 
-* [KYLIN-5993] - Internal table new UI
-* [KYLIN-6025] - Internal table file merging within partitions
+* [KYLIN-5993] - Internal table For website
+* [KYLIN-5996] - Support preloading for internal table cache
+* [KYLIN-6025] - Support file merging within partitions for internal tables
 
 __Bug Fix__
 
-* [KYLIN-5973] - Fix streaming function
-* [KYLIN-5975] - Fix accepting recommendations
-* [KYLIN-5978] - Reorder the gluten jar loader
-* [KYLIN-5980] - Reformat internal table truncate and drop partition rest api
-* [KYLIN-5981] - Upgrade tomcat version to fix high-risk security vulnerabilities
-* [KYLIN-5982] - Fix internal table error when single table model exists
-* [KYLIN-5997] - Fix query with streaming model
-* [KYLIN-5999] - Fix query out of segment range
-* [KYLIN-6001] - Rename job table name as v2
-* [KYLIN-6002] - Synchronize computedColumns when operating models
-* [KYLIN-6003] - Fix model import failed
-* [KYLIN-6004] - Check gluten enabled when load table as internal table
-* [KYLIN-6005] - Prefer using aggregate indexes for queries involving aggregations on a single table
-* [KYLIN-6007] - Fix filtering jobs with table identity fuzzy matching
-* [KYLIN-6008] - Fix logical view creation failed
-* [KYLIN-6010] - Only InternalTableLoadingJob uses gluten
-* [KYLIN-6011] - Unify job_lock fetch sequence when consuming job and producing job
-* [KYLIN-6013] - OpenAPI check gluten is enabled
-* [KYLIN-6016] - Fix driver & executor load same class from different classpath randomly when executing building job
-* [KYLIN-6017] - Skip replay audit log when running metadata restore tool
-* [KYLIN-6018] - Optimize metadata migrate tool 4x-->5x, run without kylin_config
-* [KYLIN-6019] - Fix calculate scanRows and scanBytes
-* [KYLIN-6021] - Add use_excel_serialization=true for CSV
-* [KYLIN-6023] - Fix invalid model renaming
-* [KYLIN-6026] - When table sourceType is JDBC,skip calculateViewMetas
-* [KYLIN-6027] - Update example metadata files
-* [KYLIN-6028] - Fix parallel build/refresh job
-* [KYLIN-6029] - Ensure reset password successfully
-* [KYLIN-6032] - Duplicate with KYLIN-5934, just format code
-* [KYLIN-6034] - Fix columns of OlapContext when top node is OlapWindowRel
-* [KYLIN-6035] - Support for showing project list in ops_plan
-* [KYLIN-6036] - Skip tables without permissions when loading tables
-* [KYLIN-6037] - Migrate upgrade metadata to system metadata
-* [KYLIN-6038] - Fix storage v3 layout details deletion
-* [KYLIN-6040] - Remove hasChecked and isLogicalViewConfigLegal
-* [KYLIN-6041] - If modelContext is SnapshotSelected, do not collectResponseOfReusedModels
-* [KYLIN-6042] - Fix the discard_table_index parameter to ensure that no detail indexes are recommended
-* [KYLIN-6043] - Fix truncate function for decimal scale
-* [KYLIN-6044] - Removed ProjectAggregateMergeRule to avoid aggregate index mismatches
-* [KYLIN-6045] - Fix sum decimal precision
-* [KYLIN-6046] - Fix quoted lower-case table name when pushdown
-* [KYLIN-6047] - Support Row operator conversion
-* [KYLIN-6048] - Limit command line output size to avoid OOM
-* [KYLIN-6049] - Fix metadata migrate tool
-* [KYLIN-6050] - Fix using default schema when querying internal tables directly
-* [KYLIN-6055] - Support for calculating dimension_range_information_map for one level partition under multi partitions
-* [KYLIN-6056] - Fix the preflight request got a 401 Unauthorized error due to the OPTIONS request lacks authentication header
-* [KYLIN-6057] - Fix global dict v2 concurrent build version problem
-* [KYLIN-6058] - Only non-empty segments calculate ColumnSourceBytes
-* [KYLIN-6059] - Fix job suicide operation
-* [KYLIN-6062] - Delete internal table metadata while deleting project
-* [KYLIN-6063] - Fix KylinStorageScanExec fallback
-* [KYLIN-6064] - Support HiveTableScanExecTransformer operator for RD
-* [KYLIN-6065] - Update JobFilter initialization to use BUILD_JOB_TYPES when jobName is null
-* [KYLIN-6066] - Adapt the spark-test script for gluten and opt code structure
-* [KYLIN-6067] - Keep columns order in select star for ModelView
-* [KYLIN-6070] - Modify the logic of internal table and snapshot usage times
+* [KYLIN-5990] - [Storage V3] Triggering optimization task throws an error
+* [KYLIN-5991] - Multiple abnormal errors in internal tables
+* [KYLIN-5992] - Query response error
+* [KYLIN-5997] - Errors in building and querying real-time models
+* [KYLIN-5999] - When querying beyond the model segment time range, it displays as a constant query.
+* [KYLIN-6001] - [Metadata] Kylin4 metadata cannot be directly upgraded to Kylin5. After customers migrate the metadata, they still need to rebuild models and other components.
+* [KYLIN-6002] - When recommending CC, it should check if there are reusable CCs in the CC table.
+* [KYLIN-6003] - MYSQL Single-Node Use Case with New Database: Error Occurs When Importing Models
+* [KYLIN-6004] - Failed to delete a table without an internal table
+* [KYLIN-6005] - For a single-table model, when an internal table exists, aggregate queries do not hit the model but instead hit the internal table.
+* [KYLIN-6007] - On the task list page, snapshot tasks cannot be filtered by table name
+* [KYLIN-6008] - Failed to create logical view. The project was not passed during storage.
+* [KYLIN-6010] - If there is a `count distinct` in the view table definition, an error occurs when building the snapshot
+* [KYLIN-6011] - After the build task is completed, it is not cleared from the lock table, causing the remaining build tasks to fail to start
+* [KYLIN-6012] - Remove `org.apache.kylin.rest.controller.SparkSourceController`
+* [KYLIN-6013] - [Internal Table] After disabling Gluten, the asynchronous interface can successfully request pre-caching
+* [KYLIN-6016] - Kylin5 occasionally encounters ParquetFileFormat class conflicts during builds
+* [KYLIN-6017] - Metadata recovery times out when the metadata size is too large
+* [KYLIN-6018] - When renaming a model, the description information field is incorrectly modified
+* [KYLIN-6019] - The metrics data for the number of scanned rows in pushdown queries is lost
+* [KYLIN-6021] - [Gluten] Gluten query on Hive external tables in CSV format throws an error
+* [KYLIN-6023] - Kylin5 model cannot be renamed
+* [KYLIN-6026] - JDBC data source table sampling error
+* [KYLIN-6027] - Executing `sample.sh` to import the model throws an error
+* [KYLIN-6028] - Kylin5 encounters metadata anomalies when concurrently submitting build/refresh tasks
+* [KYLIN-6029] - The password reset tool does not work in Kylin5
+* [KYLIN-6032] - The validation for the presence of a slash in the computed column fails, causing the model save to fail
+* [KYLIN-6034] - Query using the `DENSE_RANK()` function hits the model execution, but the smart recommendation does not recommend an index
+* [KYLIN-6035] - Kylin query node: ops plan cannot display the project list
+* [KYLIN-6036] - Ranger permission issues cause errors when loading Hive tables
+* [KYLIN-6037] - Metadata migration fails when the backup metadata contains an "upgrade" directory
+* [KYLIN-6038] - [Storage V3] Error occurs when deleting an index
+* [KYLIN-6040] - Logical view fails permanently after a single failure during the scheduled check.
+* [KYLIN-6041] - When using the SQL acceleration interface to accelerate multiple SQL queries, the interface returns success, but no indexes are generated
+* [KYLIN-6042] - Model acceleration interface: The parameter discard_table_index is not taking effect
+* [KYLIN-6043] - Query truncate decimal type, precision loss
+* [KYLIN-6044] - Subqueries containing JOIN may lead to incorrect query results
+* [KYLIN-6045] - SUM Query Decimal Precision Anomaly
+* [KYLIN-6046] - Table Not Found Due to Lowercase Table Names Enclosed in Double Quotes in SQL
+* [KYLIN-6047] - Error Occurs When the Number of Values in an IN Clause Reaches 20
+* [KYLIN-6048] - OOM Likely to Occur When Build Job Logs Are Too Large
+* [KYLIN-6049] - Incorrect Calculation of `expressionMd5` Value When Saving Computable Columns
+* [KYLIN-6050] - Tables in the `default` Database Cannot Be Directly Queried When Only the Table Name Is Specified in the SQL Statement
+* [KYLIN-6055] - Empty `dimension_range_info_map` After Building Model with Secondary Partition Causes Query to Fail Filtering by Dimension
+* [KYLIN-6056] - Cross-Origin Request Failures Caused by Spring Version Upgrade
+* [KYLIN-6057] - Incorrect Data in Global Dictionary Construction
+* [KYLIN-6058] - Incorrect Segment Size Calculation When Data Source Format is ORC and Data is Empty
+* [KYLIN-6059] - When the model is in a "broken" state, the build task status becomes abnormal
+* [KYLIN-6062] - Internal Table Metadata Not Deleted After Project Deletion Causes Tables to Remain Visible in a Re-created Project with the Same Name
+* [KYLIN-6063] - Storage V3: Queries cannot utilize Gluten cache
+* [KYLIN-6064] - When Gluten is enabled, non-internal table build tasks encounter errors
+* [KYLIN-6065] - Calling the batch data task list retrieval interface generates dirty jobs
+* [KYLIN-6066] - Error in "Checking Spark Availability"
+* [KYLIN-6067] - The column order in the `SELECT *` query result from the Model view does not meet expectations
+* [KYLIN-6070] - Internal Table Usage Count Not Properly Tracked After Query on Management Page
 
 __Improvement__
 
-* [KYLIN-5979] - Preload gluten cache
-* [KYLIN-6009] - API performance improvement
-* [KYLIN-6020] - Add system-level/project-level configuration to check internal table directly
-* [KYLIN-6022] - InternalTableLoading Job support parallel build
-* [KYLIN-6024] - Gluten metadata cache support rocksdb
-* [KYLIN-6030] - Rename table related api response attributes
-* [KYLIN-6031] - Add OpenAPI to show internalTable info
-* [KYLIN-6033] - Route to calcite engine when answering min/max query by metadata
-* [KYLIN-6039] - Optimize query placeholder search by reducing loop count
-* [KYLIN-6051] - Historical code cleanup & refactoring
-* [KYLIN-6052] - Internal table loading supports jdbc logical view
-* [KYLIN-6053] - Add OpenAPI to show internaltable details
-* [KYLIN-6054] - Filter hadoop makes files in file pruner
+* [KYLIN-5995] - Reorder the gluten jar loader
+* [KYLIN-6000] - After Kylin starts, the file `krb5cc_gluten` is generated in the directory at the same level as `Kylin_Home`. The location of the file generation needs to be adjusted.
+* [KYLIN-6009] - API performance test shows a decrease compared to Kylin4
+* [KYLIN-6020] - Add system-level/project-level configuration to allow direct querying of internal tables.
+* [KYLIN-6022] - Support parallel incremental loading for internal tables
+* [KYLIN-6024] - Gluten metadata caching supports RocksDB
+* [KYLIN-6030] - Inconsistent attribute name style in the tables response message
+* [KYLIN-6031] - Add an internal table OpenAPI to support viewing details of a specified internal table
+* [KYLIN-6033] - When answering `min` and `max` queries using metadata, route to the Calcite engine to avoid submitting Spark tasks
+* [KYLIN-6039] - Performance Optimization for Long SQL Parsing with Dynamic Parameters
+* [KYLIN-6051] - Historical Code Cleanup + Refactoring
+* [KYLIN-6052] - Kylin5 Internal Tables Support Logical Views
+* [KYLIN-6053] - Add OpenAPI for viewing the details of a specified inner table
+* [KYLIN-6054] - Optimize shard pruning logic to avoid query failures
 * [KYLIN-6060] - Add separate load methods for different storage types of internal tables
-* [KYLIN-6061] - Enabling gluten on index build
-* [KYLIN-6068] - Optimizing spring session cleanup to avoid MySQL deadlocks as much as possible
-* [KYLIN-6069] - Optimize internal table jobs
-* [KYLIN-6071] - Provide new jdbc service discovery
-* [KYLIN-6072] - Fix storage v3 use iceberg datasource
-* [KYLIN-6073] - Can not submit incremental refresh job of non-time partitioned table
+* [KYLIN-6061] - Support building index files using Gluten
+* [KYLIN-6068] - Spring Session Cleanup to Avoid MySQL Deadlock Warnings
+* [KYLIN-6069] - [Internal Table - Incremental Load] Overlapping Time Ranges Prohibited for Loading
+* [KYLIN-6071] - Support JDBC Service Discovery
+* [KYLIN-6072] - StorageV3 Catalog Refactoring to Avoid Conflicts with Iceberg Catalog
+* [KYLIN-6073] - Refresh Button for Non-Time-Partitioned Internal Tables Should Not Be Grayed Out & Backend Returns Error on Refresh
 
 ## v5.0.0 - 2024-09-27
 __New Feature__
