@@ -1,8 +1,8 @@
 {
-  "uuid" : "221f1778-b5c6-6d1e-0f21-a6a30b0c7724",
+  "uuid" : "7ad976bf-fd99-6b7d-d587-b3d6c048b96e",
   "last_modified" : 0,
-  "create_time" : 1726220562007,
-  "version" : "%default_version%",
+  "create_time" : 1743406300942,
+  "version" : "5.0.2.0",
   "project" : "learn_kylin",
   "database" : "SSB",
   "name" : "P_LINEORDER",
@@ -99,7 +99,7 @@
   } ],
   "source_type" : 9,
   "table_type" : "VIEW",
-  "has_Internal" : false,
+  "has_internal" : false,
   "top" : false,
   "increment_loading" : false,
   "last_snapshot_path" : null,
@@ -115,7 +115,7 @@
   "temp_snapshot_path" : null,
   "snapshot_has_broken" : false,
   "transactional" : false,
-  "rangePartition" : false,
   "partition_desc" : null,
-  "table_comment" : null
+  "table_comment" : null,
+  "range_partition" : false
 }

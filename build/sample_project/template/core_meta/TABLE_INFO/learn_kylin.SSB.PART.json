@@ -1,50 +1,60 @@
 {
-  "uuid" : "33559e63-2e7e-a0cd-d309-1215b931b0be",
+  "uuid" : "f763df6b-0ab6-eeca-402e-fdc8ff39cb86",
   "last_modified" : 0,
-  "create_time" : 1726220561224,
-  "version" : "%default_version%",
+  "create_time" : 1743406300823,
+  "version" : "5.0.2.0",
   "project" : "learn_kylin",
   "database" : "SSB",
-  "name" : "SUPPLIER",
+  "name" : "PART",
   "columns" : [ {
     "id" : "1",
-    "name" : "S_SUPPKEY",
+    "name" : "P_PARTKEY",
     "datatype" : "integer",
-    "case_sensitive_name" : "s_suppkey"
+    "case_sensitive_name" : "p_partkey"
   }, {
     "id" : "2",
-    "name" : "S_NAME",
+    "name" : "P_NAME",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_name"
+    "case_sensitive_name" : "p_name"
   }, {
     "id" : "3",
-    "name" : "S_ADDRESS",
+    "name" : "P_MFGR",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_address"
+    "case_sensitive_name" : "p_mfgr"
   }, {
     "id" : "4",
-    "name" : "S_CITY",
+    "name" : "P_CATEGORY",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_city"
+    "case_sensitive_name" : "p_category"
   }, {
     "id" : "5",
-    "name" : "S_NATION",
+    "name" : "P_BRAND",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_nation"
+    "case_sensitive_name" : "p_brand"
   }, {
     "id" : "6",
-    "name" : "S_REGION",
+    "name" : "P_COLOR",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_region"
+    "case_sensitive_name" : "p_color"
   }, {
     "id" : "7",
-    "name" : "S_PHONE",
+    "name" : "P_TYPE",
     "datatype" : "varchar(4096)",
-    "case_sensitive_name" : "s_phone"
+    "case_sensitive_name" : "p_type"
+  }, {
+    "id" : "8",
+    "name" : "P_SIZE",
+    "datatype" : "integer",
+    "case_sensitive_name" : "p_size"
+  }, {
+    "id" : "9",
+    "name" : "P_CONTAINER",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "p_container"
   } ],
   "source_type" : 9,
   "table_type" : "EXTERNAL",
-  "has_Internal" : false,
+  "has_internal" : false,
   "top" : false,
   "increment_loading" : false,
   "last_snapshot_path" : null,
@@ -60,7 +70,7 @@
   "temp_snapshot_path" : null,
   "snapshot_has_broken" : false,
   "transactional" : false,
-  "rangePartition" : false,
   "partition_desc" : null,
-  "table_comment" : null
+  "table_comment" : null,
+  "range_partition" : false
 }

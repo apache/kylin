@@ -1,8 +1,8 @@
 {
-  "uuid" : "ccc282c6-50a7-0ddf-8e44-d929f69bc3bf",
+  "uuid" : "4f29ca5b-86a2-6d0f-d9b1-650eeb03e7b7",
   "last_modified" : 0,
-  "create_time" : 1726220561417,
-  "version" : "%default_version%",
+  "create_time" : 1743406300808,
+  "version" : "5.0.2.0",
   "project" : "learn_kylin",
   "database" : "SSB",
   "name" : "CUSTOMER",
@@ -49,7 +49,7 @@
   } ],
   "source_type" : 9,
   "table_type" : "EXTERNAL",
-  "has_Internal" : false,
+  "has_internal" : false,
   "top" : false,
   "increment_loading" : false,
   "last_snapshot_path" : null,
@@ -65,7 +65,7 @@
   "temp_snapshot_path" : null,
   "snapshot_has_broken" : false,
   "transactional" : false,
-  "rangePartition" : false,
   "partition_desc" : null,
-  "table_comment" : null
+  "table_comment" : null,
+  "range_partition" : false
 }

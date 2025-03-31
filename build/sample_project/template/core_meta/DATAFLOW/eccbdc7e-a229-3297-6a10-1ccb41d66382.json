@@ -1,0 +1,15 @@
+{
+  "uuid" : "eccbdc7e-a229-3297-6a10-1ccb41d66382",
+  "last_modified" : 1743407020522,
+  "create_time" : 1743407020522,
+  "version" : "5.0.2.0",
+  "project" : "learn_kylin",
+  "status" : "OFFLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "last_data_refresh_time" : 0,
+  "layout_query_hit_count" : { },
+  "segment_uuids" : [ "00ffe9c0-6ad7-6fd8-fcc1-0ad639b9f243" ]
+}

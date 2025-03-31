@@ -110,17 +110,6 @@ echo "Sample hive tables are created successfully; Going to create sample projec
 mkdir -p ${KYLIN_HOME}/sample_project/sample_model/metadata
 cp -R ${KYLIN_HOME}/sample_project/template/core_meta ${KYLIN_HOME}/sample_project/sample_model/metadata
 
-#### Add version info into model
-kylin_version=5.0.0.0
-echo "kylin version is "$kylin_version
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/PROJECT/learn_kylin.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.CUSTOMER.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.DATES.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.LINEORDER.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.P_LINEORDER.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.PART.json
-sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_project/sample_model/metadata/core_meta/TABLE_INFO/learn_kylin.SSB.SUPPLIER.json
-
 function printImportResult() {
   error=$1
   if [[ $error == 0 ]]; then

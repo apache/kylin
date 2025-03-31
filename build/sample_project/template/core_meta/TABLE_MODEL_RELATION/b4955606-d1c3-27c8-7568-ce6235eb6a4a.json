@@ -1,0 +1,9 @@
+{
+  "uuid" : "b4955606-d1c3-27c8-7568-ce6235eb6a4a",
+  "last_modified" : 0,
+  "create_time" : 1743406863335,
+  "version" : "5.0.2.0",
+  "project" : "learn_kylin",
+  "table_identity" : "SSB.P_LINEORDER",
+  "model_uuid" : "8de76906-3337-dddf-ab11-1d6e7b2811ec"
+}

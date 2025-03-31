@@ -1,42 +1,43 @@
 {
-  "uuid" : "2d07e878-da28-a203-2d2c-185b4c6656f1",
-  "last_modified" : 1632293938767,
-  "create_time" : 1632293938765,
-  "version" : "%default_version%",
+  "uuid" : "eccbdc7e-a229-3297-6a10-1ccb41d66382",
+  "last_modified" : 1743407020521,
+  "create_time" : 1743407020517,
+  "version" : "5.0.2.0",
+  "project" : "learn_kylin",
   "description" : null,
   "rule_based_index" : {
-    "dimensions" : [ 53, 55, 46, 43, 40, 42, 32 ],
+    "dimensions" : [ 36, 38, 29, 26, 23, 25, 58 ],
     "measures" : [ 100000 ],
     "global_dim_cap" : null,
     "aggregation_groups" : [ {
-      "includes" : [ 53, 55 ],
+      "includes" : [ 36, 38 ],
       "measures" : [ 100000 ],
       "select_rule" : {
         "hierarchy_dims" : [ ],
-        "mandatory_dims" : [ 53 ],
+        "mandatory_dims" : [ 36 ],
         "joint_dims" : [ ]
       },
       "index_range" : "EMPTY"
     }, {
-      "includes" : [ 46, 43 ],
+      "includes" : [ 29, 26 ],
       "measures" : [ 100000 ],
       "select_rule" : {
         "hierarchy_dims" : [ ],
-        "mandatory_dims" : [ 46 ],
+        "mandatory_dims" : [ 29 ],
         "joint_dims" : [ ]
       },
       "index_range" : "EMPTY"
     }, {
-      "includes" : [ 40, 42 ],
+      "includes" : [ 23, 25 ],
       "measures" : [ 100000 ],
       "select_rule" : {
         "hierarchy_dims" : [ ],
-        "mandatory_dims" : [ 40 ],
+        "mandatory_dims" : [ 23 ],
         "joint_dims" : [ ]
       },
       "index_range" : "EMPTY"
     }, {
-      "includes" : [ 32 ],
+      "includes" : [ 58 ],
       "measures" : [ 100000 ],
       "select_rule" : {
         "hierarchy_dims" : [ ],
@@ -48,25 +49,27 @@
     "layout_id_mapping" : [ 10001, 20001, 30001, 40001, 50001, 60001, 70001, 80001 ],
     "parent_forward" : 3,
     "index_start_id" : 10000,
-    "last_modify_time" : 1632294041099,
+    "last_modify_time" : 1743407130676,
     "layout_black_list" : [ ],
+    "layout_cost_based_pruned_list" : null,
     "scheduler_version" : 2,
-    "index_update_enabled" : true
+    "index_update_enabled" : true,
+    "base_layout_enabled" : true
   },
   "indexes" : [ {
     "id" : 0,
-    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 34, 40, 42, 43, 46, 53, 55 ],
+    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58 ],
     "measures" : [ 100000 ],
     "layouts" : [ {
       "id" : 1,
       "name" : null,
       "owner" : null,
-      "col_order" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 34, 40, 42, 43, 46, 53, 55, 100000 ],
+      "col_order" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 100000 ],
       "shard_by_columns" : [ ],
       "partition_by_columns" : [ ],
       "sort_by_columns" : [ ],
       "storage_type" : 20,
-      "update_time" : 1632293938765,
+      "update_time" : 1743407020517,
       "manual" : false,
       "auto" : false,
       "base" : true,
@@ -76,18 +79,18 @@
     "next_layout_offset" : 2
   }, {
     "id" : 20000000000,
-    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 34, 40, 42, 43, 46, 53, 55 ],
+    "dimensions" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58 ],
     "measures" : [ ],
     "layouts" : [ {
       "id" : 20000000001,
       "name" : null,
       "owner" : null,
-      "col_order" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 34, 40, 42, 43, 46, 53, 55 ],
+      "col_order" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58 ],
       "shard_by_columns" : [ ],
       "partition_by_columns" : [ ],
       "sort_by_columns" : [ ],
       "storage_type" : 20,
-      "update_time" : 1632293938765,
+      "update_time" : 1743407020517,
       "manual" : false,
       "auto" : false,
       "base" : true,
@@ -108,5 +111,6 @@
   "layout_bucket_num" : { },
   "approved_additional_recs" : 0,
   "approved_removal_recs" : 0,
-  "project" : "learn_kylin"
+  "base_agg_index_reduce_high_cardinality_dim" : false,
+  "planner_white_list" : [ ]
 }

@@ -1,12 +1,12 @@
 {
-  "uuid" : "6e8e4b33-5873-1a63-799c-3356793620d3",
-  "last_modified" : 1726220537212,
-  "create_time" : 1726220531678,
-  "version" : "%default_version%",
+  "uuid" : "29a2eb9a-7840-a360-11c5-8f6c0ec694b9",
+  "last_modified" : 1743406295474,
+  "create_time" : 1743406292280,
+  "version" : "5.0.2.0",
   "name" : "learn_kylin",
   "owner" : "ADMIN",
   "status" : "ENABLED",
-  "create_time_utc" : 1726220531681,
+  "create_time_utc" : 1743406292280,
   "default_database" : "DEFAULT",
   "description" : "",
   "principal" : null,
@@ -15,8 +15,8 @@
   "override_kylin_properties" : {
     "kylin.metadata.semi-automatic-mode" : "false",
     "kylin.query.metadata.expose-computed-column" : "true",
-    "kylin.internal-table-enabled" : "true",
-    "kylin.source.default" : "9"
+    "kylin.source.default" : "9",
+    "kylin.internal-table-enabled" : "true"
   },
   "segment_config" : {
     "auto_merge_enabled" : false,

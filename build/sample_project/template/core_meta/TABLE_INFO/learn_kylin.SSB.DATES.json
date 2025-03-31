@@ -1,8 +1,8 @@
 {
-  "uuid" : "f09153f1-1a07-e27c-611c-7662d8f5af26",
+  "uuid" : "7b91ddce-48b1-317a-37e7-61363f744b4e",
   "last_modified" : 0,
-  "create_time" : 1726220561245,
-  "version" : "%default_version%",
+  "create_time" : 1743406300836,
+  "version" : "5.0.2.0",
   "project" : "learn_kylin",
   "database" : "SSB",
   "name" : "DATES",
@@ -94,7 +94,7 @@
   } ],
   "source_type" : 9,
   "table_type" : "EXTERNAL",
-  "has_Internal" : false,
+  "has_internal" : false,
   "top" : false,
   "increment_loading" : false,
   "last_snapshot_path" : null,
@@ -110,7 +110,7 @@
   "temp_snapshot_path" : null,
   "snapshot_has_broken" : false,
   "transactional" : false,
-  "rangePartition" : false,
   "partition_desc" : null,
-  "table_comment" : null
+  "table_comment" : null,
+  "range_partition" : false
 }
