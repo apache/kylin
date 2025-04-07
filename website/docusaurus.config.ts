@@ -241,10 +241,10 @@ const config = {
             position: 'left',
             label: 'Development',
           },
-          {
-            type: 'localeDropdown',
-            position: 'right',
-          },
+          // {
+          //   type: 'localeDropdown',
+          //   position: 'right',
+          // },
           {
             type: 'doc',
             docId: 'download',
