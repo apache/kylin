@@ -26,6 +26,7 @@ import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_USER_KEY;
+import static org.apache.kylin.common.constant.Constants.MAX_FILENAME_LENGTH;
 import static org.apache.kylin.common.constant.NonCustomProjectLevelConfig.DATASOURCE_TYPE;
 import static org.apache.kylin.common.exception.ServerErrorCode.DATABASE_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_PROJECT_NAME;
@@ -33,6 +34,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_EMAIL;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_TYPE_MISMATCH;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_JDBC_SOURCE_CONFIG;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_KERBEROS_FILE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.PROJECT_DROP_FAILED;
@@ -172,6 +174,8 @@ public class ProjectService extends BasicService {
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODES = "DAY, HOURS, MINUTE";
     private static final String KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME = "kylin.query.pushdown.runner-class-name";
     private static final String DEFAULT_VAL = "default";
+    private static final Pattern INVALID_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"'<>|\\u0000-\\u001F\\s]|^[.]+$|[.]$");
+
     @Autowired
     UserService userService;
     @Autowired
@@ -1242,11 +1246,26 @@ public class ProjectService extends BasicService {
         return kFile;
     }
 
-    public File generateTempKeytab(String principal, MultipartFile keytabFile) throws IOException {
-        Message msg = MsgPicker.getMsg();
+    public static void checkPrincipal(String principal, Message msg) {
         if (null == principal || principal.isEmpty()) {
             throw new KylinException(EMPTY_PARAMETER, msg.getPrincipalEmpty());
         }
+
+        // principal length
+        if (principal.length() > MAX_FILENAME_LENGTH - KerberosLoginManager.TMP_KEYTAB_SUFFIX.length()) {
+            throw new KylinException(INVALID_KERBEROS_FILE, msg.getKerberosInfoError());
+        }
+
+        // invalid characters
+        if (INVALID_FILENAME_CHARS.matcher(principal).find()) {
+            throw new KylinException(INVALID_KERBEROS_FILE, msg.getKerberosInfoError());
+        }
+    }
+
+    public File generateTempKeytab(String principal, MultipartFile keytabFile) throws IOException {
+        Message msg = MsgPicker.getMsg();
+        checkPrincipal(principal, msg);
+
         val originalFilename = keytabFile.getOriginalFilename();
         if (originalFilename == null || !originalFilename.endsWith(".keytab")) {
             throw new KylinException(FILE_TYPE_MISMATCH, msg.getKeytabFileTypeMismatch());

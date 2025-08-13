@@ -19,10 +19,15 @@
 package org.apache.kylin.rest.service;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.kylin.common.constant.Constants.BACKSLASH;
 import static org.apache.kylin.common.constant.Constants.METADATA_FILE;
+import static org.apache.kylin.common.constant.Constants.SYSTEM_TMP_DIR;
+import static org.apache.kylin.rest.service.FileService.METADATA_TMP_PREFIX;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.apache.hadoop.fs.Path;
@@ -63,14 +70,14 @@ class FileServiceTest {
     @Test
     void getMetadataBackupFromTmpPath() throws IOException {
         InputStream is = null;
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(Paths.get(SYSTEM_TMP_DIR), METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
         try {
             is = fileService.getMetadataBackupFromTmpPath(tmpFilePath, 0L);
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertEquals("Metadata backup temp file is not a file: " + tmpFilePath, e.getMessage());
         } finally {
             close(is);
@@ -88,7 +95,7 @@ class FileServiceTest {
             is = fileService.getMetadataBackupFromTmpPath(tmpFilePath, 0L);
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertEquals("Metadata backup temp file length does not right: " + tmpFilePath + ", length :" + 3,
                     e.getMessage());
         } finally {
@@ -115,7 +122,7 @@ class FileServiceTest {
             result = fileService.saveMetadataBackupInTmpPath(path.toString());
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertEquals("Metadata backup file is not a file: " + path, e.getMessage());
             assertNull(result);
         }
@@ -141,7 +148,7 @@ class FileServiceTest {
             fileService.saveMetadataBackupInTmpPath(path.toString());
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertTrue(e.getMessage().endsWith("HDFS backup file:" + path + ", len: " + 3));
         }
     }
@@ -149,7 +156,7 @@ class FileServiceTest {
     @Test
     void saveMetadataBackupTmpFromRequest() throws IOException {
         InputStream is = null;
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(Paths.get(SYSTEM_TMP_DIR), METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
 
@@ -161,7 +168,7 @@ class FileServiceTest {
             fileService.saveMetadataBackupTmpFromRequest(0L, is);
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertTrue(e.getMessage().startsWith("Metadata backup temp file length does not right: "));
             assertTrue(e.getMessage().endsWith(" length :" + 3));
         } finally {
@@ -184,7 +191,7 @@ class FileServiceTest {
         val fileSystem = HadoopUtil.getWorkingFileSystem();
         val path = new Path(HadoopUtil.getBackupFolder(KylinConfig.getInstanceFromEnv()),
                 new Path(RandomUtil.randomUUIDStr(), METADATA_FILE));
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
         try (val os = new FileOutputStream(tmpFile)) {
@@ -195,7 +202,7 @@ class FileServiceTest {
             fileService.saveMetadataBackupInHDFS(path.toString(), tmpFilePath, 0L);
             fail();
         } catch (IOException e) {
-            assertTrue(e instanceof FileNotFoundException);
+            assertInstanceOf(FileNotFoundException.class, e);
             assertEquals("Metadata backup temp file length does not right.\n Tmp file: " + tmpFilePath + " length: " + 0
                     + "\n DFS file: " + path + " length: " + 3, e.getMessage());
         }
@@ -207,7 +214,7 @@ class FileServiceTest {
 
     @Test
     void deleteTmpDir() throws IOException {
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
         try (val os = new FileOutputStream(tmpFile)) {
@@ -219,7 +226,7 @@ class FileServiceTest {
 
     @Test
     void downloadMetadataBackTmpFile() throws IOException {
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
         try (val os = new FileOutputStream(tmpFile)) {
@@ -236,7 +243,7 @@ class FileServiceTest {
 
     @Test
     void saveBroadcastMetadataBackup() throws IOException {
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         val tmpFilePath = tmpFile.getAbsolutePath();
         try (val os = new FileOutputStream(tmpFile)) {
@@ -256,5 +263,196 @@ class FileServiceTest {
         assertTrue(fileSystem.isFile(path));
         val fileStatus = fileSystem.getFileStatus(path);
         assertEquals(3, fileStatus.getLen());
+    }
+
+    @Test
+    void saveAndGet() throws IOException {
+        InputStream is = null;
+        val tmpDirectory = Files.createTempDirectory(Paths.get(SYSTEM_TMP_DIR), METADATA_TMP_PREFIX).toFile();
+        val tmpFile = new File(tmpDirectory, METADATA_FILE);
+        val tmpFilePath = tmpFile.getAbsolutePath();
+
+        try (val os = new FileOutputStream(tmpFile)) {
+            os.write("123".getBytes(UTF_8));
+            is = fileService.getMetadataBackupFromTmpPath(tmpFilePath, 3L);
+        }
+
+        try {
+            is = fileService.getMetadataBackupFromTmpPath(tmpFilePath, 3L);
+
+            val tempPath = fileService.saveMetadataBackupTmpFromRequest(3L, is);
+            val tempFile = new File(tempPath);
+            assertEquals(3, tempFile.length());
+
+            try (val iss = fileService.getMetadataBackupFromTmpPath(tmpFilePath, 3L)) {
+                val tempPath2 = fileService.saveMetadataBackupTmpFromRequest(3L, iss);
+                val tempFile2 = new File(tempPath2);
+                assertEquals(3, tempFile2.length());
+            }
+        } finally {
+            close(is);
+        }
+    }
+
+    @Test
+    void testGetSafeAbsolutePath() {
+        val tmpPath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX);
+        val tmpDir = tmpPath.toAbsolutePath().normalize().toString();
+        val validFilePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "validFile.txt");
+        {
+            String filePath = tmpPath.toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(Paths.get(filePath).toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "subdir", "file.txt").toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(Paths.get(filePath).toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String result = FileService.getSafeAbsolutePath(SYSTEM_TMP_DIR + BACKSLASH + METADATA_TMP_PREFIX);
+
+            assertEquals(tmpDir, result);
+        }
+        {
+            String filePath = SYSTEM_TMP_DIR + BACKSLASH + METADATA_TMP_PREFIX + "/./validFile.txt";
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(validFilePath.toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "subdir1", "..", "subdir2", "file.txt")
+                    .toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "subdir2", "file.txt").toAbsolutePath()
+                    .normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "level1", "level2", "level3", "file.txt")
+                    .toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(Paths.get(filePath).toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String filePath = Paths
+                    .get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", tmpPath.getFileName().toString(), "validFile.txt")
+                    .toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(validFilePath.toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+        {
+            String filePath = Paths
+                    .get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", "..", tmpPath.toString(), "validFile.txt")
+                    .toString();
+            String result = FileService.getSafeAbsolutePath(filePath);
+
+            assertEquals(validFilePath.toAbsolutePath().normalize().toString(), result);
+            assertTrue(result.startsWith(tmpDir));
+        }
+    }
+
+    @Test
+    void testGetSafeAbsolutePathError() {
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, "..", "..", "etc", "passwd").toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+            assertTrue(exception.getMessage().contains(filePath));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", "..", "..", "etc", "passwd")
+                    .toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+            assertTrue(exception.getMessage().contains(filePath));
+        }
+        {
+            String filePath = "/etc/passwd";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+            assertTrue(exception.getMessage().contains(filePath));
+        }
+        {
+            String filePath = String.format(Locale.ROOT, "%s/%s/subdir/../../../../../../etc/passwd", SYSTEM_TMP_DIR,
+                    METADATA_TMP_PREFIX);
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            String filePath = "../../../etc/passwd";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            String filePath = "";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            // Test with null path
+            assertThrows(Exception.class, () -> {
+                FileService.getSafeAbsolutePath(null);
+            });
+        }
+        {
+            // Test path with only dots (current directory reference)
+            String filePath = ".";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            // Test path with only double dots (parent directory reference)
+            String filePath = "..";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, "..", "malicious.txt").toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", "malicious.txt").toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path not kylin metadata tmp directory"));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, "malicious.txt").toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path not kylin metadata tmp directory"));
+        }
     }
 }

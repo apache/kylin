@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.constant.Constants.HIDDEN_VALUE;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_DRIVER_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_KEY;
+import static org.apache.kylin.common.constant.Constants.MAX_FILENAME_LENGTH;
 import static org.apache.kylin.metadata.model.MaintainModelType.MANUAL_MAINTAIN;
 
 import java.io.IOException;
@@ -36,6 +37,8 @@ import java.util.concurrent.FutureTask;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.Message;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JsonUtil;
@@ -77,6 +80,7 @@ import org.apache.kylin.rest.response.ProjectConfigResponse;
 import org.apache.kylin.rest.response.StorageVolumeInfoResponse;
 import org.apache.kylin.rest.response.UserProjectPermissionResponse;
 import org.apache.kylin.rest.security.AclPermissionEnum;
+import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
@@ -99,6 +103,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import alluxio.shaded.client.org.apache.commons.lang3.StringUtils;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -1011,6 +1016,134 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertThrows(KylinException.class, () -> projectService.generateTempKeytab(null, null));
         MultipartFile multipartFile = new MockMultipartFile("234", new byte[] {});
         Assert.assertThrows(KylinException.class, () -> projectService.generateTempKeytab("test", multipartFile));
+    }
+
+    @Test
+    public void testCheckPrincipal() {
+        Message msg = MsgPicker.getMsg();
+        testCheckPrincipalNormal(msg);
+        testCheckPrincipalWithEmpty(msg);
+        testCheckPrincipalWithFileNameLengthLimitation(msg);
+        testCheckPrincipalWithIllegalPunctuationSymbols(msg);
+        testCheckPrincipalWithControlCharacters(msg);
+        testCheckPrincipalWithWhitespace(msg);
+        testCheckPrincipalWithDot(msg);
+        testCheckPrincipalWithVariousEffectiveCharacterCombinations(msg);
+    }
+
+    private void testCheckPrincipalNormal(Message msg) {
+        // Test normal condition
+        ProjectService.checkPrincipal("validuser", msg);
+        ProjectService.checkPrincipal("user123", msg);
+        ProjectService.checkPrincipal("user_name", msg);
+        ProjectService.checkPrincipal("user-name", msg);
+    }
+
+    private void testCheckPrincipalWithEmpty(Message msg) {
+        // Test null and empty string
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal(null, msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("", msg));
+    }
+
+    private void testCheckPrincipalWithFileNameLengthLimitation(Message msg) {
+        // Test length exceeds limit（MAX_FILENAME_LENGTH - TMP_KEYTAB_SUFFIX.length()）
+        int maxLength = MAX_FILENAME_LENGTH - KerberosLoginManager.TMP_KEYTAB_SUFFIX.length();
+        String longPrincipal = StringUtils.repeat("a", maxLength + 1);
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal(longPrincipal, msg));
+        // Test boundary length (just reached limit)
+        String boundaryPrincipal = StringUtils.repeat("a", maxLength);
+        ProjectService.checkPrincipal(boundaryPrincipal, msg);
+    }
+
+    private void testCheckPrincipalWithIllegalPunctuationSymbols(Message msg) {
+        // Test backslash and forward slash
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\\name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user/name", msg));
+
+        // Test colon
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user:name", msg));
+
+        // Test asterisks and question marks
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user*name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user?name", msg));
+
+        // Test double quotes and single quotes
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\"name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user'name", msg));
+
+        // Test angle brackets and vertical line
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user<name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user>name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user|name", msg));
+    }
+
+    private void testCheckPrincipalWithControlCharacters(Message msg) {
+        // Test control characters（\u0000-\u001F）
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\u0000name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\u0001name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\u000Fname", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\u001Fname", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\tname", msg)); // \u0009
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\nname", msg)); //
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user\rname", msg)); //
+    }
+
+    private void testCheckPrincipalWithWhitespace(Message msg) {
+        // Test whitespace characters
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user name", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal(" username", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("username ", msg));
+    }
+
+    private void testCheckPrincipalWithDot(Message msg) {
+        // Test only the case with periods.（^[.]+$）
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal(".", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("..", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("...", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("....", msg));
+
+        // Test cases ending with a period（[.]$）
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("username.", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("user.name.", msg));
+        Assert.assertThrows(KylinException.class, () -> ProjectService.checkPrincipal("a.", msg));
+
+        // Test valid cases with dots (not all dots, not at the end)
+        ProjectService.checkPrincipal("user.name", msg);
+        ProjectService.checkPrincipal("user.sub.domain", msg);
+        ProjectService.checkPrincipal(".validuser", msg); // 以点开头但不是全点
+        ProjectService.checkPrincipal("user.123", msg);
+    }
+
+    private void testCheckPrincipalWithVariousEffectiveCharacterCombinations(Message msg) {
+        // Test various effective character combinations
+        ProjectService.checkPrincipal("user123", msg);
+        ProjectService.checkPrincipal("user_name", msg);
+        ProjectService.checkPrincipal("user-name", msg);
+        ProjectService.checkPrincipal("USER", msg);
+        ProjectService.checkPrincipal("User", msg);
+        ProjectService.checkPrincipal("123user", msg);
+        ProjectService.checkPrincipal("user123name", msg);
+        ProjectService.checkPrincipal("user_123-name", msg);
+        ProjectService.checkPrincipal("a", msg);
+        ProjectService.checkPrincipal("A", msg);
+        ProjectService.checkPrincipal("1", msg);
+        ProjectService.checkPrincipal("_", msg);
+        ProjectService.checkPrincipal("-", msg);
+        ProjectService.checkPrincipal("u0", msg);
+        ProjectService.checkPrincipal("u0000", msg);
+        ProjectService.checkPrincipal("u001F", msg);
+        ProjectService.checkPrincipal("1F", msg);
+
+        // Unicode character (non-control character)
+        ProjectService.checkPrincipal("用户名", msg);
+        ProjectService.checkPrincipal("usuário", msg);
+
+        // Containing Dot but Valid
+        ProjectService.checkPrincipal("user.domain", msg);
+        ProjectService.checkPrincipal(".user", msg);
+        ProjectService.checkPrincipal("u.s.e.r", msg);
+        ProjectService.checkPrincipal("u.s..e.r", msg);
+        ProjectService.checkPrincipal("u.s...e.r", msg);
     }
 
     @Test

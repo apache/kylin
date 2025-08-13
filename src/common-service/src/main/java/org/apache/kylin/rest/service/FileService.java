@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.constant.Constants.BACKSLASH;
 import static org.apache.kylin.common.constant.Constants.METADATA_FILE;
+import static org.apache.kylin.common.constant.Constants.SYSTEM_TMP_DIR;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -60,12 +62,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class FileService extends BasicService {
+    protected static final String METADATA_TMP_PREFIX = "KylinMetadataBackupTmp-";
+
     @Autowired
     @Qualifier("normalRestTemplate")
     private RestTemplate restTemplate;
 
+    public static String getSafeAbsolutePath(String filePath) {
+        val basePath = Paths.get(SYSTEM_TMP_DIR).toAbsolutePath().normalize();
+        val targetPath = Paths.get(filePath).toAbsolutePath().normalize();
+
+        if (!targetPath.startsWith(basePath)) {
+            throw new SecurityException("Path outside base directory: " + filePath);
+        }
+
+        val metadataTmpPrefix = Paths.get(basePath.toString(), METADATA_TMP_PREFIX).toAbsolutePath().normalize();
+        if (!StringUtils.startsWith(targetPath.toString(), metadataTmpPrefix.toString())) {
+            throw new SecurityException("Path not kylin metadata tmp directory: " + filePath);
+        }
+
+        return targetPath.toString();
+    }
+
     public InputStream getMetadataBackupFromTmpPath(String tmpFilePath, Long fileSize) throws IOException {
-        val metadataBackupTmp = new File(tmpFilePath);
+        val realTempPath = getSafeAbsolutePath(tmpFilePath);
+        val metadataBackupTmp = new File(realTempPath);
         if (metadataBackupTmp.isFile()) {
             if (metadataBackupTmp.length() != fileSize) {
                 throw new FileNotFoundException("Metadata backup temp file length does not right: " + tmpFilePath
@@ -84,7 +105,7 @@ public class FileService extends BasicService {
         val filePath = new Path(path);
         if (fileSystem.isFile(filePath)) {
             val fileStatus = fileSystem.getFileStatus(filePath);
-            val tempDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+            val tempDirectory = Files.createTempDirectory(Paths.get(SYSTEM_TMP_DIR), METADATA_TMP_PREFIX).toFile();
             fileSystem.copyToLocalFile(false, filePath, new Path(tempDirectory.getAbsolutePath()), true);
             val tmpFile = new File(tempDirectory, METADATA_FILE);
             if (fileStatus.getLen() != tmpFile.length()) {
@@ -99,7 +120,7 @@ public class FileService extends BasicService {
     }
 
     public String saveMetadataBackupTmpFromRequest(Long fileSize, InputStream inputStream) throws IOException {
-        val tmpDirectory = Files.createTempDirectory("MetadataBackupTmp-").toFile();
+        val tmpDirectory = Files.createTempDirectory(METADATA_TMP_PREFIX).toFile();
         val tmpFile = new File(tmpDirectory, METADATA_FILE);
         try (val os = new FileOutputStream(tmpFile)) {
             IOUtils.copy(inputStream, os);
