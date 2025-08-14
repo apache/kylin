@@ -36,7 +36,7 @@ cp ../NOTICE ${package_name}/
 mkdir -p ${package_name}/lib/ext
 
 # Spark binary won't be distributed into Kylin binary due to size limit
-# cp -rf spark ${package_name}/
+cp -rf spark ${package_name}/
 cp -rf sample_project ${package_name}/
 cp -rf samples ${package_name}/
 
@@ -47,7 +47,7 @@ if [[ -d "influxdb" ]]; then
 fi
 
 ## copy async profiler native files
-bash async-profiler-lib/download-async-profiler.sh
+bash build/release/download-async-profiler.sh
 #cp -rf async-profiler-lib/libasyncProfiler-mac.so "${package_name}"/lib/libasyncProfiler-mac.so
 cp -rf libasyncProfiler-linux-x64.so "${package_name}"/lib/libasyncProfiler-linux-x64.so
 cp -rf libasyncProfiler-linux-arm64.so "${package_name}"/lib/libasyncProfiler-linux-arm64.so
@@ -103,11 +103,23 @@ if [[ "${WITH_GLUTEN}" = "1" ]]; then
     mv spark/libch.so ${package_name}/server/
     cp spark/jars/gluten.jar ${package_name}/lib/ext/
     if [[ "$(uname)" == "Darwin" ]]; then
-    sed -i '' '22a\
+    sed -i '' '21a\
 export LD_PRELOAD=${KYLIN_HOME}/server/libch.so
 ' ${package_name}/sbin/spark-test.sh
+    sed -i '' '21a\
+export LD_PRELOAD=${KYLIN_HOME}/server/libch.so
+' ${package_name}/sbin/bootstrap.sh
     else
-        sed -i '22aexport LD_PRELOAD=${KYLIN_HOME}/server/libch.so' ${package_name}/sbin/spark-test.sh
+        sed -i '21aexport LD_PRELOAD=${KYLIN_HOME}/server/libch.so' ${package_name}/sbin/spark-test.sh
+        sed -i '21aexport LD_PRELOAD=${KYLIN_HOME}/server/libch.so' ${package_name}/sbin/bootstrap.sh
+    fi
+else
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' '/^export LD_PRELOAD=/d' ${package_name}/sbin/spark-test.sh
+        sed -i '' '/^export LD_PRELOAD=/d' ${package_name}/sbin/bootstrap.sh
+    else
+        sed -i '/^export LD_PRELOAD=/d' ${package_name}/sbin/spark-test.sh
+        sed -i '/^export LD_PRELOAD=/d' ${package_name}/sbin/bootstrap.sh
     fi
 fi
 

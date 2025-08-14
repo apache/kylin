@@ -58,8 +58,6 @@ if [[ "${WITH_SPARK}" = "1" ]]; then
     if [[ "${WITH_GLUTEN}" = "1" ]]; then
         echo "Prepare gluten..."
         sh build/release/download-gluten.sh      || { exit 1; }
-    else
-        sed -i '/^export LD_PRELOAD=/d' build/sbin/bootstrap.sh
     fi
 else
     rm -rf build/spark

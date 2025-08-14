@@ -35,5 +35,4 @@ fi
 tar -zxf build/gluten-${gluten_version}-${gluten_platform}.tar.gz -C build/
 mv build/gluten-${gluten_version}-${gluten_platform} build/gluten
 cp build/gluten/libs/libch.so build/spark/
-find build/spark/jars/ -name "protobuf-java*" -delete
 cp -r build/gluten/jars/spark33/* build/spark/jars/

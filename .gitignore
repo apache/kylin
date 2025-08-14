@@ -96,6 +96,7 @@ build/tpch-benchmark
 build/spark
 build/gluten
 build/libasyncProfiler*
+build/async-profiler*
 
 *.tgz
 *.tar.gz
