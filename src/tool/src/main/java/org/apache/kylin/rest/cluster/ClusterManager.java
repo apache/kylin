@@ -20,6 +20,7 @@ package org.apache.kylin.rest.cluster;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.util.SpringContext;
@@ -43,5 +44,12 @@ public interface ClusterManager {
 
     static ClusterManager getInstance() {
         return SpringContext.getApplicationContext().getBean(ClusterManager.class);
+    }
+
+    default boolean checkServer(String host) {
+        if (StringUtils.isBlank(host)) {
+            return true;
+        }
+        return getServers().stream().noneMatch(server -> StringUtils.equals(server.getHost(), host));
     }
 }

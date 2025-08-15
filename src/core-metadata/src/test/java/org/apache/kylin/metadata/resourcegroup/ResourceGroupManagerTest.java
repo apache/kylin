@@ -34,6 +34,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import lombok.val;
 
@@ -118,7 +119,7 @@ public class ResourceGroupManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(project, rgManager.listProjectWithPermission().get(0));
     }
 
-    private void mockResourceGroup(String host, String project) {
+    public static void mockResourceGroup(String host, String project) {
         ResourceGroupManager manager = ResourceGroupManager.getInstance(getTestConfig());
         manager.updateResourceGroup(copyForWrite -> {
             copyForWrite.setResourceGroupEnabled(true);
@@ -136,4 +137,25 @@ public class ResourceGroupManagerTest extends NLocalFileMetadataTestCase {
             copyForWrite.setResourceGroupMappingInfoList(Collections.singletonList(mappingInfo));
         });
     }
+
+    @Test
+    public void testCheckServer() {
+        String project = "default";
+        mockResourceGroup(AddressUtil.getLocalInstance(), project);
+        ResourceGroupManager manager = ResourceGroupManager.getInstance(getTestConfig());
+
+        // Test valid server
+        Assertions.assertFalse(manager.checkServer(AddressUtil.getLocalInstance()));
+
+        // Test null host
+        Assertions.assertTrue(manager.checkServer(null));
+
+        // Test empty host
+        Assertions.assertTrue(manager.checkServer(""));
+        Assertions.assertTrue(manager.checkServer(" "));
+
+        // Test host not found in servers
+        Assertions.assertTrue(manager.checkServer("192.168.1.1:8080"));
+    }
+
 }

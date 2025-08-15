@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.Rule;
 import org.junit.jupiter.api.Assertions;
@@ -105,5 +106,57 @@ class AddressUtilTest {
     void testIsSameHost() {
         Assertions.assertTrue(AddressUtil.isSameHost(hostInfoFetcher.getHostname()));
         Assertions.assertFalse(AddressUtil.isSameHost("unknown"));
+    }
+
+    @Test
+    void testExtractIpAndPort() {
+        // Test valid HTTP URL with port
+        Assertions.assertEquals("example.com:8080", AddressUtil.extractIpAndPort("http://example.com:8080/path"));
+
+        // Test valid HTTPS URL with port
+        Assertions.assertEquals("example.com:443", AddressUtil.extractIpAndPort("https://example.com:443/path"));
+
+        // Test URL without explicit port (default port -1)
+        Assertions.assertEquals("example.com:-1", AddressUtil.extractIpAndPort("http://example.com/path"));
+
+        // Test IP address with port
+        Assertions.assertEquals("192.168.1.1:9090", AddressUtil.extractIpAndPort("http://192.168.1.1:9090"));
+
+        // Test localhost with port
+        Assertions.assertEquals("localhost:7070", AddressUtil.extractIpAndPort("http://localhost:7070"));
+
+        // Test URL with query parameters
+        Assertions.assertEquals("example.com:8080",
+                AddressUtil.extractIpAndPort("http://example.com:8080/path?param=value"));
+
+        // Test URL with fragment
+        Assertions.assertEquals("example.com:8080",
+                AddressUtil.extractIpAndPort("http://example.com:8080/path#section"));
+
+        Assertions.assertEquals("example .com:8080",
+                AddressUtil.extractIpAndPort("http://example .com:8080/path#section"));
+    }
+
+    @Test
+    void testExtractIpAndPortMalformedUrl() {
+        // Test malformed URL - missing protocol
+        Assertions.assertThrows(KylinRuntimeException.class, () -> AddressUtil.extractIpAndPort("example.com:8080"));
+
+        // Test malformed URL - empty string
+        Assertions.assertThrows(KylinRuntimeException.class, () -> AddressUtil.extractIpAndPort(""));
+
+        // Test malformed URL - null (will throw NPE before reaching method)
+        Assertions.assertThrows(Exception.class, () -> AddressUtil.extractIpAndPort(null));
+
+        // Test malformed URL - invalid protocol format
+        Assertions.assertThrows(KylinRuntimeException.class,
+                () -> AddressUtil.extractIpAndPort("http:example.com:8080"));
+
+        // Test malformed URL - incomplete protocol
+        Assertions.assertThrows(KylinRuntimeException.class,
+                () -> AddressUtil.extractIpAndPort("http:/example.com:8080"));
+
+        // Test malformed URL - unclosed bracket in host
+        Assertions.assertThrows(KylinRuntimeException.class, () -> AddressUtil.extractIpAndPort("http://[invalid"));
     }
 }

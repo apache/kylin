@@ -73,7 +73,7 @@ public class ResourceGroupLoadBalancer implements ReactorServiceInstanceLoadBala
                 .collect(Collectors.toList());
         String project = ProjectInfoParser.parseProjectInfo(httpServletRequest).getFirst();
         if (rgManager.isResourceGroupEnabled() && !project.equals(UnitOfWork.GLOBAL_UNIT)) {
-            jobNodes.retainAll(rgManager.getInstancesForProject(project));
+            jobNodes = rgManager.getInstancesForProject(project);
         }
 
         if (jobNodes.isEmpty()) {

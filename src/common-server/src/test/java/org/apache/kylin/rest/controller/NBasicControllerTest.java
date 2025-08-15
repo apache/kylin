@@ -40,12 +40,17 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.resourcegroup.ResourceGroupManagerTest;
+import org.apache.kylin.rest.cluster.ClusterManager;
+import org.apache.kylin.rest.cluster.MockClusterManager;
 import org.apache.kylin.rest.controller.fixture.FixtureController;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -56,6 +61,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -64,6 +70,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -333,4 +340,68 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("ip", nBasicController.decodeHost("ip"));
     }
 
+    @Test
+    public void testCheckServerWithResourceGroupEnable() {
+        ClusterManager clusterManager = new MockClusterManager();
+
+        String project = "default";
+        ResourceGroupManagerTest.mockResourceGroup(AddressUtil.getLocalInstance(), project);
+        ReflectionTestUtils.setField(nBasicController, "clusterManager", clusterManager);
+
+        // Test valid server - should not throw exception
+        Assertions.assertDoesNotThrow(() -> nBasicController.checkServer(AddressUtil.getLocalInstance()));
+        Assertions.assertDoesNotThrow(() -> nBasicController.checkServer("127.0.0.1:7070"));
+
+        // Test null host - should throw KylinRuntimeException
+        KylinRuntimeException nullException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(null));
+        Assertions.assertEquals("Server cannot be null or empty", nullException.getMessage());
+
+        // Test empty host - should throw KylinRuntimeException
+        KylinRuntimeException emptyException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(""));
+        Assertions.assertEquals("Server cannot be null or empty", emptyException.getMessage());
+        KylinRuntimeException emptyException2 = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(" "));
+        Assertions.assertEquals("Server cannot be null or empty", emptyException2.getMessage());
+
+        // Test host not found in servers - should throw KylinRuntimeException
+        KylinRuntimeException notFoundException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer("192.168.1.1:8080"));
+        Assertions.assertEquals("Server <192.168.1.1:8080> not found", notFoundException.getMessage());
+    }
+
+    @Test
+    public void testCheckServerWithoutResourceGroupEnable() {
+        ClusterManager clusterManager = new MockClusterManager();
+
+        ReflectionTestUtils.setField(nBasicController, "clusterManager", clusterManager);
+
+        // Test valid server - should not throw exception
+        Assertions.assertDoesNotThrow(() -> nBasicController.checkServer("127.0.0.1:7070"));
+
+        // Test null host - should throw KylinRuntimeException
+        KylinRuntimeException nullException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(null));
+        Assertions.assertEquals("Server cannot be null or empty", nullException.getMessage());
+
+        // Test empty host - should throw KylinRuntimeException
+        KylinRuntimeException emptyException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(""));
+        Assertions.assertEquals("Server cannot be null or empty", emptyException.getMessage());
+        KylinRuntimeException emptyException2 = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(" "));
+        Assertions.assertEquals("Server cannot be null or empty", emptyException2.getMessage());
+
+        // Test host not found in servers - should throw KylinRuntimeException
+        KylinRuntimeException notFoundException = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer("192.168.1.1:8080"));
+        Assertions.assertEquals("Server <192.168.1.1:8080> not found", notFoundException.getMessage());
+
+        // Test current host not found in servers - should throw KylinRuntimeException
+        KylinRuntimeException notFoundException2 = Assertions.assertThrows(KylinRuntimeException.class,
+                () -> nBasicController.checkServer(AddressUtil.getLocalInstance()));
+        Assertions.assertEquals("Server <" + AddressUtil.getLocalInstance() + "> not found",
+                notFoundException2.getMessage());
+    }
 }

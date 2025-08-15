@@ -18,10 +18,14 @@
 package org.apache.kylin.common.util;
 
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 
@@ -125,6 +129,20 @@ public class AddressUtil {
     public static void validateHost(String host) {
         if (StringUtils.isNotBlank(host) && !StringHelper.validateHost(host)) {
             throw new IllegalArgumentException("Url contains disallowed chars, host: " + host);
+        }
+    }
+
+    public static String extractIpAndPort(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            String host = url.getHost();
+            int port = url.getPort();
+            if (StringUtils.isEmpty(host)) {
+                throw new KylinRuntimeException(String.format(Locale.ROOT, "Invalid or illegal URL: %s", urlString));
+            }
+            return host + ":" + port;
+        } catch (MalformedURLException e) {
+            throw new KylinRuntimeException(String.format(Locale.ROOT, "Invalid or illegal URL: %s", urlString), e);
         }
     }
 }

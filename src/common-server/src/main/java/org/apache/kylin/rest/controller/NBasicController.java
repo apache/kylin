@@ -79,6 +79,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
@@ -96,7 +97,9 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
+import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -159,6 +162,9 @@ public class NBasicController {
 
     @Autowired
     protected UserService userService;
+
+    @Autowired
+    protected ClusterManager clusterManager;
 
     protected Logger getLogger() {
         return logger;
@@ -700,5 +706,25 @@ public class NBasicController {
     private void initBinder(WebDataBinder binder) {
         int autoGrowCollectionLimit = KylinConfig.getInstanceFromEnv().getDataBinderAutoGrowCollectionLimit();
         binder.setAutoGrowCollectionLimit(autoGrowCollectionLimit);
+    }
+
+    public void checkServer(String host) {
+        if (StringUtils.isBlank(host)) {
+            throw new KylinRuntimeException("Server cannot be null or empty");
+        }
+
+        val rgManager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());
+        val serverNotFoundInCluster = clusterManager.checkServer(host);
+
+        if (rgManager.isResourceGroupEnabled()) {
+            val serverNotFoundInResourceGroup = rgManager.checkServer(host);
+            if (serverNotFoundInCluster && serverNotFoundInResourceGroup) {
+                throw new KylinRuntimeException(String.format(Locale.ROOT, "Server <%s> not found", host));
+            }
+        } else {
+            if (serverNotFoundInCluster) {
+                throw new KylinRuntimeException(String.format(Locale.ROOT, "Server <%s> not found", host));
+            }
+        }
     }
 }

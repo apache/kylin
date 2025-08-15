@@ -72,7 +72,6 @@ import org.apache.kylin.metadata.query.util.QueryHisTransformStandardUtil;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.plugin.profiler.AsyncProfiling;
-import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.model.Query;
@@ -144,9 +143,6 @@ public class NQueryController extends NBasicController {
     @Autowired
     @Qualifier("queryHistoryService")
     private QueryHistoryService queryHistoryService;
-
-    @Autowired
-    private ClusterManager clusterManager;
 
     @Autowired
     private QueryCacheManager queryCacheManager;

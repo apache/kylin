@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.resourcegroup;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.MetadataType;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -104,7 +105,7 @@ public class ResourceGroupManager {
         updater.modify(copy);
         return updateResourceGroup(copy);
     }
-    
+
     public List<String> getInstancesForProject(String project) {
         ResourceGroup resourceGroup = getResourceGroup();
         List<String> ids = resourceGroup.getResourceGroupMappingInfoList().stream()
@@ -148,5 +149,16 @@ public class ResourceGroupManager {
     private ResourceGroup save(ResourceGroup resourceGroup) {
         crud.save(resourceGroup);
         return resourceGroup;
+    }
+
+    public boolean checkServer(String host) {
+        if (StringUtils.isBlank(host)) {
+            return true;
+        }
+        if (isResourceGroupEnabled()) {
+            return getResourceGroup().getKylinInstances().stream().map(KylinInstance::getInstance)
+                    .noneMatch(server -> StringUtils.equals(server, host));
+        }
+        return true;
     }
 }

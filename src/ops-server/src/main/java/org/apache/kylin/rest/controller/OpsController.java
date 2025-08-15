@@ -43,7 +43,6 @@ import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.metadata.asynctask.MetadataRestoreTask;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
 import org.apache.kylin.rest.request.MaintenanceModeRequest;
@@ -80,15 +79,12 @@ import io.swagger.annotations.ApiOperation;
 @Controller
 @RequestMapping(value = "/api/system", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class OpsController extends NBasicController {
-    
+
     private static String DEPRECATED_MAINTENANCE_MODE = "Maintenance mode has been deprecated.";
 
     @Autowired
     @Qualifier("systemService")
     private SystemService systemService;
-
-    @Autowired
-    private ClusterManager clusterManager;
 
     @Autowired
     private AclEvaluate aclEvaluate;
@@ -151,6 +147,7 @@ public class OpsController extends NBasicController {
                     diagPackageRequest.getJobId(), diagPackageRequest.getProject(), headers);
             return new EnvelopeResponse<>(CODE_SUCCESS, uuid, "");
         } else {
+            checkServer(AddressUtil.extractIpAndPort(host));
             String url = host + "/kylin/api/system/diag";
             return generateTaskForRemoteHost(request, url);
         }
@@ -170,6 +167,7 @@ public class OpsController extends NBasicController {
                     queryDiagPackageRequest.getProject(), headers);
             return new EnvelopeResponse<>(CODE_SUCCESS, uuid, "");
         } else {
+            checkServer(AddressUtil.extractIpAndPort(host));
             String url = host + "/kylin/api/system/diag/query";
             return generateTaskForRemoteHost(request, url);
         }
@@ -195,6 +193,7 @@ public class OpsController extends NBasicController {
         if (StringUtils.isEmpty(host) || KylinConfig.getInstanceFromEnv().getMicroServiceMode() != null) {
             return systemService.getExtractorStatus(id, project);
         } else {
+            checkServer(AddressUtil.extractIpAndPort(host));
             String url = host + "/kylin/api/system/diag/status?id=" + id;
             if (StringUtils.isNotEmpty(project)) {
                 url = url + "&project=" + project;
@@ -215,6 +214,7 @@ public class OpsController extends NBasicController {
             setDownloadResponse(systemService.getDiagPackagePath(id, project), MediaType.APPLICATION_OCTET_STREAM_VALUE,
                     response);
         } else {
+            checkServer(AddressUtil.extractIpAndPort(host));
             String url = host + "/kylin/api/system/diag?id=" + id;
             if (StringUtils.isNotEmpty(project)) {
                 url = url + "&project=" + project;
@@ -234,6 +234,7 @@ public class OpsController extends NBasicController {
             systemService.stopDiagTask(id);
             return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
         } else {
+            checkServer(AddressUtil.extractIpAndPort(host));
             String url = host + "/kylin/api/system/diag?id=" + id;
             return generateTaskForRemoteHost(request, url);
         }
