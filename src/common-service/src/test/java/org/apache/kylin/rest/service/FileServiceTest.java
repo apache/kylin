@@ -363,7 +363,7 @@ class FileServiceTest {
     }
 
     @Test
-    void testGetSafeAbsolutePathError() {
+    void testGetSafeAbsolutePathErrorWithDot() {
         {
             String filePath = Paths.get(SYSTEM_TMP_DIR, "..", "..", "etc", "passwd").toString();
             SecurityException exception = assertThrows(SecurityException.class,
@@ -382,12 +382,18 @@ class FileServiceTest {
             assertTrue(exception.getMessage().contains(filePath));
         }
         {
-            String filePath = "/etc/passwd";
+            String filePath = Paths.get(SYSTEM_TMP_DIR, "..", "malicious.txt").toString();
             SecurityException exception = assertThrows(SecurityException.class,
                     () -> FileService.getSafeAbsolutePath(filePath));
 
             assertTrue(exception.getMessage().contains("Path outside base directory"));
-            assertTrue(exception.getMessage().contains(filePath));
+        }
+        {
+            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", "malicious.txt").toString();
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path not kylin metadata tmp directory"));
         }
         {
             String filePath = String.format(Locale.ROOT, "%s/%s/subdir/../../../../../../etc/passwd", SYSTEM_TMP_DIR,
@@ -403,6 +409,18 @@ class FileServiceTest {
                     () -> FileService.getSafeAbsolutePath(filePath));
 
             assertTrue(exception.getMessage().contains("Path outside base directory"));
+        }
+    }
+
+    @Test
+    void testGetSafeAbsolutePathError() {
+        {
+            String filePath = "/etc/passwd";
+            SecurityException exception = assertThrows(SecurityException.class,
+                    () -> FileService.getSafeAbsolutePath(filePath));
+
+            assertTrue(exception.getMessage().contains("Path outside base directory"));
+            assertTrue(exception.getMessage().contains(filePath));
         }
         {
             String filePath = "";
@@ -432,20 +450,6 @@ class FileServiceTest {
                     () -> FileService.getSafeAbsolutePath(filePath));
 
             assertTrue(exception.getMessage().contains("Path outside base directory"));
-        }
-        {
-            String filePath = Paths.get(SYSTEM_TMP_DIR, "..", "malicious.txt").toString();
-            SecurityException exception = assertThrows(SecurityException.class,
-                    () -> FileService.getSafeAbsolutePath(filePath));
-
-            assertTrue(exception.getMessage().contains("Path outside base directory"));
-        }
-        {
-            String filePath = Paths.get(SYSTEM_TMP_DIR, METADATA_TMP_PREFIX, "..", "malicious.txt").toString();
-            SecurityException exception = assertThrows(SecurityException.class,
-                    () -> FileService.getSafeAbsolutePath(filePath));
-
-            assertTrue(exception.getMessage().contains("Path not kylin metadata tmp directory"));
         }
         {
             String filePath = Paths.get(SYSTEM_TMP_DIR, "malicious.txt").toString();

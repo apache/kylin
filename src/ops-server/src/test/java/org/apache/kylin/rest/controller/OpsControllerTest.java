@@ -25,9 +25,11 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
+import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
@@ -56,6 +58,9 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
     @Mock
     private SystemService systemService;
 
+    @Mock
+    private ClusterManager clusterManager;
+
     @InjectMocks
     private OpsController opsController = Mockito.spy(new OpsController());
 
@@ -83,7 +88,7 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
         DiagPackageRequest request = new DiagPackageRequest();
         Mockito.doAnswer(x -> null).when(opsController).generateTaskForRemoteHost(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)).param("host", "ip")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)).param("host", mockHost())
                 .content(JsonUtil.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError());
 
@@ -152,7 +157,7 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
     public void testGetRemoteDumpDiagPackage() throws Exception {
         Mockito.doAnswer(x -> null).when(opsController).generateTaskForRemoteHost(Mockito.any(), Mockito.anyString());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag/status").contentType(MediaType.APPLICATION_JSON)
-                .param("id", "id").param("host", "ip").param("project", "project")
+                .param("id", "id").param("host", mockHost()).param("project", "project")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(opsController).getRemotePackageStatus(Mockito.anyString(), Mockito.anyString(),
@@ -163,7 +168,7 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
     public void testRemoteDownloadPackage() throws Exception {
         Mockito.doNothing().when(opsController).downloadFromRemoteHost(Mockito.any(), Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
-                .param("id", "id").param("host", "ip").param("project", "project")
+                .param("id", "id").param("host", mockHost()).param("project", "project")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(opsController).remoteDownloadPackage(Mockito.anyString(), Mockito.anyString(),
@@ -185,7 +190,8 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
     public void testRemoteStopPackage() throws Exception {
         Mockito.doAnswer(x -> null).when(opsController).generateTaskForRemoteHost(Mockito.any(), Mockito.anyString());
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
-                .param("host", "ip").param("id", "id").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .param("host", mockHost()).param("id", "id")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(opsController).remoteStopPackage(Mockito.anyString(), Mockito.anyString(), Mockito.any());
     }
@@ -199,4 +205,9 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(opsController).updateDiagProgress(Mockito.any());
     }
+
+    private String mockHost() {
+        return "http://" + AddressUtil.getLocalInstance();
+    }
+
 }
