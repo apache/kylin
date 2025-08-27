@@ -24,6 +24,10 @@ import static org.apache.kylin.common.exception.ServerErrorCode.INTERNAL_TABLE_N
 import static org.apache.kylin.common.exception.ServerErrorCode.INTERNAL_TABLE_RELOAD_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_INTERNAL_TABLE_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
+import static org.apache.kylin.common.util.ArrayUtils.isPrefixSubset;
+import static org.apache.kylin.common.util.StringHelper.splitAndTrim;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_ORDER_BY_KEY;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_PRIMARY_KEY;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,6 +45,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
@@ -48,6 +53,7 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -56,6 +62,7 @@ import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.metadata.table.InternalTablePartition;
 import org.apache.kylin.metadata.table.InternalTablePartitionDetail;
+import org.apache.kylin.rest.request.InternalTableRequest;
 import org.apache.kylin.rest.response.InternalTableDescResponse;
 import org.apache.kylin.rest.response.InternalTableLoadingJobResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -436,6 +443,67 @@ public class InternalTableService extends BasicService {
             return null;
         }
         return internalTableDesc.getTablePartition().getPartitionDetails();
+    }
+
+    public static void validate(InternalTableRequest request) {
+        String storageType = request.getStorageType();
+        Message msg = MsgPicker.getMsg();
+        // 1. Validate the legality of storageType
+        if (storageType == null || storageType.isEmpty()) {
+            request.setStorageType(InternalTableDesc.StorageType.GLUTEN.name());
+            storageType = request.getStorageType();
+        }
+        if (!InternalTableDesc.StorageType.contains(storageType)) {
+            throw new KylinException(INVALID_INTERNAL_TABLE_PARAMETER,
+                    String.format(Locale.ROOT, msg.getInternalTableStorageTypeFailed(), storageType));
+        }
+
+        // 2. Skip subsequent checks if the type is not GLUTEN
+        // TODO check other storageType
+        if (!storageType.equalsIgnoreCase(InternalTableDesc.StorageType.GLUTEN.name())) {
+            return;
+        }
+
+        // 3. Extract and validate key-value pairs
+        Map<String, String> tblProperties = request.getTblProperties();
+        String primaryKey = null;
+        String orderByKey = null;
+        // 3.1 Iterate to check the validity of keys and extract target key values
+        for (Map.Entry<String, String> entry : tblProperties.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            // Check if the key is valid
+            if (!NBatchConstants.TblPropertyKey.contains(key)) {
+                throw new KylinException(INVALID_INTERNAL_TABLE_PARAMETER,
+                        String.format(Locale.ROOT, msg.getInternalTableTblPropertiesFailed(), key));
+            }
+            // Extract target key values
+            if (key.equals(P_PRIMARY_KEY)) {
+                primaryKey = value;
+            }
+            if (key.equals(P_ORDER_BY_KEY)) {
+                orderByKey = value;
+            }
+        }
+        // 4. Validate the existence of the primaryKey
+        if (primaryKey == null) {
+            return;
+        }
+        // 5. Ensure that the orderByKey is set
+        if (orderByKey == null) {
+            throw new KylinException(INVALID_INTERNAL_TABLE_PARAMETER,
+                    "When " + P_PRIMARY_KEY + " is set, " + P_ORDER_BY_KEY + " must be set.");
+        }
+        // 6. Parse the field list
+        List<String> primaryColumns = Arrays.asList(splitAndTrim(primaryKey, ","));
+        List<String> orderByColumns = Arrays.asList(splitAndTrim((orderByKey), ","));
+
+        // 7. Verify that the primaryKey is a prefix of the orderByKey
+        if (!isPrefixSubset(primaryColumns, orderByColumns)) {
+            throw new KylinException(INVALID_INTERNAL_TABLE_PARAMETER,
+                    P_PRIMARY_KEY + " must be a prefix subset of " + P_ORDER_BY_KEY + ". Example: If " + P_ORDER_BY_KEY
+                            + " is 'a,b,c', " + P_PRIMARY_KEY + " can be 'a', 'a,b' or 'a,b,c'");
+        }
     }
 
 }

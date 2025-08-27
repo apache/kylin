@@ -35,4 +35,32 @@ public class ArrayUtils {
         }
         return result;
     }
+
+    /**
+     * Checks if the given subset is a prefix of the superset.
+     *
+     * A subset is considered a prefix of the superset if:
+     * 1. The subset is shorter than or equal to the superset in length.
+     * 2. All elements in the subset match the corresponding elements in the superset at the same positions.
+     *
+     * Examples:
+     * - subset = ["a", "b"], superset = ["a", "b", "c"] -> returns true
+     * - subset = ["a", "b"], superset = ["a", "c", "b"] -> returns false
+     * - subset = ["a", "b", "c"], superset = ["a", "b"] -> returns false
+     *
+     * @param subset    The list to check if it is a prefix subset.
+     * @param superset  The list to check against (the larger list).
+     * @return          True if the subset is a prefix of the superset, otherwise false.
+     */
+    public static boolean isPrefixSubset(List<String> subset, List<String> superset) {
+        if (subset.size() > superset.size()) {
+            return false;
+        }
+        for (int i = 0; i < subset.size(); i++) {
+            if (!subset.get(i).equals(superset.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

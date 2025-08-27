@@ -1780,4 +1780,14 @@ public class CnMessage extends Message {
     public String getModelStorageUpdateFailed() {
         return "更新模型存储类型失败，请确认模型中没有 segment 后重试。";
     }
+
+    @Override
+    public String getInternalTableStorageTypeFailed() {
+        return "不支持的内表存储类型 %s，请检查后再重试。";
+    }
+
+    @Override
+    public String getInternalTableTblPropertiesFailed() {
+        return "不支持的内表表属性 %s，请检查后再重试。";
+    }
 }

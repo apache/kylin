@@ -37,7 +37,7 @@ class InternalTableDescTest {
         TableDesc originTable = tableMetadataManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         InternalTableDesc table = new InternalTableDesc(originTable);
 
-        table.setStorageType(null);
+        table.setStorageType(InternalTableDesc.StorageType.GLUTEN.name());
         Assertions.assertEquals(InternalTableDesc.StorageType.GLUTEN, table.getStorageType());
         table.setStorageType(InternalTableDesc.StorageType.PARQUET.name());
         Assertions.assertEquals(InternalTableDesc.StorageType.PARQUET, table.getStorageType());
@@ -98,5 +98,13 @@ class InternalTableDescTest {
         table.setTblProperties(tblProperties);
         table.optimizeTblProperties();
         Assertions.assertTrue(table.isSortByPartitionEnabled());
+    }
+
+    @Test
+    void testStorageType() {
+        String format = "clickhouse";
+        Assertions.assertFalse(InternalTableDesc.StorageType.contains(format));
+        format = "gluten";
+        Assertions.assertTrue(InternalTableDesc.StorageType.contains(format));
     }
 }

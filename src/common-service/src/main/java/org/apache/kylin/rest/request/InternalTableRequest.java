@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.rest.request;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,7 +36,7 @@ public class InternalTableRequest {
     private String datePartitionFormat;
 
     @JsonProperty("tbl_properties")
-    private Map<String, String> tblProperties = new HashMap<>();
+    private Map<String, String> tblProperties = new LinkedHashMap<>();
 
     @JsonProperty("storage_type")
     private String storageType;

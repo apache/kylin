@@ -71,6 +71,7 @@ public class InternalTableController extends NBasicController {
         if (StringUtils.isBlank(table) || StringUtils.isBlank(database)) {
             throw new KylinException(EMPTY_PARAMETER, "Table or database can not be null, please check again.");
         }
+        InternalTableService.validate(request);
         internalTableService.createInternalTable(project, table, database, request.getPartitionCols(),
                 request.getDatePartitionFormat(), request.getTblProperties(), request.getStorageType());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -150,6 +151,7 @@ public class InternalTableController extends NBasicController {
         if (table.isEmpty()) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableNameCannotEmpty());
         }
+        InternalTableService.validate(request);
         internalTableService.updateInternalTable(project, table, database, request.getPartitionCols(),
                 request.getDatePartitionFormat(), request.getTblProperties(), request.getStorageType());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");

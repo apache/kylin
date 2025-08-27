@@ -18,6 +18,13 @@
 
 package org.apache.kylin.metadata.table;
 
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_BUCKET_COLUMN;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_BUCKET_NUM;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_ORDER_BY_KEY;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_PRELOADED_CACHE;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_PRIMARY_KEY;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_SORT_BY_PARTITION_BEFORE_SAVE;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -48,12 +55,6 @@ import lombok.Setter;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class InternalTableDesc extends ATable implements Serializable {
 
-    private static final String BUCKET_COLUMN = "bucketCol";
-    private static final String BUCKET_NUM = "bucketNum";
-    private static final String PRELOADED_CACHE = "preloadedCache";
-    private static final String PRIMARY_KEY = "primaryKey";
-    private static final String SORT_BY_KEY = "sortByKey";
-    private static final String SORT_BY_PARTITION_BEFORE_SAVE = "sortByPartition";
     public static final int INIT_SIZE = 0;
 
     @Getter
@@ -67,6 +68,15 @@ public class InternalTableDesc extends ATable implements Serializable {
 
         StorageType(String format) {
             this.format = format;
+        }
+
+        public static boolean contains(String format) {
+            for (StorageType storageType : StorageType.values()) {
+                if (storageType.name().equalsIgnoreCase(format)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -96,7 +106,6 @@ public class InternalTableDesc extends ATable implements Serializable {
 
     @JsonProperty("table_partition")
     private InternalTablePartition tablePartition;
-
 
     public InternalTableDesc(InternalTableDesc other) {
         this.project = other.project;
@@ -150,47 +159,43 @@ public class InternalTableDesc extends ATable implements Serializable {
     }
 
     public void setStorageType(String storageType) {
-        if (storageType == null) {
-            this.storageType = StorageType.GLUTEN;
-        } else {
-            String storageTypeUpper = storageType.toUpperCase(Locale.ROOT);
-            this.storageType = StorageType.valueOf(storageTypeUpper);
-        }
+        String storageTypeUpper = storageType.toUpperCase(Locale.ROOT);
+        this.storageType = StorageType.valueOf(storageTypeUpper);
     }
 
     public String getBucketColumn() {
-        if (null == tblProperties.get(BUCKET_COLUMN)) {
+        if (null == tblProperties.get(P_BUCKET_COLUMN)) {
             return null;
         } else {
-            return tblProperties.get(BUCKET_COLUMN).trim();
+            return tblProperties.get(P_BUCKET_COLUMN).trim();
         }
     }
 
     public int getBucketNumber() {
-        if (null == tblProperties.get(BUCKET_NUM)) {
+        if (null == tblProperties.get(P_BUCKET_NUM)) {
             return 0;
         } else {
-            return Integer.parseInt(tblProperties.get(BUCKET_NUM).trim());
+            return Integer.parseInt(tblProperties.get(P_BUCKET_NUM).trim());
         }
     }
 
     public List<String> getPrimaryKey() {
-        return Arrays.stream(StringUtils.split(tblProperties.get(PRIMARY_KEY), ",")).map(String::trim)
+        return Arrays.stream(StringUtils.split(tblProperties.get(P_PRIMARY_KEY), ",")).map(String::trim)
                 .collect(Collectors.toList());
     }
 
-    public List<String> getSortByKey() {
-        return Arrays.stream(StringUtils.split(tblProperties.get(SORT_BY_KEY), ",")).map(String::trim)
+    public List<String> getOrderByKey() {
+        return Arrays.stream(StringUtils.split(tblProperties.get(P_ORDER_BY_KEY), ",")).map(String::trim)
                 .collect(Collectors.toList());
     }
 
     public boolean isPreloadedCacheEnable() {
-        return Boolean.parseBoolean(tblProperties.getOrDefault(PRELOADED_CACHE, KylinConfig.FALSE));
+        return Boolean.parseBoolean(tblProperties.getOrDefault(P_PRELOADED_CACHE, KylinConfig.FALSE));
     }
 
     public boolean isSortByPartitionEnabled() {
-        if (tblProperties.containsKey(SORT_BY_PARTITION_BEFORE_SAVE)) {
-            return Boolean.parseBoolean(tblProperties.get(SORT_BY_PARTITION_BEFORE_SAVE));
+        if (tblProperties.containsKey(P_SORT_BY_PARTITION_BEFORE_SAVE)) {
+            return Boolean.parseBoolean(tblProperties.get(P_SORT_BY_PARTITION_BEFORE_SAVE));
         } else {
             return NProjectManager.getProjectConfig(project).isInternalTableSortByPartitionEnabled();
         }

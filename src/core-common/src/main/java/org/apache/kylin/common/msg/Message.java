@@ -1625,4 +1625,12 @@ public class Message {
     public String getModelStorageUpdateFailed() {
         return "Update model storage failed, please make sure model not contain segment.";
     }
+
+    public String getInternalTableStorageTypeFailed() {
+        return "Unsupported StorageType \"%s\", please check and try again.";
+    }
+
+    public String getInternalTableTblPropertiesFailed() {
+        return "Unsupported tbl_properties parameter \"%s\", please check and try again.";
+    }
 }

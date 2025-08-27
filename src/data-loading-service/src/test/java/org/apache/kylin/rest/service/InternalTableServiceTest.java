@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.QueryErrorCode.EMPTY_TABLE;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_ORDER_BY_KEY;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_PRIMARY_KEY;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -30,7 +32,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,6 +69,7 @@ import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.metadata.table.InternalTablePartition;
 import org.apache.kylin.metadata.table.InternalTablePartitionDetail;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.InternalTableRequest;
 import org.apache.kylin.rest.response.InternalTableDescResponse;
 import org.apache.kylin.rest.response.InternalTableLoadingJobResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -1156,5 +1161,55 @@ public class InternalTableServiceTest extends AbstractTestCase {
         });
         Assertions.assertEquals(kylinException.getErrorCode(), ServerErrorCode.INTERNAL_TABLE_NOT_EXIST.toErrorCode());
         Assertions.assertFalse(internalTableFolder.exists());
+    }
+
+    @Test
+    void testValidate() {
+        // 1. Unsupported StorageType
+        InternalTableRequest request = new InternalTableRequest();
+        request.setStorageType("clickhouse");
+        request.setTblProperties(Collections.emptyMap());
+        Assertions.assertThrows(KylinException.class, () -> InternalTableService.validate(request));
+
+        // 2. Only check when storageType is GLUTEN
+        request.setStorageType(InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableService.validate(request);
+
+        // 3. Unsupported tbl_properties parameter
+        Map<String, String> tblProperties = new LinkedHashMap<>();
+        tblProperties.put("checkFalse", null);
+        request.setStorageType(InternalTableDesc.StorageType.GLUTEN.name());
+        request.setTblProperties(tblProperties);
+        Assertions.assertThrows(KylinException.class, () -> InternalTableService.validate(request));
+
+        // 4. Skip check for cases that do not contain PRIMARY_KEY
+        tblProperties.clear();
+        tblProperties.put(P_ORDER_BY_KEY, null);
+        InternalTableService.validate(request);
+
+        // 5. Set PRIMARY_KEY without ORDER_BY_KEY
+        tblProperties.clear();
+        tblProperties.put(P_PRIMARY_KEY, "primary1");
+        Assertions.assertThrows(KylinException.class, () -> InternalTableService.validate(request));
+
+        // 6. Skip check for cases that set ORDER_BY_KEY without PRIMARY_KEY
+        tblProperties.clear();
+        tblProperties.put(P_ORDER_BY_KEY, "order1");
+        InternalTableService.validate(request);
+
+        // 7. Test primaryKey is a prefix subset of orderByKey
+        tblProperties.clear();
+        tblProperties.put(P_PRIMARY_KEY, "a,b");
+        tblProperties.put(P_ORDER_BY_KEY, "a,b,c");
+        InternalTableService.validate(request);
+        request.setStorageType(null);
+        InternalTableService.validate(request);
+
+        // 8. Test primaryKey is not a prefix subset of orderByKey
+        tblProperties.clear();
+        request.setStorageType("");
+        tblProperties.put(P_PRIMARY_KEY, "a,c");
+        tblProperties.put(P_ORDER_BY_KEY, "a,b,c");
+        Assertions.assertThrows(KylinException.class, () -> InternalTableService.validate(request));
     }
 }

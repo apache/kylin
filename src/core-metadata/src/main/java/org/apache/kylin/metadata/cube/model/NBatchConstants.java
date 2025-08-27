@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.cube.model;
 
+import lombok.Getter;
+
 public interface NBatchConstants {
     String P_DATAFLOW_ID = "dataflowId";
     String P_SEGMENT_IDS = "segmentIds";
@@ -68,8 +70,12 @@ public interface NBatchConstants {
     String P_END_DATE = "endTime";
     String P_PRIMARY_KEY = "primaryKey";
     String P_ORDER_BY_KEY = "orderByKey";
+    String P_BUCKET_COLUMN = "bucketCol";
+    String P_BUCKET_NUM = "bucketNum";
     String P_DELETE_PARTITION_VALUES = "deletePartitionValues";
     String P_DELETE_PARTITION = "deletePartition";
+    String P_SORT_BY_PARTITION_BEFORE_SAVE = "sortByPartition";
+    String P_PRELOADED_CACHE = "preloadedCache";
 
 
     /** index planner job parameters */
@@ -83,4 +89,27 @@ public interface NBatchConstants {
 
     // ut only
     String P_BREAK_POINT_LAYOUTS = "breakPointLayouts";
+
+    @Getter
+    enum TblPropertyKey {
+        PRIMARY_KEY(P_PRIMARY_KEY),
+        ORDER_BY_KEY(P_ORDER_BY_KEY),
+        BUCKET_COLUMN(P_BUCKET_COLUMN),
+        BUCKET_NUM(P_BUCKET_NUM);
+
+        private final String value;
+
+        TblPropertyKey(String value) {
+            this.value = value;
+        }
+
+        public static boolean contains(String key) {
+            for (TblPropertyKey propertyKey : values()) {
+                if (propertyKey.getValue().equals(key)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }
