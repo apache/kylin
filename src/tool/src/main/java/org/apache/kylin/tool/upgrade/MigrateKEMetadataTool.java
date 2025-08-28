@@ -148,7 +148,7 @@ public class MigrateKEMetadataTool {
     }
 
     public MetadataStore.MemoryMetaData loadOldMetaData(FileSystemMetadataStore metadataStore, String inputPath,
-                                                        String type) {
+            String type) {
         Path path = new Path(inputPath);
 
         if (DIR.name().equals(type)) {
@@ -580,10 +580,8 @@ public class MigrateKEMetadataTool {
      * @param scope when originUuid is modelUuid, scope is project; when originUuid is segmentUuid, scope is model_uuid.
      * @return a unique modelUuid or segmentUuid
      */
-    public static String getUniqueUuid(Map<String, Map<String, String>> globalMap,
-                                       String scope, String originUuid) {
-        Map<String, String> projectMap = globalMap.computeIfAbsent(originUuid,
-                k -> new ConcurrentHashMap<>());
+    public static String getUniqueUuid(Map<String, Map<String, String>> globalMap, String scope, String originUuid) {
+        Map<String, String> projectMap = globalMap.computeIfAbsent(originUuid, k -> new ConcurrentHashMap<>());
         if (projectMap.get(scope) == null) {
             synchronized (projectMap) {
                 if (projectMap.get(scope) == null) {
@@ -599,8 +597,8 @@ public class MigrateKEMetadataTool {
     }
 
     private class MigrateRawResourceFactory {
-        private void createAndSaveCcRelations(JsonNode je, ObjectNode modelMap, String proj, String modelUuid,
-                long ts, MetadataStore.MemoryMetaData data, ArrayNode ccUuids) throws IOException {
+        private void createAndSaveCcRelations(JsonNode je, ObjectNode modelMap, String proj, String modelUuid, long ts,
+                MetadataStore.MemoryMetaData data, ArrayNode ccUuids) throws IOException {
             if (je.has("computed_columns")) {
                 Object s = modelMap.get("computed_columns");
                 JsonNode entries = JsonUtil.readValue(JsonUtil.writeValueAsIndentBytes(s), ArrayNode.class);
@@ -649,8 +647,8 @@ public class MigrateKEMetadataTool {
             return ccUuid;
         }
 
-        private CcModelRelationRawResource createCCRelation(String ccUuid, String proj, String modelUuid,
-                long ts) throws JsonProcessingException {
+        private CcModelRelationRawResource createCCRelation(String ccUuid, String proj, String modelUuid, long ts)
+                throws JsonProcessingException {
             CcModelRelationRawResource ccRel = new CcModelRelationRawResource();
             String ccRelUuid = RandomUtil.randomUUIDStr();
             ccRel.setUuid(ccRelUuid);
@@ -966,7 +964,8 @@ public class MigrateKEMetadataTool {
                 "/query_history/", "/query_history_time/", "/query_history_id/", "/event/", "/rec_items/",
                 "/loading_range/", "/dataflow_detail/", "/async_task/" };
         String[] metadataWithoutJsonPostfix = new String[] { METASTORE_UUID_META_KEY_TAG, VERSION_FILE_META_KEY_TAG,
-                METASTORE_IMAGE_META_KEY_TAG, "_global/user", "_global/user_group", "_global/sys_acl", "/streaming/" };
+                METASTORE_IMAGE_META_KEY_TAG, "_global/user", "_global/user_group", "_global/sys_acl", "/streaming/",
+                "_global/logical_view" };
 
         for (String s : nonMetadata) {
             if (resourcePath.endsWith(s)) {
