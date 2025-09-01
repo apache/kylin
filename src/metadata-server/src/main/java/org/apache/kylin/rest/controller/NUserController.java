@@ -522,14 +522,6 @@ public class NUserController extends NBasicController implements ApplicationList
         return response;
     }
 
-    @ApiOperation(value = "updateUser", tags = { "MID" })
-    @PostMapping(value = "/update_user")
-    @ResponseBody
-    public EnvelopeResponse<UserDetails> updateUserWithoutAuth(@RequestBody ManagedUser user) {
-        userService.updateUser(user);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
-    }
-
     @ApiOperation(value = "authentication", tags = { "MID" })
     @GetMapping(value = "/authentication", produces = { HTTP_VND_APACHE_KYLIN_JSON,
             HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })

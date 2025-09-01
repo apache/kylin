@@ -160,27 +160,6 @@ public class RestClient {
         return client.execute(post);
     }
 
-    public HttpResponse updateUser(Object object) throws IOException {
-        String url = baseUrl + "/user/update_user";
-        HttpPost post = newPost(url);
-        post.addHeader(ROUTED, "true");
-        String jsonMsg = JsonUtil.writeValueAsIndentString(object);
-        post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
-        HttpResponse response = null;
-        try {
-            response = client.execute(post);
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                String msg = EntityUtils.toString(response.getEntity());
-                logger.error("Invalid response {} with update user {}\n{}", response.getStatusLine().getStatusCode(),
-                        url, msg);
-            }
-        } finally {
-            cleanup(post, response);
-            tryCatchUp();
-        }
-        return response;
-    }
-
     public HttpResponse updateSourceUsage() throws IOException {
         String url = baseUrl + "/broadcast/capacity/refresh_all";
         HttpPut put = newPut(url);
