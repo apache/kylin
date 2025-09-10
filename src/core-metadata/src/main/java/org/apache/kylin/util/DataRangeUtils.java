@@ -35,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.PartitionDesc;
 
 public final class DataRangeUtils {
@@ -169,12 +170,17 @@ public final class DataRangeUtils {
         if (values == null || values.isEmpty()) {
             return mergedRanges;
         }
-
         SimpleDateFormat sdf = new SimpleDateFormat(dateFormat, Locale.ROOT);
         try {
             List<Date> dates = new ArrayList<>();
             for (String value : values) {
+                if (StringUtils.isEmpty(value)) {
+                    continue;
+                }
                 dates.add(sdf.parse(value));
+            }
+            if (dates.isEmpty()) {
+                return Lists.newArrayList();
             }
             // Sort the dates
             dates.sort(Date::compareTo);

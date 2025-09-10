@@ -39,6 +39,7 @@ public class InternalTableJobHandler extends AbstractJobHandler {
         private String endDate;
         private String deletePartitionValues;
         private String deletePartition; // true or false
+        private String refreshPartitionValues;
 
         public InternalTableJobBuildParam(JobParam jobParam) {
             super(null, null, jobParam.getOwner(), jobParam.getJobTypeEnum(), jobParam.getJobId(), null, null, null,
@@ -51,6 +52,7 @@ public class InternalTableJobHandler extends AbstractJobHandler {
             this.endDate = jobParam.getExtParams().get(NBatchConstants.P_END_DATE);
             this.deletePartitionValues = jobParam.getExtParams().get(NBatchConstants.P_DELETE_PARTITION_VALUES);
             this.deletePartition = jobParam.getExtParams().get(NBatchConstants.P_DELETE_PARTITION);
+            this.refreshPartitionValues = jobParam.getExtParams().get(NBatchConstants.P_REFRESH_PARTITION_VALUES);
         }
     }
 

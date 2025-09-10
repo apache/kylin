@@ -551,6 +551,13 @@ public class InternalTableServiceTest extends AbstractTestCase {
             ExecutableState state = executableManager.getJob(finalJobId3).getStatus();
             return state.isFinalState() || state == ExecutableState.ERROR;
         });
+
+        // test cancel a full load job
+        internalTableService.truncateInternalTable(PROJECT, TABLE_INDENTITY);
+        jobId = internalTableService
+                .loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, false, "", "", null, null)
+                .getJobs().get(0).getJobId();
+        executableManager.discardJob(jobId);
     }
 
     @Test
@@ -578,6 +585,7 @@ public class InternalTableServiceTest extends AbstractTestCase {
     void testRefreshPartitions() throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NTableMetadataManager tManager = NTableMetadataManager.getInstance(config, PROJECT);
+        ExecutableManager executableManager = ExecutableManager.getInstance(config, PROJECT);
         TableDesc table = tManager.getTableDesc(TABLE_INDENTITY);
         internalTableService.createInternalTable(PROJECT, TABLE_INDENTITY, new String[] { PARTITION_COL }, null,
                 new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
@@ -593,8 +601,9 @@ public class InternalTableServiceTest extends AbstractTestCase {
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyyMM");
         internalTableService.updateInternalTable(PROJECT, table.getName(), table.getDatabase(),
                 new String[] { DATE_COL }, "yyyyMM", new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
-        internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false, true, "", "",
-                new String[] { "199201", "199203" }, null);
+        String jobId = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false,
+                true, "", "", new String[] { "199201", "199203" }, null).getJobs().get(0).getJobId();
+        executableManager.discardJob(jobId);
     }
 
     @Test

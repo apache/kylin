@@ -27,6 +27,8 @@ import static org.apache.kylin.job.execution.JobTypeEnum.INTERNAL_TABLE_REFRESH;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -39,6 +41,7 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
 import org.apache.kylin.engine.spark.job.InternalTableLoadJob;
 import org.apache.kylin.engine.spark.job.InternalTableUpdateMetadataStep;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -75,28 +78,22 @@ public class InternalTableLoadingService extends BasicService {
             jobStatisticsManager.updateStatistics(TimeUtil.getDayStart(System.currentTimeMillis()), 0, 0, 1);
             InternalTableDesc internalTable = checkAndGetInternalTables(project, table, database);
             InternalTableManager internalTableManager = InternalTableManager.getInstance(getConfig(), project);
-            // refresh partitions
-            if (isRefresh && null != partitions && partitions.length > 0) {
-                SparkSession ss = SparkSession.getDefaultSession().get();
-                InternalTableLoader internalTableLoader = new InternalTableLoader();
-                internalTableLoader.loadInternalTable(ss, internalTable, new String[] { startDate, endDate },
-                        partitions, internalTable.getStorageType().getFormat(), isIncremental);
-            } else {
-                checkBeforeSubmit(internalTable, jobType, isIncremental, isRefresh, startDate, endDate);
-                logger.info(
-                        "create internal table loading job for table: {}, isIncrementBuild: {}, startTime: {}, endTime: {}",
-                        internalTable.getIdentity(), isIncremental, startDate, endDate);
-                JobParam jobParam = new JobParam().withProject(project).withTable(internalTable.getIdentity())
-                        .withYarnQueue(yarnQueue).withJobTypeEnum(jobType).withOwner(BasicService.getUsername())
-                        .addExtParams(NBatchConstants.P_INCREMENTAL_BUILD, String.valueOf(isIncremental))
-                        .addExtParams(NBatchConstants.P_OUTPUT_MODE, String.valueOf(isRefresh))
-                        .addExtParams(NBatchConstants.P_START_DATE, startDate)
-                        .addExtParams(NBatchConstants.P_END_DATE, endDate);
-                String jobId = getManager(SourceUsageManager.class).licenseCheckWrap(project,
-                        () -> getManager(JobManager.class, project).addJob(jobParam));
-                jobIds.add(jobId);
-                internalTableManager.saveOrUpdateInternalTable(internalTable);
-            }
+            checkBeforeSubmit(internalTable, isIncremental, isRefresh, startDate, endDate, partitions);
+            logger.info(
+                    "create internal table loading job for table: {}, isIncrementBuild: {}, startTime: {}, endTime: {}",
+                    internalTable.getIdentity(), isIncremental, startDate, endDate);
+            String partitionValues = null == partitions ? "" : Arrays.toString(partitions);
+            JobParam jobParam = new JobParam().withProject(project).withTable(internalTable.getIdentity())
+                    .withYarnQueue(yarnQueue).withJobTypeEnum(jobType).withOwner(BasicService.getUsername())
+                    .addExtParams(NBatchConstants.P_INCREMENTAL_BUILD, String.valueOf(isIncremental))
+                    .addExtParams(NBatchConstants.P_OUTPUT_MODE, String.valueOf(isRefresh))
+                    .addExtParams(NBatchConstants.P_START_DATE, startDate)
+                    .addExtParams(NBatchConstants.P_END_DATE, endDate)
+                    .addExtParams(NBatchConstants.P_REFRESH_PARTITION_VALUES, partitionValues);
+            String jobId = getManager(SourceUsageManager.class).licenseCheckWrap(project,
+                    () -> getManager(JobManager.class, project).addJob(jobParam));
+            jobIds.add(jobId);
+            internalTableManager.saveOrUpdateInternalTable(internalTable);
             return true;
         }, project);
         String jobName = isRefresh ? INTERNAL_TABLE_REFRESH.toString() : INTERNAL_TABLE_BUILD.toString();
@@ -108,42 +105,53 @@ public class InternalTableLoadingService extends BasicService {
      * @param startDate
      * @param endDate
      */
-    private void checkBeforeSubmit(InternalTableDesc internalTable, JobTypeEnum jobType, boolean isIncremental,
-            boolean isRefresh, String startDate, String endDate) throws KylinException {
+    private void checkBeforeSubmit(InternalTableDesc internalTable, boolean isIncremental, boolean isRefresh,
+            String startDate, String endDate, String[] partitions) throws Exception {
         if (isIncremental && (Objects.isNull(internalTable.getTablePartition())
                 || Objects.isNull(internalTable.getTablePartition().getPartitionColumns())
                 || internalTable.getTablePartition().getPartitionColumns().length == 0)) {
             String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned());
             throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
         }
+        partitions = null == partitions ? new String[] {} : partitions;
         // check job_range overlap?
         InternalTablePartition tablePartition = internalTable.getTablePartition();
         List<String[]> jobRange = internalTable.getJobRange();
-        String[] curJobRange = new String[] { "0", "0" };
+        List<String[]> curRange = Lists.newArrayList();
+        if (!isIncremental) {
+            curRange.add(new String[] { "0", "0" });
+        }
         String timeFmt = Objects.isNull(tablePartition) ? "" : tablePartition.getDatePartitionFormat();
+        if (isRefresh && partitions.length > 0 && StringUtils.isNotEmpty(timeFmt)) {
+            curRange.addAll(DataRangeUtils.mergeTimeRange(Arrays.asList(partitions), timeFmt));
+        }
         if (StringUtils.isNotEmpty(startDate) && StringUtils.isNotEmpty(timeFmt)) {
             SimpleDateFormat fmt = new SimpleDateFormat(timeFmt, Locale.ROOT);
-            String start = StringUtils.isEmpty(startDate) ? "0" : fmt.format(Long.parseLong(startDate));
-            String end = StringUtils.isEmpty(endDate) ? "0" : fmt.format(Long.parseLong(endDate));
-            curJobRange = new String[] { start, end };
+            String start = fmt.format(Long.parseLong(startDate));
+            String end = fmt.format(Long.parseLong(endDate));
+            curRange.add(new String[] { start, end });
         }
         // non-time partition table can not submit incremental job
-        if (isIncremental && !Objects.isNull(tablePartition)
+        if (isIncremental && !Objects.isNull(tablePartition) && StringUtils.isNotEmpty(startDate)
                 && StringUtils.isEmpty(tablePartition.getDatePartitionFormat())) {
             String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getNonTimeInternalTableIncrementalBuild());
             throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
         }
-        if (DataRangeUtils.timeOverlap(internalTable.getJobRange(), curJobRange, timeFmt)) {
-            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeRangeOverlap());
-            throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
-        }
-        // check refresh out of data range
-        if (isRefresh && !DataRangeUtils.timeInRange(curJobRange, internalTable.getPartitionRange(), timeFmt)) {
-            String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeOutOfRange());
-            throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
-        }
-        logger.info(jobType.getCategory());
-        jobRange.add(curJobRange);
+        String[] finalPartitions = partitions;
+        curRange.forEach(range -> {
+            if (DataRangeUtils.timeOverlap(internalTable.getJobRange(), range, timeFmt)) {
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeRangeOverlap());
+                throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
+            }
+            // check refresh out of data range(exclude specify partitions)
+            if (isRefresh && finalPartitions.length == 0
+                    && !DataRangeUtils.timeInRange(range, internalTable.getPartitionRange(), timeFmt)) {
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned());
+                throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
+            }
+        });
+        jobRange.addAll(curRange);
+        jobRange.sort(Comparator.comparing(valueA -> valueA[0]));
         internalTable.setJobRange(jobRange);
     }
 
@@ -168,6 +176,11 @@ public class InternalTableLoadingService extends BasicService {
             tablePartition.setPartitionValues(info.getPartitionValues());
             tablePartition.setPartitionDetails(info.getPartitionDetails());
             oldTable.setRowCount(info.getFinalCount());
+            if (StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
+                List<String[]> partitionRange = DataRangeUtils.mergeTimeRange(tablePartition.getPartitionValues(),
+                        tablePartition.getDatePartitionFormat());
+                oldTable.setPartitionRange(partitionRange);
+            }
             internalTableManager.saveOrUpdateInternalTable(oldTable);
             return true;
         }, project);

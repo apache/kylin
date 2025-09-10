@@ -41,6 +41,6 @@ public class InternalTableBuildRequest {
     private String yarnQueue;
 
     @JsonProperty("partitions")
-    private String[] partitions;
+    private String[] partitions = new String[] {};
 
 }
