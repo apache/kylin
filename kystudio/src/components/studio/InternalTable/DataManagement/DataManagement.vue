@@ -211,6 +211,8 @@ export default class DataManagement extends Vue {
         yarn_queue: 'default'
       }).then(() => {
         this.$message({ type: 'success', message: this.$t('refreshDataSuccessTips', { tableName: this.tableInfo.name }) })
+      }).catch((e) => {
+        this.$message.error(e.body.msg)
       }).finally(() => {
         this.internalTableDataListLoading = false
       })

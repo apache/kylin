@@ -14,7 +14,7 @@ export default {
     confirmDeletePartionsTitle: 'Delete Data',
     confirmDeleteAllDataPrompt: 'Are you sure to clear the data?',
     confirmDeleteAllDataTitle: 'Clear Data',
-    refreshDataSuccessTips: 'Refreshing data job for internal table [{tableName}] has been submitted successfully, you can view the job progress in the Monitor page.'
+    refreshDataSuccessTips: 'Refreshing internal table [{tableName}] partition has been submitted successfully, you can view the job progress in the Monitor page.'
   },
   'zh-cn': {
     dialogTitle: '内表数据管理 | {tableName}',
@@ -31,6 +31,6 @@ export default {
     confirmDeletePartionsTitle: '删除数据',
     confirmDeleteAllDataPrompt: '确认要清空数据么？',
     confirmDeleteAllDataTitle: '清空数据',
-    refreshDataSuccessTips: '刷新内表 [{tableName}] 任务提交成功，您可以在监控页面查看任务进度。'
+    refreshDataSuccessTips: '刷新内表 [{tableName}] 分区任务提交成功，您可以在监控页面查看任务进度。'
   }
 }
