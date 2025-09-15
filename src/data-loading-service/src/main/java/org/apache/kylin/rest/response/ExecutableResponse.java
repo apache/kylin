@@ -84,6 +84,8 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
     private ExecutableState schedulerState;
     @JsonProperty("job_name")
     private String jobName;
+    @JsonProperty("data_range_partitions")
+    private String dataRangePartitions;
     @JsonProperty("data_range_start")
     private long dataRangeStart;
     @JsonProperty("data_range_end")
@@ -202,9 +204,12 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
             }
         } else if (abstractExecutable instanceof InternalTableLoadingJob) {
             InternalTableLoadingJob internalTableJob = (InternalTableLoadingJob) abstractExecutable;
-            if ("false".equals(internalTableJob.getParam("incrementalBuild"))
-                    || "true".equals(internalTableJob.getParam("deletePartition"))) {
+            String partitionValues = internalTableJob.getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES);
+            if ("false".equals(internalTableJob.getParam("incrementalBuild"))) {
                 executableResponse.setDataRangeEnd(Long.MAX_VALUE);
+            } else if (StringUtils.isNotEmpty(partitionValues)) {
+                partitionValues = partitionValues.replace("[", "").replace("]", "");
+                executableResponse.setDataRangePartitions(partitionValues);
             } else {
                 executableResponse.setDataRangeStart(Long.parseLong(internalTableJob.getParam("startTime")));
                 executableResponse.setDataRangeEnd(Long.parseLong(internalTableJob.getParam("endTime")));
@@ -288,8 +293,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
 
     /** calculate stage count from segment */
     public static double calculateSuccessStageInTaskMap(AbstractExecutable task,
-            Map<String, List<StageExecutable>> stageMap,
-            ExecutablePO executablePO) {
+            Map<String, List<StageExecutable>> stageMap, ExecutablePO executablePO) {
         var successStages = 0D;
         boolean calculateIndexExecRadio = stageMap.size() == 1;
         for (Map.Entry<String, List<StageExecutable>> entry : stageMap.entrySet()) {
@@ -301,8 +305,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
     }
 
     public static double calculateSuccessStage(AbstractExecutable task, String segmentId,
-            List<StageExecutable> stageExecutables,
-            boolean calculateIndexExecRadio, ExecutablePO executablePO) {
+            List<StageExecutable> stageExecutables, boolean calculateIndexExecRadio, ExecutablePO executablePO) {
         var successStages = 0D;
         for (StageExecutable stage : stageExecutables) {
             if (ExecutableState.SUCCEED == stage.getStatusInMem(segmentId)

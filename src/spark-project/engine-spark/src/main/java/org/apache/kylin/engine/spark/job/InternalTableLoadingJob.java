@@ -18,9 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -74,6 +72,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
         job.setParam(NBatchConstants.P_END_DATE, param.getEndDate());
         job.setParam(NBatchConstants.P_DELETE_PARTITION_VALUES, param.getDeletePartitionValues());
         job.setParam(NBatchConstants.P_DELETE_PARTITION, param.getDeletePartition());
+        job.setParam(NBatchConstants.P_REFRESH_PARTITION_VALUES, param.getRefreshPartitionValues());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         StepEnum.BUILD_INTERNAL.create(job, config);
         StepEnum.UPDATE_METADATA.create(job, config);
@@ -114,15 +113,10 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
             String tableName = getParam(NBatchConstants.P_TABLE_NAME);
             String startDate = getParam(NBatchConstants.P_START_DATE);
             String endDate = getParam(NBatchConstants.P_END_DATE);
+            String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES).replace("[", "")
+                    .replace("]", "");
+            boolean isIncremental = "true".equals(getParam(NBatchConstants.P_INCREMENTAL_BUILD));
             InternalTablePartition tablePartition = internalTable.getTablePartition();
-            // release current job_range
-            String[] curJobRange = new String[] { "0", "0" };
-            if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())
-                    && StringUtils.isNotEmpty(startDate)) {
-                SimpleDateFormat fmt = new SimpleDateFormat(tablePartition.getDatePartitionFormat(), Locale.ROOT);
-                curJobRange = new String[] { fmt.format(Long.parseLong(startDate)),
-                        fmt.format(Long.parseLong(endDate)) };
-            }
             // merge latest partition_range
             logger.info("starting merging delta partitions for internal table {}", tableName);
             if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
@@ -130,12 +124,11 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
                         tablePartition.getDatePartitionFormat());
                 internalTable.setPartitionRange(partitionRange);
             }
-            List<String[]> jobRange = internalTable.getJobRange();
-            String[] finalCurJobRange = curJobRange;
-            jobRange.removeIf(rang -> rang[0].equals(finalCurJobRange[0]) && rang[1].equals(finalCurJobRange[1]));
-            internalTable.setJobRange(jobRange);
+            // release current job_range
+            InternalTableUpdateMetadataStep metadataStep = new InternalTableUpdateMetadataStep();
+            metadataStep.releaseJobRange(internalTable, isIncremental, startDate, endDate, refreshPartitions);
             internalTableManager.saveOrUpdateInternalTable(internalTable);
-            logger.info("release job_range for internal table {} , range {}.", tableName, jobRange);
+            logger.info("release job_range for internal table {} ", tableName);
             return true;
         }, getProject());
     }

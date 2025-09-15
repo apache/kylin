@@ -25,7 +25,7 @@ import java.util.Locale
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.exception.{CommonErrorCode, KylinException}
-import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
+import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NBatchConstants
 import org.apache.kylin.metadata.table.InternalTableDesc
@@ -102,9 +102,6 @@ class InternalTableLoader extends Logging {
     }
     val format = table.getStorageType.getFormat
     if (incremental) {
-      val dateFormat = table.getTablePartition.getDatePartitionFormat
-      logInfo(f"Refresh dynamic partitions [${DateFormat.formatToDateStr(startDate.toLong, dateFormat)}," +
-        f" ${DateFormat.formatToDateStr(endDate.toLong, dateFormat)})")
       ss.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
     }
     writer.format(format).mode(outPutMode).save(location)

@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.job;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.builder.InternalTableLoader;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.JobContext;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -92,6 +94,9 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
             String project = getParam(NBatchConstants.P_PROJECT_NAME);
             String startDate = getParam(NBatchConstants.P_START_DATE);
             String endDate = getParam(NBatchConstants.P_END_DATE);
+            String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES).replace("[", "")
+                    .replace("]", "");
+            boolean isIncremental = "true".equals(getParam(NBatchConstants.P_INCREMENTAL_BUILD));
             // fetch delta partition info
             InternalTableManager internalTableManager = InternalTableManager.getInstance(config, project);
             InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(tableName);
@@ -109,26 +114,42 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
                         tablePartition.getDatePartitionFormat());
                 internalTable.setPartitionRange(partitionRange);
             }
-            // release current job_range
-            String[] curJobRange = new String[] { "0", "0" };
-            if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())
-                    && StringUtils.isNotEmpty(startDate)) {
-                SimpleDateFormat fmt = new SimpleDateFormat(tablePartition.getDatePartitionFormat(), Locale.ROOT);
-                curJobRange = new String[] { fmt.format(Long.parseLong(startDate)),
-                        fmt.format(Long.parseLong(endDate)) };
-            }
-            List<String[]> jobRange = internalTable.getJobRange();
-            String[] finalCurJobRange = curJobRange;
-            jobRange.removeIf(rang -> rang[0].equals(finalCurJobRange[0]) && rang[1].equals(finalCurJobRange[1]));
-            internalTable.setJobRange(jobRange);
-            logger.info("trying to release job_range for internal table {} , range {}.",
-                    internalTable.getTableDesc().getTableAlias(), jobRange);
-
+            releaseJobRange(internalTable, isIncremental, startDate, endDate, refreshPartitions);
             internalTableManager.saveOrUpdateInternalTable(internalTable);
             logger.info("update metadata for internal table {} cost: {} ms.",
                     internalTable.getTableDesc().getTableAlias(), (System.currentTimeMillis() - startTime));
             return true;
         }, project);
+    }
+
+    public void releaseJobRange(InternalTableDesc internalTable, boolean isIncremental, String startDate,
+            String endDate, String refreshPartitions) throws Exception {
+        InternalTablePartition tablePartition = internalTable.getTablePartition();
+        // release current job_range
+        logger.info("starting releasing job_range");
+        List<String[]> curRange = Lists.newArrayList();
+        if (!isIncremental) {
+            curRange.add(new String[] { "0", "0" });
+        }
+        if (StringUtils.isNotEmpty(refreshPartitions)
+                && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
+            String[] partitions = refreshPartitions.split(", ");
+            curRange.addAll(
+                    DataRangeUtils.mergeTimeRange(Arrays.asList(partitions), tablePartition.getDatePartitionFormat()));
+        }
+        if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())
+                && StringUtils.isNotEmpty(startDate)) {
+            SimpleDateFormat fmt = new SimpleDateFormat(tablePartition.getDatePartitionFormat(), Locale.ROOT);
+            curRange.add(new String[] { fmt.format(Long.parseLong(startDate)), fmt.format(Long.parseLong(endDate)) });
+        }
+        List<String[]> jobRange = internalTable.getJobRange();
+        curRange.forEach(curJobRange -> {
+            jobRange.removeIf(range -> range[0].equals(curJobRange[0]) && range[1].equals(curJobRange[1]));
+        });
+        internalTable.setJobRange(jobRange);
+        logger.info("trying to release job_range for internal table {} , range {}.",
+                internalTable.getTableDesc().getTableAlias(), jobRange);
+
     }
 
     public InternalTableLoadJob.InternalTableMetaUpdateInfo extractUpdateInfo(String project, String tableName,

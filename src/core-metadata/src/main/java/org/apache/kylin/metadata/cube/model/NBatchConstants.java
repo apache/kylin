@@ -76,7 +76,7 @@ public interface NBatchConstants {
     String P_DELETE_PARTITION = "deletePartition";
     String P_SORT_BY_PARTITION_BEFORE_SAVE = "sortByPartition";
     String P_PRELOADED_CACHE = "preloadedCache";
-
+    String P_REFRESH_PARTITION_VALUES = "refreshPartitionValues";
 
     /** index planner job parameters */
     String P_PLANNER_INITIALIZE_CUBOID_COUNT = "kylin.planner.initializeCuboidCount";
@@ -92,10 +92,8 @@ public interface NBatchConstants {
 
     @Getter
     enum TblPropertyKey {
-        PRIMARY_KEY(P_PRIMARY_KEY),
-        ORDER_BY_KEY(P_ORDER_BY_KEY),
-        BUCKET_COLUMN(P_BUCKET_COLUMN),
-        BUCKET_NUM(P_BUCKET_NUM);
+        PRIMARY_KEY(P_PRIMARY_KEY), ORDER_BY_KEY(P_ORDER_BY_KEY), BUCKET_COLUMN(P_BUCKET_COLUMN), BUCKET_NUM(
+                P_BUCKET_NUM);
 
         private final String value;
 

@@ -406,6 +406,9 @@ public class InternalTableService extends BasicService {
         if (isIncremental) {
             DataRangeUtils.validateRange(startDate, endDate);
         }
+        if (null != partitions && partitions.length > 0) {
+            isIncremental = true;
+        }
         // treat full refresh as full load processing.
         if (!isIncremental && isRefresh) {
             isRefresh = false;

@@ -1009,11 +1009,6 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         response = ExecutableResponse.create(job, null);
         Assert.assertEquals(Long.MAX_VALUE, response.getDataRangeEnd());
 
-        job.setParam("incrementalBuild", "true");
-        job.setParam("deletePartition", "true");
-        response = ExecutableResponse.create(job, null);
-        Assert.assertEquals(Long.MAX_VALUE, response.getDataRangeEnd());
-
         TableDesc originTable = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         internalManager.createInternalTable(new InternalTableDesc(originTable));
 
