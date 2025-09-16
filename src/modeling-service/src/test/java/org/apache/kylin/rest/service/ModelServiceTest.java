@@ -86,6 +86,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -4668,7 +4669,8 @@ public class ModelServiceTest extends SourceTestCase {
         String expected = FileUtils
                 .readFileToString(
                         new File("src/test/resources/ut_meta/internal_measure.model_desc/nmodel_test_expected.json"))
-                .trim();
+                .trim()
+                .replace("%default_version%", KylinVersion.getCurrentVersion().toString());
         Assert.assertEquals(expected, dump);
 
         val index = NIndexPlanManager.getInstance(getTestConfig(), getProject()).getIndexPlan(saved.getId());
