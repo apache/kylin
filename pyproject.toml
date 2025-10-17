@@ -1,0 +1,67 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+[project]
+name = "kylin-mcp"
+version = "0.0.1"
+description = "official MCP server for Apache Kylin"
+keywords = ["kylin", "mcp", "model-context-protocol", "database", "analytics"]
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = [
+    "loguru>=0.7.3",
+    "fastmcp>=2.12.0,<2.13.0",
+    "pandas>=2.2.3",
+    "plotly>=6.0.1",
+    "kaleido==0.2.1",
+    "adbc-driver-manager>=0.8.0",
+    "adbc-driver-flightsql>=0.8.0",
+    "pyarrow>=14.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "fastapi>=0.108.0",
+    "uvicorn[standard]>=0.25.0",
+    "requests>=2.31.0",
+    "httpx>=0.26.0",
+    "curlify==2.2.1",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0"
+]
+authors = [
+    {name = "jlfsdtc", email = "jlfsdtc@apache.org"}
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "debugpy>=1.8.16"
+]
+
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project.scripts]
+kylin-mcp = "kylin_mcp.main:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.hatch.build.targets.wheel]
+packages = ["kylin_mcp"]
