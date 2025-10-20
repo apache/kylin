@@ -601,6 +601,13 @@ public class InternalTableServiceTest extends AbstractTestCase {
         when(tableService.getPartitionColumnFormat(any(), any(), any(), any())).thenReturn("yyyyMM");
         internalTableService.updateInternalTable(PROJECT, table.getName(), table.getDatabase(),
                 new String[] { DATE_COL }, "yyyyMM", new HashMap<>(), InternalTableDesc.StorageType.PARQUET.name());
+        InternalTableManager internalTableManager = InternalTableManager.getInstance(config, PROJECT);
+        InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(TABLE_INDENTITY);
+        List<String[]> partitionRange = internalTable.getPartitionRange();
+        partitionRange.add(new String[] { "199201", "199211" });
+        internalTable.setPartitionRange(partitionRange);
+        internalTableManager.saveOrUpdateInternalTable(internalTable);
+
         String jobId = internalTableService.loadIntoInternalTable(PROJECT, table.getName(), table.getDatabase(), false,
                 true, "", "", new String[] { "199201", "199203" }, null).getJobs().get(0).getJobId();
         executableManager.discardJob(jobId);

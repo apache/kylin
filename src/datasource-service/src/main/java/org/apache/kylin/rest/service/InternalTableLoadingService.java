@@ -143,10 +143,9 @@ public class InternalTableLoadingService extends BasicService {
                 String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeRangeOverlap());
                 throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
             }
-            // check refresh out of data range(exclude specify partitions)
-            if (isRefresh && finalPartitions.length == 0
-                    && !DataRangeUtils.timeInRange(range, internalTable.getPartitionRange(), timeFmt)) {
-                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getTimeOutOfRange());
+            // check refresh out of data range(exclude non-time partitions)
+            if (isRefresh && !DataRangeUtils.timeInRange(range, internalTable.getPartitionRange(), timeFmt)) {
+                String errorMsg = String.format(Locale.ROOT, MsgPicker.getMsg().getInternalTableUnpartitioned());
                 throw new KylinException(INTERNAL_TABLE_ERROR, errorMsg);
             }
         });

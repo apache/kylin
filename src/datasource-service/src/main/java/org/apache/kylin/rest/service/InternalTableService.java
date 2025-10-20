@@ -403,11 +403,10 @@ public class InternalTableService extends BasicService {
             boolean isIncremental, boolean isRefresh, String startDate, String endDate, String[] partitions,
             String yarnQueue) {
         aclEvaluate.checkProjectWritePermission(project);
-        if (isIncremental) {
-            DataRangeUtils.validateRange(startDate, endDate);
-        }
         if (null != partitions && partitions.length > 0) {
             isIncremental = true;
+        } else if (isIncremental) {
+            DataRangeUtils.validateRange(startDate, endDate);
         }
         // treat full refresh as full load processing.
         if (!isIncremental && isRefresh) {
