@@ -108,7 +108,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
                 tablePartition.setPartitionDetails(info.getPartitionDetails());
             }
             internalTable.setRowCount(info.getFinalCount());
-            logger.info("starting merging delta partitions");
+            logger.info("Starting merging delta partitions");
             if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
                 List<String[]> partitionRange = DataRangeUtils.mergeTimeRange(tablePartition.getPartitionValues(),
                         tablePartition.getDatePartitionFormat());
@@ -116,7 +116,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
             }
             releaseJobRange(internalTable, isIncremental, startDate, endDate, refreshPartitions);
             internalTableManager.saveOrUpdateInternalTable(internalTable);
-            logger.info("update metadata for internal table {} cost: {} ms.",
+            logger.info("Update metadata for internal table {} cost: {} ms.",
                     internalTable.getTableDesc().getTableAlias(), (System.currentTimeMillis() - startTime));
             return true;
         }, project);
@@ -126,7 +126,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
             String endDate, String refreshPartitions) throws Exception {
         InternalTablePartition tablePartition = internalTable.getTablePartition();
         // release current job_range
-        logger.info("starting releasing job_range");
+        logger.info("Starting releasing job_range");
         List<String[]> curRange = Lists.newArrayList();
         if (!isIncremental) {
             curRange.add(new String[] { "0", "0" });
@@ -147,7 +147,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
             jobRange.removeIf(range -> range[0].equals(curJobRange[0]) && range[1].equals(curJobRange[1]));
         });
         internalTable.setJobRange(jobRange);
-        logger.info("trying to release job_range for internal table {} , range {}.",
+        logger.info("Trying to release job_range for internal table {} , range {}.",
                 internalTable.getTableDesc().getTableAlias(), jobRange);
 
     }
@@ -166,7 +166,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
         if (!partitionDetails.isEmpty()) {
             partitionDetails.sort(Comparator.comparing(InternalTablePartitionDetail::getPartitionValue));
         }
-        logger.info("update internal table meta data : row count:{}, partition size:{}", count,
+        logger.info("Update internal table meta data : row count:{}, partition size:{}", count,
                 partitionDetails.size());
         List<String> finalPartitionValues = partitionDetails.stream()
                 .map(InternalTablePartitionDetail::getPartitionValue).collect(Collectors.toList());
@@ -238,7 +238,7 @@ public class InternalTableUpdateMetadataStep extends AbstractExecutable {
                 partitionDetails.add(detail);
             }
         }
-        logger.info("[ UPDATE_INTERNAL_TABLE] extract partitions from delta table cost {} ms",
+        logger.info("[ UPDATE_INTERNAL_TABLE ] extract partitions from delta table cost {} ms",
                 System.currentTimeMillis() - startTime);
         return partitionDetails;
     }

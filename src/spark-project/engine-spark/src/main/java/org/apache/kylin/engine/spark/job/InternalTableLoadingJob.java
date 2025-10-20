@@ -107,7 +107,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
             InternalTableManager internalTableManager = InternalTableManager.getInstance(getConfig(), getProject());
             InternalTableDesc internalTable = internalTableManager.getInternalTableDesc(getTableIdentity());
             if (null == internalTable) {
-                logger.debug("internalTable is null, maybe internalTable is deleted ?");
+                logger.debug("InternalTable is null, maybe internalTable is deleted ?");
                 return true;
             }
             String tableName = getParam(NBatchConstants.P_TABLE_NAME);
@@ -118,7 +118,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
             boolean isIncremental = "true".equals(getParam(NBatchConstants.P_INCREMENTAL_BUILD));
             InternalTablePartition tablePartition = internalTable.getTablePartition();
             // merge latest partition_range
-            logger.info("starting merging delta partitions for internal table {}", tableName);
+            logger.info("Starting merging delta partitions for internal table {}", tableName);
             if (null != tablePartition && StringUtils.isNotEmpty(tablePartition.getDatePartitionFormat())) {
                 List<String[]> partitionRange = DataRangeUtils.mergeTimeRange(tablePartition.getPartitionValues(),
                         tablePartition.getDatePartitionFormat());
@@ -128,7 +128,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
             InternalTableUpdateMetadataStep metadataStep = new InternalTableUpdateMetadataStep();
             metadataStep.releaseJobRange(internalTable, isIncremental, startDate, endDate, refreshPartitions);
             internalTableManager.saveOrUpdateInternalTable(internalTable);
-            logger.info("release job_range for internal table {} ", tableName);
+            logger.info("Release job_range for internal table {} ", tableName);
             return true;
         }, getProject());
     }
