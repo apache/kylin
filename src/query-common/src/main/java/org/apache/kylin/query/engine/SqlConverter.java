@@ -145,6 +145,7 @@ public class SqlConverter {
         SqlToRelConverter.Config config = SqlToRelConverter.CONFIG //
                 .withTrimUnusedFields(true) // trim unused fields
                 .withInSubQueryThreshold(kylinConfig.convertInSubQueryThreshold()) // handle in-to-or
+                .withRemoveSortInSubQuery(kylinConfig.isRemoveSortInSubQuery())
                 .withExpand(Boolean.TRUE.equals(Prepare.THREAD_EXPAND.get())) //
                 .addRelBuilderConfigTransform(x -> x.withBloat(kylinConfig.getProjectBloatThreshold())) // bloat
                 .withExplain(false);

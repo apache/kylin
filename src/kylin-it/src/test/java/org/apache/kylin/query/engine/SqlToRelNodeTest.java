@@ -27,6 +27,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -35,6 +36,7 @@ import org.apache.calcite.util.Litmus;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.query.relnode.OlapTableScan;
 import org.apache.kylin.query.rules.CalciteRuleTestBase;
 import org.junit.After;
 import org.junit.Assert;
@@ -174,5 +176,24 @@ public class SqlToRelNodeTest extends CalciteRuleTestBase {
         overwriteSystemProp("kylin.query.convert-in-to-or-threshold", "0");
         Pair<String, String> sql = readOneSQL(config, "ssb", "query/sql_sqlnode", "query01.sql");
         checkSQLOptimize("ssb", sql.getSecond(), "query01");
+    }
+
+    @Test
+    public void testRemoveSortInSubQuery() {
+        overwriteSystemProp("kylin.query.calcite.remove-sort-in-subquery", "true");
+        queryExec = new QueryExec(PROJECT, config);
+        String sql = "select a.* from (select * from SSB.CUSTOMER where 1=1 order by SSB.CUSTOMER.C_CUSTKEY) a";
+        RelNode relNode = sqlToRelRoot("ssb", sql, KylinConfig.getInstanceFromEnv()).rel;
+        Assert.assertNotEquals(relNode.getInput(0).getClass(), LogicalSort.class);
+        Assert.assertEquals(relNode.getInput(0).getInput(0).getClass(), OlapTableScan.class);
+    }
+
+    @Test
+    public void testNotRemoveSortInSubQuery() {
+        overwriteSystemProp("kylin.query.calcite.remove-sort-in-subquery", "false");
+        queryExec = new QueryExec(PROJECT, config);
+        String sql = "select a.* from (select * from SSB.CUSTOMER where 1=1 order by SSB.CUSTOMER.C_CUSTKEY) a";
+        RelNode relNode = sqlToRelRoot("ssb", sql, KylinConfig.getInstanceFromEnv()).rel;
+        Assert.assertEquals(relNode.getInput(0).getClass(), LogicalSort.class);
     }
 }

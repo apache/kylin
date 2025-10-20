@@ -2797,6 +2797,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.convert-in-to-or-threshold", "20"));
     }
 
+    public boolean isRemoveSortInSubQuery() {
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.remove-sort-in-subquery", FALSE));
+    }
+
     public boolean isEnumerableRulesEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", FALSE));
     }
