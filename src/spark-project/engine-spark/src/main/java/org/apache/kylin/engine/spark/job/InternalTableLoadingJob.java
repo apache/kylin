@@ -113,8 +113,7 @@ public class InternalTableLoadingJob extends DefaultExecutableOnTable {
             String tableName = getParam(NBatchConstants.P_TABLE_NAME);
             String startDate = getParam(NBatchConstants.P_START_DATE);
             String endDate = getParam(NBatchConstants.P_END_DATE);
-            String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES).replace("[", "")
-                    .replace("]", "");
+            String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES);
             boolean isIncremental = "true".equals(getParam(NBatchConstants.P_INCREMENTAL_BUILD));
             InternalTablePartition tablePartition = internalTable.getTablePartition();
             // merge latest partition_range

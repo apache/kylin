@@ -82,7 +82,8 @@ public class InternalTableLoadingService extends BasicService {
             logger.info(
                     "create internal table loading job for table: {}, isIncrementBuild: {}, startTime: {}, endTime: {}",
                     internalTable.getIdentity(), isIncremental, startDate, endDate);
-            String partitionValues = null == partitions ? "" : Arrays.toString(partitions);
+            String partitionValues = null == partitions ? ""
+                    : Arrays.toString(partitions).replace("[", "").replace("]", "");
             JobParam jobParam = new JobParam().withProject(project).withTable(internalTable.getIdentity())
                     .withYarnQueue(yarnQueue).withJobTypeEnum(jobType).withOwner(BasicService.getUsername())
                     .addExtParams(NBatchConstants.P_INCREMENTAL_BUILD, String.valueOf(isIncremental))

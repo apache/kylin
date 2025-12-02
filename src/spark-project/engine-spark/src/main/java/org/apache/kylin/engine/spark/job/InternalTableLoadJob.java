@@ -72,8 +72,7 @@ public class InternalTableLoadJob extends SparkApplication {
         boolean incrementalBuild = "true".equals(getParam(NBatchConstants.P_INCREMENTAL_BUILD));
         String startDate = getParam(NBatchConstants.P_START_DATE);
         String endDate = getParam(NBatchConstants.P_END_DATE);
-        String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES).replace("[", "").replace("]",
-                "");
+        String refreshPartitions = getParam(NBatchConstants.P_REFRESH_PARTITION_VALUES);
         String[] partitions = new String[] {};
         if (StringUtils.isNotEmpty(refreshPartitions)) {
             partitions = StringUtils.isEmpty(refreshPartitions) ? new String[] {} : refreshPartitions.split(", ");
