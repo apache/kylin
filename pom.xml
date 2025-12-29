@@ -141,7 +141,7 @@
         <scala-retry>0.3.0</scala-retry>
 
         <!-- Calcite Version -->
-        <calcite.version>1.30.0-kylin-4.x-r10</calcite.version>
+        <calcite.version>1.30.0-kylin-5.x-r3</calcite.version>
         <avatica.version>1.22.0</avatica.version>
         <immutables.version>2.8.8</immutables.version>
 
