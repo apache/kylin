@@ -25,6 +25,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AutoBuildSegmentScheduler {
     private static final int THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE = 20;
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
 
     @Autowired
     @Qualifier("projectScheduler")
@@ -176,8 +177,7 @@ public class AutoBuildSegmentScheduler {
             stopCron(key);
             return;
         }
-        val autoSegmentBuild = model.getSegmentConfig() == null ? null
-                : model.getSegmentConfig().getAutoSegmentBuild();
+        val autoSegmentBuild = model.getSegmentConfig() == null ? null : model.getSegmentConfig().getAutoSegmentBuild();
         if (autoSegmentBuild == null || !autoSegmentBuild.isEnabled()) {
             return;
         }
@@ -228,7 +228,7 @@ public class AutoBuildSegmentScheduler {
     private String toDailyCron(String triggerTime) {
         try {
             val time = LocalTime.parse(triggerTime, TIME_FORMATTER);
-            return String.format("%d %d %d * * ?", time.getSecond(), time.getMinute(), time.getHour());
+            return String.format(Locale.ROOT, "%d %d %d * * ?", time.getSecond(), time.getMinute(), time.getHour());
         } catch (DateTimeParseException e) {
             log.warn("Invalid trigger_time for auto build segment: {}", triggerTime);
             return null;

@@ -289,8 +289,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     private static final List<String> MODEL_CONFIG_BLOCK_LIST = Lists.newArrayList("kylin.index.rule-scheduler-data");
     private static final Set<String> STRING_TYPE_SET = Sets.newHashSet("STRING", "CHAR", "VARCHAR");
-    private static final DateTimeFormatter SEGMENT_AUTO_BUILD_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
-
+    private static final DateTimeFormatter SEGMENT_AUTO_BUILD_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss",
+            Locale.ROOT);
     //The front-end supports only the following formats
     private static final List<String> SUPPORTED_FORMATS = ImmutableList.of("ZZ", "DD", "D", "Do", "dddd", "ddd", "dd", //
             "d", "MMM", "MM", "M", "yyyy", "yy", "hh", "hh", "h", "HH", "H", "m", "mm", "ss", "s", "SSS", "SS", "S", //
@@ -856,13 +856,14 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 inconsistentBatchSegmentCount);
         if (!batchModel.isBroken() && !modelDesc.isBroken()) {
             switch (modelResponseStatus) {
-            case ONLINE:
-                return (batchModelResponseStatus == ModelStatusToDisplayEnum.WARNING ? ModelStatusToDisplayEnum.WARNING
-                        : modelResponseStatus);
-            case OFFLINE:
-                return batchModelResponseStatus;
-            default:
-                return modelResponseStatus;
+                case ONLINE:
+                    return (batchModelResponseStatus == ModelStatusToDisplayEnum.WARNING
+                            ? ModelStatusToDisplayEnum.WARNING
+                            : modelResponseStatus);
+                case OFFLINE:
+                    return batchModelResponseStatus;
+                default:
+                    return modelResponseStatus;
             }
         } else {
             return modelResponseStatus;
@@ -3403,7 +3404,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         boolean endOfNextDay = "24:00:00".equals(autoSegmentBuild.getDataRangeEndTime());
         LocalTime endTime = parseSegmentBuildTime(autoSegmentBuild.getDataRangeEndTime(), "data_range_end_time", true);
         if (!endOfNextDay && !startTime.isBefore(endTime)) {
-            throw new KylinException(INVALID_PARAMETER, "data_range_start_time must be earlier than data_range_end_time.");
+            throw new KylinException(INVALID_PARAMETER,
+                    "data_range_start_time must be earlier than data_range_end_time.");
         }
         if (StringUtils.isBlank(project) || StringUtils.isBlank(modelId)) {
             return;
