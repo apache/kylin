@@ -125,6 +125,7 @@ import org.apache.kylin.metadata.cube.model.PartitionStatusEnumToDisplay;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -2788,6 +2789,13 @@ public class ModelServiceTest extends SourceTestCase {
         modelConfigRequest.setProject(project);
         modelConfigRequest.setAutoMergeEnabled(false);
         modelConfigRequest.setAutoMergeTimeRanges(Lists.newArrayList(AutoMergeTimeEnum.WEEK));
+        AutoSegmentBuildConfig autoSegmentBuildConfig = new AutoSegmentBuildConfig();
+        autoSegmentBuildConfig.setEnabled(true);
+        autoSegmentBuildConfig.setTriggerTime("01:00:00");
+        autoSegmentBuildConfig.setLogicalDateOffsetDays(1);
+        autoSegmentBuildConfig.setDataRangeStartTime("00:00:00");
+        autoSegmentBuildConfig.setDataRangeEndTime("24:00:00");
+        modelConfigRequest.setAutoSegmentBuild(autoSegmentBuildConfig);
         modelService.updateModelConfig(project, model, modelConfigRequest);
 
         var modelConfigResponses = modelService.getModelConfig(project, null);
@@ -2795,6 +2803,8 @@ public class ModelServiceTest extends SourceTestCase {
             if (modelConfigResponse.getModel().equals(model)) {
                 Assert.assertEquals(false, modelConfigResponse.getAutoMergeEnabled());
                 Assert.assertEquals(1, modelConfigResponse.getAutoMergeTimeRanges().size());
+                Assert.assertNotNull(modelConfigResponse.getAutoSegmentBuild());
+                Assert.assertTrue(modelConfigResponse.getAutoSegmentBuild().isEnabled());
             }
         });
 
@@ -4328,6 +4338,81 @@ public class ModelServiceTest extends SourceTestCase {
         modelService.checkModelConfigParameters(request);
         request.setRetentionRange(null);
         checkPropParameter(request);
+    }
+
+    @Test
+    public void testCheckModelConfigParameters_AutoSegmentBuildInvalidConfig() {
+        ModelConfigRequest request = new ModelConfigRequest();
+        AutoSegmentBuildConfig config = new AutoSegmentBuildConfig();
+        config.setEnabled(true);
+        config.setTriggerTime("01:00:00");
+        config.setLogicalDateOffsetDays(0);
+        config.setDataRangeStartTime("00:00:00");
+        config.setDataRangeEndTime("24:00:00");
+        request.setAutoSegmentBuild(config);
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("logical_date_offset_days"));
+        }
+
+        config.setLogicalDateOffsetDays(1);
+        config.setTriggerTime("25:00:00");
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("trigger_time"));
+        }
+
+        config.setTriggerTime("01:00:00");
+        config.setDataRangeStartTime("10:00:00");
+        config.setDataRangeEndTime("09:00:00");
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("data_range_start_time"));
+        }
+    }
+
+    @Test
+    public void testCheckModelConfigParameters_AutoSegmentBuildModelConstraints() {
+        ModelConfigRequest request = new ModelConfigRequest();
+        AutoSegmentBuildConfig config = new AutoSegmentBuildConfig();
+        config.setEnabled(true);
+        config.setTriggerTime("01:00:00");
+        config.setLogicalDateOffsetDays(1);
+        config.setDataRangeStartTime("00:00:00");
+        config.setDataRangeEndTime("24:00:00");
+        request.setAutoSegmentBuild(config);
+
+        NDataModel streamingModel = NDataModelManager.getInstance(getTestConfig(), "streaming_test").listAllModels()
+                .stream().filter(NDataModel::isStreaming).findFirst().orElse(null);
+        Assert.assertNotNull(streamingModel);
+        try {
+            modelService.checkModelConfigParameters("streaming_test", streamingModel.getId(), request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("streaming"));
+        }
+
+        NDataModel noPartitionModel = NDataModelManager.getInstance(getTestConfig(), "default").listAllModels()
+                .stream().filter(model -> PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc())).findFirst()
+                .orElse(null);
+        Assert.assertNotNull(noPartitionModel);
+        try {
+            modelService.checkModelConfigParameters("default", noPartitionModel.getId(), request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("partition"));
+        }
     }
 
     @Test

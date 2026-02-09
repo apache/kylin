@@ -49,6 +49,9 @@ public class SegmentConfig implements Serializable {
     @JsonProperty("create_empty_segment_enabled")
     private Boolean createEmptySegmentEnabled = false;
 
+    @JsonProperty("auto_segment_build")
+    private AutoSegmentBuildConfig autoSegmentBuild = new AutoSegmentBuildConfig();
+
     public boolean canSkipAutoMerge() {
         return !autoMergeEnabled;
     }

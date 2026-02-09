@@ -70,6 +70,9 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -158,6 +161,7 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.model.AntiFlatChecker;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataCheckDesc;
@@ -285,6 +289,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     private static final List<String> MODEL_CONFIG_BLOCK_LIST = Lists.newArrayList("kylin.index.rule-scheduler-data");
     private static final Set<String> STRING_TYPE_SET = Sets.newHashSet("STRING", "CHAR", "VARCHAR");
+    private static final DateTimeFormatter SEGMENT_AUTO_BUILD_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     //The front-end supports only the following formats
     private static final List<String> SUPPORTED_FORMATS = ImmutableList.of("ZZ", "DD", "D", "Do", "dddd", "ddd", "dd", //
@@ -3261,6 +3266,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                     response.setAutoMergeTimeRanges(segmentConfig.getAutoMergeTimeRanges());
                     response.setVolatileRange(segmentConfig.getVolatileRange());
                     response.setRetentionRange(segmentConfig.getRetentionRange());
+                    response.setAutoSegmentBuild(segmentConfig.getAutoSegmentBuild());
                     response.setConfigLastModified(dataModel.getConfigLastModified());
                     response.setConfigLastModifier(dataModel.getConfigLastModifier());
                     val indexPlan = getIndexPlan(dataModel.getUuid(), project);
@@ -3277,7 +3283,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     @Transaction(project = 0)
     public void updateModelConfig(String project, String modelId, ModelConfigRequest request) {
         aclEvaluate.checkProjectWritePermission(project);
-        checkModelConfigParameters(request);
+        checkModelConfigParameters(project, modelId, request);
         val dataModelManager = getManager(NDataModelManager.class, project);
         dataModelManager.updateDataModel(modelId, copyForWrite -> {
             val segmentConfig = copyForWrite.getSegmentConfig();
@@ -3285,6 +3291,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             segmentConfig.setAutoMergeTimeRanges(request.getAutoMergeTimeRanges());
             segmentConfig.setVolatileRange(request.getVolatileRange());
             segmentConfig.setRetentionRange(request.getRetentionRange());
+            segmentConfig.setAutoSegmentBuild(request.getAutoSegmentBuild());
 
             copyForWrite.setConfigLastModified(System.currentTimeMillis());
             copyForWrite.setConfigLastModifier(BasicService.getUsername());
@@ -3352,10 +3359,16 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     @VisibleForTesting
     public void checkModelConfigParameters(ModelConfigRequest request) {
+        checkModelConfigParameters(request.getProject(), null, request);
+    }
+
+    @VisibleForTesting
+    public void checkModelConfigParameters(String project, String modelId, ModelConfigRequest request) {
         Boolean autoMergeEnabled = request.getAutoMergeEnabled();
         List<AutoMergeTimeEnum> timeRanges = request.getAutoMergeTimeRanges();
         VolatileRange volatileRange = request.getVolatileRange();
         RetentionRange retentionRange = request.getRetentionRange();
+        AutoSegmentBuildConfig autoSegmentBuild = request.getAutoSegmentBuild();
 
         if (Boolean.TRUE.equals(autoMergeEnabled) && (null == timeRanges || timeRanges.isEmpty())) {
             throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getInvalidAutoMergeConfig());
@@ -3368,7 +3381,59 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 && retentionRange.getRetentionRangeNumber() < 0) {
             throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getInvalidRetentionRangeConfig());
         }
+        if (null != autoSegmentBuild && autoSegmentBuild.isEnabled()) {
+            checkAutoSegmentBuildConfig(project, modelId, autoSegmentBuild);
+        }
         checkPropParameter(request);
+    }
+
+    private void checkAutoSegmentBuildConfig(String project, String modelId, AutoSegmentBuildConfig autoSegmentBuild) {
+        if (StringUtils.isBlank(autoSegmentBuild.getTriggerTime())
+                || StringUtils.isBlank(autoSegmentBuild.getDataRangeStartTime())
+                || StringUtils.isBlank(autoSegmentBuild.getDataRangeEndTime())
+                || autoSegmentBuild.getLogicalDateOffsetDays() == null) {
+            throw new KylinException(INVALID_PARAMETER, "Invalid auto_segment_build config.");
+        }
+        if (autoSegmentBuild.getLogicalDateOffsetDays() < 1) {
+            throw new KylinException(INVALID_PARAMETER, "logical_date_offset_days must be >= 1.");
+        }
+        parseSegmentBuildTime(autoSegmentBuild.getTriggerTime(), "trigger_time", false);
+        LocalTime startTime = parseSegmentBuildTime(autoSegmentBuild.getDataRangeStartTime(), "data_range_start_time",
+                false);
+        boolean endOfNextDay = "24:00:00".equals(autoSegmentBuild.getDataRangeEndTime());
+        LocalTime endTime = parseSegmentBuildTime(autoSegmentBuild.getDataRangeEndTime(), "data_range_end_time", true);
+        if (!endOfNextDay && !startTime.isBefore(endTime)) {
+            throw new KylinException(INVALID_PARAMETER, "data_range_start_time must be earlier than data_range_end_time.");
+        }
+        if (StringUtils.isBlank(project) || StringUtils.isBlank(modelId)) {
+            return;
+        }
+        val model = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
+        if (model == null) {
+            throw new KylinException(MODEL_ID_NOT_EXIST, modelId);
+        }
+        if (model.isStreaming()) {
+            throw new KylinException(INVALID_PARAMETER, "auto_segment_build is not supported for streaming model.");
+        }
+        if (model.isMultiPartitionModel()) {
+            throw new KylinException(INVALID_PARAMETER,
+                    "auto_segment_build is not supported for multi partition model.");
+        }
+        if (PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc())) {
+            throw new KylinException(INVALID_PARAMETER, "auto_segment_build requires a valid partition column.");
+        }
+    }
+
+    private LocalTime parseSegmentBuildTime(String value, String fieldName, boolean allow24Hour) {
+        if (allow24Hour && StringUtils.equals(value, "24:00:00")) {
+            return LocalTime.MIDNIGHT;
+        }
+        try {
+            return LocalTime.parse(value, SEGMENT_AUTO_BUILD_TIME_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new KylinException(INVALID_PARAMETER,
+                    String.format(Locale.ROOT, "Invalid %s, expected HH:mm:ss.", fieldName));
+        }
     }
 
     public ExistedDataRangeResponse getLatestDataRange(String project, String modelId, PartitionDesc desc) {
