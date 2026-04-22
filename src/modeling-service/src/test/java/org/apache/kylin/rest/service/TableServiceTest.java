@@ -477,8 +477,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         tableService.filterSamplingRows("newten", tableDescResponse, false, aclTCRs);
 
         Assert.assertEquals(1, tableDescResponse.getSamplingRows().size());
-        Assert.assertEquals("country_a,11.11,name_%a",
-                String.join(",", tableDescResponse.getSamplingRows().get(0)));
+        Assert.assertEquals("country_a,11.11,name_%a", String.join(",", tableDescResponse.getSamplingRows().get(0)));
     }
 
     @Test
@@ -1088,6 +1087,24 @@ public class TableServiceTest extends CSVSourceTestCase {
         Assert.assertEquals(1, refreshRes.getRefreshed().size());
         Assert.assertEquals("test_kylin_refresh", refreshRes.getRefreshed().get(0));
         SparderEnv.getSparkSession().stop();
+    }
+
+    @Test
+    public void testRefreshTableInvalidName() {
+        List<String> refreshed = Lists.newArrayList();
+        List<String> failed = Lists.newArrayList();
+        String[] invalidNames = { "", " ", "a-b", "a b", "a;DROP TABLE t", "`a`", "tbl; SELECT 1", "db.tbl.extra",
+                ".tbl", "tbl;", "tbl,", "db.", "db..tbl", "db.tbl;DROP", "db.a-b", "db.tbl;" };
+        for (String name : invalidNames) {
+            tableService.refreshTable(name, refreshed, failed);
+        }
+        tableService.refreshTable(null, refreshed, failed);
+
+        Assert.assertTrue(refreshed.isEmpty());
+        Assert.assertFalse(failed.isEmpty());
+        Assert.assertEquals(invalidNames.length + 1, failed.size());
+        Assert.assertTrue(failed.contains(null));
+        Assert.assertTrue(failed.containsAll(Arrays.asList(invalidNames)));
     }
 
     private HashMap<String, List<String>> mockRefreshTable(String... tables) {

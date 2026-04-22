@@ -25,6 +25,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_IMPORT_SS
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_REFRESH_CATALOG_CACHE;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_COMPUTED_COLUMN_EXPRESSION;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
@@ -55,6 +56,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -193,6 +195,11 @@ public class TableService extends BasicService {
     private static final String REFRESH_SINGLE_CATALOG_PATH = "/kylin/api/query/single_catalog_cache";
 
     private static final String SSB_ERROR_MSG = "import ssb data error.";
+
+    /**
+     * refer to {@link org.apache.spark.sql.catalyst.catalog.SessionCatalog#validateName}
+     */
+    private static final Pattern VALID_NAME_PATTERN = Pattern.compile("([\\w_]+)");
 
     @Autowired
     private TableModelSupporter modelService;
@@ -1879,12 +1886,32 @@ public class TableService extends BasicService {
 
     public void refreshTable(String table, List<String> refreshed, List<String> failed) {
         try {
+            if (!isValidTableIdentifier(table)) {
+                throw new KylinException(INVALID_NAME,
+                        String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidTableName(), table));
+            }
             PushDownUtil.trySimplyExecute("REFRESH TABLE " + table, null);
             refreshed.add(table);
         } catch (Exception e) {
             failed.add(table);
             logger.error("fail to refresh spark cached table", e);
         }
+    }
+
+    private static boolean isValidTableIdentifier(String table) {
+        if (StringUtils.isBlank(table)) {
+            return false;
+        }
+        String[] parts = table.split("\\.", -1);
+        if (parts.length > 2) {
+            return false;
+        }
+        for (String part : parts) {
+            if (!VALID_NAME_PATTERN.matcher(part).matches()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public TableRefreshAll refreshAllCatalogCache(final HttpServletRequest request) {

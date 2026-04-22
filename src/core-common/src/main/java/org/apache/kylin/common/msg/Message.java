@@ -801,6 +801,10 @@ public class Message {
         return "The “table“ parameter is invalid. Please check and try again.";
     }
 
+    public String getInvalidTableName() {
+        return "The table name \"%s\" is invalid. Please check and try again.";
+    }
+
     public String getTableRefreshParamMore() {
         return "There exists invalid filed(s) other than the expected “tables“. Please check and try again.";
     }

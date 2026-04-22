@@ -732,6 +732,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getInvalidTableName() {
+        return "表 \"%s\" 无效。请检查后重试。";
+    }
+
+    @Override
     public String getTableRefreshParamMore() {
         return "请求中包含非 “tables“ 的多余字段。请检查后重试。";
     }
