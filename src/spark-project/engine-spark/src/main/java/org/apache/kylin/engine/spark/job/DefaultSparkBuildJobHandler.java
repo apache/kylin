@@ -217,6 +217,11 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
 
     protected void appendSparkConf(StringBuilder sb, String confKey, String confValue) {
         // Multiple parameters in "--conf" need to be enclosed in single quotes
+        if (confKey.contains("'") || confValue.contains("'")) {
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
+                    "Spark conf key or value contains invalid single quote: key=%s, value=%s",
+                    confKey, confValue));
+        }
         sb.append(" --conf '").append(confKey).append(EQUALS).append(confValue).append("' ");
         sb.append(SUBMIT_LINE_FORMAT);
     }

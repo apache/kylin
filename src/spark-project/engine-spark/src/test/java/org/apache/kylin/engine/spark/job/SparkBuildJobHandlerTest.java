@@ -20,12 +20,14 @@ package org.apache.kylin.engine.spark.job;
 
 import static org.apache.kylin.engine.spark.job.NSparkExecutable.SPARK_MASTER;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -81,5 +83,99 @@ public class SparkBuildJobHandlerTest extends NLocalWithSparkSessionTestBase {
         Assert.assertEquals(cmd, updateInfo.get("output"));
         Assert.assertNotNull(updateInfo.get("process_id"));
 
+    }
+
+    @Test
+    public void testAppendSparkConfRejectSingleQuote() {
+        DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
+
+        StringBuilder sb = new StringBuilder();
+        handler.appendSparkConf(sb, "spark.yarn.queue", "normalQueue");
+        Assert.assertTrue(sb.toString().contains("--conf 'spark.yarn.queue=normalQueue'"));
+
+        // conf value containing single quote must be rejected
+        try {
+            handler.appendSparkConf(new StringBuilder(), "spark.yarn.queue",
+                    "default'; touch /tmp/pwned; echo '");
+            Assert.fail("Should have thrown IllegalArgumentException for value containing single quote");
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("single quote"));
+        }
+
+        // pipe without single quote is acceptable
+        StringBuilder sb2 = new StringBuilder();
+        handler.appendSparkConf(sb2, "spark.yarn.queue", "a|b");
+        Assert.assertTrue(sb2.toString().contains("--conf 'spark.yarn.queue=a|b'"));
+    }
+
+    @Test
+    public void testCheckCommandInjectionBlocked() throws Exception {
+        DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
+        Method method = DefaultSparkBuildJobHandler.class.getDeclaredMethod("checkCommandInjection", String.class);
+        method.setAccessible(true);
+
+        String[] blockedPayloads = {
+                "--conf 'spark.yarn.queue=`id`'",
+                "--conf 'spark.yarn.queue=$(whoami)'",
+        };
+
+        for (String payload : blockedPayloads) {
+            try {
+                method.invoke(handler, payload);
+                Assert.fail("Should have thrown IllegalArgumentException for payload: " + payload);
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                Assert.assertTrue("Payload not blocked: " + payload,
+                        e.getCause() instanceof IllegalArgumentException);
+            }
+        }
+    }
+
+    @Test
+    public void testCheckCommandInjectionAllowed() throws Exception {
+        DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
+        Method method = DefaultSparkBuildJobHandler.class.getDeclaredMethod("checkCommandInjection", String.class);
+        method.setAccessible(true);
+
+        String[] allowedPayloads = {
+                "--conf 'spark.yarn.queue=default' \\\n--conf 'spark.executor.memory=1024m'",
+                "--conf 'spark.driver.extraJavaOptions=-Dconfig=value'",
+                "--conf 'spark.yarn.queue=normal_queue.v1'",
+        };
+
+        for (String payload : allowedPayloads) {
+            method.invoke(handler, payload);
+        }
+    }
+
+    @Test
+    public void testGenerateSparkCmdWithMaliciousQueue() throws Exception {
+        KylinConfig config = getTestConfig();
+        config.setProperty("kylin.engine.spark-conf.spark.master", "local[2]");
+        config.setProperty("kylin.engine.spark-conf.spark.yarn.queue", "default'; touch /tmp/pwned; echo '");
+        config.setProperty("kylin.engine.spark-conf.spark.executor.memory", "1024m");
+        config.setProperty("kylin.env.hadoop-conf-dir", "/dummy");
+
+        SparkAppDescription desc = new SparkAppDescription();
+        desc.setHadoopConfDir("/dummy");
+        desc.setKylinJobJar("mock.jar");
+        desc.setAppArgs("mock-args");
+        desc.setJobNamePrefix("test_");
+        desc.setJobId("test-job-id");
+        desc.setComma(",");
+        desc.setSparkJars(Sets.newHashSet("jar1.jar"));
+        desc.setSparkFiles(Sets.newHashSet("file1.conf"));
+
+        Map<String, String> sparkConf = Maps.newHashMap();
+        sparkConf.put("spark.yarn.queue", "default'; touch /tmp/pwned; echo '");
+        sparkConf.put("spark.executor.memory", "1024m");
+        desc.setSparkConf(sparkConf);
+
+        ISparkJobHandler handler = new DefaultSparkBuildJobHandler();
+        try {
+            handler.generateSparkCmd(config, desc);
+            Assert.fail("Should have thrown IllegalArgumentException for conf value containing single quote");
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("single quote"));
+        }
     }
 }
