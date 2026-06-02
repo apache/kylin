@@ -1681,7 +1681,10 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
         }
 
         // add layout to blacklist which is auto and manual, will not remove datalayout from segment
-        val blacklist4 = Lists.newArrayList(indexPlan.getRuleBaseLayouts().get(0).getId());
+        val whitelistIds = indexPlan.getWhitelistLayouts().stream().map(LayoutEntity::getId)
+                .collect(Collectors.toSet());
+        val blacklist4 = Lists.newArrayList(indexPlan.getRuleBaseLayouts().stream()
+                .filter(l -> whitelistIds.contains(l.getId())).findFirst().get().getId());
         updatedPlan = semanticService.addRuleBasedIndexBlackListLayouts(indexPlan, blacklist4);
         Assert.assertEquals(updatedPlan.getAllLayouts().size() + 2, indexPlan.getAllLayouts().size());
         val df4 = dataflowManager.getDataflow(dataflow.getId());

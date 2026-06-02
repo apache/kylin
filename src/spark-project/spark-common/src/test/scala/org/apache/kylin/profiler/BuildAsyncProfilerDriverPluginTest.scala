@@ -34,7 +34,7 @@ class BuildAsyncProfilerDriverPluginTest extends SparkFunSuite with BeforeAndAft
   lazy val metaStore: NLocalFileMetadataTestCase = new NLocalFileMetadataTestCase
 
   val sparkPluginName: String = classOf[BuildAsyncProfilerSparkPlugin].getName
-  val flagFileDir: String = System.getProperty("java.io.tmpdir") + "default/jobStepId/"
+  val flagFileDir: String = System.getProperty("java.io.tmpdir") + "/default/jobStepId/"
   val actionFilePath: String = flagFileDir + "/action"
   val statusFileName: String = flagFileDir + "/status"
   val dumpFileName: String = flagFileDir + "/dump.tar.gz"

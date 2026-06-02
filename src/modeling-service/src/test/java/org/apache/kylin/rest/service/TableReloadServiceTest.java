@@ -345,9 +345,8 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
         val indexPlan = indexManager.getIndexPlan(MODEL_ID);
         Assert.assertEquals(
-                Joiner.on(",")
-                        .join(indexPlan.getAllLayouts().stream().map(LayoutEntity::getId).collect(Collectors.toList())),
-                ((NSparkCubingJob) executables.get(0)).getTasks().get(0).getParam("layoutIds"));
+                indexPlan.getAllLayouts().stream().map(layout -> String.valueOf(layout.getId())).collect(Collectors.toSet()),
+                Sets.newHashSet(((NSparkCubingJob) executables.get(0)).getTasks().get(0).getParam("layoutIds").split(",")));
     }
 
     @Test

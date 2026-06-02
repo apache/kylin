@@ -186,7 +186,7 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.driver.extraJavaOptions",
-                "'`touch /tmp/foo.bar` $(touch /tmp/foo.bar)'");
+                "`touch /tmp/foo.bar` $(touch /tmp/foo.bar)");
         {
             try {
                 val desc = sparkExecutable.getSparkAppDesc();

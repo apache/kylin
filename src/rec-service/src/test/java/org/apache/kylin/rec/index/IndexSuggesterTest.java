@@ -242,17 +242,21 @@ public class IndexSuggesterTest extends AutoTestOnLearnKylinData {
 
         IndexPlan indexPlan = mdCtx.getTargetIndexPlan();
         List<IndexEntity> allCuboids = indexPlan.getIndexes();
-        final IndexEntity indexEntity0 = allCuboids.get(0);
+        Assert.assertEquals(2, allCuboids.size());
 
-        Assert.assertEquals("{100000, 100005, 100006}", indexEntity0.getMeasureBitset().toString());
-        Assert.assertEquals(1, indexEntity0.getLayouts().size());
-        Assert.assertEquals(20001L, indexEntity0.getLayouts().get(0).getId());
+        java.util.Set<String> measureBitsets = allCuboids.stream()
+                .map(e -> e.getMeasureBitset().toString()).collect(java.util.stream.Collectors.toSet());
+        Assert.assertTrue(measureBitsets.contains("{100000, 100005, 100006}"));
+        Assert.assertTrue(measureBitsets.contains("{100000, 100001, 100002, 100003, 100004, 100007, 100008}"));
 
-        final IndexEntity indexEntity1 = allCuboids.get(1);
-        Assert.assertEquals("{100000, 100001, 100002, 100003, 100004, 100007, 100008}",
-                indexEntity1.getMeasureBitset().toString());
-        Assert.assertEquals(1, indexEntity1.getLayouts().size());
-        Assert.assertEquals(40001L, indexEntity1.getLayouts().get(0).getId());
+        for (IndexEntity indexEntity : allCuboids) {
+            Assert.assertEquals(1, indexEntity.getLayouts().size());
+            if (indexEntity.getMeasureBitset().toString().equals("{100000, 100005, 100006}")) {
+                Assert.assertEquals(20001L, indexEntity.getLayouts().get(0).getId());
+            } else {
+                Assert.assertEquals(40001L, indexEntity.getLayouts().get(0).getId());
+            }
+        }
     }
 
     @Test

@@ -1327,13 +1327,18 @@ public class IndexPlanServiceTest extends SourceTestCase {
         List<LayoutEntity> ruleBaseLayouts = dataflowManager.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa")
                 .getIndexPlan().getRuleBaseLayouts();
         Assert.assertEquals(7L, ruleBaseLayouts.size());
-        Assert.assertEquals("[1, 2, 10000]", ruleBaseLayouts.get(0).getColOrder().toString());
-        Assert.assertEquals("[5, 6, 7, 10000, 10001]", ruleBaseLayouts.get(1).getColOrder().toString());
-        Assert.assertEquals("[1, 3, 10000]", ruleBaseLayouts.get(2).getColOrder().toString());
-        Assert.assertEquals("[1, 4, 10000]", ruleBaseLayouts.get(3).getColOrder().toString());
-        Assert.assertEquals("[1, 10000]", ruleBaseLayouts.get(4).getColOrder().toString());
-        Assert.assertEquals("[5, 10000, 10001]", ruleBaseLayouts.get(5).getColOrder().toString());
-        Assert.assertEquals("[1, 2, 3, 4, 5, 6, 7, 10000, 10001]", ruleBaseLayouts.get(6).getColOrder().toString());
+        Set<String> actualColOrders = ruleBaseLayouts.stream()//
+                .map(l -> l.getColOrder().toString())//
+                .collect(Collectors.toSet());
+        Set<String> expectedColOrders = Sets.newHashSet(//
+                "[1, 2, 10000]", //
+                "[5, 6, 7, 10000, 10001]", //
+                "[1, 3, 10000]", //
+                "[1, 4, 10000]", //
+                "[1, 10000]", //
+                "[5, 10000, 10001]", //
+                "[1, 2, 3, 4, 5, 6, 7, 10000, 10001]");
+        Assert.assertEquals(expectedColOrders, actualColOrders);
     }
 
     @Test

@@ -241,8 +241,9 @@ public class NIndexPlanManagerTest {
         });
 
         val plan = manager.getIndexPlan(modelId);
-        Assert.assertEquals("[1, 1030002, 1010001, 1080002, 1070002, 1090001, 1100001, 1020001, 1040001]",
-                plan.getAllLayouts().stream().map(LayoutEntity::getId).collect(Collectors.toList()).toString());
+        Assert.assertEquals("[1, 1010001, 1020001, 1030002, 1040001, 1070002, 1080002, 1090001, 1100001]",
+                plan.getAllLayouts().stream().map(LayoutEntity::getId).sorted()
+                        .collect(Collectors.toList()).toString());
     }
 
     @Test

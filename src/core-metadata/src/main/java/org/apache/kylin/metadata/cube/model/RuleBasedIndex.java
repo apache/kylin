@@ -308,7 +308,7 @@ public class RuleBasedIndex implements Serializable {
     private Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts,
             boolean excludeDel, boolean useCostBasedList) {
 
-        Set<LayoutEntity> genLayouts = Sets.newHashSet();
+        Set<LayoutEntity> genLayouts = Sets.newLinkedHashSet();
 
         Map<LayoutEntity, Long> existLayouts = Maps.newHashMap();
         previousLayouts.forEach(layout -> existLayouts.put(layout, layout.getId()));
@@ -397,7 +397,7 @@ public class RuleBasedIndex implements Serializable {
     private Set<LayoutEntity> tryLayoutsOfCostBasedPlanner(boolean useCostBasedList, Set<LayoutEntity> genLayouts) {
         if (useCostBasedList && layoutsOfCostBasedList != null) {
             // use the recommend white list id
-            Set<LayoutEntity> result = Sets.newHashSet();
+            Set<LayoutEntity> result = Sets.newLinkedHashSet();
             genLayouts.stream().forEach(layout -> {
                 if (layoutsOfCostBasedList.contains(layout.getId())) {
                     result.add(layout);

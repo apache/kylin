@@ -30,7 +30,7 @@ import org.mockito.Mockito.mock
 class AsyncProfilingTest extends SparkPluginWithMeta {
 
   val sparkPluginName: String = classOf[BuildAsyncProfilerSparkPlugin].getName
-  val flagFileDir: String = System.getProperty("java.io.tmpdir") + "default/jobStepId/"
+  val flagFileDir: String = System.getProperty("java.io.tmpdir") + "/default/jobStepId/"
   val actionFilePath: String = flagFileDir + "/action"
   val statusFileName: String = flagFileDir + "/status"
   val dumpFileName: String = flagFileDir + "/dump.tar.gz"
