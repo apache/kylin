@@ -213,7 +213,7 @@
         <cors.version>2.5</cors.version>
         <t-digest.version>3.1.1-kylin-r1</t-digest.version>
         <jsonpath.version>2.7.0</jsonpath.version>
-        <lombok.version>1.18.46</lombok.version>
+        <lombok.version>1.18.2</lombok.version>
         <forbiddenapis.version>3.1</forbiddenapis.version>
         <javassist.version>3.20.0-GA</javassist.version>
         <esapi.version>2.3.0.0</esapi.version>
