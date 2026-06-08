@@ -214,6 +214,11 @@
       <if test="project != null">
         project = #{project}
       </if>
+      <if test="projects != null">
+        <foreach close=")" collection="projects" index="index" item="item" open="project in (" separator=",">
+          #{item}
+        </foreach>
+      </if>
       <if test="queryStartTime != null">
         AND update_time &gt;= #{queryStartTime}
       </if>
@@ -274,6 +279,11 @@
     <where>
       <if test="project != null">
         project = #{project}
+      </if>
+      <if test="projects != null">
+        <foreach close=")" collection="projects" index="index" item="item" open="project in (" separator=",">
+            #{item}
+        </foreach>
       </if>
       <if test="queryStartTime != null">
         AND update_time &gt;= #{queryStartTime}

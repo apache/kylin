@@ -106,7 +106,7 @@ class JdbcJobSchedulerTest extends AbstractTestCase {
         for (int i = 0; i < 3; i++) {
             mockJob();
         }
-        JobMapperFilter filter = new JobMapperFilter();
+        JobMapperFilter filter = JobMapperFilter.builder().build();
         filter.setStatuses(ExecutableState.RUNNING);
         await().atMost(5, TimeUnit.SECONDS).until(() -> jobInfoDao.getJobInfoListByFilter(filter).size() == 3);
         Assertions.assertEquals(secondJobContext.getJobScheduler().getRunningJob().size()

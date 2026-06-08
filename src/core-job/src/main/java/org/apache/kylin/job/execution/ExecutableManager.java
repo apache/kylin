@@ -1103,8 +1103,7 @@ public class ExecutableManager {
                     if (task instanceof ChainedStageExecutable) {
                         final ChainedStageExecutable stageExecutable = (ChainedStageExecutable) task;
                         Map<String, List<StageExecutable>> stageMap = Optional
-                                .ofNullable(stageExecutable.getStagesMap())
-                                .orElse(Maps.newHashMap());
+                                .ofNullable(stageExecutable.getStagesMap()).orElse(Maps.newHashMap());
                         val taskStartTime = task.getStartTime();
                         for (Map.Entry<String, List<StageExecutable>> entry : stageMap.entrySet()) {
                             final String segmentId = entry.getKey();
@@ -1287,8 +1286,7 @@ public class ExecutableManager {
     }
 
     private List<ExecutablePO> getExecutablePOByModelId(String project, String modelId) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).build();
         if (null != modelId) {
             jobMapperFilter.setModelIds(Lists.newArrayList(modelId));
         }
@@ -1385,8 +1383,7 @@ public class ExecutableManager {
     }
 
     public List<ExecutablePO> getExecutablePOsByStatus(List<String> jobIds, List<ExecutableState> executableStates) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).build();
         if (CollectionUtils.isNotEmpty(jobIds)) {
             jobMapperFilter.setJobIds(jobIds);
         }
@@ -1409,16 +1406,6 @@ public class ExecutableManager {
 
     public List<AbstractExecutable> getExecutablesByStatus(ExecutableState status) {
         return getExecutablesByStatus(null, Lists.newArrayList(status));
-    }
-
-    public List<AbstractExecutable> getExecutablesByJobType(Set<JobTypeEnum> RELATED_JOBS) {
-        List<String> jobTypeNames = RELATED_JOBS.stream().map(jobTypeEnum -> jobTypeEnum.name())
-                .collect(Collectors.toList());
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setJobNames(jobTypeNames);
-        List<JobInfo> jobInfoList = jobInfoDao.getJobInfoListByFilter(jobMapperFilter);
-        return jobInfoList.stream().map(jobInfo -> JobInfoUtil.deserializeExecutablePO(jobInfo)).map(this::fromPO)
-                .collect(Collectors.toList());
     }
 
     public ExecutablePO getExecutablePO(String jobId) {
@@ -1672,15 +1659,14 @@ public class ExecutableManager {
         if (StringUtils.isNotBlank(model)) {
             return listExecByModelAndStatus(model, ExecutableState::isRunning, null);
         } else {
-            JobMapperFilter jobMapperFilter = new JobMapperFilter();
             List<ExecutableState> runningStates = Lists.newArrayList();
             for (ExecutableState executableState : ExecutableState.values()) {
                 if (executableState.isRunning()) {
                     runningStates.add(executableState);
                 }
             }
-            jobMapperFilter.setStatuses(runningStates);
-            jobMapperFilter.setProject(project);
+            JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).statuses(runningStates)
+                    .build();
             return jobInfoDao.getJobInfoListByFilter(jobMapperFilter).stream()
                     .map(jobInfo -> JobInfoUtil.deserializeExecutablePO(jobInfo)).map(this::fromPO)
                     .collect(Collectors.toList());
@@ -1752,9 +1738,8 @@ public class ExecutableManager {
     }
 
     public void checkSuicideJobOfModel(String project, String modelId) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
-        jobMapperFilter.setModelIds(Lists.newArrayList(modelId));
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project)
+                .modelIds(Lists.newArrayList(modelId)).build();
         jobMapperFilter.setStatuses(ExecutableState.ERROR, ExecutableState.PAUSED);
         List<JobInfo> errorJobInfoList = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                 .fetchJobsByFilter(jobMapperFilter);
@@ -2013,12 +1998,10 @@ public class ExecutableManager {
     }
 
     public List<AbstractExecutable> getNotFinalExecutablesByType(List<JobTypeEnum> jobTypeEnums) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
-        jobMapperFilter.setStatuses(ExecutableState.getNotFinalStates());
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project)
+                .statuses(ExecutableState.getNotFinalStates()).build();
         if (CollectionUtils.isNotEmpty(jobTypeEnums)) {
-            jobMapperFilter.setJobNames(
-                    jobTypeEnums.stream().map(jobTypeEnum -> jobTypeEnum.name()).collect(Collectors.toList()));
+            jobMapperFilter.setJobNames(jobTypeEnums.stream().map(Enum::name).collect(Collectors.toList()));
         }
         List<JobInfo> jobInfoList = jobInfoDao.getJobInfoListByFilter(jobMapperFilter);
         return jobInfoList.stream().map(jobInfo -> fromPO(JobInfoUtil.deserializeExecutablePO(jobInfo)))

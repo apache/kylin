@@ -124,8 +124,8 @@ public class JobCheckRunner implements Runnable {
     }
 
     private void markSuicideForErrorOrPausedJobs() {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setStatuses(Lists.newArrayList(ExecutableState.ERROR, ExecutableState.PAUSED));
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder()
+                .statuses(Lists.newArrayList(ExecutableState.ERROR, ExecutableState.PAUSED)).build();
         jobMapperFilter.setLimit(10);
         jobMapperFilter.setOffset(0);
         List<JobInfo> jobInfoList = jobContext.getJobInfoMapper().selectByJobFilter(jobMapperFilter);

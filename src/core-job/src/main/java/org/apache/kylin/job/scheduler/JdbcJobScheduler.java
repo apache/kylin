@@ -360,10 +360,9 @@ public class JdbcJobScheduler implements JobScheduler {
     }
 
     private List<JobInfo> getProcessingJobInfoWithOrder() {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().orderByFiled("priority,create_time")
+                .orderType("ASC").build();
         jobMapperFilter.setStatuses(ExecutableState.READY, ExecutableState.PENDING, ExecutableState.RUNNING);
-        jobMapperFilter.setOrderByFiled("priority,create_time");
-        jobMapperFilter.setOrderType("ASC");
         return jobContext.getJobInfoMapper().selectByJobFilter(jobMapperFilter);
     }
 
@@ -407,12 +406,11 @@ public class JdbcJobScheduler implements JobScheduler {
 
     private void releaseExpiredLock() {
         int batchSize = jobContext.getKylinConfig().getJobSchedulerMasterPollBatchSize();
-        JobMapperFilter filter = new JobMapperFilter();
         List<String> jobIds = jobContext.getJobLockMapper().findExpiredORNonLockIdList(batchSize);
         if (jobIds.isEmpty()) {
             return;
         }
-        filter.setJobIds(jobIds);
+        JobMapperFilter filter = JobMapperFilter.builder().jobIds(jobIds).build();
         List<JobInfo> jobs = jobContext.getJobInfoMapper().selectByJobFilter(filter);
         List<String> jobInfoIds = jobs.stream().map(JobInfo::getJobId).collect(Collectors.toList());
         List<String> toRemoveLocks = Lists.newArrayList(jobIds).stream().filter(jobId -> !jobInfoIds.contains(jobId))

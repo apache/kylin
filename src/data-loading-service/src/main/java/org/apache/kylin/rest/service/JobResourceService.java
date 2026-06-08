@@ -96,10 +96,8 @@ public class JobResourceService {
         val jobInfoDao = JobContextUtil.getJobInfoDao(config);
         Set<String> queues = Sets.newHashSet();
         projects.forEach(projectInstance -> {
-            JobMapperFilter jobMapperFilter = new JobMapperFilter();
-            jobMapperFilter.setProject(projectInstance.getName());
-            jobMapperFilter.setStatuses(ExecutableState.SUCCEED);
-            jobMapperFilter.setLimit(10);
+            JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(projectInstance.getName())
+                    .statuses(Lists.newArrayList(ExecutableState.SUCCEED)).limit(10).build();
             val jobs = jobInfoDao.getJobInfoListByFilter(jobMapperFilter);
             if (CollectionUtils.isNotEmpty(jobs)) {
                 for (JobInfo jobInfo : jobs) {

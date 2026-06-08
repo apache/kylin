@@ -23,9 +23,14 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STATUS_
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_UPDATE_STATUS_FAILED;
 import static org.apache.kylin.job.constant.JobStatusEnum.PENDING;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.ErrorCode;
@@ -64,6 +69,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
@@ -90,16 +96,18 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.JobUpdateRequest;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
+import org.apache.kylin.rest.response.UserProjectPermissionResponse;
+import org.apache.kylin.rest.security.AclPermissionEnum;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.apache.spark.application.NoRetryException;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,7 +122,7 @@ import lombok.var;
 
 public class JobInfoServiceTest extends LogOutputTestCase {
 
-    String project = "default";
+    private static final String DEFAULT_PROJECT = "default";
 
     private JobInfoService jobInfoService = Mockito.spy(JobInfoService.class);
 
@@ -168,21 +176,22 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
         // test size
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, DEFAULT_PROJECT, "",
+                true);
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(3, jobs.size());
+        assertEquals(3, jobs.size());
         jobInfoService.addOldParams(jobs);
         jobFilter.setSubject("");
         jobFilter.setStatuses(Lists.newArrayList(JobStatusEnum.NEW));
         jobFilter.setTimeFilter(1);
         List<ExecutableResponse> jobs4 = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(2, jobs4.size());
+        assertEquals(2, jobs4.size());
 
         jobFilter.setSubject("");
         jobFilter.setStatuses(Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.FINISHED));
         jobFilter.setTimeFilter(1);
         jobs4 = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(3, jobs4.size());
+        assertEquals(3, jobs4.size());
 
         jobFilter.setStatuses(Lists.newArrayList());
         jobFilter.setTimeFilter(3);
@@ -197,26 +206,26 @@ public class JobInfoServiceTest extends LogOutputTestCase {
                 maxDuration = duration;
             }
         }
-        Assert.assertTrue(jobs7.size() == 3 && jobs7.get(0).getDuration() == maxDuration);
+        assertTrue(jobs7.size() == 3 && jobs7.get(0).getDuration() == maxDuration);
 
         jobFilter.setSortBy("create_time");
         jobFilter.setReverse(true);
         List<ExecutableResponse> jobs8 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(jobs8.size() == 3 && jobs8.get(0).getId().equals("sparkjob3"));
+        assertTrue(jobs8.size() == 3 && jobs8.get(0).getId().equals("sparkjob3"));
 
         jobFilter.setReverse(false);
         jobFilter.setStatuses(Lists.newArrayList());
         jobFilter.setSortBy("");
         List<ExecutableResponse> jobs10 = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(3, jobs10.size());
+        assertEquals(3, jobs10.size());
 
         jobFilter.setSortBy("job_status");
         List<ExecutableResponse> jobs11 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(jobs11.size() == 3 && jobs11.get(2).getId().equals("sparkjob1"));
+        assertTrue(jobs11.size() == 3 && jobs11.get(2).getId().equals("sparkjob1"));
 
         jobFilter.setSortBy("create_time");
         List<ExecutableResponse> jobs12 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(jobs12.size() == 3 && jobs12.get(0).getId().equals("sparkjob1"));
+        assertTrue(jobs12.size() == 3 && jobs12.get(0).getId().equals("sparkjob1"));
 
         jobFilter.setSortBy("target_subject");
         for (ExecutablePO job : mockJobs) {
@@ -226,7 +235,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             });
         }
         List<ExecutableResponse> sortJobs2 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(sortJobs2.size() == 3 && sortJobs2.get(0).getId().equals("sparkjob1"));
+        assertTrue(sortJobs2.size() == 3 && sortJobs2.get(0).getId().equals("sparkjob1"));
         for (ExecutablePO job : mockJobs) {
             jobInfoDao.updateJob(job.getUuid(), jobUpdater -> {
                 jobUpdater.setJobType(JobTypeEnum.TABLE_SAMPLING);
@@ -234,7 +243,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             });
         }
         List<ExecutableResponse> sortJobs3 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(sortJobs3.size() == 3 && sortJobs3.get(0).getId().equals("sparkjob1"));
+        assertTrue(sortJobs3.size() == 3 && sortJobs3.get(0).getId().equals("sparkjob1"));
         for (ExecutablePO job : mockJobs) {
             jobInfoDao.updateJob(job.getUuid(), jobUpdater -> {
                 jobUpdater.setJobType(JobTypeEnum.SNAPSHOT_BUILD);
@@ -248,7 +257,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         }
         jobFilter.setSortBy("job_status");
         List<ExecutableResponse> sortJobs4 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(sortJobs4.size() == 3 && sortJobs4.get(2).getId().equals("sparkjob2"));
+        assertTrue(sortJobs4.size() == 3 && sortJobs4.get(2).getId().equals("sparkjob2"));
         for (ExecutablePO job : mockJobs) {
             jobInfoDao.updateJob(job.getUuid(), jobUpdater -> {
                 jobUpdater.setJobType(JobTypeEnum.SNAPSHOT_REFRESH);
@@ -261,7 +270,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             });
         }
         List<ExecutableResponse> sortJobs5 = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(sortJobs5.size() == 3 && sortJobs5.get(0).getId().equals("sparkjob1"));
+        assertTrue(sortJobs5.size() == 3 && sortJobs5.get(0).getId().equals("sparkjob1"));
 
         jobFilter.setSortBy("total_time");
         assertKylinExeption(() -> {
@@ -270,20 +279,20 @@ public class JobInfoServiceTest extends LogOutputTestCase {
 
         jobFilter.setSortBy("create_time");
         List<ExecutableResponse> jobs13 = jobInfoService.listJobs(jobFilter, 0, 10);
-        Assert.assertEquals(3, jobs13.size());
+        assertEquals(3, jobs13.size());
         String jobId = jobs13.get(0).getId();
         for (ExecutablePO job : mockJobs) {
             job.setJobType(JobTypeEnum.TABLE_SAMPLING);
         }
         jobFilter.setKey(jobId);
         List<ExecutableResponse> jobs14 = jobInfoService.listJobs(jobFilter, 0, 10);
-        Assert.assertTrue(jobs14.size() == 1 && jobs14.get(0).getId().equals(jobId));
+        assertTrue(jobs14.size() == 1 && jobs14.get(0).getId().equals(jobId));
         jobFilter.setStatuses(Lists.newArrayList());
         List<ExecutableResponse> jobs15 = jobInfoService.listJobs(jobFilter, 0, 10);
         assertEquals(1, jobs15.size());
         jobFilter.setStatuses(Lists.newArrayList(JobStatusEnum.NEW));
         List<ExecutableResponse> jobs16 = jobInfoService.listJobs(jobFilter, 0, 10);
-        assertEquals(0, jobs16.size());
+        assertTrue(jobs16.isEmpty());
     }
 
     private List<ExecutablePO> mockDetailJobs(boolean random) throws Exception {
@@ -304,10 +313,6 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         return jobs;
     }
 
-    private String getProject() {
-        return "default";
-    }
-
     private long getCreateTime(String name) {
         switch (name) {
         case "1":
@@ -325,7 +330,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         ExecutablePO mockJob = new ExecutablePO();
         mockJob.setType("org.apache.kylin.job.execution.SucceedChainedTestExecutable");
         mockJob.setJobType(JobTypeEnum.INDEX_BUILD);
-        mockJob.setProject(getProject());
+        mockJob.setProject(DEFAULT_PROJECT);
         mockJob.setUuid("sparkjob" + name);
         mockJob.setTargetModel("model" + name);
         val jobOutput = mockJob.getOutput();
@@ -342,7 +347,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             val childExecutable = new ExecutablePO();
             childExecutable.setUuid(mockJob.getId() + "_0" + i);
             childExecutable.setType("org.apache.kylin.job.execution.SucceedSubTaskTestExecutable");
-            childExecutable.setProject(getProject());
+            childExecutable.setProject(DEFAULT_PROJECT);
             val jobChildOutput = childExecutable.getOutput();
             mockOutputTime(random, lastEndTime, jobChildOutput, i);
             lastEndTime = jobChildOutput.getEndTime();
@@ -383,8 +388,8 @@ public class JobInfoServiceTest extends LogOutputTestCase {
                     .collect(Collectors.toList());
             List<Long> copyDurationList = new ArrayList<>(totalDurationArrays);
             copyDurationList.sort(Collections.reverseOrder());
-            Assert.assertEquals(3, copyDurationList.size());
-            Assert.assertEquals(totalDurationArrays, copyDurationList);
+            assertEquals(3, copyDurationList.size());
+            assertEquals(totalDurationArrays, copyDurationList);
         }
 
         for (JobInfo jobInfo : mockJobs) {
@@ -397,7 +402,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "default", false, "default", "",
                 false);
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(0, jobs.size());
+        assertEquals(0, jobs.size());
     }
 
     @Test
@@ -415,7 +420,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         List<String> jobNames = Lists.newArrayList();
         JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", false, "default", "", true);
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
-        Assert.assertTrue(jobs.get(0).getCreateTime() > 0);
+        assertTrue(jobs.get(0).getCreateTime() > 0);
     }
 
     private void addSegment(AbstractExecutable job) {
@@ -428,13 +433,13 @@ public class JobInfoServiceTest extends LogOutputTestCase {
     public void testGetTargetSubjectAndJobType() {
         ExecutableManager manager = ExecutableManager.getInstance(jobInfoService.getConfig(), "default");
         SucceedChainedTestExecutable job1 = new SucceedChainedTestExecutable();
-        job1.setProject(getProject());
+        job1.setProject(DEFAULT_PROJECT);
         job1.setName("mocked job");
         job1.setTargetSubject("12345678");
         job1.setJobType(JobTypeEnum.INDEX_BUILD);
-        final TableDesc tableDesc = NTableMetadataManager.getInstance(getTestConfig(), getProject())
+        final TableDesc tableDesc = NTableMetadataManager.getInstance(getTestConfig(), DEFAULT_PROJECT)
                 .getTableDesc("DEFAULT.TEST_KYLIN_FACT");
-        NTableSamplingJob samplingJob = NTableSamplingJob.internalCreate(tableDesc, getProject(), "ADMIN", 20000);
+        NTableSamplingJob samplingJob = NTableSamplingJob.internalCreate(tableDesc, DEFAULT_PROJECT, "ADMIN", 20000);
         manager.addJob(job1);
         manager.addJob(samplingJob);
         List<String> jobNames = Lists.newArrayList();
@@ -442,20 +447,20 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         jobFilter.setSortBy("create_time");
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
 
-        Assert.assertEquals("The model is deleted", jobs.get(0).getTargetSubject()); // no target model so it's null
-        Assert.assertEquals("mocked job", jobs.get(0).getJobName());
-        Assert.assertEquals(tableDesc.getIdentity(), jobs.get(1).getTargetSubject());
-        Assert.assertEquals("TABLE_SAMPLING", jobs.get(1).getJobName());
+        assertEquals("The model is deleted", jobs.get(0).getTargetSubject()); // no target model so it's null
+        assertEquals("mocked job", jobs.get(0).getJobName());
+        assertEquals(tableDesc.getIdentity(), jobs.get(1).getTargetSubject());
+        assertEquals("TABLE_SAMPLING", jobs.get(1).getJobName());
     }
 
     @Test
     public void testJobnameResponse() throws Exception {
-        ExecutableManager manager = Mockito.spy(ExecutableManager.getInstance(getTestConfig(), getProject()));
+        ExecutableManager manager = Mockito.spy(ExecutableManager.getInstance(getTestConfig(), DEFAULT_PROJECT));
         ConcurrentHashMap<Class, ConcurrentHashMap<String, Object>> managersByPrjCache = NLocalFileMetadataTestCase
                 .getInstanceByProject();
-        managersByPrjCache.get(ExecutableManager.class).put(getProject(), manager);
+        managersByPrjCache.get(ExecutableManager.class).put(DEFAULT_PROJECT, manager);
         ExecutablePO job1 = Mockito.spy(ExecutablePO.class);
-        job1.setProject(getProject());
+        job1.setProject(DEFAULT_PROJECT);
         job1.setUuid("sparkjob1");
         job1.setTargetModel("model1");
         job1.setJobType(JobTypeEnum.INC_BUILD);
@@ -464,7 +469,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         subJob.setType("org.apache.kylin.job.execution.SucceedChainedTestExecutable");
         subJob.setJobType(JobTypeEnum.INC_BUILD);
         subJob.getOutput().setStatus("SUCCEED");
-        subJob.setProject(getProject());
+        subJob.setProject(DEFAULT_PROJECT);
         subJob.setUuid(job1.getId() + "_00");
         job1.setTasks(Lists.newArrayList(subJob));
         manager.addJob(job1);
@@ -477,11 +482,11 @@ public class JobInfoServiceTest extends LogOutputTestCase {
                 false);
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
 
-        Assert.assertEquals(2, jobs.size());
+        assertEquals(2, jobs.size());
 
         ExecutableResponse executableResponse = jobs.get(0);
 
-        Assert.assertEquals("sparkjob1", executableResponse.getId());
+        assertEquals("sparkjob1", executableResponse.getId());
 
     }
 
@@ -499,15 +504,15 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         List<String> jobNames = Lists.newArrayList();
         JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "def", false, "default", "", false);
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
-        Assert.assertEquals(0, jobs.size());
+        assertEquals(0, jobs.size());
 
         JobFilter jobFilter2 = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "def", true, "default", "", false);
         List<ExecutableResponse> jobs2 = jobInfoService.listJobs(jobFilter2);
-        Assert.assertEquals(0, jobs2.size());
+        assertEquals(0, jobs2.size());
 
         JobFilter jobFilter3 = new JobFilter(Lists.newArrayList(), jobNames, 0, "", null, true, "default", "", false);
         List<ExecutableResponse> jobs3 = jobInfoService.listJobs(jobFilter3);
-        Assert.assertEquals(3, jobs3.size());
+        assertEquals(3, jobs3.size());
     }
 
     @Test
@@ -527,7 +532,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         String segmentId2 = RandomUtil.randomUUIDStr();
         String segmentIds = segmentId + "," + segmentId2;
 
-        ExecutableManager manager = ExecutableManager.getInstance(jobInfoService.getConfig(), project);
+        ExecutableManager manager = ExecutableManager.getInstance(jobInfoService.getConfig(), DEFAULT_PROJECT);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
         executable.setId(RandomUtil.randomUUIDStr());
         executable.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
@@ -565,7 +570,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
 
         manager.updateStageStatus(logicStep.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
 
-        List<ExecutableStepResponse> jobDetail = jobInfoService.getJobDetail(project, executable.getId());
+        List<ExecutableStepResponse> jobDetail = jobInfoService.getJobDetail(DEFAULT_PROJECT, executable.getId());
         assertEquals(1, jobDetail.size());
         ExecutableStepResponse executableStepResponse = jobDetail.get(0);
         checkResponse(executableStepResponse, sparkExecutable.getId(), null);
@@ -587,7 +592,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
 
         manager.updateStageStatus(logicStep.getId(), null, ExecutableState.SUCCEED, null, "test output");
 
-        jobDetail = jobInfoService.getJobDetail(project, executable.getId());
+        jobDetail = jobInfoService.getJobDetail(DEFAULT_PROJECT, executable.getId());
         assertEquals(1, jobDetail.size());
         executableStepResponse = jobDetail.get(0);
         checkResponse(executableStepResponse, sparkExecutable.getId(), null);
@@ -626,7 +631,118 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         executable.setJobType(JobTypeEnum.INC_BUILD);
         manager.addJob(executable);
         List<ExecutableStepResponse> result = jobInfoService.getJobDetail("default", executable.getId());
-        Assert.assertEquals(1, result.size());
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    public void testGetExecutablePoByUuid() throws Exception {
+        ExecutablePO po = jobInfoDao.addJob(mockExecutablePO(false, "1"));
+
+        // found when both project and jobId match
+        ExecutablePO found = jobInfoDao.getExecutablePoByUuidWithProject(DEFAULT_PROJECT, po.getId());
+        assertNotNull(found);
+        assertEquals(po.getId(), found.getId());
+
+        // not found when jobId does not exist
+        assertNull(jobInfoDao.getExecutablePoByUuidWithProject(DEFAULT_PROJECT, "not_exist_job_id"));
+
+        // not found when the job belongs to another project (project scoping)
+        assertNull(jobInfoDao.getExecutablePoByUuidWithProject("not_exist_project", po.getId()));
+    }
+
+    @Test
+    public void testGetJobDetailProjectScoped() throws Exception {
+        Mockito.doNothing().when(aclEvaluate).checkProjectOperationPermission(Mockito.anyString());
+        ExecutablePO po = jobInfoDao.addJob(mockExecutablePO(false, "1"));
+
+        // queried under the owning project -> succeeds
+        List<ExecutableStepResponse> result = jobInfoService.getJobDetail(DEFAULT_PROJECT, po.getId());
+        assertFalse(result.isEmpty());
+
+        // same job queried under a different project -> JOB_NOT_EXIST
+        assertKylinExeption(() -> jobInfoService.getJobDetail("not_exist_project", po.getId()), po.getId());
+    }
+
+    @Test
+    public void testListJobsEmptyProjectPermissionFilter() throws Exception {
+        mockDetailJobs(true);
+        getTestConfig().setProperty("kylin.streaming.enabled", "false");
+        ProjectInstance defaultProject = NProjectManager.getInstance(getTestConfig()).getProject(DEFAULT_PROJECT);
+
+        // empty project + user has OPERATION permission on 'default' -> all 3 jobs are visible
+        Mockito.doReturn(Lists.newArrayList(new UserProjectPermissionResponse(defaultProject, "OPERATION")))
+                .when(projectService).getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                        AclPermissionEnum.OPERATION);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), Lists.newArrayList(), 4, "", "", false, null, "",
+                true);
+        List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter, 0, 10);
+        assertEquals(3, jobs.size());
+
+        // empty project + user has no permitted project -> all jobs filtered out
+        Mockito.doReturn(Lists.newArrayList()).when(projectService)
+                .getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                        AclPermissionEnum.OPERATION);
+        assertTrue(jobInfoService.listJobs(jobFilter, 0, 10).isEmpty());
+
+        // empty project + user has OPERATION permission on 'default' -> all 3 jobs are visible
+        jobFilter.setProject(StringUtils.EMPTY);
+        UserProjectPermissionResponse project1 = Mockito.mock(UserProjectPermissionResponse.class);
+        when(project1.getProject())
+                .thenReturn(ProjectInstance.create(DEFAULT_PROJECT, "UT", StringUtils.EMPTY, Maps.newLinkedHashMap()));
+        UserProjectPermissionResponse project2 = Mockito.mock(UserProjectPermissionResponse.class);
+        when(project2.getProject())
+                .thenReturn(ProjectInstance.create("default2", "UT", StringUtils.EMPTY, Maps.newLinkedHashMap()));
+        when(projectService.getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                AclPermissionEnum.OPERATION)).thenReturn(Lists.newArrayList(project1, project2));
+        assertEquals(3, jobInfoService.listJobs(jobFilter, 0, 10).size());
+
+        // empty project + user has OPERATION permission on 'default3' -> all jobs filtered out
+        when(project1.getProject())
+                .thenReturn(ProjectInstance.create("default3", "UT", StringUtils.EMPTY, Maps.newLinkedHashMap()));
+        assertTrue(jobInfoService.listJobs(jobFilter, 0, 10).isEmpty());
+    }
+
+    @Test
+    public void testCountJobs() throws Exception {
+        mockDetailJobs(false);
+        getTestConfig().setProperty("kylin.streaming.enabled", "false");
+
+        // count all jobs in project
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), Lists.newArrayList(), 4, "", "", false,
+                DEFAULT_PROJECT, "", true);
+        assertEquals(3, jobInfoService.countJobs(jobFilter));
+        Mockito.verify(aclEvaluate, Mockito.atLeastOnce()).checkProjectOperationPermission("default");
+
+        // count by status
+        jobFilter.setStatuses(Lists.newArrayList(JobStatusEnum.NEW));
+        assertEquals(2, jobInfoService.countJobs(jobFilter));
+        jobFilter.setStatuses(Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.FINISHED));
+        assertEquals(3, jobInfoService.countJobs(jobFilter));
+
+        // fuzzy count by job id when key can not be converted to subjects
+        jobFilter.setStatuses(Lists.newArrayList());
+        jobFilter.setKey("sparkjob1");
+        assertEquals(1, jobInfoService.countJobs(jobFilter));
+        jobFilter.setKey("not_exist_job_id");
+        assertEquals(0, jobInfoService.countJobs(jobFilter));
+
+        // empty project -> count jobs of projects with OPERATION permission only
+        jobFilter.setKey(StringUtils.EMPTY);
+        jobFilter.setProject(StringUtils.EMPTY);
+        ProjectInstance defaultProject = NProjectManager.getInstance(getTestConfig()).getProject(DEFAULT_PROJECT);
+        Mockito.doReturn(Lists.newArrayList(new UserProjectPermissionResponse(defaultProject, "OPERATION")))
+                .when(projectService).getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                        AclPermissionEnum.OPERATION);
+        assertEquals(3, jobInfoService.countJobs(jobFilter));
+
+        // project `default1` -> all jobs filtered out
+        UserProjectPermissionResponse project1 = Mockito.mock(UserProjectPermissionResponse.class);
+        when(project1.getProject())
+                .thenReturn(ProjectInstance.create("default1", "UT", StringUtils.EMPTY, Maps.newLinkedHashMap()));
+        Mockito.doReturn(Lists.newArrayList(project1)).when(projectService)
+                .getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                        AclPermissionEnum.OPERATION);
+        assertEquals(0, jobInfoService.countJobs(jobFilter));
     }
 
     @Test
@@ -638,7 +754,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         manager.addJob(executable);
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "PAUSE",
                 Lists.newArrayList());
-        Assert.assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
         UnitOfWork.doInTransactionWithRetry(() -> {
             jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "RESUME",
                     Lists.newArrayList());
@@ -646,24 +762,24 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         }, "default");
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "PAUSE",
                 Lists.newArrayList());
-        Assert.assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
         UnitOfWork.doInTransactionWithRetry(() -> {
             jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "RESUME",
                     Lists.newArrayList("STOPPED"));
             return null;
         }, "default");
-        Assert.assertEquals(ExecutableState.READY, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.READY, manager.getJob(executable.getId()).getStatus());
         UnitOfWork.doInTransactionWithRetry(() -> {
             jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "DISCARD",
                     Lists.newArrayList());
             return null;
         }, "default");
-        Assert.assertEquals(ExecutableState.DISCARDED, manager.getJob(executable.getId()).getStatus());
-        Assert.assertNull(dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getSegments().getFirstSegment());
+        assertEquals(ExecutableState.DISCARDED, manager.getJob(executable.getId()).getStatus());
+        assertNull(dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getSegments().getFirstSegment());
         Mockito.doNothing().when(tableExtService).removeJobIdFromTableExt(executable.getId(), "default");
         jobInfoService.batchDropJob("default", Lists.newArrayList(executable.getId()), Lists.newArrayList());
         List<AbstractExecutable> executables = manager.getAllExecutables();
-        Assert.assertFalse(executables.contains(executable));
+        assertFalse(executables.contains(executable));
     }
 
     @Test
@@ -676,7 +792,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         manager.updateJobOutput(executable.getId(), ExecutableState.PENDING, null, null, null);
         manager.updateJobOutput(executable.getId(), ExecutableState.RUNNING, null, null, null);
         manager.updateJobOutput(executable.getId(), ExecutableState.SUCCEED, null, null, null);
-        Assert.assertEquals(ExecutableState.SUCCEED, executable.getStatus());
+        assertEquals(ExecutableState.SUCCEED, executable.getStatus());
         thrown.expect(KylinException.class);
         thrown.expectMessage(JOB_UPDATE_STATUS_FAILED.getMsg("DISCARD", executable.getId(), ExecutableState.SUCCEED));
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "DISCARD",
@@ -698,27 +814,27 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         Mockito.when(projectService.getOwnedProjects()).thenReturn(Lists.newArrayList("default"));
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "PAUSE",
                 Lists.newArrayList());
-        Assert.assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
 
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "RESUME",
                 Lists.newArrayList());
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "PAUSE",
                 Lists.newArrayList());
-        Assert.assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.PAUSED, manager.getJob(executable.getId()).getStatus());
 
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "RESUME",
                 Lists.newArrayList("STOPPED"));
-        Assert.assertEquals(ExecutableState.READY, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.READY, manager.getJob(executable.getId()).getStatus());
 
         jobInfoService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "DISCARD",
                 Lists.newArrayList());
-        Assert.assertEquals(ExecutableState.DISCARDED, manager.getJob(executable.getId()).getStatus());
+        assertEquals(ExecutableState.DISCARDED, manager.getJob(executable.getId()).getStatus());
 
-        Assert.assertNull(dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getSegments().getFirstSegment());
+        assertNull(dsMgr.getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa").getSegments().getFirstSegment());
 
         Mockito.doNothing().when(tableExtService).removeJobIdFromTableExt(executable.getId(), "default");
         jobInfoService.batchDropGlobalJob(Lists.newArrayList(executable.getId()), Lists.newArrayList());
-        Assert.assertFalse(manager.getAllExecutables().contains(executable));
+        assertFalse(manager.getAllExecutables().contains(executable));
     }
 
     @Test
@@ -770,7 +886,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             sampleLog = sampleData.toString();
         }
         String[] actualLines = StringUtils.splitByWholeSeparatorPreserveAllTokens(sampleLog, "\n");
-        Assert.assertTrue(Arrays.deepEquals(exceptLines, actualLines));
+        assertTrue(Arrays.deepEquals(exceptLines, actualLines));
     }
 
     public void testFusionModelStopBatchJob() {
@@ -796,7 +912,7 @@ public class JobInfoServiceTest extends LogOutputTestCase {
             return null;
         }, project);
         AbstractExecutable job = manager.getJob(executable.getId());
-        Assert.assertEquals(ExecutableState.DISCARDED, job.getStatus());
+        assertEquals(ExecutableState.DISCARDED, job.getStatus());
 
         // test no fusion model
         String table2 = "SSB.DATES";
@@ -809,26 +925,26 @@ public class JobInfoServiceTest extends LogOutputTestCase {
 
     @Test
     public void testKillExistApplication() {
-        ExecutableManager manager = ExecutableManager.getInstance(jobInfoService.getConfig(), getProject());
+        ExecutableManager manager = ExecutableManager.getInstance(jobInfoService.getConfig(), DEFAULT_PROJECT);
         SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
-        executable.setProject(getProject());
+        executable.setProject(DEFAULT_PROJECT);
         addSegment(executable);
         val task = new NSparkExecutable();
-        task.setProject(getProject());
+        task.setProject(DEFAULT_PROJECT);
         addSegment(task);
         executable.addTask(task);
         executable.setJobType(JobTypeEnum.INC_BUILD);
         manager.addJob(executable);
         jobInfoService.killExistApplication(executable);
 
-        jobInfoService.killExistApplication(getProject(), executable.getId());
+        jobInfoService.killExistApplication(DEFAULT_PROJECT, executable.getId());
     }
 
     @Test
     public void testSetExceptionResolveAndCode() {
-        val manager = ExecutableManager.getInstance(jobInfoService.getConfig(), project);
+        val manager = ExecutableManager.getInstance(jobInfoService.getConfig(), DEFAULT_PROJECT);
         val executable = new SucceedChainedTestExecutable();
-        executable.setProject(project);
+        executable.setProject(DEFAULT_PROJECT);
         executable.setId(RandomUtil.randomUUIDStr());
         executable.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         executable.setJobType(JobTypeEnum.INC_BUILD);
@@ -839,46 +955,46 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         var failedSegmentId = RandomUtil.randomUUIDStr();
         var failedStack = ExceptionUtils.getStackTrace(new NoRetryException("date format not match"));
         var failedReason = "date format not match";
-        jobInfoService.updateJobError(project, jobId, failedStepId, failedSegmentId, failedStack, failedReason);
+        jobInfoService.updateJobError(DEFAULT_PROJECT, jobId, failedStepId, failedSegmentId, failedStack, failedReason);
 
         ExecutableStepResponse executableStepResponse = new ExecutableStepResponse();
         jobInfoService.setExceptionResolveAndCodeAndReason(executable.getOutput(), executableStepResponse);
-        Assert.assertEquals(JobExceptionResolve.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionResolve().getResolve(),
+        assertEquals(JobExceptionResolve.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionResolve().getResolve(),
                 executableStepResponse.getFailedResolve());
-        Assert.assertEquals(JobErrorCode.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toErrorCode().getLocalizedString(),
+        assertEquals(JobErrorCode.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toErrorCode().getLocalizedString(),
                 executableStepResponse.getFailedCode());
-        Assert.assertEquals(JobExceptionReason.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionReason().getReason(),
+        assertEquals(JobExceptionReason.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionReason().getReason(),
                 executableStepResponse.getFailedReason());
 
         ErrorCode.setMsg("en");
         ExceptionResolve.setLang("en");
         jobInfoService.setExceptionResolveAndCodeAndReason(executable.getOutput(), executableStepResponse);
-        Assert.assertEquals(JobExceptionResolve.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionResolve().getResolve(),
+        assertEquals(JobExceptionResolve.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionResolve().getResolve(),
                 executableStepResponse.getFailedResolve());
-        Assert.assertEquals(JobErrorCode.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toErrorCode().getLocalizedString(),
+        assertEquals(JobErrorCode.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toErrorCode().getLocalizedString(),
                 executableStepResponse.getFailedCode());
-        Assert.assertEquals(JobExceptionReason.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionReason().getReason(),
+        assertEquals(JobExceptionReason.JOB_DATE_FORMAT_NOT_MATCH_ERROR.toExceptionReason().getReason(),
                 executableStepResponse.getFailedReason());
 
         // test default reason / code / resolve
         manager.updateJobError(jobId, null, null, null, null);
-        jobInfoService.updateJobError(project, jobId, failedStepId, failedSegmentId, failedStack, "test");
+        jobInfoService.updateJobError(DEFAULT_PROJECT, jobId, failedStepId, failedSegmentId, failedStack, "test");
         jobInfoService.setExceptionResolveAndCodeAndReason(executable.getOutput(), executableStepResponse);
-        Assert.assertEquals(JobExceptionResolve.JOB_BUILDING_ERROR.toExceptionResolve().getResolve(),
+        assertEquals(JobExceptionResolve.JOB_BUILDING_ERROR.toExceptionResolve().getResolve(),
                 executableStepResponse.getFailedResolve());
-        Assert.assertEquals(JobErrorCode.JOB_BUILDING_ERROR.toErrorCode().getLocalizedString(),
+        assertEquals(JobErrorCode.JOB_BUILDING_ERROR.toErrorCode().getLocalizedString(),
                 executableStepResponse.getFailedCode());
-        Assert.assertEquals(JobExceptionReason.JOB_BUILDING_ERROR.toExceptionReason().getReason() + ": test",
+        assertEquals(JobExceptionReason.JOB_BUILDING_ERROR.toExceptionReason().getReason() + ": test",
                 executableStepResponse.getFailedReason());
 
         ErrorCode.setMsg("en");
         ExceptionResolve.setLang("en");
         jobInfoService.setExceptionResolveAndCodeAndReason(executable.getOutput(), executableStepResponse);
-        Assert.assertEquals(JobExceptionResolve.JOB_BUILDING_ERROR.toExceptionResolve().getResolve(),
+        assertEquals(JobExceptionResolve.JOB_BUILDING_ERROR.toExceptionResolve().getResolve(),
                 executableStepResponse.getFailedResolve());
-        Assert.assertEquals(JobErrorCode.JOB_BUILDING_ERROR.toErrorCode().getLocalizedString(),
+        assertEquals(JobErrorCode.JOB_BUILDING_ERROR.toErrorCode().getLocalizedString(),
                 executableStepResponse.getFailedCode());
-        Assert.assertEquals(JobExceptionReason.JOB_BUILDING_ERROR.toExceptionReason().getReason() + ": test",
+        assertEquals(JobExceptionReason.JOB_BUILDING_ERROR.toExceptionReason().getReason() + ": test",
                 executableStepResponse.getFailedReason());
     }
 
@@ -904,20 +1020,21 @@ public class JobInfoServiceTest extends LogOutputTestCase {
 
     @Test
     public void testDiscardJobAndNotify() {
-        ExecutableManager manager = ExecutableManager.getInstance(getTestConfig(), project);
+        ExecutableManager manager = ExecutableManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
         val job = new DefaultExecutable();
-        job.setProject(project);
+        job.setProject(DEFAULT_PROJECT);
         job.setJobType(JobTypeEnum.INC_BUILD);
         manager.addJob(job);
 
         overwriteSystemProp("kylin.job.notification-enabled", "true");
 
         UnitOfWork.doInTransactionWithRetry(() -> {
-            jobInfoService.updateJobStatus(job.getId(), ExecutableManager.toPO(job, project), project, "DISCARD");
+            jobInfoService.updateJobStatus(job.getId(), ExecutableManager.toPO(job, DEFAULT_PROJECT), DEFAULT_PROJECT,
+                    "DISCARD");
             return null;
-        }, project);
+        }, DEFAULT_PROJECT);
 
-        Assert.assertTrue(containsLog("[Job Discarded] is not specified by user, not need to notify users."));
+        assertTrue(containsLog("[Job Discarded] is not specified by user, not need to notify users."));
     }
 
     @Test
@@ -951,18 +1068,18 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         List<ExecutableResponse> jobs = jobInfoService.listJobs(jobFilter);
         List<ExecutableResponse> executableResponses = jobInfoService.addOldParams(jobs);
         ExecutableResponse executable = executableResponses.get(0);
-        Assert.assertEquals("", executable.getRelatedSegment());
-        Assert.assertEquals(0, executable.getProgress(), 0);
+        assertEquals("", executable.getRelatedSegment());
+        assertEquals(0, executable.getProgress(), 0);
         executable.getSteps().get(0).setStatus(JobStatusEnum.FINISHED);
-        Assert.assertEquals(33, executable.getProgress(), 1);
+        assertEquals(33, executable.getProgress(), 1);
         executable.setSteps(null);
         String uuid = UUID.randomUUID().toString();
         executable.setTargetSegments(Lists.newArrayList(uuid));
-        Assert.assertEquals(0.0, executable.getProgress(), 0);
-        Assert.assertEquals(uuid, executable.getRelatedSegment());
+        assertEquals(0.0, executable.getProgress(), 0);
+        assertEquals(uuid, executable.getRelatedSegment());
         executable.setTargetSegments(Collections.emptyList());
-        Assert.assertEquals(0.0, executable.getProgress(), 0);
-        Assert.assertEquals("", executable.getRelatedSegment());
+        assertEquals(0.0, executable.getProgress(), 0);
+        assertEquals("", executable.getRelatedSegment());
     }
 
     @Test
@@ -971,19 +1088,19 @@ public class JobInfoServiceTest extends LogOutputTestCase {
         task.setProject("default");
         ExecutableState jobState = ExecutableState.RUNNING;
         ExecutableStepResponse result = jobInfoService.parseToExecutableStep(task, null, new HashMap<>(), jobState);
-        Assert.assertSame(PENDING, result.getStatus());
+        assertSame(PENDING, result.getStatus());
     }
 
     @Test
     public void testJobDiscard() {
         ExecutableManager executableManager = Mockito.mock(ExecutableManager.class);
-        Mockito.when(jobInfoService.getManager(ExecutableManager.class, project)).thenReturn(executableManager);
+        Mockito.when(jobInfoService.getManager(ExecutableManager.class, DEFAULT_PROJECT)).thenReturn(executableManager);
         Mockito.doAnswer(invocation -> {
             // ensure unit of work transaction
-            Assert.assertNotNull(UnitOfWork.get());
+            assertNotNull(UnitOfWork.get());
             return null;
         }).when(executableManager).discardJob(Mockito.any());
-        jobInfoService.discardJobs(project, Lists.newArrayList("job1", "job2"));
+        jobInfoService.discardJobs(DEFAULT_PROJECT, Lists.newArrayList("job1", "job2"));
         Mockito.verify(executableManager, Mockito.times(1)).discardJob("job1");
         Mockito.verify(executableManager, Mockito.times(1)).discardJob("job2");
     }
@@ -991,13 +1108,13 @@ public class JobInfoServiceTest extends LogOutputTestCase {
     @Test
     public void testSuicideJobOfModel() {
         ExecutableManager executableManager = Mockito.mock(ExecutableManager.class);
-        Mockito.when(jobInfoService.getManager(ExecutableManager.class, project)).thenReturn(executableManager);
+        Mockito.when(jobInfoService.getManager(ExecutableManager.class, DEFAULT_PROJECT)).thenReturn(executableManager);
         Mockito.doAnswer(invocation -> {
             // ensure unit of work transaction
-            Assert.assertNotNull(UnitOfWork.get());
+            assertNotNull(UnitOfWork.get());
             return null;
         }).when(executableManager).checkSuicideJobOfModel(Mockito.any(), Mockito.anyString());
-        jobInfoService.checkSuicideJobOfModel(project, "test");
-        Mockito.verify(executableManager, Mockito.times(1)).checkSuicideJobOfModel(project, "test");
+        jobInfoService.checkSuicideJobOfModel(DEFAULT_PROJECT, "test");
+        Mockito.verify(executableManager, Mockito.times(1)).checkSuicideJobOfModel(DEFAULT_PROJECT, "test");
     }
 }

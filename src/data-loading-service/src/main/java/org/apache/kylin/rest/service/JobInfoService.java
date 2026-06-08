@@ -250,13 +250,12 @@ public class JobInfoService extends BasicService implements JobSupporter {
 
     // TODO model == null || !model.isFusionModel();
     public List<ExecutableResponse> listJobs(final JobFilter jobFilter, int offset, int limit) {
-        // TODO check permission when 'project' is empty
         if (StringUtils.isNotEmpty(jobFilter.getProject())) {
             aclEvaluate.checkProjectOperationPermission(jobFilter.getProject());
         }
         JobMapperFilter jobMapperFilter = JobFilterUtil.getJobMapperFilter(jobFilter, offset, limit, modelService,
                 tableExtService, projectService);
-        List<JobInfo> jobInfoList = jobInfoDao.getJobInfoListByFilter(jobMapperFilter);
+        List<JobInfo> jobInfoList = jobInfoDao.getJobInfoListByProjectFilter(jobMapperFilter);
         List<ExecutableResponse> result = jobInfoList.stream().map(JobInfoUtil::deserializeExecutablePO)
                 .map(executablePO -> {
                     AbstractExecutable executable = getManager(ExecutableManager.class, executablePO.getProject())
@@ -264,6 +263,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
                     val convert = this.convert(executable, executablePO);
                     return convert;
                 }).collect(Collectors.toList());
+
         sortByDurationIfNeed(result, jobFilter.getSortBy(), jobMapperFilter.getOrderType());
         return result;
     }
@@ -287,7 +287,6 @@ public class JobInfoService extends BasicService implements JobSupporter {
     }
 
     public long countJobs(final JobFilter jobFilter) {
-        // TODO check permission when 'project' is empty
         if (StringUtils.isNotEmpty(jobFilter.getProject())) {
             aclEvaluate.checkProjectOperationPermission(jobFilter.getProject());
         }
@@ -298,7 +297,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
 
     public List<ExecutableStepResponse> getJobDetail(String project, String jobId) {
         aclEvaluate.checkProjectOperationPermission(project);
-        ExecutablePO executablePO = jobInfoDao.getExecutablePOByUuid(jobId);
+        ExecutablePO executablePO = jobInfoDao.getExecutablePoByUuidWithProject(project, jobId);
         if (executablePO == null) {
             throw new KylinException(JOB_NOT_EXIST, jobId);
         }
@@ -373,8 +372,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
                     // table sampling and snapshot table don't have some segment
                     if (!StringUtils.equals(task.getId(), segmentId)) {
                         setSegmentSubStageParams(project, targetSubject, task, segmentId, segmentSubStages,
-                                stageExecutables,
-                                stageResponses, waiteTimeMap, output.getState(), executablePO);
+                                stageExecutables, stageResponses, waiteTimeMap, output.getState(), executablePO);
                         stringSubStageMap.put(segmentId, segmentSubStages);
                     }
                 }
@@ -474,6 +472,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
         updateJobStatus(job.getId(), executablePO, project, action);
         return getJobInstance(job.getId());
     }
+
     private void jobActionValidate(String action) {
         JobActionEnum.validateValue(action.toUpperCase(Locale.ROOT));
     }
@@ -995,9 +994,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
             return Lists.newArrayList();
         }
 
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
-        jobMapperFilter.setModelIds(batchModelIds);
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).modelIds(batchModelIds).build();
         List<ExecutableState> ignoreStates = Lists.newArrayList(ExecutableState.SUCCEED, ExecutableState.ERROR,
                 ExecutableState.DISCARDED, ExecutableState.SUICIDAL);
         List<ExecutableState> states = Arrays.stream(ExecutableState.values())
@@ -1007,6 +1004,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
         return jobInfoList.stream().map(jobInfo -> jobInfo.getJobId()).collect(Collectors.toList());
     }
 
+    @Override
     @Transaction(project = 0)
     public void stopBatchJob(String project, TableDesc tableDesc) {
         List<String> fusionModelIds = getFusionModelsByTableDesc(project, tableDesc);

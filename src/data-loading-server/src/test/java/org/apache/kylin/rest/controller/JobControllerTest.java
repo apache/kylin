@@ -257,6 +257,8 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         Mockito.verify(jobController).getJobDetail("e1ad7bb0-522e-456a-859d-2eab1df448de", "default");
+        // the resolved (normalized) project name from checkProjectName is forwarded to the service
+        Mockito.verify(jobInfoService).getJobDetail("default", "e1ad7bb0-522e-456a-859d-2eab1df448de");
     }
 
     private List<ExecutableStepResponse> mockStepsResponse() {

@@ -25,17 +25,20 @@ import static org.apache.kylin.job.util.JobInfoUtil.JOB_SERIALIZER;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.domain.JobInfo;
 import org.apache.kylin.job.domain.JobLock;
 import org.apache.kylin.job.exception.ExecuteRuntimeException;
@@ -73,9 +76,16 @@ public class JobInfoDao {
     @Setter
     private JobLockMapper jobLockMapper;
 
+    public List<JobInfo> getJobInfoListByProjectFilter(final JobMapperFilter jobMapperFilter) {
+        if (StringUtils.isBlank(jobMapperFilter.getProject())
+                && CollectionUtils.isEmpty(jobMapperFilter.getProjects())) {
+            return Collections.emptyList();
+        }
+        return getJobInfoListByFilter(jobMapperFilter);
+    }
+
     public List<JobInfo> getJobInfoListByFilter(final JobMapperFilter jobMapperFilter) {
-        List<JobInfo> jobInfoList = jobInfoMapper.selectByJobFilter(jobMapperFilter);
-        return jobInfoList;
+        return jobInfoMapper.selectByJobFilter(jobMapperFilter);
     }
 
     public long countByFilter(JobMapperFilter jobMapperFilter) {
@@ -83,8 +93,7 @@ public class JobInfoDao {
     }
 
     public List<ExecutablePO> getJobs(String project) {
-        JobMapperFilter filter = new JobMapperFilter();
-        filter.setProject(project);
+        JobMapperFilter filter = JobMapperFilter.builder().project(project).build();
         return jobInfoMapper.selectByJobFilter(filter).stream().map(JobInfoUtil::deserializeExecutablePO)
                 .collect(Collectors.toList());
     }
@@ -136,12 +145,20 @@ public class JobInfoDao {
         return null;
     }
 
+    public ExecutablePO getExecutablePoByUuidWithProject(String project, String jobId) {
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).jobIds(Lists.newArrayList(jobId))
+                .build();
+        List<JobInfo> jobInfoList = jobInfoMapper.selectByJobFilter(jobMapperFilter);
+        if (CollectionUtils.isEmpty(jobInfoList) || jobInfoList.size() != 1) {
+            return null;
+        }
+        return JobInfoUtil.deserializeExecutablePO(jobInfoList.get(0));
+    }
+
     public List<ExecutablePO> getExecutablePoByStatus(String project, List<String> jobIds,
             List<ExecutableState> filterStatuses) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
-        jobMapperFilter.setStatuses(filterStatuses);
-        jobMapperFilter.setJobIds(jobIds);
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project).statuses(filterStatuses)
+                .jobIds(jobIds).build();
         List<JobInfo> jobInfoList = jobInfoMapper.selectByJobFilter(jobMapperFilter);
         if (CollectionUtils.isEmpty(jobInfoList)) {
             return new ArrayList<>();

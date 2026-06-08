@@ -180,10 +180,8 @@ public class SegmentUtil {
     public static Segments<NDataSegment> getValidSegments(String modelId, String project) {
         val df = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getDataflow(modelId);
 
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setProject(project);
-        jobMapperFilter.setModelIds(Lists.newArrayList(modelId));
-        jobMapperFilter.setStatuses(ExecutableState.getNotFinalStates());
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().project(project)
+                .modelIds(Lists.newArrayList(modelId)).statuses(ExecutableState.getNotFinalStates()).build();
         List<JobInfo> runningJobInfoList = JobContextUtil.getJobInfoDao(KylinConfig.getInstanceFromEnv())
                 .getJobInfoListByFilter(jobMapperFilter);
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);

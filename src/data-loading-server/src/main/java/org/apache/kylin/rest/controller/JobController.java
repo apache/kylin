@@ -210,9 +210,9 @@ public class JobController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<List<ExecutableStepResponse>> getJobDetail(@PathVariable(value = "job_id") String jobId,
             @RequestParam(value = "project") String project) {
-        checkProjectName(project);
+        String projectName = checkProjectName(project);
         checkRequiredArg(JOB_ID_ARG_NAME, jobId);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, jobInfoService.getJobDetail(project, jobId), "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, jobInfoService.getJobDetail(projectName, jobId), "");
     }
 
     @ApiOperation(value = "updateJobStatus", tags = {
@@ -446,7 +446,7 @@ public class JobController extends BaseController {
     }
 
     private Set<String> getLogicalViewMetaDumpList(KylinConfig config, String project, String viewTable,
-                                                   String modelId) {
+            String modelId) {
         Set<String> dumpList = new LinkedHashSet<>();
         if (!config.isDDLLogicalViewEnabled()) {
             return dumpList;

@@ -244,8 +244,7 @@ public class JobService extends BasicService {
     }
 
     public String getProjectByJobId(String jobId) {
-        JobMapperFilter jobMapperFilter = new JobMapperFilter();
-        jobMapperFilter.setJobId(jobId);
+        JobMapperFilter jobMapperFilter = JobMapperFilter.builder().jobId(jobId).build();
         List<JobInfo> jobInfoList = jobInfoDao.getJobInfoListByFilter(jobMapperFilter);
         if (CollectionUtils.isEmpty(jobInfoList)) {
             return null;

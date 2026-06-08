@@ -58,6 +58,8 @@ public class JobMapperFilter {
 
     private String project;
 
+    private List<String> projects;
+
     private String orderByFiled;
 
     private String orderType;
@@ -76,8 +78,32 @@ public class JobMapperFilter {
     public void setStatuses(List<ExecutableState> stateList) {
         statuses = stateList;
     }
-    
+
     public void setStatuses(ExecutableState... states) {
         statuses = Lists.newArrayList(states);
+    }
+
+    public void setProjects(List<String> projects) {
+        this.project = null;
+        this.projects = projects;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+        this.projects = null;
+    }
+
+    public static class JobMapperFilterBuilder {
+        public JobMapperFilterBuilder projects(List<String> projects) {
+            this.project = null;
+            this.projects = projects;
+            return this;
+        }
+
+        public JobMapperFilterBuilder project(String project) {
+            this.project = project;
+            this.projects = null;
+            return this;
+        }
     }
 }

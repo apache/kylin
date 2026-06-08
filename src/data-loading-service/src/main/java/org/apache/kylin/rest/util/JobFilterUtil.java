@@ -20,6 +20,7 @@ package org.apache.kylin.rest.util;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -48,8 +49,11 @@ import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.TableExtService;
 import org.sparkproject.guava.collect.Lists;
 
+import lombok.SneakyThrows;
+
 public class JobFilterUtil {
 
+    @SneakyThrows(IOException.class)
     public static JobMapperFilter getJobMapperFilter(final JobFilter jobFilter, int offset, int limit,
             ModelService modelService, TableExtService tableExtService, ProjectService projectService) {
         Date queryStartTime = getQueryStartTime(jobFilter.getTimeFilter());
@@ -90,9 +94,21 @@ public class JobFilterUtil {
                     .forEach(jobStatus -> scheduleStates.addAll(JobStatusUtil.mapJobStatusToScheduleState(jobStatus)));
         }
 
-        return new JobMapperFilter(scheduleStates, jobFilter.getJobNames(), queryStartTime.getTime(),
-                Lists.newArrayList(subjects), null, jobId, null, jobFilter.getProject(), orderByField, orderType,
-                offset, limit, null, null);
+        JobMapperFilter.JobMapperFilterBuilder filterBuilder = JobMapperFilter.builder().statuses(scheduleStates)
+                .jobNames(jobFilter.getJobNames()).queryStartTime(queryStartTime.getTime())
+                .subjects(Lists.newArrayList(subjects)).jobId(jobId).project(jobFilter.getProject())
+                .orderByFiled(orderByField).orderType(orderType).offset(offset).limit(limit);
+
+        if (StringUtils.isEmpty(jobFilter.getProject())) {
+            List<String> projects = projectService
+                    .getProjectsFilterByExactMatchAndPermissionWrapperUserPermission(null, false,
+                            AclPermissionEnum.OPERATION)
+                    .stream().map(projectAndPermission -> projectAndPermission.getProject().getName())
+                    .collect(Collectors.toList());
+            return filterBuilder.projects(projects).build();
+        }
+
+        return filterBuilder.build();
     }
 
     private static Date getQueryStartTime(int timeFilter) {
