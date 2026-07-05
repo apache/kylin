@@ -150,7 +150,7 @@ You can use letters, numbers and '_' to name your cube (blank space in name is n
 * EXTENDED_COLUMN
    Extended_Column as a measure rather than a dimension is to save space. One column with another column can generate new columns.
 
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.png)
 
 * PERCENTILE
    Percentile represent the percentage. The larger the value, the smaller the error. 100 is the most suitable.

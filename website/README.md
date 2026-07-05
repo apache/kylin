@@ -51,6 +51,9 @@ website
 cd website
 npm start
 
+## Build HTML from source
+npm build
+
 ## Publishes the website to GitHub pages.
 npm deploy
 ```
