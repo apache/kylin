@@ -23,7 +23,7 @@ function isPrerelease(version: string) {
 
 function getLastStableVersion() {
   // const lastStableVersion = versions.find((version) => !isPrerelease(version));
-  const lastStableVersion = '5.0.2';
+  const lastStableVersion = '5.0.4';
   if (!lastStableVersion) {
     throw new Error('unexpected, no stable Docusaurus version?');
   }
@@ -120,7 +120,7 @@ const config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: '5.0.2',
+              label: '5.0.4',
               badge: true,
               path: '/',
               banner: 'none',

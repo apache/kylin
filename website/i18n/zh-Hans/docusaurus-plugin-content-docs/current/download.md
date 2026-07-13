@@ -7,14 +7,14 @@ last_update:
 
 # 下载 Apache Kylin
 
-### v5.0.2-GA
+### v5.0.4-GA
 - 有关此版本的更多信息，请查看[版本注释](release_notes.md)和[概述](overview.md)
-- 源码下载: [apache-kylin-5.0.2-source-release.zip](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-source-release.zip) \[[asc](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-source-release.zip.asc)\] \[[sha256](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-source-release.zip.sha256)\]
-- 安装包下载: [apache-kylin-5.0.2-bin.tar.gz](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-bin.tar.gz) \[[asc](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-bin.tar.gz.asc)\] \[[sha256](https://github.com/apache/kylin/releases/download/kylin-5.0.2/apache-kylin-5.0.2-bin.tar.gz.sha256)\]
+- Source download: [apache-kylin-5.0.4-source-release.zip](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-source-release.zip) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-source-release.zip.asc)\] \[[sha256](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-source-release.zip.sha256)\]
+- Binary download: [apache-kylin-5.0.4-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-bin.tar.gz.asc)\] \[[sha256](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-5.0.4/apache-kylin-5.0.4-bin.tar.gz.sha256)\]
 
+### v4.0.4-GA
+- Source download: [apache-kylin-4.0.4-source-release.zip](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-source-release.zip) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-source-release.zip.asc)\] \[[sha256](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-source-release.zip.sha256)\]
+- Binary download: [apache-kylin-4.0.4-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-bin.tar.gz.asc)\] \[[sha256](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-4.0.4/apache-kylin-4.0.4-bin.tar.gz.sha256)\]
 
-### Dockerhub预览
-
-在个人电脑中体验 Kylin 5,
-我们建议在dockerhub中拉出docker镜像并检查[独立镜像](https://hub.docker.com/r/apachekylin/apache-kylin-standalone).
-
+### 更多老版本
+请访问 https://dist.apache.org/repos/dist/release/kylin/

@@ -15,6 +15,32 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v5.0.4 - 2026-07-13
+
+__Bug Fix__
+
+* [KYLIN-6078] - [Internal Table] job_range was occupied by another task, but the time partitions within job_range were refreshed successfully.
+* [KYLIN-6084] - [Internal Table] Incorrect error message in internal table refresh API
+* [KYLIN-6085] - Fix issue where ORDER BY in SQL subqueries does not take effect
+* [KYLIN-6086] - [Internal Table] Fix Incorrect Data Range Display on Job Page
+* [KYLIN-6089] - Validate table name in TableService#refreshTable
+* [KYLIN-6090] - Add project permission verification to the job information retrieval API
+* [KYLIN-6091] - Job handler parameters validation
+
+## v5.0.3 - 2025-09-19
+
+__Enhancement__
+
+* [KYLIN-5475] - Use javaCC to parse self define DML
+* [KYLIN-6076] - Complete the verification of the additional tbl_properties field corresponding to storage_type in the internal table
+
+__Bug Fix__
+
+* [KYLIN-6079] - Logical_view information was lost when upgrade Kylin
+* [KYLIN-6080] - Support normal startup on macOS after packaging Kylin 5 with -withGluten
+* [KYLIN-6081] - Remove unused endpoint
+* [KYLIN-6082] - Fix API parameter check
+
 ## v5.0.2 - 2025-03-31
 
 __New Feature__

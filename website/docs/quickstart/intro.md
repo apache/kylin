@@ -20,6 +20,9 @@ In this guide, we will explain how to quickly install and start Kylin 5. Before 
 
 To explore new features in Kylin 5 on a laptop, we recommend pulling the Docker image and checking the [Apache Kylin Standalone Image on Docker Hub](https://hub.docker.com/r/apachekylin/apache-kylin-standalone) (For amd64 platform).
 
+NOTE: The 5.0.2 docker version does NOT have the latest security fixes and is only good for personal function test.
+ALWAYS USE THE LATEST VERSION for production and other serious tasks.
+
 ```shell
 docker run -d \
     --name Kylin5-Machine \
