@@ -18,30 +18,35 @@
 
 package org.apache.kylin.rest.scheduler;
 
+import static org.apache.kylin.metadata.model.AutoSegmentBuildConfig.END_OF_DAY;
+
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.util.JobContextUtil;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -49,159 +54,142 @@ import org.apache.kylin.rest.service.ModelBuildService;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
-import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class AutoBuildSegmentScheduler {
-    private static final int THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE = 20;
+    private static final Duration INITIAL_TRIGGER_LOOKBACK = Duration.ofMinutes(1);
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
-
-    @Autowired
-    @Qualifier("projectScheduler")
-    private TaskScheduler projectScheduler;
 
     @Autowired
     @Qualifier("modelBuildService")
     private ModelBuildService modelBuildService;
 
-    @Getter
-    private final Map<String, Pair<String, ScheduledFuture<?>>> taskFutures = Maps.newConcurrentMap();
-    @Getter
-    private final AtomicInteger schedulerModelCount = new AtomicInteger(0);
+    private final AtomicBoolean dispatching = new AtomicBoolean(false);
+    private final AtomicReference<Instant> lastDispatchTime = new AtomicReference<>();
 
-    @Scheduled(cron = "*/30 * * * * ?")
+    @Scheduled(cron = "${kylin.model.auto-segment-build.dispatcher-cron:*/30 * * * * ?}")
     public void schedulerAutoBuildSegment() {
-        val projectManager = NProjectManager.getInstance(KylinConfig.readSystemKylinConfig());
-        reconcile(projectManager);
-    }
-
-    private void reconcile(NProjectManager projectManager) {
-        Map<String, String> expected = Maps.newHashMap();
-        for (ProjectInstance project : projectManager.listAllProjects()) {
-            val projectName = project.getName();
-            val modelManager = NDataModelManager.getInstance(KylinConfig.readSystemKylinConfig(), projectName);
-            for (NDataModel model : modelManager.listAllModels()) {
-                val segmentConfig = model.getSegmentConfig();
-                if (segmentConfig == null || segmentConfig.getAutoSegmentBuild() == null
-                        || !segmentConfig.getAutoSegmentBuild().isEnabled()) {
-                    continue;
-                }
-                if (model.isStreaming() || model.isMultiPartitionModel()
-                        || PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc())) {
-                    continue;
-                }
-                val triggerTime = segmentConfig.getAutoSegmentBuild().getTriggerTime();
-                if (StringUtils.isBlank(triggerTime)) {
-                    continue;
-                }
-                val cron = toDailyCron(triggerTime);
-                if (cron == null) {
-                    continue;
-                }
-                expected.put(buildTaskKey(projectName, model.getUuid()), cron);
-            }
-        }
-        for (val entry : expected.entrySet()) {
-            val key = entry.getKey();
-            val cron = entry.getValue();
-            val scheduled = taskFutures.get(key);
-            if (scheduled != null && StringUtils.equals(scheduled.getFirst(), cron)) {
-                continue;
-            }
-            startCron(key, cron);
-        }
-        for (val key : Lists.newArrayList(taskFutures.keySet())) {
-            if (!expected.containsKey(key)) {
-                stopCron(key);
-            }
-        }
-    }
-
-    private void startCron(String key, String cron) {
-        stopCron(key);
-        checkSchedulerThreadPoolSize();
-        val scheduledFuture = projectScheduler.schedule(() -> submitJob(key), triggerContext -> {
-            val trigger = new org.springframework.scheduling.support.CronTrigger(cron);
-            return trigger.nextExecutionTime(triggerContext);
-        });
-        taskFutures.put(key, Pair.newPair(cron, scheduledFuture));
-        log.info("Auto build segment start cron, key: {}, cron: {}", key, cron);
-    }
-
-    private void stopCron(String key) {
-        val scheduledFuturePair = taskFutures.get(key);
-        if (scheduledFuturePair != null) {
-            val future = scheduledFuturePair.getSecond();
-            if (future != null) {
-                future.cancel(true);
-            }
-            taskFutures.remove(key);
-            schedulerModelCount.decrementAndGet();
-            log.info("Auto build segment stop cron, key: {}", key);
-        }
-    }
-
-    private void checkSchedulerThreadPoolSize() {
-        val scheduler = (ThreadPoolTaskScheduler) projectScheduler;
-        val poolSize = scheduler.getPoolSize();
-        val modelCount = schedulerModelCount.incrementAndGet();
-        if (modelCount > poolSize) {
-            scheduler.setPoolSize(modelCount);
-        } else if (modelCount < THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE
-                && poolSize > THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE) {
-            scheduler.setPoolSize(THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE);
-        }
-    }
-
-    private void submitJob(String key) {
+        val currentTime = Instant.now();
         if (!JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv()).getJobScheduler().isMaster()) {
+            lastDispatchTime.set(currentTime);
             return;
         }
-        val parts = key.split("/", 2);
-        if (parts.length != 2) {
+        if (!dispatching.compareAndSet(false, true)) {
+            log.warn("Skip auto build segment dispatch because the previous dispatch is still running");
             return;
         }
-        val project = parts[0];
-        val modelId = parts[1];
-        val modelManager = NDataModelManager.getInstance(KylinConfig.readSystemKylinConfig(), project);
-        val model = modelManager.getDataModelDesc(modelId);
-        if (model == null) {
-            stopCron(key);
+
+        val previousTime = getPreviousDispatchTime(currentTime);
+        try {
+            dispatch(previousTime, currentTime);
+        } finally {
+            lastDispatchTime.set(currentTime);
+            dispatching.set(false);
+        }
+    }
+
+    private Instant getPreviousDispatchTime(Instant currentTime) {
+        val previousTime = lastDispatchTime.get();
+        if (previousTime == null || previousTime.isAfter(currentTime)) {
+            return currentTime.minus(INITIAL_TRIGGER_LOOKBACK);
+        }
+        return previousTime;
+    }
+
+    @VisibleForTesting
+    void dispatch(Instant previousTime, Instant currentTime) {
+        val systemConfig = KylinConfig.readSystemKylinConfig();
+        val projectManager = NProjectManager.getInstance(systemConfig);
+        for (ProjectInstance project : projectManager.listAllProjects()) {
+            try {
+                dispatchProject(systemConfig, project, previousTime, currentTime);
+            } catch (Exception e) {
+                log.error("Auto build segment dispatch failed for project: {}", project.getName(), e);
+            }
+        }
+    }
+
+    private void dispatchProject(KylinConfig systemConfig, ProjectInstance project, Instant previousTime,
+            Instant currentTime) {
+        val projectName = project.getName();
+        val zoneId = ZoneId.of(project.getConfig().getTimeZone());
+        val dataflowManager = NDataflowManager.getInstance(systemConfig, projectName);
+        for (NDataModel model : dataflowManager.listOnlineDataModels()) {
+            try {
+                dispatchModel(projectName, model, zoneId, previousTime, currentTime);
+            } catch (Exception e) {
+                log.error("Auto build segment dispatch failed, project: {}, model: {}", projectName, model.getUuid(),
+                        e);
+            }
+        }
+    }
+
+    private void dispatchModel(String project, NDataModel model, ZoneId zoneId, Instant previousTime,
+            Instant currentTime) {
+        val autoSegmentBuild = getEligibleConfig(model);
+        if (autoSegmentBuild == null) {
             return;
         }
-        val autoSegmentBuild = model.getSegmentConfig() == null ? null : model.getSegmentConfig().getAutoSegmentBuild();
-        if (autoSegmentBuild == null || !autoSegmentBuild.isEnabled()) {
+        if (StringUtils.isBlank(autoSegmentBuild.getTriggerTime())) {
+            log.warn("Skip auto build segment because trigger_time is blank, project: {}, model: {}", project,
+                    model.getUuid());
             return;
         }
-        if (model.isStreaming() || model.isMultiPartitionModel()
-                || PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc())) {
+
+        val scheduledTime = getLatestScheduledTime(autoSegmentBuild.getTriggerTime(), zoneId, currentTime);
+        val scheduledInstant = scheduledTime.toInstant();
+        if (!scheduledInstant.isAfter(previousTime) || scheduledInstant.isAfter(currentTime)) {
             return;
         }
-        if (hasRunningBuildJob(project, modelId)) {
-            log.info("Skip auto build segment because model has running build job, project: {}, model: {}", project,
-                    modelId);
+        submitJob(project, model, autoSegmentBuild, scheduledTime);
+    }
+
+    private AutoSegmentBuildConfig getEligibleConfig(NDataModel model) {
+        if (model.isBroken() || model.isStreaming() || model.isMultiPartitionModel()
+                || PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc()) || model.getSegmentConfig() == null) {
+            return null;
+        }
+        val autoSegmentBuild = model.getSegmentConfig().getAutoSegmentBuild();
+        return autoSegmentBuild != null && autoSegmentBuild.isEnabled() ? autoSegmentBuild : null;
+    }
+
+    @VisibleForTesting
+    ZonedDateTime getLatestScheduledTime(String triggerTime, ZoneId zoneId, Instant currentTime) {
+        val localCurrentTime = currentTime.atZone(zoneId);
+        val parsedTriggerTime = LocalTime.parse(triggerTime, TIME_FORMATTER);
+        ZonedDateTime scheduledTime = ZonedDateTime.of(localCurrentTime.toLocalDate(), parsedTriggerTime, zoneId);
+        if (scheduledTime.toInstant().isAfter(currentTime)) {
+            scheduledTime = scheduledTime.minusDays(1);
+        }
+        return scheduledTime;
+    }
+
+    @VisibleForTesting
+    void submitJob(String project, NDataModel model, AutoSegmentBuildConfig autoSegmentBuild,
+            ZonedDateTime scheduledTime) {
+        val modelId = model.getUuid();
+        if (hasRunningModelBuildJob(project, modelId)) {
+            log.info("Skip auto build segment because the model has a progressing build job, project: {}, model: {}",
+                    project, modelId);
             return;
         }
         try {
-            val projectConfig = NProjectManager.getInstance(KylinConfig.readSystemKylinConfig()).getProject(project)
-                    .getConfig();
-            val zoneId = ZoneId.of(projectConfig.getTimeZone());
-            val logicalDate = LocalDate.now(zoneId).minusDays(autoSegmentBuild.getLogicalDateOffsetDays());
+            val zoneId = scheduledTime.getZone();
+            val logicalDate = scheduledTime.toLocalDate().minusDays(autoSegmentBuild.getLogicalDateOffsetDays());
             val start = parseTime(autoSegmentBuild.getDataRangeStartTime(), false);
             val end = parseTime(autoSegmentBuild.getDataRangeEndTime(), true);
             val startDateTime = LocalDateTime.of(logicalDate, start.getFirst());
             val endDate = end.getSecond() ? logicalDate.plusDays(1) : logicalDate;
             val endDateTime = LocalDateTime.of(endDate, end.getFirst());
             if (!startDateTime.isBefore(endDateTime)) {
-                log.warn("Skip auto build segment because invalid range, project: {}, model: {}", project, modelId);
+                log.warn("Skip auto build segment because of an invalid range, project: {}, model: {}", project,
+                        modelId);
                 return;
             }
             val startMillis = String.valueOf(startDateTime.atZone(zoneId).toInstant().toEpochMilli());
@@ -209,14 +197,18 @@ public class AutoBuildSegmentScheduler {
             val params = new IncrementBuildSegmentParams(project, modelId, startMillis, endMillis,
                     model.getPartitionDesc(), model.getMultiPartitionDesc(), Lists.newArrayList(), true, null);
             modelBuildService.incrementBuildSegmentsByScheduler(params, "System");
-            log.info("Auto build segment submitted, project: {}, model: {}, range: [{}, {})", project, modelId,
-                    startMillis, endMillis);
+            log.info("Auto build segment submitted, project: {}, model: {}, scheduled time: {}, range: [{}, {})",
+                    project, modelId, scheduledTime, startMillis, endMillis);
+        } catch (DateTimeParseException e) {
+            log.error("Invalid time in auto build segment config, project: {}, model: {}", project, modelId, e);
         } catch (Exception e) {
             log.error("Auto build segment submit failed, project: {}, model: {}", project, modelId, e);
         }
     }
 
-    private boolean hasRunningBuildJob(String project, String modelId) {
+    @VisibleForTesting
+    boolean hasRunningModelBuildJob(String project, String modelId) {
+        // Segment and model metadata mutations are serialized with any progressing build job on the same model.
         val executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         JobTypeEnum[] buildJobTypes = JobTypeEnum.getJobTypeByCategory(JobTypeEnum.Category.BUILD)
                 .toArray(new JobTypeEnum[0]);
@@ -225,24 +217,10 @@ public class AutoBuildSegmentScheduler {
         return !jobs.isEmpty();
     }
 
-    private String toDailyCron(String triggerTime) {
-        try {
-            val time = LocalTime.parse(triggerTime, TIME_FORMATTER);
-            return String.format(Locale.ROOT, "%d %d %d * * ?", time.getSecond(), time.getMinute(), time.getHour());
-        } catch (DateTimeParseException e) {
-            log.warn("Invalid trigger_time for auto build segment: {}", triggerTime);
-            return null;
-        }
-    }
-
     private Pair<LocalTime, Boolean> parseTime(String time, boolean allow24Hour) {
-        if (allow24Hour && StringUtils.equals(time, "24:00:00")) {
+        if (allow24Hour && StringUtils.equals(time, END_OF_DAY)) {
             return Pair.newPair(LocalTime.MIDNIGHT, true);
         }
         return Pair.newPair(LocalTime.parse(time, TIME_FORMATTER), false);
-    }
-
-    private String buildTaskKey(String project, String modelId) {
-        return project + "/" + modelId;
     }
 }

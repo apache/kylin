@@ -29,6 +29,9 @@ import lombok.Setter;
 @Setter
 public class AutoSegmentBuildConfig implements Serializable {
 
+    // LocalTime cannot represent 24:00:00; this value denotes midnight at the end of the logical date.
+    public static final String END_OF_DAY = "24:00:00";
+
     @JsonProperty("enabled")
     private boolean enabled = false;
 

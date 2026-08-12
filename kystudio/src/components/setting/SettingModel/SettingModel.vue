@@ -237,13 +237,15 @@ import { handleSuccess, transToGmtTime, kylinConfirm } from '../../../util/busin
 import { handleSuccessAsync, handleError, objectClone, ArrayFlat } from '../../../util/index'
 import { retentionTypes } from '../handler'
 
+const END_OF_DAY = '24:00:00'
+
 const initialSettingForm = JSON.stringify({
   name: '',
   settingItem: '',
   autoMerge: [],
   volatileRange: {volatile_range_number: 0, volatile_range_type: '', volatile_range_enabled: true},
   retentionThreshold: {retention_range_number: 0, retention_range_type: '', retention_range_enabled: true},
-  autoSegmentBuild: {enabled: true, trigger_time: '01:00:00', logical_date_offset_days: 1, data_range_start_time: '00:00:00', data_range_end_time: '24:00:00'},
+  autoSegmentBuild: {enabled: true, trigger_time: '01:00:00', logical_date_offset_days: 1, data_range_start_time: '00:00:00', data_range_end_time: END_OF_DAY},
   'spark.executor.cores': null,
   'spark.executor.instances': null,
   'spark.executor.memory': null,
@@ -611,7 +613,7 @@ export default class SettingStorage extends Vue {
     const config = this.modelSettingForm.autoSegmentBuild
     if (!config || !config.trigger_time || !config.data_range_start_time || !config.data_range_end_time) return false
     if (!(+config.logical_date_offset_days >= 1)) return false
-    if (config.data_range_end_time === '24:00:00') return true
+    if (config.data_range_end_time === END_OF_DAY) return true
     return config.data_range_start_time < config.data_range_end_time
   }
   formatAutoSegmentBuild (config) {

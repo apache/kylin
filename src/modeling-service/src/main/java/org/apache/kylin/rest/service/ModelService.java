@@ -63,6 +63,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MER
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_NOT_EXIST_ID;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_NOT_EXIST_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_STATUS;
+import static org.apache.kylin.metadata.model.AutoSegmentBuildConfig.END_OF_DAY;
 import static org.apache.kylin.metadata.model.FunctionDesc.PARAMETER_TYPE_COLUMN;
 
 import java.io.IOException;
@@ -3401,7 +3402,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         parseSegmentBuildTime(autoSegmentBuild.getTriggerTime(), "trigger_time", false);
         LocalTime startTime = parseSegmentBuildTime(autoSegmentBuild.getDataRangeStartTime(), "data_range_start_time",
                 false);
-        boolean endOfNextDay = "24:00:00".equals(autoSegmentBuild.getDataRangeEndTime());
+        boolean endOfNextDay = END_OF_DAY.equals(autoSegmentBuild.getDataRangeEndTime());
         LocalTime endTime = parseSegmentBuildTime(autoSegmentBuild.getDataRangeEndTime(), "data_range_end_time", true);
         if (!endOfNextDay && !startTime.isBefore(endTime)) {
             throw new KylinException(INVALID_PARAMETER,
@@ -3427,7 +3428,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     private LocalTime parseSegmentBuildTime(String value, String fieldName, boolean allow24Hour) {
-        if (allow24Hour && StringUtils.equals(value, "24:00:00")) {
+        if (allow24Hour && StringUtils.equals(value, END_OF_DAY)) {
             return LocalTime.MIDNIGHT;
         }
         try {
