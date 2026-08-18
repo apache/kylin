@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DefaultHostInfoFetcher;
 import org.apache.kylin.common.util.HostInfoFetcher;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.DefaultClusterManager;
@@ -189,6 +190,7 @@ public class AppConfig implements WebMvcConfigurer {
     public ObjectMapper getObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.setPolymorphicTypeValidator(JsonUtil.KYLIN_TYPE_VALIDATOR);
         FilterProvider filterProvider = new SimpleFilterProvider().addFilter("passwordFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept("password"));
 

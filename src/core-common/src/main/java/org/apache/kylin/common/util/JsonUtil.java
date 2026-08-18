@@ -52,6 +52,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.LRUMap;
@@ -65,6 +67,11 @@ public class JsonUtil {
     private static final SimpleFilterProvider simpleFilterProvider = new SimpleFilterProvider()
             .setFailOnUnknownId(false);
 
+    // restrict classes loadable via @JsonTypeInfo(Id.CLASS) ids (Event, SegmentRange, ...)
+    // to Kylin's own types, blocking deserialization gadget attacks
+    public static final PolymorphicTypeValidator KYLIN_TYPE_VALIDATOR = BasicPolymorphicTypeValidator.builder()
+            .allowIfSubType("org.apache.kylin.").build();
+
     static {
         LookupCache<Object, JavaType> cache = new LRUMap<>(16, 2000);
         TypeFactory customTypeFactory = TypeFactory.defaultInstance().withCache(cache);
@@ -74,11 +81,13 @@ public class JsonUtil {
         mapper.setFilterProvider(simpleFilterProvider);
         mapper.setTypeFactory(customTypeFactory);
         mapper.registerModule(new GuavaModule());
+        mapper.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
         indentMapper.configure(SerializationFeature.INDENT_OUTPUT, true)
                 .setConfig(indentMapper.getSerializationConfig().withView(PersistenceView.class));
         indentMapper.setFilterProvider(simpleFilterProvider);
         indentMapper.setTypeFactory(customTypeFactory);
         indentMapper.registerModule(new GuavaModule());
+        indentMapper.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
     }
 
     public static ArrayNode createArrayNode() {
