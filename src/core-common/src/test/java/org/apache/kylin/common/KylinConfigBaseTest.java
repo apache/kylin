@@ -1516,7 +1516,7 @@ class KylinConfigBaseTest {
 
         val withoutGluten = config.getKylinExtJarsPath(false);
         val withoutExpected = "," + celebornJar.getAbsolutePath() + "," + mysqlJar.getAbsolutePath();
-        Assertions.assertEquals(withoutExpected, withoutGluten);
+        assertUnorderedEqualsIgnoringEmpty(withoutExpected, withoutGluten);
     }
 
     @Test

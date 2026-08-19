@@ -147,3 +147,15 @@ src/server-base/spark-warehouse/
 
 #streaming
 src/streaming/examples/*
+
+# UT tmp files
+src/spark-project/kylin-soft-affinity-cache/org.junit.rules.TemporaryFolder@*
+src/tool/file:/*
+src/tool/ignored/*
+src/kylin-server-it/file:/*
+src/kylin-it/src/test/resources/query/**/*.sql.json
+src/kylin-it/src/test/resources/query/**/*.sql.schema
+src/kylin-it/src/test/resources/sql_tdvt/**/*.sql.json
+src/kylin-it/src/test/resources/sql_tdvt/**/*.sql.schema
+src/kylin-it/src/test/resources/sql_tpch/**/*.sql.json
+src/kylin-it/src/test/resources/sql_tpch/**/*.sql.schema

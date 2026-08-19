@@ -70,8 +70,21 @@ public abstract class BaseSchedulerTest extends NLocalFileMetadataTestCase {
 
     @After
     public void tearDown() throws Exception {
+        JobContextUtil.stopScheduler();
+        awaitJobWorkersStopped();
         JobContextUtil.cleanUp();
         cleanupTestMetadata();
+    }
+
+    /**
+     * Stopping the scheduler only interrupts the job workers, it does not wait for them: the driver memory permit is
+     * given back later, while the worker unwinds (JobExecutor#close). ResourceAcquirer's semaphore is static and never
+     * reset, so a worker outliving its test steals memory from the next test's baseline.
+     */
+    private void awaitJobWorkersStopped() {
+        with().pollInterval(10, TimeUnit.MILLISECONDS).await().atMost(30, TimeUnit.SECONDS)
+                .until(() -> Thread.getAllStackTraces().keySet().stream()
+                        .noneMatch(t -> t.getName().startsWith("JobWorker(")));
     }
 
     protected void waitForJobFinish(String jobId) {
