@@ -26,14 +26,13 @@ import java.util.NavigableSet;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -54,9 +53,6 @@ public class MetadataVersionRefresher {
     }
 
     public void refresh() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-
         List<String> all = Lists.newArrayList();
         collectFiles(this.store, "/", all);
 
@@ -66,11 +62,11 @@ public class MetadataVersionRefresher {
                 logger.info("Updating metadata version of path {}", path);
                 ObjectNode objectNode;
                 try (InputStream is = this.store.getResource(path).getByteSource().openStream()) {
-                    objectNode = (ObjectNode) mapper.readTree(is);
+                    objectNode = (ObjectNode) JsonUtil.readValueAsTreeDefault(is);
                 }
                 objectNode.put("version", version);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                mapper.writeValue(baos, objectNode);
+                JsonUtil.writeValueIndentDefault(baos, objectNode);
                 this.store.checkAndPutResource(path, ByteSource.wrap(baos.toByteArray()), -1);
             }
         }

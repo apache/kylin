@@ -23,12 +23,9 @@ import java.util.Map;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.ServiceType;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kylin.common.util.JsonUtil;
 
 public class ServiceInstanceSerializer<T> extends JsonInstanceSerializer<T> {
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     public ServiceInstanceSerializer(Class<T> payloadClass) {
         super(payloadClass);
@@ -37,7 +34,7 @@ public class ServiceInstanceSerializer<T> extends JsonInstanceSerializer<T> {
     @Override
     public ServiceInstance<T> deserialize(byte[] bytes) throws Exception {
         String content = new String(bytes, Charset.defaultCharset());
-        Map map = mapper.readValue(content, Map.class);
+        Map map = JsonUtil.readValueDefault(content, Map.class);
         return castToServiceInstance(map);
     }
 

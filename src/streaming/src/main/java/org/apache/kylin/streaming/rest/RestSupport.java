@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.val;
 import lombok.var;
@@ -81,9 +80,8 @@ public class RestSupport implements Closeable {
         while (retry++ < MAX_RETRY) {
             try {
                 if (param != null && httpReqBase instanceof HttpEntityEnclosingRequestBase) {
-                    ObjectMapper mapper = new ObjectMapper();
                     ((HttpEntityEnclosingRequestBase) httpReqBase)
-                            .setEntity(new StringEntity(mapper.writeValueAsString(param), "UTF-8"));
+                            .setEntity(new StringEntity(JsonUtil.writeValueAsStringDefault(param), "UTF-8"));
                 }
 
                 HttpResponse response = httpClient.execute(httpReqBase);

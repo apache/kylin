@@ -65,7 +65,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  */
@@ -155,7 +154,7 @@ public class RestClient {
         HashMap<String, String> paraMap = new HashMap<>();
         paraMap.put("sql", sql);
         paraMap.put("project", project);
-        String jsonMsg = new ObjectMapper().writeValueAsString(paraMap);
+        String jsonMsg = JsonUtil.writeValueAsStringDefault(paraMap);
         post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
         return client.execute(post);
     }
@@ -383,7 +382,7 @@ public class RestClient {
             paraMap.put("stage", stage);
             paraMap.put("progress", progress);
             paraMap.put("updateTime", updateTime);
-            put.setEntity(new StringEntity(new ObjectMapper().writeValueAsString(paraMap), "UTF-8"));
+            put.setEntity(new StringEntity(JsonUtil.writeValueAsStringDefault(paraMap), "UTF-8"));
             response = client.execute(put);
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 String msg = EntityUtils.toString(response.getEntity());

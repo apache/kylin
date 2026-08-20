@@ -21,19 +21,16 @@ package org.apache.kylin.metadata.cube.model;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentConfig;
 import org.apache.kylin.metadata.project.NProjectManager;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.val;
 
 public class NSegmentConfigHelper {
-
-    final static ObjectMapper mapper = new ObjectMapper();
 
     public static SegmentConfig getModelSegmentConfig(String project, String model) {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -59,8 +56,8 @@ public class NSegmentConfigHelper {
         if (secondSegmentConfig == null) {
             return firstSegmentConfig;
         }
-        Map<String, Object> firstSegmentConfigMap = mapper.convertValue(firstSegmentConfig, Map.class);
-        Map<String, Object> secondSegmentConfigMap = mapper.convertValue(secondSegmentConfig, Map.class);
+        Map<String, Object> firstSegmentConfigMap = JsonUtil.convertDefault(firstSegmentConfig, Map.class);
+        Map<String, Object> secondSegmentConfigMap = JsonUtil.convertDefault(secondSegmentConfig, Map.class);
         secondSegmentConfigMap.entrySet().forEach(entry -> {
             val key = entry.getKey();
             val value = entry.getValue();
@@ -68,7 +65,7 @@ public class NSegmentConfigHelper {
                 firstSegmentConfigMap.put(key, value);
             }
         });
-        return mapper.convertValue(firstSegmentConfigMap, SegmentConfig.class);
+        return JsonUtil.convertDefault(firstSegmentConfigMap, SegmentConfig.class);
     }
 
     private static SegmentConfig getFromProject(String project, KylinConfig kylinConfig) {

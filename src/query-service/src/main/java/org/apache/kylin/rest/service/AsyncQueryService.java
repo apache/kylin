@@ -53,6 +53,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.FileSystemUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -64,8 +65,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -346,7 +345,7 @@ public class AsyncQueryService extends BasicService {
                 }
             }
         }
-        String json = new ObjectMapper().writeValueAsString(rowResults);
+        String json = JsonUtil.writeValueAsStringDefault(rowResults);
         IOUtils.copy(IOUtils.toInputStream(json), outputStream);
     }
 

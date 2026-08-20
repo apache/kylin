@@ -18,18 +18,18 @@
 
 package org.apache.kylin.cluster.parser
 
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.fasterxml.jackson.databind.JsonNode
 import org.apache.kylin.cluster.AvailableResource
+import org.apache.kylin.common.util.JsonUtil
 import org.apache.spark.internal.Logging
 
 trait SchedulerParser extends Logging {
   protected var root: JsonNode = _
-  protected lazy val mapper = new ObjectMapper
 
   def availableResource(queueName: String): AvailableResource
 
   def parse(schedulerInfo: String): Unit = {
-    this.root = mapper.readTree(schedulerInfo)
+    this.root = JsonUtil.readValueAsTreeDefault(schedulerInfo)
   }
 
   // value in some scheduler info format to "value"

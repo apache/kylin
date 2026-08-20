@@ -33,6 +33,7 @@ import org.apache.kylin.cluster.SchedulerInfoCmdHelper;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.Unsafe;
@@ -41,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.val;
 
@@ -121,7 +121,7 @@ public class KapGetClusterInfo {
                 throw new IllegalStateException(
                         "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
             }
-            clusterMetrics = new ObjectMapper().readTree(response).path("clusterMetrics");
+            clusterMetrics = JsonUtil.readValueAsTreeDefault(response).path("clusterMetrics");
         } catch (Exception e) {
             logger.warn("Attempt 1 failed to get clusterMetrics from cluster via curl command.", e);
         }
@@ -132,7 +132,7 @@ public class KapGetClusterInfo {
         }
         // attempt 2
         try {
-            clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo()).path("clusterMetrics");
+            clusterMetrics = JsonUtil.readValueAsTreeDefault(SchedulerInfoCmdHelper.metricsInfo()).path("clusterMetrics");
         } catch (IOException | RuntimeException exception) {
             logger.warn("Attempt 2 failed to get clusterMetrics from cluster via SchedulerInfoCmdHelper.", exception);
         }

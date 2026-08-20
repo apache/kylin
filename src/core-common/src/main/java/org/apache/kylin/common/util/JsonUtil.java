@@ -50,10 +50,10 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.LRUMap;
@@ -62,8 +62,9 @@ import com.fasterxml.jackson.databind.util.LookupCache;
 public class JsonUtil {
 
     // reuse the object mapper to save memory footprint
-    private static final ObjectMapper mapper = new ObjectMapper();
-    private static final ObjectMapper indentMapper = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper INDENT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
     private static final SimpleFilterProvider simpleFilterProvider = new SimpleFilterProvider()
             .setFailOnUnknownId(false);
 
@@ -75,27 +76,29 @@ public class JsonUtil {
     static {
         LookupCache<Object, JavaType> cache = new LRUMap<>(16, 2000);
         TypeFactory customTypeFactory = TypeFactory.defaultInstance().withCache(cache);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .setConfig(mapper.getSerializationConfig().withView(PersistenceView.class));
-        mapper.setFilterProvider(simpleFilterProvider);
-        mapper.setTypeFactory(customTypeFactory);
-        mapper.registerModule(new GuavaModule());
-        mapper.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
-        indentMapper.configure(SerializationFeature.INDENT_OUTPUT, true)
-                .setConfig(indentMapper.getSerializationConfig().withView(PersistenceView.class));
-        indentMapper.setFilterProvider(simpleFilterProvider);
-        indentMapper.setTypeFactory(customTypeFactory);
-        indentMapper.registerModule(new GuavaModule());
-        indentMapper.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
+                .setConfig(MAPPER.getSerializationConfig().withView(PersistenceView.class));
+        MAPPER.setFilterProvider(simpleFilterProvider);
+        MAPPER.setTypeFactory(customTypeFactory);
+        MAPPER.registerModule(new GuavaModule());
+        MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
+        INDENT_MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true)
+                .setConfig(INDENT_MAPPER.getSerializationConfig().withView(PersistenceView.class));
+        INDENT_MAPPER.setFilterProvider(simpleFilterProvider);
+        INDENT_MAPPER.setTypeFactory(customTypeFactory);
+        INDENT_MAPPER.registerModule(new GuavaModule());
+        INDENT_MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
+
+        DEFAULT_MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
     }
 
     public static ArrayNode createArrayNode() {
-        return mapper.createArrayNode();
+        return MAPPER.createArrayNode();
     }
 
     public static <T> T readValue(File src, Class<T> valueType) throws IOException {
-        return mapper.readValue(src, valueType);
+        return MAPPER.readValue(src, valueType);
     }
 
     public static <T> T readValueQuietly(File src, Class<T> valueType) {
@@ -115,65 +118,85 @@ public class JsonUtil {
     }
 
     public static <T> T readValue(String content, Class<T> valueType) throws IOException {
-        return mapper.readValue(content, valueType);
+        return MAPPER.readValue(content, valueType);
+    }
+
+    public static <T> T readValueDefault(String content, Class<T> valueType) throws IOException {
+        return DEFAULT_MAPPER.readValue(content, valueType);
     }
 
     public static <T> T readValue(Reader src, Class<T> valueType) throws IOException {
-        return mapper.readValue(src, valueType);
+        return MAPPER.readValue(src, valueType);
     }
 
     public static <T> T readValue(InputStream src, Class<T> valueType) throws IOException {
-        return mapper.readValue(src, valueType);
+        return MAPPER.readValue(src, valueType);
     }
 
     public static <T> T readValue(byte[] src, Class<T> valueType) throws IOException {
-        return mapper.readValue(src, valueType);
+        return MAPPER.readValue(src, valueType);
     }
 
     public static <T> ObjectNode valueToTree(T value) {
-        return mapper.valueToTree(value);
+        return MAPPER.valueToTree(value);
     }
 
     public static <T> T readValue(String content, TypeReference<T> valueTypeRef) throws IOException {
-        return mapper.readValue(content, valueTypeRef);
+        return MAPPER.readValue(content, valueTypeRef);
     }
 
     public static <T> T readValue(File src, TypeReference<T> valueTypeRef) throws IOException {
-        return mapper.readValue(src, valueTypeRef);
+        return MAPPER.readValue(src, valueTypeRef);
     }
 
     public static <T> T readValue(InputStream src, TypeReference<T> valueTypeRef) throws IOException {
-        return mapper.readValue(src, valueTypeRef);
+        return MAPPER.readValue(src, valueTypeRef);
     }
 
     public static Map<String, String> readValueAsMap(String content) throws IOException {
         TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
         };
-        return mapper.readValue(content, typeRef);
+        return MAPPER.readValue(content, typeRef);
     }
 
     public static Set<String> readValueAsSet(String content) throws IOException {
         TypeReference<HashSet<String>> typeRef = new TypeReference<HashSet<String>>() {
         };
-        return mapper.readValue(content, typeRef);
+        return MAPPER.readValue(content, typeRef);
     }
 
     public static List<String> readValueAsList(String content) throws IOException {
         TypeReference<ArrayList<String>> typeRef = new TypeReference<ArrayList<String>>() {
         };
-        return mapper.readValue(content, typeRef);
+        return MAPPER.readValue(content, typeRef);
     }
 
     public static JsonNode readValueAsTree(String content) throws IOException {
-        return mapper.readTree(content);
+        return MAPPER.readTree(content);
+    }
+
+    public static JsonNode readValueAsTreeDefault(String content) throws IOException {
+        return DEFAULT_MAPPER.readTree(content);
+    }
+
+    public static JsonNode readValueAsTreeDefault(byte[] content) throws IOException {
+        return DEFAULT_MAPPER.readTree(content);
+    }
+
+    public static JsonNode readValueAsTreeDefault(InputStream iso) throws IOException {
+        return DEFAULT_MAPPER.readTree(iso);
     }
 
     public static void writeValueIndent(OutputStream out, Object value) throws IOException {
-        indentMapper.writeValue(out, value);
+        INDENT_MAPPER.writeValue(out, value);
+    }
+
+    public static void writeValueIndentDefault(OutputStream out, Object value) throws IOException {
+        DEFAULT_MAPPER.writerWithDefaultPrettyPrinter().writeValue(out, value);
     }
 
     public static void writeValue(OutputStream out, Object value) throws IOException {
-        mapper.writeValue(out, value);
+        MAPPER.writeValue(out, value);
     }
 
     public static void writeValue(File out, Object value) throws IOException {
@@ -182,11 +205,15 @@ public class JsonUtil {
 
     public static <T> String writeValueAsStringForCollection(Object value, TypeReference<T> ref)
             throws JsonProcessingException {
-        return mapper.writerFor(ref).writeValueAsString(value);
+        return MAPPER.writerFor(ref).writeValueAsString(value);
     }
 
     public static String writeValueAsString(Object value) throws JsonProcessingException {
-        return mapper.writeValueAsString(value);
+        return MAPPER.writeValueAsString(value);
+    }
+
+    public static String writeValueAsStringDefault(Object value) throws JsonProcessingException {
+        return DEFAULT_MAPPER.writeValueAsString(value);
     }
 
     public static String writeValueAsStringQuietly(Object value) {
@@ -198,37 +225,41 @@ public class JsonUtil {
     }
 
     public static byte[] writeValueAsBytes(Object value) throws JsonProcessingException {
-        return mapper.writeValueAsBytes(value);
+        return MAPPER.writeValueAsBytes(value);
     }
 
     public static byte[] writeValueAsIndentBytes(Object value) throws JsonProcessingException {
-        return indentMapper.writeValueAsBytes(value);
+        return INDENT_MAPPER.writeValueAsBytes(value);
     }
 
     public static String writeValueAsIndentString(Object value) throws JsonProcessingException {
-        return indentMapper.writeValueAsString(value);
+        return INDENT_MAPPER.writeValueAsString(value);
     }
 
     public static String writeValueAsStringWithPretty(Object value) throws JsonProcessingException {
-        return indentMapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+        return INDENT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(value);
     }
 
     public static <T> T convert(Object obj, Class<T> valueType) {
-        return mapper.convertValue(obj, valueType);
+        return MAPPER.convertValue(obj, valueType);
+    }
+
+    public static <T> T convertDefault(Object obj, Class<T> valueType) {
+        return DEFAULT_MAPPER.convertValue(obj, valueType);
     }
 
     public static <T> T convert(Object obj, TypeReference<T> valueType) {
-        return mapper.convertValue(obj, valueType);
+        return MAPPER.convertValue(obj, valueType);
     }
 
     public static <T> T deepCopy(T src, Class<T> valueType) throws IOException {
-        String s = mapper.writeValueAsString(src);
-        return mapper.readValue(s, valueType);
+        String s = MAPPER.writeValueAsString(src);
+        return MAPPER.readValue(s, valueType);
     }
 
     public static <T> T deepCopy(T src, TypeReference<T> valueType) throws IOException {
-        String s = mapper.writeValueAsString(src);
-        return mapper.readValue(s, valueType);
+        String s = MAPPER.writeValueAsString(src);
+        return MAPPER.readValue(s, valueType);
     }
 
     public static <T> T deepCopyQuietly(T src, Class<T> valueType) {
@@ -249,10 +280,10 @@ public class JsonUtil {
 
     public static <T extends RootPersistentEntity> T copyForWrite(T entity, Serializer<T> serializer,
             @Nullable BiConsumer<T, String> initEntityAfterReload) {
-        if (!entity.isCachedAndShared())
+        if (!entity.isCachedAndShared()) {
             return entity;
-        else
-            return copyBySerialization(entity, serializer, initEntityAfterReload);
+        }
+        return copyBySerialization(entity, serializer, initEntityAfterReload);
     }
 
     public static <T extends RootPersistentEntity> T copyBySerialization(T entity, Serializer<T> serializer,
@@ -284,7 +315,7 @@ public class JsonUtil {
 
     public static boolean isJson(String content) {
         try {
-            mapper.readTree(content);
+            MAPPER.readTree(content);
             return true;
         } catch (IOException e) {
             return false;

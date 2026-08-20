@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.JsonUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
@@ -39,13 +39,11 @@ import lombok.SneakyThrows;
  */
 public class TimedJsonStreamParser extends AbstractDataParser<ByteBuffer> {
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     @SneakyThrows
     @Override
     protected Map<String, Object> parse(ByteBuffer input) {
         Map<String, Object> flatMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        traverseJsonNode("", mapper.readTree(input.array()), flatMap);
+        traverseJsonNode("", JsonUtil.readValueAsTreeDefault(input.array()), flatMap);
         return flatMap;
     }
 
