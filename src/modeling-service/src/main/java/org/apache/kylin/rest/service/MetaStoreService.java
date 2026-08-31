@@ -502,9 +502,9 @@ public class MetaStoreService extends BasicService {
 
     @VisibleForTesting
     public static String getModelMetadataProjectName(Map<String, RawResource> rawResourceMap) {
-        RawResource raw = rawResourceMap.values().stream()
-                .filter(rawResource -> rawResource != null && rawResource.getProject() != null
-                        && rawResource.getMetaType() == MetadataType.MODEL).findAny().orElse(null);
+        RawResource raw = rawResourceMap.values().stream().filter(rawResource -> rawResource != null
+                && rawResource.getProject() != null && rawResource.getMetaType() == MetadataType.MODEL).findAny()
+                .orElse(null);
         if (raw == null) {
             throw new KylinException(MODEL_METADATA_FILE_ERROR, MsgPicker.getMsg().getModelMetadataPackageInvalid());
         }
@@ -880,19 +880,23 @@ public class MetaStoreService extends BasicService {
 
     public void cleanupMeta(String project) {
         if (project.equals(UnitOfWork.GLOBAL_UNIT)) {
+            aclEvaluate.checkIsGlobalAdmin();
             RoutineToolHelper.cleanGlobalSourceUsage();
             RoutineToolHelper.cleanQueryHistoriesAsync().join();
         } else {
+            aclEvaluate.checkProjectAdminPermission(project);
             RoutineToolHelper.cleanMetaByProject(project);
         }
     }
 
     public void cleanupStorage(String[] projectsToClean, boolean cleanupStorage) {
+        aclEvaluate.checkIsGlobalAdmin();
         CleanTaskExecutorService.getInstance().cleanStorageForService(cleanupStorage, Arrays.asList(projectsToClean),
                 0D, 0);
     }
 
     public void cleanupStorage(StorageCleanupRequest request, HttpServletRequest servletRequest) {
+        aclEvaluate.checkIsGlobalAdmin();
         if (routeService.needRoute()) {
             String url = StringUtils.stripEnd(servletRequest.getRequestURI(), "/") + "/tenant_node";
             routeService.asyncRouteForMultiTenantMode(servletRequest, url);

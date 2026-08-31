@@ -243,8 +243,6 @@
             <scr:intercept-url pattern="/api/kg/health" access="permitAll"/>
             <scr:intercept-url pattern="/api/kg/health/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/monitor/alert" access="hasRole('ROLE_ADMIN')"/>
-            <scr:intercept-url pattern="/api/metastore/cleanup" access="permitAll"/>
-            <scr:intercept-url pattern="/api/metastore/cleanup_storage" access="permitAll"/>
             <scr:intercept-url pattern="/api/epoch" access="permitAll"/>
             <scr:intercept-url pattern="/api/broadcast/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/config/is_cloud" access="permitAll"/>

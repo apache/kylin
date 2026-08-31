@@ -88,8 +88,10 @@ import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelConfigRequest;
 import org.apache.kylin.rest.request.ModelImportRequest;
+import org.apache.kylin.rest.request.StorageCleanupRequest;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.ModelPreviewResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.After;
@@ -103,6 +105,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -1535,5 +1538,30 @@ public class MetaStoreServiceTest extends ServiceTestBase {
     public void testCleanupMeta() {
         metaStoreService.cleanupMeta(UnitOfWork.GLOBAL_UNIT);
         metaStoreService.cleanupMeta(PROJECT_DEFAULT);
+    }
+
+    @Test
+    public void testCleanupCheckPermission() {
+        Object originAclEvaluate = ReflectionTestUtils.getField(metaStoreService, "aclEvaluate");
+        AclEvaluate aclEvaluate = Mockito.mock(AclEvaluate.class);
+        ReflectionTestUtils.setField(metaStoreService, "aclEvaluate", aclEvaluate);
+        try {
+            Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate).checkIsGlobalAdmin();
+            Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                    .checkProjectAdminPermission(PROJECT_DEFAULT);
+
+            Assert.assertThrows(AccessDeniedException.class,
+                    () -> metaStoreService.cleanupMeta(UnitOfWork.GLOBAL_UNIT));
+            Assert.assertThrows(AccessDeniedException.class, () -> metaStoreService.cleanupMeta(PROJECT_DEFAULT));
+            Assert.assertThrows(AccessDeniedException.class,
+                    () -> metaStoreService.cleanupStorage(new String[] {}, false));
+            Assert.assertThrows(AccessDeniedException.class,
+                    () -> metaStoreService.cleanupStorage(new StorageCleanupRequest(), null));
+
+            Mockito.verify(aclEvaluate, Mockito.times(3)).checkIsGlobalAdmin();
+            Mockito.verify(aclEvaluate).checkProjectAdminPermission(PROJECT_DEFAULT);
+        } finally {
+            ReflectionTestUtils.setField(metaStoreService, "aclEvaluate", originAclEvaluate);
+        }
     }
 }

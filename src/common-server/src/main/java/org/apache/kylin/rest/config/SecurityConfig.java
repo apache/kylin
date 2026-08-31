@@ -74,8 +74,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/api/streaming_jobs/spark", "/api/streaming_jobs/stats",
                 "/api/streaming_jobs/dataflow/**", "/api/epoch/maintenance_mode", "/api/health", "/api/health/**",
-                "/api/prometheus", "/api/monitor/spark/prometheus", "/api/metastore/cleanup",
-                "/api/metastore/cleanup_storage", "/api/epoch", "/api/broadcast/**", "/api/config/is_cloud",
+                "/api/prometheus", "/api/monitor/spark/prometheus",
+                "/api/epoch", "/api/broadcast/**", "/api/config/is_cloud",
                 "/api/system/license/file", "/api/system/license/content", "/api/system/license/trial",
                 "/api/system/license", "/api/system/diag/progress", "/api/system/roll_event_log",
                 "/api/user/authentication*/**", "/api/query/history_queries/table_names", "/api/models/model_info",

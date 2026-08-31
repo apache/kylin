@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.resourcegroup.ResourceGroup;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.metadata.streaming.ReflectionUtils;
 import org.apache.kylin.rest.request.StorageCleanupRequest;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.garbage.PriorityExecutor;
 import org.junit.Assert;
@@ -66,6 +67,8 @@ public class MetaStoreTenantServiceTest {
     @Mock
     private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
     @Mock
+    private AclEvaluate aclEvaluate = Mockito.mock(AclEvaluate.class);
+    @Mock
     private ResourceGroupManager rgManager = Mockito.mock(ResourceGroupManager.class);
     @Mock
     private KylinConfig kylinConfig = Mockito.mock(KylinConfig.class);
@@ -80,6 +83,7 @@ public class MetaStoreTenantServiceTest {
         Mockito.when(kylinConfig.isKylinMultiTenantEnabled()).thenReturn(false);
 
         ReflectionUtils.setField(metaStoreService, "routeService", routeService);
+        ReflectionUtils.setField(metaStoreService, "aclEvaluate", aclEvaluate);
         ReflectionUtils.setField(routeService, "restTemplate", restTemplate);
 
         CleanTaskExecutorService.getInstance()
