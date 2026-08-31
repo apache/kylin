@@ -36,6 +36,7 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.DDLRequest;
 import org.apache.kylin.rest.response.DDLResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.DDLDesc;
 import org.apache.spark.sql.DdlOperation;
@@ -51,6 +52,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import scala.Option;
 
@@ -60,11 +63,13 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     private NProjectManager projectManager;
     @InjectMocks
     private final SparkSourceService sparkSourceService = Mockito.spy(new SparkSourceService());
+    private final AclEvaluate aclEvaluate = Mockito.mock(AclEvaluate.class);
     private TestingServer zkTestServer;
 
     @Before
     public void setUp() throws Exception {
         createTestMetadata();
+        ReflectionTestUtils.setField(sparkSourceService, "aclEvaluate", aclEvaluate);
         ss = SparkSession.builder().appName("local").master("local[1]")
                 .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
                 .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
@@ -313,6 +318,16 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testTableExists() {
+        Assert.assertTrue(sparkSourceService.tableExists("default", "COUNTRY"));
+    }
+
+    @Test
+    public void testCheckIsGlobalAdmin() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate).checkIsGlobalAdmin();
+        DDLRequest ddlRequest = new DDLRequest();
+        ddlRequest.setSql("show databases");
+        Assert.assertThrows(AccessDeniedException.class, () -> sparkSourceService.executeSQL(ddlRequest));
+        Assert.assertThrows(AccessDeniedException.class, () -> sparkSourceService.dropTable("default", "COUNTRY"));
         Assert.assertTrue(sparkSourceService.tableExists("default", "COUNTRY"));
     }
 }

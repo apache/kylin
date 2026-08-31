@@ -103,6 +103,7 @@ import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobUpdateRequest;
 import org.apache.kylin.rest.request.SparkJobUpdateRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -112,6 +113,7 @@ import org.apache.kylin.rest.util.SparkHistoryUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -252,6 +254,8 @@ public class JobInfoService extends BasicService implements JobSupporter {
     public List<ExecutableResponse> listJobs(final JobFilter jobFilter, int offset, int limit) {
         if (StringUtils.isNotEmpty(jobFilter.getProject())) {
             aclEvaluate.checkProjectOperationPermission(jobFilter.getProject());
+        } else {
+            aclEvaluate.checkIsGlobalAdmin();
         }
         JobMapperFilter jobMapperFilter = JobFilterUtil.getJobMapperFilter(jobFilter, offset, limit, modelService,
                 tableExtService, projectService);
@@ -289,6 +293,8 @@ public class JobInfoService extends BasicService implements JobSupporter {
     public long countJobs(final JobFilter jobFilter) {
         if (StringUtils.isNotEmpty(jobFilter.getProject())) {
             aclEvaluate.checkProjectOperationPermission(jobFilter.getProject());
+        } else {
+            aclEvaluate.checkIsGlobalAdmin();
         }
         JobMapperFilter jobMapperFilter = JobFilterUtil.getJobMapperFilter(jobFilter, 0, 0, modelService,
                 tableExtService, projectService);
@@ -446,6 +452,13 @@ public class JobInfoService extends BasicService implements JobSupporter {
 
     public void batchUpdateJobStatus(List<String> jobIds, String project, String action, List<String> filterStatuses)
             throws IOException {
+        final var executablePos = checkJobsAcl(jobIds, project, filterStatuses);
+        for (ExecutablePO executablePO : executablePos) {
+            updateJobStatus(executablePO.getId(), executablePO, executablePO.getProject(), action);
+        }
+    }
+
+    private List<ExecutablePO> checkJobsAcl(List<String> jobIds, String project, List<String> filterStatuses) {
         List<ExecutableState> filterStates = JobStatusUtil.mapJobStatusToScheduleState(filterStatuses);
         val executablePos = jobInfoDao.getExecutablePoByStatus(project, jobIds, filterStates);
         if (null == project) {
@@ -454,9 +467,18 @@ public class JobInfoService extends BasicService implements JobSupporter {
         } else {
             aclEvaluate.checkProjectOperationPermission(project);
         }
-        for (ExecutablePO executablePO : executablePos) {
-            updateJobStatus(executablePO.getId(), executablePO, executablePO.getProject(), action);
+        return executablePos;
+    }
+
+    public EnvelopeResponse<String> remoteUpdateJobStatus(JobUpdateRequest jobUpdateRequest, HttpHeaders headers,
+            Map<String, List<String>> nodeWithJobs) throws IOException {
+        checkJobsAcl(jobUpdateRequest.getJobIds(), jobUpdateRequest.getProject(), jobUpdateRequest.getStatuses());
+        for (Map.Entry<String, List<String>> entry : nodeWithJobs.entrySet()) {
+            jobUpdateRequest.setJobIds(entry.getValue());
+            forwardRequestToTargetNode(JsonUtil.writeValueAsBytes(jobUpdateRequest), headers, entry.getKey(),
+                    "/jobs/status");
         }
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
     @Transactional
@@ -1033,6 +1055,7 @@ public class JobInfoService extends BasicService implements JobSupporter {
     }
 
     public void discardJobs(String project, List<String> jobIdList) {
+        aclEvaluate.checkProjectOperationPermission(project);
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             ExecutableManager executableManager = getManager(ExecutableManager.class, project);
             jobIdList.forEach(executableManager::discardJob);

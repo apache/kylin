@@ -28,23 +28,31 @@ import org.apache.kylin.query.blacklist.SQLBlacklistManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.SQLBlacklistItemRequest;
 import org.apache.kylin.rest.request.SQLBlacklistRequest;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component("querySQLBlacklistService")
 public class QuerySQLBlacklistService extends BasicService {
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     private SQLBlacklistManager getSQLBlacklistManager() {
         return SQLBlacklistManager.getInstance(getConfig());
     }
 
     public SQLBlacklist getSqlBlacklist(String project) {
+        aclEvaluate.checkProjectWritePermission(project);
         return getSQLBlacklistManager().getSqlBlacklist(project);
     }
 
     @Transaction(project = 0)
     public SQLBlacklist saveSqlBlacklist(SQLBlacklistRequest sqlBlacklistRequest) throws IOException {
+        String project = sqlBlacklistRequest.getProject();
+        aclEvaluate.checkProjectWritePermission(project);
         SQLBlacklist sqlBlacklist = new SQLBlacklist();
-        sqlBlacklist.setProject(sqlBlacklistRequest.getProject());
+        sqlBlacklist.setProject(project);
         List<SQLBlacklistItemRequest> itemRequestList = sqlBlacklistRequest.getBlacklistItems();
         List<SQLBlacklistItem> itemList = Lists.newArrayList();
         if (null != itemRequestList) {
@@ -62,10 +70,12 @@ public class QuerySQLBlacklistService extends BasicService {
     }
 
     public SQLBlacklistItem getItemById(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest) {
+        aclEvaluate.checkProjectWritePermission(project);
         return getSQLBlacklistManager().getSqlBlacklistItemById(project, sqlBlacklistItemRequest.getId());
     }
 
     public SQLBlacklistItem getItemByRegex(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest) {
+        aclEvaluate.checkProjectWritePermission(project);
         String regex = sqlBlacklistItemRequest.getRegex();
         if (null == regex) {
             return null;
@@ -74,6 +84,7 @@ public class QuerySQLBlacklistService extends BasicService {
     }
 
     public SQLBlacklistItem getItemBySql(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest) {
+        aclEvaluate.checkProjectWritePermission(project);
         String sql = sqlBlacklistItemRequest.getSql();
         if (null == sql) {
             return null;
@@ -84,6 +95,7 @@ public class QuerySQLBlacklistService extends BasicService {
     @Transaction(project = 0)
     public SQLBlacklist addSqlBlacklistItem(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest)
             throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         SQLBlacklistItem sqlBlacklistItem = new SQLBlacklistItem();
         sqlBlacklistItem.updateRandomUuid();
         sqlBlacklistItem.setRegex(sqlBlacklistItemRequest.getRegex());
@@ -93,6 +105,7 @@ public class QuerySQLBlacklistService extends BasicService {
     }
 
     public SQLBlacklistItem checkConflictRegex(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest) {
+        aclEvaluate.checkProjectWritePermission(project);
         String itemId = sqlBlacklistItemRequest.getId();
         String regex = sqlBlacklistItemRequest.getRegex();
         SQLBlacklist sqlBlacklist = getSQLBlacklistManager().getSqlBlacklist(project);
@@ -108,6 +121,7 @@ public class QuerySQLBlacklistService extends BasicService {
     }
 
     public SQLBlacklistItem checkConflictSql(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest) {
+        aclEvaluate.checkProjectWritePermission(project);
         String itemId = sqlBlacklistItemRequest.getId();
         String sql = sqlBlacklistItemRequest.getSql();
         SQLBlacklist sqlBlacklist = getSQLBlacklistManager().getSqlBlacklist(project);
@@ -125,6 +139,7 @@ public class QuerySQLBlacklistService extends BasicService {
     @Transaction(project = 0)
     public SQLBlacklist updateSqlBlacklistItem(String project, SQLBlacklistItemRequest sqlBlacklistItemRequest)
             throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         SQLBlacklistItem sqlBlacklistItem = new SQLBlacklistItem();
         sqlBlacklistItem.setId(sqlBlacklistItemRequest.getId());
         sqlBlacklistItem.setRegex(sqlBlacklistItemRequest.getRegex());
@@ -135,11 +150,13 @@ public class QuerySQLBlacklistService extends BasicService {
 
     @Transaction(project = 0)
     public SQLBlacklist deleteSqlBlacklistItem(String project, String id) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         return getSQLBlacklistManager().deleteSqlBlacklistItem(project, id);
     }
 
     @Transaction(project = 0)
     public SQLBlacklist clearSqlBlacklist(String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         return getSQLBlacklistManager().clearBlacklist(project);
     }
 }

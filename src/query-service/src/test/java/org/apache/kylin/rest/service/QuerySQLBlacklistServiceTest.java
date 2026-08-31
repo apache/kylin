@@ -24,8 +24,13 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.rest.request.SQLBlacklistItemRequest;
 import org.apache.kylin.rest.request.SQLBlacklistRequest;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
 
@@ -33,6 +38,13 @@ import lombok.val;
 class QuerySQLBlacklistServiceTest {
 
     private final QuerySQLBlacklistService service = new QuerySQLBlacklistService();
+
+    private final AclEvaluate aclEvaluate = Mockito.mock(AclEvaluate.class);
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(service, "aclEvaluate", aclEvaluate);
+    }
 
     private SQLBlacklistRequest blacklistRequest(SQLBlacklistItemRequest... items) {
         val req = new SQLBlacklistRequest();
@@ -119,6 +131,32 @@ class QuerySQLBlacklistServiceTest {
 
         // sql
         Assertions.assertNotNull(service.checkConflictSql("default", itemRequest(id1, null, "d", 0)));
+    }
+
+    @Test
+    public void testCheckProjectWritePermission() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectWritePermission("default");
+
+        Assertions.assertThrows(AccessDeniedException.class, () -> service.getSqlBlacklist("default"));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.saveSqlBlacklist(blacklistRequest(itemRequest(null, "a", "b", 8))));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.getItemById("default", itemRequest("1", null, null, 0)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.getItemByRegex("default", itemRequest(null, "a", null, 0)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.getItemBySql("default", itemRequest(null, null, "b", 0)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.addSqlBlacklistItem("default", itemRequest(null, "a", "b", 8)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.checkConflictRegex("default", itemRequest("1", "a", null, 0)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.checkConflictSql("default", itemRequest("1", null, "b", 0)));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> service.updateSqlBlacklistItem("default", itemRequest("1", "a", "b", 8)));
+        Assertions.assertThrows(AccessDeniedException.class, () -> service.deleteSqlBlacklistItem("default", "1"));
+        Assertions.assertThrows(AccessDeniedException.class, () -> service.clearSqlBlacklist("default"));
     }
 
 }

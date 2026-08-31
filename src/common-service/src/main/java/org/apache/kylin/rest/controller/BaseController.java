@@ -79,12 +79,10 @@ import org.apache.kylin.rest.response.ErrorResponse;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.tool.restclient.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -405,11 +403,5 @@ public class BaseController {
         Set<String> targetNodes = nodeWithJobs.keySet();
         String local = AddressUtil.getLocalInstance();
         return targetNodes.size() > 1 || targetNodes.size() == 1 && !targetNodes.contains(local);
-    }
-
-    protected void forwardRequestToTargetNode(byte[] requestEntity, HttpHeaders headers, String node, String url)
-            throws IOException {
-        RestClient client = new RestClient(node);
-        client.forwardPut(requestEntity, headers, url, true);
     }
 }

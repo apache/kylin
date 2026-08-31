@@ -115,6 +115,7 @@ public class OpsController extends NBasicController {
     @GetMapping(value = "/metadata/dump")
     @ResponseBody
     public EnvelopeResponse<String> dumpMetadata(@RequestParam(value = "dump_path") String dumpPath) throws Exception {
+        getProjectStrAndCheckPermission(UnitOfWork.GLOBAL_UNIT);
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
         KylinConfig backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig

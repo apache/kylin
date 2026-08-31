@@ -176,4 +176,10 @@ public abstract class BasicService {
     public NProjectManager getProjectManager() {
         return NProjectManager.getInstance(getConfig());
     }
+
+    protected void forwardRequestToTargetNode(byte[] requestEntity, HttpHeaders headers, String node, String url)
+            throws IOException {
+        RestClient client = new RestClient(node);
+        client.forwardPut(requestEntity, headers, url, true);
+    }
 }

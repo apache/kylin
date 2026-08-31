@@ -44,6 +44,7 @@ import org.apache.kylin.rest.request.DDLRequest;
 import org.apache.kylin.rest.response.DDLResponse;
 import org.apache.kylin.rest.response.ExportTablesResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.spark.sql.AnalysisException;
@@ -60,6 +61,7 @@ import org.apache.spark.sql.catalyst.catalog.CatalogTable;
 import org.apache.spark.sql.delta.DeltaTableUtils;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -90,7 +92,11 @@ public class SparkSourceService extends BasicService {
             + "        LO_SHIPMODE,\n" + "        LO_EXTENDEDPRICE*LO_DISCOUNT as V_REVENUE\n"
             + "        from SSB.LINEORDER";
 
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
     public DDLResponse executeSQL(DDLRequest request) {
+        aclEvaluate.checkIsGlobalAdmin();
         List<String> sqlList = Arrays.asList(request.getSql().split(";"));
         if (!Strings.isNullOrEmpty(request.getDatabase())) {
             executeSQL("use " + request.getDatabase());
@@ -119,6 +125,7 @@ public class SparkSourceService extends BasicService {
     }
 
     public void dropTable(String database, String table) throws AnalysisException {
+        aclEvaluate.checkIsGlobalAdmin();
         SparkSession ss = SparderEnv.getSparkSession();
         if (ss.catalog().tableExists(database, table)) {
             val t = ss.catalog().getTable(database, table);

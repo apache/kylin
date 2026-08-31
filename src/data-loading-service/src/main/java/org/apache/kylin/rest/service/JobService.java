@@ -19,9 +19,11 @@ package org.apache.kylin.rest.service;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,9 +49,16 @@ import org.apache.kylin.job.domain.JobInfo;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.rest.JobMapperFilter;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
+import org.apache.kylin.rest.request.ReplaceMetaRequest;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.BuildAsyncProfileHelper;
+import org.apache.kylin.util.DumpInfo;
+import org.apache.kylin.util.MetadataDumpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -270,5 +279,48 @@ public class JobService extends BasicService {
             ErrorCode.setMsg("en");
             MsgPicker.setMsg("en");
         }
+    }
+
+    public void destroyJobProcess(String project) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).destroyAllProcess();
+    }
+
+    public void updateDumpedMetadata(ReplaceMetaRequest request) throws Exception {
+        String project = request.getProject();
+        aclEvaluate.checkProjectOperationPermission(project);
+        String modelId = request.getModelId();
+        String viewTable = request.getViewTable();
+        String distMetaUrl = request.getDistMetaUrl();
+
+        Set<String> dumpList = new LinkedHashSet<>();
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(modelId);
+        dumpList.addAll(df.collectPrecalculationResource());
+        dumpList.addAll(getLogicalViewMetaDumpList(config, project, viewTable, modelId));
+
+        DumpInfo dumpInfo = new DumpInfo(project, distMetaUrl, dumpList, DumpInfo.DumpType.DATA_LOADING);
+        MetadataDumpUtil.dumpMetadata(dumpInfo);
+    }
+
+    private Set<String> getLogicalViewMetaDumpList(KylinConfig config, String project, String viewTable,
+            String modelId) {
+        Set<String> dumpList = new LinkedHashSet<>();
+        if (!config.isDDLLogicalViewEnabled()) {
+            return dumpList;
+        }
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+        if (StringUtils.isNotBlank(modelId)) {
+            Set<String> viewsMeta = viewManager.findLogicalViewsInModel(project, modelId).stream()
+                    .map(LogicalView::getResourcePath).collect(Collectors.toSet());
+            dumpList.addAll(viewsMeta);
+        }
+        if (StringUtils.isNotBlank(viewTable)) {
+            LogicalView logicalView = viewManager.findLogicalViewInProject(project, viewTable);
+            if (logicalView != null) {
+                dumpList.add(logicalView.getResourcePath());
+            }
+        }
+        return dumpList;
     }
 }

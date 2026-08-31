@@ -26,13 +26,10 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_TYPE_IL
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,7 +38,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -50,10 +46,6 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.rest.JobFilter;
 import org.apache.kylin.job.util.JobContextUtil;
-import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.view.LogicalView;
-import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.request.JobErrorRequest;
 import org.apache.kylin.rest.request.JobUpdateRequest;
 import org.apache.kylin.rest.request.LoadGlutenCacheRequest;
@@ -70,8 +62,6 @@ import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
-import org.apache.kylin.util.DumpInfo;
-import org.apache.kylin.util.MetadataDumpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,7 +173,7 @@ public class JobController extends BaseController {
         Map<String, List<String>> nodeWithJobs = JobContextUtil
                 .splitJobIdsByScheduleInstance(jobUpdateRequest.getJobIds());
         if (needRouteToOtherInstance(nodeWithJobs, jobUpdateRequest.getAction())) {
-            return remoteUpdateJobStatus(jobUpdateRequest, headers, nodeWithJobs);
+            return jobInfoService.remoteUpdateJobStatus(jobUpdateRequest, headers, nodeWithJobs);
         }
         if (StringUtils.isBlank(jobUpdateRequest.getProject())
                 && CollectionUtils.isEmpty(jobUpdateRequest.getJobIds())) {
@@ -192,16 +182,6 @@ public class JobController extends BaseController {
 
         jobInfoService.batchUpdateJobStatus(jobUpdateRequest.getJobIds(), jobUpdateRequest.getProject(),
                 jobUpdateRequest.getAction(), jobUpdateRequest.getStatuses());
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
-    }
-
-    private EnvelopeResponse<String> remoteUpdateJobStatus(JobUpdateRequest jobUpdateRequest, HttpHeaders headers,
-            Map<String, List<String>> nodeWithJobs) throws IOException {
-        for (Map.Entry<String, List<String>> entry : nodeWithJobs.entrySet()) {
-            jobUpdateRequest.setJobIds(entry.getValue());
-            forwardRequestToTargetNode(JsonUtil.writeValueAsBytes(jobUpdateRequest), headers, entry.getKey(),
-                    "/jobs/status");
-        }
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
@@ -422,48 +402,15 @@ public class JobController extends BaseController {
     @ApiOperation(value = "destroyJobProcess", tags = { "DW" })
     @ResponseBody
     public void destroyJobProcess(@RequestParam("project") String project) {
-        ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).destroyAllProcess();
+        jobService.destroyJobProcess(project);
     }
 
     @PostMapping(value = "/replace_metadata")
     @ApiOperation(value = "replace_metadata", tags = { "DW" })
     @ResponseBody
     public EnvelopeResponse<String> updateDumpedMetadata(@RequestBody ReplaceMetaRequest request) throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Set<String> dumpList = new LinkedHashSet<>();
-        String project = request.getProject();
-        String modelId = request.getModelId();
-        String viewTable = request.getViewTable();
-        String distMetaUrl = request.getDistMetaUrl();
-
-        NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(modelId);
-        dumpList.addAll(df.collectPrecalculationResource());
-        dumpList.addAll(getLogicalViewMetaDumpList(config, project, viewTable, modelId));
-
-        DumpInfo dumpInfo = new DumpInfo(project, distMetaUrl, dumpList, DumpInfo.DumpType.DATA_LOADING);
-        MetadataDumpUtil.dumpMetadata(dumpInfo);
+        jobService.updateDumpedMetadata(request);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
-    }
-
-    private Set<String> getLogicalViewMetaDumpList(KylinConfig config, String project, String viewTable,
-            String modelId) {
-        Set<String> dumpList = new LinkedHashSet<>();
-        if (!config.isDDLLogicalViewEnabled()) {
-            return dumpList;
-        }
-        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
-        if (StringUtils.isNotBlank(modelId)) {
-            Set<String> viewsMeta = viewManager.findLogicalViewsInModel(project, modelId).stream()
-                    .map(LogicalView::getResourcePath).collect(Collectors.toSet());
-            dumpList.addAll(viewsMeta);
-        }
-        if (StringUtils.isNotBlank(viewTable)) {
-            LogicalView logicalView = viewManager.findLogicalViewInProject(project, viewTable);
-            if (logicalView != null) {
-                dumpList.add(logicalView.getResourcePath());
-            }
-        }
-        return dumpList;
     }
 
     @ApiOperation(value = "startProfile", tags = { "DW" }, notes = "")

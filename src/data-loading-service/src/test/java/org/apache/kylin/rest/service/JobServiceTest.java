@@ -77,6 +77,7 @@ import org.apache.kylin.metadata.table.InternalTableDesc;
 import org.apache.kylin.metadata.table.InternalTableManager;
 import org.apache.kylin.profiler.ProfilerStatus;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.ReplaceMetaRequest;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -98,6 +99,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -672,6 +674,25 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         }
 
         Mockito.when(executableManager.getAllJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(jobs);
+    }
+
+    @Test
+    public void testDestroyJobProcessCheckAcl() {
+        jobService.destroyJobProcess(project);
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(project);
+
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(project);
+        Assert.assertThrows(AccessDeniedException.class, () -> jobService.destroyJobProcess(project));
+    }
+
+    @Test
+    public void testUpdateDumpedMetadataCheckAcl() {
+        ReplaceMetaRequest request = new ReplaceMetaRequest();
+        request.setProject(project);
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(project);
+        Assert.assertThrows(AccessDeniedException.class, () -> jobService.updateDumpedMetadata(request));
     }
 
     @Test

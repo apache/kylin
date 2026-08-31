@@ -115,6 +115,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
@@ -168,6 +170,56 @@ public class JobInfoServiceTest extends LogOutputTestCase {
     public void tearDown() {
         JobContextUtil.cleanUp();
         cleanupTestMetadata();
+    }
+
+    @Test
+    public void testListJobsWithoutProjectCheckIsGlobalAdmin() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate).checkIsGlobalAdmin();
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), Lists.newArrayList(), 4, "", "", false, "", "",
+                true);
+        Assertions.assertThatThrownBy(() -> jobInfoService.listJobs(jobFilter))
+                .isInstanceOf(AccessDeniedException.class);
+        Assertions.assertThatThrownBy(() -> jobInfoService.countJobs(jobFilter))
+                .isInstanceOf(AccessDeniedException.class);
+        Mockito.verify(aclEvaluate, Mockito.times(2)).checkIsGlobalAdmin();
+    }
+
+    @Test
+    public void testDiscardJobsCheckProjectOperationPermission() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(DEFAULT_PROJECT);
+        Assertions
+                .assertThatThrownBy(
+                        () -> jobInfoService.discardJobs(DEFAULT_PROJECT, Lists.newArrayList("mock_job_id")))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    public void testRemoteUpdateJobStatusCheckAcl() throws Exception {
+        Mockito.doNothing().when(jobInfoService).forwardRequestToTargetNode(Mockito.any(), Mockito.any(),
+                Mockito.anyString(), Mockito.anyString());
+        JobUpdateRequest request = new JobUpdateRequest();
+        request.setProject(DEFAULT_PROJECT);
+        request.setJobIds(Lists.newArrayList("mock_job_id"));
+        request.setStatuses(Lists.newArrayList());
+        Map<String, List<String>> nodeWithJobs = Maps.newHashMap();
+        nodeWithJobs.put("127.0.0.1:7070", Lists.newArrayList("mock_job_id"));
+
+        val response = jobInfoService.remoteUpdateJobStatus(request, new HttpHeaders(), nodeWithJobs);
+        assertEquals(KylinException.CODE_SUCCESS, response.getCode());
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(DEFAULT_PROJECT);
+        Mockito.verify(jobInfoService).forwardRequestToTargetNode(Mockito.any(), Mockito.any(),
+                Mockito.eq("127.0.0.1:7070"), Mockito.eq("/jobs/status"));
+
+        // acl denied: no forwarding happens
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(DEFAULT_PROJECT);
+        Assertions
+                .assertThatThrownBy(() -> jobInfoService.remoteUpdateJobStatus(request, new HttpHeaders(),
+                        nodeWithJobs))
+                .isInstanceOf(AccessDeniedException.class);
+        Mockito.verify(jobInfoService, Mockito.times(1)).forwardRequestToTargetNode(Mockito.any(), Mockito.any(),
+                Mockito.anyString(), Mockito.anyString());
     }
 
     @Test

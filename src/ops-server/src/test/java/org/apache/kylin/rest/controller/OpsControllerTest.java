@@ -34,7 +34,9 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
 import org.apache.kylin.rest.service.SystemService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,6 +63,9 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private ClusterManager clusterManager;
+
+    @Mock
+    private AclEvaluate aclEvaluate;
 
     @InjectMocks
     private OpsController opsController = Mockito.spy(new OpsController());
@@ -204,6 +210,13 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(opsController).updateDiagProgress(Mockito.any());
+    }
+
+    @Test
+    public void testDumpMetadataCheckGlobalAdmin() throws Exception {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate).checkIsGlobalAdmin();
+        Assert.assertThrows(AccessDeniedException.class, () -> opsController.dumpMetadata("/tmp/dump"));
+        Mockito.verify(aclEvaluate).checkIsGlobalAdmin();
     }
 
     private String mockHost() {
