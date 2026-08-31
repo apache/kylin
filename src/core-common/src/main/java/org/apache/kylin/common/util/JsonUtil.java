@@ -46,10 +46,10 @@ import org.apache.kylin.shaded.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -57,40 +57,36 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.LRUMap;
-import com.fasterxml.jackson.databind.util.LookupCache;
 
 public class JsonUtil {
 
-    // reuse the object mapper to save memory footprint
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final ObjectMapper INDENT_MAPPER = new ObjectMapper();
-    private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
-    private static final SimpleFilterProvider simpleFilterProvider = new SimpleFilterProvider()
+    private static final SimpleFilterProvider SIMPLE_FILTER_PROVIDER = new SimpleFilterProvider()
             .setFailOnUnknownId(false);
-
+    public static final TypeFactory CUSTOM_TYPE_FACTORY = TypeFactory.defaultInstance()
+            .withCache(new LRUMap<>(16, 2000));
     // restrict classes loadable via @JsonTypeInfo(Id.CLASS) ids (Event, SegmentRange, ...)
     // to Kylin's own types, blocking deserialization gadget attacks
     public static final PolymorphicTypeValidator KYLIN_TYPE_VALIDATOR = BasicPolymorphicTypeValidator.builder()
             .allowIfSubType("org.apache.kylin.").build();
 
-    static {
-        LookupCache<Object, JavaType> cache = new LRUMap<>(16, 2000);
-        TypeFactory customTypeFactory = TypeFactory.defaultInstance().withCache(cache);
-        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .setConfig(MAPPER.getSerializationConfig().withView(PersistenceView.class));
-        MAPPER.setFilterProvider(simpleFilterProvider);
-        MAPPER.setTypeFactory(customTypeFactory);
-        MAPPER.registerModule(new GuavaModule());
-        MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
-        INDENT_MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true)
-                .setConfig(INDENT_MAPPER.getSerializationConfig().withView(PersistenceView.class));
-        INDENT_MAPPER.setFilterProvider(simpleFilterProvider);
-        INDENT_MAPPER.setTypeFactory(customTypeFactory);
-        INDENT_MAPPER.registerModule(new GuavaModule());
-        INDENT_MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
+    // reuse the object mapper to save memory footprint
+    private static final ObjectMapper MAPPER = withPersistenceView(JsonMapper.builder()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+            .filterProvider(SIMPLE_FILTER_PROVIDER).typeFactory(CUSTOM_TYPE_FACTORY).addModule(new GuavaModule())
+            .polymorphicTypeValidator(KYLIN_TYPE_VALIDATOR).build());
 
-        DEFAULT_MAPPER.setPolymorphicTypeValidator(KYLIN_TYPE_VALIDATOR);
+    private static final ObjectMapper INDENT_MAPPER = withPersistenceView(JsonMapper.builder()
+            .configure(SerializationFeature.INDENT_OUTPUT, true).filterProvider(SIMPLE_FILTER_PROVIDER)
+            .typeFactory(CUSTOM_TYPE_FACTORY).addModule(new GuavaModule())
+            .polymorphicTypeValidator(KYLIN_TYPE_VALIDATOR).build());
+
+    private static final ObjectMapper DEFAULT_MAPPER = JsonMapper.builder()
+            .polymorphicTypeValidator(KYLIN_TYPE_VALIDATOR).build();
+
+    // MapperBuilder has no active-view setter, so apply it on the built mapper
+    private static ObjectMapper withPersistenceView(ObjectMapper mapper) {
+        return mapper.setConfig(mapper.getSerializationConfig().withView(PersistenceView.class));
     }
 
     public static ArrayNode createArrayNode() {
