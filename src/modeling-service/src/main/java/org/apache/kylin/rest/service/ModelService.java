@@ -74,6 +74,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -291,7 +292,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     private static final List<String> MODEL_CONFIG_BLOCK_LIST = Lists.newArrayList("kylin.index.rule-scheduler-data");
     private static final Set<String> STRING_TYPE_SET = Sets.newHashSet("STRING", "CHAR", "VARCHAR");
     private static final DateTimeFormatter SEGMENT_AUTO_BUILD_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss",
-            Locale.ROOT);
+            Locale.ROOT).withResolverStyle(ResolverStyle.STRICT);
     //The front-end supports only the following formats
     private static final List<String> SUPPORTED_FORMATS = ImmutableList.of("ZZ", "DD", "D", "Do", "dddd", "ddd", "dd", //
             "d", "MMM", "MM", "M", "yyyy", "yy", "hh", "hh", "h", "HH", "H", "m", "mm", "ss", "s", "SSS", "SS", "S", //
@@ -3394,7 +3395,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 || StringUtils.isBlank(autoSegmentBuild.getDataRangeStartTime())
                 || StringUtils.isBlank(autoSegmentBuild.getDataRangeEndTime())
                 || autoSegmentBuild.getLogicalDateOffsetDays() == null) {
-            throw new KylinException(INVALID_PARAMETER, "Invalid auto_segment_build config.");
+            throw new KylinException(INVALID_PARAMETER,
+                    "auto_segment_build requires trigger_time, logical_date_offset_days, data_range_start_time "
+                            + "and data_range_end_time.");
         }
         if (autoSegmentBuild.getLogicalDateOffsetDays() < 1) {
             throw new KylinException(INVALID_PARAMETER, "logical_date_offset_days must be >= 1.");

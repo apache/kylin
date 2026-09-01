@@ -103,6 +103,7 @@ import lombok.var;
 @Component("modelBuildService")
 public class ModelBuildService extends AbstractModelService implements ModelBuildSupporter {
 
+    private static final String SCHEDULER_SUBMITTER = "System";
     private static final Logger logger = LoggerFactory.getLogger(ModelBuildService.class);
     @Autowired
     private ModelService modelService;
@@ -284,9 +285,8 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         return incrementBuildSegmentsInternal(params, getUsername(), true);
     }
 
-    public JobInfoResponse incrementBuildSegmentsByScheduler(IncrementBuildSegmentParams params, String submitter)
-            throws Exception {
-        return incrementBuildSegmentsInternal(params, submitter, false);
+    public JobInfoResponse incrementBuildSegmentsByScheduler(IncrementBuildSegmentParams params) throws Exception {
+        return incrementBuildSegmentsInternal(params, SCHEDULER_SUBMITTER, false);
     }
 
     private JobInfoResponse incrementBuildSegmentsInternal(IncrementBuildSegmentParams params, String submitter,

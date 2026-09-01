@@ -174,12 +174,18 @@
           </el-form-item>
           <el-form-item :label="$t('autoSegmentBuildRangeEnd')">
             <el-time-picker
+              v-if="!isAutoSegmentBuildEndOfDay"
               style="width: 180px;"
               size="small"
               format="HH:mm:ss"
               value-format="HH:mm:ss"
               v-model="modelSettingForm.autoSegmentBuild.data_range_end_time">
             </el-time-picker>
+            <el-checkbox
+              :class="{'ksd-ml-10': !isAutoSegmentBuildEndOfDay}"
+              v-model="isAutoSegmentBuildEndOfDay">
+              {{$t('autoSegmentBuildEndOfDay')}}
+            </el-checkbox>
           </el-form-item>
         </template>
         <el-form-item :label="settingMap[modelSettingForm.settingItem]" v-if="step=='stepTwo'&&modelSettingForm.settingItem.indexOf('spark.')!==-1">
@@ -340,6 +346,12 @@ export default class SettingStorage extends Vue {
     // })
     // return largestRange || ''
     return 'DAY'
+  }
+  get isAutoSegmentBuildEndOfDay () {
+    return this.modelSettingForm.autoSegmentBuild.data_range_end_time === END_OF_DAY
+  }
+  set isAutoSegmentBuildEndOfDay (isEndOfDay) {
+    this.modelSettingForm.autoSegmentBuild.data_range_end_time = isEndOfDay ? END_OF_DAY : null
   }
   validateSettingItem (rule, value, callback) {
     const autoMergeRanges = this.activeRow && this.activeRow.auto_merge_time_ranges || []

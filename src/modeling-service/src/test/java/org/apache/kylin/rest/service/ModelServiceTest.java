@@ -2794,7 +2794,7 @@ public class ModelServiceTest extends SourceTestCase {
         autoSegmentBuildConfig.setTriggerTime("01:00:00");
         autoSegmentBuildConfig.setLogicalDateOffsetDays(1);
         autoSegmentBuildConfig.setDataRangeStartTime("00:00:00");
-        autoSegmentBuildConfig.setDataRangeEndTime("24:00:00");
+        autoSegmentBuildConfig.setDataRangeEndTime(AutoSegmentBuildConfig.END_OF_DAY);
         modelConfigRequest.setAutoSegmentBuild(autoSegmentBuildConfig);
         modelService.updateModelConfig(project, model, modelConfigRequest);
 
@@ -4345,11 +4345,22 @@ public class ModelServiceTest extends SourceTestCase {
         ModelConfigRequest request = new ModelConfigRequest();
         AutoSegmentBuildConfig config = new AutoSegmentBuildConfig();
         config.setEnabled(true);
+        request.setAutoSegmentBuild(config);
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("trigger_time"));
+            Assert.assertTrue(e.getMessage().contains("logical_date_offset_days"));
+            Assert.assertTrue(e.getMessage().contains("data_range_start_time"));
+            Assert.assertTrue(e.getMessage().contains("data_range_end_time"));
+        }
+
         config.setTriggerTime("01:00:00");
         config.setLogicalDateOffsetDays(0);
         config.setDataRangeStartTime("00:00:00");
-        config.setDataRangeEndTime("24:00:00");
-        request.setAutoSegmentBuild(config);
+        config.setDataRangeEndTime(AutoSegmentBuildConfig.END_OF_DAY);
         try {
             modelService.checkModelConfigParameters(request);
             Assert.fail();
@@ -4368,7 +4379,25 @@ public class ModelServiceTest extends SourceTestCase {
             Assert.assertTrue(e.getMessage().contains("trigger_time"));
         }
 
+        config.setTriggerTime("24:00:00");
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("trigger_time"));
+        }
+
         config.setTriggerTime("01:00:00");
+        config.setDataRangeStartTime("24:00:00");
+        try {
+            modelService.checkModelConfigParameters(request);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertTrue(e.getMessage().contains("data_range_start_time"));
+        }
+
         config.setDataRangeStartTime("10:00:00");
         config.setDataRangeEndTime("09:00:00");
         try {
@@ -4378,6 +4407,10 @@ public class ModelServiceTest extends SourceTestCase {
             Assert.assertTrue(e instanceof KylinException);
             Assert.assertTrue(e.getMessage().contains("data_range_start_time"));
         }
+
+        config.setDataRangeStartTime("00:00:00");
+        config.setDataRangeEndTime(AutoSegmentBuildConfig.END_OF_DAY);
+        modelService.checkModelConfigParameters(request);
     }
 
     @Test
@@ -4388,7 +4421,7 @@ public class ModelServiceTest extends SourceTestCase {
         config.setTriggerTime("01:00:00");
         config.setLogicalDateOffsetDays(1);
         config.setDataRangeStartTime("00:00:00");
-        config.setDataRangeEndTime("24:00:00");
+        config.setDataRangeEndTime(AutoSegmentBuildConfig.END_OF_DAY);
         request.setAutoSegmentBuild(config);
 
         NDataModel streamingModel = NDataModelManager.getInstance(getTestConfig(), "streaming_test").listAllModels()

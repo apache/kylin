@@ -20,24 +20,25 @@ package org.apache.kylin.rest.scheduler;
 
 import static org.apache.kylin.metadata.model.AutoSegmentBuildConfig.END_OF_DAY;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -54,6 +55,7 @@ import org.apache.kylin.rest.service.ModelBuildService;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -63,17 +65,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AutoBuildSegmentScheduler {
-    private static final Duration INITIAL_TRIGGER_LOOKBACK = Duration.ofMinutes(1);
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
+    private static final long DEFAULT_DISPATCHER_INTERVAL_MILLIS = 30_000L;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT)
+            .withResolverStyle(ResolverStyle.STRICT);
 
     @Autowired
     @Qualifier("modelBuildService")
     private ModelBuildService modelBuildService;
 
+    @Value("${kylin.model.auto-segment-build.dispatcher-interval-ms:30000}")
+    private long dispatcherIntervalMillis = DEFAULT_DISPATCHER_INTERVAL_MILLIS;
+
     private final AtomicBoolean dispatching = new AtomicBoolean(false);
     private final AtomicReference<Instant> lastDispatchTime = new AtomicReference<>();
+    // Avoid repeating the same malformed-metadata warning on every dispatcher scan.
+    private final Cache<String, String> invalidConfigWarnings = CacheBuilder.newBuilder().maximumSize(10_000)
+            .expireAfterAccess(1, TimeUnit.DAYS).build();
 
-    @Scheduled(cron = "${kylin.model.auto-segment-build.dispatcher-cron:*/30 * * * * ?}")
+    @Scheduled(fixedDelayString = "${kylin.model.auto-segment-build.dispatcher-interval-ms:30000}")
     public void schedulerAutoBuildSegment() {
         val currentTime = Instant.now();
         if (!JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv()).getJobScheduler().isMaster()) {
@@ -97,12 +106,11 @@ public class AutoBuildSegmentScheduler {
     private Instant getPreviousDispatchTime(Instant currentTime) {
         val previousTime = lastDispatchTime.get();
         if (previousTime == null || previousTime.isAfter(currentTime)) {
-            return currentTime.minus(INITIAL_TRIGGER_LOOKBACK);
+            return currentTime.minusMillis(Math.max(1L, dispatcherIntervalMillis));
         }
         return previousTime;
     }
 
-    @VisibleForTesting
     void dispatch(Instant previousTime, Instant currentTime) {
         val systemConfig = KylinConfig.readSystemKylinConfig();
         val projectManager = NProjectManager.getInstance(systemConfig);
@@ -132,13 +140,8 @@ public class AutoBuildSegmentScheduler {
 
     private void dispatchModel(String project, NDataModel model, ZoneId zoneId, Instant previousTime,
             Instant currentTime) {
-        val autoSegmentBuild = getEligibleConfig(model);
+        val autoSegmentBuild = getEligibleConfig(project, model);
         if (autoSegmentBuild == null) {
-            return;
-        }
-        if (StringUtils.isBlank(autoSegmentBuild.getTriggerTime())) {
-            log.warn("Skip auto build segment because trigger_time is blank, project: {}, model: {}", project,
-                    model.getUuid());
             return;
         }
 
@@ -150,16 +153,77 @@ public class AutoBuildSegmentScheduler {
         submitJob(project, model, autoSegmentBuild, scheduledTime);
     }
 
-    private AutoSegmentBuildConfig getEligibleConfig(NDataModel model) {
+    private AutoSegmentBuildConfig getEligibleConfig(String project, NDataModel model) {
+        val configKey = project + "/" + model.getUuid();
         if (model.isBroken() || model.isStreaming() || model.isMultiPartitionModel()
                 || PartitionDesc.isEmptyPartitionDesc(model.getPartitionDesc()) || model.getSegmentConfig() == null) {
+            invalidConfigWarnings.invalidate(configKey);
             return null;
         }
         val autoSegmentBuild = model.getSegmentConfig().getAutoSegmentBuild();
-        return autoSegmentBuild != null && autoSegmentBuild.isEnabled() ? autoSegmentBuild : null;
+        if (autoSegmentBuild == null || !autoSegmentBuild.isEnabled()) {
+            invalidConfigWarnings.invalidate(configKey);
+            return null;
+        }
+
+        val invalidReason = getInvalidConfigReason(autoSegmentBuild);
+        if (invalidReason == null) {
+            invalidConfigWarnings.invalidate(configKey);
+            return autoSegmentBuild;
+        }
+        if (!StringUtils.equals(invalidReason, invalidConfigWarnings.getIfPresent(configKey))) {
+            log.warn("Skip auto build segment because of invalid config: {}, project: {}, model: {}", invalidReason,
+                    project, model.getUuid());
+            invalidConfigWarnings.put(configKey, invalidReason);
+        }
+        return null;
     }
 
-    @VisibleForTesting
+    private String getInvalidConfigReason(AutoSegmentBuildConfig config) {
+        List<String> missingFields = Lists.newArrayList();
+        if (StringUtils.isBlank(config.getTriggerTime())) {
+            missingFields.add("trigger_time");
+        }
+        if (config.getLogicalDateOffsetDays() == null) {
+            missingFields.add("logical_date_offset_days");
+        }
+        if (StringUtils.isBlank(config.getDataRangeStartTime())) {
+            missingFields.add("data_range_start_time");
+        }
+        if (StringUtils.isBlank(config.getDataRangeEndTime())) {
+            missingFields.add("data_range_end_time");
+        }
+        if (!missingFields.isEmpty()) {
+            return "missing required field(s): " + StringUtils.join(missingFields, ", ");
+        }
+        if (config.getLogicalDateOffsetDays() < 1) {
+            return "logical_date_offset_days must be >= 1";
+        }
+
+        try {
+            LocalTime.parse(config.getTriggerTime(), TIME_FORMATTER);
+        } catch (DateTimeParseException e) {
+            return "invalid trigger_time, expected HH:mm:ss";
+        }
+
+        Pair<LocalTime, Boolean> start;
+        Pair<LocalTime, Boolean> end;
+        try {
+            start = parseTime(config.getDataRangeStartTime(), false);
+        } catch (DateTimeParseException e) {
+            return "invalid data_range_start_time, expected HH:mm:ss";
+        }
+        try {
+            end = parseTime(config.getDataRangeEndTime(), true);
+        } catch (DateTimeParseException e) {
+            return "invalid data_range_end_time, expected HH:mm:ss or " + END_OF_DAY;
+        }
+        if (!end.getSecond() && !start.getFirst().isBefore(end.getFirst())) {
+            return "data_range_start_time must be earlier than data_range_end_time";
+        }
+        return null;
+    }
+
     ZonedDateTime getLatestScheduledTime(String triggerTime, ZoneId zoneId, Instant currentTime) {
         val localCurrentTime = currentTime.atZone(zoneId);
         val parsedTriggerTime = LocalTime.parse(triggerTime, TIME_FORMATTER);
@@ -170,7 +234,6 @@ public class AutoBuildSegmentScheduler {
         return scheduledTime;
     }
 
-    @VisibleForTesting
     void submitJob(String project, NDataModel model, AutoSegmentBuildConfig autoSegmentBuild,
             ZonedDateTime scheduledTime) {
         val modelId = model.getUuid();
@@ -196,7 +259,7 @@ public class AutoBuildSegmentScheduler {
             val endMillis = String.valueOf(endDateTime.atZone(zoneId).toInstant().toEpochMilli());
             val params = new IncrementBuildSegmentParams(project, modelId, startMillis, endMillis,
                     model.getPartitionDesc(), model.getMultiPartitionDesc(), Lists.newArrayList(), true, null);
-            modelBuildService.incrementBuildSegmentsByScheduler(params, "System");
+            modelBuildService.incrementBuildSegmentsByScheduler(params);
             log.info("Auto build segment submitted, project: {}, model: {}, scheduled time: {}, range: [{}, {})",
                     project, modelId, scheduledTime, startMillis, endMillis);
         } catch (DateTimeParseException e) {
@@ -206,7 +269,6 @@ public class AutoBuildSegmentScheduler {
         }
     }
 
-    @VisibleForTesting
     boolean hasRunningModelBuildJob(String project, String modelId) {
         // Segment and model metadata mutations are serialized with any progressing build job on the same model.
         val executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);

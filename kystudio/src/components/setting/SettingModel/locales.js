@@ -63,6 +63,7 @@ export default {
     autoSegmentBuildLogicalOffset: 'Logical Date Offset (Day)',
     autoSegmentBuildRangeStart: 'Range Start Time',
     autoSegmentBuildRangeEnd: 'Range End Time',
+    autoSegmentBuildEndOfDay: 'End of logical day (next day 00:00)',
     autoSegmentBuildTip: 'Build segment automatically every day with logical day offset and configured time range.',
     autoSegmentBuildSummary: 'Daily {trigger}, D-{offset} {start}~{end}'
   }

@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.scheduler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -59,6 +61,19 @@ class AutoBuildSegmentSchedulerTest {
                 scheduler.getLatestScheduledTime("00:00:00", zoneId, currentTime));
         assertEquals(ZonedDateTime.of(2026, 8, 12, 0, 1, 0, 0, zoneId),
                 scheduler.getLatestScheduledTime("00:01:00", zoneId, currentTime));
+        assertThrows(DateTimeParseException.class,
+                () -> scheduler.getLatestScheduledTime("24:00:00", zoneId, currentTime));
+    }
+
+    @Test
+    void testInitialLookbackUsesDispatcherInterval() {
+        val scheduler = new AutoBuildSegmentScheduler();
+        val currentTime = Instant.parse("2026-08-12T16:00:20Z");
+        ReflectionTestUtils.setField(scheduler, "dispatcherIntervalMillis", 300_000L);
+
+        Instant previousTime = ReflectionTestUtils.invokeMethod(scheduler, "getPreviousDispatchTime", currentTime);
+
+        assertEquals(currentTime.minusSeconds(300), previousTime);
     }
 
     @Test
@@ -76,8 +91,7 @@ class AutoBuildSegmentSchedulerTest {
         scheduler.dispatch(scheduledTime.minusSeconds(1).toInstant(), scheduledTime.plusSeconds(1).toInstant());
 
         val paramsCaptor = ArgumentCaptor.forClass(IncrementBuildSegmentParams.class);
-        Mockito.verify(modelBuildService).incrementBuildSegmentsByScheduler(paramsCaptor.capture(),
-                Mockito.eq("System"));
+        Mockito.verify(modelBuildService).incrementBuildSegmentsByScheduler(paramsCaptor.capture());
         val logicalDate = scheduledTime.toLocalDate().minusDays(1);
         assertEquals(String.valueOf(LocalDateTime.of(logicalDate, LocalTime.MIDNIGHT).atZone(zoneId).toInstant()
                 .toEpochMilli()), paramsCaptor.getValue().getStart());
@@ -121,6 +135,25 @@ class AutoBuildSegmentSchedulerTest {
         Mockito.verifyNoInteractions(modelBuildService);
     }
 
+    @Test
+    void testSkipIncompleteConfig() throws Exception {
+        val modelBuildService = Mockito.mock(ModelBuildService.class);
+        val scheduler = Mockito.spy(new AutoBuildSegmentScheduler());
+        ReflectionTestUtils.setField(scheduler, "modelBuildService", modelBuildService);
+        Mockito.doReturn(false).when(scheduler).hasRunningModelBuildJob(PROJECT, MODEL_ID);
+        enableAutoSegmentBuild();
+        NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT).updateDataModel(MODEL_ID,
+                copyForWrite -> copyForWrite.getSegmentConfig().getAutoSegmentBuild()
+                        .setLogicalDateOffsetDays(null));
+
+        val zoneId = ZoneId.of(NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(PROJECT)
+                .getConfig().getTimeZone());
+        val scheduledTime = ZonedDateTime.of(LocalDate.of(2026, 8, 12), LocalTime.of(1, 0), zoneId);
+        scheduler.dispatch(scheduledTime.minusSeconds(1).toInstant(), scheduledTime.plusSeconds(1).toInstant());
+
+        Mockito.verifyNoInteractions(modelBuildService);
+    }
+
     private NDataModel enableAutoSegmentBuild() {
         val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
         return modelManager.updateDataModel(MODEL_ID, copyForWrite -> {
@@ -129,7 +162,7 @@ class AutoBuildSegmentSchedulerTest {
             config.setTriggerTime("01:00:00");
             config.setLogicalDateOffsetDays(1);
             config.setDataRangeStartTime("00:00:00");
-            config.setDataRangeEndTime("24:00:00");
+            config.setDataRangeEndTime(AutoSegmentBuildConfig.END_OF_DAY);
             copyForWrite.getSegmentConfig().setAutoSegmentBuild(config);
         });
     }
