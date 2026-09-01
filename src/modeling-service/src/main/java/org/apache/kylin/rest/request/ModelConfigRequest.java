@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.RetentionRange;
 import org.apache.kylin.metadata.model.VolatileRange;
 
@@ -44,6 +45,8 @@ public class ModelConfigRequest implements ProjectInsensitiveRequest {
     private VolatileRange volatileRange;
     @JsonProperty("retention_range")
     private RetentionRange retentionRange;
+    @JsonProperty("auto_segment_build")
+    private AutoSegmentBuildConfig autoSegmentBuild;
     @JsonProperty("override_props")
     LinkedHashMap<String, String> overrideProps = Maps.newLinkedHashMap();
 }

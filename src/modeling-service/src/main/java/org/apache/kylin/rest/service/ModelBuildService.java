@@ -103,6 +103,7 @@ import lombok.var;
 @Component("modelBuildService")
 public class ModelBuildService extends AbstractModelService implements ModelBuildSupporter {
 
+    private static final String SCHEDULER_SUBMITTER = "System";
     private static final Logger logger = LoggerFactory.getLogger(ModelBuildService.class);
     @Autowired
     private ModelService modelService;
@@ -281,9 +282,20 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
 
     @Override
     public JobInfoResponse incrementBuildSegmentsManually(IncrementBuildSegmentParams params) throws Exception {
+        return incrementBuildSegmentsInternal(params, getUsername(), true);
+    }
+
+    public JobInfoResponse incrementBuildSegmentsByScheduler(IncrementBuildSegmentParams params) throws Exception {
+        return incrementBuildSegmentsInternal(params, SCHEDULER_SUBMITTER, false);
+    }
+
+    private JobInfoResponse incrementBuildSegmentsInternal(IncrementBuildSegmentParams params, String submitter,
+            boolean checkPermission) throws Exception {
         String project = params.getProject();
-        aclEvaluate.checkProjectOperationPermission(project);
-        checkModelPermission(project, params.getModelId());
+        if (checkPermission) {
+            aclEvaluate.checkProjectOperationPermission(project);
+            checkModelPermission(project, params.getModelId());
+        }
         val modelManager = getManager(NDataModelManager.class, project);
         if (PartitionDesc.isEmptyPartitionDesc(params.getPartitionDesc())) {
             throw new KylinException(EMPTY_PARTITION_COLUMN, "Partition column is null.'");
@@ -320,7 +332,7 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
                 .withTag(params.getTag());
 
         List<JobInfoResponse.JobInfo> jobIds = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            List<JobParam> paramList = createSegmentsAndJobParams(buildSegmentParams);
+            List<JobParam> paramList = createSegmentsAndJobParams(buildSegmentParams, submitter);
             return createJob(paramList);
         }, project);
 
@@ -342,6 +354,11 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
     }
 
     public List<JobParam> createSegmentsAndJobParams(IncrementBuildSegmentParams params) throws IOException {
+        return createSegmentsAndJobParams(params, getUsername());
+    }
+
+    public List<JobParam> createSegmentsAndJobParams(IncrementBuildSegmentParams params, String submitter)
+            throws IOException {
         modelService.checkModelAndIndexManually(params);
         if (CollectionUtils.isEmpty(params.getSegmentHoles())) {
             params.setSegmentHoles(Lists.newArrayList());
@@ -374,7 +391,7 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
                     .withBatchIndexIds(params.getBatchIndexIds()).withYarnQueue(params.getYarnQueue())
                     .withTag(params.getTag());
             NDataSegment segment = createSegment(relParams);
-            res.add(createJobParam(relParams, segment));
+            res.add(createJobParam(relParams, segment, submitter));
         }
         IncrementBuildSegmentParams relParams = new IncrementBuildSegmentParams(params.getProject(),
                 params.getModelId(), params.getStart(), params.getEnd(), params.getPartitionColFormat(),
@@ -386,18 +403,22 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
                 .withBatchIndexIds(params.getBatchIndexIds()).withYarnQueue(params.getYarnQueue())
                 .withTag(params.getTag());
         NDataSegment segment = createSegment(relParams);
-        res.add(createJobParam(relParams, segment));
+        res.add(createJobParam(relParams, segment, submitter));
         return res;
     }
 
     public JobParam createJobParam(IncrementBuildSegmentParams params, NDataSegment segment) {
+        return createJobParam(params, segment, getUsername());
+    }
+
+    public JobParam createJobParam(IncrementBuildSegmentParams params, NDataSegment segment, String submitter) {
         if (!params.isNeedBuild()) {
             return null;
         }
         String project = params.getProject();
         String modelId = params.getModelId();
         NDataModel dataModel = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
-        JobParam jobParam = new JobParam(segment, modelId, getUsername())
+        JobParam jobParam = new JobParam(segment, modelId, submitter)
                 .withIgnoredSnapshotTables(params.getIgnoredSnapshotTables()).withPriority(params.getPriority())
                 .withYarnQueue(params.getYarnQueue()).withTag(params.getTag()).withProject(project);
         addJobParamExtParams(jobParam, params);

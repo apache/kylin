@@ -619,6 +619,7 @@ public class OpenModelController extends NBasicController {
         modelConfigRequest.setRetentionRange(modelConfig.getRetentionRange());
         modelConfigRequest.setVolatileRange(modelConfig.getVolatileRange());
         modelConfigRequest.setAutoMergeTimeRanges(modelConfig.getAutoMergeTimeRanges());
+        modelConfigRequest.setAutoSegmentBuild(modelConfig.getAutoSegmentBuild());
         modelConfigRequest.setOverrideProps(modelConfig.getOverrideProps());
         return modelConfigRequest;
     }
