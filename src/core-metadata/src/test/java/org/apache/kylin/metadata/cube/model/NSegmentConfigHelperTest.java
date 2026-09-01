@@ -63,7 +63,7 @@ public class NSegmentConfigHelperTest extends NLocalFileMetadataTestCase {
         // 2. MODEL_BASED && model segmentConfig is not empty, get mergedSegmentConfig of project segmentConfig and model SegmentConfig
         dataModelManager.updateDataModel(model, copyForWrite -> {
             copyForWrite.setSegmentConfig(
-                    new SegmentConfig(false, Lists.newArrayList(AutoMergeTimeEnum.WEEK), null, null, false, null));
+                    new SegmentConfig(false, Lists.newArrayList(AutoMergeTimeEnum.WEEK), null, null, false, null, null));
         });
         segmentConfig = NSegmentConfigHelper.getModelSegmentConfig(DEFAULT_PROJECT, model);
         Assert.assertEquals(false, segmentConfig.getAutoMergeEnabled());

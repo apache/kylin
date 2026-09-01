@@ -115,7 +115,7 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     @Setter
     private SegmentConfig segmentConfig = new SegmentConfig(false, Lists.newArrayList(AutoMergeTimeEnum.WEEK,
             AutoMergeTimeEnum.MONTH, AutoMergeTimeEnum.QUARTER, AutoMergeTimeEnum.YEAR), new VolatileRange(),
-            new RetentionRange(), false, new AutoSegmentBuildConfig());
+            new RetentionRange(), false, new AutoSegmentBuildConfig(), false);
 
     public static ProjectInstance create(String name, String owner, String description,
             LinkedHashMap<String, String> overrideProps) {

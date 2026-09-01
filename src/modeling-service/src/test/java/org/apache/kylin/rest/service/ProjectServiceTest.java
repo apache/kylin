@@ -474,9 +474,11 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         val segmentConfigRequest = new SegmentConfigRequest();
         segmentConfigRequest.setAutoMergeEnabled(false);
         segmentConfigRequest.setAutoMergeTimeRanges(Collections.singletonList(AutoMergeTimeEnum.DAY));
+        segmentConfigRequest.setAutoSegmentBuildEnabled(true);
         projectService.updateSegmentConfig(project, segmentConfigRequest);
         response = projectService.getProjectConfig(project);
         Assert.assertFalse(response.isAutoMergeEnabled());
+        Assert.assertTrue(response.isAutoSegmentBuildEnabled());
 
         val pushDownConfigRequest = new PushDownConfigRequest();
         pushDownConfigRequest.setPushDownEnabled(false);
@@ -835,6 +837,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
         response = projectService.resetProjectConfig(PROJECT, "segment_config");
         Assert.assertFalse(response.isAutoMergeEnabled());
+        Assert.assertFalse(response.isAutoSegmentBuildEnabled());
         Assert.assertEquals(4, response.getAutoMergeTimeRanges().size());
 
         response = projectService.resetProjectConfig(PROJECT, "storage_quota_config");

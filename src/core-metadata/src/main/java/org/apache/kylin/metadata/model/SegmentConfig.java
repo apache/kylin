@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -51,6 +52,10 @@ public class SegmentConfig implements Serializable {
 
     @JsonProperty("auto_segment_build")
     private AutoSegmentBuildConfig autoSegmentBuild = new AutoSegmentBuildConfig();
+
+    @JsonProperty("auto_segment_build_enabled")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean autoSegmentBuildEnabled;
 
     public boolean canSkipAutoMerge() {
         return !autoMergeEnabled;

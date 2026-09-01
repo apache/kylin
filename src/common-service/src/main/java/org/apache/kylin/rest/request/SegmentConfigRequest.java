@@ -40,4 +40,6 @@ public class SegmentConfigRequest {
     private RetentionRange retentionRange = new RetentionRange();
     @JsonProperty("create_empty_segment_enabled")
     private Boolean createEmptySegmentEnabled = false;
+    @JsonProperty("auto_segment_build_enabled")
+    private Boolean autoSegmentBuildEnabled;
 }
