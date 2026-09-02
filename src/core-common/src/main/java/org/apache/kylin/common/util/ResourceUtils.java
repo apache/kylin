@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class ResourceUtils {
@@ -44,4 +46,9 @@ public class ResourceUtils {
         throw new IllegalStateException("Utility class");
     }
 
+    public static String getMetaStoreId() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        ResourceStore store = ResourceStore.getKylinMetaStore(kylinConfig);
+        return store.getMetaStoreUUID();
+    }
 }

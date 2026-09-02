@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common;
 
+import static org.apache.kylin.common.constant.Constants.ON_PREMISES;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -245,7 +247,7 @@ public class KapConfig {
     }
 
     public String getChannelUser() {
-        return config.getOptional("kylin.env.channel", "on-premises");
+        return config.getOptional("kylin.env.channel", ON_PREMISES);
     }
 
     public boolean isCloud() {

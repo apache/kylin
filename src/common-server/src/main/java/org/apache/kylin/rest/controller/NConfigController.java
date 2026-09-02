@@ -22,35 +22,38 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.util.Properties;
 
-import org.apache.kylin.common.KapConfig;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.service.ConfigService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import lombok.val;
 
 @Controller
 @RequestMapping(value = "/api/config", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class NConfigController extends NBasicController {
 
+    @Autowired
+    private ConfigService configService;
+
     @ApiOperation(value = "is cloud", tags = { "MID" })
     @GetMapping(value = "/is_cloud")
     @ResponseBody
     public EnvelopeResponse<Boolean> isCloud() {
-        KapConfig kapConfig = KapConfig.getInstanceFromEnv();
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, !(kapConfig.getChannelUser().equals("on-premises")),
-                "");
+        val cloud = configService.isCloud();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, cloud, "");
     }
 
     @ApiOperation(value = "fetch all", tags = { "MID" })
     @GetMapping(value = "/all")
     @ResponseBody
     public EnvelopeResponse<Properties> fetchAll() {
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                KylinConfig.getInstanceFromEnv().exportToProperties(), "");
+        val properties = configService.fetchAll();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, properties, "");
     }
 }

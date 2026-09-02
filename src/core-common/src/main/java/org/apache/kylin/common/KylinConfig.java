@@ -19,6 +19,7 @@
 package org.apache.kylin.common;
 
 import static org.apache.kylin.common.KylinExternalConfigLoader.KYLIN_CONF_PROPERTIES_FILE;
+import static org.apache.kylin.common.constant.Constants.ON_PREMISES;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -626,7 +627,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String getChannelFromProperties(Properties properties) {
-        return getOptionalFromProperties("kylin.env.channel", "on-premises", properties);
+        return getOptionalFromProperties("kylin.env.channel", ON_PREMISES, properties);
     }
 
     public String getMetadataUrlUniqueIdFromProperties(Properties properties) {

@@ -61,4 +61,6 @@ public class Constants {
     public static final String FILTER_COMMAND = "AFTER %s AS OF '%s'";
 
     public static final int MAX_FILENAME_LENGTH = 255;
+
+    public static final String ON_PREMISES = "on-premises";
 }

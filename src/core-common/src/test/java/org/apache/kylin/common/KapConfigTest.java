@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common;
 
+import static org.apache.kylin.common.constant.Constants.ON_PREMISES;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -68,7 +70,7 @@ public class KapConfigTest {
 
         map.put("getExtractionStartTimeDays", new PropertiesEntity("kylin.diag.extraction.start-time-days", "3", 3));
 
-        map.put("getChannelUser", new PropertiesEntity("kylin.env.channel", "on-premises", "on-premises"));
+        map.put("getChannelUser", new PropertiesEntity("kylin.env.channel", ON_PREMISES, ON_PREMISES));
 
         map.put("isJdbcEscapeEnabled", new PropertiesEntity("kylin.query.jdbc-escape-enabled", "true", true));
 

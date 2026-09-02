@@ -27,6 +27,7 @@ import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_USER_KEY;
+import static org.apache.kylin.common.constant.Constants.ON_PREMISES;
 import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
 
 import java.io.File;
@@ -747,7 +748,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getChannel() {
-        return getOptional("kylin.env.channel", "on-premises");
+        return getOptional("kylin.env.channel", ON_PREMISES);
     }
 
     public boolean isServerHttpsEnabled() {
@@ -3321,6 +3322,17 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metadata.random-admin-password.enabled", TRUE));
     }
 
+    public boolean isRandomEncryptKeyEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.random-encrypt-key.enabled", FALSE));
+    }
+
+    /**
+     * true: AES/GCM/NoPadding, false: legacy AES/ECB/PKCS5Padding. Decryption accepts both regardless.
+     */
+    public boolean isGcmEncryptEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.gcm-encrypt.enabled", FALSE));
+    }
+
     public long getCatchUpInterval() {
         return TimeUtil.timeStringAs(getOptional("kylin.metadata.audit-log.catchup-interval", "5s"), TimeUnit.SECONDS);
     }
@@ -4551,14 +4563,14 @@ public abstract class KylinConfigBase implements Serializable {
         if (!whiteListSchemes.contains(scheme)) {
             return Collections.emptySet();
         }
-        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
-                "kylin.source.jdbc.white-list.%s.url-param-keys", scheme), ""));
+        String config = StringUtils.deleteWhitespace(
+                getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.url-param-keys", scheme), ""));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
         return Sets.newHashSet(config.split(","));
     }
-    
+
     public boolean isForcedToPushDown() {
         return Boolean.parseBoolean(getOptional("kylin.query.pushdown-force", FALSE));
     }

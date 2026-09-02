@@ -18,31 +18,35 @@
 
 package org.apache.kylin.tool.general;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import lombok.val;
 
+@MetadataInfo(onlyProps = true)
 public class CryptToolTest {
     private final PrintStream systemOut = System.out;
     private ByteArrayOutputStream output;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         output = new ByteArrayOutputStream();
         System.setOut(new PrintStream(output, false, Charset.defaultCharset().name()));
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         System.setOut(systemOut);
     }
@@ -51,14 +55,14 @@ public class CryptToolTest {
     public void testAES() throws UnsupportedEncodingException {
         val tool = new CryptTool();
         tool.execute(new String[] { "-e", "AES", "-s", "secret" });
-        Assert.assertEquals("x0vzfDV1ZQ7ME4M/dO4bCw==\n", output.toString(Charset.defaultCharset().name()));
+        assertEquals("x0vzfDV1ZQ7ME4M/dO4bCw==\n", output.toString(Charset.defaultCharset().name()));
     }
 
     @Test
     public void testBCrypt() throws UnsupportedEncodingException {
         val tool = new CryptTool();
         tool.execute(new String[] { "-e", "BCrypt", "-s", "secret" });
-        Assert.assertTrue(new BCryptPasswordEncoder().matches("secret",
+        assertTrue(new BCryptPasswordEncoder().matches("secret",
                 StringUtils.chomp(output.toString(Charset.defaultCharset().name()))));
     }
 }

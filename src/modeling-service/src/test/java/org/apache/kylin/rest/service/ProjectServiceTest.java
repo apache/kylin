@@ -957,8 +957,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
                 project.getOverrideKylinProps().get("kylin.query.pushdown.partition-check.runner-class-name"));
         Assert.assertEquals("org.apache.kylin.source.jdbc.DefaultSourceConnector",
                 project.getOverrideKylinProps().get("kylin.source.jdbc.connector-class-name"));
-        Assert.assertEquals("ENC('YeqVr9MakSFbgxEec9sBwg==')",
-                project.getOverrideKylinProps().get("kylin.source.jdbc.pass"));
+        Assert.assertEquals("kylin",
+                EncryptUtil.getDecryptedValue(project.getOverrideKylinProps().get("kylin.source.jdbc.pass")));
 
         Mockito.doReturn(Mockito.mock(UserDetails.class)).when(userService).loadUserByUsername(Mockito.anyString());
         Mockito.doReturn(true).when(userService).isGlobalAdmin(Mockito.any(UserDetails.class));
@@ -1007,8 +1007,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         projectService.updateJdbcInfo(PROJECT_JDBC, jdbcSourceInfoRequest);
 
         project = NProjectManager.getInstance(getTestConfig()).getProject(PROJECT_JDBC);
-        Assert.assertEquals(EncryptUtil.encryptWithPrefix("test"),
-                project.getOverrideKylinProps().get(KYLIN_SOURCE_JDBC_PASS_KEY));
+        Assert.assertEquals("test", EncryptUtil
+                .getDecryptedValue(project.getOverrideKylinProps().get(KYLIN_SOURCE_JDBC_PASS_KEY)));
     }
 
     @Test

@@ -686,6 +686,8 @@ class KylinConfigBaseTest {
 
         map.put("getRandomAdminPasswordEnabled",
                 new PropertiesEntity("kylin.metadata.random-admin-password.enabled", "true", true));
+        map.put("isRandomEncryptKeyEnabled", new PropertiesEntity("kylin.random-encrypt-key.enabled", "false", false));
+        map.put("isGcmEncryptEnabled", new PropertiesEntity("kylin.gcm-encrypt.enabled", "false", false));
         map.put("getCatchUpInterval", new PropertiesEntity("kylin.metadata.audit-log.catchup-interval", "5s", 5L));
         map.put("isSessionSecureRandomCreateEnabled",
                 new PropertiesEntity("kylin.web.session.secure-random-create-enabled", "false", false));

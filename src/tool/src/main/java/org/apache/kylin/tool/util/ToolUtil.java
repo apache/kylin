@@ -35,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -108,12 +107,6 @@ public class ToolUtil {
     public static String getHadoopConfFolder() {
         final String HADOOP_CONF = "hadoop_conf";
         return getKylinHome() + File.separator + HADOOP_CONF;
-    }
-
-    public static String getMetaStoreId() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        ResourceStore store = ResourceStore.getKylinMetaStore(kylinConfig);
-        return store.getMetaStoreUUID();
     }
 
     public static String getHostName() {

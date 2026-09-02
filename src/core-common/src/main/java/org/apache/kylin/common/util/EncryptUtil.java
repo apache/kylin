@@ -18,14 +18,21 @@
 
 package org.apache.kylin.common.util;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,30 +52,94 @@ public class EncryptUtil {
         return StringUtils.isNotEmpty(value) && value.startsWith(ENC_PREFIX) && value.endsWith(ENC_SUBFIX);
     }
 
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_BITS = 128;
+
     public static String encrypt(String strToEncrypt) {
+        if (KylinConfig.readSystemKylinConfig().isGcmEncryptEnabled()) {
+            return encryptGcm(strToEncrypt);
+        }
+        return encryptEcb(strToEncrypt);
+    }
+
+    private static String encryptGcm(String strToEncrypt) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            return Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes(Charset.defaultCharset())));
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            new SecureRandom().nextBytes(iv);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(gcmKey(), "AES"),
+                    new GCMParameterSpec(GCM_TAG_BITS, iv));
+            byte[] encrypted = cipher.doFinal(strToEncrypt.getBytes(Charset.defaultCharset()));
+            return Base64.encodeBase64String(
+                    ByteBuffer.allocate(iv.length + encrypted.length).put(iv).put(encrypted).array());
         } catch (Exception e) {
+            log.error("Encrypt gcm failed: {}", e.getMessage(), e);
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
+    private static String encryptEcb(String strToEncrypt) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, ecbKey());
+            return Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes(Charset.defaultCharset())));
+        } catch (Exception e) {
+            log.error("Encrypt ecb failed: {}", e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * AES-256 key derived from the key material, so a 36-char metastore UUID is a legal key length too.
+     */
+    private static byte[] gcmKey() {
+        val config = KylinConfig.readSystemKylinConfig();
+        if (config.isRandomEncryptKeyEnabled()) {
+            return DigestUtils.sha256(ResourceUtils.getMetaStoreId());
+        }
+        return DigestUtils.sha256(key);
+    }
+
     public static String encryptWithPrefix(String value) {
+        if (isEncrypted(value)) {
+            return value;
+        }
         return ENC_PREFIX + encrypt(value) + ENC_SUBFIX;
     }
 
     public static String decrypt(String strToDecrypt) {
+        byte[] raw = Base64.decodeBase64(strToDecrypt);
+        try {
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(gcmKey(), "AES"),
+                    new GCMParameterSpec(GCM_TAG_BITS, raw, 0, GCM_IV_LENGTH));
+            return new String(cipher.doFinal(raw, GCM_IV_LENGTH, raw.length - GCM_IV_LENGTH), Charset.defaultCharset());
+        } catch (Exception e) {
+            log.error("Decrypt gcm failed: {}", e.getMessage(), e);
+            return decryptLegacyEcb(raw);
+        }
+    }
+
+    /**
+     * Values encrypted before the switch to AES/GCM (e.g. passwords already in kylin.properties) are still ECB.
+     */
+    private static String decryptLegacyEcb(byte[] raw) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
-            final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            return new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)), Charset.defaultCharset());
+            cipher.init(Cipher.DECRYPT_MODE, ecbKey());
+            return new String(cipher.doFinal(raw), Charset.defaultCharset());
         } catch (Exception e) {
+            log.error("Decrypt legacy ecb failed: {}", e.getMessage(), e);
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    /** AES-128, so ciphertext written by older versions with the built-in key stays readable. */
+    private static SecretKeySpec ecbKey() {
+        byte[] material = KylinConfig.readSystemKylinConfig().isRandomEncryptKeyEnabled()
+                ? Arrays.copyOf(gcmKey(), key.length)
+                : key;
+        return new SecretKeySpec(material, "AES");
     }
 
     public static String decryptPassInKylin(String value) {
