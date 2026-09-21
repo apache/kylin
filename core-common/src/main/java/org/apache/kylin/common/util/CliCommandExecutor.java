@@ -58,10 +58,11 @@ public class CliCommandExecutor {
     }
 
     public void copyFile(String localFile, String destDir) throws IOException {
-        if (remoteHost == null)
+        if (remoteHost == null) {
             copyNative(localFile, destDir);
-        else
+        } else {
             copyRemote(localFile, destDir);
+        }
     }
 
     private void copyNative(String localFile, String destDir) throws IOException {
@@ -93,11 +94,12 @@ public class CliCommandExecutor {
             r = runRemoteCommand(command, logAppender);
         }
 
-        if (r.getFirst() != 0)
-            throw new IOException("OS command error exit with return code: " + r.getFirst() //
+        if (r.getFirst() != 0) {
+            throw new IOException("OS command error exit with return code: " + r.getFirst()
                     + ", error message: " + r.getSecond() + "The command is: \n" + command
-                    + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")") //
+                    + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")")
             );
+        }
 
         return r;
     }
@@ -143,9 +145,10 @@ public class CliCommandExecutor {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
             String line;
-            StringBuilder result = new StringBuilder();
+            // keep only the last 10k logs, to avoid cause job server oom.
+            RingBuffer ringBuffer = RingBuffer.allocate(10240);
             while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
-                result.append(line).append('\n');
+                ringBuffer.put((line + '\n').getBytes(StandardCharsets.UTF_8));
                 if (logAppender != null) {
                     logAppender.log(line);
                 }
@@ -164,7 +167,7 @@ public class CliCommandExecutor {
 
             try {
                 int exitCode = proc.waitFor();
-                return Pair.newPair(exitCode, result.toString());
+                return Pair.newPair(exitCode, new String(ringBuffer.get(), StandardCharsets.UTF_8));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException(e);

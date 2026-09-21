@@ -37,6 +37,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
+import java.util.Objects;
+
 /**
  * @author yangli9
  * 
@@ -92,11 +94,11 @@ public class RowKeyColDesc implements java.io.Serializable {
         if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName) && cubeDesc.getConfig().isRowKeyEncodingAutoConvert()) {
             if (type.isDate()) {
                 encoding = encodingName = DateDimEnc.ENCODING_NAME;
-                logger.info("Implicitly convert encoding to {}", encodingName);
+                logger.debug("Implicitly convert encoding to {}", encodingName);
             }
             if (type.isTimeFamily()) {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
-                logger.info("Implicitly convert encoding to {}", encodingName);
+                logger.debug("Implicitly convert encoding to {}", encodingName);
             }
         }
 
@@ -191,7 +193,7 @@ public class RowKeyColDesc implements java.io.Serializable {
 
         RowKeyColDesc that = (RowKeyColDesc) o;
 
-        if (column != null ? !column.equals(that.column) : that.column != null) {
+        if (!Objects.equals(column, that.column)) {
             return false;
         }
 

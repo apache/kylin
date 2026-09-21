@@ -24,6 +24,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -787,7 +788,7 @@ abstract public class ResourceStore {
             boolean loadContent, Visitor visitor) throws IOException;
 
     public static String dumpResources(KylinConfig kylinConfig, Collection<String> dumpList) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
+        File tmp = Files.createTempFile("kylin_job_meta", "").toFile();
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
         File metaDir = new File(tmp, "meta");

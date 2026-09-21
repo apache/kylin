@@ -25,6 +25,7 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.common.util.VersionUtil;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +44,14 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
@@ -65,13 +71,15 @@ public class KylinConfig extends KylinConfigBase {
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
-    private static KylinConfig SYS_ENV_INSTANCE = null;
+    private static volatile KylinConfig SYS_ENV_INSTANCE = null;
 
     // static default Ordered Properties, only need load from classpath once
     private static OrderedProperties defaultOrderedProperties = new OrderedProperties();
 
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient InternalThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
+
+    public static final Set<String> BLACK_LIST = new LinkedHashSet<>(ImmutableList.of("kylin.metadata.url", "password"));
 
     static {
         /*
@@ -91,7 +99,6 @@ public class KylinConfig extends KylinConfigBase {
         System.setProperty("saffron.default.charset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
-
     }
 
     public static File getKylinHomeAtBestEffort() {
@@ -134,38 +141,40 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static KylinConfig getInstanceFromEnv(boolean allowConfigFileNoExist) {
-        synchronized (KylinConfig.class) {
-            KylinConfig config = THREAD_ENV_INSTANCE.get();
-            if (config != null) {
-                return config;
-            }
+        KylinConfig config = THREAD_ENV_INSTANCE.get();
+        if (config != null) {
+            return config;
+        }
 
-            if (SYS_ENV_INSTANCE == null) {
-                try {
-                    //build default ordered properties will only be called once.
-                    //This logic no need called by CoProcessor due to it didn't call getInstanceFromEnv.
-                    buildDefaultOrderedProperties();
-
-                    config = new KylinConfig();
+        if (SYS_ENV_INSTANCE == null) {
+            synchronized (KylinConfig.class) {
+                if (SYS_ENV_INSTANCE == null) {
                     try {
-                        config.reloadKylinConfig(buildSiteProperties());
-                    } catch (KylinConfigCannotInitException e) {
-                        logger.info("Kylin Config Can not Init Exception");
-                        if (!allowConfigFileNoExist) {
-                            throw e;
-                        }
-                    }
+                        //build default ordered properties will only be called once.
+                        //This logic no need called by CoProcessor due to it didn't call getInstanceFromEnv.
+                        buildDefaultOrderedProperties();
 
-                    VersionUtil.loadKylinVersion();
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
-                            + System.identityHashCode(config));
-                    SYS_ENV_INSTANCE = config;
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalStateException("Failed to find KylinConfig ", e);
+                        config = new KylinConfig();
+                        try {
+                            config.reloadKylinConfig(buildSiteProperties());
+                        } catch (KylinConfigCannotInitException e) {
+                            logger.info("Kylin Config Can not Init Exception");
+                            if (!allowConfigFileNoExist) {
+                                throw e;
+                            }
+                        }
+
+                        VersionUtil.loadKylinVersion();
+                        logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
+                                + System.identityHashCode(config));
+                        SYS_ENV_INSTANCE = config;
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalStateException("Failed to find KylinConfig ", e);
+                    }
                 }
             }
-            return SYS_ENV_INSTANCE;
         }
+        return SYS_ENV_INSTANCE;
     }
 
     public static KylinConfig getInstanceFromEnv() {
@@ -538,7 +547,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String exportAllToString() {
-        final Properties allProps = getProperties(null);
+        final Properties allProps = getAllProperties();
         final OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
@@ -546,7 +555,7 @@ public class KylinConfig extends KylinConfigBase {
             String value = entry.getValue().toString();
             orderedProperties.setProperty(key, value);
         }
-        // Reset some properties which might be overriden by system properties
+        // Reset some properties which might be overridden by system properties
         String[] systemProps = { "kylin.server.cluster-servers", "kylin.server.cluster-servers-with-mode" };
         for (String sysProp : systemProps) {
             String sysPropValue = System.getProperty(sysProp);
@@ -555,12 +564,18 @@ public class KylinConfig extends KylinConfigBase {
             }
         }
 
+        // filter out sensitive entries according to a black list
+        List<Pattern> patterns = BLACK_LIST.stream().map(ptn -> Pattern.compile(ptn)).collect(Collectors.toList());
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+            String k = entry.getKey();
+            String v = entry.getValue();
+            long blackHits = patterns.stream().filter(ptn -> ptn.matcher(k).find() || ptn.matcher(v).find()).count();
+            if (blackHits == 0) {
+                sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+            }
         }
         return sb.toString();
-
     }
 
     public String exportToString(Collection<String> propertyKeys) {

@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
@@ -130,7 +131,7 @@ public class FileResourceStore extends ResourceStore {
         if (--failPutResourceCountDown == 0)
             throw new IOException("for test");
 
-        File tmp = File.createTempFile("kylin-fileresource-", ".tmp");
+        File tmp = Files.createTempFile("kylin-fileresource-", ".tmp").toFile();
         try {
 
             try (FileOutputStream out = new FileOutputStream(tmp); DataOutputStream dout = new DataOutputStream(out)) {

@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -93,7 +94,7 @@ public class H2Database {
         File tempFile = null;
 
         try {
-            tempFile = File.createTempFile("tmp_h2", ".csv");
+            tempFile = Files.createTempFile("tmp_h2", ".csv").toFile();
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String path = path(tableDesc);
             InputStream csvStream = metaMgr.getStore().getResource(path).content();

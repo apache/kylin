@@ -30,9 +30,12 @@ public class SparkSubmitter {
     public static final Logger logger = LoggerFactory.getLogger(SparkSubmitter.class);
 
     public static PushdownResponse submitPushDownTask(String sql) {
-        Pair<List<List<String>>, List<StructField>> pair =
-                SparkSqlClient.executeSql(SparderContext.getSparkSession(), sql);
-        SparderContext.closeThreadSparkSession();
+        Pair<List<List<String>>, List<StructField>> pair = null;
+        try {
+            pair = SparkSqlClient.executeSql(SparderContext.getSparkSession(), sql);
+        } finally {
+            SparderContext.closeThreadSparkSession();
+        }
         return new PushdownResponse(pair.getSecond(), pair.getFirst());
     }
 

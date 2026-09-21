@@ -190,7 +190,6 @@ object ResultPlan extends Logging {
           }
       }
     SparderContext.cleanQueryInfo()
-    SparderContext.closeThreadSparkSession()
     result
   }
 }

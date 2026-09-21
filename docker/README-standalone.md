@@ -18,7 +18,7 @@ We have pushed the Kylin images to the [docker hub](https://hub.docker.com/r/apa
 docker pull apachekylin/apache-kylin-standalone:4.0.0
 ```
 
-After the pull is successful, execute "sh run_container.sh" or the following command to start the container:
+After the pull is successful, execute "sh setup_standalone.sh" or the following command to start the container:
 
 ```
 docker run -d \
@@ -59,7 +59,7 @@ SPARK_HOME=/home/admin/spark-2.4.7-bin-hadoop2.7
 HIVE_HOME=/home/admin/apache-hive-1.2.1-bin
 ```
 
-After about 1 to 2 minutes, all the services should be started. At the Kylin login page (http://127.0.0.1:7070/kylin), enter ADMIN:KYLIN to login, select the "learn_kylin" project. In the "Model" tab, you should be able to see two sample cubes: "kylin_sales_cube" and "kylin_streaming_cube". If they don't appear, go to the "System" tab, and then click "Reload metadata", they should be loaded.
+After about 1 to 2 minutes, all the services should be started. At the Kylin login page (http://127.0.0.1:7070/kylin), enter ADMIN:KYLIN to login, select the "default" project. In the "Model" tab, you should be able to see two sample cubes: "kylin_sales_cube" and "kylin_streaming_cube". If they don't appear, go to the "System" tab, and then click "Reload metadata", they should be loaded.
 
 In the "Model" tab, you can click "Build" to build the two sample cubes. After the cubes be built, try some queries in the "Insight" tab.
 
@@ -68,8 +68,8 @@ If you want to login into the Docker container, run "docker exec -it apache-kyli
 ```
 > docker exec -it apache-kylin-standalone bash
 [root@c15d10ff6bf1 admin]# ls
-apache-hive-1.2.1-bin                  apache-maven-3.6.1  first_run     hbase-1.1.2   kafka_2.11-1.1.1
-apache-kylin-3.0.0-alpha2-bin-hbase1x  entrypoint.sh       hadoop-2.7.0  jdk1.8.0_141  spark-2.3.1-bin-hadoop2.6
+apache-hive-1.2.1-bin          apache-maven-3.6.1  first_run     jdk1.8.0_141      mysql80-community-release-el7-3.noarch.rpm  zookeeper-3.4.6
+apache-kylin-4.0.0-bin-spark2  entrypoint.sh       hadoop-2.8.5  kafka_2.11-1.1.1  spark-2.4.7-bin-hadoop2.7
 ```
 
 Or you can run "docker ps" to get the container id:
@@ -95,7 +95,6 @@ You can build the docker image by yourself with the provided Dockerfile. Here we
 
 - Dockerfile_hadoop: build a Hadoop image with Hadoop/Hive/HBase/Spark/Kafka and other components installed;
 - Dockerfile: based on the Hadoop image, download Kylin from apache website and then start all services.
-- Dockerfile_dev: similar with "Dockerfile", instead of downloading the released version, it copies local built Kylin package to the image.
 
 Others:
 - conf/: the Hadoop/HBase/Hive/Maven configuration files for this docker; Will copy them into the image on 'docker build';
@@ -104,7 +103,7 @@ Others:
 The build is very simple:
 
 ```
-./build_image.sh
+./build_standalone_image.sh
 ```
 The script will build the Hadoop image first, and then build Kylin image based on it. Depends on the network bandwidth, the first time may take a while.
 
@@ -115,20 +114,13 @@ You can customize these scripts and Dockerfile to make your image.
 For example, if you made some code change in Kylin, you can make a new binary package in local with:
 
 ```
-./build/scripts/package.sh
+../build/scripts/package.sh
 ```
 
 The new package is generated in "dist/" folder; Copy it to the "docker" folder:
 
 ```
-cp ./dist/apache-kylin-3.1.0-SNAPSHOT-bin.tar.gz ./docker
-```
-
-Use the "Dockerfile_dev" file customized by yourself to build:
-
-```
-docker build -f Dockerfile_dev -t apache-kylin-standalone:test .
-
+cp ../dist/apache-kylin-3.1.0-SNAPSHOT-bin.tar.gz ../docker
 ```
 
 ## Build Docker image for your Hadoop environment
@@ -136,8 +128,8 @@ docker build -f Dockerfile_dev -t apache-kylin-standalone:test .
 You can run Kylin in Docker with your Hadoop cluster. In this case, you need to build a customized image:
 
 - Use the same version Hadoop components as your cluster;
-- Use your cluster's configuration files (copy to conf/);
-- Modify the "entrypoint.sh", only start Kylin, no need to start other Hadoop services;
+- Use your cluster's configuration files (copy to ./dockerfile/standalone/conf/);
+- Modify the "./dockerfile/standalone/entrypoint.sh", only start Kylin, no need to start other Hadoop services;
 
 
 ## Container resource recommendation

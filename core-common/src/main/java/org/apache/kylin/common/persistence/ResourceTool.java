@@ -70,8 +70,9 @@ public class ResourceTool {
             tool.addExcludes(exclude.split("\\s*,\\s*"));
         }
         String group = System.getProperty("group");
-        if (group != null)
+        if (group != null) {
             tool.parallelCopyGroupSize = Integer.parseInt(group);
+        }
 
         tool.addExcludes(IMMUTABLE_PREFIX.toArray(new String[IMMUTABLE_PREFIX.size()]));
 
@@ -151,8 +152,9 @@ public class ResourceTool {
 
     private void copyParallel(KylinConfig from, KylinConfig to, String folder) throws IOException {
         ResourceParallelCopier copier = new ResourceParallelCopier(ResourceStore.getStore(from), ResourceStore.getStore(to));
-        if (parallelCopyGroupSize > 0)
+        if (parallelCopyGroupSize > 0) {
             copier.setGroupSize(parallelCopyGroupSize);
+        }
 
         Stats stats = copier.copy(folder, includes, excludes, new Stats() {
 
@@ -178,10 +180,12 @@ public class ResourceTool {
         });
 
         if (stats.hasError()) {
-            for (String errGroup : stats.errorGroups)
+            for (String errGroup : stats.errorGroups) {
                 System.out.println("Failed to copy resource group: " + errGroup + "*");
-            for (String errResPath : stats.errorResourcePaths)
+            }
+            for (String errResPath : stats.errorResourcePaths) {
                 System.out.println("Failed to copy resource: " + errResPath);
+            }
             throw new IOException("Failed to copy " + stats.errorResource.get() + " resource");
         }
     }

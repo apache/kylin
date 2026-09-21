@@ -75,17 +75,17 @@ public class FactTableRealizationSetCalculator extends RealizationSetCalculator 
 
     private String getRootFactTableForRealization(IRealization realization) {
         if (realization == null) {
-            logger.warn("Cannot find realization %s", realization);
+            logger.warn("Cannot find realization {}", realization);
             return null;
         }
         DataModelDesc model = realization.getModel();
         if (model == null) {
-            logger.warn("The model for realization %s is null", realization.getName());
+            logger.warn("The model for realization {} is null", realization.getName());
             return null;
         }
         TableRef rootFactTable = model.getRootFactTable();
         if (rootFactTable == null) {
-            logger.warn("The root table for model %s is null", model.getName());
+            logger.warn("The root table for model {} is null", model.getName());
             return null;
         }
         return rootFactTable.getTableIdentity();

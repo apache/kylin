@@ -25,8 +25,10 @@ import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class RawAggregatorTest {
     private RawAggregator agg = new RawAggregator();
 

@@ -397,8 +397,7 @@ public class NSparkExecutable extends AbstractExecutable {
                                       String appArgs) {
         StringBuilder sb = new StringBuilder();
 
-        String sparkSubmitCmd = config.getSparkSubmitCmd() != null ?
-                config.getSparkSubmitCmd() : KylinConfig.getSparkHome() + "/bin/spark-submit";
+        String sparkSubmitCmd = KylinConfig.getSparkHome() + "/bin/spark-submit";
         sb.append("export HADOOP_CONF_DIR=%s && %s --class org.apache.kylin.engine.spark.application.SparkEntry ");
 
         Map<String, String> sparkConfs = getSparkConfigOverride(config);

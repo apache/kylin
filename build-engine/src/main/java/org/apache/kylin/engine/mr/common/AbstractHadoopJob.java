@@ -29,6 +29,7 @@ import static org.apache.kylin.engine.mr.common.JobRelatedMetaUtil.collectCubeMe
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -89,7 +90,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             .isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)")
             .create(BatchConstants.ARG_JOB_NAME);
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg()
-            .isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube")
+            .isRequired(true).withDescription("Cube name. For example, flat_item_cube")
             .create(BatchConstants.ARG_CUBE_NAME);
     protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID)
             .hasArg().isRequired(false).withDescription("ID of cubing job executable")
@@ -127,7 +128,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_NEED_UPDATE_BASE_CUBOID_SHARD = OptionBuilder
             .withArgName(BatchConstants.ARG_UPDATE_SHARD).hasArg().isRequired(false)
             .withDescription("If need to update base cuboid shard").create(BatchConstants.ARG_UPDATE_SHARD);
-    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_TABLE_NAME).hasArg().isRequired(true).withDescription("Table name. For exmaple, default.table1").create(BatchConstants.ARG_TABLE_NAME);
+    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_TABLE_NAME).hasArg().isRequired(true).withDescription("Table name. For example, default.table1").create(BatchConstants.ARG_TABLE_NAME);
     protected static final Option OPTION_LOOKUP_SNAPSHOT_ID = OptionBuilder.withArgName(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID).hasArg()
             .isRequired(true).withDescription("Lookup table snapshotID")
             .create(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID);
@@ -595,7 +596,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig,
             Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
+        File tmp = Files.createTempFile("kylin_job_meta", "").toFile();
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
         File metaDir = new File(tmp, "meta");

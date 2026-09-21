@@ -2107,14 +2107,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getFileName(kylinHome + File.separator + "lib", PARQUET_JOB_JAR_NAME_PATTERN);
     }
 
-    /**
-     * Use https://github.com/spektom/spark-flamegraph for Spark profile
-     */
-    @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
-    public String getSparkSubmitCmd() {
-        return getOptional("kylin.engine.spark-cmd", null);
-    }
-
     public void overrideKylinParquetJobJarPath(String path) {
         logger.info("override {} to {}", KYLIN_ENGINE_PARQUET_JOB_JAR, path);
         System.setProperty(KYLIN_ENGINE_PARQUET_JOB_JAR, path);
@@ -2821,5 +2813,9 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getEncryptCipherIvSpec() {
         return getOptional("kylin.security.encrypt.cipher.ivSpec", "AAAAAAAAAAAAAAAA");
+    }
+
+    public boolean isEnabledNoAggQuery() {
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-no-aggregate-query", FALSE));
     }
 }

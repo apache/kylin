@@ -550,7 +550,7 @@ public class JobService extends BasicService implements InitializingBean {
         } else {
             String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
             result.setRelatedCube(cubeName);
-            result.setRelatedObject(cube.getName());
+            result.setRelatedObject(cubeName);
             result.setDisplayCubeName(cubeName);
         }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));

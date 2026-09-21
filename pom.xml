@@ -30,7 +30,7 @@
   <groupId>org.apache.kylin</groupId>
   <artifactId>kylin</artifactId>
   <packaging>pom</packaging>
-  <version>4.0.2-SNAPSHOT</version>
+  <version>4.0.5-SNAPSHOT</version>
 
   <name>Apache Kylin</name>
   <url>http://kylin.apache.org</url>
@@ -62,15 +62,13 @@
     <puppycrawl.version>8.18</puppycrawl.version>
     <spotbugs.version>3.1.1</spotbugs.version>
 
-    <kylin.version>3.0.0</kylin.version>
-
     <!-- Hadoop versions -->
-    <hadoop2.version>2.7.3</hadoop2.version>
-    <yarn.version>2.7.3</yarn.version>
+    <hadoop2.version>2.10.2</hadoop2.version>
+    <yarn.version>2.10.2</yarn.version>
 
     <!-- Hive versions -->
-    <hive.version>1.2.1</hive.version>
-    <hive-hcatalog.version>1.2.1</hive-hcatalog.version>
+    <hive.version>2.3.7</hive.version>
+    <hive-hcatalog.version>2.3.7</hive-hcatalog.version>
 
     <!-- HBase versions -->
     <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
@@ -79,8 +77,8 @@
     <kafka.version>1.0.0</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.4.7</spark.version>
-    <spark.version.dir>spark24</spark.version.dir>
+    <spark.version>3.1.3</spark.version>
+    <spark.version.dir>spark31</spark.version.dir>
     <janino.version>3.0.16</janino.version>
 
     <kryo.version>4.0.0</kryo.version>
@@ -91,9 +89,12 @@
     <!-- mysql versions -->
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
+    <!-- postgre SQL versions -->
+    <postgresql.version>42.3.3</postgresql.version>
+
     <!-- Scala versions -->
-    <scala.version>2.11.12</scala.version>
-    <scala.binary.version>2.11</scala.binary.version>
+    <scala.version>2.12.13</scala.version>
+    <scala.binary.version>2.12</scala.binary.version>
 
     <reflections.version>0.9.10</reflections.version>
 
@@ -112,13 +113,13 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-io.version>2.11.0</commons-io.version>
-    <commons-upload.version>1.3.3</commons-upload.version>
+    <commons-upload.version>1.5</commons-upload.version>
     <commons-math3.version>3.1.1</commons-math3.version>
     <commons-collections.version>3.2.2</commons-collections.version>
     <commons-pool.version>2.5.0</commons-pool.version>
 
     <!-- Calcite deps, keep compatible with calcite.version -->
-    <jackson.version>2.6.7</jackson.version>
+    <jackson.version>2.10.0</jackson.version>
 
     <!-- Test Dependency versions -->
     <antlr.version>3.4</antlr.version>
@@ -142,7 +143,7 @@
 
     <!-- Utility -->
     <log4j.version>1.2.17</log4j.version>
-    <slf4j.version>1.7.21</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <xerces.version>2.12.2</xerces.version>
     <xalan.version>2.7.2</xalan.version>
     <ehcache.version>2.10.2.2.21</ehcache.version>
@@ -154,7 +155,7 @@
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
-    <tomcat.version>8.5.78</tomcat.version>
+    <tomcat.version>8.5.86</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.18.4</rocksdb.version>
@@ -164,8 +165,8 @@
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
     <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
-    <spring.framework.version>4.3.26.RELEASE</spring.framework.version>
-    <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
+    <spring.framework.version>5.2.22.RELEASE</spring.framework.version>
+    <spring.framework.security.version>5.5.7</spring.framework.security.version>
     <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
     <opensaml.version>2.6.6</opensaml.version>
     <aspectj.version>1.8.9</aspectj.version>
@@ -239,9 +240,7 @@
   </mailingLists>
 
   <scm>
-    <connection>scm:git:git://github.com/apache/kylin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
-    </developerConnection>
+    <developerConnection>scm:git:https://github.com/apache/kylin.git</developerConnection>
     <url>https://github.com/apache/kylin</url>
     <tag>HEAD</tag>
   </scm>
@@ -593,6 +592,12 @@
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
         <version>${mysql-connector.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
         <scope>provided</scope>
       </dependency>
       <!-- Hive dependencies -->
@@ -1191,7 +1196,7 @@
     </repository>
     <repository>
       <id>conjars</id>
-      <url>http://conjars.org/repo/</url>
+      <url>https://conjars.org/repo/</url>
     </repository>
 
     <repository>
@@ -1505,7 +1510,7 @@
 
   <profiles>
     <profile>
-      <id>sandbox</id>
+      <id>spark3</id>
       <activation>
         <activeByDefault>true</activeByDefault>
         <property>
@@ -1548,46 +1553,16 @@
               </execution>
             </executions>
           </plugin>
-          <plugin>
-            <groupId>de.thetaphi</groupId>
-            <artifactId>forbiddenapis</artifactId>
-            <configuration>
-              <!--
-              if the used Java version is too new, don't fail, just do nothing:
-             -->
-              <failOnUnsupportedJava>false</failOnUnsupportedJava>
-              <bundledSignatures>
-                <bundledSignature>jdk-unsafe</bundledSignature>
-                <bundledSignature>jdk-deprecated</bundledSignature>
-                <!--<bundledSignature>jdk-non-portable</bundledSignature>-->
-              </bundledSignatures>
-              <excludes>
-                <exclude>**/ParseException.class</exclude>
-                <exclude>**/SimpleCharStream.class</exclude>
-                <exclude>**/*TokenManager.class</exclude>
-                <exclude>**/TokenMgrError.class</exclude>
-              </excludes>
-              <signaturesFiles>
-                <signaturesFile>
-                  ${user.dir}/dev-support/signatures.txt
-                </signaturesFile>
-              </signaturesFiles>
-            </configuration>
-
-            <executions>
-              <execution>
-                <phase>test-compile</phase>
-                <goals>
-                  <goal>check</goal>
-                  <goal>testCheck</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
 
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
+            <configuration>
+              <append>true</append>
+              <destFile>
+                ${sonar.jacoco.reportPaths}
+              </destFile>
+            </configuration>
             <executions>
               <execution>
                 <id>pre-test</id>
@@ -1595,8 +1570,6 @@
                   <goal>prepare-agent</goal>
                 </goals>
                 <configuration>
-                  <append>true</append>
-                  <destFile>${sonar.jacoco.reportPaths}</destFile>
                   <propertyName>surefireArgLine</propertyName>
                 </configuration>
               </execution>
@@ -1606,13 +1579,9 @@
                 <goals>
                   <goal>report</goal>
                 </goals>
-                <configuration>
-                  <dataFile>${sonar.jacoco.reportPaths}</dataFile>
-                </configuration>
               </execution>
             </executions>
           </plugin>
-
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
@@ -1622,6 +1591,9 @@
               </reportsDirectory>
               <excludes>
                 <exclude>**/IT*.java</exclude>
+                <exclude>org.apache.kylin.engine.spark2.NManualBuildAndQueryCuboidTest</exclude>
+                <exclude>org.apache.kylin.engine.spark2.NBuildAndQueryTest</exclude>
+                <exclude>org.apache.kylin.engine.spark2.NBadQueryAndPushDownTest</exclude>
               </excludes>
               <systemProperties>
                 <property>
@@ -1640,15 +1612,10 @@
               </argLine>
             </configuration>
           </plugin>
-          <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <version>4.2.0</version>
-          </plugin>
         </plugins>
       </build>
     </profile>
-<profile>
+    <profile>
 <!-- This profile adds/overrides few features of the 'apache-release'
      profile in the parent pom. -->
       <id>apache-release</id>
@@ -1930,117 +1897,17 @@
       </build>
     </profile>
     <profile>
-      <id>spark3</id>
-      <properties>
-        <scala.version>2.12.10</scala.version>
-        <scala.binary.version>2.12</scala.binary.version>
-        <spark.version>3.1.3</spark.version>
-        <spark.version.dir>spark31</spark.version.dir>
-        <jackson.version>2.10.0</jackson.version>
-        <slf4j.version>1.7.30</slf4j.version>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <fork>true</fork>
-              <meminitial>1024m</meminitial>
-              <maxmem>2048m</maxmem>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-jamm</id>
-                <goals>
-                  <goal>copy</goal>
-                </goals>
-                <phase>generate-test-resources</phase>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>com.github.jbellis</groupId>
-                      <artifactId>jamm</artifactId>
-                      <outputDirectory>${project.build.testOutputDirectory}
-                      </outputDirectory>
-                      <destFileName>jamm.jar</destFileName>
-                    </artifactItem>
-                  </artifactItems>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <configuration>
-              <append>true</append>
-              <destFile>
-                ${sonar.jacoco.reportPaths}
-              </destFile>
-            </configuration>
-            <executions>
-              <execution>
-                <id>pre-test</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-                <configuration>
-                  <propertyName>surefireArgLine</propertyName>
-                </configuration>
-              </execution>
-              <execution>
-                <id>post-test</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.21.0</version>
-            <configuration>
-              <reportsDirectory>${project.basedir}/../target/surefire-reports
-              </reportsDirectory>
-              <excludes>
-                <exclude>**/IT*.java</exclude>
-                <exclude>org.apache.kylin.engine.spark2.NManualBuildAndQueryCuboidTest</exclude>
-                <exclude>org.apache.kylin.engine.spark2.NBuildAndQueryTest</exclude>
-                <exclude>org.apache.kylin.engine.spark2.NBadQueryAndPushDownTest</exclude>
-              </excludes>
-              <systemProperties>
-                <property>
-                  <name>buildCubeUsingProvidedData</name>
-                  <value>false</value>
-                </property>
-                <property>
-                  <name>log4j.configuration</name>
-                  <value>
-                    file:${project.basedir}/../build/conf/kylin-tools-log4j.properties
-                  </value>
-                </property>
-              </systemProperties>
-              <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar
-                ${argLine} ${surefireArgLine}
-              </argLine>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-      <!--
+      <id>hadoop3</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
-      -->
+      <dependencies>
+        <dependency>
+          <groupId>commons-configuration</groupId>
+          <artifactId>commons-configuration</artifactId>
+          <version>1.6</version>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>

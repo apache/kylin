@@ -29,6 +29,7 @@ import org.apache.kylin.query.runtime.plans.ResultPlan;
 import org.apache.kylin.query.runtime.plans.ResultType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,21 +39,28 @@ public class SparkEngine implements QueryEngine {
 
     @Override
     public Enumerable<Object> computeSCALA(DataContext dataContext, RelNode relNode, RelDataType resultType) {
-        Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        if (System.getProperty("calcite.debug") != null) {
-            log.debug("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        try {
+            Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
+            if (System.getProperty("calcite.debug") != null) {
+                log.debug("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+            }
+            return ResultPlan.getResult(sparkPlan, resultType, ResultType.SCALA()).right().get();
+        } finally {
+            SparderContext.closeThreadSparkSession();
         }
-        return ResultPlan.getResult(sparkPlan, resultType, ResultType.SCALA()).right().get();
-
     }
 
     @Override
     public Enumerable<Object[]> compute(DataContext dataContext, RelNode relNode, RelDataType resultType) {
-        Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        if (System.getProperty("calcite.debug") != null) {
-            log.info("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        try {
+            Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
+            if (System.getProperty("calcite.debug") != null) {
+                log.info("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+            }
+            return ResultPlan.getResult(sparkPlan, resultType, ResultType.NORMAL()).left().get();
+        } finally {
+            SparderContext.closeThreadSparkSession();
         }
-        return ResultPlan.getResult(sparkPlan, resultType, ResultType.NORMAL()).left().get();
     }
 
     private Dataset<Row> toSparkPlan(DataContext dataContext, RelNode relNode) {

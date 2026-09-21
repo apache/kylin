@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>4.0.2-SNAPSHOT</version>
+        <version>4.0.5-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-build-engine</artifactId>
-            <version>4.0.2-SNAPSHOT</version>
+            <version>4.0.5-SNAPSHOT</version>
         </dependency>
 
         <!-- these plug-in modules, should not have API dependencies -->
@@ -69,57 +69,17 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-metastore-hbase</artifactId>
-            <version>4.0.2-SNAPSHOT</version>
+            <version>4.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-hive</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-source-kafka</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-cache</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-source-jdbc</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-datasource-sdk</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-datasource-sdk</artifactId>-->
-<!--            <classifier>framework</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-stream-coordinator</artifactId>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>javax.servlet</groupId>-->
-<!--                    <artifactId>servlet-api</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>javax.servlet.jsp</groupId>-->
-<!--                    <artifactId>jsp-api</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-stream-source-kafka</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kylin-storage-stream</artifactId>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.kylin</groupId>

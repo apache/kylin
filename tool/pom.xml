@@ -28,11 +28,11 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>4.0.2-SNAPSHOT</version>
+        <version>4.0.5-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
+        <spring.framework.version>5.2.23.RELEASE</spring.framework.version>
     </properties>
 
     <dependencies>

@@ -18,32 +18,5 @@
 
 package org.apache.kylin.rest.util;
 
-import javax.servlet.ServletContextEvent;
-
-import org.apache.kylin.common.KylinConfig;
-
-public class Log4jConfigListener extends org.springframework.web.util.Log4jConfigListener {
-
-    private boolean isDebugTomcat;
-
-    public Log4jConfigListener() {
-        this.isDebugTomcat = KylinConfig.getInstanceFromEnv().isDevEnv();
-    }
-
-    @Override
-    public void contextInitialized(ServletContextEvent event) {
-        if (!isDebugTomcat) {
-            super.contextInitialized(event);
-        }
-        System.setProperty("needCheckCC", "true");
-
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent event) {
-        if (!isDebugTomcat) {
-            super.contextDestroyed(event);
-        }
-    }
-
+public class Log4jConfigListener {
 }

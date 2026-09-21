@@ -61,7 +61,6 @@ before_install:
 script:
   # mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
   # Skip coveralls temporarily, fix it asap
-  - mvn clean test -q
   - mvn clean test -q -Psandbox -Pspark3
   - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";

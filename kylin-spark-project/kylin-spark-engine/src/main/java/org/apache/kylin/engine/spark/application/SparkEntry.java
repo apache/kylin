@@ -22,6 +22,15 @@ import org.apache.spark.application.JobWorkSpace;
 
 public class SparkEntry {
     public static void main(String[] args) {
-        JobWorkSpace.execute(args);
+        int retCode = JobWorkSpace.execute(args);
+        if (retCode == 2) {
+            System.exit(1);
+        } else if (System.getProperty("spark.master").equals("yarn") && System.getProperty("spark.submit.deployMode").equals("cluster")) {
+            if (retCode == 1) {
+                throw new RuntimeException("Job failed!");
+            }
+        } else {
+            System.exit(retCode);
+        }
     }
 }

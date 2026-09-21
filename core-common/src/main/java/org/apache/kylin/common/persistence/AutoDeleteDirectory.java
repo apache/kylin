@@ -21,6 +21,7 @@ package org.apache.kylin.common.persistence;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class AutoDeleteDirectory implements Closeable {
 
@@ -31,7 +32,7 @@ public class AutoDeleteDirectory implements Closeable {
     }
     public AutoDeleteDirectory(String prefix, String suffix) {
         try {
-            tempFile = File.createTempFile(prefix, suffix);
+            tempFile = Files.createTempFile(prefix, suffix).toFile();
             org.apache.commons.io.FileUtils.forceDelete(tempFile); // we need a directory, so delete the file first
             tempFile.mkdirs();
         } catch (IOException e) {

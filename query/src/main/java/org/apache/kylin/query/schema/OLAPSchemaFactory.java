@@ -20,6 +20,7 @@ package org.apache.kylin.query.schema;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -119,7 +120,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
             String jsonContent = out.toString();
             File file = cachedJsons.get(jsonContent);
             if (file == null) {
-                file = File.createTempFile("olap_model_", ".json");
+                file = Files.createTempFile("olap_model_", ".json").toFile();
                 file.deleteOnExit();
                 FileUtils.writeStringToFile(file, jsonContent);
 

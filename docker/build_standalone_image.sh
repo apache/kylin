@@ -18,8 +18,9 @@
 #
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd ${DIR}
-echo "build image in dir "${DIR}
+BUILD_DIR="${DIR}/dockerfile/standalone/"
+cd ${BUILD_DIR}
+echo "build image in dir "${BUILD_DIR}
 
 echo "start build Hadoop docker image"
 docker build -f Dockerfile_hadoop -t hadoop2.8-all-in-one-for-kylin4 .

@@ -32,6 +32,7 @@ object SparderContextFacade extends Logging {
   def current(): Pair[SparkSession, UdfManager] = {
     if (CURRENT_SPARKSESSION.get() == null) {
       val spark = SparderContext.getOriginalSparkSession.cloneSession()
+      logInfo(s"Current thread ${Thread.currentThread().getId} create a SparkSession.")
       CURRENT_SPARKSESSION.set(new Pair[SparkSession, UdfManager](spark,
         UdfManager.createWithoutBuildInFunc(spark)))
     }

@@ -61,7 +61,6 @@ object SparderContext extends Logging {
   }
 
   def getSparkSession: SparkSession = {
-    logInfo(s"Current thread ${Thread.currentThread().getId} create a SparkSession.")
     SparderContextFacade.current().getFirst
   }
 

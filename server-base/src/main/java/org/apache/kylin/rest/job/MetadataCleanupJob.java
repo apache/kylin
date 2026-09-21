@@ -162,7 +162,7 @@ public class MetadataCleanupJob {
         try {
             timestamp = store.getResourceTimestamp(resPath);
         } catch (IOException e) {
-            logger.warn("Failed to get resource timestamp from remote resource store, details:{}", e);
+            logger.warn("Failed to get resource timestamp from remote resource store, details:", e);
         }
         return timestamp;
     }

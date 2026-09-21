@@ -1,6 +1,6 @@
 # Kylin deployment by docker-compose for CI/CD
 
-## Backgroud
+## Background
 
 In order to provide hadoop cluster(s) (without manual deployment) for system level testing to cover some complex features like read write speratation deployment, we would like to provide a docker-compose based way to make it easy to achieve CI/CD .
 

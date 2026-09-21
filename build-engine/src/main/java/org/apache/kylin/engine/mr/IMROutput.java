@@ -27,7 +27,7 @@ public interface IMROutput {
     public IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg);
 
     /**
-     * Participate the batch cubing flow as the output side. Responsible for savg
+     * Participate the batch cubing flow as the output side. Responsible for save
      * the cuboid output to storage (Phase 3).
      * 
      * - Phase 1: Create Flat Table
