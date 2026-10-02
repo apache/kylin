@@ -188,6 +188,36 @@ public class OpsServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testDeleteBackupPathConfinement() throws IOException {
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        String project = "default";
+        String siblingProject = "default_extra";
+        Path projectRoot = new Path(OpsService.getMetaBackupStoreDir(project));
+        Path backup = new Path(projectRoot, "backup-id");
+        Path sibling = new Path(OpsService.getMetaBackupStoreDir(siblingProject), "keep");
+        fs.mkdirs(backup);
+        fs.mkdirs(sibling);
+
+        try {
+            Assert.assertTrue(OpsService.deleteMetadataBackup(projectRoot.toString(), project)
+                    .contains("can not delete path not in metadata backup dir"));
+            Assert.assertTrue(fs.exists(projectRoot));
+
+            String traversal = new Path(projectRoot, "backup-id/../../default_extra/keep").toString();
+            Assert.assertTrue(OpsService.deleteMetadataBackup(traversal, project)
+                    .contains("can not delete path not in metadata backup dir"));
+            Assert.assertTrue(fs.exists(sibling));
+
+            Assert.assertTrue(
+                    OpsService.deleteMetadataBackup(backup.toString(), project).contains("delete succeed"));
+            Assert.assertFalse(fs.exists(backup));
+            Assert.assertTrue(fs.exists(sibling));
+        } finally {
+            fs.delete(new Path(OpsService.PROJECT_METADATA_BACKUP_PATH), true);
+        }
+    }
+
+    @Test
     public void testMetadataRestoreStatus() throws IOException {
         String backupPath = opsService.backupMetadata(UnitOfWork.GLOBAL_UNIT);
         JobContextUtil.getJobContext(KylinConfig.getInstanceFromEnv());

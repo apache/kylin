@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -170,23 +171,38 @@ public class OpsService {
             Path path = new Path(pathStr);
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             if (fs.exists(path)) {
-                if (!pathStr.startsWith(META_BACKUP_PATH)) {
-                    return "can not delete path not in metadata backup dir " + META_BACKUP_PATH;
-                }
-                String rootPath = getMetaBackupStoreDir(project);
-                if (!pathStr.startsWith(rootPath) || pathStr.equals(rootPath)) {
+                Path rootPath = normalizePath(fs, new Path(getMetaBackupStoreDir(project)));
+                Path resolvedPath = normalizePath(fs, path);
+                if (!isStrictDescendant(resolvedPath, rootPath)) {
                     return "can not delete path not in metadata backup dir " + rootPath;
                 }
-                fs.delete(path, true);
-                log.info("Delete metadata backup {} succeed.", path.toUri());
-                if (fs.listStatus(path.getParent()).length == 0) {
-                    fs.delete(path.getParent(), true);
-                    log.info("Delete project path {} for no metadata backup exist.", path.getParent().toUri());
+                fs.delete(resolvedPath, true);
+                log.info("Delete metadata backup {} succeed.", resolvedPath.toUri());
+                Path parentPath = resolvedPath.getParent();
+                if (parentPath != null && isDescendantOrSelf(parentPath, rootPath) && fs.exists(parentPath)
+                        && fs.listStatus(parentPath).length == 0) {
+                    fs.delete(parentPath, true);
+                    log.info("Delete project path {} for no metadata backup exist.", parentPath.toUri());
                 }
-                return path + " delete succeed.";
+                return resolvedPath + " delete succeed.";
             }
         }
         return pathStr + " path not exist";
+    }
+
+    private static boolean isStrictDescendant(Path candidate, Path root) {
+        return isDescendantOrSelf(candidate, root) && !candidate.equals(root);
+    }
+
+    private static Path normalizePath(FileSystem fs, Path path) throws IOException {
+        Path normalized = fs.exists(path) ? fs.resolvePath(path) : path;
+        return new Path(normalized.toUri().normalize()).makeQualified(fs.getUri(), fs.getWorkingDirectory());
+    }
+
+    private static boolean isDescendantOrSelf(Path candidate, Path root) {
+        return StringUtils.equals(candidate.toUri().getScheme(), root.toUri().getScheme())
+                && StringUtils.equals(candidate.toUri().getAuthority(), root.toUri().getAuthority())
+                && (candidate.equals(root) || candidate.toUri().getPath().startsWith(root.toUri().getPath() + PATH_SEP));
     }
 
     public void cancelAndDeleteMetadataBackup(String rootPath, String project) throws IOException {
