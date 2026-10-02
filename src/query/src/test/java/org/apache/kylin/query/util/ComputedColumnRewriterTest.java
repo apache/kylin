@@ -19,11 +19,14 @@
 package org.apache.kylin.query.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
@@ -105,6 +108,31 @@ class ComputedColumnRewriterTest {
             System.out.println("cost: " + (System.currentTimeMillis() - start));
         }
         System.out.println("total cost: " + (System.currentTimeMillis() - s));
+    }
+
+    @Test
+    void testComputedColumnCachesAreBounded() {
+        Map<String, String> rexNodeCache = ComputedColumnRewriter.CC_TO_REX_NODE_STR_CACHE;
+        Map<String, ComputedColumnDesc> expressionCache = ComputedColumnRewriter.EXP_TO_CC_MAP;
+        rexNodeCache.clear();
+        expressionCache.clear();
+        try {
+            String largeRexNode = StringUtils.repeat("x", 200_000);
+            for (int i = 0; i < 10; i++) {
+                rexNodeCache.put("rex-" + i, largeRexNode);
+            }
+            assertTrue(rexNodeCache.size() < 10);
+
+            ComputedColumnDesc cc = new ComputedColumnDesc();
+            cc.setInnerExpression(StringUtils.repeat("y", 20_000));
+            for (int i = 0; i < 10; i++) {
+                expressionCache.put("cc-" + i, cc);
+            }
+            assertTrue(expressionCache.size() < 10);
+        } finally {
+            rexNodeCache.clear();
+            expressionCache.clear();
+        }
     }
 
     @NotNull

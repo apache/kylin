@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.RelNode;
@@ -40,6 +41,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CollectionUtil;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.cache.Weigher;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -61,9 +65,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ComputedColumnRewriter {
 
-    // use concurrent map for multi-thread
-    public static final Map<String, String> CC_TO_REX_NODE_STR_CACHE = Maps.newConcurrentMap();
-    public static final Map<String, ComputedColumnDesc> EXP_TO_CC_MAP = Maps.newConcurrentMap();
+    private static final long CACHE_EXPIRE_MINUTES = 10L;
+    private static final long CC_REX_CACHE_MAX_WEIGHT = 1_000_000L;
+    private static final long CC_CACHE_MAX_WEIGHT = 100_000L;
+    private static final Cache<String, String> CC_REX_CACHE = CacheBuilder.newBuilder()
+            .maximumWeight(CC_REX_CACHE_MAX_WEIGHT)
+            .weigher((Weigher<String, String>) (key, value) -> cacheWeight(key, value))
+            .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES).build();
+    private static final Cache<String, ComputedColumnDesc> EXP_TO_CC_CACHE = CacheBuilder.newBuilder()
+            .maximumWeight(CC_CACHE_MAX_WEIGHT)
+            .weigher((Weigher<String, ComputedColumnDesc>) (key, value) -> ccCacheWeight(key, value))
+            .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES).build();
+
+    // Keep Map views for compatibility with callers that inspect the caches.
+    public static final Map<String, String> CC_TO_REX_NODE_STR_CACHE = CC_REX_CACHE.asMap();
+    public static final Map<String, ComputedColumnDesc> EXP_TO_CC_MAP = EXP_TO_CC_CACHE.asMap();
     public static final String NAME_SPLIT = "@@";
     private static final SparkSQLFunctionConverter FUNCTION_CONVERTER = new SparkSQLFunctionConverter();
 
@@ -133,8 +149,7 @@ public class ComputedColumnRewriter {
 
         // update cc cache first, because the cc may have been updated
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
-            String key = cc.getTableIdentity() + NAME_SPLIT
-                    + StringHelper.backtickToDoubleQuote(cc.getInnerExpression());
+            String key = ccCacheKey(model, cc);
             EXP_TO_CC_MAP.put(key, cc);
             if (!CC_TO_REX_NODE_STR_CACHE.containsKey(key)) {
                 String rexNodeStr = extractCcRexNode(model, kylinConfig, cc.getInnerExpression());
@@ -147,7 +162,7 @@ public class ComputedColumnRewriter {
             innerExpression = innerExpression.replace(entry.getKey(), entry.getValue());
         }
         boolean onlyReuseUserDefinedCC = kylinConfig.onlyReuseUserDefinedCC();
-        String aliasInnerExpression = model.getRootFactTableName() + NAME_SPLIT + innerExpression;
+        String aliasInnerExpression = expressionCacheKey(model, innerExpression);
         if (EXP_TO_CC_MAP.containsKey(aliasInnerExpression)) {
             ComputedColumnDesc cc = EXP_TO_CC_MAP.get(aliasInnerExpression);
             if (onlyReuseUserDefinedCC && cc.isAutoCC()) {
@@ -162,8 +177,7 @@ public class ComputedColumnRewriter {
             if (onlyReuseUserDefinedCC && cc.isAutoCC()) {
                 continue;
             }
-            String key = cc.getTableIdentity() + NAME_SPLIT
-                    + StringHelper.backtickToDoubleQuote(cc.getInnerExpression());
+            String key = ccCacheKey(model, cc);
             String rexNodeStrOfCc = CC_TO_REX_NODE_STR_CACHE.get(key);
             if (Objects.equals(rexNodeStr, rexNodeStrOfCc)) {
                 return cc;
@@ -309,8 +323,7 @@ public class ComputedColumnRewriter {
                 }
                 try {
                     String rexNodeStr;
-                    String key = cc.getTableIdentity() + NAME_SPLIT
-                            + StringHelper.backtickToDoubleQuote(cc.getInnerExpression());
+                    String key = ccCacheKey(model, cc);
                     if (!ComputedColumnRewriter.CC_TO_REX_NODE_STR_CACHE.containsKey(key)) {
                         rexNodeStr = ComputedColumnRewriter.extractCcRexNode(model, kylinConfig,
                                 cc.getInnerExpression());
@@ -321,5 +334,33 @@ public class ComputedColumnRewriter {
                 }
             }
         });
+    }
+
+    private static String expressionCacheKey(NDataModel model, String expression) {
+        return modelCacheKey(model) + NAME_SPLIT + model.getRootFactTableName() + NAME_SPLIT + expression;
+    }
+
+    private static String ccCacheKey(NDataModel model, ComputedColumnDesc cc) {
+        return modelCacheKey(model) + NAME_SPLIT + cc.getTableIdentity() + NAME_SPLIT
+                + StringHelper.backtickToDoubleQuote(cc.getInnerExpression());
+    }
+
+    private static String modelCacheKey(NDataModel model) {
+        return model.getUuid() + NAME_SPLIT + model.getMvcc() + NAME_SPLIT + model.getLastModified() + NAME_SPLIT
+                + StringUtils.defaultString(model.getProject());
+    }
+
+    private static int cacheWeight(String key, String value) {
+        return cacheWeight(key, value == null ? 0 : value.length());
+    }
+
+    private static int ccCacheWeight(String key, ComputedColumnDesc value) {
+        return cacheWeight(key, value == null || value.getInnerExpression() == null
+                ? 0 : value.getInnerExpression().length());
+    }
+
+    private static int cacheWeight(String key, int valueLength) {
+        long weight = (key == null ? 0L : key.length()) + valueLength;
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(1L, weight));
     }
 }
