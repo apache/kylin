@@ -4602,6 +4602,28 @@ public abstract class KylinConfigBase implements Serializable {
         return Sets.newHashSet(config.split(","));
     }
 
+    public Set<String> getSourceJdbcWhiteListParenthesisParamKeysByScheme(String scheme) {
+        Set<String> whiteListSchemes = getSourceJdbcWhiteListSchemes();
+        if (!whiteListSchemes.contains(scheme)) {
+            return Collections.emptySet();
+        }
+        String defaultValue;
+        switch (scheme) {
+        case "mysql":
+            defaultValue = "host,port,address";
+            break;
+        default:
+            defaultValue = "";
+            break;
+        }
+        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
+                "kylin.source.jdbc.white-list.%s.parenthesis-param-keys", scheme), defaultValue));
+        if (StringUtils.isBlank(config)) {
+            return Collections.emptySet();
+        }
+        return Sets.newHashSet(config.split(","));
+    }
+
     private String getDefaultSourceJdbcDrivers(String scheme) {
         switch (scheme) {
         case "h2":

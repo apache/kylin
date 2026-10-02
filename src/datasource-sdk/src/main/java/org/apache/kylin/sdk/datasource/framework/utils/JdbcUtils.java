@@ -82,7 +82,9 @@ public class JdbcUtils {
 
             JdbcSourceValidationSettings settings = JdbcSourceValidationSettings.builder()
                     .validUrlParamKeys(config.getSourceJdbcWhiteListUrlParamKeysByScheme(scheme))
-                    .validSemicolonParamKeys(config.getSourceJdbcWhiteListSemicolonParamKeysByScheme(scheme)).build();
+                    .validSemicolonParamKeys(config.getSourceJdbcWhiteListSemicolonParamKeysByScheme(scheme))
+                    .validParenthesisParamKeys(config.getSourceJdbcWhiteListParenthesisParamKeysByScheme(scheme))
+                    .build();
 
             JdbcSourceConnectionValidator validator = (JdbcSourceConnectionValidator) ClassUtil
                     .newInstance(config.getSourceJdbcWhiteListValidatorClassByScheme(scheme));

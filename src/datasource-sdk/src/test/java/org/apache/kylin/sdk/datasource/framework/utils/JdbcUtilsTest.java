@@ -83,6 +83,18 @@ public class JdbcUtilsTest extends NLocalFileMetadataTestCase {
                 "jdbc:mysql://localhost:3306/db;allowLoadLocalInfile=true", "com.mysql.cj.jdbc.Driver"));
     }
 
+    @Test
+    public void testValidateUrlByWhiteList_parenthesisSettings() {
+        String injected = "jdbc:mysql://address=(host=127.0.0.1)(port=61603)(user=fileread_a.txt)"
+                + "(allowLoadLocalInfile=true)(useSSL=false)(maxAllowedPacket=65535)/";
+        assertFalse(JdbcUtils.validateUrlByWhiteList(injected, "com.mysql.cj.jdbc.Driver"));
+
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://address=(host=127.0.0.1)(port=3306)/db",
+                "com.mysql.cj.jdbc.Driver"));
+
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:h2:mem:db;INIT=(x=y)", "org.h2.Driver"));
+    }
+
     public static class MockJdbcSourceConnectionValidator extends AbstractJdbcSourceConnectionValidator {
         @Override
         public boolean isValid() {

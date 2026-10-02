@@ -35,4 +35,7 @@ public final class JdbcSourceValidationSettings {
 
     @Builder.Default
     private Set<String> validSemicolonParamKeys = Collections.emptySet();
+
+    @Builder.Default
+    private Set<String> validParenthesisParamKeys = Collections.emptySet();
 }

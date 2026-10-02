@@ -52,8 +52,10 @@ public class DefaultJdbcSourceConnectionValidator extends AbstractJdbcSourceConn
 
             Set<String> queryKeys = parseKeys(query, '&');
             Set<String> semicolonKeys = parseSemicolonKeys(urlWithoutQuery);
+            Set<String> parenthesisKeys = parseParenthesisKeys(urlWithoutQuery);
             return settings.getValidUrlParamKeys().containsAll(queryKeys)
-                    && settings.getValidSemicolonParamKeys().containsAll(semicolonKeys);
+                    && settings.getValidSemicolonParamKeys().containsAll(semicolonKeys)
+                    && settings.getValidParenthesisParamKeys().containsAll(parenthesisKeys);
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -69,6 +71,42 @@ public class DefaultJdbcSourceConnectionValidator extends AbstractJdbcSourceConn
             throw new IllegalArgumentException("empty semicolon parameters");
         }
         return parseKeys(semicolonContent, ';');
+    }
+
+    private Set<String> parseParenthesisKeys(String urlWithoutQuery) {
+        if (urlWithoutQuery.indexOf('(') < 0) {
+            if (urlWithoutQuery.indexOf(')') >= 0) {
+                throw new IllegalArgumentException("unexpected closing parenthesis");
+            }
+            return Collections.emptySet();
+        }
+
+        Set<String> keys = new LinkedHashSet<>();
+        int index = 0;
+        while (index < urlWithoutQuery.length()) {
+            int groupStart = urlWithoutQuery.indexOf('(', index);
+            if (groupStart < 0) {
+                break;
+            }
+            int groupEnd = urlWithoutQuery.indexOf(')', groupStart + 1);
+            if (groupEnd < 0) {
+                throw new IllegalArgumentException("unbalanced parenthesis");
+            }
+            String group = urlWithoutQuery.substring(groupStart + 1, groupEnd);
+            if (group.indexOf('(') >= 0 || StringUtils.isBlank(group)) {
+                throw new IllegalArgumentException("invalid parenthesis content");
+            }
+            for (String key : parseKeys(group, ',')) {
+                if (!keys.add(key)) {
+                    throw new IllegalArgumentException("duplicate parenthesis parameter");
+                }
+            }
+            index = groupEnd + 1;
+        }
+        if (urlWithoutQuery.indexOf(')', index) >= 0) {
+            throw new IllegalArgumentException("unexpected closing parenthesis");
+        }
+        return keys;
     }
 
     private Set<String> parseKeys(String content, char separator) {
