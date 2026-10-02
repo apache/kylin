@@ -20,6 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.util.JobContextUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -27,7 +28,9 @@ import org.apache.kylin.rest.request.IndexGlutenCacheRequest;
 import org.apache.kylin.rest.request.InternalTableGlutenCacheRequest;
 import org.apache.kylin.rest.response.GlutenCacheResponse;
 import org.apache.kylin.rest.service.GlutenCacheService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -54,6 +57,9 @@ public class GlutenCacheControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private GlutenCacheService glutenCacheService;
+
+    @Mock
+    private AclEvaluate aclEvaluate;
 
     @InjectMocks
     private GlutenCacheController glutenCacheController = Mockito.spy(new GlutenCacheController());
@@ -87,7 +93,7 @@ public class GlutenCacheControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-        Mockito.verify(glutenCacheController).glutenCache(request);
+        Mockito.verify(glutenCacheController).glutenCache(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -99,7 +105,7 @@ public class GlutenCacheControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-        Mockito.verify(glutenCacheController).glutenCacheAsync(request);
+        Mockito.verify(glutenCacheController).glutenCacheAsync(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -129,5 +135,14 @@ public class GlutenCacheControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         Mockito.verify(glutenCacheController).indexGlutenCache(request, mvcResult.getRequest());
+    }
+
+    @Test
+    public void anonymousCacheRequestRejected() {
+        SecurityContextHolder.clearContext();
+
+        Assert.assertThrows(KylinException.class,
+                () -> glutenCacheController.glutenCache(Lists.newArrayList("DROP TABLE test"),
+                        new MockHttpServletRequest()));
     }
 }

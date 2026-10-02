@@ -20,21 +20,17 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
-import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.rest.config.initialize.BroadcastListener;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.security.BroadcastSecurityContext;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,21 +60,7 @@ public class BroadcastController extends NBasicController {
     }
 
     private void authorizeBroadcast(HttpServletRequest request) {
-        if (isAdmin()) {
-            return;
-        }
-
-        String configuredToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
-        String providedToken = request == null ? null
-                : request.getHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER);
-        if (StringUtils.isNotBlank(configuredToken) && providedToken != null
-                && MessageDigest.isEqual(configuredToken.getBytes(StandardCharsets.UTF_8),
-                        providedToken.getBytes(StandardCharsets.UTF_8))) {
-            return;
-        }
-
-        throw new KylinException(PERMISSION_DENIED,
-                "Broadcast endpoint requires an authenticated global admin or a valid broadcast token.");
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(request);
     }
 
     @PutMapping(value = "/capacity/refresh_all")

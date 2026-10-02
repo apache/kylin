@@ -68,6 +68,7 @@ public class GlutenCacheService extends BasicService {
     public GlutenCacheResponse glutenCache(List<String> cacheCommands) {
         val executeResults = Lists.<GlutenCacheExecuteResult> newArrayList();
         try (SetLogCategory ignore = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
+            GlutenCacheUtils.validateCacheCommands(cacheCommands);
             val sparkSession = SparderEnv.getSparkSession();
             val successCount = new AtomicInteger(0);
             for (String cacheCommand : cacheCommands) {
@@ -172,6 +173,7 @@ public class GlutenCacheService extends BasicService {
     public void glutenCacheAsync(List<String> cacheCommands) {
         try (GlutenCacheRequestLimits ignored = new GlutenCacheRequestLimits();
                 SetLogCategory ignore = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
+            GlutenCacheUtils.validateCacheCommands(cacheCommands);
             val sparkSession = SparderEnv.getSparkSession();
             for (String cacheCommand : cacheCommands) {
                 glutenCacheExecute(cacheCommand, sparkSession);

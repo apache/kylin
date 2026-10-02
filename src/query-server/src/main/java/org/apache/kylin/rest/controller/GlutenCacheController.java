@@ -30,7 +30,9 @@ import org.apache.kylin.rest.request.IndexGlutenCacheRequest;
 import org.apache.kylin.rest.request.InternalTableGlutenCacheRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GlutenCacheResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.GlutenCacheService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,13 +52,18 @@ public class GlutenCacheController extends NBasicController {
     @Autowired
     private GlutenCacheService glutenCacheService;
 
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
     /**
      * RPC Call: for build job update gluten cache
      */
     @PostMapping(value = "/cache/gluten_cache")
     @ApiOperation(value = "gluten cache", tags = { "Gluten" })
     @ResponseBody
-    public EnvelopeResponse<GlutenCacheResponse> glutenCache(@RequestBody List<String> cacheCommands) {
+    public EnvelopeResponse<GlutenCacheResponse> glutenCache(@RequestBody List<String> cacheCommands,
+            HttpServletRequest request) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(request);
         checkCollectionRequiredArg("cacheCommands", cacheCommands);
         val result = glutenCacheService.glutenCache(cacheCommands);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
@@ -68,7 +75,9 @@ public class GlutenCacheController extends NBasicController {
     @PostMapping(value = "/cache/gluten_cache_async")
     @ApiOperation(value = "gluten cache", tags = { "Gluten" })
     @ResponseBody
-    public EnvelopeResponse<String> glutenCacheAsync(@RequestBody List<String> cacheCommands) {
+    public EnvelopeResponse<String> glutenCacheAsync(@RequestBody List<String> cacheCommands,
+            HttpServletRequest request) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(request);
         checkCollectionRequiredArg("cacheCommands", cacheCommands);
         glutenCacheService.glutenCacheAsync(cacheCommands);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
@@ -81,6 +90,7 @@ public class GlutenCacheController extends NBasicController {
             HttpServletRequest servletRequest) throws Exception {
         log.info("Internal table gluten cache request is [{}]", request);
         val projectName = checkProjectName(request.getProject());
+        checkProjectAdminPermission(projectName, servletRequest);
         request.setProject(projectName);
         checkRequiredArg("database", request.getDatabase());
         checkRequiredArg("table", request.getTable());
@@ -95,9 +105,16 @@ public class GlutenCacheController extends NBasicController {
             HttpServletRequest servletRequest) throws Exception {
         log.info("Index gluten cache request is [{}]", request);
         val projectName = checkProjectName(request.getProject());
+        checkProjectAdminPermission(projectName, servletRequest);
         request.setProject(projectName);
         checkRequiredArg("model", request.getModel());
         glutenCacheService.indexGlutenCache(request, servletRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    private void checkProjectAdminPermission(String projectName, HttpServletRequest request) {
+        if (!InternalRpcSecurity.isGlobalAdmin() && !InternalRpcSecurity.hasValidServiceToken(request)) {
+            aclEvaluate.checkProjectAdminPermission(projectName);
+        }
     }
 }

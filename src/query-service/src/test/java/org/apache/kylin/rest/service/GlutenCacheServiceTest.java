@@ -97,12 +97,12 @@ public class GlutenCacheServiceTest extends NLocalFileMetadataTestCase {
     @Mock
     private Appender appender = Mockito.mock(Appender.class);
 
-    private static final String COMMAND_0 = "test command 0";
-    private static final String COMMAND_1 = "test command 1";
-    private static final String COMMAND_2 = "test command 2";
-    private static final String COMMAND_3 = "test command 3";
-    private static final String COMMAND_4 = "test command 4";
-    private static final String COMMAND_5 = "test command 5";
+    private static final String COMMAND_0 = "CACHE DATA SELECT * FROM 'test-command-0'";
+    private static final String COMMAND_1 = "CACHE DATA SELECT * FROM 'test-command-1'";
+    private static final String COMMAND_2 = "CACHE DATA SELECT * FROM 'test-command-2'";
+    private static final String COMMAND_3 = "CACHE DATA SELECT * FROM 'test-command-3'";
+    private static final String COMMAND_4 = "CACHE DATA SELECT * FROM 'test-command-4'";
+    private static final String COMMAND_5 = "CACHE DATA SELECT * FROM 'test-command-5'";
     private static final String PROJECT = "default";
     private static final String DATABASE = "databases";
     private static final String TABLE = "table";

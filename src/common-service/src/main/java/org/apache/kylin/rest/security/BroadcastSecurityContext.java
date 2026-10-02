@@ -22,9 +22,6 @@ import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIE
 import java.io.IOException;
 
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.rest.constant.Constant;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,11 +56,7 @@ public final class BroadcastSecurityContext {
             return;
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean globalAdmin = authentication != null && authentication.isAuthenticated()
-                && authentication.getAuthorities().stream()
-                        .anyMatch(authority -> Constant.ROLE_ADMIN.equals(authority.getAuthority()));
-        if (!globalAdmin) {
+        if (!InternalRpcSecurity.isGlobalAdmin()) {
             log.warn("Rejected an untrusted broadcast-originated ACL mutation");
             throw new KylinException(PERMISSION_DENIED, "Broadcast ACL mutation requires a trusted internal caller.");
         }

@@ -37,6 +37,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -79,6 +80,10 @@ public abstract class LoadCacheStep extends AbstractExecutable {
 
         val httpPost = new HttpPost(requestApi);
         httpPost.addHeader(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_JSON);
+        String serviceToken = config.getBroadcastToken();
+        if (StringUtils.isNotBlank(serviceToken)) {
+            httpPost.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, serviceToken);
+        }
         httpPost.setEntity(new ByteArrayEntity(requestEntity, ContentType.APPLICATION_JSON));
 
         val httpResponse = httpClient.execute(httpPost);

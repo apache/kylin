@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +43,7 @@ import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
@@ -270,7 +272,7 @@ public class RouteService extends BasicService {
             CountDownLatch result) throws Exception {
         try (SetLogCategory ignore = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
             val fullUrl = "http://" + instance + url;
-            val response = generateTaskForRemoteHost(request, fullUrl, requestEntity);
+            val response = generateTaskForRemoteHost(request, fullUrl, requestEntity, getInternalRpcHeaders());
             log.info("cacheGluten instance is [{}], result is [{}]", instance, response);
             if (StringUtils.equals(url, CACHE_GLUTEN_API)) {
                 val data = JsonUtil.convert(response.getData(), GlutenCacheResponse.class);
@@ -282,6 +284,12 @@ public class RouteService extends BasicService {
             }
             return response;
         }
+    }
+
+    private Map<String, String> getInternalRpcHeaders() {
+        String token = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        return StringUtils.isBlank(token) ? Collections.emptyMap()
+                : Collections.singletonMap(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, token);
     }
 
     public boolean checkGlutenCacheLimits(Map<Future<?>, Long> tasks) {

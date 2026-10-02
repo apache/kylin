@@ -55,6 +55,36 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class GlutenCacheUtils {
 
+    private static final String CACHE_DATA_PREFIX = "CACHE DATA ";
+    private static final String CACHE_FILES_PREFIX = "CACHE FILES ";
+
+    public static void validateCacheCommands(Collection<String> cacheCommands) {
+        if (CollectionUtils.isEmpty(cacheCommands)) {
+            return;
+        }
+        for (String cacheCommand : cacheCommands) {
+            if (StringUtils.isBlank(cacheCommand)) {
+                throw new KylinRuntimeException("Invalid gluten cache command: command is empty");
+            }
+            String command = cacheCommand.trim();
+            if (command.indexOf(';') >= 0 || command.indexOf('\n') >= 0 || command.indexOf('\r') >= 0) {
+                throw new KylinRuntimeException("Invalid gluten cache command: statement separator is not allowed");
+            }
+            if (command.startsWith(CACHE_DATA_PREFIX)) {
+                if (!command.contains(" SELECT ") || !command.contains(" FROM '")) {
+                    throw new KylinRuntimeException("Invalid gluten cache data command");
+                }
+            } else if (command.startsWith(CACHE_FILES_PREFIX)) {
+                if (!command.contains(" SELECT * FROM '")
+                        || !command.endsWith(" CACHEPROPERTIES (recursive=true)")) {
+                    throw new KylinRuntimeException("Invalid gluten cache files command");
+                }
+            } else {
+                throw new KylinRuntimeException("Invalid gluten cache command");
+            }
+        }
+    }
+
     public static String generateCacheTableCommand(KylinConfig config, String project, String table, String start,
             List<String> columns, boolean isAsync) {
         val internalTableManager = InternalTableManager.getInstance(config, project);

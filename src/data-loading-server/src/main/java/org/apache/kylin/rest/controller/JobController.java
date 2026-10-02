@@ -59,10 +59,13 @@ import org.apache.kylin.rest.response.EventResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.SparkUIUtil;
+import org.apache.kylin.utils.GlutenCacheUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +103,9 @@ public class JobController extends BaseController {
 
     @Autowired
     private RouteService routeService;
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     @Override
     protected Logger getLogger() {
@@ -488,8 +494,12 @@ public class JobController extends BaseController {
     public EnvelopeResponse<Boolean> routeGlutenCache(@RequestBody LoadGlutenCacheRequest request,
             HttpServletRequest servletRequest) throws Exception {
         logger.info("routeGlutenCache request is [{}]", request);
-        checkProjectName(request.getProject());
+        val projectName = checkProjectName(request.getProject());
+        if (!InternalRpcSecurity.isGlobalAdmin() && !InternalRpcSecurity.hasValidServiceToken(servletRequest)) {
+            aclEvaluate.checkProjectAdminPermission(projectName);
+        }
         checkCollectionRequiredArg("cache_commands", request.getCacheCommands());
+        GlutenCacheUtils.validateCacheCommands(request.getCacheCommands());
         val result = routeService.routeGlutenCache(request.getCacheCommands(), servletRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }

@@ -137,6 +137,17 @@ class GlutenCacheUtilsTest extends AbstractTestCase {
         generateTableCommandError(config);
     }
 
+    @Test
+    void validateCacheCommands() {
+        Assertions.assertDoesNotThrow(() -> GlutenCacheUtils.validateCacheCommands(Lists.newArrayList(
+                "CACHE DATA SELECT * FROM 'test-path'",
+                "CACHE FILES ASYNC SELECT * FROM 'test-path' CACHEPROPERTIES (recursive=true)")));
+        Assertions.assertThrows(KylinRuntimeException.class,
+                () -> GlutenCacheUtils.validateCacheCommands(Lists.newArrayList("DROP TABLE test")));
+        Assertions.assertThrows(KylinRuntimeException.class, () -> GlutenCacheUtils
+                .validateCacheCommands(Lists.newArrayList("CACHE DATA SELECT * FROM 'test'; DROP TABLE test")));
+    }
+
     private static void generateTableCommand(KylinConfig config, String location, InternalTableDesc internalTable,
             String datePartitionFormat) {
         var start = "";

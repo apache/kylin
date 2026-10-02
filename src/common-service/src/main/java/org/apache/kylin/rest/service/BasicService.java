@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -126,12 +127,24 @@ public abstract class BasicService {
         return JsonUtil.readValue(response.getBody(), EnvelopeResponse.class);
     }
 
+    public <T> EnvelopeResponse<T> generateTaskForRemoteHost(final HttpServletRequest request, String url, byte[] body,
+            Map<String, String> additionalHeaders) throws Exception {
+        val response = getHttpResponse(request, url, body, additionalHeaders);
+        return JsonUtil.readValue(response.getBody(), EnvelopeResponse.class);
+    }
+
     private ResponseEntity<byte[]> getHttpResponse(final HttpServletRequest request, String url, byte[] body) {
+        return getHttpResponse(request, url, body, Collections.emptyMap());
+    }
+
+    private ResponseEntity<byte[]> getHttpResponse(final HttpServletRequest request, String url, byte[] body,
+            Map<String, String> additionalHeaders) {
         HttpHeaders headers = new HttpHeaders();
         Collections.list(request.getHeaderNames())
                 .forEach(k -> headers.put(k, Collections.list(request.getHeaders(k))));
         //remove gzip
         headers.remove(ACCEPT_ENCODING);
+        additionalHeaders.forEach(headers::set);
         return restTemplate.exchange(url, HttpMethod.valueOf(request.getMethod()), new HttpEntity<>(body, headers),
                 byte[].class);
     }

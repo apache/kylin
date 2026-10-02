@@ -58,6 +58,7 @@ import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -96,6 +97,9 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private JobInfoService jobInfoService;
+
+    @Mock
+    private AclEvaluate aclEvaluate;
 
     @InjectMocks
     private final JobController jobController = Mockito.spy(new JobController());
@@ -642,7 +646,8 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void routeGlutenCache() throws Exception {
         val servletRequest = new MockHttpServletRequest();
-        val request = new LoadGlutenCacheRequest("default", Lists.newArrayList("test command"));
+        val request = new LoadGlutenCacheRequest("default",
+                Lists.newArrayList("CACHE DATA SELECT * FROM 'test-path'"));
         Mockito.when(routeService.routeGlutenCache(request.getCacheCommands(), servletRequest)).thenReturn(true);
         val mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/jobs/gluten_cache") //
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request)))
