@@ -62,6 +62,7 @@ import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
+import org.apache.kylin.rest.util.SparkUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -309,8 +310,13 @@ public class JobController extends BaseController {
     @PutMapping(value = "/spark")
     @ApiOperation(value = "updateURL", tags = { "DW" })
     @ResponseBody
-    public EnvelopeResponse<String> updateSparkJobInfo(@RequestBody SparkJobUpdateRequest sparkJobUpdateRequest) {
+    public EnvelopeResponse<String> updateSparkJobInfo(@RequestBody SparkJobUpdateRequest sparkJobUpdateRequest,
+            HttpServletRequest servletRequest) {
         checkProjectName(sparkJobUpdateRequest.getProject());
+        if (StringUtils.isNotBlank(sparkJobUpdateRequest.getYarnAppUrl())) {
+            SparkUIUtil.validateJobTrackingUrl(sparkJobUpdateRequest.getYarnAppUrl(),
+                    servletRequest.getRemoteAddr());
+        }
         return updateJobInfoWithCheck(sparkJobUpdateRequest.getProject(), sparkJobUpdateRequest.getJobId(),
                 sparkJobUpdateRequest.getJobLastRunningStartTime(),
                 () -> jobInfoService.updateSparkJobInfo(sparkJobUpdateRequest));

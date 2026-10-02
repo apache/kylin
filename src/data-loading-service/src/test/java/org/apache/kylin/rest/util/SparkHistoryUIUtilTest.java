@@ -23,6 +23,7 @@ import static org.apache.spark.deploy.history.HistoryServerBuilder.createHistory
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -77,7 +78,9 @@ public class SparkHistoryUIUtilTest extends NLocalFileMetadataTestCase {
         field.set(null, mockFactory);
         ClientHttpResponse mockClientHttpResponse = Mockito.mock(ClientHttpResponse.class);
         Mockito.when(mockClientHttpResponse.getStatusCode()).thenReturn(HttpStatus.FOUND);
-        Mockito.when(mockClientHttpResponse.getHeaders()).thenReturn(new HttpHeaders());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setLocation(URI.create("http://localhost:18080/redirect"));
+        Mockito.when(mockClientHttpResponse.getHeaders()).thenReturn(responseHeaders);
 
         ClientHttpRequest mockRequest = Mockito.mock(ClientHttpRequest.class);
         Mockito.when(mockRequest.getHeaders()).thenReturn(new HttpHeaders());

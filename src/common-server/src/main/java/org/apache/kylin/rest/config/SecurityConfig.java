@@ -94,7 +94,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/query*/**", "/api/metadata*/**", "/api/cubes*/**", "/api/models*/**", "/api/job*/**",
-                        "/api/**")
+                        "/driver_ui/**", "/api/**")
                 .authenticated();
 
         http.logout()

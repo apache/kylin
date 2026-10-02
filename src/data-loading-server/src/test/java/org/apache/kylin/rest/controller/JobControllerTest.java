@@ -331,7 +331,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         request.setProject(job.getProject());
         request.setJobId(job.getId());
         request.setTaskId(job.getId() + "_00_00");
-        request.setYarnAppUrl("url");
+        request.setYarnAppUrl("http://127.0.0.1:4040");
         request.setYarnAppId("app_id");
         request.setCores("1");
         request.setMemory("1024");
@@ -340,12 +340,38 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         MvcResult result = mockMvc
                 .perform(MockMvcRequestBuilders.put("/api/jobs/spark").contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.writeValueAsString(request))
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
+                        })
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
         Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
 
-        Mockito.verify(jobController).updateSparkJobInfo(request);
+        Mockito.verify(jobController).updateSparkJobInfo(Mockito.eq(request), Mockito.any());
+    }
+
+    @Test
+    public void testUpdateSparkJobInfoRejectsUntrustedYarnAppUrl() throws Exception {
+        ExecutablePO job = mockJob(ExecutableState.RUNNING);
+        SparkJobUpdateRequest request = new SparkJobUpdateRequest();
+        request.setJobLastRunningStartTime(String.valueOf(job.getOutput().getLastRunningStartTime()));
+        request.setProject(job.getProject());
+        request.setJobId(job.getId());
+        request.setTaskId(job.getId() + "_00_00");
+        request.setYarnAppUrl("http://10.0.0.1:4040");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/jobs/spark").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .with(req -> {
+                    req.setRemoteAddr("127.0.0.1");
+                    return req;
+                })
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+        Mockito.verify(jobInfoService, Mockito.never()).updateSparkJobInfo(Mockito.any());
     }
 
     @Test
