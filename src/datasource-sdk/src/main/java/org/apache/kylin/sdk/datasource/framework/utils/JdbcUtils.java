@@ -19,6 +19,7 @@
 package org.apache.kylin.sdk.datasource.framework.utils;
 
 import java.sql.Connection;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,8 @@ public class JdbcUtils {
         connProp.put("username", username);
         connProp.put("password", password);
 
-        if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled() && !validateUrlByWhiteList(url)) {
+        if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                && !validateUrlByWhiteList(url, driver)) {
             log.warn("jdbc url white list check failed");
             return false;
         }
@@ -61,7 +63,7 @@ public class JdbcUtils {
         }
     }
 
-    public static boolean validateUrlByWhiteList(String url) {
+    public static boolean validateUrlByWhiteList(String url, String driver) {
         try {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             String scheme = null;
@@ -70,12 +72,17 @@ public class JdbcUtils {
             if (m.find()) {
                 scheme = m.group();
             }
+            scheme = scheme == null ? null : scheme.toLowerCase(Locale.ROOT);
             if (StringUtils.isBlank(scheme) || !config.getSourceJdbcWhiteListSchemes().contains(scheme)) {
+                return false;
+            }
+            if (!config.getSourceJdbcWhiteListDriversByScheme(scheme).contains(driver)) {
                 return false;
             }
 
             JdbcSourceValidationSettings settings = JdbcSourceValidationSettings.builder()
-                    .validUrlParamKeys(config.getSourceJdbcWhiteListUrlParamKeysByScheme(scheme)).build();
+                    .validUrlParamKeys(config.getSourceJdbcWhiteListUrlParamKeysByScheme(scheme))
+                    .validSemicolonParamKeys(config.getSourceJdbcWhiteListSemicolonParamKeysByScheme(scheme)).build();
 
             JdbcSourceConnectionValidator validator = (JdbcSourceConnectionValidator) ClassUtil
                     .newInstance(config.getSourceJdbcWhiteListValidatorClassByScheme(scheme));

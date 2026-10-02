@@ -21,6 +21,7 @@ package org.apache.kylin.sdk.datasource.framework.utils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.sdk.datasource.security.AbstractJdbcSourceConnectionValidator;
 import org.junit.After;
@@ -48,12 +49,38 @@ public class JdbcUtilsTest extends NLocalFileMetadataTestCase {
                 "org.apache.kylin.sdk.datasource.framework.utils.JdbcUtilsTest$MockJdbcSourceConnectionValidator");
 
         // valid cases
-        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://localhost:3306/db"));
-        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:postgresql://localhost:5433/db"));
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://localhost:3306/db", "com.mysql.cj.jdbc.Driver"));
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:postgresql://localhost:5433/db", "org.postgresql.Driver"));
 
         // invalid cases
-        assertFalse(JdbcUtils.validateUrlByWhiteList("xxx://localhost:3306/db"));
-        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:mongodb://localhost:1234/db"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("xxx://localhost:3306/db", "com.mysql.cj.jdbc.Driver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:mongodb://localhost:1234/db", "org.mongodb.Driver"));
+    }
+
+    @Test
+    public void testValidateUrlByWhiteList_driverCheck() {
+        overwriteSystemProp("kylin.source.jdbc.white-list.mysql.validator-class",
+                "org.apache.kylin.sdk.datasource.framework.utils.JdbcUtilsTest$MockJdbcSourceConnectionValidator");
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://localhost:3306/db", "com.mysql.jdbc.Driver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://localhost:3306/db", "org.h2.Driver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:mysql://localhost:3306/db", "com.mysql.jdbc.driver"));
+    }
+
+    @Test
+    public void testValidateUrlByWhiteList_enabledByDefault() {
+        assertTrue(KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled());
+    }
+
+    @Test
+    public void testValidateUrlByWhiteList_semicolonSettings() {
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:h2:mem:db;DB_CLOSE_DELAY=-1;MODE=MYSQL", "org.h2.Driver"));
+        assertTrue(JdbcUtils.validateUrlByWhiteList("jdbc:sqlserver://localhost;databaseName=kylin",
+                "com.microsoft.sqlserver.jdbc.SQLServerDriver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:h2:mem:db;INIT=RUNSCRIPT FROM 'evil.sql'",
+                "org.h2.Driver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList("jdbc:h2:mem:db;", "org.h2.Driver"));
+        assertFalse(JdbcUtils.validateUrlByWhiteList(
+                "jdbc:mysql://localhost:3306/db;allowLoadLocalInfile=true", "com.mysql.cj.jdbc.Driver"));
     }
 
     public static class MockJdbcSourceConnectionValidator extends AbstractJdbcSourceConnectionValidator {

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.sdk.datasource.security;
 
+import java.util.Collections;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
@@ -29,5 +30,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public final class JdbcSourceValidationSettings {
 
-    private Set<String> validUrlParamKeys;
+    @Builder.Default
+    private Set<String> validUrlParamKeys = Collections.emptySet();
+
+    @Builder.Default
+    private Set<String> validSemicolonParamKeys = Collections.emptySet();
 }

@@ -450,10 +450,14 @@ public class ProjectService extends BasicService {
                 throw new KylinException(INVALID_PARAMETER,
                         MsgPicker.getMsg().getIllegalNegative(KYLIN_JOB_MAX_CONCURRENT_JOBS));
         }
-        if (overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)) {
-            String url = overrideKylinProps.get(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY);
-            if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
-                    && !JdbcUtils.validateUrlByWhiteList(url)) {
+        if (overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)
+                || overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_DRIVER_KEY)) {
+            String url = overrideKylinProps.getOrDefault(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY,
+                    projectInstance.getConfig().getJdbcConnectionUrl());
+            String driver = overrideKylinProps.getOrDefault(KYLIN_SOURCE_JDBC_DRIVER_KEY,
+                    projectInstance.getConfig().getJdbcDriver());
+            if (StringUtils.isNotBlank(url) && KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                    && !JdbcUtils.validateUrlByWhiteList(url, driver)) {
                 throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
             }
         }

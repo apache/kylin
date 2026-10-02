@@ -31,6 +31,7 @@ public class CommonJdbcSourceConnectionValidatorTest {
     public void testValidate() {
         JdbcSourceValidationSettings settings = JdbcSourceValidationSettings.builder()
                 .validUrlParamKeys(Sets.newHashSet("q1", "q2", "q3"))
+                .validSemicolonParamKeys(Sets.newHashSet("DB_CLOSE_DELAY", "MODE"))
                 .build();
 
         {
@@ -41,6 +42,21 @@ public class CommonJdbcSourceConnectionValidatorTest {
         {
             CommonJdbcSourceConnectionValidator validator = new CommonJdbcSourceConnectionValidator();
             validator.settings(settings).url("jdbc:mysql://localhost:123/data_db?q1=v1&q2=v2&q4=v4");
+            assertFalse(validator.isValid());
+        }
+        {
+            CommonJdbcSourceConnectionValidator validator = new CommonJdbcSourceConnectionValidator();
+            validator.settings(settings).url("jdbc:h2:mem:db;DB_CLOSE_DELAY=-1;MODE=MYSQL");
+            assertTrue(validator.isValid());
+        }
+        {
+            CommonJdbcSourceConnectionValidator validator = new CommonJdbcSourceConnectionValidator();
+            validator.settings(settings).url("jdbc:h2:mem:db;INIT=RUNSCRIPT FROM 'evil.sql'");
+            assertFalse(validator.isValid());
+        }
+        {
+            CommonJdbcSourceConnectionValidator validator = new CommonJdbcSourceConnectionValidator();
+            validator.settings(settings).url("jdbc:mysql://localhost:123/data_db;allowLoadLocalInfile=true");
             assertFalse(validator.isValid());
         }
     }

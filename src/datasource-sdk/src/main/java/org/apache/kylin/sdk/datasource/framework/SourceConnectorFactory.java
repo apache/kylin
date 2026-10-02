@@ -43,7 +43,7 @@ public class SourceConnectorFactory {
         String adaptorClazz = config.getJdbcAdaptorClass();
 
         if (KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
-                && !JdbcUtils.validateUrlByWhiteList(jdbcUrl)) {
+                && !JdbcUtils.validateUrlByWhiteList(jdbcUrl, jdbcDriver)) {
             throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
         }
 

@@ -18,70 +18,7 @@
 
 package org.apache.kylin.rest.source;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.kylin.sdk.datasource.security.DefaultJdbcSourceConnectionValidator;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.sdk.datasource.security.AbstractJdbcSourceConnectionValidator;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@NoArgsConstructor
-@Slf4j
-public class CommonJdbcSourceConnectionValidator extends AbstractJdbcSourceConnectionValidator {
-
-    private static final String JDBC_COLON = "jdbc:";
-
-    private boolean parsed = false;
-    private String scheme;
-    private String host;
-    private int port;
-    private String path;
-    private Map<String, List<String>> queryParams;
-
-    @Override
-    public boolean isValid() {
-        if (!parsed) {
-            try {
-                parseUrl();
-            } catch (Exception e) {
-                log.error("Error on parseUrl", e);
-                return false;
-            }
-        }
-        // Only query param keys need to be validated currently
-        return validateQueryParamKeys();
-    }
-
-    private boolean validateQueryParamKeys() {
-        Set<String> validUrlParamKeys = settings.getValidUrlParamKeys();
-        Set<String> userInputKeys = queryParams.keySet();
-        return validUrlParamKeys.containsAll(userInputKeys);
-    }
-
-    private void parseUrl() {
-        if (parsed) {
-            return;
-        }
-        if (StringUtils.isBlank(url)) {
-            throw new IllegalStateException("url cannot be empty");
-        }
-        if (!url.startsWith(JDBC_COLON)) {
-            throw new IllegalStateException("url must start with " + JDBC_COLON);
-        }
-
-        String noPrefixUrl = url.substring(JDBC_COLON.length());
-        UriComponents uri = UriComponentsBuilder.fromUriString(noPrefixUrl).build();
-        scheme = uri.getScheme();
-        host = uri.getHost();
-        port = uri.getPort();
-        path = uri.getPath();
-        queryParams = uri.getQueryParams();
-
-        parsed = true;
-    }
+public class CommonJdbcSourceConnectionValidator extends DefaultJdbcSourceConnectionValidator {
 }

@@ -4530,15 +4530,16 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isSourceJdbcWhiteListEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.source.jdbc.white-list.enabled", FALSE));
+        return Boolean.parseBoolean(getOptional("kylin.source.jdbc.white-list.enabled", TRUE));
     }
 
     public Set<String> getSourceJdbcWhiteListSchemes() {
-        String config = StringUtils.deleteWhitespace(getOptional("kylin.source.jdbc.white-list.schemes", ""));
+        String config = StringUtils.deleteWhitespace(getOptional("kylin.source.jdbc.white-list.schemes",
+                "h2,mysql,postgresql,sqlserver,snowflake"));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
-        return Sets.newHashSet(config.split(","));
+        return Arrays.stream(config.split(",")).map(value -> value.toLowerCase(Locale.ROOT)).collect(Collectors.toSet());
     }
 
     public String getSourceJdbcWhiteListValidatorClassByScheme(String scheme) {
@@ -4547,7 +4548,7 @@ public abstract class KylinConfigBase implements Serializable {
             return null;
         }
         return getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.validator-class", scheme),
-                "org.apache.kylin.rest.source.CommonJdbcSourceConnectionValidator");
+                "org.apache.kylin.sdk.datasource.security.DefaultJdbcSourceConnectionValidator");
     }
 
     public Set<String> getSourceJdbcWhiteListUrlParamKeysByScheme(String scheme) {
@@ -4561,6 +4562,61 @@ public abstract class KylinConfigBase implements Serializable {
             return Collections.emptySet();
         }
         return Sets.newHashSet(config.split(","));
+    }
+
+    public Set<String> getSourceJdbcWhiteListDriversByScheme(String scheme) {
+        Set<String> whiteListSchemes = getSourceJdbcWhiteListSchemes();
+        if (!whiteListSchemes.contains(scheme)) {
+            return Collections.emptySet();
+        }
+        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
+                "kylin.source.jdbc.white-list.%s.drivers", scheme), getDefaultSourceJdbcDrivers(scheme)));
+        if (StringUtils.isBlank(config)) {
+            return Collections.emptySet();
+        }
+        return Sets.newHashSet(config.split(","));
+    }
+
+    public Set<String> getSourceJdbcWhiteListSemicolonParamKeysByScheme(String scheme) {
+        Set<String> whiteListSchemes = getSourceJdbcWhiteListSchemes();
+        if (!whiteListSchemes.contains(scheme)) {
+            return Collections.emptySet();
+        }
+        String defaultValue;
+        switch (scheme) {
+        case "h2":
+            defaultValue = "DB_CLOSE_DELAY,MODE,DATABASE_TO_UPPER,DEFAULT_LOCK_TIMEOUT,SCHEMA";
+            break;
+        case "sqlserver":
+            defaultValue = "databaseName,encrypt,trustServerCertificate,applicationName,loginTimeout,socketTimeout";
+            break;
+        default:
+            defaultValue = "";
+            break;
+        }
+        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
+                "kylin.source.jdbc.white-list.%s.semicolon-param-keys", scheme), defaultValue));
+        if (StringUtils.isBlank(config)) {
+            return Collections.emptySet();
+        }
+        return Sets.newHashSet(config.split(","));
+    }
+
+    private String getDefaultSourceJdbcDrivers(String scheme) {
+        switch (scheme) {
+        case "h2":
+            return "org.h2.Driver";
+        case "mysql":
+            return "com.mysql.jdbc.Driver,com.mysql.cj.jdbc.Driver";
+        case "postgresql":
+            return "org.postgresql.Driver";
+        case "sqlserver":
+            return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+        case "snowflake":
+            return "net.snowflake.client.jdbc.SnowflakeDriver";
+        default:
+            return "";
+        }
     }
 
     public boolean isForcedToPushDown() {
