@@ -22,8 +22,9 @@ import javax.servlet.Filter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -39,8 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 @Order(200)
 @Configuration
 @EnableWebSecurity
-@Profile({ "testing", "ldap", "custom" })
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private static final String[] SUPPORTED_AUTHENTICATION_PROFILES = { "testing", "ldap", "saml", "custom" };
 
     @Autowired
     Filter fillEmptyAuthorizationFilter;
@@ -51,8 +53,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     AuthenticationEntryPoint nUnauthorisedEntryPoint;
 
+    @Autowired
+    Environment environment;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        validateAuthenticationProfile(environment);
+
         // @formatter:off
         // https://docs.spring.io/spring-security/site/docs/3.2.x/reference/htmlsingle/html5/#nsa-http-attributes
         http.formLogin()
@@ -105,5 +112,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.sessionManagement(configurer -> configurer.sessionFixation().newSession());
         // @formatter:on
+    }
+
+    static void validateAuthenticationProfile(Environment environment) {
+        if (!environment.acceptsProfiles(Profiles.of(SUPPORTED_AUTHENTICATION_PROFILES))) {
+            throw new IllegalStateException("No supported authentication profile is active. Expected one of: "
+                    + String.join(", ", SUPPORTED_AUTHENTICATION_PROFILES));
+        }
     }
 }
