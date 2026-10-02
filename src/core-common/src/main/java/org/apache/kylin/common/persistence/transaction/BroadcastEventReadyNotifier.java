@@ -40,6 +40,8 @@ import lombok.Setter;
 @Setter
 public class BroadcastEventReadyNotifier extends SchedulerEventNotifier {
 
+    public static final String BROADCAST_TOKEN_HEADER = "X-Kylin-Broadcast-Token";
+
     public BroadcastScopeEnum getBroadcastScope() {
         return BroadcastScopeEnum.WHOLE_NODES;
     }

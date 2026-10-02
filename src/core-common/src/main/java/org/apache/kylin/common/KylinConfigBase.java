@@ -774,6 +774,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.server.https.keystore-password", "changeit");
     }
 
+    public String getBroadcastToken() {
+        return EncryptUtil.getDecryptedValue(getOptional("kylin.server.broadcast-token", ""));
+    }
+
     public String getServerHttpsKeyAlias() {
         return getOptional("kylin.server.https.key-alias", null);
     }
@@ -4558,7 +4562,7 @@ public abstract class KylinConfigBase implements Serializable {
         }
         return Sets.newHashSet(config.split(","));
     }
-    
+
     public boolean isForcedToPushDown() {
         return Boolean.parseBoolean(getOptional("kylin.query.pushdown-force", FALSE));
     }

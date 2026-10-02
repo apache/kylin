@@ -78,6 +78,7 @@ import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.security.AclRecord;
+import org.apache.kylin.rest.security.BroadcastSecurityContext;
 import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.MutableAclRecord;
@@ -927,7 +928,7 @@ public class AccessService extends BasicService {
             throws IOException {
         AccessGrantEventNotifier notifier = new AccessGrantEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(), identifier,
                 isPrincipal, permission);
-        updateAccess(notifier, null, null);
+        BroadcastSecurityContext.runAsTrusted(() -> updateAccess(notifier, null, null));
         return true;
     }
 
@@ -936,7 +937,7 @@ public class AccessService extends BasicService {
     public boolean batchGrantAccess(List<AccessRequest> requests, AclEntity ae) throws IOException {
         AccessBatchGrantEventNotifier notifier = new AccessBatchGrantEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(),
                 JsonUtil.writeValueAsString(requests));
-        updateAccess(null, notifier, null);
+        BroadcastSecurityContext.runAsTrusted(() -> updateAccess(null, notifier, null));
         return true;
     }
 
@@ -945,13 +946,14 @@ public class AccessService extends BasicService {
     public boolean revokeAccess(AclEntity ae, String name, boolean principal) throws IOException {
         AccessRevokeEventNotifier notifier = new AccessRevokeEventNotifier(UnitOfWork.GLOBAL_UNIT, ae.getId(), name,
                 principal);
-        updateAccess(null, null, notifier);
+        BroadcastSecurityContext.runAsTrusted(() -> updateAccess(null, null, notifier));
         return true;
     }
 
     @Transaction
     public void updateAccess(AccessGrantEventNotifier grantNotifier, AccessBatchGrantEventNotifier batchGrantNotifier,
             AccessRevokeEventNotifier revokeNotifier) throws IOException {
+        BroadcastSecurityContext.requireTrustedBroadcastOrGlobalAdmin();
         if (grantNotifier != null) {
             AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, grantNotifier.getEntityId());
             grant(ae, grantNotifier.getIdentifier(), grantNotifier.getIsPrincipal(), grantNotifier.getPermission());

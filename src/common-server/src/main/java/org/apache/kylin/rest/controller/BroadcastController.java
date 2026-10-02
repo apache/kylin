@@ -20,13 +20,21 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.rest.config.initialize.BroadcastListener;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.security.BroadcastSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +42,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Controller
 @RequestMapping(value = "/api/broadcast", produces = { HTTP_VND_APACHE_KYLIN_JSON,
@@ -45,10 +55,30 @@ public class BroadcastController extends NBasicController {
 
     @PostMapping(value = "")
     @ResponseBody
-    public EnvelopeResponse<String> broadcastReceive(@RequestBody BroadcastEventReadyNotifier notifier)
+    public EnvelopeResponse<String> broadcastReceive(@RequestBody JsonNode body, HttpServletRequest request)
             throws IOException {
-        localHandler.handle(notifier);
+        BroadcastEventReadyNotifier notifier = BroadcastEventValidator.validateAndDeserialize(body);
+        authorizeBroadcast(request);
+        BroadcastSecurityContext.runAsTrusted(() -> localHandler.handle(notifier));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    private void authorizeBroadcast(HttpServletRequest request) {
+        if (isAdmin()) {
+            return;
+        }
+
+        String configuredToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        String providedToken = request == null ? null
+                : request.getHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER);
+        if (StringUtils.isNotBlank(configuredToken) && providedToken != null
+                && MessageDigest.isEqual(configuredToken.getBytes(StandardCharsets.UTF_8),
+                        providedToken.getBytes(StandardCharsets.UTF_8))) {
+            return;
+        }
+
+        throw new KylinException(PERMISSION_DENIED,
+                "Broadcast endpoint requires an authenticated global admin or a valid broadcast token.");
     }
 
     @PutMapping(value = "/capacity/refresh_all")

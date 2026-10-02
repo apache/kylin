@@ -60,6 +60,7 @@ import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.security.AclRecord;
+import org.apache.kylin.rest.security.BroadcastSecurityContext;
 import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.security.UserAclManager;
@@ -944,5 +945,19 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+    }
+
+    @Test
+    public void testUpdateAccessRejectsUntrustedCaller() {
+        SecurityContextHolder.clearContext();
+
+        Assert.assertThrows(KylinException.class, () -> accessService.updateAccess(null, null, null));
+    }
+
+    @Test
+    public void testUpdateAccessAllowsTrustedInternalCaller() throws IOException {
+        SecurityContextHolder.clearContext();
+
+        BroadcastSecurityContext.runAsTrusted(() -> accessService.updateAccess(null, null, null));
     }
 }

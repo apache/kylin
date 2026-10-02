@@ -69,6 +69,7 @@ import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.request.AclTCRRequest;
 import org.apache.kylin.rest.response.AclTCRResponse;
+import org.apache.kylin.rest.security.BroadcastSecurityContext;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
@@ -102,6 +103,7 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
     private UserService userService;
 
     public void revokeAclTCR(String uuid, String sid, boolean principal) {
+        BroadcastSecurityContext.requireTrustedBroadcastOrGlobalAdmin();
         // permission already has been checked in AccessService#revokeAcl
         getManager(NProjectManager.class).listAllProjects().stream().filter(p -> p.getUuid().equals(uuid)).findFirst()
                 .ifPresent(prj -> EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
@@ -111,6 +113,7 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
     }
 
     public void revokeAclTCR(String sid, boolean principal) {
+        BroadcastSecurityContext.requireTrustedBroadcastOrGlobalAdmin();
         // only global admin has permission
         // permission already has been checked in UserController, UserGroupController
         projectService.getOwnedProjects().parallelStream()
@@ -1200,18 +1203,19 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
     public boolean remoteGrantACL(String projectId, List<AccessRequest> accessRequests) throws IOException {
         AclGrantEventNotifier notifier = new AclGrantEventNotifier(projectId,
                 JsonUtil.writeValueAsString(accessRequests));
-        updateAclFromRemote(notifier, null);
+        BroadcastSecurityContext.runAsTrusted(() -> updateAclFromRemote(notifier, null));
         return true;
     }
 
     public boolean remoteRevokeACL(String projectId, String sid, boolean principal) throws IOException {
         AclRevokeEventNotifier notifier = new AclRevokeEventNotifier(projectId, sid, principal);
-        updateAclFromRemote(null, notifier);
+        BroadcastSecurityContext.runAsTrusted(() -> updateAclFromRemote(null, notifier));
         return true;
     }
 
     public void updateAclFromRemote(AclGrantEventNotifier grantEventNotifier,
             AclRevokeEventNotifier revokeEventNotifier) throws IOException {
+        BroadcastSecurityContext.requireTrustedBroadcastOrGlobalAdmin();
         if (grantEventNotifier != null) {
             List<AccessRequest> accessRequest = JsonUtil.readValue(grantEventNotifier.getRawAclTCRRequests(),
                     new TypeReference<List<AccessRequest>>() {

@@ -44,6 +44,7 @@ import org.apache.kylin.rest.service.AuditLogService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.UserAclService;
+import org.apache.kylin.rest.security.BroadcastSecurityContext;
 import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,6 +132,6 @@ public class BroadcastListener implements BroadcastEventHandler {
 
     @Override
     public void handleLocally(BroadcastEventReadyNotifier notifier) throws IOException {
-        handle(notifier);
+        BroadcastSecurityContext.runAsTrusted(() -> handle(notifier));
     }
 }

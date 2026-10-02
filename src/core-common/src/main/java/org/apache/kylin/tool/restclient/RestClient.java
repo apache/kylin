@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -181,6 +182,10 @@ public class RestClient {
         String url = baseUrl + "/broadcast";
         HttpPost post = newPost(url);
         post.addHeader(ROUTED, "true");
+        String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        if (StringUtils.isNotBlank(broadcastToken)) {
+            post.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+        }
         HttpResponse response = null;
         try {
             post.setEntity(new ByteArrayEntity(JsonUtil.writeValueAsBytes(notifier), ContentType.APPLICATION_JSON));
