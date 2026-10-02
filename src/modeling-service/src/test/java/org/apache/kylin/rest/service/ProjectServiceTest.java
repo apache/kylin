@@ -97,6 +97,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -968,6 +969,16 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(1, projectInstances.size());
         Assert.assertEquals(HIDDEN_VALUE,
                 projectInstances.get(0).getProject().getOverrideKylinProps().get("kylin.source.jdbc.pass"));
+    }
+
+    @Test
+    public void testUpdateJdbcConfigCheckProjectAdminPermission() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectAdminPermission(PROJECT);
+
+        Assert.assertThrows(AccessDeniedException.class,
+                () -> projectService.updateJdbcConfig(PROJECT, new JdbcRequest()));
+        Mockito.verify(aclEvaluate).checkProjectAdminPermission(PROJECT);
     }
 
     @Test

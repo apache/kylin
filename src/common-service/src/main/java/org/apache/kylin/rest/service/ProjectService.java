@@ -1294,6 +1294,7 @@ public class ProjectService extends BasicService {
 
     @Transaction(project = 0)
     public void updateJdbcConfig(String project, JdbcRequest jdbcRequest) {
+        aclEvaluate.checkProjectAdminPermission(project);
         Map<String, String> overrideKylinProps = Maps.newLinkedHashMap();
         overrideKylinProps.put("kylin.source.jdbc.connection-url", jdbcRequest.getUrl());
         overrideKylinProps.put("kylin.source.jdbc.driver", jdbcRequest.getDriver());
