@@ -44,6 +44,7 @@ import org.apache.kylin.rest.request.DDLRequest;
 import org.apache.kylin.rest.response.DDLResponse;
 import org.apache.kylin.rest.response.ExportTablesResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.rest.source.DataSourceState;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
@@ -55,7 +56,6 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Database;
-import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.catalyst.TableIdentifier;
 import org.apache.spark.sql.catalyst.catalog.CatalogTable;
 import org.apache.spark.sql.delta.DeltaTableUtils;
@@ -146,15 +146,15 @@ public class SparkSourceService extends BasicService {
     }
 
     public List<TableNameResponse> listTables(String db, String project) throws Exception {
-        if (Strings.isNullOrEmpty(project)) {
-            SparkSession sparkSession = SparderEnv.getSparkSession();
-            Dataset<Table> tableDataset = sparkSession.catalog().listTables(db);
-            List<Table> sparkTables = tableDataset.collectAsList();
-            return sparkTables.stream()
-                    .map(table -> new TableNameResponse(table.name().toUpperCase(Locale.ROOT), false))
-                    .collect(Collectors.toList());
+        aclEvaluate.checkProjectReadPermission(project);
+        val projectInstance = getManager(NProjectManager.class).getProject(project);
+        List<String> hiveDatabases = DataSourceState.getInstance().getHiveFilterList(projectInstance);
+        if (!hiveDatabases.isEmpty()
+                && (Strings.isNullOrEmpty(db) || !hiveDatabases.contains(db.toUpperCase(Locale.ROOT)))) {
+            throw new KylinException(ServerErrorCode.PERMISSION_DENIED,
+                    MsgPicker.getMsg().getAclPermissionRequired());
         }
-        ISourceMetadataExplorer explr = SourceFactory.getSource(getManager(NProjectManager.class).getProject(project))
+        ISourceMetadataExplorer explr = SourceFactory.getSource(projectInstance)
                 .getSourceMetadataExplorer();
         List<String> tables = explr.listTables(db).stream().map(str -> str.toUpperCase(Locale.ROOT))
                 .collect(Collectors.toList());

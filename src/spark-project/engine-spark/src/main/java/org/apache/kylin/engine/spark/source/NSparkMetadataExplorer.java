@@ -60,6 +60,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Database;
+import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
 import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
@@ -131,12 +132,10 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
 
         List<String> tables = Lists.newArrayList();
         try {
-            String sql = "show tables";
-            if (StringUtils.isNotBlank(database)) {
-                sql = String.format(Locale.ROOT, sql + " in %s", database);
-            }
-            Dataset<Row> dataset = SparderEnv.getSparkSession().sql(sql).select("tableName");
-            tables = dataset.collectAsList().stream().map(row -> row.getString(0)).collect(Collectors.toList());
+            SparkSession sparkSession = SparderEnv.getSparkSession();
+            Dataset<Table> dataset = StringUtils.isNotBlank(database) ? sparkSession.catalog().listTables(database)
+                    : sparkSession.catalog().listTables();
+            tables = dataset.collectAsList().stream().map(Table::name).collect(Collectors.toList());
 
             if (config.getTableAccessFilterEnable() && config.getKerberosProjectLevelEnable()
                     && UserGroupInformation.isSecurityEnabled()) {

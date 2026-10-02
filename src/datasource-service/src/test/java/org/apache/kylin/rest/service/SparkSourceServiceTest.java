@@ -195,6 +195,25 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testListTables() throws Exception {
         Assert.assertEquals(11, sparkSourceService.listTables("DEFAULT", "default").size());
+        Mockito.verify(aclEvaluate).checkProjectReadPermission("default");
+    }
+
+    @Test
+    public void testListTablesWithProjectReadPermissionDenied() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectReadPermission("default");
+        Assert.assertThrows(AccessDeniedException.class, () -> sparkSourceService.listTables("DEFAULT", "default"));
+    }
+
+    @Test
+    public void testListTablesOutsideProjectScope() {
+        ProjectInstance projectInstance = projectManager.getProject("default");
+        LinkedHashMap<String, String> overrideKylinProps = projectInstance.getOverrideKylinProps();
+        overrideKylinProps.put("kylin.source.hive.databases", "SSB");
+        projectManager.updateProject(projectInstance, projectInstance.getName(), projectInstance.getDescription(),
+                overrideKylinProps);
+
+        Assert.assertThrows(KylinException.class, () -> sparkSourceService.listTables("DEFAULT", "default"));
     }
 
     @Test

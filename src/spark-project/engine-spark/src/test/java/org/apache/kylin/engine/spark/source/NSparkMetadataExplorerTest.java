@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.engine.spark.source;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
@@ -26,9 +27,11 @@ import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.internal.SQLConf;
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,6 +82,24 @@ public class NSparkMetadataExplorerTest extends NLocalWithSparkSessionTestBase {
 
         Assert.assertTrue(tables != null && tables.size() > 0);
         Assert.assertEquals(tables.get(0), "part");
+    }
+
+    @Test
+    public void testListTablesUsesCatalogApi() throws Exception {
+        SparkSession sparkSession = Mockito.mock(SparkSession.class, Mockito.RETURNS_DEEP_STUBS);
+        Dataset<Table> dataset = Mockito.mock(Dataset.class);
+        Table table = Mockito.mock(Table.class);
+        Mockito.when(sparkSession.catalog().listTables("default")).thenReturn(dataset);
+        Mockito.when(dataset.collectAsList()).thenReturn(Collections.singletonList(table));
+        Mockito.when(table.name()).thenReturn("safe_table");
+        SparderEnv.setSparkSession(sparkSession);
+        try {
+            NSparkMetadataExplorer sparkMetadataExplorer = new NSparkMetadataExplorer();
+            Assert.assertEquals(Collections.singletonList("safe_table"), sparkMetadataExplorer.listTables("default"));
+            Mockito.verify(sparkSession, Mockito.never()).sql(Mockito.anyString());
+        } finally {
+            SparderEnv.setSparkSession(ss);
+        }
     }
 
     @Test
