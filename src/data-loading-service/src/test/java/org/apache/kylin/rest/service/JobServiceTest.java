@@ -82,6 +82,8 @@ import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.util.DumpInfo;
+import org.apache.kylin.util.MetadataDumpUtil;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -693,6 +695,30 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
                 .checkProjectOperationPermission(project);
         Assert.assertThrows(AccessDeniedException.class, () -> jobService.updateDumpedMetadata(request));
+    }
+
+    @Test
+    public void testUpdateDumpedMetadataRejectsUntrustedMetadataStore() {
+        ReplaceMetaRequest request = new ReplaceMetaRequest();
+        request.setProject(project);
+        request.setDistMetaUrl("kylin_metadata@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:test");
+        Assert.assertThrows(KylinException.class, () -> jobService.updateDumpedMetadata(request));
+    }
+
+    @Test
+    public void testUpdateDumpedMetadataRejectsMetadataStoreOutsideJobTemp() {
+        ReplaceMetaRequest request = new ReplaceMetaRequest();
+        request.setProject(project);
+        request.setDistMetaUrl(getTestConfig().getMetadataUrlPrefix() + "@hdfs,path=/tmp/not-job-temp/meta");
+        Assert.assertThrows(KylinException.class, () -> jobService.updateDumpedMetadata(request));
+    }
+
+    @Test
+    public void testValidateGeneratedJobTempMetadataStore() {
+        DumpInfo dumpInfo = new DumpInfo(project,
+                getTestConfig().getJobTmpMetaStoreUrl(project, RandomUtil.randomUUIDStr()).toString(), Sets.newHashSet(),
+                DumpInfo.DumpType.DATA_LOADING);
+        MetadataDumpUtil.validateMetadataStoreUrl(getTestConfig(), dumpInfo);
     }
 
     @Test

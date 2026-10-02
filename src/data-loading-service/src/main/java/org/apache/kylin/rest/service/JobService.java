@@ -295,6 +295,7 @@ public class JobService extends BasicService {
 
         Set<String> dumpList = new LinkedHashSet<>();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        MetadataDumpUtil.validateMetadataStoreUrl(config, project, distMetaUrl);
         NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(modelId);
         dumpList.addAll(df.collectPrecalculationResource());
         dumpList.addAll(getLogicalViewMetaDumpList(config, project, viewTable, modelId));

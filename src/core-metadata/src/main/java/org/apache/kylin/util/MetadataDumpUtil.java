@@ -18,17 +18,25 @@
 
 package org.apache.kylin.util;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.metadata.FileSystemMetadataStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
@@ -43,11 +51,8 @@ public class MetadataDumpUtil {
 
     public static void dumpMetadata(DumpInfo info) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        validateMetadataStoreUrl(config, info);
         String metaDumpUrl = info.getDistMetaUrl();
-
-        if (StringUtils.isEmpty(metaDumpUrl)) {
-            throw new RuntimeException("Missing metaUrl");
-        }
 
         final Properties props = config.exportToProperties();
         props.setProperty("kylin.metadata.url", metaDumpUrl);
@@ -61,6 +66,74 @@ public class MetadataDumpUtil {
             dstMetadataStore.dump(ResourceStore.getKylinMetaStore(config), info.getMetadataDumpList());
         }
         log.debug("Dump metadata finished.");
+    }
+
+    public static void validateMetadataStoreUrl(KylinConfig config, DumpInfo info) {
+        validateMetadataStoreUrl(config, info.getProject(), info.getDistMetaUrl());
+    }
+
+    public static void validateMetadataStoreUrl(KylinConfig config, String project, String metaDumpUrl) {
+        if (StringUtils.isBlank(metaDumpUrl)) {
+            throw invalidMetadataStoreUrl();
+        }
+
+        StorageURL storageUrl;
+        try {
+            storageUrl = StorageURL.valueOf(metaDumpUrl);
+        } catch (RuntimeException e) {
+            throw invalidMetadataStoreUrl();
+        }
+        String scheme = storageUrl.getScheme();
+        if (!FileSystemMetadataStore.HDFS_SCHEME.equalsIgnoreCase(scheme)
+                && !FileSystemMetadataStore.FILE_SCHEME.equalsIgnoreCase(scheme)) {
+            throw invalidMetadataStoreUrl();
+        }
+        if (!config.getMetadataUrlPrefix().equals(storageUrl.getIdentifier())) {
+            throw invalidMetadataStoreUrl();
+        }
+        if (storageUrl.getAllParameters().size() != 1 || !storageUrl.containsParameter("path")
+                || StringUtils.isBlank(storageUrl.getParameter("path"))) {
+            throw invalidMetadataStoreUrl();
+        }
+
+        Path metadataStorePath = new Path(storageUrl.getParameter("path"));
+        Path allowedRoot = new Path(new Path(config.getWorkingDirectoryWithConfiguredFs(project)), "job_tmp");
+        if (!isStrictDescendant(metadataStorePath, allowedRoot)) {
+            throw invalidMetadataStoreUrl();
+        }
+    }
+
+    private static boolean isStrictDescendant(Path candidate, Path root) {
+        try {
+            URI candidateUri = normalize(candidate.toUri());
+            URI rootUri = normalize(root.toUri());
+            String candidateScheme = StringUtils.defaultIfBlank(candidateUri.getScheme(), rootUri.getScheme());
+            String candidateAuthority = StringUtils.defaultIfBlank(candidateUri.getAuthority(), rootUri.getAuthority());
+            if (!StringUtils.equalsIgnoreCase(candidateScheme, rootUri.getScheme())
+                    || !StringUtils.equalsIgnoreCase(candidateAuthority, rootUri.getAuthority())) {
+                return false;
+            }
+
+            String candidatePath = candidateUri.getPath();
+            String rootPath = rootUri.getPath();
+            if (StringUtils.isBlank(candidatePath) || StringUtils.isBlank(rootPath)) {
+                return false;
+            }
+            if (!rootPath.endsWith("/")) {
+                rootPath += "/";
+            }
+            return candidatePath.startsWith(rootPath);
+        } catch (IllegalArgumentException | URISyntaxException e) {
+            return false;
+        }
+    }
+
+    private static URI normalize(URI uri) throws URISyntaxException {
+        return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), null, null).normalize();
+    }
+
+    private static KylinException invalidMetadataStoreUrl() {
+        return new KylinException(INVALID_PARAMETER, "Invalid metadata dump URL.");
     }
 
     private static void dumpMetadataViaTmpDir(KylinConfig config, MetadataStore dstMetadataStore, DumpInfo info)
