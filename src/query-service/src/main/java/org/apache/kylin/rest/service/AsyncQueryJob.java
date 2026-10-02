@@ -60,6 +60,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.job.DefaultSparkBuildJobHandler;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
+import org.apache.kylin.engine.spark.job.SparkSubmitCommand;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.common.ExecutableUtil;
@@ -108,9 +109,11 @@ public class AsyncQueryJob extends NSparkExecutable {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkJobHandler.generateSparkCmd(KylinConfig.getInstanceFromEnv(), desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkJobHandler.generateSparkCmd(
+                    KylinConfig.getInstanceFromEnv(), desc);
             CliCommandExecutor exec = getCliCommandExecutor();
-            CliCommandExecutor.CliCmdExecResult r = exec.execute(cmd, patternedLogger, getId());
+            CliCommandExecutor.CliCmdExecResult r = exec.execute(cmd.getArguments(), cmd.getEnvironment(),
+                    patternedLogger, getId());
             return ExecuteResult.createSucceed(r.getCmd());
         } catch (Exception e) {
             return ExecuteResult.createError(e);

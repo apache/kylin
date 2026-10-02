@@ -18,12 +18,15 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
@@ -35,17 +38,12 @@ import org.apache.kylin.query.plugin.profiler.QueryAsyncProfilerSparkPlugin;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import lombok.val;
 import lombok.var;
 
 public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
-
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private NDataModelManager modelManager;
 
@@ -63,10 +61,9 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
     @Test
     public void attachMetadataAndKylinProps() throws Exception {
         KylinConfig config = getTestConfig();
-        val junitFolder = temporaryFolder.getRoot();
-        val path = junitFolder.getAbsolutePath();
+        StorageURL metaStoreUrl = config.getJobTmpMetaStoreUrl("default", RandomUtil.randomUUIDStr());
         MockSparkTestExecutable executable = new MockSparkTestExecutable();
-        executable.setMetaUrl(path);
+        executable.setMetaUrl(metaStoreUrl.toString());
         executable.setProject("default");
         Assert.assertEquals(8, executable.getMetadataDumpList(config).size());
         NDataModel model = modelManager.getDataModelDesc("82fa7671-a935-45f5-8779-85703601f49a");
@@ -74,7 +71,8 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             new Thread(new AddModelRunner(model)).start();
         }
         executable.attachMetadataAndKylinProps(config);
-        Assert.assertEquals(2, Objects.requireNonNull(junitFolder.listFiles()).length);
+        File dumpedMetaDir = new File(new Path(metaStoreUrl.getParameter("path")).toUri().getPath());
+        Assert.assertEquals(2, Objects.requireNonNull(dumpedMetaDir.listFiles()).length);
     }
 
     class AddModelRunner implements Runnable {
@@ -122,15 +120,17 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig,
+                    desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(cmd.contains("spark-submit"));
+            Assert.assertTrue(cmd.getArguments().get(0).contains("spark-submit"));
             Assert.assertTrue(
-                    cmd.contains("log4j.configurationFile=file:" + kylinConfig.getLogSparkDriverPropertiesFile()));
-            Assert.assertTrue(cmd.contains("spark.executor.extraClassPath=job.jar"));
-            Assert.assertTrue(cmd.contains("spark.driver.log4j.appender.hdfs.File="));
-            Assert.assertTrue(cmd.contains("kylin.hdfs.working.dir="));
+                    cmd.getArguments().toString()
+                            .contains("log4j.configurationFile=file:" + kylinConfig.getLogSparkDriverPropertiesFile()));
+            Assert.assertTrue(cmd.getArguments().toString().contains("spark.executor.extraClassPath=job.jar"));
+            Assert.assertTrue(cmd.getArguments().toString().contains("spark.driver.log4j.appender.hdfs.File="));
+            Assert.assertTrue(cmd.getArguments().toString().contains("kylin.hdfs.working.dir="));
         }
 
         overwriteSystemProp("kylin.engine.extra-jars-path", "/this_new_path.jar");
@@ -139,10 +139,11 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig,
+                    desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(cmd.contains("/this_new_path.jar"));
+            Assert.assertTrue(cmd.getArguments().toString().contains("/this_new_path.jar"));
         }
 
         // Spark plugin
@@ -152,10 +153,12 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig,
+                    desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(cmd.contains("spark.plugins=," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
+            Assert.assertTrue(cmd.getArguments().toString()
+                    .contains("spark.plugins=," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.plugins",
@@ -165,11 +168,13 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig,
+                    desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(cmd.contains("spark.plugins=" + QueryAsyncProfilerSparkPlugin.class.getCanonicalName()
-                    + "," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
+            Assert.assertTrue(cmd.getArguments().toString()
+                    .contains("spark.plugins=" + QueryAsyncProfilerSparkPlugin.class.getCanonicalName() + ","
+                            + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
@@ -178,11 +183,12 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             desc.setHadoopConfDir(hadoopConf);
             desc.setKylinJobJar(kylinJobJar);
             desc.setAppArgs(appArgs);
-            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+            SparkSubmitCommand cmd = (SparkSubmitCommand) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig,
+                    desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertFalse(
-                    cmd.contains("spark.plugins=," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
+            Assert.assertFalse(cmd.getArguments().toString()
+                    .contains("spark.plugins=," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.driver.extraJavaOptions",
@@ -193,9 +199,10 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
                 desc.setHadoopConfDir(hadoopConf);
                 desc.setKylinJobJar(kylinJobJar);
                 desc.setAppArgs(appArgs);
-                String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
-            } catch (IllegalArgumentException iae) {
-                Assert.assertTrue(iae.getMessage().contains("Not allowed to specify injected command"));
+                sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+                Assert.fail("Should reject command substitution in spark config");
+            } catch (IllegalArgumentException e) {
+                Assert.assertTrue(e.getMessage().contains("Not allowed to specify injected command"));
             }
         }
     }

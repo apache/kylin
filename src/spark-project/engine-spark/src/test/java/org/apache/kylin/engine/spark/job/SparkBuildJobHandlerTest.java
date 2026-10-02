@@ -20,12 +20,16 @@ package org.apache.kylin.engine.spark.job;
 
 import static org.apache.kylin.engine.spark.job.NSparkExecutable.SPARK_MASTER;
 
-import java.lang.reflect.Method;
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTestBase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -78,73 +82,28 @@ public class SparkBuildJobHandlerTest extends NLocalWithSparkSessionTestBase {
         KylinConfig config = getTestConfig();
         ISparkJobHandler handler = (ISparkJobHandler) ClassUtil.newInstance(config.getSparkBuildJobHandlerClassName());
         Assert.assertTrue(handler instanceof DefaultSparkBuildJobHandler);
-        String cmd = "";
+        SparkSubmitCommand cmd = new SparkSubmitCommand(Arrays.asList("/bin/echo", "spark-submit"), Maps.newHashMap());
         Map<String, String> updateInfo = handler.runSparkSubmit(cmd, "");
-        Assert.assertEquals(cmd, updateInfo.get("output"));
+        Assert.assertEquals("spark-submit\n", updateInfo.get("output"));
         Assert.assertNotNull(updateInfo.get("process_id"));
 
     }
 
     @Test
-    public void testAppendSparkConfRejectSingleQuote() {
+    public void testAppendSparkConf() {
         DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
 
-        StringBuilder sb = new StringBuilder();
-        handler.appendSparkConf(sb, "spark.yarn.queue", "normalQueue");
-        Assert.assertTrue(sb.toString().contains("--conf 'spark.yarn.queue=normalQueue'"));
+        List<String> arguments = Lists.newArrayList();
+        handler.appendSparkConf(arguments, "spark.yarn.queue", "normalQueue");
+        Assert.assertEquals(Arrays.asList("--conf", "spark.yarn.queue=normalQueue"), arguments);
 
-        // conf value containing single quote must be rejected
-        try {
-            handler.appendSparkConf(new StringBuilder(), "spark.yarn.queue",
-                    "default'; touch /tmp/pwned; echo '");
-            Assert.fail("Should have thrown IllegalArgumentException for value containing single quote");
-        } catch (IllegalArgumentException e) {
-            Assert.assertTrue(e.getMessage().contains("single quote"));
-        }
+        arguments.clear();
+        handler.appendSparkConf(arguments, "spark.yarn.queue", "default'; touch /tmp/pwned; echo '");
+        Assert.assertEquals(Arrays.asList("--conf", "spark.yarn.queue=default'; touch /tmp/pwned; echo '"), arguments);
 
-        // pipe without single quote is acceptable
-        StringBuilder sb2 = new StringBuilder();
-        handler.appendSparkConf(sb2, "spark.yarn.queue", "a|b");
-        Assert.assertTrue(sb2.toString().contains("--conf 'spark.yarn.queue=a|b'"));
-    }
-
-    @Test
-    public void testCheckCommandInjectionBlocked() throws Exception {
-        DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
-        Method method = DefaultSparkBuildJobHandler.class.getDeclaredMethod("checkCommandInjection", String.class);
-        method.setAccessible(true);
-
-        String[] blockedPayloads = {
-                "--conf 'spark.yarn.queue=`id`'",
-                "--conf 'spark.yarn.queue=$(whoami)'",
-        };
-
-        for (String payload : blockedPayloads) {
-            try {
-                method.invoke(handler, payload);
-                Assert.fail("Should have thrown IllegalArgumentException for payload: " + payload);
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                Assert.assertTrue("Payload not blocked: " + payload,
-                        e.getCause() instanceof IllegalArgumentException);
-            }
-        }
-    }
-
-    @Test
-    public void testCheckCommandInjectionAllowed() throws Exception {
-        DefaultSparkBuildJobHandler handler = new DefaultSparkBuildJobHandler();
-        Method method = DefaultSparkBuildJobHandler.class.getDeclaredMethod("checkCommandInjection", String.class);
-        method.setAccessible(true);
-
-        String[] allowedPayloads = {
-                "--conf 'spark.yarn.queue=default' \\\n--conf 'spark.executor.memory=1024m'",
-                "--conf 'spark.driver.extraJavaOptions=-Dconfig=value'",
-                "--conf 'spark.yarn.queue=normal_queue.v1'",
-        };
-
-        for (String payload : allowedPayloads) {
-            method.invoke(handler, payload);
-        }
+        arguments.clear();
+        handler.appendSparkConf(arguments, "spark.yarn.queue", "a|b");
+        Assert.assertEquals(Arrays.asList("--conf", "spark.yarn.queue=a|b"), arguments);
     }
 
     @Test
@@ -162,8 +121,8 @@ public class SparkBuildJobHandlerTest extends NLocalWithSparkSessionTestBase {
         desc.setJobNamePrefix("test_");
         desc.setJobId("test-job-id");
         desc.setComma(",");
-        desc.setSparkJars(Sets.newHashSet("jar1.jar"));
-        desc.setSparkFiles(Sets.newHashSet("file1.conf"));
+        desc.setSparkJars(Sets.newHashSet("jar1.jar;touch /tmp/pwned"));
+        desc.setSparkFiles(Sets.newHashSet("file1.conf|cat /tmp/pwned"));
 
         Map<String, String> sparkConf = Maps.newHashMap();
         sparkConf.put("spark.yarn.queue", "default'; touch /tmp/pwned; echo '");
@@ -171,11 +130,37 @@ public class SparkBuildJobHandlerTest extends NLocalWithSparkSessionTestBase {
         desc.setSparkConf(sparkConf);
 
         ISparkJobHandler handler = new DefaultSparkBuildJobHandler();
-        try {
-            handler.generateSparkCmd(config, desc);
-            Assert.fail("Should have thrown IllegalArgumentException for conf value containing single quote");
-        } catch (IllegalArgumentException e) {
-            Assert.assertTrue(e.getMessage().contains("single quote"));
-        }
+        SparkSubmitCommand cmd = (SparkSubmitCommand) handler.generateSparkCmd(config, desc);
+        Assert.assertTrue(cmd.getArguments().contains("spark.yarn.queue=default'; touch /tmp/pwned; echo '"));
+        Assert.assertTrue(cmd.getArguments().contains("jar1.jar;touch /tmp/pwned"));
+        Assert.assertTrue(cmd.getArguments().contains("file1.conf|cat /tmp/pwned"));
+    }
+
+    @Test
+    public void testGenerateSparkCmdPreservesArgumentOrder() {
+        SparkAppDescription desc = new SparkAppDescription();
+        desc.setHadoopConfDir("/etc/hadoop");
+        desc.setKylinJobJar("job.jar");
+        desc.setAppArgs("-className org.example.Main file:/tmp/args.json");
+        desc.setJobNamePrefix("job_");
+        desc.setJobId("id");
+        desc.setComma(",");
+        desc.setSparkJars(Sets.newLinkedHashSet(Arrays.asList("a.jar", "b.jar")));
+        desc.setSparkFiles(Sets.newLinkedHashSet(Arrays.asList("a.conf", "b.conf")));
+
+        Map<String, String> sparkConf = Maps.newLinkedHashMap();
+        sparkConf.put("spark.executor.memory", "1024m");
+        sparkConf.put("spark.yarn.queue", "default");
+        desc.setSparkConf(sparkConf);
+
+        SparkSubmitCommand cmd = (SparkSubmitCommand) new DefaultSparkBuildJobHandler().generateSparkCmd(getTestConfig(),
+                desc);
+
+        Assert.assertEquals(Arrays.asList(KylinConfigBase.getSparkHome() + File.separator + "bin/spark-submit",
+                "--class", "org.apache.kylin.engine.spark.application.SparkEntry", "--name", "job_id", "--jars",
+                "a.jar,b.jar", "--files", "a.conf,b.conf", "--conf", "spark.executor.memory=1024m", "--conf",
+                "spark.yarn.queue=default", "job.jar", "-className", "org.example.Main", "file:/tmp/args.json"),
+                cmd.getArguments());
+        Assert.assertEquals("/etc/hadoop", cmd.getEnvironment().get("HADOOP_CONF_DIR"));
     }
 }

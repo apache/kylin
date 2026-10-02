@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -30,6 +32,7 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import lombok.val;
@@ -133,6 +136,33 @@ public class CliCommandExecutorTest {
         assertEquals(10 * 100 * 1024 + HEAD_TAIL_LEN, res.getCmd().length());
         assertTrue(res.getCmd().startsWith("testhead"));
         assertTrue(res.getCmd().endsWith("testtail\n"));
+    }
+
+    @Test
+    void testExecuteWithArgumentsDoesNotInterpretShellMetacharacters() throws Exception {
+        CliCommandExecutor executor = new CliCommandExecutor();
+        CliCommandExecutor.CliCmdExecResult result = executor.execute(
+                Arrays.asList("/bin/echo", "$(touch /tmp/not-executed)", "`id`", "a;b"),
+                Collections.singletonMap("TEST_ENV", "value;command"), null, null);
+
+        assertEquals("$(touch /tmp/not-executed) `id` a;b\n", result.getCmd());
+    }
+
+    @Test
+    void testExecuteWithArgumentsQuotesRemoteCommand() throws Exception {
+        CliCommandExecutor executor = Mockito.spy(new CliCommandExecutor("localhost", "root", null));
+        SSHClient sshClient = Mockito.mock(SSHClient.class);
+        Mockito.doReturn(sshClient).when(executor).getSshClient();
+        Mockito.when(sshClient.execCommand(Mockito.anyString(), Mockito.anyInt(), Mockito.any()))
+                .thenReturn(new SSHClientOutput(0, "ok"));
+
+        executor.execute(Arrays.asList("/bin/echo", "a b", "c'd", "$(unused)"),
+                Collections.singletonMap("TEST_ENV", "value;command"), null, null);
+
+        ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(sshClient).execCommand(commandCaptor.capture(), Mockito.eq(3600), Mockito.isNull());
+        assertEquals("TEST_ENV='value;command' '/bin/echo' 'a b' 'c'\"'\"'d' '$(unused)'",
+                commandCaptor.getValue());
     }
 }
 

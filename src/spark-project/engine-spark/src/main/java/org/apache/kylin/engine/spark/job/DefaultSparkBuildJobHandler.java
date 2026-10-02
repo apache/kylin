@@ -55,14 +55,12 @@ import lombok.val;
 
 public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSparkBuildJobHandler.class);
-    private static final String SPACE = " ";
-    private static final String SUBMIT_LINE_FORMAT = " \\\n";
 
     private static final String SPARK_JARS_1 = "spark.jars";
     private static final String SPARK_JARS_2 = "spark.yarn.dist.jars";
     private static final String SPARK_FILES_1 = "spark.files";
     private static final String SPARK_FILES_2 = "spark.yarn.dist.files";
-    private static final String EQUALS = "=";
+    private static final Pattern COMMAND_INJECTION_PATTERN = Pattern.compile("(`[^`]*+`)|(\\$\\([^)]*+)");
 
     @Override
     public void killOrphanApplicationIfExists(String project, String jobStepId, KylinConfig config,
@@ -123,66 +121,75 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
 
     @Override
     public Object generateSparkCmd(KylinConfig config, SparkAppDescription desc) {
-        // Hadoop conf dir.
-        StringBuilder cmdBuilder = new StringBuilder("export HADOOP_CONF_DIR=");
-        cmdBuilder.append(desc.getHadoopConfDir());
-        cmdBuilder.append(SPACE).append("&&");
-
-        // Spark submit.
-        cmdBuilder.append(SPACE).append(KylinConfigBase.getSparkHome()).append(File.separator);
-        cmdBuilder.append("bin/spark-submit");
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        List<String> arguments = Lists.newArrayList();
+        arguments.add(KylinConfigBase.getSparkHome() + File.separator + "bin/spark-submit");
 
         // Application main class.
-        cmdBuilder.append(SPACE).append("--class");
-        cmdBuilder.append(SPACE).append("org.apache.kylin.engine.spark.application.SparkEntry");
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        arguments.add("--class");
+        arguments.add("org.apache.kylin.engine.spark.application.SparkEntry");
 
         // Application name.
-        cmdBuilder.append(SPACE).append("--name");
-        cmdBuilder.append(SPACE).append(desc.getJobNamePrefix()).append(desc.getJobId());
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        arguments.add("--name");
+        arguments.add(desc.getJobNamePrefix() + desc.getJobId());
 
         // Spark jars.
-        cmdBuilder.append(SPACE).append("--jars");
-        cmdBuilder.append(SPACE).append(String.join(desc.getComma(), desc.getSparkJars()));
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        if (!desc.getSparkJars().isEmpty()) {
+            arguments.add("--jars");
+            arguments.add(String.join(desc.getComma(), desc.getSparkJars()));
+        }
 
-        cmdBuilder.append(SPACE).append("--files");
-        cmdBuilder.append(SPACE).append(String.join(desc.getComma(), desc.getSparkFiles()));
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        if (!desc.getSparkFiles().isEmpty()) {
+            arguments.add("--files");
+            arguments.add(String.join(desc.getComma(), desc.getSparkFiles()));
+        }
 
         // Spark conf.
         // Maybe we would rewrite some confs, like 'extraJavaOptions', 'extraClassPath',
         // and the confs rewrited should be removed from props thru #modifyDump.
-        wrapSparkConf(cmdBuilder, desc.getSparkConf());
+        wrapSparkConf(arguments, desc.getSparkConf());
 
         // Application jar. KylinJobJar is the application-jar (of spark-submit),
         // path to a bundled jar including your application and all dependencies,
         // The URL must be globally visible inside of your cluster,
         // for instance, an hdfs:// path or a file:// path that is present on all nodes.
-        cmdBuilder.append(SPACE).append(desc.getKylinJobJar());
-        cmdBuilder.append(SUBMIT_LINE_FORMAT);
+        arguments.add(desc.getKylinJobJar());
 
         // Application parameter file.
-        cmdBuilder.append(SPACE).append(desc.getAppArgs());
+        if (StringUtils.isNotBlank(desc.getAppArgs())) {
+            for (String arg : StringUtils.split(desc.getAppArgs())) {
+                arguments.add(arg);
+            }
+        }
 
-        final String command = cmdBuilder.toString();
-        logger.info("spark submit cmd: {}", command);
+        Map<String, String> environment = Maps.newHashMap();
+        if (StringUtils.isNotBlank(desc.getHadoopConfDir())) {
+            environment.put("HADOOP_CONF_DIR", desc.getHadoopConfDir());
+        }
+        checkCommandInjection(arguments, environment.values());
 
-        // Safe check.
-        checkCommandInjection(command);
-        return command;
+        logger.info("spark submit cmd: {}", arguments);
+        return new SparkSubmitCommand(arguments, environment);
     }
 
-    private void checkCommandInjection(String command) {
-        if (Objects.isNull(command)) {
-            return;
-        }
+    private void checkCommandInjection(List<String> arguments, Iterable<String> environmentValues) {
         List<String> illegals = Lists.newArrayList();
-        Matcher matcher = Pattern.compile("(`[^`]*+`)|(\\$\\([^)]*+)").matcher(command);
-        while (matcher.find()) {
-            illegals.add(matcher.group());
+        for (String argument : arguments) {
+            if (argument == null) {
+                continue;
+            }
+            Matcher matcher = COMMAND_INJECTION_PATTERN.matcher(argument);
+            while (matcher.find()) {
+                illegals.add(matcher.group());
+            }
+        }
+        for (String environmentValue : environmentValues) {
+            if (environmentValue == null) {
+                continue;
+            }
+            Matcher matcher = COMMAND_INJECTION_PATTERN.matcher(environmentValue);
+            while (matcher.find()) {
+                illegals.add(matcher.group());
+            }
         }
 
         if (illegals.isEmpty()) {
@@ -197,7 +204,7 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
         throw new IllegalArgumentException(msg);
     }
 
-    private void wrapSparkConf(StringBuilder cmdBuilder, Map<String, String> sparkConf) {
+    private void wrapSparkConf(List<String> arguments, Map<String, String> sparkConf) {
         for (Map.Entry<String, String> entry : sparkConf.entrySet()) {
             switch (entry.getKey()) {
             // Avoid duplicated from '--jars'
@@ -209,21 +216,15 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
                 // Do nothing.
                 break;
             default:
-                appendSparkConf(cmdBuilder, entry.getKey(), entry.getValue());
+                appendSparkConf(arguments, entry.getKey(), entry.getValue());
                 break;
             }
         }
     }
 
-    protected void appendSparkConf(StringBuilder sb, String confKey, String confValue) {
-        // Multiple parameters in "--conf" need to be enclosed in single quotes
-        if (confKey.contains("'") || confValue.contains("'")) {
-            throw new IllegalArgumentException(String.format(Locale.ROOT,
-                    "Spark conf key or value contains invalid single quote: key=%s, value=%s",
-                    confKey, confValue));
-        }
-        sb.append(" --conf '").append(confKey).append(EQUALS).append(confValue).append("' ");
-        sb.append(SUBMIT_LINE_FORMAT);
+    protected void appendSparkConf(List<String> arguments, String confKey, String confValue) {
+        arguments.add("--conf");
+        arguments.add(confKey + "=" + confValue);
     }
 
     @Override
@@ -232,7 +233,12 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
         try {
             val patternedLogger = new BufferedLogger(logger);
             CliCommandExecutor exec = new CliCommandExecutor();
-            CliCommandExecutor.CliCmdExecResult r = exec.execute((String) cmd, patternedLogger, parentId);
+            if (!(cmd instanceof SparkSubmitCommand)) {
+                throw new IllegalArgumentException("Unsupported spark submit command type");
+            }
+            SparkSubmitCommand sparkSubmitCommand = (SparkSubmitCommand) cmd;
+            CliCommandExecutor.CliCmdExecResult r = exec.execute(sparkSubmitCommand.getArguments(),
+                    sparkSubmitCommand.getEnvironment(), patternedLogger, parentId);
             if (StringUtils.isNotEmpty(r.getProcessId())) {
                 updateInfo.put("process_id", r.getProcessId());
             }

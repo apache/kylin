@@ -50,6 +50,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.engine.spark.job.SparkSubmitCommand;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.guava30.shaded.common.io.ByteSource;
@@ -119,7 +120,7 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
     public void testAsyncQueryJob() throws ExecuteException, JsonProcessingException, ShellException {
         CliCommandExecutor executor = Mockito.spy(new CliCommandExecutor());
         Mockito.doReturn(new CliCommandExecutor.CliCmdExecResult(0, "mock", "mock")).when(executor)
-                .execute(Mockito.any(), Mockito.any(), Mockito.any());
+                .execute(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         AsyncQueryJob asyncQueryJob = Mockito.spy(new AsyncQueryJob());
         Assert.assertNotNull(asyncQueryJob.getCliCommandExecutor());
         Mockito.doNothing().when(asyncQueryJob).killOrphanApplicationIfExists(Mockito.any());
@@ -148,8 +149,9 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                     desc.setHadoopConfDir(hadoopConf);
                     desc.setKylinJobJar(kylinJobJar);
                     desc.setAppArgs(appArgs);
-                    String cmd = (String) this.sparkJobHandler.generateSparkCmd(getConfig(), desc);
-                    return ExecuteResult.createSucceed(cmd);
+                    SparkSubmitCommand cmd = (SparkSubmitCommand) this.sparkJobHandler.generateSparkCmd(getConfig(),
+                            desc);
+                    return ExecuteResult.createSucceed(cmd.getArguments().toString());
                 }
             };
             asyncQueryJob.setProject(queryParams.getProject());
@@ -167,8 +169,9 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                     desc.setHadoopConfDir(hadoopConf);
                     desc.setKylinJobJar(kylinJobJar);
                     desc.setAppArgs(appArgs);
-                    String cmd = (String) this.sparkJobHandler.generateSparkCmd(getConfig(), desc);
-                    return ExecuteResult.createSucceed(cmd);
+                    SparkSubmitCommand cmd = (SparkSubmitCommand) this.sparkJobHandler.generateSparkCmd(getConfig(),
+                            desc);
+                    return ExecuteResult.createSucceed(cmd.getArguments().toString());
                 }
             };
             asyncQueryJob.setProject(queryParams.getProject());
@@ -196,7 +199,8 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                 desc.setHadoopConfDir(hadoopConf);
                 desc.setKylinJobJar(kylinJobJar);
                 desc.setAppArgs(appArgs);
-                String cmd = (String) this.sparkJobHandler.generateSparkCmd(getConfig(), desc);
+                SparkSubmitCommand ignored = (SparkSubmitCommand) this.sparkJobHandler.generateSparkCmd(getConfig(),
+                        desc);
                 return ExecuteResult.createSucceed(appArgs
                         .substring(appArgs.lastIndexOf("file:") + "file:".length(), appArgs.lastIndexOf("/")).trim());
             }
@@ -301,7 +305,8 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                     desc.setHadoopConfDir(hadoopConf);
                     desc.setKylinJobJar(kylinJobJar);
                     desc.setAppArgs(appArgs);
-                    String cmd = (String) this.sparkJobHandler.generateSparkCmd(getConfig(), desc);
+                    SparkSubmitCommand ignored = (SparkSubmitCommand) this.sparkJobHandler.generateSparkCmd(getConfig(),
+                            desc);
                     return ExecuteResult.createSucceed(
                             appArgs.substring(appArgs.lastIndexOf("file:") + "file:".length(), appArgs.lastIndexOf("/"))
                                     .trim());
@@ -332,15 +337,16 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                     desc.setHadoopConfDir(hadoopConf);
                     desc.setKylinJobJar(kylinJobJar);
                     desc.setAppArgs(appArgs);
-                    String cmd = (String) this.sparkJobHandler.generateSparkCmd(getConfig(), desc);
-                    return ExecuteResult.createSucceed(cmd);
+                    SparkSubmitCommand cmd = (SparkSubmitCommand) this.sparkJobHandler.generateSparkCmd(getConfig(),
+                            desc);
+                    return ExecuteResult.createSucceed(cmd.getArguments().toString());
                 }
             };
             asyncQueryJob.setProject(queryParams.getProject());
             ExecuteResult executeResult = asyncQueryJob.submit(queryParams);
             Assert.assertTrue(executeResult.succeed());
-            Assert.assertTrue(executeResult.output().contains("--conf 'spark.executor.memory=513m'"));
-            Assert.assertTrue(executeResult.output().contains("--conf 'spark.executor.cores=3'"));
+            Assert.assertTrue(executeResult.output().contains("spark.executor.memory=513m"));
+            Assert.assertTrue(executeResult.output().contains("spark.executor.cores=3"));
         }
     }
 

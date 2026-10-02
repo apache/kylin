@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -155,6 +157,25 @@ public class CliCommandExecutor {
         return r;
     }
 
+    public CliCmdExecResult execute(List<String> command, Map<String, String> environment, Logger logAppender,
+            String jobId) throws ShellException {
+        String displayCommand = displayCommand(command, environment);
+        CliCmdExecResult r;
+        if (remoteHost == null) {
+            r = runNativeCommand(command, environment, logAppender, jobId);
+        } else {
+            val remoteResult = runRemoteCommand(toShellCommand(command, environment), logAppender);
+            r = new CliCmdExecResult(remoteResult.getFirst(), remoteResult.getSecond(), null);
+        }
+
+        if (r.getCode() != 0) {
+            throw new ShellException("OS command error exit with return code: " + r.getCode() //
+                    + ", error message: " + r.getCmd() + "The command is: \n" + displayCommand
+                    + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")"));
+        }
+        return r;
+    }
+
     private Pair<Integer, String> runRemoteCommand(String command, Logger logAppender) throws ShellException {
         try {
             SSHClient ssh = getSshClient();
@@ -231,6 +252,83 @@ public class CliCommandExecutor {
         } finally {
             EventBusFactory.getInstance().postSync(new ProcessFinished(pid));
         }
+    }
+
+    private CliCmdExecResult runNativeCommand(List<String> command, Map<String, String> environment, Logger logAppender,
+            String jobId) throws ShellException {
+        int pid = 0;
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder(command);
+            builder.environment().putAll(System.getenv());
+            if (environment != null) {
+                builder.environment().putAll(environment);
+            }
+            builder.redirectErrorStream(true);
+            Process proc = builder.start();
+            pid = ProcessUtils.getPid(proc);
+            logger.info("sub process {} on behalf of job {}, start to run...", pid, jobId);
+            EventBusFactory.getInstance().postSync(new ProcessStart(pid, jobId));
+            int maxCommandLineOutputLength = KylinConfig.getInstanceFromEnv().getMaxCommandLineOutputLength();
+            int headSize = maxCommandLineOutputLength / 2;
+            StringBuilderHelper result = StringBuilderHelper.headTail(headSize,
+                    maxCommandLineOutputLength - headSize);
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    result.append(line).append('\n');
+                    if (logAppender != null) {
+                        logAppender.log(line);
+                    }
+                    if (Thread.currentThread().isInterrupted()) {
+                        String msg = displayCommand(command, environment) + " is interrupt";
+                        logger.warn(msg);
+                        throw new InterruptedException(msg);
+                    }
+                }
+            }
+
+            try {
+                int exitCode = proc.waitFor();
+                String b = result.toString();
+                if (b.length() > (100 << 20)) {
+                    logger.info("[LESS_LIKELY_THINGS_HAPPENED]Sub process log larger than 100M");
+                }
+                return new CliCmdExecResult(exitCode, b, pid + "");
+
+            } catch (InterruptedException e) {
+                logger.warn("Thread is interrupted, cmd: {}, pid: {}", displayCommand(command, environment), pid, e);
+                Thread.currentThread().interrupt();
+                throw e;
+            }
+        } catch (Exception e) {
+            throw new ShellException(e);
+        } finally {
+            EventBusFactory.getInstance().postSync(new ProcessFinished(pid));
+        }
+    }
+
+    private static String displayCommand(List<String> command, Map<String, String> environment) {
+        return toShellCommand(command, environment);
+    }
+
+    private static String toShellCommand(List<String> command, Map<String, String> environment) {
+        StringBuilder builder = new StringBuilder();
+        if (environment != null) {
+            for (Map.Entry<String, String> entry : environment.entrySet()) {
+                builder.append(entry.getKey()).append('=').append(quoteShellArgument(entry.getValue())).append(' ');
+            }
+        }
+        for (String argument : command) {
+            builder.append(quoteShellArgument(argument)).append(' ');
+        }
+        return builder.toString().trim();
+    }
+
+    private static String quoteShellArgument(String argument) {
+        return "'" + argument.replace("'", "'\"'\"'") + "'";
     }
 
     @Setter
