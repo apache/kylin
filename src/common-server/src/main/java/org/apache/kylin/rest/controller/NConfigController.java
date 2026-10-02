@@ -26,6 +26,8 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +38,9 @@ import io.swagger.annotations.ApiOperation;
 @Controller
 @RequestMapping(value = "/api/config", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class NConfigController extends NBasicController {
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     @ApiOperation(value = "is cloud", tags = { "MID" })
     @GetMapping(value = "/is_cloud")
@@ -50,6 +55,7 @@ public class NConfigController extends NBasicController {
     @GetMapping(value = "/all")
     @ResponseBody
     public EnvelopeResponse<Properties> fetchAll() {
+        aclEvaluate.checkIsGlobalAdmin();
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
                 KylinConfig.getInstanceFromEnv().exportToProperties(), "");
     }

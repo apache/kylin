@@ -20,14 +20,19 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -41,11 +46,15 @@ public class NConfigControllerTest extends NLocalFileMetadataTestCase {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @Mock
+    private AclEvaluate aclEvaluate;
+
     @InjectMocks
     private NConfigController nConfigController = Mockito.spy(new NConfigController());
 
     @Before
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(nConfigController) //
                 .defaultRequest(MockMvcRequestBuilders.get("/")).build();
 
@@ -70,4 +79,20 @@ public class NConfigControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(nConfigController).isCloud();
     }
 
+    @Test
+    public void testFetchAllAllowedForGlobalAdmin() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/config/all") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .accept(MediaType.parseMediaType(APPLICATION_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(aclEvaluate).checkIsGlobalAdmin();
+    }
+
+    @Test
+    public void testFetchAllRejectedForNonAdmin() {
+        Mockito.doThrow(new AccessDeniedException("denied")).when(aclEvaluate).checkIsGlobalAdmin();
+
+        Assert.assertThrows(AccessDeniedException.class, () -> nConfigController.fetchAll());
+        Mockito.verify(aclEvaluate).checkIsGlobalAdmin();
+    }
 }

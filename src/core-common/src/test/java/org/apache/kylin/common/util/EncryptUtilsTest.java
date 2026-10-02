@@ -18,6 +18,7 @@
 package org.apache.kylin.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
@@ -46,5 +47,49 @@ class EncryptUtilsTest {
     void testGetDecryptedValueError() {
         String text = "ENC('1YeqVr9MakSFbgxEec9sBwg==')";
         assertNull(EncryptUtil.getDecryptedValue(text));
+    }
+
+    @Test
+    void testEncryptWithConfiguredKey() {
+        System.setProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY, "deployment-specific-secret");
+        try {
+            String encrypted = EncryptUtil.encrypt("kylin");
+            assertNotEquals("YeqVr9MakSFbgxEec9sBwg==", encrypted);
+            assertEquals("kylin", EncryptUtil.decrypt(encrypted));
+            assertEquals("kylin",
+                    EncryptUtil.getDecryptedValue(EncryptUtil.ENC_PREFIX + encrypted + EncryptUtil.ENC_SUBFIX));
+        } finally {
+            System.clearProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY);
+        }
+    }
+
+    @Test
+    void testLegacyCiphertextStillDecryptsWithConfiguredKey() {
+        System.setProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY, "deployment-specific-secret");
+        try {
+            assertEquals("kylin", EncryptUtil.getDecryptedValue("ENC('YeqVr9MakSFbgxEec9sBwg==')"));
+        } finally {
+            System.clearProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY);
+        }
+    }
+
+    @Test
+    void testConfiguredKeysAreDeploymentScoped() {
+        System.setProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY, "deployment-a");
+        String encryptedByDeploymentA;
+        try {
+            encryptedByDeploymentA = EncryptUtil.encrypt("kylin");
+        } finally {
+            System.clearProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY);
+        }
+
+        System.setProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY, "deployment-b");
+        try {
+            assertNotEquals(encryptedByDeploymentA, EncryptUtil.encrypt("kylin"));
+            assertNull(EncryptUtil.getDecryptedValue(
+                    EncryptUtil.ENC_PREFIX + encryptedByDeploymentA + EncryptUtil.ENC_SUBFIX));
+        } finally {
+            System.clearProperty(EncryptUtil.ENCRYPTION_KEY_PROPERTY);
+        }
     }
 }
