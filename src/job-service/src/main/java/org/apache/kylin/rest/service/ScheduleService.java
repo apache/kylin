@@ -53,6 +53,7 @@ import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
@@ -334,6 +335,10 @@ public class ScheduleService extends BasicService {
             req.put("from_host", AddressUtil.getLocalInstance());
             val httpHeaders = new HttpHeaders();
             httpHeaders.add(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON);
+            String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+            if (StringUtils.isNotBlank(broadcastToken)) {
+                httpHeaders.add(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+            }
             val exchange = restTemplate.exchange(url, HttpMethod.POST,
                     new HttpEntity<>(JsonUtil.writeValueAsBytes(req), httpHeaders), String.class);
             receive(exchange, "noticeToTenantNode");

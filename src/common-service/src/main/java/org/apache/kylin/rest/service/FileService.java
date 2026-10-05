@@ -22,6 +22,7 @@ import static org.apache.kylin.common.constant.Constants.BACKSLASH;
 import static org.apache.kylin.common.constant.Constants.METADATA_FILE;
 import static org.apache.kylin.common.constant.Constants.SYSTEM_TMP_DIR;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +39,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
@@ -171,6 +174,10 @@ public class FileService extends BasicService {
         val httpHeaders = new HttpHeaders();
         httpHeaders.add(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON);
         httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+        String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        if (StringUtils.isNotBlank(broadcastToken)) {
+            httpHeaders.add(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+        }
         val httpEntity = new HttpEntity<>(JsonUtil.writeValueAsBytes(req), httpHeaders);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(httpEntity);
         return restTemplate.execute(url, HttpMethod.POST, requestCallback, clientResponse -> {
@@ -182,6 +189,7 @@ public class FileService extends BasicService {
 
     public void saveBroadcastMetadataBackup(String backupDir, String filePath, Long fileSize, String resourceGroupId,
             String fromHost) {
+        checkBackupDir(backupDir);
         var tmpFilePath = "";
         try {
             tmpFilePath = downloadMetadataBackTmpFile(filePath, fileSize, resourceGroupId, fromHost);
@@ -196,6 +204,13 @@ public class FileService extends BasicService {
             if (StringUtils.isNotBlank(tmpFilePath)) {
                 deleteTmpDir(tmpFilePath);
             }
+        }
+    }
+
+    private static void checkBackupDir(String backupDir) {
+        if (StringUtils.isBlank(backupDir) || backupDir.contains(BACKSLASH) || backupDir.contains("\\")
+                || ".".equals(backupDir) || "..".equals(backupDir)) {
+            throw new KylinException(PERMISSION_DENIED, "Illegal metadata backup directory: " + backupDir);
         }
     }
 }

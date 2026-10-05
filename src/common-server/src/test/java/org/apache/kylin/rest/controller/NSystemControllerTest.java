@@ -20,6 +20,7 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
@@ -27,6 +28,7 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.MetadataBackupRequest;
 import org.apache.kylin.rest.service.SystemService;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -107,21 +110,32 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void broadcastMetadataBackup() throws Exception {
         MetadataBackupRequest request = new MetadataBackupRequest();
-        Mockito.doAnswer(x -> null).when(nSystemController).broadcastMetadataBackup(Mockito.any());
+        Mockito.doAnswer(x -> null).when(nSystemController).broadcastMetadataBackup(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/system/broadcast_metadata_backup")
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nSystemController).broadcastMetadataBackup(Mockito.any(MetadataBackupRequest.class));
+        Mockito.verify(nSystemController).broadcastMetadataBackup(Mockito.any(MetadataBackupRequest.class),
+                Mockito.any());
+    }
+
+    @Test
+    public void broadcastMetadataBackupRequiresAdminOrServiceToken() {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("analyst", "analyst", Constant.ROLE_ANALYST));
+        MetadataBackupRequest request = new MetadataBackupRequest();
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.broadcastMetadataBackup(request, new MockHttpServletRequest()));
     }
 
     @Test
     public void downloadMetadataBackTmpFile() throws Exception {
         MetadataBackupRequest request = new MetadataBackupRequest();
-        Mockito.doAnswer(x -> null).when(nSystemController).downloadMetadataBackTmpFile(Mockito.any(), Mockito.any());
+        Mockito.doAnswer(x -> null).when(nSystemController).downloadMetadataBackTmpFile(Mockito.any(), Mockito.any(),
+                Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/system/metadata_backup_tmp_file")
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController).downloadMetadataBackTmpFile(Mockito.any(MetadataBackupRequest.class),
-                Mockito.any());
+                Mockito.any(), Mockito.any());
     }
 }

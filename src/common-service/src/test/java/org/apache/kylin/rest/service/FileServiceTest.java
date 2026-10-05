@@ -45,6 +45,7 @@ import java.util.Objects;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
@@ -458,5 +459,11 @@ class FileServiceTest {
 
             assertTrue(exception.getMessage().contains("Path not kylin metadata tmp directory"));
         }
+    }
+
+    @Test
+    void saveBroadcastMetadataBackupRejectsTraversal() {
+        assertThrows(KylinException.class, () -> fileService.saveBroadcastMetadataBackup("../evil", "tmp-file", 3L,
+                RandomUtil.randomUUIDStr(), AddressUtil.getLocalInstance()));
     }
 }

@@ -44,6 +44,7 @@ import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.MetadataBackupRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.FileService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.ScheduleService;
@@ -187,9 +188,11 @@ public class NSystemController extends NBasicController {
      */
     @PostMapping(value = "broadcast_metadata_backup")
     @ResponseBody
-    public EnvelopeResponse<String> broadcastMetadataBackup(@RequestBody MetadataBackupRequest request) {
+    public EnvelopeResponse<String> broadcastMetadataBackup(@RequestBody MetadataBackupRequest request,
+            HttpServletRequest servletRequest) {
         log.info("ResourceGroup[{}] broadcastMetadataBackup tmpFilePath : {}", request.getResourceGroupId(),
                 request.getTmpFilePath());
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkServer(request.getFromHost());
         fileService.saveBroadcastMetadataBackup(request.getBackupDir(), request.getTmpFilePath(),
                 request.getTmpFileSize(), request.getResourceGroupId(), request.getFromHost());
@@ -205,9 +208,10 @@ public class NSystemController extends NBasicController {
     @PostMapping(value = "metadata_backup_tmp_file")
     @ResponseBody
     public EnvelopeResponse<String> downloadMetadataBackTmpFile(@RequestBody MetadataBackupRequest request,
-            HttpServletResponse response) throws IOException {
+            HttpServletRequest servletRequest, HttpServletResponse response) throws IOException {
         log.info("ResourceGroup[{}] downloadMetadataBackTmpFile tmpFilePath : {}", request.getResourceGroupId(),
                 request.getTmpFilePath());
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         InputStream backupInputStream = fileService.getMetadataBackupFromTmpPath(request.getTmpFilePath(),
                 request.getTmpFileSize());
         setDownloadResponse(backupInputStream, METADATA_FILE, MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
