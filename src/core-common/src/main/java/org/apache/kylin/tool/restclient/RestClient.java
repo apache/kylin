@@ -291,6 +291,13 @@ public class RestClient {
         return response;
     }
 
+    private void addServiceToken(HttpRequestBase method) {
+        String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        if (StringUtils.isNotBlank(broadcastToken)) {
+            method.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+        }
+    }
+
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", "application/json");
@@ -380,6 +387,7 @@ public class RestClient {
     public boolean updateDiagProgress(String diagId, String stage, float progress, long updateTime) {
         String url = baseUrl + "/system/diag/progress";
         HttpPut put = newPut(url);
+        addServiceToken(put);
         HttpResponse response = null;
         try {
             HashMap<String, Object> paraMap = Maps.newHashMap();
@@ -406,6 +414,7 @@ public class RestClient {
     public boolean rollUpEventLog() {
         String url = baseUrl + "/system/roll_event_log";
         HttpPut put = newPut(url);
+        addServiceToken(put);
         HttpResponse response = null;
         try {
             response = client.execute(put);

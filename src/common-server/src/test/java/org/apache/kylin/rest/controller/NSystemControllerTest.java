@@ -21,6 +21,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
@@ -78,7 +79,30 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
     public void testRollEventLog() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/api/system/roll_event_log").contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.parseMediaType(APPLICATION_JSON))).andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nSystemController).rollEventLog();
+        Mockito.verify(nSystemController).rollEventLog(Mockito.any());
+    }
+
+    @Test
+    public void testMaintenanceOperationsRejectAnonymous() {
+        SecurityContextHolder.clearContext();
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.rollEventLog(new MockHttpServletRequest()));
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.reloadMetadata(new MockHttpServletRequest()));
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.doCleanupGarbage(new MockHttpServletRequest()));
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.simulateInsertMeta(1, 1, new MockHttpServletRequest()));
+    }
+
+    @Test
+    public void testMaintenanceOperationAcceptsServiceToken() throws Exception {
+        SecurityContextHolder.clearContext();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/transaction/simulation/insert_meta")
+                .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken())
+                .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "100")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -95,7 +119,7 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "1")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError());
-        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong(), Mockito.any());
     }
 
     @Test
@@ -104,7 +128,7 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "100")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong(), Mockito.any());
     }
 
     @Test

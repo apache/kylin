@@ -102,7 +102,8 @@ public class NSystemController extends NBasicController {
 
     @PutMapping(value = "/roll_event_log")
     @ResponseBody
-    public EnvelopeResponse<String> rollEventLog() {
+    public EnvelopeResponse<String> rollEventLog(HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         if (ToolUtil.waitForSparderRollUp()) {
             return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
         }
@@ -119,7 +120,8 @@ public class NSystemController extends NBasicController {
     @ApiOperation(value = "reload metadata", tags = { "MID" })
     @PostMapping(value = "/metadata/reload")
     @ResponseBody
-    public EnvelopeResponse<String> reloadMetadata() throws IOException {
+    public EnvelopeResponse<String> reloadMetadata(HttpServletRequest servletRequest) throws IOException {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         systemService.reloadMetadata();
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }
@@ -146,6 +148,7 @@ public class NSystemController extends NBasicController {
     @PostMapping(value = "/do_cleanup_garbage")
     @ResponseBody
     public EnvelopeResponse<String> doCleanupGarbage(final HttpServletRequest request) throws Exception {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(request);
         scheduleService.routineTask();
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }
@@ -154,7 +157,9 @@ public class NSystemController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<String> simulateInsertMeta(
             @RequestParam(value = "count", required = false, defaultValue = "5") int count,
-            @RequestParam(value = "sleepSec", required = false, defaultValue = "20") long sleepSec) {
+            @RequestParam(value = "sleepSec", required = false, defaultValue = "20") long sleepSec,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         if (KylinConfig.getInstanceFromEnv().isUnitOfWorkSimulationEnabled()) {
 
             val projectList = IntStream.range(0, 5).mapToObj(i -> "simulation" + i).collect(Collectors.toList());

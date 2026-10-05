@@ -53,6 +53,7 @@ import org.apache.kylin.rest.response.MaintenanceModeResponse;
 import org.apache.kylin.rest.response.ServerExtInfoResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.response.ServersResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.MetadataBackupService;
 import org.apache.kylin.rest.service.OpsService;
 import org.apache.kylin.rest.service.ScheduleService;
@@ -177,7 +178,9 @@ public class OpsController extends NBasicController {
     @ApiOperation(value = "diagProgress", tags = { "SM" })
     @PutMapping(value = "/diag/progress")
     @ResponseBody
-    public EnvelopeResponse<String> updateDiagProgress(@RequestBody DiagProgressRequest diagProgressRequest) {
+    public EnvelopeResponse<String> updateDiagProgress(@RequestBody DiagProgressRequest diagProgressRequest,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         systemService.updateDiagProgress(diagProgressRequest);
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }

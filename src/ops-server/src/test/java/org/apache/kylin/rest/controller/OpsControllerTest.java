@@ -25,6 +25,8 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 
+import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -45,6 +47,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -205,11 +208,26 @@ public class OpsControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testUpdateDiagProgress() throws Exception {
         DiagProgressRequest request = new DiagProgressRequest();
-        Mockito.doAnswer(x -> null).when(opsController).updateDiagProgress(Mockito.any());
+        Mockito.doAnswer(x -> null).when(opsController).updateDiagProgress(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.put("/api/system/diag/progress").contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(opsController).updateDiagProgress(Mockito.any());
+        Mockito.verify(opsController).updateDiagProgress(Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    public void testUpdateDiagProgressRejectsAnonymous() {
+        SecurityContextHolder.clearContext();
+        Assert.assertThrows(KylinException.class,
+                () -> opsController.updateDiagProgress(new DiagProgressRequest(), new MockHttpServletRequest()));
+    }
+
+    @Test
+    public void testUpdateDiagProgressAcceptsServiceToken() {
+        SecurityContextHolder.clearContext();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken());
+        opsController.updateDiagProgress(new DiagProgressRequest(), request);
     }
 
     @Test
