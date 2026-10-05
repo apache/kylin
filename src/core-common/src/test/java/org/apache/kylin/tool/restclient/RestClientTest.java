@@ -47,8 +47,13 @@ public class RestClientTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNoDefaultBroadcastCredential() {
-        Assert.assertEquals("", getTestConfig().getBroadcastToken());
+    public void testDefaultBroadcastCredentialIsDeploymentScoped() {
+        String token = getTestConfig().getBroadcastToken();
+        Assert.assertFalse(token.isEmpty());
+        Assert.assertEquals(token, getTestConfig().getBroadcastToken());
+
+        getTestConfig().setProperty("kylin.server.broadcast-token", "secret");
+        Assert.assertEquals("secret", getTestConfig().getBroadcastToken());
     }
 
     @Test

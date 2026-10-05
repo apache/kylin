@@ -53,6 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -775,7 +776,21 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getBroadcastToken() {
-        return EncryptUtil.getDecryptedValue(getOptional("kylin.server.broadcast-token", ""));
+        String configuredToken = getOptional("kylin.server.broadcast-token", "");
+        if (StringUtils.isNotBlank(configuredToken)) {
+            return EncryptUtil.getDecryptedValue(configuredToken);
+        }
+        return getDefaultBroadcastToken();
+    }
+
+    /**
+     * Backward compatibility: derive a cluster-wide default from the shared metadata location so
+     * inter-node RPC keeps working after an upgrade without extra configuration. Every node in the
+     * cluster derives the same value, and the value is not a public constant, so the service-token
+     * check stays meaningful.
+     */
+    private String getDefaultBroadcastToken() {
+        return DigestUtils.sha256Hex("kylin.server.broadcast-token:" + getMetadataUrl());
     }
 
     public String getServerHttpsKeyAlias() {
