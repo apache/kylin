@@ -27,7 +27,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.base.Strings;
@@ -35,6 +34,7 @@ import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.primitives.Ints;
 import org.apache.kylin.guava30.shaded.common.primitives.Shorts;
+import org.apache.kylin.rest.util.SerializeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -267,6 +267,6 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return SerializationUtils.deserialize(bytes);
+        return (KeyHook) SerializeUtil.deserialize(bytes);
     }
 }

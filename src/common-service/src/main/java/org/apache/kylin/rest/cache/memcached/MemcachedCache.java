@@ -44,6 +44,7 @@ import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.primitives.Ints;
 import org.apache.kylin.guava30.shaded.common.primitives.Shorts;
+import org.apache.kylin.rest.util.SerializeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +117,7 @@ public class MemcachedCache {
 
     public static MemcachedCache create(final MemcachedCacheConfig config, String memcachedPrefix, int timeToLive) {
         try {
-            SerializingTranscoder transcoder = new SerializingTranscoder(config.getMaxObjectSize());
+            SerializingTranscoder transcoder = new KylinSerializingTranscoder(config.getMaxObjectSize());
             // always no compression inside, we compress/decompress outside
             transcoder.setCompressionThreshold(Integer.MAX_VALUE);
 
@@ -386,6 +387,29 @@ public class MemcachedCache {
         return Joiner.on(":").skipNulls().join(KylinConfig.getInstanceFromEnv().getDeployEnv(), this.memcachedPrefix,
                 DigestUtils.sha1Hex(key));
 
+    }
+
+    /**
+     * The client only ever stores byte[] values produced by encodeValue, but a poisoned
+     * memcached item can set the serialized flag and smuggle an arbitrary object graph
+     * through the default transcoder. Route transcoder deserialization through the same
+     * class allowlist used by SerializeUtil so disallowed classes are rejected before they
+     * are instantiated.
+     */
+    @VisibleForTesting
+    static final class KylinSerializingTranscoder extends SerializingTranscoder {
+
+        KylinSerializingTranscoder(int maxSize) {
+            super(maxSize);
+        }
+
+        @Override
+        protected Object deserialize(byte[] in) {
+            if (in == null) {
+                return null;
+            }
+            return SerializeUtil.deserialize(in);
+        }
     }
 
 }

@@ -24,11 +24,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
+import org.apache.kylin.rest.util.SerializeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -213,7 +213,7 @@ public class CompositeMemcachedCache implements KylinCache {
             if (value == null || value.length == 0) {
                 return null;
             }
-            return new SimpleValueWrapper(SerializationUtils.deserialize(value));
+            return new SimpleValueWrapper(SerializeUtil.deserialize(value));
         }
 
         @Override
@@ -242,7 +242,7 @@ public class CompositeMemcachedCache implements KylinCache {
             if (value == null || value.length == 0) {
                 return null;
             }
-            Object obj = SerializationUtils.deserialize(value);
+            Object obj = SerializeUtil.deserialize(value);
             if (obj != null && type != null && !type.isInstance(value)) {
                 throw new IllegalStateException(
                         "Cached value is not of required type [" + type.getName() + "]: " + Arrays.toString(value));
@@ -264,7 +264,7 @@ public class CompositeMemcachedCache implements KylinCache {
                 memcachedCache.put(key, value);
                 return null;
             } else {
-                return new SimpleValueWrapper(SerializationUtils.deserialize(existing));
+                return new SimpleValueWrapper(SerializeUtil.deserialize(existing));
             }
         }
     }
