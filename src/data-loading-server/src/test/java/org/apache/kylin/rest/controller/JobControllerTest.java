@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -401,7 +402,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
         Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
 
-        Mockito.verify(jobController).updateJobError(request);
+        Mockito.verify(jobController).updateJobError(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -422,7 +423,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
         Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
 
-        Mockito.verify(jobController).updateStageStatus(request);
+        Mockito.verify(jobController).updateStageStatus(Mockito.eq(request), Mockito.any());
 
         request = new StageRequest();
         request.setProject("");
@@ -437,7 +438,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn();
 
-        Mockito.verify(jobController).updateStageStatus(request);
+        Mockito.verify(jobController).updateStageStatus(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -459,7 +460,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(response.get("code"), KylinException.CODE_UNDEFINED);
         Assert.assertEquals(response.get("msg"), "Job has stopped.");
 
-        Mockito.verify(jobController).updateStageStatus(request);
+        Mockito.verify(jobController).updateStageStatus(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -481,7 +482,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(response.get("code"), KylinException.CODE_UNDEFINED);
         Assert.assertEquals(response.get("msg"), "Job has stopped.");
 
-        Mockito.verify(jobController).updateStageStatus(request);
+        Mockito.verify(jobController).updateStageStatus(Mockito.eq(request), Mockito.any());
     }
 
     @Test
@@ -528,7 +529,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
             }
         });
 
-        Mockito.verify(jobController, Mockito.times(repeatTime)).updateStageStatus(request);
+        Mockito.verify(jobController, Mockito.times(repeatTime)).updateStageStatus(Mockito.eq(request), Mockito.any());
         Assert.assertEquals(0, failedCount.get());
     }
 
@@ -552,7 +553,46 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
         Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
 
-        Mockito.verify(jobController).updateSparkJobTime(request);
+        Mockito.verify(jobController).updateSparkJobTime(Mockito.eq(request), Mockito.any());
+    }
+
+    @Test
+    public void testUpdateJobReportAcceptsServiceToken() throws Exception {
+        SecurityContextHolder.clearContext();
+        ExecutablePO job = mockJob(ExecutableState.RUNNING);
+        JobErrorRequest request = new JobErrorRequest();
+        request.setJobLastRunningStartTime(String.valueOf(job.getOutput().getLastRunningStartTime()));
+        request.setProject(job.getProject());
+        request.setJobId(job.getId());
+        request.setFailedStepId("c");
+        request.setFailedSegmentId("d");
+        request.setFailedStack("error");
+        request.setFailedReason("reason");
+        Mockito.doNothing().when(jobInfoService).updateJobError(request.getProject(), request.getJobId(),
+                request.getFailedStepId(), request.getFailedSegmentId(), request.getFailedStack(),
+                request.getFailedReason());
+
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.put("/api/jobs/error").contentType(MediaType.APPLICATION_JSON)
+                        .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER,
+                                getTestConfig().getBroadcastToken())
+                        .content(JsonUtil.writeValueAsString(request))
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
+        Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
+
+        Mockito.verify(jobController).updateJobError(Mockito.eq(request), Mockito.any());
+    }
+
+    @Test
+    public void testUpdateJobReportRejectsAnonymous() {
+        SecurityContextHolder.clearContext();
+        JobErrorRequest request = new JobErrorRequest();
+        request.setProject("default");
+        request.setJobId("job-id");
+        Assert.assertThrows(KylinException.class,
+                () -> jobController.updateJobError(request, new MockHttpServletRequest()));
     }
 
     @Test

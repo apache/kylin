@@ -273,7 +273,9 @@ public class JobController extends BaseController {
     @ApiOperation(value = "updateJobError", tags = { "DW" }, notes = "Update Body: job error")
     @PutMapping(value = "error")
     @ResponseBody
-    public EnvelopeResponse<String> updateJobError(@RequestBody JobErrorRequest request) {
+    public EnvelopeResponse<String> updateJobError(@RequestBody JobErrorRequest request,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         if (StringUtils.isBlank(request.getProject()) && StringUtils.isBlank(request.getJobId())) {
             throw new KylinException(JOB_ID_EMPTY, "At least one job should be selected to update stage status");
         }
@@ -294,7 +296,9 @@ public class JobController extends BaseController {
     @ApiOperation(value = "updateStageStatus", tags = { "DW" }, notes = "Update Body: jobIds(stage ids)")
     @PutMapping(value = "/stage/status")
     @ResponseBody
-    public EnvelopeResponse<String> updateStageStatus(@RequestBody StageRequest stageRequest) {
+    public EnvelopeResponse<String> updateStageStatus(@RequestBody StageRequest stageRequest,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         if (StringUtils.isBlank(stageRequest.getProject()) && StringUtils.isBlank(stageRequest.getTaskId())) {
             throw new KylinException(JOB_ID_EMPTY, "At least one job should be selected to update stage status");
         }
@@ -318,6 +322,7 @@ public class JobController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<String> updateSparkJobInfo(@RequestBody SparkJobUpdateRequest sparkJobUpdateRequest,
             HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkProjectName(sparkJobUpdateRequest.getProject());
         if (StringUtils.isNotBlank(sparkJobUpdateRequest.getYarnAppUrl())) {
             SparkUIUtil.validateJobTrackingUrl(sparkJobUpdateRequest.getYarnAppUrl(),
@@ -337,7 +342,9 @@ public class JobController extends BaseController {
     @PutMapping(value = "/wait_and_run_time")
     @ApiOperation(value = "updateWaitTime", tags = { "DW" })
     @ResponseBody
-    public EnvelopeResponse<String> updateSparkJobTime(@RequestBody SparkJobTimeRequest sparkJobTimeRequest) {
+    public EnvelopeResponse<String> updateSparkJobTime(@RequestBody SparkJobTimeRequest sparkJobTimeRequest,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkProjectName(sparkJobTimeRequest.getProject());
         return updateJobInfoWithCheck(sparkJobTimeRequest.getProject(), sparkJobTimeRequest.getJobId(),
                 sparkJobTimeRequest.getJobLastRunningStartTime(),

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -36,6 +37,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +64,10 @@ public class RestfulJobProgressReport implements IJobProgressReport {
             CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
             HttpPut httpPut = new HttpPut(requestApi);
             httpPut.addHeader(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_JSON);
+            String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+            if (StringUtils.isNotBlank(broadcastToken)) {
+                httpPut.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+            }
             httpPut.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
 
             HttpResponse response = httpClient.execute(httpPut);
