@@ -27,6 +27,8 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.SystemPropertiesCache;
+import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -56,6 +58,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -188,7 +191,8 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).collectStreamingJobStats(Mockito.any(StreamingJobStatsRequest.class));
+        Mockito.verify(streamingJobController).collectStreamingJobStats(Mockito.any(StreamingJobStatsRequest.class),
+                Mockito.any());
     }
 
     @Test
@@ -204,7 +208,8 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).updateStreamingJobInfo(Mockito.any(StreamingJobUpdateRequest.class));
+        Mockito.verify(streamingJobController).updateStreamingJobInfo(Mockito.any(StreamingJobUpdateRequest.class),
+                Mockito.any());
     }
 
     @Test
@@ -251,7 +256,7 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).addSegment(Mockito.any(StreamingSegmentRequest.class));
+        Mockito.verify(streamingJobController).addSegment(Mockito.any(StreamingSegmentRequest.class), Mockito.any());
     }
 
     @Test
@@ -272,7 +277,7 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).updateSegment(Mockito.any(StreamingSegmentRequest.class));
+        Mockito.verify(streamingJobController).updateSegment(Mockito.any(StreamingSegmentRequest.class), Mockito.any());
     }
 
     @Test
@@ -295,7 +300,7 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).deleteSegment(Mockito.any(StreamingSegmentRequest.class));
+        Mockito.verify(streamingJobController).deleteSegment(Mockito.any(StreamingSegmentRequest.class), Mockito.any());
     }
 
     @Test
@@ -321,8 +326,35 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(streamingJobController).updateLayout(Mockito.any(LayoutUpdateRequest.class));
+        Mockito.verify(streamingJobController).updateLayout(Mockito.any(LayoutUpdateRequest.class), Mockito.any());
 
+    }
+
+    @Test
+    public void testUpdateStreamingJobInfoAcceptsServiceToken() throws Exception {
+        SecurityContextHolder.clearContext();
+        val request = new StreamingJobUpdateRequest();
+        request.setJobType(JobTypeEnum.STREAMING_BUILD.name());
+        request.setProject(PROJECT);
+        request.setModelId(MODEL_ID);
+        request.setProcessId("9921");
+        Mockito.when(streamingJobService.updateStreamingJobInfo(Mockito.any())).thenReturn(new StreamingJobMeta());
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/streaming_jobs/spark")
+                .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken())
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(streamingJobController).updateStreamingJobInfo(Mockito.any(StreamingJobUpdateRequest.class),
+                Mockito.any());
+    }
+
+    @Test
+    public void testUpdateStreamingJobInfoRejectsAnonymous() {
+        SecurityContextHolder.clearContext();
+        val request = new StreamingJobUpdateRequest();
+        request.setProject(PROJECT);
+        Assert.assertThrows(KylinException.class,
+                () -> streamingJobController.updateStreamingJobInfo(request, new MockHttpServletRequest()));
     }
 
     @Test

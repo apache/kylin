@@ -36,6 +36,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.streaming.constants.StreamingConstants;
@@ -192,5 +193,9 @@ public class RestSupport implements Closeable {
     private void addHeader(HttpEntityEnclosingRequestBase httpReqBase) {
         httpReqBase.addHeader("Accept", HTTP_VND_APACHE_KYLIN_JSON);
         httpReqBase.addHeader(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_JSON);
+        String broadcastToken = KylinConfig.getInstanceFromEnv().getBroadcastToken();
+        if (StringUtils.isNotBlank(broadcastToken)) {
+            httpReqBase.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, broadcastToken);
+        }
     }
 }

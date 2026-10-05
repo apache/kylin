@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.exception.KylinException;
@@ -47,6 +48,7 @@ import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.StreamingJobDataStatsResponse;
 import org.apache.kylin.rest.response.StreamingJobResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.StreamingJobService;
 import org.apache.kylin.streaming.request.LayoutUpdateRequest;
 import org.apache.kylin.streaming.request.StreamingJobStatsRequest;
@@ -156,7 +158,8 @@ public class StreamingJobController extends NBasicController {
     @PutMapping(value = "/stats")
     @ResponseBody
     public EnvelopeResponse<String> collectStreamingJobStats(
-            @RequestBody StreamingJobStatsRequest streamingJobStatsRequest) {
+            @RequestBody StreamingJobStatsRequest streamingJobStatsRequest, HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         checkProjectName(streamingJobStatsRequest.getProject());
         val jobId = streamingJobStatsRequest.getJobId();
@@ -174,7 +177,8 @@ public class StreamingJobController extends NBasicController {
     @PutMapping(value = "/spark")
     @ResponseBody
     public EnvelopeResponse<String> updateStreamingJobInfo(
-            @RequestBody StreamingJobUpdateRequest streamingJobUpdateRequest) {
+            @RequestBody StreamingJobUpdateRequest streamingJobUpdateRequest, HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         checkProjectName(streamingJobUpdateRequest.getProject());
         val meta = streamingJobService.updateStreamingJobInfo(streamingJobUpdateRequest);
@@ -199,7 +203,8 @@ public class StreamingJobController extends NBasicController {
      */
     @PostMapping(value = "/dataflow/segment")
     @ResponseBody
-    public RestResponse addSegment(@RequestBody StreamingSegmentRequest request) {
+    public RestResponse addSegment(@RequestBody StreamingSegmentRequest request, HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         String project = request.getProject();
         String dataflowId = request.getDataflowId();
@@ -218,7 +223,9 @@ public class StreamingJobController extends NBasicController {
      */
     @PutMapping(value = "/dataflow/segment")
     @ResponseBody
-    public RestResponse updateSegment(@RequestBody StreamingSegmentRequest request) {
+    public RestResponse updateSegment(@RequestBody StreamingSegmentRequest request,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         String project = request.getProject();
         String dataflowId = request.getDataflowId();
@@ -239,7 +246,9 @@ public class StreamingJobController extends NBasicController {
      */
     @PostMapping(value = "/dataflow/segment/deletion")
     @ResponseBody
-    public RestResponse deleteSegment(@RequestBody StreamingSegmentRequest request) {
+    public RestResponse deleteSegment(@RequestBody StreamingSegmentRequest request,
+            HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         String project = request.getProject();
         String dataflowId = request.getDataflowId();
@@ -257,7 +266,8 @@ public class StreamingJobController extends NBasicController {
      */
     @PutMapping(value = "/dataflow/layout")
     @ResponseBody
-    public RestResponse updateLayout(@RequestBody LayoutUpdateRequest request) {
+    public RestResponse updateLayout(@RequestBody LayoutUpdateRequest request, HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkStreamingEnabled();
         String project = request.getProject();
         String dataflowId = request.getDataflowId();
