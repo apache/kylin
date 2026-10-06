@@ -41,6 +41,7 @@ import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.MaintainModelType;
 import org.apache.kylin.metadata.model.RetentionRange;
@@ -114,7 +115,7 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     @Setter
     private SegmentConfig segmentConfig = new SegmentConfig(false, Lists.newArrayList(AutoMergeTimeEnum.WEEK,
             AutoMergeTimeEnum.MONTH, AutoMergeTimeEnum.QUARTER, AutoMergeTimeEnum.YEAR), new VolatileRange(),
-            new RetentionRange(), false);
+            new RetentionRange(), false, new AutoSegmentBuildConfig(), false);
 
     public static ProjectInstance create(String name, String owner, String description,
             LinkedHashMap<String, String> overrideProps) {

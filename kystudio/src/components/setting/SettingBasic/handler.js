@@ -24,6 +24,7 @@ export const initialFormValue = {
   push_down_range_limited: true,
   auto_merge_enabled: true,
   auto_merge_time_ranges: [ 'WEEK', 'MONTH' ],
+  auto_segment_build_enabled: false,
   storage_garbage: true,
   storage_quota_size: 0,
   storage_quota_tb_size: 0,
@@ -81,6 +82,7 @@ export function _getSegmentSettings (data, project) {
     project: data.project,
     auto_merge_time_ranges: data.auto_merge_time_ranges,
     auto_merge_enabled: data.auto_merge_enabled,
+    auto_segment_build_enabled: data.auto_segment_build_enabled,
     volatile_range: {
       ...data.volatile_range,
       volatile_range_number: data.volatile_range.volatile_range_number + '',

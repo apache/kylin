@@ -94,6 +94,16 @@
       @cancel="(scb, ecb) => handleResetForm('segment-settings', scb, ecb)">
       <el-form ref="segment-setting-form" :model="form" :rules="rules">
         <div class="setting-item">
+          <span class="setting-label font-medium">{{$t('autoSegmentBuild')}}</span><span class="setting-value fixed">
+            <el-switch
+              v-model="form.auto_segment_build_enabled"
+              :active-text="$t('kylinLang.common.OFF')"
+              :inactive-text="$t('kylinLang.common.ON')">
+            </el-switch>
+          </span>
+          <div class="setting-desc">{{$t('autoSegmentBuildDesc')}}</div>
+        </div>
+        <div class="setting-item">
           <span class="setting-label font-medium">{{$t('segmentMerge')}}</span><span class="setting-value fixed">
             <el-switch
               v-model="form.auto_merge_enabled"

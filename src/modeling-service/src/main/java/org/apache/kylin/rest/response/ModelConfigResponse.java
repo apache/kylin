@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.AutoSegmentBuildConfig;
 import org.apache.kylin.metadata.model.RetentionRange;
 import org.apache.kylin.metadata.model.VolatileRange;
 
@@ -48,6 +49,8 @@ public class ModelConfigResponse {
     private VolatileRange volatileRange;
     @JsonProperty("retention_range")
     private RetentionRange retentionRange;
+    @JsonProperty("auto_segment_build")
+    private AutoSegmentBuildConfig autoSegmentBuild;
     @JsonProperty("config_last_modifier")
     private String configLastModifier;
     @JsonProperty("config_last_modified")

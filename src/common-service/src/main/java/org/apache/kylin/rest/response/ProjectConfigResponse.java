@@ -82,6 +82,8 @@ public class ProjectConfigResponse {
     private VolatileRange volatileRange;
     @JsonProperty("create_empty_segment_enabled")
     private boolean createEmptySegmentEnabled = false;
+    @JsonProperty("auto_segment_build_enabled")
+    private boolean autoSegmentBuildEnabled = false;
 
     @JsonProperty("retention_range")
     private RetentionRange retentionRange;
