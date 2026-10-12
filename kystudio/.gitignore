@@ -8,6 +8,5 @@ cypress/videos
 cypress/screenshots
 selenium-debug.log
 test/coverage
-package-lock.json
 *.env.local
 e2e/node_modules/
