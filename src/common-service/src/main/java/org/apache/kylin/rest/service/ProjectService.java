@@ -606,6 +606,8 @@ public class ProjectService extends BasicService {
         response.setVolatileRange(projectInstance.getSegmentConfig().getVolatileRange());
         response.setRetentionRange(projectInstance.getSegmentConfig().getRetentionRange());
         response.setCreateEmptySegmentEnabled(projectInstance.getSegmentConfig().getCreateEmptySegmentEnabled());
+        response.setAutoSegmentBuildEnabled(
+                Boolean.TRUE.equals(projectInstance.getSegmentConfig().getAutoSegmentBuildEnabled()));
 
         response.setFavoriteQueryThreshold(config.getFavoriteQueryAccelerateThreshold());
         response.setFavoriteQueryTipsEnabled(config.getFavoriteQueryAccelerateTipsEnabled());
@@ -941,6 +943,10 @@ public class ProjectService extends BasicService {
             copyForWrite.getSegmentConfig().setRetentionRange(segmentConfigRequest.getRetentionRange());
             copyForWrite.getSegmentConfig()
                     .setCreateEmptySegmentEnabled(segmentConfigRequest.getCreateEmptySegmentEnabled());
+            if (segmentConfigRequest.getAutoSegmentBuildEnabled() != null) {
+                copyForWrite.getSegmentConfig()
+                        .setAutoSegmentBuildEnabled(segmentConfigRequest.getAutoSegmentBuildEnabled());
+            }
         });
     }
 
@@ -1203,6 +1209,8 @@ public class ProjectService extends BasicService {
                     .setAutoMergeTimeRanges(projectInstance.getSegmentConfig().getAutoMergeTimeRanges());
             copyForWrite.getSegmentConfig().setVolatileRange(projectInstance.getSegmentConfig().getVolatileRange());
             copyForWrite.getSegmentConfig().setRetentionRange(projectInstance.getSegmentConfig().getRetentionRange());
+            copyForWrite.getSegmentConfig()
+                    .setAutoSegmentBuildEnabled(projectInstance.getSegmentConfig().getAutoSegmentBuildEnabled());
         });
     }
 

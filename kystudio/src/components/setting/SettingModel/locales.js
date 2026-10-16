@@ -6,6 +6,7 @@ export default {
     segmentMerge: 'Segment Merge:',
     volatileRange: 'Volatile Range:',
     retention: 'Retention Threshold:',
+    autoSegmentBuild: 'Auto Segment Build:',
     newSetting: 'Add Parameter Configuration',
     editSetting: 'Edit Parameter Configuration',
     modelName: 'Model Name',
@@ -34,6 +35,7 @@ export default {
     'isDel_kylin.engine.spark-conf.spark.executor.memory': 'Are you sure delete spark.executor.memory item?',
     'isDel_kylin.engine.spark-conf.spark.sql.shuffle.partitions': 'Are you sure delete spark.sql.shuffle.partitions item?',
     'isDel_kylin.cube.aggrgroup.is-base-cuboid-always-valid': 'Are you sure delete is-base-cuboid-always-valid item?',
+    isDel_auto_segment_build: 'Are you sure delete auto segment build configuration?',
     autoMergeTip: 'The system could auto-merge segment fragments over different merging threshold. Auto-merge will optimize storage to enhance query performance.',
     volatileTip: '"Auto-Merge" will not merge the latest segments defined in "Volatile Range". The default value is 0.',
     retentionThresholdDesc: 'The segments within the retention threshold would be kept. The rest would be removed automatically.',
@@ -41,6 +43,7 @@ export default {
     'Auto-merge': 'Auto Merge',
     'Volatile Range': 'Volatile Range',
     'Retention Threshold': 'Retention Threshold',
+    'Auto Segment Build': 'Auto Segment Build',
     'kylin.engine.spark-conf.spark.executor.cores': 'kylin.engine.spark-conf.spark.executor.cores',
     'kylin.engine.spark-conf.spark.executor.instances': 'kylin.engine.spark-conf.spark.executor.instances',
     'kylin.engine.spark-conf.spark.executor.memory': 'kylin.engine.spark-conf.spark.executor.memory',
@@ -55,6 +58,13 @@ export default {
     customOptions: 'Besides the defined configurations, you can also add some advanced settings.<br/><i class="el-icon-ksd-alert"></i>Note: It\'s highly recommended to use this feature with the support of Kylin 5 Team.',
     customSettingKeyPlaceholder: 'Configuration Name',
     customSettingValuePlaceholder: 'Value',
-    delCustomConfigTip: 'Are you sure you want to delete custom setting item {name}？'
+    delCustomConfigTip: 'Are you sure you want to delete custom setting item {name}？',
+    autoSegmentBuildTriggerTime: 'Trigger Time',
+    autoSegmentBuildLogicalOffset: 'Logical Date Offset (Day)',
+    autoSegmentBuildRangeStart: 'Range Start Time',
+    autoSegmentBuildRangeEnd: 'Range End Time',
+    autoSegmentBuildEndOfDay: 'End of logical day (next day 00:00)',
+    autoSegmentBuildTip: 'Build segment automatically every day with logical day offset and configured time range.',
+    autoSegmentBuildSummary: 'Daily {trigger}, D-{offset} {start}~{end}'
   }
 }
