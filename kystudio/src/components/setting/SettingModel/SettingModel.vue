@@ -46,6 +46,15 @@
               <i class="el-icon-ksd-symbol_type" @click="removeAutoMerge(scope.row, 'retention_range')"></i>
             </common-tip>
           </div>
+          <div v-if="scope.row.auto_segment_build && scope.row.auto_segment_build.enabled">
+            <span class="model-setting-item" @click="editAutoSegmentBuildItem(scope.row)">
+              {{$t('autoSegmentBuild')}}<span>{{formatAutoSegmentBuild(scope.row.auto_segment_build)}}</span>
+            </span><common-tip :content="$t('kylinLang.common.edit')">
+              <i class="el-icon-ksd-table_edit ksd-mr-5 ksd-ml-10" @click="editAutoSegmentBuildItem(scope.row)"></i>
+            </common-tip><common-tip :content="$t('kylinLang.common.delete')">
+              <i class="el-icon-ksd-symbol_type" @click="removeAutoMerge(scope.row, 'auto_segment_build')"></i>
+            </common-tip>
+          </div>
           <div v-if="Object.keys(scope.row.override_props).length">
             <div v-for="(propValue, key) in scope.row.override_props" :key="key">
               <template v-if="key.includes('kylin.engine.spark-conf') && defaultConfigs.includes(key.replace(/^kylin.engine.spark-conf./, ''))">
@@ -141,6 +150,44 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <template v-if="step=='stepTwo'&&modelSettingForm.settingItem==='Auto Segment Build'">
+          <el-form-item :label="$t('autoSegmentBuildTriggerTime')">
+            <el-time-picker
+              style="width: 180px;"
+              size="small"
+              format="HH:mm:ss"
+              value-format="HH:mm:ss"
+              v-model="modelSettingForm.autoSegmentBuild.trigger_time">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item :label="$t('autoSegmentBuildLogicalOffset')">
+            <el-input v-model="modelSettingForm.autoSegmentBuild.logical_date_offset_days" v-number="modelSettingForm.autoSegmentBuild.logical_date_offset_days" class="retention-input"></el-input>
+          </el-form-item>
+          <el-form-item :label="$t('autoSegmentBuildRangeStart')">
+            <el-time-picker
+              style="width: 180px;"
+              size="small"
+              format="HH:mm:ss"
+              value-format="HH:mm:ss"
+              v-model="modelSettingForm.autoSegmentBuild.data_range_start_time">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item :label="$t('autoSegmentBuildRangeEnd')">
+            <el-time-picker
+              v-if="!isAutoSegmentBuildEndOfDay"
+              style="width: 180px;"
+              size="small"
+              format="HH:mm:ss"
+              value-format="HH:mm:ss"
+              v-model="modelSettingForm.autoSegmentBuild.data_range_end_time">
+            </el-time-picker>
+            <el-checkbox
+              :class="{'ksd-ml-10': !isAutoSegmentBuildEndOfDay}"
+              v-model="isAutoSegmentBuildEndOfDay">
+              {{$t('autoSegmentBuildEndOfDay')}}
+            </el-checkbox>
+          </el-form-item>
+        </template>
         <el-form-item :label="settingMap[modelSettingForm.settingItem]" v-if="step=='stepTwo'&&modelSettingForm.settingItem.indexOf('spark.')!==-1">
           <el-input v-model="modelSettingForm[modelSettingForm.settingItem]" v-number="modelSettingForm[modelSettingForm.settingItem]" :placeholder="$t('kylinLang.common.pleaseInput')" class="retention-input"></el-input><span
           class="ksd-ml-5" v-if="modelSettingForm.settingItem==='spark.executor.memory'">G</span>
@@ -196,12 +243,15 @@ import { handleSuccess, transToGmtTime, kylinConfirm } from '../../../util/busin
 import { handleSuccessAsync, handleError, objectClone, ArrayFlat } from '../../../util/index'
 import { retentionTypes } from '../handler'
 
+const END_OF_DAY = '24:00:00'
+
 const initialSettingForm = JSON.stringify({
   name: '',
   settingItem: '',
   autoMerge: [],
   volatileRange: {volatile_range_number: 0, volatile_range_type: '', volatile_range_enabled: true},
   retentionThreshold: {retention_range_number: 0, retention_range_type: '', retention_range_enabled: true},
+  autoSegmentBuild: {enabled: true, trigger_time: '01:00:00', logical_date_offset_days: 1, data_range_start_time: '00:00:00', data_range_end_time: END_OF_DAY},
   'spark.executor.cores': null,
   'spark.executor.instances': null,
   'spark.executor.memory': null,
@@ -255,6 +305,7 @@ export default class SettingStorage extends Vue {
     'Auto-merge': 'Auto-merge',
     'Volatile Range': 'Volatile Range',
     'Retention Threshold': 'Retention Threshold',
+    'Auto Segment Build': 'Auto Segment Build',
     'spark.executor.cores': 'kylin.engine.spark-conf.spark.executor.cores',
     'spark.executor.instances': 'kylin.engine.spark-conf.spark.executor.instances',
     'spark.executor.memory': 'kylin.engine.spark-conf.spark.executor.memory',
@@ -275,6 +326,7 @@ export default class SettingStorage extends Vue {
       'Auto-merge',
       'Volatile Range',
       'Retention Threshold',
+      'Auto Segment Build',
       'spark.executor.cores',
       'spark.executor.instances',
       'spark.executor.memory',
@@ -295,6 +347,12 @@ export default class SettingStorage extends Vue {
     // return largestRange || ''
     return 'DAY'
   }
+  get isAutoSegmentBuildEndOfDay () {
+    return this.modelSettingForm.autoSegmentBuild.data_range_end_time === END_OF_DAY
+  }
+  set isAutoSegmentBuildEndOfDay (isEndOfDay) {
+    this.modelSettingForm.autoSegmentBuild.data_range_end_time = isEndOfDay ? END_OF_DAY : null
+  }
   validateSettingItem (rule, value, callback) {
     const autoMergeRanges = this.activeRow && this.activeRow.auto_merge_time_ranges || []
     if (this.step === 'stepOne' && value === 'Retention Threshold' && !autoMergeRanges.length) {
@@ -308,6 +366,7 @@ export default class SettingStorage extends Vue {
       'Auto-merge': this.$t('autoMergeTip'),
       'Volatile Range': this.$t('volatileTip'),
       'Retention Threshold': this.$t('retentionThresholdDesc'),
+      'Auto Segment Build': this.$t('autoSegmentBuildTip'),
       'kylin.engine.spark-conf.spark.executor.cores': this.$t('sparkCores'),
       'kylin.engine.spark-conf.spark.executor.instances': this.$t('sparkInstances'),
       'kylin.engine.spark-conf.spark.executor.memory': this.$t('sparkMemory'),
@@ -345,6 +404,8 @@ export default class SettingStorage extends Vue {
     } else if (this.modelSettingForm.settingItem === 'Volatile Range' && !(this.modelSettingForm.volatileRange.volatile_range_number >= 0 && this.modelSettingForm.volatileRange.volatile_range_number !== '' && this.modelSettingForm.volatileRange.volatile_range_type)) {
       return true
     } else if (this.modelSettingForm.settingItem === 'Retention Threshold' && !(this.modelSettingForm.retentionThreshold.retention_range_number >= 0 && this.modelSettingForm.retentionThreshold.retention_range_number !== '' && this.modelSettingForm.retentionThreshold.retention_range_type)) {
+      return true
+    } else if (this.modelSettingForm.settingItem === 'Auto Segment Build' && !this.isValidAutoSegmentBuild()) {
       return true
     } else if (this.modelSettingForm.settingItem.indexOf('spark.') !== -1 && !this.modelSettingForm[this.modelSettingForm.settingItem]) {
       return true
@@ -439,6 +500,15 @@ export default class SettingStorage extends Vue {
     this.isEdit = true
     this.editModelSetting = true
   }
+  editAutoSegmentBuildItem (row) {
+    this.modelSettingForm.name = row.alias
+    this.modelSettingForm.settingItem = 'Auto Segment Build'
+    this.modelSettingForm.autoSegmentBuild = JSON.parse(JSON.stringify(row.auto_segment_build))
+    this.activeRow = row
+    this.step = 'stepTwo'
+    this.isEdit = true
+    this.editModelSetting = true
+  }
   editSparkItem (row, sparkItemKey) {
     this.modelSettingForm.name = row.alias
     this.modelSettingForm.settingItem = sparkItemKey.substring(24)
@@ -488,6 +558,13 @@ export default class SettingStorage extends Vue {
     }
     if (this.modelSettingForm.settingItem === 'Retention Threshold') {
       this.activeRow.retention_range = this.modelSettingForm.retentionThreshold
+    }
+    if (this.modelSettingForm.settingItem === 'Auto Segment Build') {
+      this.activeRow.auto_segment_build = {
+        ...this.modelSettingForm.autoSegmentBuild,
+        enabled: true,
+        logical_date_offset_days: Number(this.modelSettingForm.autoSegmentBuild.logical_date_offset_days)
+      }
     }
     if (this.modelSettingForm.settingItem.indexOf('spark.') !== -1) {
       this.activeRow.override_props['kylin.engine.spark-conf.' + this.modelSettingForm.settingItem] = this.modelSettingForm[this.modelSettingForm.settingItem]
@@ -543,6 +620,22 @@ export default class SettingStorage extends Vue {
   // 删除某个自定义配置项
   removeCustomSetting (index) {
     this.modelSettingForm[this.modelSettingForm.settingItem].splice(index, 1)
+  }
+  isValidAutoSegmentBuild () {
+    const config = this.modelSettingForm.autoSegmentBuild
+    if (!config || !config.trigger_time || !config.data_range_start_time || !config.data_range_end_time) return false
+    if (!(+config.logical_date_offset_days >= 1)) return false
+    if (config.data_range_end_time === END_OF_DAY) return true
+    return config.data_range_start_time < config.data_range_end_time
+  }
+  formatAutoSegmentBuild (config) {
+    if (!config) return ''
+    return this.$t('autoSegmentBuildSummary', {
+      trigger: config.trigger_time,
+      offset: config.logical_date_offset_days,
+      start: config.data_range_start_time,
+      end: config.data_range_end_time
+    })
   }
   created () {
     this.getConfigList()

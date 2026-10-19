@@ -11,6 +11,8 @@ export default {
     pushdownRange: 'Pushdown Range',
     pushdownRangeDesc: 'Turn off the pushdown range setting may cause the result difference between query on source data and indexes, especially when a source table has new data yet indexes don\'t.',
     segmentSettings: 'Segment Settings',
+    autoSegmentBuild: 'Auto Segment Build',
+    autoSegmentBuildDesc: 'When enabled, the master node periodically scans this project and submits jobs for eligible model-level auto segment build schedules.',
     datasourceSetting: 'Data Source Setting',
     gbaseConnectInfo: 'GBase Data Source Information',
     JDBCDataSource: 'JDBC Datasource',

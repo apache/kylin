@@ -328,6 +328,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
         request.setAutoMergeEnabled(true);
         request.setAutoMergeTimeRanges(Arrays.asList(AutoMergeTimeEnum.DAY));
         request.setCreateEmptySegmentEnabled(true);
+        request.setAutoSegmentBuildEnabled(true);
 
         Mockito.doNothing().when(projectService).updateSegmentConfig("default", request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/segment_config", "default")
