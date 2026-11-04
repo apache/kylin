@@ -59,7 +59,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     private AtomicReference<Collection<MemcachedNode>> allNodes = new AtomicReference<>();
 
     /**
-     * Create a new KetamaNodeLocator using specified nodes and the specifed hash
+     * Create a new KetamaNodeLocator using specified nodes and the specified hash
      * algorithm.
      *
      * @param nodes The List of nodes to use in the Ketama consistent hash
