@@ -19,8 +19,8 @@
 package org.apache.kylin.streaming.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.cluster.ClusterManagerFactory;
@@ -42,7 +42,7 @@ import lombok.val;
 
 public class JobKiller {
     private static final Logger logger = LoggerFactory.getLogger(JobKiller.class);
-    private static final String GREP_CMD = "ps -ef|grep '%s' | grep -v grep|awk '{print $2}'";
+    private static final List<String> PROCESS_LIST_COMMAND = Arrays.asList("ps", "-eo", "pid=,args=");
 
     private static boolean isYarnEnv = StreamingUtils.isJobOnCluster(KylinConfig.getInstanceFromEnv());
 
@@ -156,17 +156,30 @@ public class JobKiller {
     }
 
     public static int grepProcess(CliCommandExecutor exec, StringLogger strLogger, String jobId) throws ShellException {
-        String cmd = String.format(Locale.getDefault(), GREP_CMD, jobId);
-        val result = exec.execute(cmd, strLogger).getCode();
-        logger.info("grep process cmd={}, result ={} ", cmd, result);
+        StringLogger processOutput = new StringLogger();
+        int result = exec.execute(PROCESS_LIST_COMMAND, null, processOutput, null).getCode();
+        for (String line : processOutput.getContents()) {
+            String[] pidAndCommand = line.trim().split("\\s+", 2);
+            if (pidAndCommand.length == 2 && StringUtils.isNumeric(pidAndCommand[0])
+                    && pidAndCommand[1].contains(jobId)) {
+                if (strLogger != null) {
+                    strLogger.log(pidAndCommand[0]);
+                }
+            }
+        }
+        logger.info("grep process jobId={}, result={} ", jobId, result);
         return result;
     }
 
     public static int doKillProcess(CliCommandExecutor exec, String jobId, boolean forced) throws ShellException {
-        String cmd = String.format(Locale.getDefault(), GREP_CMD, jobId);
-        val force = forced ? " -9" : StringUtils.EMPTY;
-        val result = exec.execute(cmd + "|xargs kill" + force, null).getCode();
-        logger.info("kill process cmd={}, result ={} ", cmd, result);
+        StringLogger pidLogger = new StringLogger();
+        int result = grepProcess(exec, pidLogger, jobId);
+        String signal = forced ? "-9" : "-TERM";
+        for (String pid : pidLogger.getContents()) {
+            exec.execute(Arrays.asList("kill", signal, pid), null, null, jobId);
+        }
+        logger.info("kill process jobId={}, forced={}, pids={}, result={} ", jobId, forced,
+                pidLogger.getContents(), result);
         return result;
     }
 

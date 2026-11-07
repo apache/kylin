@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SIMPLIFIED_MEASURES_MISSING_ID;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -145,6 +147,7 @@ public class ModelSemanticHelper extends BasicService {
     }
 
     public NDataModel convertToDataModel(ModelRequest modelRequest) {
+        validateModelUuid(modelRequest.getUuid());
         List<SimplifiedMeasure> simplifiedMeasures = modelRequest.getSimplifiedMeasures();
         NDataModel dataModel;
         try {
@@ -175,6 +178,19 @@ public class ModelSemanticHelper extends BasicService {
         convertNonEquiJoinCond(dataModel, modelRequest);
         dataModel.setModelType(dataModel.getModelTypeFromTable());
         return dataModel;
+    }
+
+    private void validateModelUuid(String modelUuid) {
+        if (modelUuid == null) {
+            return;
+        }
+        try {
+            if (!UUID.fromString(modelUuid).toString().equalsIgnoreCase(modelUuid)) {
+                throw new IllegalArgumentException("Non-canonical UUID");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new KylinException(INVALID_PARAMETER, "Invalid model UUID.");
+        }
     }
 
     /**

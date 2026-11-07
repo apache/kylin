@@ -18,8 +18,12 @@
 package org.apache.kylin.streaming.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Logger;
@@ -204,7 +208,8 @@ public class JobKillerTest extends StreamingTestCase {
         val mgr = StreamingJobManager.getInstance(getTestConfig(), PROJECT);
         val streamingJobMeta = mgr.getStreamingJobByUuid(id);
         val exec = new CliCommandExecutor() {
-            public CliCmdExecResult execute(String command, Logger logAppender) throws ShellException {
+            public CliCmdExecResult execute(List<String> command, Map<String, String> environment, Logger logAppender,
+                    String jobId) throws ShellException {
                 throw new ShellException("test");
             }
         };
@@ -225,6 +230,34 @@ public class JobKillerTest extends StreamingTestCase {
             Assert.assertTrue(strLogger.getContents().isEmpty());
         } catch (Exception e) {
         }
+    }
+
+    @Test
+    public void testGrepProcessDoesNotInterpretJobIdAsShell() throws Exception {
+        RecordingCliCommandExecutor exec = new RecordingCliCommandExecutor();
+        String jobId = "test';touch /tmp/not-executed;echo'";
+        exec.processOutput = " 123 java -jar app.jar " + jobId + "\n 456 java -jar other.jar\n";
+        val strLogger = new JobKiller.StringLogger();
+
+        int resultCode = JobKiller.grepProcess(exec, strLogger, jobId);
+
+        Assert.assertEquals(0, resultCode);
+        Assert.assertEquals(Collections.singletonList("123"), strLogger.getContents());
+        Assert.assertEquals(Collections.singletonList(Arrays.asList("ps", "-eo", "pid=,args=")), exec.commands);
+    }
+
+    @Test
+    public void testDoKillProcessUsesNumericPidArguments() throws Exception {
+        RecordingCliCommandExecutor exec = new RecordingCliCommandExecutor();
+        String jobId = "test';touch /tmp/not-executed;echo'";
+        exec.processOutput = " 123 java -jar app.jar " + jobId + "\n 456 java -jar other.jar\n";
+
+        int resultCode = JobKiller.doKillProcess(exec, jobId, true);
+
+        Assert.assertEquals(0, resultCode);
+        Assert.assertEquals(2, exec.commands.size());
+        Assert.assertEquals(Arrays.asList("ps", "-eo", "pid=,args="), exec.commands.get(0));
+        Assert.assertEquals(Arrays.asList("kill", "-9", "123"), exec.commands.get(1));
     }
 
     @Test
@@ -252,5 +285,20 @@ public class JobKillerTest extends StreamingTestCase {
         Assert.assertTrue(log.getContents().isEmpty());
         log.log("test");
         Assert.assertFalse(log.getContents().isEmpty());
+    }
+
+    private static class RecordingCliCommandExecutor extends CliCommandExecutor {
+        private final List<List<String>> commands = new ArrayList<>();
+        private String processOutput = StringUtils.EMPTY;
+
+        @Override
+        public CliCmdExecResult execute(List<String> command, Map<String, String> environment, Logger logAppender,
+                String jobId) {
+            commands.add(new ArrayList<>(command));
+            if (logAppender != null && "ps".equals(command.get(0))) {
+                Arrays.stream(processOutput.split("\n")).forEach(logAppender::log);
+            }
+            return new CliCmdExecResult(0, StringUtils.EMPTY, "1");
+        }
     }
 }

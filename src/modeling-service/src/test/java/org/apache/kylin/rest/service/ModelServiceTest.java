@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_EXECUTE_MODEL_SQL;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT_ADJUST_INFO;
@@ -4704,6 +4705,21 @@ public class ModelServiceTest extends SourceTestCase {
         batchModelRequest.setProject(project);
         val model1 = semanticService.convertToDataModel(batchModelRequest);
         Assert.assertEquals(model.getAllNamedColumns().get(4).getName(), model1.getAllNamedColumns().get(4).getName());
+    }
+
+    @Test
+    public void testRejectNonCanonicalModelUuid() {
+        String project = "streaming_test";
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataModel model = modelManager.getDataModelDesc("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+        ModelRequest modelRequest = new ModelRequest(model);
+        modelRequest.setProject(project);
+        modelRequest.setUuid("test';touch /tmp/not-executed;echo'");
+
+        KylinException exception = Assert.assertThrows(KylinException.class,
+                () -> semanticService.convertToDataModel(modelRequest));
+
+        Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), exception.getErrorCode());
     }
 
     @Test
