@@ -173,6 +173,16 @@ public class ProjectService extends BasicService {
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODE_MINUTE = "MINUTE";
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODES = "DAY, HOURS, MINUTE";
     private static final String KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME = "kylin.query.pushdown.runner-class-name";
+    private static final String KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME =
+            "kylin.query.pushdown.partition-check.runner-class-name";
+    private static final String KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES =
+            "kylin.query.pushdown.converter-class-names";
+    private static final String KYLIN_QUERY_PUSHDOWN_JDBC_URL = "kylin.query.pushdown.jdbc.url";
+    private static final String KYLIN_QUERY_PUSHDOWN_JDBC_DRIVER = "kylin.query.pushdown.jdbc.driver";
+    private static final Set<String> DEFAULT_PUSHDOWN_RUNNER_CLASS_NAMES = Sets.newHashSet(
+            "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl",
+            "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl",
+            "org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl");
     private static final String DEFAULT_VAL = "default";
     private static final Pattern INVALID_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"'<>|\\u0000-\\u001F\\s]|^[.]+$|[.]$");
 
@@ -444,26 +454,81 @@ public class ProjectService extends BasicService {
         if (projectInstance == null) {
             throw new KylinException(PROJECT_NOT_EXIST, project);
         }
-        if (overrideKylinProps.containsKey(KYLIN_JOB_MAX_CONCURRENT_JOBS)) {
-            val maxConcurrentJobs = Ints.tryParse(overrideKylinProps.get(KYLIN_JOB_MAX_CONCURRENT_JOBS));
+        Map<String, String> normalizedOverrides = KylinConfig.trimKVFromMap(overrideKylinProps);
+        if (normalizedOverrides.containsKey(KYLIN_JOB_MAX_CONCURRENT_JOBS)) {
+            val maxConcurrentJobs = Ints.tryParse(normalizedOverrides.get(KYLIN_JOB_MAX_CONCURRENT_JOBS));
             if (Objects.isNull(maxConcurrentJobs) || maxConcurrentJobs < 0)
                 throw new KylinException(INVALID_PARAMETER,
                         MsgPicker.getMsg().getIllegalNegative(KYLIN_JOB_MAX_CONCURRENT_JOBS));
         }
-        if (overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)
-                || overrideKylinProps.containsKey(KYLIN_SOURCE_JDBC_DRIVER_KEY)) {
-            String url = overrideKylinProps.getOrDefault(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY,
+        if (normalizedOverrides.containsKey(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY)
+                || normalizedOverrides.containsKey(KYLIN_SOURCE_JDBC_DRIVER_KEY)) {
+            String url = normalizedOverrides.getOrDefault(KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY,
                     projectInstance.getConfig().getJdbcConnectionUrl());
-            String driver = overrideKylinProps.getOrDefault(KYLIN_SOURCE_JDBC_DRIVER_KEY,
+            String driver = normalizedOverrides.getOrDefault(KYLIN_SOURCE_JDBC_DRIVER_KEY,
                     projectInstance.getConfig().getJdbcDriver());
             if (StringUtils.isNotBlank(url) && KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
                     && !JdbcUtils.validateUrlByWhiteList(url, driver)) {
                 throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
             }
         }
-        encryptJdbcPassInOverrideKylinProps(overrideKylinProps);
+        validateQueryPushdownConfig(projectInstance, normalizedOverrides);
+        encryptJdbcPassInOverrideKylinProps(normalizedOverrides);
         projectManager.updateProject(project, copyForWrite -> copyForWrite.getOverrideKylinProps()
-                .putAll(KylinConfig.trimKVFromMap(overrideKylinProps)));
+                .putAll(normalizedOverrides));
+    }
+
+    private void validateQueryPushdownConfig(ProjectInstance projectInstance, Map<String, String> overrides) {
+        validateQueryPushdownJdbcConfig(projectInstance, overrides);
+        validateQueryPushdownRunnerClasses(overrides);
+        validateQueryPushdownConverterClasses(overrides);
+    }
+
+    private void validateQueryPushdownJdbcConfig(ProjectInstance projectInstance, Map<String, String> overrides) {
+        if (!overrides.containsKey(KYLIN_QUERY_PUSHDOWN_JDBC_URL)
+                && !overrides.containsKey(KYLIN_QUERY_PUSHDOWN_JDBC_DRIVER)) {
+            return;
+        }
+        String url = overrides.getOrDefault(KYLIN_QUERY_PUSHDOWN_JDBC_URL, projectInstance.getConfig().getJdbcUrl());
+        String driver = overrides.getOrDefault(KYLIN_QUERY_PUSHDOWN_JDBC_DRIVER,
+                projectInstance.getConfig().getJdbcDriverClass());
+        if (StringUtils.isNotBlank(url) && KylinConfig.getInstanceFromEnv().isSourceJdbcWhiteListEnabled()
+                && !JdbcUtils.validateUrlByWhiteList(url, driver)) {
+            throw new KylinException(INVALID_JDBC_SOURCE_CONFIG, MsgPicker.getMsg().getJdbcConnectionInfoWrong());
+        }
+    }
+
+    private void validateQueryPushdownRunnerClasses(Map<String, String> overrides) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Set<String> allowedRunners = Sets.newHashSet(DEFAULT_PUSHDOWN_RUNNER_CLASS_NAMES);
+        allowedRunners.add(config.getPushDownRunnerClassName());
+        allowedRunners.add(config.getPartitionCheckRunnerClassName());
+        validatePushdownClassOverride(overrides, KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME, allowedRunners);
+        validatePushdownClassOverride(overrides, KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME,
+                allowedRunners);
+    }
+
+    private void validatePushdownClassOverride(Map<String, String> overrides, String key, Set<String> allowedClasses) {
+        String className = overrides.get(key);
+        if (StringUtils.isNotBlank(className) && !allowedClasses.contains(className)) {
+            throw new KylinException(INVALID_PARAMETER, String.format(Locale.ROOT,
+                    "Unsupported query pushdown class for '%s'", key));
+        }
+    }
+
+    private void validateQueryPushdownConverterClasses(Map<String, String> overrides) {
+        String converterClassNames = overrides.get(KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES);
+        if (StringUtils.isBlank(converterClassNames)) {
+            return;
+        }
+        Set<String> allowedConverters = Sets
+                .newHashSet(KylinConfig.getInstanceFromEnv().getPushDownConverterClassNames());
+        for (String converterClassName : StringUtils.split(converterClassNames, ',')) {
+            if (!allowedConverters.contains(converterClassName.trim())) {
+                throw new KylinException(INVALID_PARAMETER,
+                        "Unsupported query pushdown converter class");
+            }
+        }
     }
 
     private void encryptJdbcPassInOverrideKylinProps(Map<String, String> overrideKylinProps) {
@@ -895,12 +960,11 @@ public class ProjectService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
     @Transaction(project = 0)
     public void updatePushDownProjectConfig(String project, PushDownProjectConfigRequest pushDownProjectConfigRequest) {
-        getManager(NProjectManager.class).updateProject(project, copyForWrite -> {
-            copyForWrite.putOverrideKylinProps(KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME,
-                    pushDownProjectConfigRequest.getRunnerClassName());
-            copyForWrite.putOverrideKylinProps("kylin.query.pushdown.converter-class-names",
-                    pushDownProjectConfigRequest.getConverterClassNames());
-        });
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put(KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME, pushDownProjectConfigRequest.getRunnerClassName());
+        overrides.put(KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES,
+                pushDownProjectConfigRequest.getConverterClassNames());
+        updateProjectOverrideKylinProps(project, overrides);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")

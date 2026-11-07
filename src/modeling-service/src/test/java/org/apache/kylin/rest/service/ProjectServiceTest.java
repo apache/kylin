@@ -532,6 +532,68 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testUpdateProjectConfigAcceptsSafePushdownJdbcConfig() {
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.runner-class-name",
+                "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
+        overrides.put("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
+        overrides.put("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:pushdown;MODE=MYSQL");
+
+        projectService.updateProjectConfig(PROJECT, overrides);
+
+        Map<String, String> projectOverrides = projectManager.getProject(PROJECT).getOverrideKylinProps();
+        Assert.assertEquals("org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl",
+                projectOverrides.get("kylin.query.pushdown.runner-class-name"));
+        Assert.assertEquals("org.h2.Driver", projectOverrides.get("kylin.query.pushdown.jdbc.driver"));
+        Assert.assertEquals("jdbc:h2:mem:pushdown;MODE=MYSQL",
+                projectOverrides.get("kylin.query.pushdown.jdbc.url"));
+    }
+
+    @Test
+    public void testUpdateProjectConfigRejectsUnsafePushdownJdbcUrl() {
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.runner-class-name",
+                "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
+        overrides.put("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
+        overrides.put(" kylin.query.pushdown.jdbc.url ",
+                "jdbc:h2:mem:pushdown;INIT=RUNSCRIPT FROM 'http://127.0.0.1/init.sql'");
+
+        Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
+        Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps()
+                .get("kylin.query.pushdown.jdbc.url"));
+    }
+
+    @Test
+    public void testUpdateProjectConfigRejectsMismatchedPushdownDriver() {
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.jdbc.driver", "com.mysql.cj.jdbc.Driver");
+        overrides.put("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:pushdown");
+
+        Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
+        Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps()
+                .get("kylin.query.pushdown.jdbc.driver"));
+    }
+
+    @Test
+    public void testUpdateProjectConfigRejectsUnknownPushdownRunnerClass() {
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.runner-class-name", "java.lang.Runtime");
+
+        Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
+        Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps()
+                .get("kylin.query.pushdown.runner-class-name"));
+    }
+
+    @Test
+    public void testUpdatePushdownProjectConfigRejectsUnknownRunnerClass() {
+        PushDownProjectConfigRequest request = new PushDownProjectConfigRequest();
+        request.setRunnerClassName("java.lang.Runtime");
+
+        Assert.assertThrows(KylinException.class,
+                () -> projectService.updatePushDownProjectConfig(PROJECT, request));
+    }
+
+    @Test
     public void testUpdateProjectConfigTrim() {
 
         Map<String, String> testOverrideP = Maps.newLinkedHashMap();
