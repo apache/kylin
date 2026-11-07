@@ -39,6 +39,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.query.util.AsyncQueryUtil;
@@ -60,6 +61,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -550,25 +552,50 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void deleteAllFolder() throws Exception {
         Mockito.doReturn(true).when(asyncQueryService).deleteAllFolder();
+        val request = new MockHttpServletRequest();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/tenant_node")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        val response = nAsyncQueryController.deleteAllFolder();
+        val response = nAsyncQueryController.deleteAllFolder(request);
         Assert.assertTrue(response.getData());
     }
 
     @Test
     public void deleteAllFolderFailed() throws Exception {
         Mockito.doReturn(false).when(asyncQueryService).deleteAllFolder();
+        val request = new MockHttpServletRequest();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/tenant_node")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        val response = nAsyncQueryController.deleteAllFolder();
+        val response = nAsyncQueryController.deleteAllFolder(request);
         Assert.assertFalse(response.getData());
+    }
+
+    @Test
+    public void deleteAllFolderRejectsLowPrivilegeUser() throws Exception {
+        Authentication otherUser = new TestingAuthenticationToken("OTHER", "OTHER", Constant.IDENTITY_USER);
+        SecurityContextHolder.getContext().setAuthentication(otherUser);
+
+        Assert.assertThrows(KylinException.class,
+                () -> nAsyncQueryController.deleteAllFolder(new MockHttpServletRequest()));
+        Mockito.verify(asyncQueryService, Mockito.never()).deleteAllFolder();
+    }
+
+    @Test
+    public void deleteAllFolderAcceptsServiceToken() throws Exception {
+        Authentication otherUser = new TestingAuthenticationToken("OTHER", "OTHER", Constant.IDENTITY_USER);
+        SecurityContextHolder.getContext().setAuthentication(otherUser);
+        Mockito.doReturn(true).when(asyncQueryService).deleteAllFolder();
+        val request = new MockHttpServletRequest();
+        request.addHeader(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken());
+
+        val response = nAsyncQueryController.deleteAllFolder(request);
+
+        Assert.assertTrue(response.getData());
     }
 
     @Test

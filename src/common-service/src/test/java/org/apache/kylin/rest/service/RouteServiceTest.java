@@ -39,6 +39,7 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
@@ -69,6 +70,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -77,6 +79,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -173,8 +176,14 @@ public class RouteServiceTest {
     public void deleteAllFolder() throws Exception {
         val result = new CountDownLatch(1);
         val request = new MockHttpServletRequest();
+        Mockito.when(kylinConfig.getBroadcastToken()).thenReturn("service-token");
         routeService.deleteAllFolder("127.0.0.1:8080", request, result);
         Assert.assertEquals(0, result.getCount());
+        ArgumentCaptor<HttpEntity> requestEntity = ArgumentCaptor.forClass(HttpEntity.class);
+        Mockito.verify(restTemplate).exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
+                requestEntity.capture(), ArgumentMatchers.<Class<byte[]>> any());
+        Assert.assertEquals("service-token",
+                requestEntity.getValue().getHeaders().getFirst(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER));
     }
 
     @Test

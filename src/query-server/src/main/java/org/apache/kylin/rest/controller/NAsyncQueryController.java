@@ -57,6 +57,7 @@ import org.apache.kylin.rest.request.AsyncQuerySQLRequest;
 import org.apache.kylin.rest.response.AsyncQueryResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.security.InternalRpcSecurity;
 import org.apache.kylin.rest.service.AsyncQueryService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -230,7 +231,8 @@ public class NAsyncQueryController extends NBasicController {
     @ApiOperation(value = "delete all folder", tags = { "QE" })
     @DeleteMapping(value = "/async_query/tenant_node")
     @ResponseBody
-    public EnvelopeResponse<Boolean> deleteAllFolder() throws Exception {
+    public EnvelopeResponse<Boolean> deleteAllFolder(HttpServletRequest request) throws Exception {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(request);
         if (asyncQueryService.deleteAllFolder()) {
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, true, "");
         } else {

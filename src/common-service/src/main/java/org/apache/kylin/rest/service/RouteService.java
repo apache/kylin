@@ -113,7 +113,7 @@ public class RouteService extends BasicService {
             throws Exception {
         String uri = StringUtils.stripEnd(request.getRequestURI(), "/");
         val url = "http://" + instance + uri + "/tenant_node";
-        val response = generateTaskForRemoteHost(request, url);
+        val response = generateTaskForRemoteHost(request, url, new byte[0], getInternalRpcHeaders());
         val data = (Boolean) response.getData();
         log.info("deleteAllFolder instance[{}] result : [{}]", instance, data);
         if (data) {
