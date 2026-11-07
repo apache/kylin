@@ -91,6 +91,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -346,6 +347,18 @@ public class InternalTableServiceTest extends AbstractTestCase {
         Assertions.assertThrows(TransactionException.class, () -> internalTableService.updateInternalTable(PROJECT,
                 tableName, db, partitionCols, dateFormat, tblProperties, InternalTableDesc.StorageType.PARQUET.name()));
 
+    }
+
+    @Test
+    void testInternalTableReadsCheckProjectReadPermission() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectReadPermission(PROJECT);
+
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> internalTableService.getTableList(PROJECT, false, true, "", ""));
+        Assertions.assertThrows(AccessDeniedException.class,
+                () -> internalTableService.getTableDetail(PROJECT, "DEFAULT", "TEST_KYLIN_FACT"));
+        Mockito.verify(aclEvaluate, Mockito.times(2)).checkProjectReadPermission(PROJECT);
     }
 
     @Test

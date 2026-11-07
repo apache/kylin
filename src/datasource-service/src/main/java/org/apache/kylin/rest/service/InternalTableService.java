@@ -418,6 +418,7 @@ public class InternalTableService extends BasicService {
 
     public List<InternalTableDescResponse> getTableList(String project, boolean isFuzzy, boolean needDetails,
             String databaseName, String tableName) {
+        aclEvaluate.checkProjectReadPermission(project);
         InternalTableManager internalTableManager = getManager(InternalTableManager.class, project);
         List<InternalTableDesc> tableList;
         if (StringUtils.isNotBlank(databaseName) || StringUtils.isNotBlank(tableName)) {
@@ -434,6 +435,7 @@ public class InternalTableService extends BasicService {
     }
 
     public List<InternalTablePartitionDetail> getTableDetail(String project, String databaseName, String tableName) {
+        aclEvaluate.checkProjectReadPermission(project);
         InternalTableManager internalTableManager = getManager(InternalTableManager.class, project);
         String tableIdentity = databaseName + "." + tableName;
         InternalTableDesc internalTableDesc = internalTableManager.getInternalTableDesc(tableIdentity);
