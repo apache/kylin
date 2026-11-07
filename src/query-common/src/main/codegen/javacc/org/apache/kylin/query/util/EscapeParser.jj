@@ -32,8 +32,21 @@ public class EscapeParser {
     private static final String QUOTE_STR = "'";
     private static final ImmutableSet<String> OPERATORS = ImmutableSet.of("+", "-", "*", "/", "%", "=",
         ">=", "<=", "!=", "<>", "||");
+    private static final int MAX_EXPRESSION_NESTING_DEPTH = 256;
 
     private EscapeDialect dialect = EscapeDialect.DEFAULT;
+    private int expressionNestingDepth;
+
+    private void enterExpression() throws ParseException {
+        if (++expressionNestingDepth > MAX_EXPRESSION_NESTING_DEPTH) {
+            expressionNestingDepth--;
+            throw new ParseException("SQL expression nesting exceeds " + MAX_EXPRESSION_NESTING_DEPTH);
+        }
+    }
+
+    private void leaveExpression() {
+        expressionNestingDepth--;
+    }
 
     public static void main(String[] args) throws ParseException {
         System.out.println("Input SQL:");
@@ -192,6 +205,7 @@ TOKEN :
 /** Root production. */
 String Input() :
 {
+    expressionNestingDepth = 0;
     String innerString;
     StringBuilder transformedStr = new StringBuilder();
 }
@@ -226,6 +240,7 @@ String Expression() :
         if (Thread.currentThread().isInterrupted()) {
             throw new ParseException("EscapeParser is interrupted");
         }
+        enterExpression();
     }
     (
         innerString = EscapeExpress()
@@ -255,6 +270,7 @@ String Expression() :
     | innerString = Any()
     )
     {
+        leaveExpression();
         return innerString;
     }
 }

@@ -35,8 +35,21 @@ public class WhiteSpaceParser {
     private static final char SPACE_CHAR = ' ';
     private static final String QUOTE_STR = "'";
     private static final Set<String> OPERATORS = new HashSet(Arrays.asList("+", "-", "*", "/", "%", "=",">=", "<=", "!=", "<>", "||"));
+    private static final int MAX_EXPRESSION_NESTING_DEPTH = 256;
 
     private EscapeDialect dialect = EscapeDialect.DEFAULT;
+    private int expressionNestingDepth;
+
+    private void enterExpression() throws ParseException {
+        if (++expressionNestingDepth > MAX_EXPRESSION_NESTING_DEPTH) {
+            expressionNestingDepth--;
+            throw new ParseException("SQL expression nesting exceeds " + MAX_EXPRESSION_NESTING_DEPTH);
+        }
+    }
+
+    private void leaveExpression() {
+        expressionNestingDepth--;
+    }
 
   public static void main(String[] args) throws Exception {
     String sql = "select  *          col1    ,\ncol2,col3  from \n tableA  \\r   a left \t\n table\rb     (  select *      from  t) ";
@@ -200,6 +213,7 @@ TOKEN :
 
 String parse():
 {
+    expressionNestingDepth = 0;
   StringBuilder transformedStr = new StringBuilder();
   String inner;
 }
@@ -232,6 +246,7 @@ String Expression() :
         if (Thread.currentThread().isInterrupted()) {
             throw new ParseException("EscapeParser is interrupted");
         }
+        enterExpression();
     }
     (innerString = EscapeExpress()
      | innerString = SubstringExpression()
@@ -260,6 +275,7 @@ String Expression() :
      | innerString = Any()
     )
     {
+        leaveExpression();
         return innerString;
     }
 }

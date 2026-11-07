@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -90,6 +91,27 @@ public class WhiteSpaceParserTest {
         testBinary(sql1);
         testBinary(sql2);
         testBinary(sql3);
+    }
+
+    @Test
+    public void testExcessiveExpressionNestingRejected() throws ParseException {
+        String nestedSql = nestedExpression(300);
+
+        ParseException whitespaceException = Assert.assertThrows(ParseException.class,
+                () -> new WhiteSpaceParser(dialect, nestedSql).parse());
+        Assert.assertTrue(whitespaceException.getMessage().contains("nesting exceeds"));
+
+        ParseException escapeException = Assert.assertThrows(ParseException.class,
+                () -> new EscapeParser(dialect, nestedSql).Input());
+        Assert.assertTrue(escapeException.getMessage().contains("nesting exceeds"));
+
+        String shallowSql = nestedExpression(64);
+        Assert.assertNotNull(new WhiteSpaceParser(dialect, shallowSql).parse());
+        Assert.assertNotNull(new EscapeParser(dialect, shallowSql).Input());
+    }
+
+    private String nestedExpression(int depth) {
+        return "select " + StringUtils.repeat("(", depth) + "1=1" + StringUtils.repeat(")", depth);
     }
 
     private void testBinary(String sql) throws ParseException {
