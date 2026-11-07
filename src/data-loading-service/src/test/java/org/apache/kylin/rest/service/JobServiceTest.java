@@ -800,6 +800,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             errorMsg = e.getMessage();
         }
         Assert.assertEquals(0, errorMsg.length());
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(project);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
     }
 
@@ -837,6 +838,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             errorMsg = e.getMessage();
         }
         Assert.assertEquals(0, errorMsg.length());
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(project);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), dumpFilePath);
         t1.interrupt();
@@ -873,6 +875,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
                 KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
         HadoopUtil.writeStringToHdfs(ProfilerStatus.IDLE(), actionPath);
         jobService.startProfileByYarnAppId(yarnAppId, startParams);
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(project);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
     }
 
@@ -914,9 +917,34 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             errorMsg = e.getMessage();
         }
         Assert.assertEquals(0, errorMsg.length());
+        Mockito.verify(aclEvaluate).checkProjectOperationPermission(project);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), dumpFilePath);
         t1.interrupt();
+    }
+
+    @Test
+    public void testProfileOperationsByProjectCheckAcl() {
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(project);
+
+        Assert.assertThrows(AccessDeniedException.class,
+                () -> jobService.startProfileByProject(project, jobStepId, startParams));
+        Assert.assertThrows(AccessDeniedException.class,
+                () -> jobService.dumpProfileByProject(project, jobStepId, dumpParams, new Pair<>()));
+    }
+
+    @Test
+    public void testProfileOperationsByYarnAppIdCheckResolvedProjectAcl() {
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Mockito.doReturn(project).when(jobService).getProjectByJobId(jobId);
+        Mockito.doThrow(new AccessDeniedException("Access is denied")).when(aclEvaluate)
+                .checkProjectOperationPermission(project);
+
+        Assert.assertThrows(AccessDeniedException.class,
+                () -> jobService.startProfileByYarnAppId(yarnAppId, startParams));
+        Assert.assertThrows(AccessDeniedException.class,
+                () -> jobService.dumpProfileByYarnAppId(yarnAppId, dumpParams, new Pair<>()));
     }
 
     @Test

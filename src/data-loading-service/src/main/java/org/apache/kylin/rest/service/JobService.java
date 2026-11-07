@@ -175,6 +175,7 @@ public class JobService extends BasicService {
     }
 
     public void startProfileByProject(String project, String jobStepId, String params) {
+        aclEvaluate.checkProjectOperationPermission(project);
         if (!KylinConfig.getInstanceFromEnv().buildJobProfilingEnabled()) {
             throw new KylinException(JobErrorCode.PROFILING_NOT_ENABLED, String.format(Locale.ROOT,
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));
@@ -184,6 +185,7 @@ public class JobService extends BasicService {
 
     public void dumpProfileByProject(String project, String jobStepId, String params,
             Pair<InputStream, String> jobOutputAndDownloadFile) {
+        aclEvaluate.checkProjectOperationPermission(project);
         if (!KylinConfig.getInstanceFromEnv().buildJobProfilingEnabled()) {
             throw new KylinException(JobErrorCode.PROFILING_NOT_ENABLED, String.format(Locale.ROOT,
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));
@@ -200,6 +202,7 @@ public class JobService extends BasicService {
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));
         }
         Pair<String, String> projectNameAndJobStepId = getProjectNameAndJobStepId(yarnAppId);
+        aclEvaluate.checkProjectOperationPermission(projectNameAndJobStepId.getFirst());
         BuildAsyncProfileHelper.startProfile(projectNameAndJobStepId.getFirst(), projectNameAndJobStepId.getSecond(),
                 params);
     }
@@ -211,6 +214,7 @@ public class JobService extends BasicService {
                     MsgPicker.getMsg().getProfilingNotEnabled(), BUILD_JOB_PROFILING_PARAMETER));
         }
         Pair<String, String> projectNameAndJobStepId = getProjectNameAndJobStepId(yarnAppId);
+        aclEvaluate.checkProjectOperationPermission(projectNameAndJobStepId.getFirst());
         InputStream jobOutput = BuildAsyncProfileHelper.dump(projectNameAndJobStepId.getFirst(),
                 projectNameAndJobStepId.getSecond(), params);
         jobOutputAndDownloadFile.setFirst(jobOutput);
