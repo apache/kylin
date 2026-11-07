@@ -228,7 +228,8 @@ public class NSystemController extends NBasicController {
      */
     @DeleteMapping(value = "clean_sparder_event_log")
     @ResponseBody
-    public EnvelopeResponse<String> queryNodeCleanSparderEventsLogs() {
+    public EnvelopeResponse<String> queryNodeCleanSparderEventsLogs(HttpServletRequest servletRequest) {
+        InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         systemService.cleanSparderEventLog();
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }

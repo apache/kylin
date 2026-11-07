@@ -300,6 +300,8 @@ public class ScheduleService extends BasicService {
 
                 val httpHeaders = new HttpHeaders();
                 httpHeaders.add(HttpHeaders.CONTENT_TYPE, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON);
+                httpHeaders.add(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER,
+                        KylinConfig.getInstanceFromEnv().getBroadcastToken());
                 val response = restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(httpHeaders),
                         String.class);
                 receive(response, "noticeToQueryNode");

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -49,10 +50,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentMatchers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -182,5 +185,16 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
         });
         doThrow(TimeoutException.class).when(scheduleService).executeTask(any(), anyString(), anyLong());
         scheduleService.doRoutineTaskForGlobal();
+    }
+
+    @Test
+    public void testCleanSparderEventLogBroadcastIncludesServiceToken() {
+        ReflectionTestUtils.invokeMethod(scheduleService, "broadcastCleanSparderEventLogToAllNodes");
+
+        ArgumentCaptor<HttpEntity<HttpHeaders>> requestCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        Mockito.verify(restTemplate).exchange(anyString(), Mockito.eq(HttpMethod.DELETE), requestCaptor.capture(),
+                ArgumentMatchers.<Class<String>> any());
+        Assert.assertEquals(getTestConfig().getBroadcastToken(),
+                requestCaptor.getValue().getHeaders().getFirst(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER));
     }
 }

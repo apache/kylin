@@ -93,6 +93,9 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 () -> nSystemController.doCleanupGarbage(new MockHttpServletRequest()));
         Assert.assertThrows(KylinException.class,
                 () -> nSystemController.simulateInsertMeta(1, 1, new MockHttpServletRequest()));
+        Assert.assertThrows(KylinException.class,
+                () -> nSystemController.queryNodeCleanSparderEventsLogs(new MockHttpServletRequest()));
+        Mockito.verify(systemService, Mockito.never()).cleanSparderEventLog();
     }
 
     @Test
@@ -103,6 +106,16 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "100")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testCleanSparderEventLogAcceptsServiceToken() throws Exception {
+        SecurityContextHolder.clearContext();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/system/clean_sparder_event_log")
+                .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken())
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(systemService).cleanSparderEventLog();
     }
 
     @Test
