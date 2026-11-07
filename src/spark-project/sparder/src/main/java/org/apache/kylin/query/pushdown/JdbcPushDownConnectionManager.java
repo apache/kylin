@@ -38,7 +38,10 @@ public class JdbcPushDownConnectionManager {
             synchronized (JdbcPushDownConnectionManager.class) {
                 if (needUpdateProjectConnectionManager(manager, newDataSourceConfig)) {
                     manager = new JdbcPushDownConnectionManager(config, newDataSourceConfig);
-                    managerMap.put(project, manager);
+                    JdbcPushDownConnectionManager previousManager = managerMap.put(project, manager);
+                    if (previousManager != null) {
+                        previousManager.close();
+                    }
                 }
             }
         }
