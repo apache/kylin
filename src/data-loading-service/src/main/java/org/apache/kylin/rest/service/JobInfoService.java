@@ -110,6 +110,7 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.JobDriverUIUtil;
 import org.apache.kylin.rest.util.JobFilterUtil;
 import org.apache.kylin.rest.util.SparkHistoryUIUtil;
+import org.apache.kylin.rest.util.SparkUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -558,6 +559,10 @@ public class JobInfoService extends BasicService implements JobSupporter {
             return null;
         }
         return ExecutableState.valueOf(status);
+    }
+
+    public void validateJobTrackingUrl(String url, String requestHost) {
+        SparkUIUtil.validateJobTrackingUrl(url, requestHost, clusterManager);
     }
 
     /**

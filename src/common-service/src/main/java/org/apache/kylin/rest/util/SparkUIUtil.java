@@ -24,7 +24,6 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,6 +33,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.rest.cluster.ClusterManager;
+import org.apache.kylin.tool.util.HadoopConfExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -42,7 +44,9 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.util.UriComponentsBuilder;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class SparkUIUtil {
 
     private static final HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(
@@ -52,9 +56,6 @@ public class SparkUIUtil {
     private static final int REDIRECT_THRESHOLD = 5;
 
     private static final String SPARK_UI_PROXY_HEADER = "X-Kylin-Proxy-Path";
-
-    private SparkUIUtil() {
-    }
 
     public static void resendSparkUIRequest(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
             String sparkUiUrl, String uriPath, String proxyLocationBase) throws IOException {
@@ -140,7 +141,7 @@ public class SparkUIUtil {
         return target;
     }
 
-    public static void validateJobTrackingUrl(String url, String requestHost) {
+    public static void validateJobTrackingUrl(String url, String requestHost, ClusterManager clusterManager) {
         URI target = validateProxyUrl(url);
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
@@ -149,7 +150,7 @@ public class SparkUIUtil {
             return;
         }
 
-        String yarnStatusUrl = config.getYarnStatusCheckUrl();
+        String yarnStatusUrl = HadoopConfExtractor.extractYarnMasterUrl(HadoopUtil.getHadoopConfFromSparkEngine());
         if (StringUtils.isNotBlank(yarnStatusUrl)) {
             URI allowedYarnTarget = validateProxyUrl(yarnStatusUrl);
             if (isSameAuthority(target, allowedYarnTarget)) {
@@ -161,7 +162,15 @@ public class SparkUIUtil {
             return;
         }
 
-        throw new KylinRuntimeException("Tracking URL host is not allowed: " + target.getHost());
+        boolean matchJobServer = clusterManager.getJobServers().stream().map(request -> request.getHost().split(":")[0])
+                .anyMatch(host -> isSameHost(requestHost, host));
+
+        if (matchJobServer) {
+            return;
+        }
+
+        throw new KylinRuntimeException(String.format(Locale.ROOT,
+                "Tracking URL host is not allowed:  %s, requestHost: %s", target.getHost(), requestHost));
     }
 
     private static boolean isSameAuthority(URI first, URI second) {

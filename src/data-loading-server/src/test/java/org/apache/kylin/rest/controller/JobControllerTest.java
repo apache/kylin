@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -342,14 +343,11 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         request.setMemory("1024");
         request.setQueueName("queue");
         Mockito.doNothing().when(jobInfoService).updateSparkJobInfo(request);
-        MvcResult result = mockMvc
-                .perform(MockMvcRequestBuilders.put("/api/jobs/spark").contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.writeValueAsString(request))
-                        .with(req -> {
-                            req.setRemoteAddr("127.0.0.1");
-                            return req;
-                        })
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/api/jobs/spark")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request)).with(req -> {
+                    req.setRemoteAddr("127.0.0.1");
+                    return req;
+                }).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Map<String, String> response = JsonUtil.readValueAsMap(result.getResponse().getContentAsString());
         Assert.assertEquals(response.get("code"), KylinException.CODE_SUCCESS);
@@ -367,13 +365,14 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
         request.setTaskId(job.getId() + "_00_00");
         request.setYarnAppUrl("http://10.0.0.1:4040");
 
+        Mockito.doThrow(new KylinRuntimeException("Tracking URL host is not allowed")).when(jobInfoService)
+                .validateJobTrackingUrl(request.getYarnAppUrl(), "127.0.0.1");
+
         mockMvc.perform(MockMvcRequestBuilders.put("/api/jobs/spark").contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtil.writeValueAsString(request))
-                .with(req -> {
+                .content(JsonUtil.writeValueAsString(request)).with(req -> {
                     req.setRemoteAddr("127.0.0.1");
                     return req;
-                })
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                }).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
 
         Mockito.verify(jobInfoService, Mockito.never()).updateSparkJobInfo(Mockito.any());
@@ -574,8 +573,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
 
         MvcResult result = mockMvc
                 .perform(MockMvcRequestBuilders.put("/api/jobs/error").contentType(MediaType.APPLICATION_JSON)
-                        .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER,
-                                getTestConfig().getBroadcastToken())
+                        .header(BroadcastEventReadyNotifier.BROADCAST_TOKEN_HEADER, getTestConfig().getBroadcastToken())
                         .content(JsonUtil.writeValueAsString(request))
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
@@ -686,8 +684,7 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void routeGlutenCache() throws Exception {
         val servletRequest = new MockHttpServletRequest();
-        val request = new LoadGlutenCacheRequest("default",
-                Lists.newArrayList("CACHE DATA SELECT * FROM 'test-path'"));
+        val request = new LoadGlutenCacheRequest("default", Lists.newArrayList("CACHE DATA SELECT * FROM 'test-path'"));
         Mockito.when(routeService.routeGlutenCache(request.getCacheCommands(), servletRequest)).thenReturn(true);
         val mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/jobs/gluten_cache") //
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request)))

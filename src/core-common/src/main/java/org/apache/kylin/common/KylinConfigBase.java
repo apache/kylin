@@ -790,7 +790,7 @@ public abstract class KylinConfigBase implements Serializable {
      * check stays meaningful.
      */
     private String getDefaultBroadcastToken() {
-        return DigestUtils.sha256Hex("kylin.server.broadcast-token:" + getMetadataUrl());
+        return DigestUtils.sha256Hex("kylin.server.broadcast-token:" + getMetadataUrlPrefix());
     }
 
     public String getServerHttpsKeyAlias() {
@@ -4549,12 +4549,13 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public Set<String> getSourceJdbcWhiteListSchemes() {
-        String config = StringUtils.deleteWhitespace(getOptional("kylin.source.jdbc.white-list.schemes",
-                "h2,mysql,postgresql,sqlserver,snowflake"));
+        String config = StringUtils.deleteWhitespace(
+                getOptional("kylin.source.jdbc.white-list.schemes", "h2,mysql,postgresql,sqlserver,snowflake"));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
-        return Arrays.stream(config.split(",")).map(value -> value.toLowerCase(Locale.ROOT)).collect(Collectors.toSet());
+        return Arrays.stream(config.split(",")).map(value -> value.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
     }
 
     public String getSourceJdbcWhiteListValidatorClassByScheme(String scheme) {
@@ -4571,8 +4572,8 @@ public abstract class KylinConfigBase implements Serializable {
         if (!whiteListSchemes.contains(scheme)) {
             return Collections.emptySet();
         }
-        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
-                "kylin.source.jdbc.white-list.%s.url-param-keys", scheme), ""));
+        String config = StringUtils.deleteWhitespace(
+                getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.url-param-keys", scheme), ""));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
@@ -4584,8 +4585,9 @@ public abstract class KylinConfigBase implements Serializable {
         if (!whiteListSchemes.contains(scheme)) {
             return Collections.emptySet();
         }
-        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
-                "kylin.source.jdbc.white-list.%s.drivers", scheme), getDefaultSourceJdbcDrivers(scheme)));
+        String config = StringUtils.deleteWhitespace(
+                getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.drivers", scheme),
+                        getDefaultSourceJdbcDrivers(scheme)));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
@@ -4609,8 +4611,9 @@ public abstract class KylinConfigBase implements Serializable {
             defaultValue = "";
             break;
         }
-        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
-                "kylin.source.jdbc.white-list.%s.semicolon-param-keys", scheme), defaultValue));
+        String config = StringUtils.deleteWhitespace(
+                getOptional(String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.semicolon-param-keys", scheme),
+                        defaultValue));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }
@@ -4631,8 +4634,9 @@ public abstract class KylinConfigBase implements Serializable {
             defaultValue = "";
             break;
         }
-        String config = StringUtils.deleteWhitespace(getOptional(String.format(Locale.ROOT,
-                "kylin.source.jdbc.white-list.%s.parenthesis-param-keys", scheme), defaultValue));
+        String config = StringUtils.deleteWhitespace(getOptional(
+                String.format(Locale.ROOT, "kylin.source.jdbc.white-list.%s.parenthesis-param-keys", scheme),
+                defaultValue));
         if (StringUtils.isBlank(config)) {
             return Collections.emptySet();
         }

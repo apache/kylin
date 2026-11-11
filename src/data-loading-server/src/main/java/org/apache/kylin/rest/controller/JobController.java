@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,7 +63,6 @@ import org.apache.kylin.rest.service.JobInfoService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.RouteService;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.SparkUIUtil;
 import org.apache.kylin.utils.GlutenCacheUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +81,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
 
@@ -325,7 +322,7 @@ public class JobController extends BaseController {
         InternalRpcSecurity.requireGlobalAdminOrServiceToken(servletRequest);
         checkProjectName(sparkJobUpdateRequest.getProject());
         if (StringUtils.isNotBlank(sparkJobUpdateRequest.getYarnAppUrl())) {
-            SparkUIUtil.validateJobTrackingUrl(sparkJobUpdateRequest.getYarnAppUrl(),
+            jobInfoService.validateJobTrackingUrl(sparkJobUpdateRequest.getYarnAppUrl(),
                     servletRequest.getRemoteAddr());
         }
         return updateJobInfoWithCheck(sparkJobUpdateRequest.getProject(), sparkJobUpdateRequest.getJobId(),
