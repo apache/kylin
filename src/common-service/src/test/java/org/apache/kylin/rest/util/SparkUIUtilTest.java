@@ -22,10 +22,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.rest.cluster.ClusterManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SparkUIUtilTest extends NLocalFileMetadataTestCase {
 
@@ -53,12 +55,12 @@ public class SparkUIUtilTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testValidateJobTrackingUrl() {
-        SparkUIUtil.validateJobTrackingUrl("http://127.0.0.1:4040", "127.0.0.1");
+        ClusterManager clusterManager = Mockito.mock(ClusterManager.class);
+        SparkUIUtil.validateJobTrackingUrl("http://127.0.0.1:4040", "127.0.0.1", clusterManager);
 
         Assert.assertThrows(KylinRuntimeException.class,
-                () -> SparkUIUtil.validateJobTrackingUrl("http://10.0.0.1:4040", "127.0.0.1"));
+                () -> SparkUIUtil.validateJobTrackingUrl("http://10.0.0.1:4040", "127.0.0.1", clusterManager));
         Assert.assertThrows(KylinRuntimeException.class,
-                () -> SparkUIUtil.validateJobTrackingUrl("ftp://127.0.0.1", "127.0.0.1"));
+                () -> SparkUIUtil.validateJobTrackingUrl("ftp://127.0.0.1", "127.0.0.1", clusterManager));
     }
 }
-
