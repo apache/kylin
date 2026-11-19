@@ -85,6 +85,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.SourceUsageUpdateNotifier;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
@@ -143,6 +144,8 @@ import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.service.task.QueryHistoryMetaUpdateScheduler;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.sdk.datasource.framework.utils.JdbcUtils;
+import org.apache.kylin.source.adhocquery.IPushDownConverter;
+import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.tool.garbage.MetadataCleaner;
 import org.slf4j.Logger;
@@ -173,18 +176,13 @@ public class ProjectService extends BasicService {
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODE_MINUTE = "MINUTE";
     private static final String SNAPSHOT_AUTO_REFRESH_TIME_MODES = "DAY, HOURS, MINUTE";
     private static final String KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME = "kylin.query.pushdown.runner-class-name";
-    private static final String KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME =
-            "kylin.query.pushdown.partition-check.runner-class-name";
-    private static final String KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES =
-            "kylin.query.pushdown.converter-class-names";
+    private static final String KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME = "kylin.query.pushdown.partition-check.runner-class-name";
+    private static final String KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES = "kylin.query.pushdown.converter-class-names";
     private static final String KYLIN_QUERY_PUSHDOWN_JDBC_URL = "kylin.query.pushdown.jdbc.url";
     private static final String KYLIN_QUERY_PUSHDOWN_JDBC_DRIVER = "kylin.query.pushdown.jdbc.driver";
-    private static final Set<String> DEFAULT_PUSHDOWN_RUNNER_CLASS_NAMES = Sets.newHashSet(
-            "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl",
-            "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl",
-            "org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl");
     private static final String DEFAULT_VAL = "default";
-    private static final Pattern INVALID_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"'<>|\\u0000-\\u001F\\s]|^[.]+$|[.]$");
+    private static final Pattern INVALID_FILENAME_CHARS = Pattern
+            .compile("[\\\\/:*?\"'<>|\\u0000-\\u001F\\s]|^[.]+$|[.]$");
 
     @Autowired
     UserService userService;
@@ -474,14 +472,18 @@ public class ProjectService extends BasicService {
         }
         validateQueryPushdownConfig(projectInstance, normalizedOverrides);
         encryptJdbcPassInOverrideKylinProps(normalizedOverrides);
-        projectManager.updateProject(project, copyForWrite -> copyForWrite.getOverrideKylinProps()
-                .putAll(normalizedOverrides));
+        projectManager.updateProject(project,
+                copyForWrite -> copyForWrite.getOverrideKylinProps().putAll(normalizedOverrides));
     }
 
     private void validateQueryPushdownConfig(ProjectInstance projectInstance, Map<String, String> overrides) {
         validateQueryPushdownJdbcConfig(projectInstance, overrides);
-        validateQueryPushdownRunnerClasses(overrides);
-        validateQueryPushdownConverterClasses(overrides);
+        validatePushdownClasses(KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME, IPushDownRunner.class,
+                overrides.get(KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME));
+        validatePushdownClasses(KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME, IPushDownRunner.class,
+                overrides.get(KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME));
+        validatePushdownClasses(KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES, IPushDownConverter.class,
+                StringUtils.split(overrides.get(KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES), ','));
     }
 
     private void validateQueryPushdownJdbcConfig(ProjectInstance projectInstance, Map<String, String> overrides) {
@@ -498,36 +500,29 @@ public class ProjectService extends BasicService {
         }
     }
 
-    private void validateQueryPushdownRunnerClasses(Map<String, String> overrides) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Set<String> allowedRunners = Sets.newHashSet(DEFAULT_PUSHDOWN_RUNNER_CLASS_NAMES);
-        allowedRunners.add(config.getPushDownRunnerClassName());
-        allowedRunners.add(config.getPartitionCheckRunnerClassName());
-        validatePushdownClassOverride(overrides, KYLIN_QUERY_PUSHDOWN_RUNNER_CLASS_NAME, allowedRunners);
-        validatePushdownClassOverride(overrides, KYLIN_QUERY_PUSHDOWN_PARTITION_CHECK_RUNNER_CLASS_NAME,
-                allowedRunners);
-    }
-
-    private void validatePushdownClassOverride(Map<String, String> overrides, String key, Set<String> allowedClasses) {
-        String className = overrides.get(key);
-        if (StringUtils.isNotBlank(className) && !allowedClasses.contains(className)) {
-            throw new KylinException(INVALID_PARAMETER, String.format(Locale.ROOT,
-                    "Unsupported query pushdown class for '%s'", key));
-        }
-    }
-
-    private void validateQueryPushdownConverterClasses(Map<String, String> overrides) {
-        String converterClassNames = overrides.get(KYLIN_QUERY_PUSHDOWN_CONVERTER_CLASS_NAMES);
-        if (StringUtils.isBlank(converterClassNames)) {
+    /**
+     * A project may only name real implementations of the pushdown interface. The check is on the class
+     * itself, so it does not depend on which classes the system-level configuration happens to list.
+     */
+    private void validatePushdownClasses(String key, Class<?> expectedType, String... classNames) {
+        if (classNames == null) {
             return;
         }
-        Set<String> allowedConverters = Sets
-                .newHashSet(KylinConfig.getInstanceFromEnv().getPushDownConverterClassNames());
-        for (String converterClassName : StringUtils.split(converterClassNames, ',')) {
-            if (!allowedConverters.contains(converterClassName.trim())) {
+        for (String className : classNames) {
+            if (StringUtils.isNotBlank(className) && !isImplementation(className.trim(), expectedType)) {
                 throw new KylinException(INVALID_PARAMETER,
-                        "Unsupported query pushdown converter class");
+                        String.format(Locale.ROOT, "Unsupported query pushdown class for '%s'", key));
             }
+        }
+    }
+
+    private boolean isImplementation(String className, Class<?> expectedType) {
+        try {
+            // initialize=false: only the type is inspected, no code of the named class runs
+            Class<?> clazz = Class.forName(className, false, ClassUtil.class.getClassLoader());
+            return expectedType.isAssignableFrom(clazz) && !clazz.isInterface();
+        } catch (ClassNotFoundException | LinkageError e) {
+            return false;
         }
     }
 
