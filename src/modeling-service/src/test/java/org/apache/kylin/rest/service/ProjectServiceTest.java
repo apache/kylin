@@ -26,6 +26,7 @@ import static org.apache.kylin.metadata.model.MaintainModelType.MANUAL_MAINTAIN;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -545,8 +546,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl",
                 projectOverrides.get("kylin.query.pushdown.runner-class-name"));
         Assert.assertEquals("org.h2.Driver", projectOverrides.get("kylin.query.pushdown.jdbc.driver"));
-        Assert.assertEquals("jdbc:h2:mem:pushdown;MODE=MYSQL",
-                projectOverrides.get("kylin.query.pushdown.jdbc.url"));
+        Assert.assertEquals("jdbc:h2:mem:pushdown;MODE=MYSQL", projectOverrides.get("kylin.query.pushdown.jdbc.url"));
     }
 
     @Test
@@ -559,8 +559,139 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
                 "jdbc:h2:mem:pushdown;INIT=RUNSCRIPT FROM 'http://127.0.0.1/init.sql'");
 
         Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
-        Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps()
-                .get("kylin.query.pushdown.jdbc.url"));
+        Assert.assertNull(
+                projectManager.getProject(PROJECT).getOverrideKylinProps().get("kylin.query.pushdown.jdbc.url"));
+    }
+
+    @Test
+    public void testPushdownJdbcValidationFollowsSourceWhiteListSwitch() {
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.jdbc.driver", "org.apache.hive.jdbc.HiveDriver");
+        overrides.put("kylin.query.pushdown.jdbc.url", "jdbc:hive2://localhost:10000/default");
+
+        // the white list is on by default and hive2 is not one of its default schemes
+        Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
+        Assert.assertNull(
+                projectManager.getProject(PROJECT).getOverrideKylinProps().get("kylin.query.pushdown.jdbc.url"));
+
+        overwriteSystemProp("kylin.source.jdbc.white-list.enabled", "false");
+        projectService.updateProjectConfig(PROJECT, overrides);
+        Assert.assertEquals("jdbc:hive2://localhost:10000/default",
+                projectManager.getProject(PROJECT).getOverrideKylinProps().get("kylin.query.pushdown.jdbc.url"));
+    }
+
+    @Test
+    public void testUpdateProjectConfigAcceptsValidPushdownClasses() {
+        String runnerKey = "kylin.query.pushdown.runner-class-name";
+        String partitionRunnerKey = "kylin.query.pushdown.partition-check.runner-class-name";
+        String converterKey = "kylin.query.pushdown.converter-class-names";
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put(runnerKey, " org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl ");
+        overrides.put(partitionRunnerKey, "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
+        overrides.put(converterKey,
+                "org.apache.kylin.query.security.RowFilter , org.apache.kylin.query.util.DialectConverter");
+        projectService.updateProjectConfig(PROJECT, overrides);
+
+        val projectConfig = projectManager.getProject(PROJECT).getConfig();
+        Assert.assertEquals("org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl",
+                projectConfig.getPushDownRunnerClassName());
+        Assert.assertEquals("org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl",
+                projectConfig.getPartitionCheckRunnerClassName());
+        Assert.assertArrayEquals(
+                new String[] { "org.apache.kylin.query.security.RowFilter",
+                        "org.apache.kylin.query.util.DialectConverter" },
+                projectConfig.getPushDownConverterClassNames());
+
+        // blank values name no class, so there is nothing to validate
+        Map<String, String> blanks = Maps.newHashMap();
+        blanks.put(runnerKey, "");
+        blanks.put(partitionRunnerKey, " ");
+        blanks.put(converterKey, "");
+        projectService.updateProjectConfig(PROJECT, blanks);
+        Map<String, String> projectOverrides = projectManager.getProject(PROJECT).getOverrideKylinProps();
+        Assert.assertEquals("", projectOverrides.get(runnerKey));
+        Assert.assertEquals("", projectOverrides.get(partitionRunnerKey));
+        Assert.assertEquals("", projectOverrides.get(converterKey));
+    }
+
+    @Test
+    public void testUpdateProjectConfigRejectsInvalidPushdownClasses() {
+        String runnerKey = "kylin.query.pushdown.runner-class-name";
+        String partitionRunnerKey = "kylin.query.pushdown.partition-check.runner-class-name";
+        String converterKey = "kylin.query.pushdown.converter-class-names";
+        String sparkRunner = "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl";
+        String powerBIConverter = "org.apache.kylin.query.util.PowerBIConverter";
+        String[][] invalidConfigs = {
+                // the class does not exist
+                { runnerKey, "org.apache.kylin.query.pushdown.NotExistRunner" },
+                { partitionRunnerKey, "org.apache.kylin.query.pushdown.NotExistRunner" },
+                { converterKey, "org.apache.kylin.query.util.NotExistConverter" },
+                // the interface itself is not an implementation
+                { runnerKey, "org.apache.kylin.source.adhocquery.IPushDownRunner" },
+                { converterKey, "org.apache.kylin.source.adhocquery.IPushDownConverter" },
+                // a converter is not a runner, and a runner is not a converter
+                { runnerKey, powerBIConverter }, { partitionRunnerKey, powerBIConverter },
+                { converterKey, sparkRunner },
+                // one invalid entry fails the whole converter list
+                { converterKey, powerBIConverter + ",java.util.ArrayList" },
+                // a runner key names a single class, not a list
+                { runnerKey, sparkRunner + "," + sparkRunner } };
+
+        for (String[] invalidConfig : invalidConfigs) {
+            Map<String, String> overrides = Maps.newHashMap();
+            overrides.put(invalidConfig[0], invalidConfig[1]);
+            KylinException e = Assert.assertThrows(invalidConfig[1], KylinException.class,
+                    () -> projectService.updateProjectConfig(PROJECT, overrides));
+            Assert.assertEquals("Unsupported query pushdown class for '" + invalidConfig[0] + "'", e.getMessage());
+            Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps().get(invalidConfig[0]));
+        }
+    }
+
+    @Test
+    public void testUpdatePushdownProjectConfigValidatesClasses() {
+        String dialectConverter = "org.apache.kylin.query.util.DialectConverter";
+        PushDownProjectConfigRequest request = new PushDownProjectConfigRequest();
+        request.setRunnerClassName("org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl");
+        // a real converter that the system-level converter list does not contain
+        Assert.assertFalse(Arrays.asList(getTestConfig().getPushDownConverterClassNames()).contains(dialectConverter));
+        request.setConverterClassNames(dialectConverter);
+        projectService.updatePushDownProjectConfig(PROJECT, request);
+        Assert.assertEquals("org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl",
+                projectManager.getProject(PROJECT).getConfig().getPushDownRunnerClassName());
+        Assert.assertArrayEquals(new String[] { dialectConverter },
+                projectManager.getProject(PROJECT).getConfig().getPushDownConverterClassNames());
+
+        // a rejected update keeps the previous project setting
+        request.setConverterClassNames("java.util.ArrayList");
+        Assert.assertThrows(KylinException.class, () -> projectService.updatePushDownProjectConfig(PROJECT, request));
+        Assert.assertArrayEquals(new String[] { dialectConverter },
+                projectManager.getProject(PROJECT).getConfig().getPushDownConverterClassNames());
+    }
+
+    @Test
+    public void testPushdownClassValidationIndependentOfSystemConfig() {
+        // neither class is listed in the system-level pushdown config
+        overwriteSystemProp("kylin.query.pushdown.runner-class-name", "");
+        overwriteSystemProp("kylin.query.pushdown.converter-class-names",
+                "org.apache.kylin.query.util.PowerBIConverter");
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.pushdown.runner-class-name",
+                "org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl");
+        overrides.put("kylin.query.pushdown.converter-class-names",
+                "org.apache.kylin.query.util.PowerBIConverter, org.apache.kylin.query.util.DialectConverter");
+        projectService.updateProjectConfig(PROJECT, overrides);
+        Assert.assertEquals("org.apache.kylin.sdk.datasource.PushDownRunnerSDKImpl", projectManager.getProject(PROJECT)
+                .getOverrideKylinProps().get("kylin.query.pushdown.runner-class-name"));
+
+        // a real class that is not a converter / runner, even if the system-level config names it
+        overwriteSystemProp("kylin.query.pushdown.converter-class-names", "java.util.ArrayList");
+        overwriteSystemProp("kylin.query.pushdown.runner-class-name", "java.util.ArrayList");
+        for (String key : new String[] { "kylin.query.pushdown.converter-class-names",
+                "kylin.query.pushdown.runner-class-name", "kylin.query.pushdown.partition-check.runner-class-name" }) {
+            Map<String, String> invalid = Maps.newHashMap();
+            invalid.put(key, "java.util.ArrayList");
+            Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, invalid));
+        }
     }
 
     @Test
@@ -570,8 +701,8 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         overrides.put("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:pushdown");
 
         Assert.assertThrows(KylinException.class, () -> projectService.updateProjectConfig(PROJECT, overrides));
-        Assert.assertNull(projectManager.getProject(PROJECT).getOverrideKylinProps()
-                .get("kylin.query.pushdown.jdbc.driver"));
+        Assert.assertNull(
+                projectManager.getProject(PROJECT).getOverrideKylinProps().get("kylin.query.pushdown.jdbc.driver"));
     }
 
     @Test
@@ -589,8 +720,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         PushDownProjectConfigRequest request = new PushDownProjectConfigRequest();
         request.setRunnerClassName("java.lang.Runtime");
 
-        Assert.assertThrows(KylinException.class,
-                () -> projectService.updatePushDownProjectConfig(PROJECT, request));
+        Assert.assertThrows(KylinException.class, () -> projectService.updatePushDownProjectConfig(PROJECT, request));
     }
 
     @Test
