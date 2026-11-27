@@ -20,12 +20,17 @@ package org.apache.kylin.common.util;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +51,16 @@ public class EncryptUtil {
 
     public static final String ENCRYPTION_KEY_ENV = "KYLIN_SECURITY_ENCRYPTION_KEY";
 
+    /**
+     * Cipher mode for newly encrypted values: {@code ECB} (the default, and the only one older releases can
+     * read) or {@code GCM}. It only governs writing; values in either format stay readable whatever the mode.
+     * Like the key, it is read from the JVM system property or the environment, not from kylin.properties, so
+     * set it for every JVM that encrypts values, including the command line tools.
+     */
+    public static final String ENCRYPTION_MODE_PROPERTY = "kylin.security.encryption-mode";
+
+    public static final String ENCRYPTION_MODE_ENV = "KYLIN_SECURITY_ENCRYPTION_MODE";
+
     public static final String ENC_PREFIX = "ENC('";
     public static final String ENC_SUBFIX = "')";
 
@@ -55,14 +70,24 @@ public class EncryptUtil {
     private static final String SHA_256 = "SHA-256";
     private static final int AES_KEY_LENGTH = 16;
 
+    private static final int AES_BLOCK_SIZE = 16;
+    private static final String GCM_TRANSFORMATION = "AES/GCM/NoPadding";
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_BITS = 128;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private static volatile boolean legacyKeyWarningLogged = false;
 
     public static boolean isEncrypted(String value) {
         return StringUtils.isNotEmpty(value) && value.startsWith(ENC_PREFIX) && value.endsWith(ENC_SUBFIX);
     }
 
+    /**
+     * The cipher mode is chosen by {@link #ENCRYPTION_MODE_PROPERTY}.
+     */
     public static String encrypt(String strToEncrypt) {
-        return encrypt(strToEncrypt, encryptionKey());
+        byte[] key = encryptionKey();
+        return gcmEnabled() ? encryptGcm(strToEncrypt, key) : encryptEcb(strToEncrypt, key);
     }
 
     public static String encryptWithPrefix(String value) {
@@ -113,6 +138,22 @@ public class EncryptUtil {
         System.out.println(EncryptUtil.encrypt(passwordTxt));
     }
 
+    private static boolean gcmEnabled() {
+        String mode = System.getProperty(ENCRYPTION_MODE_PROPERTY);
+        if (StringUtils.isBlank(mode)) {
+            mode = System.getenv(ENCRYPTION_MODE_ENV);
+        }
+        if (StringUtils.isBlank(mode) || "ECB".equalsIgnoreCase(mode.trim())) {
+            return false;
+        }
+        if ("GCM".equalsIgnoreCase(mode.trim())) {
+            return true;
+        }
+        // A typo must not silently downgrade to ECB.
+        throw new IllegalArgumentException(
+                "Unsupported " + ENCRYPTION_MODE_PROPERTY + " '" + mode + "', expected ECB or GCM");
+    }
+
     private static byte[] encryptionKey() {
         byte[] configuredKey = configuredKey();
         if (configuredKey != null) {
@@ -150,7 +191,50 @@ public class EncryptUtil {
         }
     }
 
-    private static String encrypt(String strToEncrypt, byte[] key) {
+    /**
+     * Produces {@code base64(iv || ciphertext || tag)}. The plaintext is PKCS#7 padded to whole blocks, so the
+     * decoded length is always 12 modulo 16 and can never be mistaken for AES/ECB output.
+     */
+    private static String encryptGcm(String strToEncrypt, byte[] key) {
+        try {
+            byte[] plain = strToEncrypt.getBytes(StandardCharsets.UTF_8);
+            int padLength = AES_BLOCK_SIZE - plain.length % AES_BLOCK_SIZE;
+            byte[] padded = Arrays.copyOf(plain, plain.length + padLength);
+            Arrays.fill(padded, plain.length, padded.length, (byte) padLength);
+
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            RANDOM.nextBytes(iv);
+            Cipher cipher = Cipher.getInstance(GCM_TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(GCM_TAG_BITS, iv));
+            return Base64.encodeBase64String(ArrayUtils.addAll(iv, cipher.doFinal(padded)));
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * The format is read off the ciphertext, not the configured mode: AES/ECB output is always a whole number
+     * of blocks, while {@link #encryptGcm} output never is.
+     */
+    private static String decrypt(String strToDecrypt, byte[] key) {
+        try {
+            byte[] data = Base64.decodeBase64(strToDecrypt);
+            boolean gcm = data != null && data.length % AES_BLOCK_SIZE == GCM_IV_LENGTH;
+            return gcm ? decryptGcm(data, key) : decryptEcb(data, key);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private static String decryptGcm(byte[] data, byte[] key) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(GCM_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"),
+                new GCMParameterSpec(GCM_TAG_BITS, data, 0, GCM_IV_LENGTH));
+        byte[] padded = cipher.doFinal(data, GCM_IV_LENGTH, data.length - GCM_IV_LENGTH);
+        return new String(padded, 0, padded.length - padded[padded.length - 1], StandardCharsets.UTF_8);
+    }
+
+    private static String encryptEcb(String strToEncrypt, byte[] key) {
         try {
             Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
@@ -161,14 +245,9 @@ public class EncryptUtil {
         }
     }
 
-    private static String decrypt(String strToDecrypt, byte[] key) {
-        try {
-            Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
-            final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            return new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)), Charset.defaultCharset());
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    private static String decryptEcb(byte[] data, byte[] key) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
+        return new String(cipher.doFinal(data), Charset.defaultCharset());
     }
 }
